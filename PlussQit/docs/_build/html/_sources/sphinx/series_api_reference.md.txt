@@ -25,7 +25,7 @@ compiled-and-run examples under every code block.
 
 `Series` exposes a large public method surface, and this reference currently
 covers a working subset, prioritized by how load-bearing each family is
-(indexing/shape, factories, then the autograd-sensitive family) rather than by
+(indexing/shape, factories, then the autodiff-sensitive family) rather than by
 code generation order. Every page here is real, hand-verified prose — nothing
 below is a mechanically generated stub.
 
@@ -116,13 +116,16 @@ The current handwritten shape and slice/indexing cluster now covers:
 - elementwise comparison/bounds helpers and a few load-bearing utility ops
 - reduction and scan core: `sum`, `mean`, `prod`, `max`, `min`, `argmax`,
   `argmin`, `amax`, `amin`, `norm`, `cumsum`, `cumprod`
-- autograd and state controls: `tracks_slope`, `tracks_slope_`, `reverse`,
+- autodiff and state controls: `tracks_slope`, `tracks_slope_`, `reverse`,
   `detach`, `detach_`, `retain_grad`, `retains_grad`, `has_sensitivity`,
   `sensitivity`, `clear_sensitivity`, `storage_version`
 - accessors: `stat`
 - linear-algebra accessor entrypoint: `linearalg`, with its complete product,
   determinant, transformation, factorization, norm, and solver surface
   documented in the dedicated accessor reference
+- antiderivative accessor entrypoint: `antidiff`, with its `trapezoid` and
+  `cumulative_trapezoid` methods documented in the dedicated accessor
+  reference
 
 The complete handwritten `SeriesStatAccessor` reference covers:
 
@@ -141,11 +144,14 @@ The complete handwritten `SeriesStatAccessor` reference covers:
   [`SeriesLinearAlgAccessor`](series_linearalg_accessor_api_reference.md)
 - `traverse` ->
   [`SeriesTraverseAccessor`](series_traverse_accessor_api_reference.md)
+- `antidiff` ->
+  [`SeriesAntidiffAccessor`](series_antidiff_accessor_api_reference.md)
 
-All three accessor references are complete across their public surfaces. Start
+All four accessor references are complete across their public surfaces. Start
 with [`Series::stat`](api/series/stat.md),
-[`Series::linearalg`](api/series/linearalg.md), or
-[`Series::traverse`](api/series/traverse.md) for the entrypoint itself, or jump
+[`Series::linearalg`](api/series/linearalg.md),
+[`Series::traverse`](api/series/traverse.md), or
+[`Series::antidiff`](api/series/antidiff.md) for the entrypoint itself, or jump
 straight to a dedicated accessor reference from the sidebar. `traverse` is the
 value-driven search family — one call from a condition to the coordinates,
 matched values, and flat offsets of every position that satisfies it.
@@ -171,6 +177,7 @@ api/series/amax
 api/series/amin
 api/series/aminmax
 api/series/angle
+api/series/antidiff
 api/series/any
 api/series/argmax
 api/series/argmin
@@ -496,6 +503,7 @@ api/series/zeta
 series_stat_accessor_api_reference
 series_linearalg_accessor_api_reference
 series_traverse_accessor_api_reference
+series_antidiff_accessor_api_reference
 ```
 
 <div class="pluss-inline-prev-next">

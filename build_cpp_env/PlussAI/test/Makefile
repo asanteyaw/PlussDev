@@ -627,6 +627,34 @@ nn_mps_schedule_family_trainability_test/fast:
 .PHONY : nn_mps_schedule_family_trainability_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/rule
+
+# Convenience name for target.
+nn_optim_complex_test: PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/rule
+.PHONY : nn_optim_complex_test
+
+# fast build rule for target.
+nn_optim_complex_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build
+.PHONY : nn_optim_complex_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/rule
+
+# Convenience name for target.
+nn_optim_float64_test: PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/rule
+.PHONY : nn_optim_float64_test
+
+# fast build rule for target.
+nn_optim_float64_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build
+.PHONY : nn_optim_float64_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nn_optim_foreach_lane_test.dir/rule
@@ -2056,6 +2084,54 @@ nn_mps_schedule_family_trainability_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/nn_mps_schedule_family_trainability_test.cpp.s
 .PHONY : nn_mps_schedule_family_trainability_test.cpp.s
 
+nn_optim_complex_test.o: nn_optim_complex_test.cpp.o
+.PHONY : nn_optim_complex_test.o
+
+# target to build an object file
+nn_optim_complex_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/nn_optim_complex_test.cpp.o
+.PHONY : nn_optim_complex_test.cpp.o
+
+nn_optim_complex_test.i: nn_optim_complex_test.cpp.i
+.PHONY : nn_optim_complex_test.i
+
+# target to preprocess a source file
+nn_optim_complex_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/nn_optim_complex_test.cpp.i
+.PHONY : nn_optim_complex_test.cpp.i
+
+nn_optim_complex_test.s: nn_optim_complex_test.cpp.s
+.PHONY : nn_optim_complex_test.s
+
+# target to generate assembly for a file
+nn_optim_complex_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/nn_optim_complex_test.cpp.s
+.PHONY : nn_optim_complex_test.cpp.s
+
+nn_optim_float64_test.o: nn_optim_float64_test.cpp.o
+.PHONY : nn_optim_float64_test.o
+
+# target to build an object file
+nn_optim_float64_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/nn_optim_float64_test.cpp.o
+.PHONY : nn_optim_float64_test.cpp.o
+
+nn_optim_float64_test.i: nn_optim_float64_test.cpp.i
+.PHONY : nn_optim_float64_test.i
+
+# target to preprocess a source file
+nn_optim_float64_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/nn_optim_float64_test.cpp.i
+.PHONY : nn_optim_float64_test.cpp.i
+
+nn_optim_float64_test.s: nn_optim_float64_test.cpp.s
+.PHONY : nn_optim_float64_test.s
+
+# target to generate assembly for a file
+nn_optim_float64_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/nn_optim_float64_test.cpp.s
+.PHONY : nn_optim_float64_test.cpp.s
+
 nn_optim_foreach_lane_test.o: nn_optim_foreach_lane_test.cpp.o
 .PHONY : nn_optim_foreach_lane_test.o
 
@@ -3278,6 +3354,8 @@ help:
 	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
 	@echo "... nn_mps_schedule_family_trainability_test"
+	@echo "... nn_optim_complex_test"
+	@echo "... nn_optim_float64_test"
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
@@ -3420,6 +3498,12 @@ help:
 	@echo "... nn_mps_schedule_family_trainability_test.o"
 	@echo "... nn_mps_schedule_family_trainability_test.i"
 	@echo "... nn_mps_schedule_family_trainability_test.s"
+	@echo "... nn_optim_complex_test.o"
+	@echo "... nn_optim_complex_test.i"
+	@echo "... nn_optim_complex_test.s"
+	@echo "... nn_optim_float64_test.o"
+	@echo "... nn_optim_float64_test.i"
+	@echo "... nn_optim_float64_test.s"
 	@echo "... nn_optim_foreach_lane_test.o"
 	@echo "... nn_optim_foreach_lane_test.i"
 	@echo "... nn_optim_foreach_lane_test.s"

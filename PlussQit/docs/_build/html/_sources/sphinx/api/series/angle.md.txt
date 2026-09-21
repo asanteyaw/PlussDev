@@ -200,8 +200,8 @@ data=[(-0.1600+0.1200j), (0.0000+0.0000j)]
     <span class="label">Previous</span>
     <span class="title">aminmax</span>
   </a>
-  <a class="next-link" href="any.html">
+  <a class="next-link" href="antidiff.html">
     <span class="label">Next</span>
-    <span class="title">any</span>
+    <span class="title">antidiff</span>
   </a>
 </div>

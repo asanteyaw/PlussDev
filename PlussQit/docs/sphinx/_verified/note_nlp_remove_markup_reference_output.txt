@@ -1,0 +1,94 @@
+=== accessor pipeline ===
+plain
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Ship today"]
+tokens
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Ship", "today"]
+
+=== emails ===
+recognized forms
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Write or today"]
+invalid forms unchanged
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  keep a@b, @handle, and x@@example.com\nexactly  "]
+
+=== footers ===
+recognized footer lines
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Body line Closing"]
+footer-like prose unchanged
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  page three\nconfidentiality matters  "]
+
+=== hashtags ===
+recognized hashtags
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Ship with (), []; keep C# mid#word and #"]
+hash boundaries unchanged
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  C#\nmid#word stays  "]
+
+=== headers ===
+heading lines
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Body Text ####### Seven #include <x> #topic"]
+hash-prefixed prose unchanged
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  #topic\n#include <vector>  "]
+
+=== html ===
+tags comments and entities
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Hello world. Tail &amp; more"]
+declaration and custom element
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Value"]
+adjacent blocks
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["One Two"]
+comparisons unchanged
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  3 < 5 and x < y > z\nstill text  "]
+
+=== shared contract ===
+matrix emails
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", "Page 1"], 
+  ["#tag", "<b>bold</b>"]
+]
+matrix footers
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a@b.io", ""], 
+  ["#tag", "<b>bold</b>"]
+]
+matrix hashtags
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a@b.io", "Page 1"], 
+  ["", "<b>bold</b>"]
+]
+matrix headers
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a@b.io", "Page 1"], 
+  ["#tag", "<b>bold</b>"]
+]
+matrix HTML
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a@b.io", "Page 1"], 
+  ["#tag", "bold"]
+]
+HTML idempotent=true
+empty
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+undefined defined=false
+Bytes: rejected
+Bool: rejected
+Int64: rejected
+Float64: rejected

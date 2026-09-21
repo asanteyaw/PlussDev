@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "CodeN/core/AlignedAllocator.h"
+
 namespace {
 
 using clock_type = std::chrono::steady_clock;
@@ -70,6 +72,44 @@ double run_bench_ms(Fn&& fn, std::int64_t rounds) {
   return static_cast<double>(us) / (1000.0 * static_cast<double>(rounds));
 }
 
+struct LaneBenchResult {
+  double milliseconds{0.0};
+  double million_lanes_per_second{0.0};
+  std::uint64_t allocations{0};
+  std::uint64_t bytes{0};
+};
+
+template <class Fn>
+LaneBenchResult run_lane_bench(Fn&& fn, std::int64_t lanes,
+                               std::int64_t rounds) {
+  (void)fn();
+  pluss::coden::detail::LaneAllocationScope tracking;
+  const auto t0 = clock_type::now();
+  for (std::int64_t round = 0; round < rounds; ++round) (void)fn();
+  const auto t1 = clock_type::now();
+  const auto allocations = tracking.snapshot();
+  const auto elapsed =
+      std::chrono::duration<double, std::milli>(t1 - t0).count();
+  const auto total_lanes = static_cast<double>(lanes) * rounds;
+  return {
+      elapsed / static_cast<double>(rounds),
+      elapsed > 0.0 ? total_lanes / (elapsed * 1000.0) : 0.0,
+      allocations.allocations,
+      allocations.bytes,
+  };
+}
+
+void print_lane_bench(std::string_view name, const LaneBenchResult& result,
+                      std::int64_t rounds) {
+  std::cout << name << "_ms=" << result.milliseconds << "\n";
+  std::cout << name << "_million_lanes_per_second="
+            << result.million_lanes_per_second << "\n";
+  std::cout << name << "_allocations_per_round="
+            << static_cast<double>(result.allocations) / rounds << "\n";
+  std::cout << name << "_bytes_per_round="
+            << static_cast<double>(result.bytes) / rounds << "\n";
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -79,6 +119,8 @@ int main(int argc, char** argv) {
 
   const auto corpus = make_regression_corpus(cfg.n);
   const auto note = make_note_1d(corpus);
+  const auto small_corpus = make_regression_corpus(32);
+  const auto small_note = make_note_1d(small_corpus);
   const auto note2d = make_note_2d_prefix_cols(corpus);
   std::string keyword_doc;
   keyword_doc.reserve(static_cast<std::size_t>(cfg.n * 8));
@@ -135,11 +177,32 @@ int main(int argc, char** argv) {
 
   const double keywords_ms = run_bench_ms(
       [&]() {
-        auto y = keyword_note.nlp_keywords(10);
+        auto y = keyword_note.nlp().keywords(10);
         sink += y.tokens().numel();
         return y.tokens().numel();
       },
       cfg.rounds);
+
+  const auto small_bool = run_lane_bench(
+      [&]() { return small_note.contains("a"); }, small_note.numel(),
+      cfg.rounds);
+  const auto large_bool = run_lane_bench(
+      [&]() { return note.contains("a"); }, note.numel(), cfg.rounds);
+  const auto small_bool_left = small_note.contains("a");
+  const auto small_bool_right = small_note.contains("e");
+  const auto large_bool_left = note.contains("a");
+  const auto large_bool_right = note.contains("e");
+  const auto small_bool_or = run_lane_bench(
+      [&]() { return small_bool_left | small_bool_right; },
+      small_note.numel(), cfg.rounds);
+  const auto large_bool_or = run_lane_bench(
+      [&]() { return large_bool_left | large_bool_right; }, note.numel(),
+      cfg.rounds);
+  const auto small_int = run_lane_bench(
+      [&]() { return small_note.lengths_bytes(); }, small_note.numel(),
+      cfg.rounds);
+  const auto large_int = run_lane_bench(
+      [&]() { return note.lengths_bytes(); }, note.numel(), cfg.rounds);
 
   std::cout << "CodeN CPU Perf Bench\n";
   std::cout << "n=" << cfg.n << ", rounds=" << cfg.rounds << "\n";
@@ -149,6 +212,12 @@ int main(int argc, char** argv) {
   std::cout << "deduplicate_ms=" << dedup_ms << "\n";
   std::cout << "take_ms=" << take_ms << "\n";
   std::cout << "nlp_keywords_ms=" << keywords_ms << "\n";
+  print_lane_bench("contains_small", small_bool, cfg.rounds);
+  print_lane_bench("contains_large", large_bool, cfg.rounds);
+  print_lane_bench("bool_or_small", small_bool_or, cfg.rounds);
+  print_lane_bench("bool_or_large", large_bool_or, cfg.rounds);
+  print_lane_bench("lengths_bytes_small", small_int, cfg.rounds);
+  print_lane_bench("lengths_bytes_large", large_int, cfg.rounds);
   std::cout << "sink=" << sink << "\n";
   return 0;
 }

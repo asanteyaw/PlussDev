@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_utf8_valid() const
+Note Note::is_utf8_valid() const
 ```
 
 ## Test Whether Each Cell Is Well-Formed UTF-8
@@ -24,8 +24,8 @@ transcode, where individual cells may hold arbitrary bytes. An empty cell is
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Bytes-Mode `Note` With A Bad Cell
 
@@ -33,8 +33,8 @@ length `numel()`.
 const auto n = pluss::note::bytes({"abc", "café", "\xFF\xFE"});
 const auto mask = n.is_utf8_valid();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 

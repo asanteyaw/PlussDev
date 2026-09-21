@@ -263,6 +263,20 @@ external_reference_parity_test/fast:
 .PHONY : external_reference_parity_test/fast
 
 # Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/rule
+
+# Convenience name for target.
+lsr1_complex_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/rule
+.PHONY : lsr1_complex_test
+
+# fast build rule for target.
+lsr1_complex_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build
+.PHONY : lsr1_complex_test/fast
+
+# Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_blackbox_advanced_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_blackbox_advanced_test.dir/rule
 .PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/mads_blackbox_advanced_test.dir/rule
@@ -317,6 +331,34 @@ pattern_search_minimizer_test: PlussMa/Math/Numerical/optimization/test/CMakeFil
 pattern_search_minimizer_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build
 .PHONY : pattern_search_minimizer_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/rule
+
+# Convenience name for target.
+septima_adam_complex_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/rule
+.PHONY : septima_adam_complex_test
+
+# fast build rule for target.
+septima_adam_complex_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build
+.PHONY : septima_adam_complex_test/fast
+
+# Convenience name for target.
+PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/rule
+.PHONY : PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/rule
+
+# Convenience name for target.
+septima_lbfgs_complex_test: PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/rule
+.PHONY : septima_lbfgs_complex_test
+
+# fast build rule for target.
+septima_lbfgs_complex_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build
+.PHONY : septima_lbfgs_complex_test/fast
 
 # Convenience name for target.
 PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_optimizer_selection_test.dir/rule:
@@ -494,6 +536,30 @@ external_reference_parity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/external_reference_parity_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/external_reference_parity_test.dir/external_reference_parity_test.cpp.s
 .PHONY : external_reference_parity_test.cpp.s
 
+lsr1_complex_test.o: lsr1_complex_test.cpp.o
+.PHONY : lsr1_complex_test.o
+
+# target to build an object file
+lsr1_complex_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/lsr1_complex_test.cpp.o
+.PHONY : lsr1_complex_test.cpp.o
+
+lsr1_complex_test.i: lsr1_complex_test.cpp.i
+.PHONY : lsr1_complex_test.i
+
+# target to preprocess a source file
+lsr1_complex_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/lsr1_complex_test.cpp.i
+.PHONY : lsr1_complex_test.cpp.i
+
+lsr1_complex_test.s: lsr1_complex_test.cpp.s
+.PHONY : lsr1_complex_test.s
+
+# target to generate assembly for a file
+lsr1_complex_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/lsr1_complex_test.cpp.s
+.PHONY : lsr1_complex_test.cpp.s
+
 mads_blackbox_advanced_test.o: mads_blackbox_advanced_test.cpp.o
 .PHONY : mads_blackbox_advanced_test.o
 
@@ -638,6 +704,54 @@ pattern_search_minimizer_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_minimizer_test.dir/pattern_search_minimizer_test.cpp.s
 .PHONY : pattern_search_minimizer_test.cpp.s
 
+septima_adam_complex_test.o: septima_adam_complex_test.cpp.o
+.PHONY : septima_adam_complex_test.o
+
+# target to build an object file
+septima_adam_complex_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/septima_adam_complex_test.cpp.o
+.PHONY : septima_adam_complex_test.cpp.o
+
+septima_adam_complex_test.i: septima_adam_complex_test.cpp.i
+.PHONY : septima_adam_complex_test.i
+
+# target to preprocess a source file
+septima_adam_complex_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/septima_adam_complex_test.cpp.i
+.PHONY : septima_adam_complex_test.cpp.i
+
+septima_adam_complex_test.s: septima_adam_complex_test.cpp.s
+.PHONY : septima_adam_complex_test.s
+
+# target to generate assembly for a file
+septima_adam_complex_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/septima_adam_complex_test.cpp.s
+.PHONY : septima_adam_complex_test.cpp.s
+
+septima_lbfgs_complex_test.o: septima_lbfgs_complex_test.cpp.o
+.PHONY : septima_lbfgs_complex_test.o
+
+# target to build an object file
+septima_lbfgs_complex_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/septima_lbfgs_complex_test.cpp.o
+.PHONY : septima_lbfgs_complex_test.cpp.o
+
+septima_lbfgs_complex_test.i: septima_lbfgs_complex_test.cpp.i
+.PHONY : septima_lbfgs_complex_test.i
+
+# target to preprocess a source file
+septima_lbfgs_complex_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/septima_lbfgs_complex_test.cpp.i
+.PHONY : septima_lbfgs_complex_test.cpp.i
+
+septima_lbfgs_complex_test.s: septima_lbfgs_complex_test.cpp.s
+.PHONY : septima_lbfgs_complex_test.s
+
+# target to generate assembly for a file
+septima_lbfgs_complex_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/septima_lbfgs_complex_test.cpp.s
+.PHONY : septima_lbfgs_complex_test.cpp.s
+
 septima_optimizer_selection_test.o: septima_optimizer_selection_test.cpp.o
 .PHONY : septima_optimizer_selection_test.o
 
@@ -706,12 +820,15 @@ help:
 	@echo "... dfo_minimizers_test"
 	@echo "... dfo_solver_test"
 	@echo "... external_reference_parity_test"
+	@echo "... lsr1_complex_test"
 	@echo "... mads_blackbox_advanced_test"
 	@echo "... mads_blackbox_minimizers_test"
 	@echo "... mads_nomad_parity_test"
 	@echo "... optima_robustness_catch2"
 	@echo "... pattern_search_closure_catch2"
 	@echo "... pattern_search_minimizer_test"
+	@echo "... septima_adam_complex_test"
+	@echo "... septima_lbfgs_complex_test"
 	@echo "... septima_optimizer_selection_test"
 	@echo "... septima_rigor_suite_test"
 	@echo "... adam_functional_torch_rigor_test.o"
@@ -729,6 +846,9 @@ help:
 	@echo "... external_reference_parity_test.o"
 	@echo "... external_reference_parity_test.i"
 	@echo "... external_reference_parity_test.s"
+	@echo "... lsr1_complex_test.o"
+	@echo "... lsr1_complex_test.i"
+	@echo "... lsr1_complex_test.s"
 	@echo "... mads_blackbox_advanced_test.o"
 	@echo "... mads_blackbox_advanced_test.i"
 	@echo "... mads_blackbox_advanced_test.s"
@@ -747,6 +867,12 @@ help:
 	@echo "... pattern_search_minimizer_test.o"
 	@echo "... pattern_search_minimizer_test.i"
 	@echo "... pattern_search_minimizer_test.s"
+	@echo "... septima_adam_complex_test.o"
+	@echo "... septima_adam_complex_test.i"
+	@echo "... septima_adam_complex_test.s"
+	@echo "... septima_lbfgs_complex_test.o"
+	@echo "... septima_lbfgs_complex_test.i"
+	@echo "... septima_lbfgs_complex_test.s"
 	@echo "... septima_optimizer_selection_test.o"
 	@echo "... septima_optimizer_selection_test.i"
 	@echo "... septima_optimizer_selection_test.s"

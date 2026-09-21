@@ -29,14 +29,38 @@ inline Config floating_cfg_(Config cfg) {
 inline bool is_training_float_dtype_(ScalarType dtype) noexcept {
   return dtype == ScalarType::Float32 ||
          dtype == ScalarType::Float16 ||
-         dtype == ScalarType::BFloat16;
+         dtype == ScalarType::BFloat16 ||
+         dtype == ScalarType::Float64;
 }
 
 inline void require_training_float_dtype_(ScalarType dtype, const char* what, const char* role) {
   PLUSS_CHECK(
       is_training_float_dtype_(dtype),
       std::string("pluss::") + what + ": expected " + role +
-          " dtype in {Float32, Float16, BFloat16}; got enum=" +
+          " dtype in {Float32, Float16, BFloat16, Float64}; got enum=" +
+          std::to_string(static_cast<int>(dtype)));
+}
+
+// PARAMETERS (unlike the loss they feed into, which must stay real-valued
+// for "minimize" to mean anything) may additionally be complex -- matching
+// real torch, whose Adam/AdamW/RMSprop/NAdam/Adagrad/SGD all accept complex
+// Parameters (verified live: torch.optim.Adam trains a complex64 Parameter
+// correctly). Deliberately a SEPARATE function from
+// is_training_float_dtype_ rather than widening it in place: loss/target/
+// prediction dtype checks throughout Loss.h reuse that one and must keep
+// rejecting complex, since a loss value has to be real to have a
+// well-defined descent direction.
+inline bool is_training_numeric_dtype_(ScalarType dtype) noexcept {
+  return is_training_float_dtype_(dtype) ||
+         dtype == ScalarType::Complex64 ||
+         dtype == ScalarType::Complex128;
+}
+
+inline void require_training_numeric_dtype_(ScalarType dtype, const char* what, const char* role) {
+  PLUSS_CHECK(
+      is_training_numeric_dtype_(dtype),
+      std::string("pluss::") + what + ": expected " + role +
+          " dtype in {Float32, Float16, BFloat16, Float64, Complex64, Complex128}; got enum=" +
           std::to_string(static_cast<int>(dtype)));
 }
 

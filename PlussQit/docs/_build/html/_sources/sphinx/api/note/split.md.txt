@@ -18,7 +18,7 @@ structural splitter — the right tool for CSV-ish fields, `key:value` pairs,
 `a -> b` arrows, and other formats with a known separator. When the boundary
 is "any run of whitespace," use [`split_whitespace`](split_whitespace.md);
 when it is a line break, use [`split_lines`](split_lines.md); when it is a
-pattern, use `regex_split`.
+pattern, use [`regex().split()`](../note-regex/split.md).
 
 `delim` is matched **literally** (no regex) and must be **non-empty** — an
 empty delimiter throws `pluss::Error`. It may be more than one character
@@ -43,9 +43,10 @@ unlimited.
 
 ### The `TokenBatch` result
 
-All pieces from all cells are concatenated into one flat rank-`1` token
-`Note` (`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each
-cell's run — cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`. Every
+All pieces from all cells are concatenated into the rank-`1` Note
+`batch.tokens()`. The rank-`1` Int64 Note `batch.offsets()` has length
+`numel + 1` and marks each cell's run: cell `r` owns `tokens.at(k)` for `k`
+in `[offsets[r], offsets[r + 1])`. Every
 cell contributes at least one piece, so no offset range is empty.
 
 ## Example 1: Comma-Separated Fields
@@ -55,8 +56,8 @@ const auto batch = pluss::make_note({"a,b,c", "x,y", "solo"}).split(",");
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -79,8 +80,8 @@ const auto batch =
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -163,8 +164,8 @@ split: delimiter must be non-empty
 - [`Note::split_whitespace`](split_whitespace.md): split on runs of
   whitespace, dropping empty fields.
 - [`Note::split_lines`](split_lines.md): split on line breaks.
-- `pluss::coden::Note::regex_split`: split on a regular expression.
-- [`Note::tokenize_words`](tokenize_words.md): word tokens rather than
+- [`NoteRegexAccessor::split`](../note-regex/split.md): split on a regular expression.
+- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): word tokens rather than
   delimiter fields.
 
 <div class="pluss-inline-prev-next">
@@ -172,8 +173,8 @@ split: delimiter must be non-empty
     <span class="label">Previous</span>
     <span class="title">sort</span>
   </a>
-  <a class="next-link" href="split_lines.html">
+  <a class="next-link" href="split_chars.html">
     <span class="label">Next</span>
-    <span class="title">split_lines</span>
+    <span class="title">split_chars</span>
   </a>
 </div>

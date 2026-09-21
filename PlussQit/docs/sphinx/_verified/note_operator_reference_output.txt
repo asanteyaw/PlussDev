@@ -1,0 +1,180 @@
+=== concatenation ===
+paired
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada!", "Grace?", "Linus."]
+suffix literal
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada!", "Grace!", "Linus!"]
+prefix literal
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Dr. Ada", "Dr. Grace", "Dr. Linus"]
+one-element Note broadcast
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada.", "Grace.", "Linus."]
+plus-equals Note
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada!", "Grace?", "Linus."]
+plus-equals literal
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada!#", "Grace?#", "Linus.#"]
+original after plus-equals
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada", "Grace", "Linus"]
+matrix shape
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a!", "b!"], 
+  ["c!", "d!"]
+]
+bytes=true sizes=3,2
+concat shape mismatch: rejected
+concat mixed encoding: rejected
+concat native dtype: rejected
+concat empty
+Note(shape=[2, 0], dim=2, numel=0, encoding=utf8)
+[]
+concat undefined: rejected
+
+=== repetition ===
+right multiply
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["hahaha", "gogogo"]
+left multiply
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["abab", "xx"]
+zero
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", ""], 
+  ["", ""]
+]
+times-equals
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["nana", "batmanbatman"]
+negative repeat: rejected
+native repeat: rejected
+
+=== comparisons ===
+equal
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, false, false]
+not equal
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, true, true]
+less
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, true, false]
+less equal
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, true, false]
+greater
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, false, true]
+greater equal
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, false, true]
+literal right
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, true, true]
+literal left
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, false, true]
+scalar Note left
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, true, true]
+matrix comparison
+Note(shape=[2, 2], dim=2, numel=4, dtype=Bool)
+[
+  [false, false], 
+  [true, true]
+]
+Int64 comparison
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, true, false]
+Float64 NaN equality
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, false, true]
+Bool ordering
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, true, true]
+Bytes equality
+Note(shape=[2], dim=1, numel=2, dtype=Bool)
+[true, true]
+empty comparison
+Note(shape=[2, 0], dim=2, numel=0, dtype=Bool)
+[]
+comparison mixed dtype: rejected
+comparison shape mismatch: rejected
+string against Int64: rejected
+comparison undefined: rejected
+
+=== Bool composition ===
+and
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, true, false]
+or
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, true, true]
+xor
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, false, true]
+not
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[false, false, true]
+broadcast true
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, true, false]
+logical non-Bool: rejected
+logical shape mismatch: rejected
+
+=== reductions ===
+any mixed
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+any false
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+false
+all true
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+all mixed
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+false
+matrix any
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+matrix all
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+false
+empty any
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+false
+empty all
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+scalar any
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+scalar all
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+false
+compound any mask
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, false, true]
+compound any
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+compound all mask
+Note(shape=[3], dim=1, numel=3, dtype=Bool)
+[true, true, true]
+compound all
+Note(shape=[], dim=0, numel=1, dtype=Bool)
+true
+any Text: rejected
+all Text: rejected
+any undefined: rejected
+all undefined: rejected
+
+=== stream insertion ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada", "Grace", "Linus"]

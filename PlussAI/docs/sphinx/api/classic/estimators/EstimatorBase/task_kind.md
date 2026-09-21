@@ -1,54 +1,60 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: af0475b4d4d5 -->
 # `pluss::ai::classic::EstimatorBase::task_kind`
 
-[Back to `pluss::ai::classic::EstimatorBase`](../EstimatorBase.md)
+`task_kind` reports which task the estimator solves. It is fixed at
+construction — [`ClassifierBase`](../ClassifierBase.md) always answers
+`Classification`, [`RegressorBase`](../RegressorBase.md) always answers
+`Regression` — and never changes, including across `learn` calls.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+classic::TaskKind classic::EstimatorBase::task_kind() const noexcept;
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+The `TaskKind` (`Classification` or `Regression`) fixed by which base class
+the concrete estimator derives from — independent of whether the estimator is
+trained.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None — `noexcept`, always succeeds.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+Reading `task_kind()` from a classifier and a regressor, before either is
+trained.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
+  cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> classifier =
+      cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> regressor =
+      cls::make_regressor(cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear,
+                                         cls::LinearFamilyOptions{}});
+
+  std::cout << "classifier task_kind == Classification: " << std::boolalpha
+            << (classifier.value()->task_kind() == cls::TaskKind::Classification) << "\n";
+  std::cout << "regressor task_kind == Regression: "
+            << (regressor.value()->task_kind() == cls::TaskKind::Regression) << "\n";
 
   return 0;
 }
@@ -57,27 +63,38 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+classifier task_kind == Classification: true
+regressor task_kind == Regression: true
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+`task_kind()` does not change across `learn` — it reflects the estimator's
+fixed type, not anything learned from data.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> made =
+      cls::make_regressor(cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear,
+                                         cls::LinearFamilyOptions{}});
+  const cls::TaskKind before = made.value()->task_kind();
+
+  cls::LabeledBatch batch{};
+  batch.features.x = pluss::make_series({1.0, 2.0}, {2}, f64).reshape({2, 1});
+  batch.y = pluss::make_series({2.0, 4.0}, {2}, f64);
+  made.value()->learn(batch);
+  const cls::TaskKind after = made.value()->task_kind();
+
+  std::cout << "same before and after learn = " << std::boolalpha << (before == after) << "\n";
 
   return 0;
 }
@@ -86,27 +103,38 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+same before and after learn = true
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Using `task_kind()` to branch generically over an `EstimatorBase`-family
+pointer without knowing the concrete family ahead of time.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  auto describe = [](cls::TaskKind kind) {
+    switch (kind) {
+      case cls::TaskKind::Classification: return "classification";
+      case cls::TaskKind::Regression: return "regression";
+      case cls::TaskKind::Transform: return "transform";
+    }
+    return "unknown";
+  };
+
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Hinge;
+  cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
+      cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+
+  std::cout << "this estimator solves a " << describe(made.value()->task_kind()) << " problem\n";
 
   return 0;
 }
@@ -115,12 +143,14 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+this estimator solves a classification problem
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`ClassifierBase`](../ClassifierBase.md) / [`RegressorBase`](../RegressorBase.md) —
+  which `task_kind()` each always returns.
+- [`trained`](trained.md) — the other fixed-vs-mutable state query.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

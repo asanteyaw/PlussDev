@@ -28,6 +28,11 @@ struct SVDResult {
   Series Vh;
 };
 
+struct EighResult {
+  Series eigenvalues;   // ascending, shape (n,)
+  Series eigenvectors;  // columns are eigenvectors, shape (n,n)
+};
+
 inline SVDResult svd(const Series& a, bool full_matrices);
 
 namespace detail {
@@ -1072,6 +1077,47 @@ inline SVDResult svd(const Series& a, bool full_matrices = true) {
       detail::matrix_from_row_major_(detail::col_to_row_major_(vtcol, vt_rows, n), vt_rows, n)};
 #else
   ::pluss::throw_error("subsp::math::linalg::svd: LAPACK path unavailable on this platform");
+#endif
+}
+
+// Symmetric eigendecomposition: a = eigenvectors * diag(eigenvalues) * eigenvectors^T,
+// with eigenvalues in ascending order (matches LAPACK dsyev / numpy / torch linalg.eigh
+// convention). Only the triangle named by `upper` is read; the other is ignored, exactly
+// like cholesky(). Complex input is not supported (L-SR1's compact SR1 representation only
+// ever needs the spectrum of small real symmetric matrices).
+inline EighResult eigh(const Series& a, bool upper = false) {
+  detail::require_square_(a, "subsp::math::linalg::eigh");
+  if (detail::is_complex_(a)) {
+    ::pluss::throw_error("subsp::math::linalg::eigh: complex input not supported");
+  }
+  const auto n64 = a.sizes()[0];
+#if defined(__APPLE__)
+  int n = static_cast<int>(n64);
+  auto row = detail::to_row_major_f64_(a);
+  auto col = detail::row_to_col_major_(row, n, n);
+  char jobz = 'V';
+  char uplo = upper ? 'U' : 'L';
+  std::vector<double> w(static_cast<std::size_t>(n), 0.0);
+  int info = 0;
+
+  int lwork = -1;
+  double wkopt = 0.0;
+  dsyev_(&jobz, &uplo, &n, col.data(), &n, w.data(), &wkopt, &lwork, &info);
+  if (info != 0) ::pluss::throw_error("subsp::math::linalg::eigh: dsyev workspace query failed");
+  lwork = std::max(1, static_cast<int>(wkopt));
+  std::vector<double> work(static_cast<std::size_t>(lwork), 0.0);
+  dsyev_(&jobz, &uplo, &n, col.data(), &n, w.data(), work.data(), &lwork, &info);
+  if (info != 0) {
+    ::pluss::throw_error("subsp::math::linalg::eigh: dsyev failed to converge");
+  }
+  // `col` now holds the eigenvectors as columns, in LAPACK's column-major layout.
+  return EighResult{
+      detail::vector_from_values_(w),
+      detail::matrix_from_row_major_(detail::col_to_row_major_(col, n, n), n, n)};
+#else
+  (void)upper;
+  (void)n64;
+  ::pluss::throw_error("subsp::math::linalg::eigh: LAPACK path unavailable on this platform");
 #endif
 }
 

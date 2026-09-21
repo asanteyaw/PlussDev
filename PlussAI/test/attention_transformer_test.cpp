@@ -90,6 +90,59 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  // Value-level regression guard: every other check in this function is
+  // shape-only (or a self-consistency check like the row-sum-to-1 above),
+  // which can't catch a wrong-but-same-shaped computation -- exactly the
+  // class of bug found and fixed in conv2d_impl_'s patch extraction (see
+  // conv_test.cpp's multi-channel case). multihead_attention's head-split/
+  // merge (reshape+transpose) was checked directly against an independent
+  // reference implementation with target_len != source_len (to also catch
+  // a target/source axis mixup) and matched to machine precision, so this
+  // pins down the exact values from that check as a literal expected
+  // result -- deterministic, no RNG, so it stays reproducible without
+  // needing that external reference at test time.
+  {
+    const Series mv_q = pluss::make_series(std::vector<double>{0.1, 0.2, 0.3, 0.4, -0.1, 0.5, 0.2, -0.3}, {1, 2, 4}, cfg);
+    const Series mv_k = pluss::make_series(std::vector<double>{0.2, -0.1, 0.4, 0.1, 0.3, 0.2, -0.2, 0.5}, {1, 2, 4}, cfg);
+    const Series mv_v = pluss::make_series(std::vector<double>{1.0, 0.5, -0.5, 1.5, 0.2, -0.2, 0.8, 0.3}, {1, 2, 4}, cfg);
+    const Series mv_wq = pluss::make_series(
+        std::vector<double>{0.1, 0.2, -0.1, 0.3, 0.2, -0.2, 0.4, 0.1, -0.3, 0.1, 0.2, 0.4, 0.1, -0.1, 0.3, 0.2}, {4, 4}, cfg);
+    const Series mv_wk = pluss::make_series(
+        std::vector<double>{0.2, 0.1, 0.3, -0.1, 0.1, 0.4, -0.2, 0.2, 0.3, -0.1, 0.1, 0.2, -0.2, 0.3, 0.1, 0.1}, {4, 4}, cfg);
+    const Series mv_wv = pluss::make_series(
+        std::vector<double>{0.3, -0.2, 0.1, 0.2, 0.1, 0.3, 0.2, -0.1, -0.1, 0.2, 0.3, 0.1, 0.2, 0.1, -0.2, 0.3}, {4, 4}, cfg);
+    const Series mv_wo = pluss::make_series(
+        std::vector<double>{0.1, 0.3, -0.2, 0.1, 0.2, -0.1, 0.3, 0.2, -0.1, 0.2, 0.1, 0.3, 0.3, 0.1, -0.1, 0.2}, {4, 4}, cfg);
+    pluss::MultiheadWeights mv_weights{.q_weight = mv_wq, .k_weight = mv_wk, .v_weight = mv_wv, .out_weight = mv_wo};
+    pluss::MultiheadOptions mv_opts{
+        .num_heads = 2,
+        .batch_first = true,
+        .average_weights = false,
+        .attention = pluss::AttentionOptions{.dropout = 0.0, .training = false, .causal = false, .scale = 0.0, .seed = 0},
+    };
+    const auto [mv_out, mv_w] = pluss::multihead_attention(mv_q, mv_k, mv_v, mv_weights, mv_opts);
+    const std::vector<double> expected_out{
+        0.064249862178061, 0.170567291658355, 0.097149769912421, 0.171874252878933,
+        0.064546457228141, 0.171234349971743, 0.097488281854749, 0.172789345016007};
+    const std::vector<double> expected_weights{
+        0.496040284809455, 0.503959715190545, 0.503482444584946, 0.496517555415054,
+        0.497843337692265, 0.502156662307735, 0.500530329887016, 0.499469670112984};
+    const auto got_out = mv_out.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    const auto got_weights = mv_w.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+    for (std::size_t i = 0; i < expected_out.size(); ++i) {
+      if (!approx(got_out[i], expected_out[i], 1e-9)) {
+        if (err) *err << "multihead_attention value regression mismatch (out)\n";
+        return false;
+      }
+    }
+    for (std::size_t i = 0; i < expected_weights.size(); ++i) {
+      if (!approx(got_weights[i], expected_weights[i], 1e-9)) {
+        if (err) *err << "multihead_attention value regression mismatch (weights)\n";
+        return false;
+      }
+    }
+  }
+
   const Series wq = pluss::series::rand({8, 8}, cfg, 73ULL);
   const Series wk = pluss::series::rand({8, 8}, cfg, 79ULL);
   const Series wv = pluss::series::rand({8, 8}, cfg, 83ULL);

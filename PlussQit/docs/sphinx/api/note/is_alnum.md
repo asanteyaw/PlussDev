@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_alnum() const
+Note Note::is_alnum() const
 ```
 
 ## Test Whether Every Character In A Cell Is A Letter Or Digit
@@ -22,8 +22,8 @@ letter fails the cell. An **empty cell is `0`**, consistent with the rest of the
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -32,8 +32,8 @@ const auto n = pluss::make_note(
     {"abc", "abc123", "123", "abc_123", "", "a b"});
 const auto mask = n.is_alnum();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -55,9 +55,9 @@ space — all `0`.
   rather than "is all".
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="intersect_tokens.html">
+  <a class="prev-link" href="integers.html">
     <span class="label">Previous</span>
-    <span class="title">intersect_tokens</span>
+    <span class="title">integers</span>
   </a>
   <a class="next-link" href="is_alpha.html">
     <span class="label">Next</span>

@@ -1,54 +1,83 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 263fb921f896 -->
 # `pluss::ai::classic::Flow::add_named_transform`
 
-[Back to `pluss::ai::classic::Flow`](../Flow.md)
+`add_named_transform` is the single dynamic form every typed convenience
+method on [`add_stage`](add_stage.md) forwards to: a `TransformKind` value
+plus its matching `TransformOptions`, rather than a named method per kind.
+Reach for it when the stage kind is not known at compile time — read from
+configuration, built in a loop over a list of kinds — otherwise the typed
+methods on [`add_stage`](add_stage.md) are more readable for a kind you
+already know by name.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+classic::Status classic::Flow::add_named_transform(
+    classic::TransformKind kind,
+    const classic::TransformOptions& options,
+    std::string stage_key = {},
+    /* feature indices */ feature_route = {},
+    classic::RouteRemainderPolicy remainder = classic::RouteRemainderPolicy::PassThrough);
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`kind` — `TransformKind`
+: Which [`prep`](../../prep.md) stage to add. See [`TransformSpec`](../TransformSpec.md#signature)
+  for the full list of values.
+
+`options` — `TransformOptions`
+: The matching options struct, held in the `TransformOptions` variant —
+  construct the concrete struct (`prep::StandardScalerOptions{}`, …) and it
+  converts implicitly. Passing an `options` alternative that does not match
+  `kind` fails (see Errors).
+
+`stage_key` — `std::string`, default `""`
+: An optional name for the stage — see [`TransformSpec::stage_key`](../TransformSpec.md#state).
+
+`feature_route`, default every column
+: As every `add_*` method — the 0-based column indices this stage sees.
+
+`remainder` — `RouteRemainderPolicy`, default `PassThrough`
+: Unlike the twenty typed methods on [`add_stage`](add_stage.md), this form
+  lets you set `Drop` directly, without a follow-up
+  [`set_stage_remainder`](set_stage_remainder.md) call.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+A `Status`. `.ok()` on success; the stage is appended and
+[`stage_count()`](../Flow.md#state) increases by one.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+- `Status::invalid_argument` — `options` holds an alternative that does not
+  match `kind`.
+- The same feature-route validity caveat as [`add_stage`](add_stage.md#errors).
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+Building a stage from a `kind` value read as if from configuration, rather
+than naming the typed method directly.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const cls::TransformKind kind = cls::TransformKind::StandardScaler;  // "read from configuration"
+  const cls::TransformOptions options = cls::prep::StandardScalerOptions{};
+
+  cls::Flow flow{};
+  const cls::Status s = flow.add_named_transform(kind, options);
+  std::cout << "ok = " << std::boolalpha << s.ok() << "\n";
+  std::cout << "stage_count() = " << flow.stage_count() << "\n";
 
   return 0;
 }
@@ -57,27 +86,33 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok = true
+stage_count() = 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+`remainder = Drop` — a column not named by the route is removed from the
+flow's output entirely, which none of the typed `add_stage` methods can do
+directly.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow{};
+  flow.add_named_transform(cls::TransformKind::StandardScaler, cls::prep::StandardScalerOptions{},
+                           "scale_col0", {0}, cls::RouteRemainderPolicy::Drop);
+
+  const cls::TransformSpec& spec = flow.transform_specs().front();
+  std::cout << "stage_key = " << spec.stage_key << "\n";
+  std::cout << "remainder == Drop: " << std::boolalpha
+            << (spec.remainder == cls::RouteRemainderPolicy::Drop) << "\n";
 
   return 0;
 }
@@ -86,27 +121,29 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+stage_key = scale_col0
+remainder == Drop: true
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+A `kind` / `options` mismatch — passing `OneHotEncoderOptions` for
+`TransformKind::StandardScaler`.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow{};
+  const cls::Status s = flow.add_named_transform(
+      cls::TransformKind::StandardScaler, cls::prep::OneHotEncoderOptions{});
+  std::cout << "ok = " << std::boolalpha << s.ok() << "\n";
+  std::cout << "message = \"" << s.message << "\"\n";
 
   return 0;
 }
@@ -115,12 +152,16 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok = false
+message = "Flow::add_named_transform: options does not match kind=standard_scaler."
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`add_stage`](add_stage.md) — the twenty typed spellings of this same call.
+- [`add_column_stage`](add_column_stage.md) — the same, with `stage_key` as
+  the first parameter instead of a trailing default.
+- [`TransformSpec`](../TransformSpec.md) — what each call appends.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

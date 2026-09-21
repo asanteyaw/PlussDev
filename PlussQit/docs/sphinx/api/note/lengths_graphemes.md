@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::int64_t> Note::lengths_graphemes() const
+Note Note::lengths_graphemes() const
 ```
 
 ## Measure Every Cell In Grapheme Clusters
@@ -31,8 +31,8 @@ count.
 
 ### Return value
 
-Not a `Note`: a flat `std::vector<std::int64_t>` with one entry per cell, in
-row-major order, length `numel()`. An empty cell measures `0`.
+An Int64 `Note` with the receiver's shape, one native count per cell. An empty
+cell measures `0`; `integers()` exposes a borrowed contiguous host view.
 
 ## Example 1: A Combining Mark Counts As One
 
@@ -41,8 +41,8 @@ const std::string e_acute = "e\xCC\x81";  // "e" + U+0301
 const auto lens =
     pluss::make_note({e_acute, "abc"}).lengths_graphemes();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -76,8 +76,8 @@ Same cell: 2 code points, 1 grapheme.
 const auto lens =
     pluss::make_note({"café", "日本語"}).lengths_graphemes();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 

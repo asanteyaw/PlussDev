@@ -1,0 +1,38 @@
+=== undefined and empty ===
+absent: defined=false dim=0 numel=0 empty=true scalar=false
+empty: defined=true dim=2 numel=0 empty=true shape=[2, 0]
+undefined dtype: rejected
+copied defined=false
+
+=== debug states ===
+Note(undefined)
+Note(shape=[3], dim=1, numel=3, encoding=utf8, values=["alpha", "line\n\"q\"", ...])
+Note(shape=[3], dim=1, numel=3, dtype=Int64, values=[-2, 0, 7])
+Note(shape=[2], dim=1, numel=2, dtype=Bool, values=[true, false])
+Note(shape=[2], dim=1, numel=2, dtype=Float64, values=[-0, 1.25])
+Note(shape=[3], dim=1, numel=3, encoding=utf8, values=[...])
+Note(shape=[3], dim=1, numel=3, encoding=utf8, values=[...])
+Note(shape=[1], dim=1, numel=1, encoding=bytes, values=["A\x00\xFF"])
+
+=== pack envelope ===
+magic=PNOT version=1 rank=2 bytes=72
+restored=Note(shape=[2, 2], dim=2, numel=4, dtype=Int64)
+[
+  [-1, 0], 
+  [7, 9]
+]
+undefined bytes=40 restored-defined=false
+empty bytes=40 shape=[2, 0]
+float bits=0x8000000000000000,0x7ff8000000000000
+
+=== split chars ===
+tokens=Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["A", "é", "🙂", "H", "i"]
+offsets=[0, 3, 5]
+row 0: ["A", "é", "🙂"]
+row 1: ["H", "i"]
+decomposed token-count=2 byte-lengths=1,2
+grid source-shape=[2, 2] offsets=0 2 2 3 5 
+undefined batch=true tokens-defined=false offset=0
+Bytes split: rejected
+Int64 split: rejected

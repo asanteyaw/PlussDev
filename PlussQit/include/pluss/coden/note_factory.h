@@ -5,6 +5,7 @@
 #include <concepts>
 #include <cctype>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <iomanip>
@@ -53,6 +54,10 @@
 // This collapses what was previously 12 make_note overloads (and 7
 // bytes_content + 3 make_bytes_note overloads) down to 3 each.
 namespace pluss::note {
+
+// Reconstruct a Note produced by Note::pack(). The decoder validates the
+// complete envelope and rejects unsupported versions and trailing bytes.
+CODEN_API pluss::Note unpack(std::span<const std::byte> encoded);
 
 namespace typed_detail {
 

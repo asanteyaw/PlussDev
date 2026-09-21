@@ -7,10 +7,12 @@
 
 ```cpp
 Note Note::take(pluss::RangeView<std::int64_t> indices) const
+Note Note::take(const Note& indices) const
 ```
 
-`indices` accepts a braced list `{0, 2, 4}`, a `std::vector<std::int64_t>`, a
-`std::array`, or a `std::span`.
+The range overload accepts a braced list `{0, 2, 4}`, a
+`std::vector<std::int64_t>`, a `std::array`, or a `std::span`. The closed
+overload accepts an Int64 `Note`, including the direct result of `argsort()`.
 
 ## Gather Cells By An Index List
 
@@ -21,9 +23,10 @@ which take a contiguous slab along one axis, `take` picks arbitrary
 positions — so it can also **reorder**, **repeat**, **filter**, or
 **subsample** cells in a single call.
 
-Nothing about the text changes: the picked cells are shared with the source,
-the [bytes-vs-UTF-8](is_bytes.md) mode carries over, and the cost is
-`O(len(indices))`.
+The receiver may use any Note dtype. Text and Bytes results share the packed
+source arena and allocate only new span metadata; Bool, Int64, and Float64
+results allocate one aligned lane buffer and copy the selected native values.
+The dtype always carries over, and the cost is `O(len(indices))`.
 
 ### `indices`
 
@@ -36,6 +39,8 @@ the [bytes-vs-UTF-8](is_bytes.md) mode carries over, and the cost is
 - Indices may **repeat** and appear in **any order** — the result mirrors the
   list exactly.
 - An **empty** `indices` returns a rank-1 `Note` of length 0.
+- An index Note must be defined and Int64. Its own rank is immaterial because
+  its lanes are consumed in flat row-major order.
 
 ## Example 1: Gather A Subset
 
@@ -141,6 +146,32 @@ try {
 Note::take index out of range
 ```
 
+## Example 7: Keep Sorting Inside The Note Family
+
+```cpp
+const auto values = pluss::note::make({"delta", "alpha", "charlie", "bravo"});
+const pluss::Note order = values.argsort();
+const pluss::Note sorted = values.take(order);
+
+std::cout << pluss::note::print(order) << '\n';
+std::cout << pluss::note::print(sorted) << '\n';
+```
+
+### Output
+
+```text
+Note(shape=[4], dim=1, numel=4, dtype=Int64)
+[1, 3, 2, 0]
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["alpha", "bravo", "charlie", "delta"]
+```
+
+No `.integers()` extraction is required: the ordering remains an Int64 Note
+until `take()` consumes it.
+
+Passing a Bool, Text, Bytes, or Float64 Note as `indices` throws before the
+receiver is read.
+
 ## See Also
 
 - [`Note::select`](select.md): one slab along one axis, that axis dropped.
@@ -153,8 +184,8 @@ Note::take index out of range
     <span class="label">Previous</span>
     <span class="title">swapcase</span>
   </a>
-  <a class="next-link" href="tensor3.html">
+  <a class="next-link" href="tex.html">
     <span class="label">Next</span>
-    <span class="title">tensor3</span>
+    <span class="title">tex</span>
   </a>
 </div>

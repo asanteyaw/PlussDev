@@ -101,6 +101,23 @@ std::pair<Series, Series> make_fusion_data() {
   };
 }
 
+std::pair<Series, Series> make_embedding_data() {
+  constexpr std::int64_t cardinality = 12;
+  constexpr std::int64_t batch = 24;
+  std::vector<float> xbuf(static_cast<std::size_t>(batch));
+  std::vector<float> ybuf(static_cast<std::size_t>(batch));
+  for (std::int64_t i = 0; i < batch; ++i) {
+    const std::int64_t code = i % cardinality;
+    const float c = static_cast<float>(code);
+    xbuf[static_cast<std::size_t>(i)] = c;
+    ybuf[static_cast<std::size_t>(i)] = std::sin(0.35f * c) + 0.15f * std::cos(0.7f * c);
+  }
+  return {
+      pluss::make_series(xbuf, {batch}, f32_cpu()),
+      pluss::make_series(ybuf, {batch, 1}, f32_cpu()),
+  };
+}
+
 std::pair<Series, Series> make_sequence_data() {
   constexpr std::int64_t batch = 10;
   constexpr std::int64_t steps = 7;
@@ -289,6 +306,31 @@ std::pair<Series, Series> make_transformer_data() {
   const Series src = pluss::make_series(values, {batch, seq, d_model}, f32_cpu());
   return {src, src};
 }
+
+struct EmbeddingProjectorImpl final : pluss::nn::Module {
+  pluss::nn::Embedding embedding;
+  pluss::nn::Fusion head;
+
+  explicit EmbeddingProjectorImpl(const Config& cfg)
+      : Module(true),
+        embedding(pluss::nn::EmbeddingOptions{
+            .cardinality = 12,
+            .hidden_size = 6,
+            .cfg = cfg,
+            .seed = 211ULL,
+        }),
+        head(6, 1, true, cfg, 213ULL) {
+    module_record("embedding", embedding);
+    module_record("head", head);
+  }
+
+  Series forward(const Series& index) const {
+    const Series looked_up = embedding->forward(index);
+    return head->forward(looked_up);
+  }
+};
+
+PLUSS_MODULE(EmbeddingProjector);
 
 struct RNNProjectorImpl final : pluss::nn::Module {
   pluss::nn::RNN rnn;
@@ -653,6 +695,13 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
         .then("activation", pluss::nn::Tanh())
         .then("fusion1", pluss::nn::Fusion(8, 1, true, cfg, 13ULL));
     if (!train_schedule_case("Schedule<Fusion>", model, x, y, 12, 2e-2, err)) return false;
+  }
+
+  {
+    const auto [x, y] = make_embedding_data();
+    pluss::nn::Schedule model;
+    model->then("embedding", EmbeddingProjector(cfg));
+    if (!train_schedule_case("Schedule<Embedding>", model, x, y, 12, 3e-2, err)) return false;
   }
 
   {

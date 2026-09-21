@@ -2086,18 +2086,6 @@ methods:
     signature: "Series& index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce, bool include_self) const"
     forward: "dim, index, source, reduce, include_self"
 
-  - name: elu
-    signature: "Series elu() const"
-    forward: ""
-
-  - name: elu
-    signature: "Series elu(double alpha) const"
-    forward: "alpha"
-
-  - name: elu
-    signature: "Series elu(double alpha, double scale, double input_scale) const"
-    forward: "alpha, scale, input_scale"
-
   - name: elu_
     signature: "Series& elu_() const"
     forward: ""
@@ -2110,14 +2098,6 @@ methods:
     signature: "Series& elu_(double alpha, double scale, double input_scale) const"
     forward: "alpha, scale, input_scale"
 
-  - name: celu
-    signature: "Series celu() const"
-    forward: ""
-
-  - name: celu
-    signature: "Series celu(double alpha) const"
-    forward: "alpha"
-
   - name: celu_
     signature: "Series& celu_() const"
     forward: ""
@@ -2126,57 +2106,25 @@ methods:
     signature: "Series& celu_(double alpha) const"
     forward: "alpha"
 
-  - name: selu
-    signature: "Series selu() const"
-    forward: ""
-
   - name: selu_
     signature: "Series& selu_() const"
-    forward: ""
-
-  - name: hardsigmoid
-    signature: "Series hardsigmoid() const"
     forward: ""
 
   - name: hardsigmoid_
     signature: "Series& hardsigmoid_() const"
     forward: ""
 
-  - name: hardswish
-    signature: "Series hardswish() const"
-    forward: ""
-
   - name: hardswish_
     signature: "Series& hardswish_() const"
-    forward: ""
-
-  - name: mish
-    signature: "Series mish() const"
     forward: ""
 
   - name: mish_
     signature: "Series& mish_() const"
     forward: ""
 
-  - name: threshold
-    signature: "Series threshold(double threshold_val, double value) const"
-    forward: "threshold_val, value"
-
   - name: threshold_
     signature: "Series& threshold_(double threshold_val, double value) const"
     forward: "threshold_val, value"
-
-  - name: rrelu
-    signature: "Series rrelu(bool training) const"
-    forward: "training"
-
-  - name: rrelu
-    signature: "Series rrelu(double lower, double upper) const"
-    forward: "lower, upper"
-
-  - name: rrelu
-    signature: "Series rrelu(double lower, double upper, bool training) const"
-    forward: "lower, upper, training"
 
   - name: rrelu_
     signature: "Series& rrelu_(bool training) const"
@@ -2715,6 +2663,21 @@ skip_methods:
   - bitwise_not
   - ceil
   - ceil_
+  # Activation family: hand-declared in Series.h with default arguments
+  # (e.g. `celu(double alpha = 1.0)`), so one declaration already covers
+  # every arity the generator used to split into separate overloads.
+  # Discovered when regenerating SeriesMethodsGen.h from scratch produced
+  # "class member cannot be redeclared" against these exact Series.h
+  # declarations (in-place `_` variants are NOT hand-declared, so those
+  # stay generated -- only the const/non-inplace names move here).
+  - celu
+  - elu
+  - hardsigmoid
+  - hardswish
+  - mish
+  - rrelu
+  - selu
+  - threshold
   - cos
   - cos_
   - cosh

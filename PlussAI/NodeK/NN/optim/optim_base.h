@@ -7,6 +7,7 @@
 #include "pluss/nn_detail.h"
 
 #include <algorithm>
+#include <complex>
 #include <concepts>
 #include <cmath>
 #include <cstddef>
@@ -219,13 +220,28 @@ protected:
     }
 
     if (clip.mode == GradientClipMode::ByValue) {
+      // Elementwise clamp needs a total order over the gradient's own
+      // values, which complex numbers don't have -- Series::clamp already
+      // rejects complex with a clear message (matches libtorch's own
+      // clip_grad_value_, verified live to fail identically: "clamp is not
+      // supported for complex types"), so this is a correct, deliberate
+      // limitation to propagate, not something to work around here.
       return g.clamp(-clip.threshold, clip.threshold);
     }
 
-    const Series norm = g.square().sum().sqrt();
-    const Series one = scalar_on_(1.0, g);
+    // ByNorm never needs to ORDER the (possibly complex) gradient values
+    // themselves -- it reduces to a real, non-negative scalar (the norm)
+    // and scales `g` by a real factor, which is why libtorch's own
+    // clip_grad_norm_ supports complex gradients (verified live) even
+    // though clip_grad_value_ does not. abs2() (|g|^2, real-valued even for
+    // complex g) in place of square() (g^2, itself complex and NOT the
+    // magnitude) is the only change needed; for a real g, abs(g)^2 == g^2
+    // exactly (abs() is a sign-bit no-op on IEEE floats), so this is a
+    // behavior-preserving generalization, not a special case.
+    const Series norm = g.abs2().sum().sqrt();
+    const Series one = scalar_on_(1.0, norm);
     const Series max_scale =
-        scalar_on_(clip.threshold, g).div(norm.add(scalar_on_(clip.epsilon, g)));
+        scalar_on_(clip.threshold, norm).div(norm.add(scalar_on_(clip.epsilon, norm)));
     const Series scale = max_scale.minimum(one);
     return g.mul(scale);
   }
@@ -407,6 +423,76 @@ protected:
     return Series::full({}, value, like.scalar_type(), like.platform());
   }
 
+  static bool is_complex_(const Series& x) {
+    return x.defined() && pluss::codem::dtype_of(x.scalar_type()).is_complex();
+  }
+
+  // Pluss's counterpart to torch's `torch.view_as_real`: reinterpret a
+  // complex Series as a real one with a NEW trailing dimension of size 2
+  // (index 0 = real part, index 1 = imaginary part), so every concrete
+  // optimizer's existing (already Float64-verified, dtype-generic) formula
+  // runs completely unchanged and applies independently to the real and
+  // imaginary channels -- exactly torch's own approach for complex
+  // parameters (verified by reading tools/optim/adam.py etc. in the local
+  // PyTorch checkout: `_view_as_real` is called on param/grad/exp_avg/
+  // exp_avg_sq/max_exp_avg_sqs before running the ordinary real update,
+  // because a complex gradient's second-moment estimate needs
+  // real(g)^2 and imag(g)^2 tracked SEPARATELY -- not |g|^2, which mixes
+  // them, and not g^2, which is itself complex).
+  //
+  // Real (non-complex) input passes through unchanged, so call sites don't
+  // need to branch.
+  //
+  // UNLIKE torch's `view_as_real` (a true zero-copy view -- std::complex<T>
+  // and T[2] share layout, so aliasing is possible in principle), this is a
+  // COPY: CodeM has no reinterpret-cast-dtype view primitive today. Adding
+  // one would be a real, separate CodeM-level engineering project (storage/
+  // stride semantics, autodiff through a reinterpreted dtype boundary, and
+  // per-backend layout for MPS/CUDA) -- deliberately out of scope here.
+  // This still reaches the numerically identical values torch's view
+  // approach does, at the cost of `real()`/`imag()` extraction and a
+  // reconstruction on the way back (see view_as_complex_below) instead of a
+  // free reinterpretation. `assign_parameter_`'s own final write is
+  // similarly not the perf-critical path (once per step per parameter);
+  // the actual moment-buffer arithmetic still runs entirely in the tracked/
+  // fast Series primitives either way, just doubled in count (one real op
+  // per real op that used to run once on the complex value).
+  static Series view_as_real_(const Series& x) {
+    if (!is_complex_(x)) return x;
+    const Series re = x.real();
+    const Series im = x.imag();
+    return re.pile(std::vector<Series>{im}, re.dim());
+  }
+
+  // Inverse of view_as_real_: given a real Series shaped [..., 2] (as
+  // produced by view_as_real_) and the ORIGINAL complex dtype, reconstruct
+  // the complex Series. `original_dtype` not being complex means the value
+  // was never converted in the first place (view_as_real_ passed it
+  // through) -- returns it unchanged, matching that symmetry.
+  static Series view_as_complex_(const Series& real_view, ScalarType original_dtype) {
+    // An undefined state buffer (e.g. RMSprop's momentum_buffer_/grad_avg_
+    // when momentum==0/centered==false, never allocated) stays undefined
+    // regardless of the parameter's own dtype -- view_as_real_ already
+    // passes an undefined Series through unchanged, so this must too rather
+    // than dereference it below.
+    if (!real_view.defined()) return real_view;
+    if (!pluss::codem::dtype_of(original_dtype).is_complex()) return real_view;
+    const std::int64_t last = real_view.dim() - 1;
+    const Series re = real_view.select(last, 0);
+    const Series im = real_view.select(last, 1);
+    // No public "construct complex from real+imag parts" entry point
+    // (CodeM's own complex_from_parts is internal-only), so build it from
+    // ordinary arithmetic instead: casting a real Series to a complex dtype
+    // embeds it with zero imaginary part, so `im_as_complex * i` isolates
+    // `im` into the imaginary slot, and adding the (zero-imaginary) real
+    // part recombines them exactly.
+    const Series i_unit =
+        pluss::make_series(std::vector<std::complex<double>>{{0.0, 1.0}}, {})
+            .to(original_dtype)
+            .to(re.platform());
+    return re.to(original_dtype).add(im.to(original_dtype).mul(i_unit));
+  }
+
   static Series state_zeros_like_(const Series& like) {
     return pluss::series::zeros_like(like, like.scalar_type());
   }
@@ -506,7 +592,10 @@ private:
   }
 
   static bool has_non_finite_(const Series& x) {
-    const Series finite_all = x.isfinite().all();
+    // Same reasoning as Minimax::finite_series_: `isfinite()` has no
+    // complex-dtype implementation, so check the real/imaginary channels
+    // independently via view_as_real_ (a no-op for a real-valued x).
+    const Series finite_all = view_as_real_(x).isfinite().all();
     if (finite_all.platform() == pluss::pCUDA && !pluss::cuda::cpu_bridge_enabled()) {
       ::pluss::throw_error(
           "pluss::ai::nn::optim::Optimizer: non-finite CUDA diagnostics require explicit CPU scalar "
@@ -526,13 +615,22 @@ private:
         ::pluss::throw_error(
             "pluss::ai::nn::optim::Optimizer: expected defined parameter Series for " + label);
       }
-      if (!pluss::codem::dtype_of(p->scalar_type()).is_floating()) {
+      // Parameters may be floating OR complex (matching real torch: its
+      // Adam/AdamW/RMSprop/NAdam/Adagrad/SGD all accept complex
+      // Parameters, verified live). The LOSS a closure returns is a
+      // separate, narrower check (require_training_float_dtype_, real-only
+      // -- see Optimizer::step(closure)): a loss has to be real for
+      // "minimize" to have a direction, even when the parameters producing
+      // it are complex.
+      const auto dtype = pluss::codem::dtype_of(p->scalar_type());
+      if (!dtype.is_floating() && !dtype.is_complex()) {
         ::pluss::throw_error(
-            "pluss::ai::nn::optim::Optimizer: expected floating dtype parameter for " + label);
+            "pluss::ai::nn::optim::Optimizer: expected floating or complex dtype parameter for " + label);
       }
-      if (!::pluss::detail::nn::is_training_float_dtype_(p->scalar_type())) {
+      if (!::pluss::detail::nn::is_training_numeric_dtype_(p->scalar_type())) {
         ::pluss::throw_error(
-            "pluss::ai::nn::optim::Optimizer: training expects Float32/Float16/BFloat16 parameters; got unsupported dtype for " +
+            "pluss::ai::nn::optim::Optimizer: training expects Float32/Float16/BFloat16/Float64/Complex64/Complex128 "
+            "parameters; got unsupported dtype for " +
             label);
       }
       if (!p->tracks_slope()) {

@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=41aa11a5"></script>
+    <script src="_static/api_nav.js?v=cf848246"></script>
     <script src="_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -116,10 +116,11 @@ implementation review.</p>
 <h2>Public Presentation<a class="headerlink" href="#public-presentation" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Use canonical public names; never leak internal namespace or adapter names.</p></li>
-<li><p>Keep public callable names to at most three underscore-separated semantic
-components. Prefer short domain terms such as <code class="docutils literal notranslate"><span class="pre">ticks()</span></code> over implementation-
-shaped names such as <code class="docutils literal notranslate"><span class="pre">ticks()</span></code>. Descriptive internal kernel
-names are exempt. Rename directly rather than retaining a compatibility alias.</p></li>
+<li><p>Keep public callable names to at most three spoken syllables, and never use
+more than three underscore-separated semantic components. Prefer compact
+domain terms such as <code class="docutils literal notranslate"><span class="pre">frac_slash()</span></code>, <code class="docutils literal notranslate"><span class="pre">pm_signs()</span></code>, and <code class="docutils literal notranslate"><span class="pre">sqrt_pow()</span></code> over
+implementation-shaped conversion phrases. Descriptive internal kernel names
+are exempt. Rename directly rather than retaining a compatibility alias.</p></li>
 <li><p>Put the return type first in C++ signatures.</p></li>
 <li><p>Present option/configuration structures as tables with at least field,
 meaning, and default columns. Add an applicability column when fields affect
@@ -227,6 +228,8 @@ warnings were introduced.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

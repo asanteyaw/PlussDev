@@ -70,9 +70,9 @@ Only the first `-` is removed; [`remove_all("-")`](remove_all.md) would give
   [`Note::remove_suffix`](remove_suffix.md): delete at a boundary only.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="regex_search.html">
+  <a class="prev-link" href="regex.html">
     <span class="label">Previous</span>
-    <span class="title">regex_search</span>
+    <span class="title">regex</span>
   </a>
   <a class="next-link" href="remove_all.html">
     <span class="label">Next</span>

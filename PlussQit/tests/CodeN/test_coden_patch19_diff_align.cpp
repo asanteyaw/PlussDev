@@ -17,7 +17,7 @@ TEST_CASE("CodeN diff family uses concrete sequence diff", "[coden][patch19]") {
   pluss::Note a = pluss::make_note("alpha beta gamma");
   pluss::Note b = pluss::make_note("alpha theta gamma delta");
 
-  auto dw = a.diff_words(b);
+  auto dw = a.nlp().diff_words(b);
   REQUIRE(has_token(dw.tokens(), "-beta"));
   REQUIRE(has_token(dw.tokens(), "+theta"));
   REQUIRE(has_token(dw.tokens(), "+delta"));
@@ -27,7 +27,7 @@ TEST_CASE("CodeN align family emits tagged LCS alignment", "[coden][patch19]") {
   pluss::Note a = pluss::make_note("One. Two!");
   pluss::Note b = pluss::make_note("One. Three! Two!");
 
-  auto sent = a.align_sentences(b);
+  auto sent = a.nlp().align_sentences(b);
   REQUIRE(has_token(sent.tokens(), "=One."));
   REQUIRE(has_token(sent.tokens(), "=Two!"));
   REQUIRE(has_token(sent.tokens(), "+Three!"));

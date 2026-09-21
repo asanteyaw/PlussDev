@@ -78,9 +78,9 @@ Any text whose characters are all U+0000–U+00FF survives
   UTF-8 to text mode.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="flatten.html">
+  <a class="prev-link" href="for_each_flat.html">
     <span class="label">Previous</span>
-    <span class="title">flatten</span>
+    <span class="title">for_each_flat</span>
   </a>
   <a class="next-link" href="from_windows1252.html">
     <span class="label">Next</span>

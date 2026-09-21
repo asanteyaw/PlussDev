@@ -187,17 +187,30 @@ private:
       if (options.maximize) sensitivity = sensitivity.neg();
 
       Series parameter_value = *param_ptr;
-      const Series lr =
-          options.execution.capturable ? capturable_learning_rate_(group, parameter_value)
-                                       : scalar_on_(lr_value, parameter_value);
-      const Series eps = scalar_on_(options.epsilon, parameter_value);
       if (options.weight_decay != 0.0) {
         sensitivity = sensitivity.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
       }
 
-      sum_square_[i] = sum_square_[i].add(sensitivity.square());
-      const Series update = sensitivity.div(sum_square_[i].sqrt().add(eps));
-      assign_parameter_(*param_ptr, parameter_value.sub(update.mul(lr)));
+      // Complex parameters: view as real with a new trailing [.., 2] dim
+      // (real(g)^2 and imag(g)^2 accumulated independently, matching
+      // torch's own `_view_as_real` in torch/optim/adagrad.py --
+      // capturable mode is rejected for complex above). No-op for real
+      // parameters.
+      const ScalarType original_dtype = parameter_value.scalar_type();
+      sensitivity = view_as_real_(sensitivity);
+      parameter_value = view_as_real_(parameter_value);
+      Series sum_square_value = view_as_real_(sum_square_[i]);
+
+      const Series lr =
+          options.execution.capturable ? capturable_learning_rate_(group, parameter_value)
+                                       : scalar_on_(lr_value, parameter_value);
+      const Series eps = scalar_on_(options.epsilon, parameter_value);
+
+      sum_square_value = sum_square_value.add(sensitivity.abs2());
+      const Series update = sensitivity.div(sum_square_value.sqrt().add(eps));
+
+      sum_square_[i] = view_as_complex_(sum_square_value, original_dtype);
+      assign_parameter_(*param_ptr, view_as_complex_(parameter_value.sub(update.mul(lr)), original_dtype));
     }
   }
 
@@ -239,7 +252,7 @@ private:
       g_batch = g_batch.add(p_batch.mul(scalar_on_(options.weight_decay, p_batch)));
     }
 
-    s_batch = s_batch.add(g_batch.square());
+    s_batch = s_batch.add(g_batch.abs2());
     const Series update = g_batch.div(s_batch.sqrt().add(eps));
     const Series next_batch = p_batch.sub(update.mul(lr));
 
@@ -290,7 +303,7 @@ private:
       g_batch = g_batch.add(p_batch.mul(scalar_on_(options.weight_decay, p_batch)));
     }
 
-    s_batch = s_batch.add(g_batch.square());
+    s_batch = s_batch.add(g_batch.abs2());
     Series denom = s_batch.sqrt();
     denom = denom.add(eps);
     g_batch = g_batch.div(denom);
@@ -416,6 +429,17 @@ private:
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
         ::pluss::throw_error("pluss::ai::nn::optim::Adagrad: capturable mode expects defined group parameters");
+      }
+      // Capturable mode is CUDA-graph-capture oriented (torch itself only
+      // supports it on cuda/xpu/hpu); complex-parameter support in this pass
+      // targets the ordinary Loop lane only (see view_as_real_/
+      // view_as_complex_ in optim_base.h) and was never exercised against
+      // capturable's own per-group bias-correction-power scalars, which are
+      // typed to match the group's parameters. Reject rather than risk a
+      // silently wrong interaction.
+      if (pluss::codem::dtype_of(anchor->scalar_type()).is_complex()) {
+        ::pluss::throw_error(
+            "pluss::ai::nn::optim::Adagrad: capturable mode is not supported for complex parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];

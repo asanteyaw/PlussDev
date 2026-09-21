@@ -115,7 +115,8 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_KERNELFAMILYOPTIONS_1
+c = 0.01 train accuracy: 1
+c = 100  train accuracy: 1
 ```
 
 ## Changelog

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NoteNlpAccessor::diff_words &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="NoteNlpAccessor::emails" href="emails.html" />
+    <link rel="prev" title="NoteNlpAccessor::definitions" href="definitions.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="notenlpaccessor-diff-words">
+<h1>NoteNlpAccessor::diff_words<a class="headerlink" href="#notenlpaccessor-diff-words" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_nlp_accessor_api_reference.html"><span class="doc std std-doc">Back to Note NLP Accessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TokenBatch</span><span class="w"> </span><span class="n">NoteNlpAccessor</span><span class="o">::</span><span class="n">diff_words</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="word-level-difference-between-two-notes">
+<h2>Word-Level Difference Between Two Notes<a class="headerlink" href="#word-level-difference-between-two-notes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">diff_words(other)</span></code> compares each cell of <code class="docutils literal notranslate"><span class="pre">self</span></code> against the matching cell of
+<code class="docutils literal notranslate"><span class="pre">other</span></code> one <strong>word</strong> at a time and returns only the <strong>changes</strong> as a
+<code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> of tag-prefixed tokens. It is the word-granularity member of the
+diff / align family — the change-only counterpart of
+<a class="reference internal" href="align_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_tokens</span></code></span></a>, and a sibling of
+<a class="reference internal" href="../note/diff_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff_lines</span></code></span></a>, <a class="reference internal" href="../note/diff_chars.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff_chars</span></code></span></a>, and
+<a class="reference internal" href="align_sentences.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_sentences</span></code></span></a>.</p>
+<section id="how-the-comparison-works">
+<h3>How the comparison works<a class="headerlink" href="#how-the-comparison-works" title="Link to this heading">¶</a></h3>
+<p>Each cell pair is tokenized into words by the same tokenizer as
+<a class="reference internal" href="tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tokens</span></code></span></a>: a word is a run of ASCII letters and
+digits, with <code class="docutils literal notranslate"><span class="pre">_</span></code>, an interior single <code class="docutils literal notranslate"><span class="pre">-</span></code>/<code class="docutils literal notranslate"><span class="pre">'</span></code>, a trailing <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">#</span></code>, and
+recognized URLs / emails / dotted abbreviations kept whole. <strong>Spaces and
+standalone punctuation are dropped before the comparison</strong> — <code class="docutils literal notranslate"><span class="pre">diff_words</span></code>
+therefore never reports a punctuation-only edit; <code class="docutils literal notranslate"><span class="pre">&quot;stop</span> <span class="pre">here&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&quot;stop,</span> <span class="pre">here!&quot;</span></code> diff to nothing.</p>
+<p>The two word lists are aligned by their <strong>longest common subsequence</strong>, and
+only the differing words are emitted, in order, one per token, tagged in the
+first byte:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Tag</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>In <code class="docutils literal notranslate"><span class="pre">self</span></code></p></th>
+<th class="head"><p>In <code class="docutils literal notranslate"><span class="pre">other</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>removed — word in <code class="docutils literal notranslate"><span class="pre">self</span></code>, not matched in <code class="docutils literal notranslate"><span class="pre">other</span></code></p></td>
+<td><p>yes</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>added — word in <code class="docutils literal notranslate"><span class="pre">other</span></code>, not matched in <code class="docutils literal notranslate"><span class="pre">self</span></code></p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+</tr>
+</tbody>
+</table>
+<p>Words common to both sides produce no token, so a cell with no word-level
+change contributes an <strong>empty range</strong>. A substituted word appears as an
+adjacent <code class="docutils literal notranslate"><span class="pre">-old</span></code> / <code class="docutils literal notranslate"><span class="pre">+new</span></code> pair. For the full transcript that keeps the
+unchanged words as <code class="docutils literal notranslate"><span class="pre">=</span></code> tokens, use <a class="reference internal" href="align_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_tokens</span></code></span></a> — it
+runs the same alignment.</p>
+</section>
+<section id="the-tokenbatch-result">
+<h3>The <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> result<a class="headerlink" href="#the-tokenbatch-result" title="Link to this heading">¶</a></h3>
+<p>Tokens from all cells are concatenated into the rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> Note
+<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>. The rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> Int64 Note <code class="docutils literal notranslate"><span class="pre">batch.offsets()</span></code> has length
+<code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code> and marks each cell’s run: cell <code class="docutils literal notranslate"><span class="pre">r</span></code> owns <code class="docutils literal notranslate"><span class="pre">tokens.at(k)</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span></code>
+in <code class="docutils literal notranslate"><span class="pre">[offsets[r],</span> <span class="pre">offsets[r</span> <span class="pre">+</span> <span class="pre">1])</span></code>. Unchanged cells
+have <code class="docutils literal notranslate"><span class="pre">offsets[r]</span> <span class="pre">==</span> <span class="pre">offsets[r</span> <span class="pre">+</span> <span class="pre">1]</span></code>.</p>
+</section>
+<section id="shape-pairing-and-rejections">
+<h3>Shape, pairing, and rejections<a class="headerlink" href="#shape-pairing-and-rejections" title="Link to this heading">¶</a></h3>
+<p>The comparison is <strong>per cell and pairwise</strong>. <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> must have the
+same <a class="reference internal" href="../note/numel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">numel</span></code></span></a>, or one of them may be a
+<strong>scalar</strong> (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code>) that is broadcast against every cell of the
+other; shape beyond the cell count is ignored, and <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> follows the
+non-scalar side. Two rejections, both raising <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">self</span></code> in bytes mode → <code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::diff_words</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(lhs</span> <span class="pre">is</span> <span class="pre">bytes)</span></code>.</p></li>
+<li><p>unequal <code class="docutils literal notranslate"><span class="pre">numel</span></code> with neither side a scalar → <code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::diff_words</span> <span class="pre">expects</span> <span class="pre">equal</span> <span class="pre">numel</span> <span class="pre">or</span> <span class="pre">scalar</span> <span class="pre">broadcast</span></code>.</p></li>
+</ul>
+<p>The alignment is <code class="docutils literal notranslate"><span class="pre">O(m</span> <span class="pre">·</span> <span class="pre">n)</span></code> in words per cell and fully deterministic: on a
+tie the walk emits the <code class="docutils literal notranslate"><span class="pre">-</span></code> (removal) before the <code class="docutils literal notranslate"><span class="pre">+</span></code> (insertion).</p>
+</section>
+</section>
+<section id="example-1-per-cell-changes-and-offsets">
+<h2>Example 1: Per-Cell Changes And Offsets<a class="headerlink" href="#example-1-per-cell-changes-and-offsets" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;the quick brown fox&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello world&quot;</span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;the slow brown fox&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hello there world&quot;</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;-quick&quot;, &quot;+slow&quot;, &quot;+there&quot;]
+offsets: [0, 2, 3]
+</pre></div>
+</div>
+<p>Cell 0’s edits are <code class="docutils literal notranslate"><span class="pre">tokens()[0..2)</span></code> — <code class="docutils literal notranslate"><span class="pre">quick</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">slow</span></code>. Cell 1’s
+are <code class="docutils literal notranslate"><span class="pre">tokens()[2..3)</span></code> — <code class="docutils literal notranslate"><span class="pre">there</span></code> inserted between <code class="docutils literal notranslate"><span class="pre">hello</span></code> and <code class="docutils literal notranslate"><span class="pre">world</span></code>.</p>
+</section>
+</section>
+<section id="example-2-identical-cells-produce-nothing">
+<h2>Example 2: Identical Cells Produce Nothing<a class="headerlink" href="#example-2-identical-cells-produce-nothing" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;no change here&quot;</span><span class="p">})</span>
+<span class="w">                       </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;no change here&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets: [0, 0]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-3-scalar-broadcast-on-the-right">
+<h2>Example 3: Scalar Broadcast On The Right<a class="headerlink" href="#example-3-scalar-broadcast-on-the-right" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a b c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a x c&quot;</span><span class="p">})</span>
+<span class="w">                       </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a b c&quot;</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;-x&quot;, &quot;+b&quot;]
+offsets: [0, 0, 2]
+</pre></div>
+</div>
+<p>The single right-hand cell is compared against both left-hand cells. Cell 0
+matches exactly (empty range); cell 1 differs by one word.</p>
+</section>
+</section>
+<section id="example-4-everything-inserted">
+<h2>Example 4: Everything Inserted<a class="headerlink" href="#example-4-everything-inserted" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">})</span>
+<span class="w">                       </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;brand new text&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[&quot;+brand&quot;, &quot;+new&quot;, &quot;+text&quot;]
+</pre></div>
+</div>
+<p>An empty <code class="docutils literal notranslate"><span class="pre">self</span></code> cell has no words, so every word of <code class="docutils literal notranslate"><span class="pre">other</span></code> is a <code class="docutils literal notranslate"><span class="pre">+</span></code> token.</p>
+</section>
+</section>
+<section id="example-5-punctuation-only-changes-are-ignored">
+<h2>Example 5: Punctuation-Only Changes Are Ignored<a class="headerlink" href="#example-5-punctuation-only-changes-are-ignored" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;stop here&quot;</span><span class="p">})</span>
+<span class="w">                       </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;stop, here!&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;token count: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>token count: 0
+</pre></div>
+</div>
+<p>The added comma and exclamation mark are separators, not words — no edit is
+reported.</p>
+</section>
+</section>
+<section id="example-6-rejections">
+<h2>Example 6: Rejections<a class="headerlink" href="#example-6-rejections" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">})</span>
+<span class="w">      </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">bytes</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">}).</span><span class="n">nlp</span><span class="p">().</span><span class="n">diff_words</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;y&quot;</span><span class="p">}));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>NoteNlpAccessor::diff_words expects equal numel or scalar broadcast
+NoteNlpAccessor::diff_words requires a UTF-8 text Note (lhs is bytes)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="align_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::align_tokens</span></code></span></a>: the same alignment, keeping the
+unchanged words as <code class="docutils literal notranslate"><span class="pre">=</span></code> tokens.</p></li>
+<li><p><a class="reference internal" href="../note/diff_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::diff_lines</span></code></span></a> / <a class="reference internal" href="../note/diff_chars.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::diff_chars</span></code></span></a>:
+coarser and finer change views.</p></li>
+<li><p><a class="reference internal" href="align_sentences.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::align_sentences</span></code></span></a>: sentence-level alignment.</p></li>
+<li><p><a class="reference internal" href="tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::tokens</span></code></span></a>: the word tokenizer and the
+<code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> shape.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="definitions.html"><span class="label">Previous</span><span class="title">definitions</span></a>
+  <a class="next-link" href="emails.html"><span class="label">Next</span><span class="title">emails</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
+  <li><a href="../../note_nlp_accessor_api_reference.html">Note NLP Accessor API Reference</a><ul>
+      <li>Previous: <a href="definitions.html" title="previous chapter">NoteNlpAccessor::definitions</a></li>
+      <li>Next: <a href="emails.html" title="next chapter">NoteNlpAccessor::emails</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note-nlp/diff_words.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

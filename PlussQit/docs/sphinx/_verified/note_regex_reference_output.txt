@@ -1,0 +1,47 @@
+=== match and search ===
+Note(shape=[2], dim=1, numel=2, dtype=Bool)
+[true, false]
+Note(shape=[2], dim=1, numel=2, dtype=Bool)
+[true, false]
+=== replace ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["A#,b#,,C#", "none"]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["x x"]
+=== findall ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["1", "22", "333"]
+offsets=[0, 3, 3]
+=== count ===
+Note(shape=[2], dim=1, numel=2, dtype=Int64)
+[3, 0]
+=== count shape ===
+shape=[2, 2]
+values=[2, 0, 1, 2]
+=== count non-overlap ===
+Note(shape=[2], dim=1, numel=2, dtype=Int64)
+[2, 2]
+=== split unlimited ===
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["A1", "b22", "", "C333", "none"]
+offsets=[0, 4, 5]
+=== split limit one ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A1", "b22,,C333", "none"]
+offsets=[0, 2, 3]
+=== split limit zero ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a,b", "c;d"]
+offsets=[0, 1, 2]
+=== split mixed delimiters ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["north", "south", "east"]
+offsets=[0, 3]
+=== invalid pattern ===
+regex().count: The expression contained mismatched ( and ).
+regex().findall: The expression contained mismatched ( and ).
+regex().match: The expression contained mismatched ( and ).
+regex().replace: The expression contained mismatched ( and ).
+regex().split: The expression contained mismatched ( and ).
+=== invalid storage ===
+regex().count: expected Text or Bytes storage

@@ -22,7 +22,15 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/ScalarType.h"
-#include "pluss/pluss.h"
+#include "pluss/codem/codem.h"
+#include "pluss/codem/series_factory.h"
+#include "pluss/codem/series_factory_compat.h"
+#include "pluss/coden/coden.h"
+#include "pluss/coden/note_factory.h"
+#include "pluss/codeh/codeh.h"
+#include "pluss/codeh/timeindex_factory.h"
+#include "pluss/codeh/timeline_factory.h"
+#include "pluss/mic.h"
 #include "pluss/tils.h"
 
 namespace {
@@ -570,7 +578,7 @@ void test_display_engine_width_truncation_and_info() {
   expect(info.find("Class") != std::string::npos, "info output missing class field");
   expect(info.find("pluss::") != std::string::npos, "info output missing class value");
   expect(info.find("Case Range") != std::string::npos, "info output missing case range field");
-  expect(info.find("Dtypes") != std::string::npos, "info output missing dtype summary");
+  expect(info.find("PTypes") != std::string::npos, "info output missing physical-type summary");
   expect(info.find("Memory") != std::string::npos, "info output missing memory field");
 }
 
@@ -3987,7 +3995,7 @@ void test_timeline_sort_nat_ordering() {
 
   expect(t.argsort().to_vec<std::int64_t>() == std::vector<std::int64_t>({2, 4, 0, 1, 3}),
          "Timeline::argsort should keep NaT values at the end while preserving NaT order");
-  expect(t.sort().to_epoch_nanos_flat() == std::vector<std::int64_t>({
+  expect(t.sort().ticks() == std::vector<std::int64_t>({
              10'000'000'000LL,
              20'000'000'000LL,
              30'000'000'000LL,

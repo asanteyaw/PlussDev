@@ -56,7 +56,7 @@ That is convenient for printing, but it means you should use
 stored sensitivity yet" from "a stored sensitivity that happens to be all
 zeros."
 
-This method is the read side of the autograd flow. It does not perform any
+This method is the read side of the autodiff flow. It does not perform any
 propagation itself.
 
 - [`tracks_slope_()`](tracks_slope_.md) decides whether this `Series` should

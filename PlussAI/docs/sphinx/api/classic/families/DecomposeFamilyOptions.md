@@ -96,7 +96,18 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_DECOMPOSEFAMILYOPTIONS_1
+components = 1 ->
+pluss::Series(shape=[4,1], strides=[1,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[3.6942452],
+  [1.2046182],
+  [-1.2850088],
+  [-3.6138546]]
+components = 2 ->
+pluss::Series(shape=[4,2], strides=[2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[[3.6942452, -0.071084138],
+  [1.2046182, 0.037349322],
+  [-1.2850088, 0.14578278],
+  [-3.6138546, -0.11204797]]
 ```
 
 ## Changelog

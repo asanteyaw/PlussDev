@@ -845,6 +845,97 @@ public:
     Series* owner_{nullptr};
   };
 
+  // Series-native antiderivative accessor:
+  // - safe call style: `s.antidiff().trapezoid(x)`, `s.antidiff(x).trapezoid()`
+  // - convenience dot style: `s.antidiff.trapezoid(x)`
+  // Composite trapezoidal-rule integration along `dim` (torch parity:
+  // torch.trapezoid/torch.cumulative_trapezoid -- real torch implements
+  // these compositionally too, no dedicated ATen kernel behind them: no
+  // `dispatch:` entry in native_functions.yaml, so this mirrors that
+  // choice rather than shortcutting it). Built entirely from diff/slice/
+  // mul/add/sum/cumsum above, so no new native kernel or backward-manifest
+  // entry is needed, and both are differentiable for free through the ops
+  // they compose -- see OpsInternal.cpp for the implementation.
+  // `pluss::subsp::math::integ::trapezoid`/`cumulative_trapezoid` in
+  // PlussMa (PlussMa/include/pluss/subsp/math/integ.h) forward to this
+  // accessor rather than duplicate the formula.
+  //
+  // Named `antidiff` because it is the reverse of `Series::diff()` (the
+  // discrete forward-difference method): both operate on an
+  // already-materialized sequence of numbers, with no reference to any
+  // generating function. This is deliberately NOT a home for continuous
+  // (Riemann/Lebesgue) integration of an arbitrary callable -- that needs
+  // to re-invoke a function at points it chooses itself (see quadra's
+  // 1-D/N-D overloads and aleatoria in PlussMa's `pluss::integ`
+  // namespace), which a single already-computed Series value structurally
+  // cannot provide.
+  class SeriesAntidiffProxy final {
+  public:
+    explicit SeriesAntidiffProxy(const Series& self) : self_(&self) {}
+    SeriesAntidiffProxy(const Series& self, const Series& other) : self_(&self), peers_{other} {}
+
+    // Explicit-argument forms -- unambiguous regardless of how the proxy
+    // was constructed.
+    Series trapezoid(const Series& x, std::int64_t dim = -1) const;
+    Series trapezoid(double dx, std::int64_t dim = -1) const;
+    // Bound-or-default form: uses the peer x bound via `antidiff(x)` if
+    // present, otherwise dx = 1.0 -- mirrors how stat/linearalg's own
+    // peer-bound proxies resolve peer1() when bound.
+    Series trapezoid(std::int64_t dim = -1) const {
+      return peers_.empty() ? trapezoid(1.0, dim) : trapezoid(peer1(), dim);
+    }
+
+    Series cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const;
+    Series cumulative_trapezoid(double dx, std::int64_t dim = -1) const;
+    Series cumulative_trapezoid(std::int64_t dim = -1) const {
+      return peers_.empty() ? cumulative_trapezoid(1.0, dim) : cumulative_trapezoid(peer1(), dim);
+    }
+
+  private:
+    const Series& self() const {
+      PLUSS_CHECK(self_ != nullptr, "Series.antidiff(): null self");
+      return *self_;
+    }
+    const Series& peer1() const {
+      PLUSS_CHECK(!peers_.empty(),
+                  "Series.antidiff(...): this operation requires one peer Series (the x coordinates)");
+      return peers_.front();
+    }
+
+    const Series* self_{nullptr};
+    std::vector<Series> peers_{};
+  };
+
+  class SeriesAntidiffAccessor final {
+  public:
+    SeriesAntidiffAccessor() = default;
+    explicit SeriesAntidiffAccessor(Series& owner) : owner_(&owner) {}
+
+    void rebind(Series& owner) noexcept { owner_ = &owner; }
+
+    SeriesAntidiffProxy operator()() const { return SeriesAntidiffProxy(owner()); }
+    SeriesAntidiffProxy operator()(const Series& x) const { return SeriesAntidiffProxy(owner(), x); }
+
+    Series trapezoid(const Series& x, std::int64_t dim = -1) const { return (*this)().trapezoid(x, dim); }
+    Series trapezoid(double dx, std::int64_t dim = -1) const { return (*this)().trapezoid(dx, dim); }
+    Series trapezoid(std::int64_t dim = -1) const { return (*this)().trapezoid(dim); }
+    Series cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const {
+      return (*this)().cumulative_trapezoid(x, dim);
+    }
+    Series cumulative_trapezoid(double dx, std::int64_t dim = -1) const {
+      return (*this)().cumulative_trapezoid(dx, dim);
+    }
+    Series cumulative_trapezoid(std::int64_t dim = -1) const { return (*this)().cumulative_trapezoid(dim); }
+
+  private:
+    Series& owner() const {
+      PLUSS_CHECK(owner_ != nullptr, "Series.antidiff: unbound accessor");
+      return *owner_;
+    }
+
+    Series* owner_{nullptr};
+  };
+
   // Factory helpers (Torch-style free-functions live elsewhere; keep these for convenience).
   static Series undefined();
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
@@ -1030,6 +1121,19 @@ public:
   Series& sigmoid_();
   Series relu() const;
   Series& relu_();
+  // Track B fused activations: forward-declared here so
+  // subsp/math/diff.h's Trace/DualTrace formulas can call them as members
+  // (matches at::elu's 3-parameter form; see OpsInternal.h for the shared
+  // ops_internal::elu/celu/selu implementation the first three forward to).
+  Series elu(double alpha = 1.0, double scale = 1.0, double input_scale = 1.0) const;
+  Series celu(double alpha = 1.0) const;
+  Series selu() const;
+  Series hardsigmoid() const;
+  Series hardswish() const;
+  Series mish() const;
+  Series threshold(double threshold_val, double value) const;
+  Series rrelu(double lower = 0.125, double upper = 0.3333333333333333,
+               bool training = false) const;
   Series isnan() const;
   Series& isnan_();
   Series isinf() const;
@@ -1989,20 +2093,28 @@ public:
   // - safe call style: `s.linearalg().det()`
   // - convenience dot style: `s.linearalg.det()`
   SeriesLinearAlgAccessor linearalg;
+  // Antiderivative accessor -- reverses `diff()` (discrete forward
+  // differencing on an already-materialized sequence), not autodiff:
+  // - safe call style: `s.antidiff().trapezoid(x)`, `s.antidiff(x).trapezoid()`
+  // - convenience dot style: `s.antidiff.trapezoid(x)`
+  SeriesAntidiffAccessor antidiff;
   // Traverse/query accessor:
   // - dot style: `s.traverse.find_all(mask)`
   // - with explicit `on` selector: `s.traverse(specs).find_ge(...)`
   SeriesTraverseAccessor traverse;
 
-  Series() : SeriesBase(), stat(*this), linearalg(*this), traverse(*this) {}
-  Series(const Series& other) : SeriesBase(other), stat(*this), linearalg(*this), traverse(*this) {}
-  Series(Series&& other) noexcept : SeriesBase(std::move(other)), stat(*this), linearalg(*this), traverse(*this) {}
+  Series() : SeriesBase(), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
+  Series(const Series& other)
+      : SeriesBase(other), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
+  Series(Series&& other) noexcept
+      : SeriesBase(std::move(other)), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
   Series& operator=(const Series& other) {
     if (this != &other) {
       SeriesBase::operator=(other);
     }
     stat.rebind(*this);
     linearalg.rebind(*this);
+    antidiff.rebind(*this);
     traverse.rebind(*this);
     return *this;
   }
@@ -2012,6 +2124,7 @@ public:
     }
     stat.rebind(*this);
     linearalg.rebind(*this);
+    antidiff.rebind(*this);
     traverse.rebind(*this);
     return *this;
   }

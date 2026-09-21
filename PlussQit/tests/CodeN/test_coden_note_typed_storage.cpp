@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <iterator>
 #include <limits>
@@ -15,6 +16,7 @@
 #include <vector>
 
 #include "CodeN/core/OpsInternal.h"
+#include "CodeN/core/AlignedAllocator.h"
 
 namespace {
 
@@ -212,6 +214,29 @@ TEST_CASE("public typed Note factories preserve dtype shape and native values",
   REQUIRE_THROWS(pluss::note::make(std::vector<int>{1, 2, 3}, shape));
 }
 
+TEST_CASE("typed item access is cardinality based and dtype exact",
+          "[coden][typed-storage][item]") {
+  const auto bool_rank3 = pluss::note::make(
+      std::vector<bool>{true}, std::array<std::int64_t, 3>{1, 1, 1});
+  const auto int_rank2 = pluss::note::make(
+      std::vector<std::int64_t>{-42}, std::array<std::int64_t, 2>{1, 1});
+  const auto float_rank1 = pluss::note::make(std::vector<double>{-0.0});
+
+  REQUIRE(bool_rank3.bool_item());
+  REQUIRE(int_rank2.int_item() == -42);
+  REQUIRE(std::signbit(float_rank1.float_item()));
+
+  REQUIRE_THROWS(pluss::note::make(std::vector<bool>{}).bool_item());
+  REQUIRE_THROWS(pluss::note::make(std::vector<std::int64_t>{1, 2}).int_item());
+  REQUIRE_THROWS(pluss::note::make(std::vector<double>{}).float_item());
+  REQUIRE_THROWS(pluss::note::make(std::int64_t{1}).bool_item());
+  REQUIRE_THROWS(pluss::note::make(1.0).int_item());
+  REQUIRE_THROWS(pluss::note::make(std::int64_t{1}).float_item());
+  REQUIRE_THROWS(pluss::Note::undefined().bool_item());
+  REQUIRE_THROWS(pluss::Note::undefined().int_item());
+  REQUIRE_THROWS(pluss::Note::undefined().float_item());
+}
+
 TEST_CASE("Note row and slab projections share their backing allocations",
           "[coden][typed-storage][pass3]") {
   const std::array<std::int64_t, 2> matrix_shape{2, 3};
@@ -229,7 +254,7 @@ TEST_CASE("Note row and slab projections share their backing allocations",
   auto cube = pluss::note::make(
       std::vector<double>{0, 1, 2, 3, 4, 5, 6, 7}, cube_shape);
   const auto cube_base = cube.reals().data();
-  const auto slabs = cube.tensor3();
+  const auto slabs = cube.slabs();
   REQUIRE(slabs[0].reals().data() == cube_base);
   REQUIRE(slabs[1].reals().data() == cube_base + 4);
   REQUIRE(slabs[1].sizes() == std::vector<std::int64_t>{2, 2});
@@ -316,6 +341,77 @@ TEST_CASE("typed Note storage preserves dtype through shape/index ops",
           std::vector<double>{1.5, 1.5, 2.5, 2.5});
 }
 
+TEST_CASE("Note pack and unpack preserve every closed dtype and shape state",
+          "[coden][typed-storage][pass3][serialization]") {
+  const std::array<std::int64_t, 2> shape{2, 2};
+  const std::string binary{"a\0b", 3};
+  const std::vector<pluss::Note> values{
+      pluss::Note::undefined(),
+      pluss::note::make("scalar"),
+      pluss::note::bytes(std::vector<std::string_view>{binary, "", "z", "q"}, shape),
+      pluss::note::make(std::vector<bool>{true, false, false, true}, shape),
+      pluss::note::make(std::vector<std::int64_t>{-1, 0, 7, 9}, shape),
+      pluss::note::make(
+          std::vector<double>{-0.0, 1.25,
+                              std::numeric_limits<double>::infinity(),
+                              std::numeric_limits<double>::quiet_NaN()},
+          shape),
+      pluss::note::make(std::vector<bool>{}, std::array<std::int64_t, 2>{0, 5}),
+  };
+
+  for (const auto& value : values) {
+    const auto encoded = value.pack();
+    const auto restored = pluss::note::unpack(encoded);
+    REQUIRE(restored.defined() == value.defined());
+    if (!value.defined()) continue;
+    REQUIRE(restored.dtype() == value.dtype());
+    REQUIRE(restored.sizes() == value.sizes());
+    if (value.is_text() || value.is_bytes()) {
+      REQUIRE(restored.vector() == value.vector());
+    } else if (value.is_bool()) {
+      REQUIRE(std::equal(restored.bools().begin(), restored.bools().end(),
+                         value.bools().begin(), value.bools().end()));
+    } else if (value.is_int64()) {
+      REQUIRE(std::equal(restored.integers().begin(), restored.integers().end(),
+                         value.integers().begin(), value.integers().end()));
+    } else {
+      REQUIRE(restored.reals().size() == value.reals().size());
+      for (std::size_t i = 0; i < value.reals().size(); ++i) {
+        REQUIRE(std::bit_cast<std::uint64_t>(restored.reals()[i]) ==
+                std::bit_cast<std::uint64_t>(value.reals()[i]));
+      }
+    }
+  }
+}
+
+TEST_CASE("Note unpack rejects corrupted or non-canonical envelopes",
+          "[coden][typed-storage][pass3][serialization]") {
+  auto encoded = pluss::note::make({true, false}).pack();
+
+  auto bad_magic = encoded;
+  bad_magic[0] = std::byte{0};
+  REQUIRE_THROWS(pluss::note::unpack(bad_magic));
+
+  auto bad_version = encoded;
+  bad_version[4] = std::byte{99};
+  REQUIRE_THROWS(pluss::note::unpack(bad_version));
+
+  auto bad_dtype = encoded;
+  bad_dtype[5] = std::byte{99};
+  REQUIRE_THROWS(pluss::note::unpack(bad_dtype));
+
+  auto bad_bool = encoded;
+  bad_bool.back() = std::byte{2};
+  REQUIRE_THROWS(pluss::note::unpack(bad_bool));
+
+  auto trailing = encoded;
+  trailing.push_back(std::byte{0});
+  REQUIRE_THROWS(pluss::note::unpack(trailing));
+
+  REQUIRE_THROWS(pluss::note::unpack(
+      std::span<const std::byte>(encoded.data(), encoded.size() - 1)));
+}
+
 TEST_CASE("Note's generic byte-oriented traversal is Text/Bytes only, by design",
           "[coden][typed-storage][pass8]") {
   // Text/Bytes: begin()/end(), copy_flat_to, and for_each_flat all work as
@@ -341,10 +437,18 @@ TEST_CASE("Note's generic byte-oriented traversal is Text/Bytes only, by design"
   const auto ints = pluss::note::make(std::vector<int>{1, 2, 3});
   REQUIRE_THROWS(ints.begin());
   REQUIRE_THROWS(ints.end());
-  REQUIRE_THROWS(ints.cbegin());
-  REQUIRE_THROWS(ints.cend());
   REQUIRE_THROWS(ints.for_each_flat([](std::string_view) {}));
   REQUIRE_THROWS(ints.copy_flat_to(std::back_inserter(copied)));
+
+  // Iterators retain the arena, so both the iterator and a view obtained from
+  // it remain valid after the original Note handle leaves scope.
+  auto kept = [] {
+    const auto temporary = pluss::note::make({"kept", "alive"});
+    return temporary.begin();
+  }();
+  REQUIRE(*kept == "kept");
+  ++kept;
+  REQUIRE(*kept == "alive");
 
   // An undefined Note yields an empty range rather than throwing (matches
   // the pre-existing convention for other accessors on undefined Notes).
@@ -363,9 +467,77 @@ TEST_CASE("Note::debug() and operator<< already branch per dtype",
 
   const auto bools = pluss::note::make(std::vector<bool>{true, false}, std::array<std::int64_t, 1>{2});
   REQUIRE(bools.debug() == "Note(shape=[2], dim=1, numel=2, dtype=Bool, values=[true, false])");
+  REQUIRE(ints.debug(0) == "Note(shape=[3], dim=1, numel=3, dtype=Int64, values=[...])");
+  REQUIRE(ints.debug(-1) == "Note(shape=[3], dim=1, numel=3, dtype=Int64, values=[...])");
+
+  const std::string raw{"A\0\xFF", 3};
+  const auto bytes = pluss::note::bytes(
+      std::vector<std::string>{raw}, std::array<std::int64_t, 1>{1});
+  REQUIRE(bytes.debug() ==
+          "Note(shape=[1], dim=1, numel=1, encoding=bytes, values=[\"A\\x00\\xFF\"])");
 
   std::ostringstream oss;
   oss << ints;
   REQUIRE(oss.str() == pluss::coden::to_string(ints));
   REQUIRE(oss.str().find("dtype=Int64") != std::string::npos);
+}
+
+TEST_CASE("TokenBatch adopts validated aligned offsets without copying",
+          "[coden][typed-storage][pass6]") {
+  NoteImpl::Int64Storage lanes{0, 2, 3};
+  const auto* lane_data = lanes.data();
+  auto offsets = pluss::coden::ops_internal::note_from_int64_storage(
+      std::move(lanes), std::array<std::int64_t, 1>{3});
+  auto batch = pluss::coden::ops_internal::TokenBatchFactoryAccess::make(
+      pluss::note::make({"a", "b", "c"}), std::move(offsets));
+  REQUIRE(batch.offsets().integers().data() == lane_data);
+
+  REQUIRE_THROWS(pluss::coden::ops_internal::TokenBatchFactoryAccess::make(
+      pluss::note::make({"a"}), pluss::note::make({1, 1})));
+  REQUIRE_THROWS(pluss::coden::ops_internal::TokenBatchFactoryAccess::make(
+      pluss::note::make({"a", "b"}), pluss::note::make({0, 2, 1})));
+  REQUIRE_THROWS(pluss::coden::ops_internal::TokenBatchFactoryAccess::make(
+      pluss::note::make({"a", "b"}), pluss::note::make({0, 1})));
+  REQUIRE_THROWS(pluss::coden::ops_internal::TokenBatchFactoryAccess::make(
+      pluss::note::make({"a"}), pluss::note::make({false, true})));
+}
+
+TEST_CASE("closed Bool and Int64 kernels allocate one native output buffer",
+          "[coden][typed-storage][pass8][allocation]") {
+  const auto text = pluss::note::make({"alpha", "beta", "gamma", "delta"});
+
+  auto mask = pluss::Note::undefined();
+  pluss::coden::detail::LaneAllocationSnapshot stats;
+  {
+    pluss::coden::detail::LaneAllocationScope tracking;
+    mask = text.contains("a");
+    stats = tracking.snapshot();
+  }
+  REQUIRE(stats.allocations == 1);
+  REQUIRE(stats.bytes ==
+          static_cast<std::uint64_t>(text.numel() * sizeof(std::uint8_t)));
+
+  auto lengths = pluss::Note::undefined();
+  {
+    pluss::coden::detail::LaneAllocationScope tracking;
+    lengths = text.lengths_bytes();
+    stats = tracking.snapshot();
+  }
+  REQUIRE(stats.allocations == 1);
+  REQUIRE(stats.bytes ==
+          static_cast<std::uint64_t>(text.numel() * sizeof(std::int64_t)));
+
+  const auto other = text.starts_with("a");
+  auto combined = pluss::Note::undefined();
+  {
+    pluss::coden::detail::LaneAllocationScope tracking;
+    combined = mask | other;
+    stats = tracking.snapshot();
+  }
+  REQUIRE(stats.allocations == 1);
+  REQUIRE(stats.bytes ==
+          static_cast<std::uint64_t>(text.numel() * sizeof(std::uint8_t)));
+
+  REQUIRE(lengths.is_int64());
+  REQUIRE(combined.is_bool());
 }

@@ -9,7 +9,7 @@ TEST_CASE("non-contiguous advanced indices: moved to front, no permute bug", "[i
   auto x = pluss::series::zeros({2,3,4}, pluss::config({{"dtype","float32"}}));
   auto i0 = pluss::make_series(std::vector<std::int64_t>{0,1}, {2,1}); // adv dim 0
   auto i2 = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {1,3}); // adv dim 2 (non-contig)
-  auto y = x.index({i0, pluss::Series{}, i2});
+  auto y = x.index({i0, pluss::Slicing::SliceAll(), i2});
   // Torch-ish: advanced dims moved to front => (2,3, dim1)?? here adv broadcast is (2,3), remaining dim1 size=3 => (2,3,3)
   REQUIRE(y.dim() == 3);
   REQUIRE(y.sizes()[0] == 2);

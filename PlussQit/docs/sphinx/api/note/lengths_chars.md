@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::int64_t> Note::lengths_chars() const
+Note Note::lengths_chars() const
 ```
 
 ## Measure Every Cell In Unicode Characters
@@ -25,16 +25,16 @@ For a base letter plus its combining marks counted as one unit, use
 
 ### Return value
 
-Not a `Note`: a flat `std::vector<std::int64_t>` with one entry per cell, in
-row-major order, length `numel()`. An empty cell measures `0`.
+An Int64 `Note` with the receiver's shape, one native count per cell. An empty
+cell measures `0`; `integers()` exposes a borrowed contiguous host view.
 
 ## Example 1: ASCII — Characters Equal Bytes
 
 ```cpp
 const auto lens = pluss::make_note({"", "a", "abc"}).lengths_chars();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -50,8 +50,8 @@ std::cout << "]\n";
 const auto lens =
     pluss::make_note({"café", "日本語", "🎯"}).lengths_chars();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -85,8 +85,8 @@ Same cell, 5 bytes versus 4 characters.
 const auto lens =
     pluss::make_note({{"a", "bb"}, {"日本", "x"}}).lengths_chars();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 

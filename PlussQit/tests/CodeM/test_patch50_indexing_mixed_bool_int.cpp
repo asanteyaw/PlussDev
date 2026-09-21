@@ -20,7 +20,7 @@ TEST_CASE("non-leading advanced index moves to front", "[indexing]") {
   auto x = pluss::make_series(std::vector<int>{0,1,2,3,4,5,6,7}, {2,2,2});
   auto idx = pluss::make_series(std::vector<std::int64_t>{1,0}, {2}); // advanced on dim2
   // indices: ":" , ":" , idx
-  auto y = x.index({pluss::Series{}, pluss::Series{}, idx});
+  auto y = x.index({pluss::Slicing::SliceAll(), pluss::Slicing::SliceAll(), idx});
   // advanced dims moved to front => output starts with broadcast(idx) then remaining dims
   REQUIRE(y.sizes().size() == 3);
 }

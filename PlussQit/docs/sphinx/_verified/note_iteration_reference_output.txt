@@ -1,0 +1,38 @@
+=== range iteration ===
+["north", "east", "south", "west"] count=4
+north east south west
+
+=== row-major matrix ===
+["r0c0", "r0c1", "r0c2", "r1c0", "r1c1", "r1c2"]
+r0c0 r0c1 r0c2 r1c0 r1c1 r1c2 
+
+=== scalar and empty ===
+scalar distance=1 value=solo
+empty distance=0 equal=true
+
+=== retained iterator ===
+kept alive
+
+=== copy destinations ===
+owning=["north", "east", "south", "west"]
+borrowed=["north", "east", "south", "west"]
+north east south west 
+
+=== embedded bytes ===
+size=5 hex=4100427fff
+
+=== callback aggregation ===
+cells=6 bytes=24
+north | east | south | west
+callback error=stop at south
+empty calls=0
+
+=== undefined range ===
+equal=true
+undefined copy: rejected
+undefined callback: rejected
+
+=== typed traversal ===
+Int64 begin: rejected
+Int64 copy: rejected
+integers=3 1 4 

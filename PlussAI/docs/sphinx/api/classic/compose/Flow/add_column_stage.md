@@ -1,54 +1,65 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 151d9474f28b -->
 # `pluss::ai::classic::Flow::add_column_stage`
 
-[Back to `pluss::ai::classic::Flow`](../Flow.md)
+`add_column_stage` is [`add_named_transform`](add_named_transform.md) with
+`stage_key` promoted to the first, required parameter instead of a trailing
+default — reach for this form when naming the stage is the point of the
+call, not an afterthought.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+classic::Status classic::Flow::add_column_stage(
+    std::string stage_key,
+    classic::TransformKind kind,
+    const classic::TransformOptions& options,
+    /* feature indices */ feature_route = {},
+    classic::RouteRemainderPolicy remainder = classic::RouteRemainderPolicy::PassThrough);
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`stage_key` — `std::string`, required (no default)
+: The stage's name — see [`TransformSpec::stage_key`](../TransformSpec.md#state).
+  Required here, unlike [`add_named_transform`](add_named_transform.md) where
+  it defaults to empty.
+
+`kind`, `options`, `feature_route`, `remainder`
+: Identical to [`add_named_transform`](add_named_transform.md) — see that
+  page for each.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+A `Status`. `.ok()` on success; the stage is appended, named, and
+[`stage_count()`](../Flow.md#state) increases by one.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+Identical to [`add_named_transform`](add_named_transform.md#errors) — a
+`kind` / `options` mismatch, or an out-of-range `feature_route`.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+Naming a stage at construction, then finding it by name through
+[`nested_param_keys`](nested_param.md).
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow{};
+  const cls::Status s = flow.add_column_stage(
+      "income_scaler", cls::TransformKind::StandardScaler, cls::prep::StandardScalerOptions{}, {0});
+  std::cout << "ok = " << std::boolalpha << s.ok() << "\n";
+  std::cout << "stage_key = " << flow.transform_specs().front().stage_key << "\n";
 
   return 0;
 }
@@ -57,27 +68,34 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok = true
+stage_key = income_scaler
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+Two named stages in one flow, each independently addressable by
+`stage_key`.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow{};
+  flow.add_column_stage("scale_numeric", cls::TransformKind::StandardScaler,
+                        cls::prep::StandardScalerOptions{}, {0, 1});
+  flow.add_column_stage("encode_category", cls::TransformKind::OneHotEncoder,
+                        cls::prep::OneHotEncoderOptions{}, {2});
+
+  for (const cls::TransformSpec& spec : flow.transform_specs()) {
+    std::cout << "stage_key = " << spec.stage_key << ", route size = " << spec.feature_route.size()
+              << "\n";
+  }
 
   return 0;
 }
@@ -86,27 +104,31 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+stage_key = scale_numeric, route size = 2
+stage_key = encode_category, route size = 1
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+A `kind` / `options` mismatch, the same failure mode as
+[`add_named_transform`](add_named_transform.md), verified here too since
+this overload validates independently.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow{};
+  const cls::Status s = flow.add_column_stage(
+      "bad_stage", cls::TransformKind::OneHotEncoder, cls::prep::StandardScalerOptions{});
+  std::cout << "ok = " << std::boolalpha << s.ok() << "\n";
+  std::cout << "message = \"" << s.message << "\"\n";
+  std::cout << "stage_count() after the failed add = " << flow.stage_count() << "\n";
 
   return 0;
 }
@@ -115,12 +137,18 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok = false
+message = "Flow::add_named_transform: options does not match kind=one_hot_encoder."
+stage_count() after the failed add = 0
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`add_named_transform`](add_named_transform.md) — the same call, with
+  `stage_key` optional and trailing.
+- [`set_stage_key`](set_stage_key.md) — rename a stage after the fact.
+- [`nested_param`](nested_param.md) — reading/writing a parameter by
+  `stage_key`-qualified path.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

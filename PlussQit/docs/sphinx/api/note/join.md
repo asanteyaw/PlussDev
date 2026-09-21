@@ -155,6 +155,6 @@ join bytes: rejected
 - [`split`](split.md): divide each cell rather than combining cells.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="jaccard_tokens.html"><span class="label">Previous</span><span class="title">jaccard_tokens</span></a>
+  <a class="prev-link" href="is_whitespace.html"><span class="label">Previous</span><span class="title">is_whitespace</span></a>
   <a class="next-link" href="join_flat.html"><span class="label">Next</span><span class="title">join_flat</span></a>
 </div>

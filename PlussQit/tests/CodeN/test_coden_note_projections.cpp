@@ -14,6 +14,15 @@
 static_assert(std::is_same_v<decltype(std::declval<const pluss::Note&>().sizes_view()),
                              std::span<const std::int64_t>>);
 
+template <class T>
+concept HasTensor3 = requires(const T& value) { value.tensor3(); };
+
+template <class T>
+concept HasIsTensor3 = requires(const T& value) { value.is_tensor3(); };
+
+static_assert(!HasTensor3<pluss::Note>);
+static_assert(!HasIsTensor3<pluss::Note>);
+
 TEST_CASE("Note scalar and vector projections distinguish cardinality from rank",
           "[coden][note-projection]") {
   const auto scalar = pluss::note::make("alpha");
@@ -73,12 +82,12 @@ TEST_CASE("Note matrix projection promotes lower ranks and preserves empty rows"
                             std::array<std::int64_t, 1>{0}).matrix().size() == 1);
 }
 
-TEST_CASE("Note tensor3 projection requires exact rank and preserves empty slabs",
+TEST_CASE("Note slabs projection requires exact rank and preserves empty slabs",
           "[coden][note-projection]") {
   const auto tensor = pluss::note::make(
       std::vector<std::string>{"000", "001", "010", "011", "100", "101", "110", "111"},
       std::array<std::int64_t, 3>{2, 2, 2});
-  const auto projected = tensor.tensor3();
+  const auto projected = tensor.slabs();
   REQUIRE(projected.size() == 2);
   REQUIRE(projected[0].sizes() == std::vector<std::int64_t>{2, 2});
   REQUIRE(projected[1].at(1) == "101");
@@ -86,14 +95,14 @@ TEST_CASE("Note tensor3 projection requires exact rank and preserves empty slabs
 
   const auto empty = pluss::note::make(
       std::vector<std::string>{}, std::array<std::int64_t, 3>{2, 0, 3});
-  const auto empty_projected = empty.tensor3();
+  const auto empty_projected = empty.slabs();
   REQUIRE(empty_projected.size() == 2);
   REQUIRE(empty_projected[0].empty());
   REQUIRE(empty_projected[0].sizes() == std::vector<std::int64_t>{0, 3});
   REQUIRE(empty_projected[1].empty());
 
-  REQUIRE_THROWS(pluss::note::make({"a"}).tensor3());
-  REQUIRE_THROWS(pluss::Note::undefined().tensor3());
+  REQUIRE_THROWS(pluss::note::make({"a"}).slabs());
+  REQUIRE_THROWS(pluss::Note::undefined().slabs());
 }
 
 TEST_CASE("Note borrowed projections expose exact bytes and source-owned geometry",

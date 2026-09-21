@@ -454,7 +454,7 @@ NodeK/CodeM, not worked around in ice:**
    still passes; its training budget was separately widened from 150 to 400 epochs after this
    change exposed that the original budget left quantile-interval calibration marginal — median
    accuracy and quantile ordering were unaffected).
-2. **`Series::narrow_copy()` cloned and silently detached from the autograd graph — confirmed
+2. **`Series::narrow_copy()` cloned and silently detached from the autodiff graph — confirmed
    empirically** (a parameter narrowed-and-summed reported zero gradient after `reverse()`; the same
    parameter through `index_select()` reported the correct one). Root cause: `select_range()` (what
    `narrow`/`slice`/`narrow_copy` are all built on) already registers a correct backward via

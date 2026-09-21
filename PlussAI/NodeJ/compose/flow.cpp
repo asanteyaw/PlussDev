@@ -139,69 +139,124 @@ template <class T>
   }
 }
 
+// std::get<T>(options) below would throw std::bad_variant_access (an
+// uncaught exception, not a Status) if a caller's `options` alternative does
+// not match `kind` -- e.g. add_named_transform(StandardScaler,
+// OneHotEncoderOptions{}). Validate the active alternative first so a
+// mismatch is reported the same way every other input error is: a Status.
+template <class Options>
+[[nodiscard]] StatusOr<Options> require_options(TransformKind kind, const TransformOptions& options) {
+  if (!std::holds_alternative<Options>(options)) {
+    return StatusOr<Options>(Status::invalid_argument(
+        std::string("Flow::add_named_transform: options does not match kind=") +
+        transform_kind_name(kind) + "."));
+  }
+  return StatusOr<Options>(std::get<Options>(options));
+}
+
 [[nodiscard]] StatusOr<std::unique_ptr<TransformerBase>> make_transformer_from_spec(TransformKind kind,
                                                                                     const TransformOptions& options) {
   switch (kind) {
-    case TransformKind::StandardScaler:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::StandardScaler>(
-          std::get<prep::StandardScalerOptions>(options)));
-    case TransformKind::MinMaxScaler:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::MinMaxScaler>(
-          std::get<prep::MinMaxScalerOptions>(options)));
-    case TransformKind::RobustScaler:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::RobustScaler>(
-          std::get<prep::RobustScalerOptions>(options)));
-    case TransformKind::SimpleImputer:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::SimpleImputer>(
-          std::get<prep::SimpleImputerOptions>(options)));
-    case TransformKind::NeighborImputer:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::NeighborImputer>(
-          std::get<prep::NeighborImputerOptions>(options)));
-    case TransformKind::IterativeImputer:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::IterativeImputer>(
-          std::get<prep::IterativeImputerOptions>(options)));
-    case TransformKind::OneHotEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::OneHotEncoder>(
-          std::get<prep::OneHotEncoderOptions>(options)));
-    case TransformKind::FrequencyEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::FrequencyEncoder>(
-          std::get<prep::FrequencyEncoderOptions>(options)));
-    case TransformKind::VectorNormalizer:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::VectorNormalizer>(
-          std::get<prep::VectorNormalizerOptions>(options)));
-    case TransformKind::MaxAbsScaler:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::MaxAbsScaler>(
-          std::get<prep::MaxAbsScalerOptions>(options)));
-    case TransformKind::QuantileMap:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::QuantileMap>(
-          std::get<prep::QuantileMapOptions>(options)));
-    case TransformKind::PowerMap:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::PowerMap>(
-          std::get<prep::PowerMapOptions>(options)));
-    case TransformKind::ThresholdBinarizer:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::ThresholdBinarizer>(
-          std::get<prep::ThresholdBinarizerOptions>(options)));
-    case TransformKind::PolynomialLift:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::PolynomialLift>(
-          std::get<prep::PolynomialLiftOptions>(options)));
-    case TransformKind::OrdinalEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::OrdinalEncoder>(
-          std::get<prep::OrdinalEncoderOptions>(options)));
-    case TransformKind::LabelEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::LabelEncoder>(
-          std::get<prep::LabelEncoderOptions>(options)));
-    case TransformKind::BaseNEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::BaseNEncoder>(
-          std::get<prep::BaseNEncoderOptions>(options)));
-    case TransformKind::HashingEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::HashingEncoder>(
-          std::get<prep::HashingEncoderOptions>(options)));
-    case TransformKind::TargetEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::TargetEncoder>(
-          std::get<prep::TargetEncoderOptions>(options)));
-    case TransformKind::WOEEncoder:
-      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::WOEEncoder>(
-          std::get<prep::WOEEncoderOptions>(options)));
+    case TransformKind::StandardScaler: {
+      StatusOr<prep::StandardScalerOptions> opts = require_options<prep::StandardScalerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::StandardScaler>(opts.value()));
+    }
+    case TransformKind::MinMaxScaler: {
+      StatusOr<prep::MinMaxScalerOptions> opts = require_options<prep::MinMaxScalerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::MinMaxScaler>(opts.value()));
+    }
+    case TransformKind::RobustScaler: {
+      StatusOr<prep::RobustScalerOptions> opts = require_options<prep::RobustScalerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::RobustScaler>(opts.value()));
+    }
+    case TransformKind::SimpleImputer: {
+      StatusOr<prep::SimpleImputerOptions> opts = require_options<prep::SimpleImputerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::SimpleImputer>(opts.value()));
+    }
+    case TransformKind::NeighborImputer: {
+      StatusOr<prep::NeighborImputerOptions> opts = require_options<prep::NeighborImputerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::NeighborImputer>(opts.value()));
+    }
+    case TransformKind::IterativeImputer: {
+      StatusOr<prep::IterativeImputerOptions> opts = require_options<prep::IterativeImputerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::IterativeImputer>(opts.value()));
+    }
+    case TransformKind::OneHotEncoder: {
+      StatusOr<prep::OneHotEncoderOptions> opts = require_options<prep::OneHotEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::OneHotEncoder>(opts.value()));
+    }
+    case TransformKind::FrequencyEncoder: {
+      StatusOr<prep::FrequencyEncoderOptions> opts = require_options<prep::FrequencyEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::FrequencyEncoder>(opts.value()));
+    }
+    case TransformKind::VectorNormalizer: {
+      StatusOr<prep::VectorNormalizerOptions> opts = require_options<prep::VectorNormalizerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::VectorNormalizer>(opts.value()));
+    }
+    case TransformKind::MaxAbsScaler: {
+      StatusOr<prep::MaxAbsScalerOptions> opts = require_options<prep::MaxAbsScalerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::MaxAbsScaler>(opts.value()));
+    }
+    case TransformKind::QuantileMap: {
+      StatusOr<prep::QuantileMapOptions> opts = require_options<prep::QuantileMapOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::QuantileMap>(opts.value()));
+    }
+    case TransformKind::PowerMap: {
+      StatusOr<prep::PowerMapOptions> opts = require_options<prep::PowerMapOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::PowerMap>(opts.value()));
+    }
+    case TransformKind::ThresholdBinarizer: {
+      StatusOr<prep::ThresholdBinarizerOptions> opts = require_options<prep::ThresholdBinarizerOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::ThresholdBinarizer>(opts.value()));
+    }
+    case TransformKind::PolynomialLift: {
+      StatusOr<prep::PolynomialLiftOptions> opts = require_options<prep::PolynomialLiftOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::PolynomialLift>(opts.value()));
+    }
+    case TransformKind::OrdinalEncoder: {
+      StatusOr<prep::OrdinalEncoderOptions> opts = require_options<prep::OrdinalEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::OrdinalEncoder>(opts.value()));
+    }
+    case TransformKind::LabelEncoder: {
+      StatusOr<prep::LabelEncoderOptions> opts = require_options<prep::LabelEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::LabelEncoder>(opts.value()));
+    }
+    case TransformKind::BaseNEncoder: {
+      StatusOr<prep::BaseNEncoderOptions> opts = require_options<prep::BaseNEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::BaseNEncoder>(opts.value()));
+    }
+    case TransformKind::HashingEncoder: {
+      StatusOr<prep::HashingEncoderOptions> opts = require_options<prep::HashingEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::HashingEncoder>(opts.value()));
+    }
+    case TransformKind::TargetEncoder: {
+      StatusOr<prep::TargetEncoderOptions> opts = require_options<prep::TargetEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::TargetEncoder>(opts.value()));
+    }
+    case TransformKind::WOEEncoder: {
+      StatusOr<prep::WOEEncoderOptions> opts = require_options<prep::WOEEncoderOptions>(kind, options);
+      if (!opts.ok()) return StatusOr<std::unique_ptr<TransformerBase>>(opts.status());
+      return StatusOr<std::unique_ptr<TransformerBase>>(std::make_unique<prep::WOEEncoder>(opts.value()));
+    }
   }
   return StatusOr<std::unique_ptr<TransformerBase>>(Status::invalid_argument("Unsupported transform kind."));
 }
@@ -952,7 +1007,9 @@ Status set_model_param(ModelSpec& spec, std::string_view param, double value) {
 
 bool Flow::trained() const noexcept { return trained_; }
 
-bool Flow::has_model() const noexcept { return static_cast<bool>(classifier_) || static_cast<bool>(regressor_); }
+bool Flow::has_model() const noexcept {
+  return static_cast<bool>(classifier_) || static_cast<bool>(regressor_) || has_transform_model_;
+}
 
 TaskKind Flow::task_kind() const noexcept {
   if (classifier_) return TaskKind::Classification;
@@ -1185,13 +1242,12 @@ StatusOr<Flow> Flow::clone() const {
         Status::invalid_argument("Flow::clone requires a ModelSpec for model-backed flows."));
   }
 
+  // Rebuild transform stages before the model: a TaskKind::Transform
+  // ModelSpec's model occupies the tail of transforms_ with no
+  // transform_specs_ entry of its own (see set_model()), and
+  // add_named_transform() refuses to add anything after it. Stages first,
+  // model last is the only order that works for every task.
   Flow out{};
-  if (model_spec_.has_value()) {
-    StatusOr<Flow> flow_or = make_flow(*model_spec_);
-    if (!flow_or.ok()) return flow_or;
-    out = flow_or.move_value();
-  }
-
   for (const TransformSpec& spec : transform_specs_) {
     Status status = out.add_named_transform(spec.kind,
                                             spec.options,
@@ -1201,6 +1257,13 @@ StatusOr<Flow> Flow::clone() const {
     if (!status.ok()) {
       return StatusOr<Flow>(
           Status::invalid_argument("Flow::clone failed to rebuild transform stage: " + status.message));
+    }
+  }
+
+  if (model_spec_.has_value()) {
+    Status status = out.set_model(*model_spec_);
+    if (!status.ok()) {
+      return StatusOr<Flow>(Status::invalid_argument("Flow::clone failed to rebuild model: " + status.message));
     }
   }
 
@@ -1233,6 +1296,19 @@ Status Flow::add_named_transform(TransformKind kind,
                                  std::string stage_key,
                                  pluss::msharp::RangeView::Int feature_route,
                                  RouteRemainderPolicy remainder) {
+  // set_model() with a TaskKind::Transform spec pushes the built transformer
+  // straight onto transforms_ without a matching transform_specs_ entry (it
+  // is the model, tracked via model_spec_, not a named stage). Pushing a
+  // named stage on top of that would land this call's own spec at the wrong
+  // index relative to transforms_, silently misrouting it to the model
+  // instead of this stage on the next map()/learn_map(). Refuse instead of
+  // corrupting the alignment.
+  if (transforms_.size() != transform_specs_.size()) {
+    return Status::precondition(
+        "Flow::add_named_transform cannot add a stage after a TaskKind::Transform model has been set via "
+        "set_model(); build every transform stage before attaching a Transform-task model, or attach the "
+        "model to a separate Flow.");
+  }
   if (!stage_key.empty()) {
     for (const TransformSpec& spec : transform_specs_) {
       if (spec.stage_key == stage_key) {
@@ -1298,6 +1374,16 @@ Status Flow::set_stage_remainder(std::int64_t stage_index, RouteRemainderPolicy 
 
 Status Flow::append_transform(std::unique_ptr<TransformerBase> transformer) {
   if (!transformer) return Status::invalid_argument("Flow::append_transform requires a non-null transformer.");
+  // See the identical guard in add_named_transform(): set_model() with a
+  // TaskKind::Transform spec leaves transforms_ one entry ahead of
+  // transform_specs_ (the model has no spec entry), so appending here would
+  // misalign every later index too.
+  if (transforms_.size() != transform_specs_.size()) {
+    return Status::precondition(
+        "Flow::append_transform cannot add a stage after a TaskKind::Transform model has been set via "
+        "set_model(); build every transform stage before attaching a Transform-task model, or attach the "
+        "model to a separate Flow.");
+  }
   transforms_.push_back(std::move(transformer));
   // Keep transform_specs_ index-aligned with transforms_. An opaque stage
   // (FeatureTransformer / FunctionTransformer) runs on the whole frame and does
@@ -1319,6 +1405,12 @@ void Flow::clear_transforms() noexcept {
   transform_specs_.clear();
   has_opaque_transforms_ = false;
   trained_ = false;
+  // Wiping transforms_ also removes a TaskKind::Transform model, if one was
+  // set via set_model() -- it lived there, not in classifier_/regressor_.
+  if (has_transform_model_) {
+    has_transform_model_ = false;
+    model_spec_.reset();
+  }
 }
 
 Status Flow::add_standard_scaler(prep::StandardScalerOptions options, pluss::msharp::RangeView::Int feature_route) {
@@ -1453,7 +1545,11 @@ Status Flow::set_model(const ModelSpec& spec) {
   if (spec.task == TaskKind::Transform) {
     StatusOr<std::unique_ptr<TransformerBase>> transformer_or = make_transformer(spec);
     if (!transformer_or.ok()) return transformer_or.status();
+    // clear_model() above already popped any prior Transform-task model, so
+    // transforms_ carries no orphan here -- push_back is always a clean
+    // replacement, never an accumulation.
     transforms_.push_back(transformer_or.move_value());
+    has_transform_model_ = true;
     model_spec_ = spec;
     trained_ = false;
     return Status::success();
@@ -1461,9 +1557,17 @@ Status Flow::set_model(const ModelSpec& spec) {
   return Status::invalid_argument("Flow::set_model supports classification, regression, or transform ModelSpec tasks.");
 }
 
+void Flow::clear_transform_model() noexcept {
+  if (has_transform_model_) {
+    transforms_.pop_back();
+    has_transform_model_ = false;
+  }
+}
+
 Status Flow::set_classifier(std::unique_ptr<ClassifierBase> model) {
   if (!model) return Status::invalid_argument("Flow::set_classifier requires a non-null model.");
   regressor_.reset();
+  clear_transform_model();
   classifier_ = std::move(model);
   model_spec_.reset();
   trained_ = false;
@@ -1473,6 +1577,7 @@ Status Flow::set_classifier(std::unique_ptr<ClassifierBase> model) {
 Status Flow::set_regressor(std::unique_ptr<RegressorBase> model) {
   if (!model) return Status::invalid_argument("Flow::set_regressor requires a non-null model.");
   classifier_.reset();
+  clear_transform_model();
   regressor_ = std::move(model);
   model_spec_.reset();
   trained_ = false;
@@ -1482,6 +1587,7 @@ Status Flow::set_regressor(std::unique_ptr<RegressorBase> model) {
 void Flow::clear_model() noexcept {
   classifier_.reset();
   regressor_.reset();
+  clear_transform_model();
   model_spec_.reset();
   trained_ = false;
 }
@@ -1546,7 +1652,7 @@ namespace {
     if (target == nullptr || !target->defined()) {
       return StatusOr<Series>(Status::invalid_argument(
           "a supervised prep stage (target / woe encoder) needs a training target; "
-          "attach it inside Model::learn(x, y), not a target-free transform flow."));
+          "attach it inside Flow::learn(labeled_batch), not Flow::map()/learn_map()."));
     }
     Status fit = stage.learn_supervised(batch, *target, learn_options);
     if (!fit.ok()) return StatusOr<Series>(std::move(fit));

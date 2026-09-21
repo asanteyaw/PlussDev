@@ -109,7 +109,7 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
 - `pluss::coden::Note::url_decode`: the inverse.
 - [`Note::base64_encode`](base64_encode.md): the other "make it ASCII-safe"
   encoding, for transfer rather than URL syntax.
-- [`Note::tex_escape`](tex_escape.md): escaping for a different consumer.
+- [`NoteTexAccessor::escape`](../note-tex/escape.md): escaping for a different consumer.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="url_decode.html">

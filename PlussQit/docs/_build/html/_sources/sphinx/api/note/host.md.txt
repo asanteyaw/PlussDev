@@ -45,7 +45,7 @@ there is no rank or storage to materialize.
 
 The operation allocates and copies `O(numel() + total text bytes)`. It preserves
 embedded zero bytes and raw-byte content because `std::string` is length-aware;
-it does not transcode, parse, or validate. Prefer `matrix()` or `tensor3()` when
+it does not transcode, parse, or validate. Prefer `matrix()` or `slabs()` when
 the goal is decomposition without copying.
 
 ## Example 1: Scalar Payload

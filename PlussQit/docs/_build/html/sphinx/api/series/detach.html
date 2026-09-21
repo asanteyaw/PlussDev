@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -72,7 +72,7 @@ A detached <code class="docutils literal notranslate"><span class="pre">Series</
 </section>
 <section id="reverse-mode-meaning">
 <h2>Reverse-Mode Meaning<a class="headerlink" href="#reverse-mode-meaning" title="Link to this heading">¶</a></h2>
-<p>Detaching creates a new autograd boundary.</p>
+<p>Detaching creates a new autodiff boundary.</p>
 <p>Before detaching, later reverse-mode can treat the current value as depending
 on earlier tracked sources.</p>
 <p>After detaching, later reverse-mode treats the detached value as a fresh value
@@ -205,7 +205,7 @@ with a new reverse history, not a continuation of the old one.</p></li>
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">detach()</span></code> when you want the current numeric value as a fresh autograd
+<p>Use <code class="docutils literal notranslate"><span class="pre">detach()</span></code> when you want the current numeric value as a fresh autodiff
 boundary: same visible data, no current upstream reverse-mode connection.</p>
 </section>
 <section id="see-also">
@@ -312,6 +312,8 @@ detached values stop feeding into upstream history.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

@@ -99,7 +99,7 @@ café
 
 - [`Note::html_escape`](html_escape.md): escaping for HTML/XML markup instead
   of JSON.
-- [`Note::tex_escape`](tex_escape.md): escaping TeX special characters.
+- [`NoteTexAccessor::escape`](../note-tex/escape.md): escaping TeX special characters.
 - [`Note::quote`](quote.md): wrap a cell in quotation marks.
 
 <div class="pluss-inline-prev-next">

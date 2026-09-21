@@ -10,16 +10,16 @@ transitive (composite) gradients for everything built out of those.
 
 - **28** declarative unary primitive rules
 - **7** declarative binary primitive rules
-- **82** ops with an explicit hand-written reverse node
-- **117** ops total with a dedicated derivative
+- **99** ops with an explicit hand-written reverse node
+- **134** ops total with a dedicated derivative
 - everything else on the public surface is composite-transitive or
   non-differentiable; correctness is pinned by
-  `tests/CodeM/test_autograd_sweep.cpp` (finite-difference) and
+  `tests/CodeM/test_autodiff_sweep.cpp` (finite-difference) and
   `tests/CodeM/test_patch177_cpu_torch_autograd_parity.cpp` (libtorch oracle)
 
 This table is a **static index** parsed from the sources. The runtime-
 authoritative list of what actually forms a reverse node is the
-`[autograd-sweep]` classification report; per-op libtorch parity lives in
+`[autodiff-sweep]` classification report; per-op libtorch parity lives in
 the oracle's `[generated]` / `[parity]` cases. Regenerate this file with
 `python3 tools/audit/gen_derivative_coverage.py` after changing
 `derivatives.yaml` or a `maybe_link_*` call site.
@@ -94,9 +94,17 @@ selected indices, views / alias lineage, and the matmul / linalg family).
 | `diag_embed` | `SourceLink` |
 | `diag_extract` | `SourceLink` |
 | `diagonal_scatter` | `SourceLink` |
+| `dropout` | `SourceLink` |
+| `elu` | `maybe_link_unary_op` |
 | `expand` | `SourceLink` |
 | `frexp` | `maybe_link_unary_op` |
 | `gather` | `maybe_link_unary_op` |
+| `gelu_exact` | `maybe_link_unary_op` |
+| `gelu_tanh` | `maybe_link_unary_op` |
+| `grouped_median` | `SourceLink` |
+| `grouped_mode` | `SourceLink` |
+| `hardsigmoid` | `maybe_link_unary_op` |
+| `hardswish` | `maybe_link_unary_op` |
 | `hilbert` | `SourceLink` |
 | `hypot` | `maybe_link_binary_op` |
 | `imag` | `maybe_link_unary_op` |
@@ -105,15 +113,20 @@ selected indices, views / alias lineage, and the matmul / linalg family).
 | `index_select` | `SourceLink` |
 | `inplace_bridge_input` | `SourceLink` |
 | `kthvalue` | `SourceLink` |
+| `layer_norm` | `SourceLink` |
+| `leaky_relu` | `maybe_link_unary_op` |
 | `lgamma` | `maybe_link_unary_op` |
+| `log_softmax` | `maybe_link_unary_op` |
 | `logaddexp` | `maybe_link_binary_op` |
 | `logaddexp2` | `maybe_link_binary_op` |
 | `logcdf` | `bind_normal_stat_backward` |
 | `logpdf` | `bind_normal_stat_backward` |
+| `logsumexp` | `maybe_link_unary_op` |
 | `masked_scatter` | `SourceLink` |
 | `masked_select` | `SourceLink` |
 | `matmul` | `SourceLink` |
 | `mean` | `SourceLink` |
+| `mish` | `maybe_link_unary_op` |
 | `mode` | `SourceLink`, `bind_selection_permutation_backward` |
 | `mov` | `SourceLink` |
 | `nan_to_num` | `maybe_link_unary_op` |
@@ -125,10 +138,13 @@ selected indices, views / alias lineage, and the matmul / linalg family).
 | `prod` | `maybe_link_unary_op` |
 | `real` | `maybe_link_unary_op` |
 | `reshape_contiguous` | `maybe_link_unary_op` |
+| `rrelu` | `SourceLink` |
 | `scatter` | `SourceLink` |
 | `scatter_add` | `SourceLink` |
 | `select` | `maybe_link_alias_lineage`, `maybe_link_unary_op` |
+| `silu` | `maybe_link_unary_op` |
 | `slice` | `maybe_link_alias_lineage`, `maybe_link_unary_op` |
+| `softmax` | `maybe_link_unary_op` |
 | `sort` | `bind_selection_permutation_backward` |
 | `squeeze` | `maybe_link_alias_lineage` |
 | `subsp::linearalg::cholesky` | `SourceLink` |
@@ -146,6 +162,7 @@ selected indices, views / alias lineage, and the matmul / linalg family).
 | `subsp::linearalg::triangular_solve` | `SourceLink` |
 | `sum` | `SourceLink` |
 | `take` | `maybe_link_unary_op` |
+| `threshold` | `maybe_link_unary_op` |
 | `topk` | `bind_selection_permutation_backward` |
 | `transpose` | `maybe_link_alias_lineage` |
 | `triu` | `bind_triangular_mask_backward` |

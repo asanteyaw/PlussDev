@@ -23,21 +23,27 @@ int main() {
   cls::LinearFamilyOptions linear{};
   linear.objective = cls::LinearObjective::Logistic;  // classification needs Logistic or Hinge
 
-  auto fit_and_predict = [&](cls::ClassWeightMode mode) {
+  // A probe between the two clusters -- both fits classify every training
+  // row correctly regardless of weighting, so the effect only shows up as a
+  // shift in the raw decision score at a point neither cluster owns outright.
+  cls::FeatureBatch probe{};
+  probe.x = pluss::make_series({3.0}, {1}, f64).reshape({1, 1});
+
+  auto fit_and_score = [&](cls::ClassWeightMode mode) {
     cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
         cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
     cls::TrainOptions opts{};
     opts.class_weight = mode;
     made.value()->learn(batch, opts);
-    cls::StatusOr<cls::Series> pred = made.value()->infer(batch.features);
-    return pred.value();
+    return made.value()->infer_scores(probe).value().item<double>();
   };
 
-  const cls::Series unweighted = fit_and_predict(cls::ClassWeightMode::None);
-  const cls::Series balanced = fit_and_predict(cls::ClassWeightMode::Balanced);
+  const double unweighted_score = fit_and_score(cls::ClassWeightMode::None);
+  const double balanced_score = fit_and_score(cls::ClassWeightMode::Balanced);
 
-  std::cout << "unweighted predictions = " << unweighted << "\n";
-  std::cout << "balanced predictions   = " << balanced << "\n";
+  std::cout << "unweighted score at x=3.0 = " << unweighted_score << "\n";
+  std::cout << "balanced score at x=3.0   = " << balanced_score
+            << "  (pulled toward the minority class)\n";
 
   return 0;
 }

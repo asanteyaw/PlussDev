@@ -1215,6 +1215,118 @@ plussqit_coden_note_collection_reference_demo/fast:
 .PHONY : plussqit_coden_note_collection_reference_demo/fast
 
 # Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_operator_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_operator_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_operator_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build
+.PHONY : plussqit_coden_note_operator_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_repeat_order_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_repeat_order_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_repeat_order_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build
+.PHONY : plussqit_coden_note_repeat_order_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_nlp_mask_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_nlp_mask_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_mask_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_mask_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_nlp_normalize_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_nlp_normalize_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_normalize_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_normalize_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_nlp_remove_structure_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_nlp_remove_structure_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_remove_structure_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_remove_structure_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_nlp_remove_markup_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_nlp_remove_markup_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_remove_markup_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_remove_markup_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_note_regex_reference_demo: PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/rule
+.PHONY : plussqit_coden_note_regex_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_regex_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build
+.PHONY : plussqit_coden_note_regex_reference_demo/fast
+
+# Convenience name for target.
+PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/rule
+.PHONY : PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/rule
+
+# Convenience name for target.
+plussqit_coden_tokenbatch_codec_reference_demo: PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/rule
+.PHONY : plussqit_coden_tokenbatch_codec_reference_demo
+
+# fast build rule for target.
+plussqit_coden_tokenbatch_codec_reference_demo/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build
+.PHONY : plussqit_coden_tokenbatch_codec_reference_demo/fast
+
+# Convenience name for target.
 PlussQit/CMakeFiles/plussqit_coden_note_docverify_demo.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussQit/CMakeFiles/plussqit_coden_note_docverify_demo.dir/rule
 .PHONY : PlussQit/CMakeFiles/plussqit_coden_note_docverify_demo.dir/rule
@@ -4012,6 +4124,126 @@ examples/CodeN/note_method_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_method_reference_demo.dir/examples/CodeN/note_method_reference_demo.cpp.s
 .PHONY : examples/CodeN/note_method_reference_demo.cpp.s
 
+examples/CodeN/note_nlp_mask_reference_demo.o: examples/CodeN/note_nlp_mask_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_mask_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_nlp_mask_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/examples/CodeN/note_nlp_mask_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_mask_reference_demo.cpp.o
+
+examples/CodeN/note_nlp_mask_reference_demo.i: examples/CodeN/note_nlp_mask_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_mask_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_nlp_mask_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/examples/CodeN/note_nlp_mask_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_mask_reference_demo.cpp.i
+
+examples/CodeN/note_nlp_mask_reference_demo.s: examples/CodeN/note_nlp_mask_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_mask_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_nlp_mask_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/examples/CodeN/note_nlp_mask_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_mask_reference_demo.cpp.s
+
+examples/CodeN/note_nlp_normalize_reference_demo.o: examples/CodeN/note_nlp_normalize_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_normalize_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_nlp_normalize_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/examples/CodeN/note_nlp_normalize_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_normalize_reference_demo.cpp.o
+
+examples/CodeN/note_nlp_normalize_reference_demo.i: examples/CodeN/note_nlp_normalize_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_normalize_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_nlp_normalize_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/examples/CodeN/note_nlp_normalize_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_normalize_reference_demo.cpp.i
+
+examples/CodeN/note_nlp_normalize_reference_demo.s: examples/CodeN/note_nlp_normalize_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_normalize_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_nlp_normalize_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/examples/CodeN/note_nlp_normalize_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_normalize_reference_demo.cpp.s
+
+examples/CodeN/note_nlp_remove_markup_reference_demo.o: examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_remove_markup_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.o
+
+examples/CodeN/note_nlp_remove_markup_reference_demo.i: examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_remove_markup_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.i
+
+examples/CodeN/note_nlp_remove_markup_reference_demo.s: examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_remove_markup_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_remove_markup_reference_demo.cpp.s
+
+examples/CodeN/note_nlp_remove_structure_reference_demo.o: examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_remove_structure_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.o
+
+examples/CodeN/note_nlp_remove_structure_reference_demo.i: examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_remove_structure_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.i
+
+examples/CodeN/note_nlp_remove_structure_reference_demo.s: examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_remove_structure_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_nlp_remove_structure_reference_demo.cpp.s
+
+examples/CodeN/note_operator_reference_demo.o: examples/CodeN/note_operator_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_operator_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_operator_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/examples/CodeN/note_operator_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_operator_reference_demo.cpp.o
+
+examples/CodeN/note_operator_reference_demo.i: examples/CodeN/note_operator_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_operator_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_operator_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/examples/CodeN/note_operator_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_operator_reference_demo.cpp.i
+
+examples/CodeN/note_operator_reference_demo.s: examples/CodeN/note_operator_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_operator_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_operator_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/examples/CodeN/note_operator_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_operator_reference_demo.cpp.s
+
 examples/CodeN/note_printing_demo.o: examples/CodeN/note_printing_demo.cpp.o
 .PHONY : examples/CodeN/note_printing_demo.o
 
@@ -4059,6 +4291,78 @@ examples/CodeN/note_projection_reference_demo.s: examples/CodeN/note_projection_
 examples/CodeN/note_projection_reference_demo.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_projection_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_projection_reference_demo.dir/examples/CodeN/note_projection_reference_demo.cpp.s
 .PHONY : examples/CodeN/note_projection_reference_demo.cpp.s
+
+examples/CodeN/note_regex_reference_demo.o: examples/CodeN/note_regex_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_regex_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_regex_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/examples/CodeN/note_regex_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_regex_reference_demo.cpp.o
+
+examples/CodeN/note_regex_reference_demo.i: examples/CodeN/note_regex_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_regex_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_regex_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/examples/CodeN/note_regex_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_regex_reference_demo.cpp.i
+
+examples/CodeN/note_regex_reference_demo.s: examples/CodeN/note_regex_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_regex_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_regex_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/examples/CodeN/note_regex_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_regex_reference_demo.cpp.s
+
+examples/CodeN/note_repeat_order_reference_demo.o: examples/CodeN/note_repeat_order_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_repeat_order_reference_demo.o
+
+# target to build an object file
+examples/CodeN/note_repeat_order_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/examples/CodeN/note_repeat_order_reference_demo.cpp.o
+.PHONY : examples/CodeN/note_repeat_order_reference_demo.cpp.o
+
+examples/CodeN/note_repeat_order_reference_demo.i: examples/CodeN/note_repeat_order_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_repeat_order_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/note_repeat_order_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/examples/CodeN/note_repeat_order_reference_demo.cpp.i
+.PHONY : examples/CodeN/note_repeat_order_reference_demo.cpp.i
+
+examples/CodeN/note_repeat_order_reference_demo.s: examples/CodeN/note_repeat_order_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_repeat_order_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/note_repeat_order_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/examples/CodeN/note_repeat_order_reference_demo.cpp.s
+.PHONY : examples/CodeN/note_repeat_order_reference_demo.cpp.s
+
+examples/CodeN/tokenbatch_codec_reference_demo.o: examples/CodeN/tokenbatch_codec_reference_demo.cpp.o
+.PHONY : examples/CodeN/tokenbatch_codec_reference_demo.o
+
+# target to build an object file
+examples/CodeN/tokenbatch_codec_reference_demo.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/examples/CodeN/tokenbatch_codec_reference_demo.cpp.o
+.PHONY : examples/CodeN/tokenbatch_codec_reference_demo.cpp.o
+
+examples/CodeN/tokenbatch_codec_reference_demo.i: examples/CodeN/tokenbatch_codec_reference_demo.cpp.i
+.PHONY : examples/CodeN/tokenbatch_codec_reference_demo.i
+
+# target to preprocess a source file
+examples/CodeN/tokenbatch_codec_reference_demo.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/examples/CodeN/tokenbatch_codec_reference_demo.cpp.i
+.PHONY : examples/CodeN/tokenbatch_codec_reference_demo.cpp.i
+
+examples/CodeN/tokenbatch_codec_reference_demo.s: examples/CodeN/tokenbatch_codec_reference_demo.cpp.s
+.PHONY : examples/CodeN/tokenbatch_codec_reference_demo.s
+
+# target to generate assembly for a file
+examples/CodeN/tokenbatch_codec_reference_demo.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/examples/CodeN/tokenbatch_codec_reference_demo.cpp.s
+.PHONY : examples/CodeN/tokenbatch_codec_reference_demo.cpp.s
 
 examples/dispense_demo.o: examples/dispense_demo.cpp.o
 .PHONY : examples/dispense_demo.o
@@ -6100,6 +6404,78 @@ src/CodeN/core/Note.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/Note.cpp.s
 .PHONY : src/CodeN/core/Note.cpp.s
 
+src/CodeN/core/NoteCodec.o: src/CodeN/core/NoteCodec.cpp.o
+.PHONY : src/CodeN/core/NoteCodec.o
+
+# target to build an object file
+src/CodeN/core/NoteCodec.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteCodec.cpp.o
+.PHONY : src/CodeN/core/NoteCodec.cpp.o
+
+src/CodeN/core/NoteCodec.i: src/CodeN/core/NoteCodec.cpp.i
+.PHONY : src/CodeN/core/NoteCodec.i
+
+# target to preprocess a source file
+src/CodeN/core/NoteCodec.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteCodec.cpp.i
+.PHONY : src/CodeN/core/NoteCodec.cpp.i
+
+src/CodeN/core/NoteCodec.s: src/CodeN/core/NoteCodec.cpp.s
+.PHONY : src/CodeN/core/NoteCodec.s
+
+# target to generate assembly for a file
+src/CodeN/core/NoteCodec.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteCodec.cpp.s
+.PHONY : src/CodeN/core/NoteCodec.cpp.s
+
+src/CodeN/core/NoteNlp.o: src/CodeN/core/NoteNlp.cpp.o
+.PHONY : src/CodeN/core/NoteNlp.o
+
+# target to build an object file
+src/CodeN/core/NoteNlp.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteNlp.cpp.o
+.PHONY : src/CodeN/core/NoteNlp.cpp.o
+
+src/CodeN/core/NoteNlp.i: src/CodeN/core/NoteNlp.cpp.i
+.PHONY : src/CodeN/core/NoteNlp.i
+
+# target to preprocess a source file
+src/CodeN/core/NoteNlp.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteNlp.cpp.i
+.PHONY : src/CodeN/core/NoteNlp.cpp.i
+
+src/CodeN/core/NoteNlp.s: src/CodeN/core/NoteNlp.cpp.s
+.PHONY : src/CodeN/core/NoteNlp.s
+
+# target to generate assembly for a file
+src/CodeN/core/NoteNlp.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteNlp.cpp.s
+.PHONY : src/CodeN/core/NoteNlp.cpp.s
+
+src/CodeN/core/NoteRegex.o: src/CodeN/core/NoteRegex.cpp.o
+.PHONY : src/CodeN/core/NoteRegex.o
+
+# target to build an object file
+src/CodeN/core/NoteRegex.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteRegex.cpp.o
+.PHONY : src/CodeN/core/NoteRegex.cpp.o
+
+src/CodeN/core/NoteRegex.i: src/CodeN/core/NoteRegex.cpp.i
+.PHONY : src/CodeN/core/NoteRegex.i
+
+# target to preprocess a source file
+src/CodeN/core/NoteRegex.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteRegex.cpp.i
+.PHONY : src/CodeN/core/NoteRegex.cpp.i
+
+src/CodeN/core/NoteRegex.s: src/CodeN/core/NoteRegex.cpp.s
+.PHONY : src/CodeN/core/NoteRegex.s
+
+# target to generate assembly for a file
+src/CodeN/core/NoteRegex.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden.dir/build.make PlussQit/CMakeFiles/plussqit_coden.dir/src/CodeN/core/NoteRegex.cpp.s
+.PHONY : src/CodeN/core/NoteRegex.cpp.s
+
 src/CodeN/core/OpsInternal.o: src/CodeN/core/OpsInternal.cpp.o
 .PHONY : src/CodeN/core/OpsInternal.o
 
@@ -6795,6 +7171,54 @@ tests/CodeM/test_gather_scatter.s: tests/CodeM/test_gather_scatter.cpp.s
 tests/CodeM/test_gather_scatter.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_gather_scatter.cpp.s
 .PHONY : tests/CodeM/test_gather_scatter.cpp.s
+
+tests/CodeM/test_grouped_median_backward.o: tests/CodeM/test_grouped_median_backward.cpp.o
+.PHONY : tests/CodeM/test_grouped_median_backward.o
+
+# target to build an object file
+tests/CodeM/test_grouped_median_backward.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_grouped_median_backward.cpp.o
+.PHONY : tests/CodeM/test_grouped_median_backward.cpp.o
+
+tests/CodeM/test_grouped_median_backward.i: tests/CodeM/test_grouped_median_backward.cpp.i
+.PHONY : tests/CodeM/test_grouped_median_backward.i
+
+# target to preprocess a source file
+tests/CodeM/test_grouped_median_backward.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_grouped_median_backward.cpp.i
+.PHONY : tests/CodeM/test_grouped_median_backward.cpp.i
+
+tests/CodeM/test_grouped_median_backward.s: tests/CodeM/test_grouped_median_backward.cpp.s
+.PHONY : tests/CodeM/test_grouped_median_backward.s
+
+# target to generate assembly for a file
+tests/CodeM/test_grouped_median_backward.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_grouped_median_backward.cpp.s
+.PHONY : tests/CodeM/test_grouped_median_backward.cpp.s
+
+tests/CodeM/test_grouped_mode_backward.o: tests/CodeM/test_grouped_mode_backward.cpp.o
+.PHONY : tests/CodeM/test_grouped_mode_backward.o
+
+# target to build an object file
+tests/CodeM/test_grouped_mode_backward.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_grouped_mode_backward.cpp.o
+.PHONY : tests/CodeM/test_grouped_mode_backward.cpp.o
+
+tests/CodeM/test_grouped_mode_backward.i: tests/CodeM/test_grouped_mode_backward.cpp.i
+.PHONY : tests/CodeM/test_grouped_mode_backward.i
+
+# target to preprocess a source file
+tests/CodeM/test_grouped_mode_backward.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_grouped_mode_backward.cpp.i
+.PHONY : tests/CodeM/test_grouped_mode_backward.cpp.i
+
+tests/CodeM/test_grouped_mode_backward.s: tests/CodeM/test_grouped_mode_backward.cpp.s
+.PHONY : tests/CodeM/test_grouped_mode_backward.s
+
+# target to generate assembly for a file
+tests/CodeM/test_grouped_mode_backward.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_grouped_mode_backward.cpp.s
+.PHONY : tests/CodeM/test_grouped_mode_backward.cpp.s
 
 tests/CodeM/test_introspection_family.o: tests/CodeM/test_introspection_family.cpp.o
 .PHONY : tests/CodeM/test_introspection_family.o
@@ -11086,6 +11510,30 @@ tests/CodeM/test_scatter_index_ii_family.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_scatter_index_ii_family.cpp.s
 .PHONY : tests/CodeM/test_scatter_index_ii_family.cpp.s
 
+tests/CodeM/test_series_backward_manifest.o: tests/CodeM/test_series_backward_manifest.cpp.o
+.PHONY : tests/CodeM/test_series_backward_manifest.o
+
+# target to build an object file
+tests/CodeM/test_series_backward_manifest.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_backward_manifest.cpp.o
+.PHONY : tests/CodeM/test_series_backward_manifest.cpp.o
+
+tests/CodeM/test_series_backward_manifest.i: tests/CodeM/test_series_backward_manifest.cpp.i
+.PHONY : tests/CodeM/test_series_backward_manifest.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_backward_manifest.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_backward_manifest.cpp.i
+.PHONY : tests/CodeM/test_series_backward_manifest.cpp.i
+
+tests/CodeM/test_series_backward_manifest.s: tests/CodeM/test_series_backward_manifest.cpp.s
+.PHONY : tests/CodeM/test_series_backward_manifest.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_backward_manifest.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_backward_manifest.cpp.s
+.PHONY : tests/CodeM/test_series_backward_manifest.cpp.s
+
 tests/CodeM/test_series_routing_manifest.o: tests/CodeM/test_series_routing_manifest.cpp.o
 .PHONY : tests/CodeM/test_series_routing_manifest.o
 
@@ -11109,6 +11557,30 @@ tests/CodeM/test_series_routing_manifest.s: tests/CodeM/test_series_routing_mani
 tests/CodeM/test_series_routing_manifest.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_routing_manifest.cpp.s
 .PHONY : tests/CodeM/test_series_routing_manifest.cpp.s
+
+tests/CodeM/test_series_source_public_api.o: tests/CodeM/test_series_source_public_api.cpp.o
+.PHONY : tests/CodeM/test_series_source_public_api.o
+
+# target to build an object file
+tests/CodeM/test_series_source_public_api.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_source_public_api.cpp.o
+.PHONY : tests/CodeM/test_series_source_public_api.cpp.o
+
+tests/CodeM/test_series_source_public_api.i: tests/CodeM/test_series_source_public_api.cpp.i
+.PHONY : tests/CodeM/test_series_source_public_api.i
+
+# target to preprocess a source file
+tests/CodeM/test_series_source_public_api.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_source_public_api.cpp.i
+.PHONY : tests/CodeM/test_series_source_public_api.cpp.i
+
+tests/CodeM/test_series_source_public_api.s: tests/CodeM/test_series_source_public_api.cpp.s
+.PHONY : tests/CodeM/test_series_source_public_api.s
+
+# target to generate assembly for a file
+tests/CodeM/test_series_source_public_api.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_tests.dir/build.make PlussQit/CMakeFiles/plussqit_tests.dir/tests/CodeM/test_series_source_public_api.cpp.s
+.PHONY : tests/CodeM/test_series_source_public_api.cpp.s
 
 tests/CodeM/test_shape_cat_stack_math.o: tests/CodeM/test_shape_cat_stack_math.cpp.o
 .PHONY : tests/CodeM/test_shape_cat_stack_math.o
@@ -11254,6 +11726,126 @@ tests/CodeN/test_coden_note_collection.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_collection.cpp.s
 .PHONY : tests/CodeN/test_coden_note_collection.cpp.s
 
+tests/CodeN/test_coden_note_nlp_accessor.o: tests/CodeN/test_coden_note_nlp_accessor.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_accessor.o
+
+# target to build an object file
+tests/CodeN/test_coden_note_nlp_accessor.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_accessor.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_accessor.cpp.o
+
+tests/CodeN/test_coden_note_nlp_accessor.i: tests/CodeN/test_coden_note_nlp_accessor.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_accessor.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_note_nlp_accessor.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_accessor.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_accessor.cpp.i
+
+tests/CodeN/test_coden_note_nlp_accessor.s: tests/CodeN/test_coden_note_nlp_accessor.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_accessor.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_note_nlp_accessor.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_accessor.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_accessor.cpp.s
+
+tests/CodeN/test_coden_note_nlp_masks.o: tests/CodeN/test_coden_note_nlp_masks.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_masks.o
+
+# target to build an object file
+tests/CodeN/test_coden_note_nlp_masks.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_masks.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_masks.cpp.o
+
+tests/CodeN/test_coden_note_nlp_masks.i: tests/CodeN/test_coden_note_nlp_masks.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_masks.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_note_nlp_masks.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_masks.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_masks.cpp.i
+
+tests/CodeN/test_coden_note_nlp_masks.s: tests/CodeN/test_coden_note_nlp_masks.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_masks.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_note_nlp_masks.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_masks.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_masks.cpp.s
+
+tests/CodeN/test_coden_note_nlp_normalize.o: tests/CodeN/test_coden_note_nlp_normalize.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_normalize.o
+
+# target to build an object file
+tests/CodeN/test_coden_note_nlp_normalize.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_normalize.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_normalize.cpp.o
+
+tests/CodeN/test_coden_note_nlp_normalize.i: tests/CodeN/test_coden_note_nlp_normalize.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_normalize.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_note_nlp_normalize.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_normalize.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_normalize.cpp.i
+
+tests/CodeN/test_coden_note_nlp_normalize.s: tests/CodeN/test_coden_note_nlp_normalize.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_normalize.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_note_nlp_normalize.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_normalize.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_normalize.cpp.s
+
+tests/CodeN/test_coden_note_nlp_remove_markup.o: tests/CodeN/test_coden_note_nlp_remove_markup.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_markup.o
+
+# target to build an object file
+tests/CodeN/test_coden_note_nlp_remove_markup.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_remove_markup.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_markup.cpp.o
+
+tests/CodeN/test_coden_note_nlp_remove_markup.i: tests/CodeN/test_coden_note_nlp_remove_markup.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_markup.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_note_nlp_remove_markup.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_remove_markup.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_markup.cpp.i
+
+tests/CodeN/test_coden_note_nlp_remove_markup.s: tests/CodeN/test_coden_note_nlp_remove_markup.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_markup.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_note_nlp_remove_markup.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_remove_markup.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_markup.cpp.s
+
+tests/CodeN/test_coden_note_nlp_remove_structure.o: tests/CodeN/test_coden_note_nlp_remove_structure.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_structure.o
+
+# target to build an object file
+tests/CodeN/test_coden_note_nlp_remove_structure.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_remove_structure.cpp.o
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_structure.cpp.o
+
+tests/CodeN/test_coden_note_nlp_remove_structure.i: tests/CodeN/test_coden_note_nlp_remove_structure.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_structure.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_note_nlp_remove_structure.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_remove_structure.cpp.i
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_structure.cpp.i
+
+tests/CodeN/test_coden_note_nlp_remove_structure.s: tests/CodeN/test_coden_note_nlp_remove_structure.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_structure.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_note_nlp_remove_structure.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_nlp_remove_structure.cpp.s
+.PHONY : tests/CodeN/test_coden_note_nlp_remove_structure.cpp.s
+
 tests/CodeN/test_coden_note_projections.o: tests/CodeN/test_coden_note_projections.cpp.o
 .PHONY : tests/CodeN/test_coden_note_projections.o
 
@@ -11277,6 +11869,30 @@ tests/CodeN/test_coden_note_projections.s: tests/CodeN/test_coden_note_projectio
 tests/CodeN/test_coden_note_projections.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_projections.cpp.s
 .PHONY : tests/CodeN/test_coden_note_projections.cpp.s
+
+tests/CodeN/test_coden_note_repeat_order.o: tests/CodeN/test_coden_note_repeat_order.cpp.o
+.PHONY : tests/CodeN/test_coden_note_repeat_order.o
+
+# target to build an object file
+tests/CodeN/test_coden_note_repeat_order.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_repeat_order.cpp.o
+.PHONY : tests/CodeN/test_coden_note_repeat_order.cpp.o
+
+tests/CodeN/test_coden_note_repeat_order.i: tests/CodeN/test_coden_note_repeat_order.cpp.i
+.PHONY : tests/CodeN/test_coden_note_repeat_order.i
+
+# target to preprocess a source file
+tests/CodeN/test_coden_note_repeat_order.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_repeat_order.cpp.i
+.PHONY : tests/CodeN/test_coden_note_repeat_order.cpp.i
+
+tests/CodeN/test_coden_note_repeat_order.s: tests/CodeN/test_coden_note_repeat_order.cpp.s
+.PHONY : tests/CodeN/test_coden_note_repeat_order.s
+
+# target to generate assembly for a file
+tests/CodeN/test_coden_note_repeat_order.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tests.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tests.dir/tests/CodeN/test_coden_note_repeat_order.cpp.s
+.PHONY : tests/CodeN/test_coden_note_repeat_order.cpp.s
 
 tests/CodeN/test_coden_note_typed_storage.o: tests/CodeN/test_coden_note_typed_storage.cpp.o
 .PHONY : tests/CodeN/test_coden_note_typed_storage.o
@@ -11804,9 +12420,17 @@ help:
 	@echo "... plussqit_coden_note_metadata_reference_demo"
 	@echo "... plussqit_coden_note_method_families_demo"
 	@echo "... plussqit_coden_note_method_reference_demo"
+	@echo "... plussqit_coden_note_nlp_mask_reference_demo"
+	@echo "... plussqit_coden_note_nlp_normalize_reference_demo"
+	@echo "... plussqit_coden_note_nlp_remove_markup_reference_demo"
+	@echo "... plussqit_coden_note_nlp_remove_structure_reference_demo"
+	@echo "... plussqit_coden_note_operator_reference_demo"
 	@echo "... plussqit_coden_note_printing_demo"
 	@echo "... plussqit_coden_note_projection_reference_demo"
+	@echo "... plussqit_coden_note_regex_reference_demo"
+	@echo "... plussqit_coden_note_repeat_order_reference_demo"
 	@echo "... plussqit_coden_tests"
+	@echo "... plussqit_coden_tokenbatch_codec_reference_demo"
 	@echo "... plussqit_dispense_demo"
 	@echo "... plussqit_queue_demo"
 	@echo "... plussqit_tests"
@@ -12096,12 +12720,36 @@ help:
 	@echo "... examples/CodeN/note_method_reference_demo.o"
 	@echo "... examples/CodeN/note_method_reference_demo.i"
 	@echo "... examples/CodeN/note_method_reference_demo.s"
+	@echo "... examples/CodeN/note_nlp_mask_reference_demo.o"
+	@echo "... examples/CodeN/note_nlp_mask_reference_demo.i"
+	@echo "... examples/CodeN/note_nlp_mask_reference_demo.s"
+	@echo "... examples/CodeN/note_nlp_normalize_reference_demo.o"
+	@echo "... examples/CodeN/note_nlp_normalize_reference_demo.i"
+	@echo "... examples/CodeN/note_nlp_normalize_reference_demo.s"
+	@echo "... examples/CodeN/note_nlp_remove_markup_reference_demo.o"
+	@echo "... examples/CodeN/note_nlp_remove_markup_reference_demo.i"
+	@echo "... examples/CodeN/note_nlp_remove_markup_reference_demo.s"
+	@echo "... examples/CodeN/note_nlp_remove_structure_reference_demo.o"
+	@echo "... examples/CodeN/note_nlp_remove_structure_reference_demo.i"
+	@echo "... examples/CodeN/note_nlp_remove_structure_reference_demo.s"
+	@echo "... examples/CodeN/note_operator_reference_demo.o"
+	@echo "... examples/CodeN/note_operator_reference_demo.i"
+	@echo "... examples/CodeN/note_operator_reference_demo.s"
 	@echo "... examples/CodeN/note_printing_demo.o"
 	@echo "... examples/CodeN/note_printing_demo.i"
 	@echo "... examples/CodeN/note_printing_demo.s"
 	@echo "... examples/CodeN/note_projection_reference_demo.o"
 	@echo "... examples/CodeN/note_projection_reference_demo.i"
 	@echo "... examples/CodeN/note_projection_reference_demo.s"
+	@echo "... examples/CodeN/note_regex_reference_demo.o"
+	@echo "... examples/CodeN/note_regex_reference_demo.i"
+	@echo "... examples/CodeN/note_regex_reference_demo.s"
+	@echo "... examples/CodeN/note_repeat_order_reference_demo.o"
+	@echo "... examples/CodeN/note_repeat_order_reference_demo.i"
+	@echo "... examples/CodeN/note_repeat_order_reference_demo.s"
+	@echo "... examples/CodeN/tokenbatch_codec_reference_demo.o"
+	@echo "... examples/CodeN/tokenbatch_codec_reference_demo.i"
+	@echo "... examples/CodeN/tokenbatch_codec_reference_demo.s"
 	@echo "... examples/dispense_demo.o"
 	@echo "... examples/dispense_demo.i"
 	@echo "... examples/dispense_demo.s"
@@ -12357,6 +13005,15 @@ help:
 	@echo "... src/CodeN/core/Note.o"
 	@echo "... src/CodeN/core/Note.i"
 	@echo "... src/CodeN/core/Note.s"
+	@echo "... src/CodeN/core/NoteCodec.o"
+	@echo "... src/CodeN/core/NoteCodec.i"
+	@echo "... src/CodeN/core/NoteCodec.s"
+	@echo "... src/CodeN/core/NoteNlp.o"
+	@echo "... src/CodeN/core/NoteNlp.i"
+	@echo "... src/CodeN/core/NoteNlp.s"
+	@echo "... src/CodeN/core/NoteRegex.o"
+	@echo "... src/CodeN/core/NoteRegex.i"
+	@echo "... src/CodeN/core/NoteRegex.s"
 	@echo "... src/CodeN/core/OpsInternal.o"
 	@echo "... src/CodeN/core/OpsInternal.i"
 	@echo "... src/CodeN/core/OpsInternal.s"
@@ -12444,6 +13101,12 @@ help:
 	@echo "... tests/CodeM/test_gather_scatter.o"
 	@echo "... tests/CodeM/test_gather_scatter.i"
 	@echo "... tests/CodeM/test_gather_scatter.s"
+	@echo "... tests/CodeM/test_grouped_median_backward.o"
+	@echo "... tests/CodeM/test_grouped_median_backward.i"
+	@echo "... tests/CodeM/test_grouped_median_backward.s"
+	@echo "... tests/CodeM/test_grouped_mode_backward.o"
+	@echo "... tests/CodeM/test_grouped_mode_backward.i"
+	@echo "... tests/CodeM/test_grouped_mode_backward.s"
 	@echo "... tests/CodeM/test_introspection_family.o"
 	@echo "... tests/CodeM/test_introspection_family.i"
 	@echo "... tests/CodeM/test_introspection_family.s"
@@ -12945,9 +13608,15 @@ help:
 	@echo "... tests/CodeM/test_scatter_index_ii_family.o"
 	@echo "... tests/CodeM/test_scatter_index_ii_family.i"
 	@echo "... tests/CodeM/test_scatter_index_ii_family.s"
+	@echo "... tests/CodeM/test_series_backward_manifest.o"
+	@echo "... tests/CodeM/test_series_backward_manifest.i"
+	@echo "... tests/CodeM/test_series_backward_manifest.s"
 	@echo "... tests/CodeM/test_series_routing_manifest.o"
 	@echo "... tests/CodeM/test_series_routing_manifest.i"
 	@echo "... tests/CodeM/test_series_routing_manifest.s"
+	@echo "... tests/CodeM/test_series_source_public_api.o"
+	@echo "... tests/CodeM/test_series_source_public_api.i"
+	@echo "... tests/CodeM/test_series_source_public_api.s"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.o"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.i"
 	@echo "... tests/CodeM/test_shape_cat_stack_math.s"
@@ -12966,9 +13635,27 @@ help:
 	@echo "... tests/CodeN/test_coden_note_collection.o"
 	@echo "... tests/CodeN/test_coden_note_collection.i"
 	@echo "... tests/CodeN/test_coden_note_collection.s"
+	@echo "... tests/CodeN/test_coden_note_nlp_accessor.o"
+	@echo "... tests/CodeN/test_coden_note_nlp_accessor.i"
+	@echo "... tests/CodeN/test_coden_note_nlp_accessor.s"
+	@echo "... tests/CodeN/test_coden_note_nlp_masks.o"
+	@echo "... tests/CodeN/test_coden_note_nlp_masks.i"
+	@echo "... tests/CodeN/test_coden_note_nlp_masks.s"
+	@echo "... tests/CodeN/test_coden_note_nlp_normalize.o"
+	@echo "... tests/CodeN/test_coden_note_nlp_normalize.i"
+	@echo "... tests/CodeN/test_coden_note_nlp_normalize.s"
+	@echo "... tests/CodeN/test_coden_note_nlp_remove_markup.o"
+	@echo "... tests/CodeN/test_coden_note_nlp_remove_markup.i"
+	@echo "... tests/CodeN/test_coden_note_nlp_remove_markup.s"
+	@echo "... tests/CodeN/test_coden_note_nlp_remove_structure.o"
+	@echo "... tests/CodeN/test_coden_note_nlp_remove_structure.i"
+	@echo "... tests/CodeN/test_coden_note_nlp_remove_structure.s"
 	@echo "... tests/CodeN/test_coden_note_projections.o"
 	@echo "... tests/CodeN/test_coden_note_projections.i"
 	@echo "... tests/CodeN/test_coden_note_projections.s"
+	@echo "... tests/CodeN/test_coden_note_repeat_order.o"
+	@echo "... tests/CodeN/test_coden_note_repeat_order.i"
+	@echo "... tests/CodeN/test_coden_note_repeat_order.s"
 	@echo "... tests/CodeN/test_coden_note_typed_storage.o"
 	@echo "... tests/CodeN/test_coden_note_typed_storage.i"
 	@echo "... tests/CodeN/test_coden_note_typed_storage.s"

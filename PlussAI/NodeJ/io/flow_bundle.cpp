@@ -864,7 +864,16 @@ Status save(const std::string& path,
   return Status::success();
 }
 
-StatusOr<FlowBundle> load(const std::string& path) {
+namespace {
+
+// A malformed or truncated file makes BinaryReader's unvalidated length
+// prefixes (string/series/vector sizes read straight off disk) request an
+// absurd allocation -- std::string::resize / std::vector::resize throw
+// std::length_error/std::bad_alloc in that case. Every read happens inside
+// this one function, so catching here turns "load() aborts the process on
+// a bad file" into the ordinary Status::internal every other failure path
+// already returns.
+StatusOr<FlowBundle> load_impl(const std::string& path) {
   BinaryReader reader(path);
   if (!reader.ok()) return StatusOr<FlowBundle>(Status::invalid_argument("load failed to open input path."));
 
@@ -944,6 +953,16 @@ StatusOr<FlowBundle> load(const std::string& path) {
     return StatusOr<FlowBundle>(Status::internal("load failed while reading category maps."));
   }
   return StatusOr<FlowBundle>(std::move(bundle));
+}
+
+} // namespace
+
+StatusOr<FlowBundle> load(const std::string& path) {
+  try {
+    return load_impl(path);
+  } catch (const std::exception&) {
+    return StatusOr<FlowBundle>(Status::internal("load encountered a corrupt or truncated bundle."));
+  }
 }
 
 StatusOr<Flow> restore(const FlowBundle& bundle) {

@@ -43,7 +43,7 @@ does not revert to the source storage's original layout.
 
 `clone()` preserves reverse-mode connectivity on the current verified surface.
 
-That means cloning a tracked series is safe in autograd pipelines: later
+That means cloning a tracked series is safe in autodiff pipelines: later
 reverse passes still route sensitivity back to the original source.
 
 ## Examples

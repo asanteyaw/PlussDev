@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -59,7 +59,7 @@ spaces.</p>
 the same text — but note it is <strong>lossy</strong>: <code class="docutils literal notranslate"><span class="pre">x²</span></code> and <code class="docutils literal notranslate"><span class="pre">x2</span></code> become identical, so
 never NFKC-normalise content where the distinction matters (mathematical
 notation, code). For a lossless normalisation use <a class="reference internal" href="to_nfc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_nfc</span></code></span></a>.</p>
-<p>This is the same operation as <code class="docutils literal notranslate"><span class="pre">normalize(2)</span></code>. <code class="docutils literal notranslate"><span class="pre">to_nfkc</span></code> is shape-preserving,
+<p><code class="docutils literal notranslate"><span class="pre">to_nfkc</span></code> is shape-preserving,
 cell-independent, idempotent, and returns a fresh <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Requires the
 Unicode backend.</p>
 </section>
@@ -183,6 +183,8 @@ caseless key.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

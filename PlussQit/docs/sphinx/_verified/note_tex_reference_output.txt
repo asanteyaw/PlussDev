@@ -1,0 +1,173 @@
+=== add math delimiters ===
+Note(shape=[7], dim=1, numel=7, encoding=utf8)
+["$x+y$", "$z$", "\\(a+b\\)", "\\[c=d\\]", "", "$u$", "\\(v\\)"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["$a$", "$b$"], 
+  ["$c$", ""]
+]
+undefined=false
+Int64 add delimiters: rejected
+
+=== align blocks ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\begin{align*}a&=1\\end{align*}", "\\begin{align}b&=2\\end{align}", "\\begin{align}c&=3\\end{align}"]
+offsets=[0, 2, 2, 3]
+
+=== balance braces ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["{a{b}}", "ab", "\\{literal\\}", "already {balanced}"]
+idempotent=true undefined=false
+
+=== balance math delimiters ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["$x+y$", "\\(a+b\\)", "\\(c+d\\)", "\\[e=f\\]", "\\[g=h\\]", "\\$5"]
+idempotent=true undefined=false
+
+=== bibliography keys ===
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["knuth84", "lamport94", "turing36", "knuth84", "church36"]
+offsets=[0, 4, 4, 5]
+undefined tokens=false offsets=[0]
+
+=== canonicalize macros ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\frac{1}{2} + \\frac{a}{b} + \\frac{x}{y}", "\\mathrm{rank} \\mathrm old \\mathbf b \\mathit i \\mathcal C \\mathbb R", "\\mathrm{kept} \\mathbf{v} \\item \\ltd \\leq < >"]
+idempotent=true
+
+=== captions ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Long title", "Starred long", "Displayed title"]
+offsets=[0, 2, 2, 3, 3]
+
+=== citations ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["a,b", "c,d", "e"]
+offsets=[0, 2, 3, 3]
+
+=== collapse macros ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["\\frac{1}{2} in \\RR", "\\frac{x}{y}"]
+
+=== command names ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["alpha", "section*", "foo@bar", "beta"]
+offsets=[0, 3, 4, 4]
+undefined names=false offsets=[0]
+
+=== commands ===
+bare=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\section*", "\\alpha", "\\frac"]
+offsets=[0, 2, 3, 3]
+with args=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\section* [Short] {A {nested} title}", "\\alpha", "\\frac"]
+offsets=[0, 2, 3, 3]
+
+=== convert fractions ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"(1)/(2) + (a+b)/(c) + (m)/(n) + (p)/(q)"
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["(1)/(2) + (a+b)/(c) + ((x)/(y))/(z)", "\\fraction{1}{2} + \\\\frac{3}{4} + \\frac{broken}"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["(a)/(b)", "plain"], 
+  ["(x)/(y)", ""]
+]
+
+=== convert plus-minus ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["x +/- e, y -/+ d", "\\pmatrix and \\\\pm stay TeX"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a+/- b", "plain"], 
+  ["c-/+ d", ""]
+]
+
+=== convert roots ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["(x)^(1/2)", "(a+b)^(1/3)"]
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["(x)^(1/2) + (a+(b)^(1/2))^(1/3)", "\\sqrted{x} + \\\\sqrt{x} + \\sqrt[3]oops"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["(a)^(1/2)", "plain"], 
+  ["(b)^(1/4)", ""]
+]
+
+=== dedup blank lines ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"alpha\n\nbeta"
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"one\n\ntwo"
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"one\r\n\r\ntwo"
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["alpha\n\nbeta", "one\r\n\r\ntwo"], 
+  ["already\n\ncompact", "single line"]
+]
+shape=[2, 2]
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"one\n\ntwo"
+undefined transforms=false,false,false,false
+
+=== display math ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["$$b+c$$", "\\[d=e\\]", "$$first$$", "$$second$$"]
+offsets=[0, 2, 4, 4]
+
+=== environment names ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["figure", "align*", "table"]
+offsets=[0, 2, 3, 3]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["proof"]
+
+=== environments ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\begin{figure}A\\end{figure}", "\\begin{align*}x&=1\\end{align*}", "\\begin{table}B\\end{table}"]
+offsets=[0, 2, 3, 3]
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets=[0, 0, 0]
+
+=== input tags ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["Before [include:chapters/one] after", "[include:appendix] and \\\\input{literal}"], 
+  ["[include:nested/{part}]", "\\input broken"]
+]
+shape=[2, 2]
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Before [include:chapters/one] after", "[include:appendix]"]
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\\\input{literal}", "\\input broken", "[include:nested/{part}]"]
+
+=== macro substitutions ===
+one pass: Note(shape=[], dim=0, numel=1, encoding=utf8)
+"Value: \\B; prefix: \\Alpha."
+two passes: Note(shape=[], dim=0, numel=1, encoding=utf8)
+"Value: done; prefix: \\Alpha."
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["mass: kg", "length: m"]
+undefined=false,false,false,false,false
+macro_subs(0): rejected
+align Int64: rejected
+braces Int64: rejected
+math Int64: rejected
+bibliography Int64: rejected
+canonical Int64: rejected
+captions Int64: rejected
+citations Int64: rejected
+collapse Int64: rejected
+command names Int64: rejected
+commands Int64: rejected
+fractions Int64: rejected
+plus-minus Int64: rejected
+roots Int64: rejected
+blank lines Int64: rejected
+display math Int64: rejected
+environment names Int64: rejected
+environments Int64: rejected
+input tags Int64: rejected
+macro substitutions Int64: rejected

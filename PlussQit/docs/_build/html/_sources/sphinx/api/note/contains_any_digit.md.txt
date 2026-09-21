@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::contains_any_digit() const
+Note Note::contains_any_digit() const
 ```
 
 ## Test Whether A Cell Has At Least One Digit
@@ -20,8 +20,8 @@ An empty cell returns `0`.
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -29,8 +29,8 @@ length `numel()`.
 const auto n = pluss::make_note({"order 17", "abc", "v2", "", "3.14", "no numbers"});
 const auto mask = n.contains_any_digit();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -44,7 +44,7 @@ std::cout << "]\n";
 
 - [`Note::is_digit`](is_digit.md): "every character is a digit".
 - [`Note::contains_any_alpha`](contains_any_alpha.md): the letter version.
-- [`Note::regex_findall`](regex_findall.md): pull the digit runs out.
+- [`NoteRegexAccessor::findall`](../note-regex/findall.md): pull the digit runs out.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="contains_any_alpha.html">

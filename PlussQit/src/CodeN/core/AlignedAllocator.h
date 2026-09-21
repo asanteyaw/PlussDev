@@ -1,10 +1,36 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <new>
 #include <type_traits>
 
 namespace pluss::coden::detail {
+
+struct LaneAllocationSnapshot {
+  ::std::uint64_t allocations{0};
+  ::std::uint64_t bytes{0};
+};
+
+inline thread_local LaneAllocationSnapshot* active_lane_allocation_stats = nullptr;
+
+class LaneAllocationScope {
+public:
+  LaneAllocationScope() noexcept
+      : previous_(active_lane_allocation_stats) {
+    active_lane_allocation_stats = &stats_;
+  }
+  ~LaneAllocationScope() { active_lane_allocation_stats = previous_; }
+
+  LaneAllocationScope(const LaneAllocationScope&) = delete;
+  LaneAllocationScope& operator=(const LaneAllocationScope&) = delete;
+
+  LaneAllocationSnapshot snapshot() const noexcept { return stats_; }
+
+private:
+  LaneAllocationSnapshot stats_{};
+  LaneAllocationSnapshot* previous_{nullptr};
+};
 
 template <class T, ::std::size_t Alignment> class AlignedAllocator {
   static_assert(Alignment >= alignof(T));
@@ -30,6 +56,10 @@ public:
   [[nodiscard]] T *allocate(size_type count) {
     if (count > max_size())
       throw ::std::bad_array_new_length();
+    if (active_lane_allocation_stats != nullptr) {
+      ++active_lane_allocation_stats->allocations;
+      active_lane_allocation_stats->bytes += count * sizeof(T);
+    }
     return static_cast<T *>(
         ::operator new(count * sizeof(T), ::std::align_val_t{Alignment}));
   }

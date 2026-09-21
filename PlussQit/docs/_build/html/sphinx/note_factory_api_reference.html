@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../_static/api_nav.js?v=cf848246"></script>
     <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -77,6 +77,8 @@ of a word).</p></li>
 into a 1-D <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
 <li><p><strong>Assemble and choose</strong> — <code class="docutils literal notranslate"><span class="pre">format</span></code> fills a <code class="docutils literal notranslate"><span class="pre">{placeholder}</span></code> template;
 <code class="docutils literal notranslate"><span class="pre">select</span></code> builds a <code class="docutils literal notranslate"><span class="pre">Note</span></code> by ordered <code class="docutils literal notranslate"><span class="pre">Series</span></code> conditions.</p></li>
+<li><p><strong>Restore packed storage</strong> — <code class="docutils literal notranslate"><span class="pre">unpack</span></code> validates and reconstructs the stable
+binary envelope emitted by <code class="docutils literal notranslate"><span class="pre">Note::pack()</span></code>.</p></li>
 <li><p><strong>Render</strong> — <code class="docutils literal notranslate"><span class="pre">print</span></code> produces a diagnostic representation (<code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">n</span></code>
 works too).</p></li>
 </ul>
@@ -114,13 +116,16 @@ appends a <code class="docutils literal notranslate"><span class="pre">Triggered
 <p><code class="docutils literal notranslate"><span class="pre">rand</span></code> and <code class="docutils literal notranslate"><span class="pre">rand_between</span></code> take a <code class="docutils literal notranslate"><span class="pre">seed</span></code>. A fixed nonzero seed makes the draw
 deterministic; the pages use seeded calls so their output is stable. <code class="docutils literal notranslate"><span class="pre">perm</span></code>,
 <code class="docutils literal notranslate"><span class="pre">arange</span></code>, and every other factory here are already deterministic.</p>
-<p>Every deterministic output on these pages is produced by
-<code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_factory_reference_demo.cpp</span></code>.</p>
+<p>Deterministic construction output is produced by
+<code class="docutils literal notranslate"><span class="pre">examples/CodeN/note_factory_reference_demo.cpp</span></code>; the binary round-trip and
+rejection cases for <code class="docutils literal notranslate"><span class="pre">unpack</span></code> are produced by
+<code class="docutils literal notranslate"><span class="pre">examples/CodeN/tokenbatch_codec_reference_demo.cpp</span></code>.</p>
 <p>Every <code class="docutils literal notranslate"><span class="pre">pluss::note::*</span></code> factory has a page: the core constructors (<code class="docutils literal notranslate"><span class="pre">make</span></code>,
 <code class="docutils literal notranslate"><span class="pre">bytes</span></code>), the shape-first family (<code class="docutils literal notranslate"><span class="pre">full</span></code>, <code class="docutils literal notranslate"><span class="pre">empty</span></code>, <code class="docutils literal notranslate"><span class="pre">rep</span></code>, and the four
 <code class="docutils literal notranslate"><span class="pre">*_like</span></code> factories), the generative builders (<code class="docutils literal notranslate"><span class="pre">arange</span></code>, <code class="docutils literal notranslate"><span class="pre">perm</span></code>, <code class="docutils literal notranslate"><span class="pre">rand</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rand_between</span></code>), the text-splitting factories (<code class="docutils literal notranslate"><span class="pre">from_lines</span></code>, <code class="docutils literal notranslate"><span class="pre">from_words</span></code>),
-and assembly and rendering (<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">print</span></code>).</p>
+assembly and rendering (<code class="docutils literal notranslate"><span class="pre">format</span></code>, <code class="docutils literal notranslate"><span class="pre">select</span></code>, <code class="docutils literal notranslate"><span class="pre">print</span></code>), and validated binary
+reconstruction (<code class="docutils literal notranslate"><span class="pre">unpack</span></code>).</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="pluss-inline-prev-next">
@@ -218,6 +223,8 @@ and assembly and rendering (<code class="docutils literal notranslate"><span cla
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

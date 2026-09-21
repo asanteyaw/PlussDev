@@ -11,7 +11,7 @@
 #include "pluss/coden/note_factory.h"
 
 TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
-  SECTION("scalar/vector/matrix/tensor projections") {
+  SECTION("scalar/vector/matrix/slab projections") {
     auto scalar = pluss::make_note("alpha");
     REQUIRE(scalar.defined());
     REQUIRE(scalar.is_scalar());
@@ -42,8 +42,8 @@ TEST_CASE("CodeN NoteBase inherited convenience methods", "[coden][patch20]") {
     std::vector<std::string> tflat = {"000", "001", "010", "011", "100", "101", "110", "111"};
     const std::array<std::int64_t, 3> tsz{2, 2, 2};
     auto t3 = pluss::make_note(tflat, tsz);
-    REQUIRE(t3.is_tensor3());
-    const auto tt = t3.tensor3();
+    REQUIRE(t3.is_rank3());
+    const auto tt = t3.slabs();
     REQUIRE(tt.size() == 2);
     REQUIRE(tt[1].at(1) == "101");
     REQUIRE(t3.at_indices(std::array<std::int64_t, 3>{1, 1, 0}) == "110");
@@ -124,7 +124,7 @@ TEST_CASE("CodeN Note metadata distinguishes rank absence and empty extents",
   REQUIRE_FALSE(undefined.is_scalar());
   REQUIRE_FALSE(undefined.is_vector());
   REQUIRE_FALSE(undefined.is_matrix());
-  REQUIRE_FALSE(undefined.is_tensor3());
+  REQUIRE_FALSE(undefined.is_rank3());
   REQUIRE_THROWS(undefined.size(0));
   REQUIRE_THROWS(undefined.sizes());
 
@@ -141,7 +141,7 @@ TEST_CASE("CodeN Note metadata distinguishes rank absence and empty extents",
   REQUIRE_FALSE(singleton.is_scalar());
   REQUIRE(singleton.is_vector());
   REQUIRE(matrix.is_matrix());
-  REQUIRE(tensor.is_tensor3());
+  REQUIRE(tensor.is_rank3());
   REQUIRE(matrix.dim() == 2);
   REQUIRE(matrix.sizes() == std::vector<std::int64_t>{2, 3});
   REQUIRE(matrix.numel() == 6);

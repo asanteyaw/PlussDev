@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -194,7 +194,7 @@ still floating-point.</p>
 after to(Float64): is_floating_point=true
 </pre></div>
 </div>
-<p>Reverse-mode autograd needs a floating dtype — <code class="docutils literal notranslate"><span class="pre">tracks_slope_</span></code> on an integer
+<p>Reverse-mode autodiff needs a floating dtype — <code class="docutils literal notranslate"><span class="pre">tracks_slope_</span></code> on an integer
 <code class="docutils literal notranslate"><span class="pre">Series</span></code> has nothing to accumulate into. <code class="docutils literal notranslate"><span class="pre">is_floating_point()</span></code> is the guard
 before enabling gradient tracking on data of unknown provenance.</p>
 </section>
@@ -223,7 +223,7 @@ don’t reimplement this check by enumerating dtypes by hand.</p></li>
 <li><p>metadata-only — <code class="docutils literal notranslate"><span class="pre">NaN</span></code>/<code class="docutils literal notranslate"><span class="pre">inf</span></code> content does not change it</p></li>
 <li><p>complex is excluded despite having float components; add <code class="docutils literal notranslate"><span class="pre">||</span> <span class="pre">is_complex()</span></code>
 for an “any continuous data” test</p></li>
-<li><p>the standard guard before enabling reverse-mode autograd</p></li>
+<li><p>the standard guard before enabling reverse-mode autodiff</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -333,6 +333,8 @@ queries on the <code class="docutils literal notranslate"><span class="pre">DTyp
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

@@ -149,8 +149,8 @@ tils_env
 loader
 io_save_load_guide
 error_handling
-autograd
-autograd_api_reference
+autodiff
+autodiff_api_reference
 autodiff_architecture
 optimization_diff_contract
 dl_torch_maturity_blueprint

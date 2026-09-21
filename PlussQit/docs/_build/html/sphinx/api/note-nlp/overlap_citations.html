@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NoteNlpAccessor::overlap_citations &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="NoteNlpAccessor::overlap_symbols" href="overlap_symbols.html" />
+    <link rel="prev" title="NoteNlpAccessor::overlap_acronyms" href="overlap_acronyms.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="notenlpaccessor-overlap-citations">
+<h1>NoteNlpAccessor::overlap_citations<a class="headerlink" href="#notenlpaccessor-overlap-citations" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_nlp_accessor_api_reference.html"><span class="doc std std-doc">Back to Note NLP Accessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">NoteNlpAccessor</span><span class="o">::</span><span class="n">overlap_citations</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="citation-set-containment-score-between-two-notes">
+<h2>Citation-Set Containment Score Between Two Notes<a class="headerlink" href="#citation-set-containment-score-between-two-notes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">overlap_citations(other)</span></code> scores each cell pair by the overlap coefficient
+of their <strong>citation-marker</strong> sets and returns a shape-preserving Float64
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> of native scores. It is the citation-set containment member of the
+set-similarity family; see also <a class="reference internal" href="jaccard_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">jaccard_citations</span></code></span></a>
+and <a class="reference internal" href="intersect_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">intersect_citations</span></code></span></a>.</p>
+<section id="how-the-score-is-computed">
+<h3>How the score is computed<a class="headerlink" href="#how-the-score-is-computed" title="Link to this heading">¶</a></h3>
+<p>A citation marker is a <strong>bracketed number</strong> (<code class="docutils literal notranslate"><span class="pre">[1]</span></code>, <code class="docutils literal notranslate"><span class="pre">[42]</span></code>, one to three
+digits) or an <strong>author–year</strong> group (<code class="docutils literal notranslate"><span class="pre">(Smith,</span> <span class="pre">2020)</span></code>, <code class="docutils literal notranslate"><span class="pre">(Lee,</span> <span class="pre">2021a)</span></code>).
+Markers keep their brackets, are lowercased, and are deduplicated into sets
+<code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>. The score is <code class="docutils literal notranslate"><span class="pre">|A</span> <span class="pre">∩</span> <span class="pre">B|</span> <span class="pre">/</span> <span class="pre">min(|A|,</span> <span class="pre">|B|)</span></code>, in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>, symmetric —
+<code class="docutils literal notranslate"><span class="pre">1.0</span></code> when the smaller reference list is contained in the larger.</p>
+<p>A cell with no bracket-or-paren and digit has an empty set. Both sets empty →
+<code class="docutils literal notranslate"><span class="pre">1.0</span></code>; one empty and one not → <code class="docutils literal notranslate"><span class="pre">0.0</span></code>. The default printer shows up to six decimals,
+trailing zeros trimmed.</p>
+</section>
+<section id="shape-pairing-and-rejections">
+<h3>Shape, pairing, and rejections<a class="headerlink" href="#shape-pairing-and-rejections" title="Link to this heading">¶</a></h3>
+<p>Per cell and pairwise; equal <a class="reference internal" href="../note/numel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">numel</span></code></span></a> or a
+scalar (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code>) broadcast. Bytes-mode input raises
+<code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_citations</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(lhs</span> <span class="pre">is</span> <span class="pre">bytes)</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">rhs</span></code>); a numel mismatch raises <code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_citations</span> <span class="pre">expects</span> <span class="pre">equal</span> <span class="pre">numel</span> <span class="pre">or</span> <span class="pre">scalar</span> <span class="pre">broadcast</span></code>.</p>
+</section>
+</section>
+<section id="example-1-one-reference-list-inside-another">
+<h2>Example 1: One Reference List Inside Another<a class="headerlink" href="#example-1-one-reference-list-inside-another" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;[1] [2]&quot;</span><span class="p">})</span>
+<span class="w">                 </span><span class="p">.</span><span class="n">nlp</span><span class="p">().</span><span class="n">overlap_citations</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;[1] [2] [3] [4]&quot;</span><span class="p">}))</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[1], dim=1, numel=1, dtype=Float64)
+[1]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">{[1],</span> <span class="pre">[2]}</span></code> is a subset of <code class="docutils literal notranslate"><span class="pre">{[1],</span> <span class="pre">[2],</span> <span class="pre">[3],</span> <span class="pre">[4]}</span></code> → <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.
+<a class="reference internal" href="jaccard_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">jaccard_citations</span></code></span></a> here would give <code class="docutils literal notranslate"><span class="pre">2/4</span> <span class="pre">=</span> <span class="pre">0.5</span></code>.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="jaccard_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::jaccard_citations</span></code></span></a>: the mutual-similarity
+score over the same sets.</p></li>
+<li><p><a class="reference internal" href="intersect_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::intersect_citations</span></code></span></a>: the shared markers
+themselves.</p></li>
+<li><p><a class="reference internal" href="overlap_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_tokens</span></code></span></a> /
+<a class="reference internal" href="overlap_terms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_terms</span></code></span></a> /
+<a class="reference internal" href="overlap_acronyms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_acronyms</span></code></span></a> /
+<a class="reference internal" href="overlap_symbols.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_symbols</span></code></span></a>: other set kinds.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="overlap_acronyms.html"><span class="label">Previous</span><span class="title">overlap_acronyms</span></a>
+  <a class="next-link" href="overlap_symbols.html"><span class="label">Next</span><span class="title">overlap_symbols</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
+  <li><a href="../../note_nlp_accessor_api_reference.html">Note NLP Accessor API Reference</a><ul>
+      <li>Previous: <a href="overlap_acronyms.html" title="previous chapter">NoteNlpAccessor::overlap_acronyms</a></li>
+      <li>Next: <a href="overlap_symbols.html" title="next chapter">NoteNlpAccessor::overlap_symbols</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note-nlp/overlap_citations.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

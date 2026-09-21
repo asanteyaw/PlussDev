@@ -260,17 +260,22 @@ inline std::string remove_delimited(std::string_view s, char open, char close) {
   std::string out;
   out.reserve(s.size());
   int depth = 0;
-  for (unsigned char c : s) {
+  std::size_t unmatched_start = std::string_view::npos;
+  for (std::size_t i = 0; i < s.size(); ++i) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
     if (c == static_cast<unsigned char>(open)) {
+      if (depth == 0) unmatched_start = i;
       ++depth;
       continue;
     }
     if (c == static_cast<unsigned char>(close) && depth > 0) {
       --depth;
+      if (depth == 0) unmatched_start = std::string_view::npos;
       continue;
     }
     if (depth == 0) out.push_back(static_cast<char>(c));
   }
+  if (depth > 0) out.append(s.substr(unmatched_start));
   return out;
 }
 
@@ -761,10 +766,6 @@ inline bool suppress_sentence_break(std::string_view s,
   return out;
 }
 
-::std::string normalize_spaces_ascii(::std::string_view s) {
-  return collapse_whitespace_ascii(s);
-}
-
 ::std::string dedent_ascii(::std::string_view s) {
   std::vector<std::pair<std::size_t, std::size_t>> lines;
   lines.reserve(16);
@@ -949,10 +950,6 @@ inline bool suppress_sentence_break(std::string_view s,
   return out;
 }
 
-::std::string keep_ascii(::std::string_view s) {
-  return remove_non_ascii(s);
-}
-
 ::std::string keep_printable_ascii(::std::string_view s) {
   std::string out;
   out.reserve(s.size());
@@ -1032,10 +1029,6 @@ inline bool suppress_sentence_break(std::string_view s,
     out.append(s.substr(start, i - start));
   }
   return out;
-}
-
-::std::string strip_diacritics_utf8(::std::string_view s) {
-  return strip_accents_utf8(s);
 }
 
 ::std::string strip_zero_width_utf8(::std::string_view s) {
@@ -1139,7 +1132,9 @@ inline bool suppress_sentence_break(std::string_view s,
 ::std::string nlp_remove_emails_fast(::std::string_view s) {
   if (s.find('@') == std::string_view::npos) return std::string(s);
   static const std::regex kEmailRe(R"(([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}))");
-  return normalize_removed(regex_replace_all(s, kEmailRe));
+  const std::string out = regex_replace_all(s, kEmailRe);
+  if (out == s) return std::string(s);
+  return normalize_removed(out);
 }
 
 ::std::string nlp_remove_mentions_fast(::std::string_view s) {
@@ -1150,17 +1145,34 @@ inline bool suppress_sentence_break(std::string_view s,
 
 ::std::string nlp_remove_hashtags_fast(::std::string_view s) {
   if (s.find('#') == std::string_view::npos) return std::string(s);
-  static const std::regex kHashRe(R"((^|[\s(])#[A-Za-z0-9_]+)", std::regex::icase);
-  return normalize_removed(regex_replace_all(s, kHashRe, "$1"));
+  static const std::regex kHashRe(
+      R"((^|[^A-Za-z0-9_])#[A-Za-z0-9_]+)", std::regex::icase);
+  const std::string out = regex_replace_all(s, kHashRe, "$1");
+  if (out == s) return std::string(s);
+  return normalize_removed(out);
 }
 
 ::std::string nlp_remove_html_fast(::std::string_view s) {
   if (s.find('<') == std::string_view::npos || s.find('>') == std::string_view::npos) return std::string(s);
   static const std::regex kHtmlComment(R"(<!--[\s\S]*?-->)", std::regex::icase);
-  static const std::regex kHtmlTag(R"(<[^>]+>)", std::regex::icase);
+  static const std::regex kHtmlTag(
+      R"(<(?:/?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*?)?\s*/?|![A-Za-z][^<>]*|\?[A-Za-z][^<>]*\?)>)",
+      std::regex::icase);
   std::string out = regex_replace_all(s, kHtmlComment);
   out = regex_replace_all(out, kHtmlTag);
-  return normalize_removed(out);
+  if (out == s) return std::string(s);
+  const std::string compact = normalize_removed(out);
+  std::string tightened;
+  tightened.reserve(compact.size());
+  for (std::size_t i = 0; i < compact.size(); ++i) {
+    if (compact[i] == ' ' && i + 1 < compact.size() &&
+        std::string_view(".,;:!?)]").find(compact[i + 1]) !=
+            std::string_view::npos) {
+      continue;
+    }
+    tightened.push_back(compact[i]);
+  }
+  return tightened;
 }
 
 ::std::string nlp_remove_markdown_fast(::std::string_view s) {
@@ -1188,8 +1200,8 @@ inline bool suppress_sentence_break(std::string_view s,
 }
 
 ::std::string nlp_remove_code_fast(::std::string_view s) {
-  if (!has_any_char(s, "`\t")) {
-    bool has_indent = false;
+  if (!has_any_char(s, "`~\t")) {
+    bool has_indent = s.size() >= 4 && s.substr(0, 4) == "    ";
     for (std::size_t i = 0; i + 3 < s.size(); ++i) {
       if (s[i] == '\n' && s[i + 1] == ' ' && s[i + 2] == ' ' && s[i + 3] == ' ') {
         has_indent = true;
@@ -1201,15 +1213,22 @@ inline bool suppress_sentence_break(std::string_view s,
   static const std::regex kFencedCode(R"rgx((```[\s\S]*?```|~~~[\s\S]*?~~~))rgx");
   static const std::regex kInlineCode(R"rgx(`[^`\n]*`)rgx");
   std::string out = regex_replace_all(s, kFencedCode);
+  bool removed = out != s;
+  const std::string before_inline = out;
   out = regex_replace_all(out, kInlineCode);
+  removed = removed || out != before_inline;
 
-  out = transform_lines(out, [](std::string_view line, std::string& transformed) {
+  out = transform_lines(out, [&removed](std::string_view line, std::string& transformed) {
     std::size_t i = 0;
     while (i < line.size() && line[i] == ' ') ++i;
-    if (i >= 4 || (!line.empty() && line[0] == '\t')) return false;
+    if (i >= 4 || (!line.empty() && line[0] == '\t')) {
+      removed = true;
+      return false;
+    }
     transformed.assign(line);
     return true;
   });
+  if (!removed) return std::string(s);
   return normalize_removed(out);
 }
 
@@ -1244,6 +1263,7 @@ inline bool suppress_sentence_break(std::string_view s,
   std::string out = remove_delimited(s, '(', ')');
   out = remove_delimited(out, '[', ']');
   out = remove_delimited(out, '{', '}');
+  if (out == s) return std::string(s);
   return normalize_removed(out);
 }
 
@@ -1296,79 +1316,129 @@ inline bool suppress_sentence_break(std::string_view s,
 }
 
 ::std::string nlp_remove_bullets_fast(::std::string_view s) {
-  if (!has_any_char(s, "-*+.\n")) return std::string(s);
-  std::string out = transform_lines(s, [](std::string_view line, std::string& transformed) {
+  if (!has_any_char(s, "-*+.\n") &&
+      s.find("\xE2\x80\xA2") == std::string_view::npos &&
+      s.find("\xE2\x80\xA3") == std::string_view::npos &&
+      s.find("\xE2\x81\x83") == std::string_view::npos) {
+    return std::string(s);
+  }
+  bool removed = false;
+  std::string out = transform_lines(s, [&removed](std::string_view line, std::string& transformed) {
     std::size_t i = 0;
     while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) ++i;
 
     std::size_t start = i;
-    if (i < line.size() &&
-        (line[i] == '-' || line[i] == '*' || line[i] == '+' ||
-         static_cast<unsigned char>(line[i]) == 0xE2)) {
-      // Also catches UTF-8 bullet ('•') by leading byte check.
-      ++i;
-      while (i < line.size() && line[i] == ' ') ++i;
+    std::size_t marker_width = 0;
+    if (i < line.size() && (line[i] == '-' || line[i] == '*' || line[i] == '+')) {
+      if (i + 1 == line.size() || line[i + 1] == ' ' || line[i + 1] == '\t') {
+        marker_width = 1;
+      }
+    } else if (i + 3 <= line.size() &&
+               (line.substr(i, 3) == "\xE2\x80\xA2" ||
+                line.substr(i, 3) == "\xE2\x80\xA3" ||
+                line.substr(i, 3) == "\xE2\x81\x83")) {
+      if (i + 3 == line.size() || line[i + 3] == ' ' || line[i + 3] == '\t') {
+        marker_width = 3;
+      }
+    }
+    if (marker_width != 0) {
+      removed = true;
+      i += marker_width;
+      while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) ++i;
       start = i;
     } else {
       std::size_t j = i;
       while (j < line.size() && std::isdigit(static_cast<unsigned char>(line[j]))) ++j;
-      if (j > i && j + 1 < line.size() && (line[j] == '.' || line[j] == ')') && line[j + 1] == ' ') {
-        start = j + 2;
+      if (j > i && j < line.size() && (line[j] == '.' || line[j] == ')') &&
+          (j + 1 == line.size() || line[j + 1] == ' ' || line[j + 1] == '\t')) {
+        removed = true;
+        start = j + 1;
+        while (start < line.size() && (line[start] == ' ' || line[start] == '\t')) ++start;
       }
     }
     transformed.assign(line.substr(start));
     return true;
   });
+  if (!removed) return std::string(s);
   return normalize_removed(out);
 }
 
 ::std::string nlp_remove_headers_fast(::std::string_view s) {
-  if (!has_any_char(s, "#:\n")) return std::string(s);
-  std::string out = transform_lines(s, [](std::string_view line, std::string& transformed) {
+  if (s.find('#') == std::string_view::npos) return std::string(s);
+  bool removed = false;
+  std::string out = transform_lines(s, [&removed](std::string_view line, std::string& transformed) {
     std::size_t i = 0;
     while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) ++i;
-    if (i < line.size() && line[i] == '#') return false; // markdown heading
+    std::size_t hashes = 0;
+    while (i + hashes < line.size() && line[i + hashes] == '#' && hashes < 7) {
+      ++hashes;
+    }
+    if (hashes >= 1 && hashes <= 6 &&
+        (i + hashes == line.size() || line[i + hashes] == ' ' ||
+         line[i + hashes] == '\t')) {
+      removed = true;
+      return false;
+    }
     transformed.assign(line);
     return true;
   });
+  if (!removed) return std::string(s);
   return normalize_removed(out);
 }
 
 ::std::string nlp_remove_footers_fast(::std::string_view s) {
-  if (!contains_ci(s, "page") && !contains_ci(s, "copyright") && !contains_ci(s, "all rights reserved")) {
+  if (!contains_ci(s, "page") && !contains_ci(s, "copyright") &&
+      !contains_ci(s, "all rights reserved") &&
+      !contains_ci(s, "confidential") && s.find("©") == std::string_view::npos) {
     return std::string(s);
   }
 
   static const std::regex kFooterPage(R"(^\s*page\s+\d+(\s+of\s+\d+)?\s*$)", std::regex::icase);
-  static const std::regex kFooterCopy(R"(^\s*(copyright|all rights reserved|confidential)\b.*$)", std::regex::icase);
+  static const std::regex kFooterCopy(
+      R"(^\s*(?:copyright\b|©|all rights reserved\b|confidential\b).*$)",
+      std::regex::icase);
 
+  bool removed = false;
   std::string out = transform_lines(s, [&](std::string_view line, std::string& transformed) {
     const std::string l(line);
-    if (std::regex_match(l, kFooterPage)) return false;
-    if (std::regex_match(l, kFooterCopy)) return false;
+    if (std::regex_match(l, kFooterPage) || std::regex_match(l, kFooterCopy)) {
+      removed = true;
+      return false;
+    }
     transformed = l;
     return true;
   });
+  if (!removed) return std::string(s);
   return normalize_removed(out);
 }
 
 ::std::string nlp_remove_boilerplate_fast(::std::string_view s) {
   if (!contains_ci(s, "copyright") && !contains_ci(s, "privacy") &&
       !contains_ci(s, "terms") && !contains_ci(s, "disclaimer") &&
-      !contains_ci(s, "all rights reserved")) {
+      !contains_ci(s, "all rights reserved") &&
+      s.find("©") == std::string_view::npos) {
     return std::string(s);
   }
 
-  std::string out = transform_lines(s, [](std::string_view line, std::string& transformed) {
-    const std::string lower = lower_ascii(line);
-    if (contains_ci(lower, "copyright")) return false;
-    if (contains_ci(lower, "all rights reserved")) return false;
-    if (contains_ci(lower, "privacy policy")) return false;
-    if (contains_ci(lower, "terms of service")) return false;
-    if (contains_ci(lower, "disclaimer")) return false;
+  bool removed = false;
+  std::string out = transform_lines(s, [&removed](std::string_view line, std::string& transformed) {
+    const std::string lower = lower_ascii(strip_ascii(line));
+    const auto starts_phrase = [&](std::string_view phrase) {
+      return lower.starts_with(phrase) &&
+             (lower.size() == phrase.size() ||
+              !std::isalnum(static_cast<unsigned char>(lower[phrase.size()])));
+    };
+    if (starts_phrase("copyright") || lower.starts_with("©") ||
+        contains_ci(lower, "all rights reserved") ||
+        contains_ci(lower, "privacy policy") ||
+        contains_ci(lower, "terms of service") || starts_phrase("disclaimer")) {
+      removed = true;
+      return false;
+    }
     transformed.assign(line);
     return true;
   });
+  if (!removed) return std::string(s);
   return normalize_removed(out);
 }
 
@@ -1423,27 +1493,64 @@ inline bool suppress_sentence_break(std::string_view s,
   return out;
 }
 
+::std::string nlp_normalize_numbers_fast(::std::string_view s) {
+  if (!has_any_digit(s)) return ::std::string(s);
+  ::std::string out;
+  out.reserve(s.size());
+  ::std::size_t i = 0;
+  while (i < s.size()) {
+    const unsigned char c = static_cast<unsigned char>(s[i]);
+    if (!is_ascii_digit(c)) {
+      out.push_back(static_cast<char>(c));
+      ++i;
+      continue;
+    }
+    out.push_back('0');
+    ++i;
+    while (i < s.size()) {
+      const unsigned char d = static_cast<unsigned char>(s[i]);
+      if (is_ascii_digit(d)) {
+        ++i;
+        continue;
+      }
+      if ((d == ',' || d == '.' || d == '-' || d == '/' || d == ':' || d == '_') &&
+          i + 1 < s.size() && is_ascii_digit(static_cast<unsigned char>(s[i + 1]))) {
+        ++i;
+        continue;
+      }
+      break;
+    }
+  }
+  return out;
+}
+
 ::std::string nlp_mask_emails_fast(::std::string_view s) {
   if (s.find('@') == ::std::string_view::npos) return ::std::string(s);
-  static const ::std::regex kEmailRe(R"(([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}))");
-  return ::std::regex_replace(::std::string(s), kEmailRe, "[EMAIL]");
+  static const ::std::regex kEmailRe(
+      R"((^|[^A-Za-z0-9._%+\-])([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}))");
+  return ::std::regex_replace(::std::string(s), kEmailRe, "$1[EMAIL]");
 }
 
 ::std::string nlp_mask_urls_fast(::std::string_view s) {
   if (!contains_ci(s, "http") && !contains_ci(s, "www.")) return ::std::string(s);
-  static const ::std::regex kUrlRe(R"((https?:\/\/[^\s<>"')\]]+|www\.[^\s<>"')\]]+))", ::std::regex::icase);
+  // Requiring a URL-like final byte leaves prose punctuation outside the mask.
+  static const ::std::regex kUrlRe(
+      R"((https?:\/\/[^\s<>"')\]]*[A-Za-z0-9\/#?=&_%~+\-]|www\.[^\s<>"')\]]*[A-Za-z0-9\/#?=&_%~+\-]))",
+      ::std::regex::icase);
   return ::std::regex_replace(::std::string(s), kUrlRe, "[URL]");
 }
 
 ::std::string nlp_mask_mentions_fast(::std::string_view s) {
   if (s.find('@') == ::std::string_view::npos) return ::std::string(s);
-  static const ::std::regex kMentionRe(R"((^|[\s(])@[A-Za-z0-9_]+)", ::std::regex::icase);
+  static const ::std::regex kMentionRe(
+      R"((^|[^A-Za-z0-9_])@[A-Za-z0-9_]+)", ::std::regex::icase);
   return ::std::regex_replace(::std::string(s), kMentionRe, "$1[MENTION]");
 }
 
 ::std::string nlp_mask_hashtags_fast(::std::string_view s) {
   if (s.find('#') == ::std::string_view::npos) return ::std::string(s);
-  static const ::std::regex kHashRe(R"((^|[\s(])#[A-Za-z0-9_]+)", ::std::regex::icase);
+  static const ::std::regex kHashRe(
+      R"((^|[^A-Za-z0-9_])#[A-Za-z0-9_]+)", ::std::regex::icase);
   return ::std::regex_replace(::std::string(s), kHashRe, "$1[HASHTAG]");
 }
 
@@ -1455,23 +1562,34 @@ inline bool suppress_sentence_break(std::string_view s,
       !contains_ci(s, "dec")) {
     return ::std::string(s);
   }
-  static const ::std::regex kDateRe(
-      R"(\b(?:\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s*\d{2,4})?)\b)",
+  static const ::std::regex kYearFirstRe(
+      R"(\b\d{4}([-.\/])(?:0?[1-9]|1[0-2])\1(?:0?[1-9]|[12]\d|3[01])\b)");
+  static const ::std::regex kDayOrMonthFirstRe(
+      R"(\b(?:(?:0?[1-9]|1[0-2])([-.\/])(?:0?[1-9]|[12]\d|3[01])\1\d{2,4}|(?:0?[1-9]|[12]\d|3[01])([-.\/])(?:0?[1-9]|1[0-2])\2\d{2,4})\b)");
+  static const ::std::regex kNamedMonthRe(
+      R"(\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+(?:0?[1-9]|[12]\d|3[01])(?:,\s*\d{2,4})?\b)",
       ::std::regex::icase);
-  return ::std::regex_replace(::std::string(s), kDateRe, "[DATE]");
+  ::std::string out = ::std::regex_replace(::std::string(s), kYearFirstRe, "[DATE]");
+  out = ::std::regex_replace(out, kDayOrMonthFirstRe, "[DATE]");
+  return ::std::regex_replace(out, kNamedMonthRe, "[DATE]");
 }
 
 ::std::string nlp_mask_times_fast(::std::string_view s) {
   if (!has_any_digit(s)) return ::std::string(s);
   static const ::std::regex kTimeRe(
-      R"(\b(?:(?:[01]?\d|2[0-3]):[0-5]\d(?:\s?[AaPp][Mm])?|(?:1[0-2]|0?[1-9])\s?[AaPp][Mm])\b)");
+      R"(\b(?:(?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s?[AaPp][Mm]|(?:[01]?\d|2[0-3]):[0-5]\d)\b)");
   return ::std::regex_replace(::std::string(s), kTimeRe, "[TIME]");
 }
 
 ::std::string nlp_mask_currency_fast(::std::string_view s) {
-  if (!has_any_digit(s) && !has_any_char(s, "$")) return ::std::string(s);
+  if (!has_any_digit(s) && s.find('$') == ::std::string_view::npos &&
+      s.find("€") == ::std::string_view::npos &&
+      s.find("£") == ::std::string_view::npos &&
+      s.find("¥") == ::std::string_view::npos) {
+    return ::std::string(s);
+  }
   static const ::std::regex kCurrencyRe(
-      R"((?:\$\s*\d+(?:[.,]\d+)*(?:\s?[kKmMbB])?|\b\d+(?:[.,]\d+)*\s?(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR)\b|\b(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR)\s?\d+(?:[.,]\d+)*\b))",
+      R"((?:(?:\$|€|£|¥)\s*\d+(?:[.,]\d+)*(?:\s?[kKmMbB])?|\b\d+(?:[.,]\d+)*\s?(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR)\b|\b(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY|INR)\s?\d+(?:[.,]\d+)*\b))",
       ::std::regex::icase);
   return ::std::regex_replace(::std::string(s), kCurrencyRe, "[CUR]");
 }

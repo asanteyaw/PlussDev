@@ -39,7 +39,7 @@ On the current verified public surface, the detached result starts untracked.
 
 ## Reverse-Mode Meaning
 
-Detaching creates a new autograd boundary.
+Detaching creates a new autodiff boundary.
 
 Before detaching, later reverse-mode can treat the current value as depending
 on earlier tracked sources.
@@ -189,7 +189,7 @@ data=[3, 3, 3]
 
 ## Summary
 
-Use `detach()` when you want the current numeric value as a fresh autograd
+Use `detach()` when you want the current numeric value as a fresh autodiff
 boundary: same visible data, no current upstream reverse-mode connection.
 
 ## See Also

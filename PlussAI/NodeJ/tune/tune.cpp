@@ -439,6 +439,8 @@ void populate_tune_ledger(TuneReport& report) {
       for (std::size_t m = 0; m < metric_count; ++m) {
         split_test[i * (max_folds * metric_count) + f * metric_count + m] = fold_vec[m];
       }
+      fit_time[i * max_folds + f] = trial.assess.folds[f].fit_time_seconds;
+      score_time[i * max_folds + f] = trial.assess.folds[f].score_time_seconds;
     }
   }
 

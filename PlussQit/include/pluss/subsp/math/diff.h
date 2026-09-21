@@ -610,7 +610,7 @@ inline DualTrace pow(const DualTrace& a, double s) {
 
 // Generated unary primitive derivatives live in the same registry that
 // drives reverse-mode links in OpsInternal.cpp.
-#include "CodeM/generated/SeriesAutogradDiffUnaryGen.inc"
+#include "CodeM/generated/SeriesAutodiffDiffUnaryGen.inc"
 
 inline Trace abs(const Trace& x) {
   detail::require_defined_(x.value(), "abs");

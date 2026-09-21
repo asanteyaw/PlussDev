@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::ends_with(std::string_view suffix) const
+Note Note::ends_with(std::string_view suffix) const
 ```
 
 ## Test Every Cell For A Literal Suffix
@@ -22,8 +22,8 @@ case-insensitive extension check (`.md` vs `.MD`), fold case first with
 
 ### Return value
 
-Not a `Note`: a flat `std::vector<std::uint8_t>`, one entry per cell (`1` /
-`0`), row-major, length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ### Edge cases
 
@@ -36,8 +36,8 @@ Not a `Note`: a flat `std::vector<std::uint8_t>`, one entry per cell (`1` /
 const auto mask =
     pluss::make_note({"report.md", "notes.MD", "data.csv"}).ends_with(".md");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -54,8 +54,8 @@ std::cout << "]\n";
 ```cpp
 const auto mask = pluss::make_note({"x", ""}).ends_with("");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -69,7 +69,7 @@ std::cout << "]\n";
 
 ```cpp
 const auto mask = pluss::make_note({"ab"}).ends_with("abcd");
-std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
+std::cout << "[" << static_cast<int>(mask.bools()[0]) << "]\n";
 ```
 
 ### Output
@@ -84,8 +84,8 @@ std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
 const auto mask =
     pluss::make_note({{"a.py", "b.py"}, {"c.js", "d.py"}}).ends_with(".py");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -104,9 +104,9 @@ std::cout << "]\n";
   rather than test for it.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="empty.html">
+  <a class="prev-link" href="end.html">
     <span class="label">Previous</span>
-    <span class="title">empty</span>
+    <span class="title">end</span>
   </a>
   <a class="next-link" href="ensure_prefix.html">
     <span class="label">Next</span>

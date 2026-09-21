@@ -58,20 +58,6 @@
       ]
     },
     {
-      "group": "Note->u8list",
-      "name": "contains",
-      "pretty": "u8list contains(string needle)",
-      "args": [
-        "string"
-      ]
-    },
-    {
-      "group": "Note->i64list",
-      "name": "lengths_bytes",
-      "pretty": "i64list lengths_bytes()",
-      "args": []
-    },
-    {
       "group": "Note->TokenBatch",
       "name": "split_whitespace",
       "pretty": "TokenBatch split_whitespace()",

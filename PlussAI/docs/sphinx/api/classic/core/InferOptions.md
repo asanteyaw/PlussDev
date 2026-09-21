@@ -38,19 +38,27 @@ production data reliably does eventually.
 `double positive_threshold = 0.5`
 
 Binary classification only. The probability cutoff `infer` (the hard-label
-form) uses to turn a positive-class score into `0` or `1`: scores strictly
-above `positive_threshold` become the positive class. `infer_scores` ignores
-this entirely — it always returns the raw score, whatever `positive_threshold`
-is set to. Moving this off `0.5` trades precision for recall (raise it to
-demand more confidence before predicting positive; lower it to catch more
-positives at the cost of more false ones) without retraining. Feed it the
+form) uses to turn a positive-class score into `0` or `1`. `infer_scores`
+returns a raw, unbounded decision score — not a `[0, 1]` probability, and not
+directly comparable to `positive_threshold` by hand (that raw score can print
+as anything from a large positive or negative number down to a value that
+rounds to zero at the exact boundary; do not assume a 1:1 numeric scale
+between the two). `infer` (the hard-label form) is what actually applies
+`positive_threshold`, mapping the raw score into probability space
+internally before comparing. `infer_scores` ignores `positive_threshold`
+entirely — it always returns the same raw score regardless of what it is set
+to. Moving `positive_threshold` off `0.5` trades precision for recall (raise
+it to demand more confidence before predicting positive; lower it to catch
+more positives at the cost of more false ones) without retraining. Feed it the
 output of [`best_threshold`](../metrics/threshold_curve.md) rather than
 guessing.
 
 ## Practical Example
 
-The same fitted classifier, three different `positive_threshold` values —
-predictions shift without touching the model.
+The same fitted classifier, three different `positive_threshold` values — the
+hard-label prediction shifts as the threshold crosses the model's own
+(near-zero, unbounded) raw score, without touching the model or the raw score
+itself.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -72,12 +80,14 @@ int main() {
 
   cls::LinearFamilyOptions linear{};
   linear.objective = cls::LinearObjective::Logistic;  // classification needs Logistic or Hinge
+  linear.regularization_strength = 1.0;  // soften the fit so the boundary score isn't saturated
   cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
       cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
   made.value()->learn(batch);
 
-  // A probe row right at the model's decision boundary.
-  const cls::Series probe = pluss::make_series({3.0}, {1}, f64).reshape({1, 1});
+  // A probe row right at the model's decision boundary (halfway between the
+  // classes, at x = 2.75).
+  const cls::Series probe = pluss::make_series({2.75}, {1}, f64).reshape({1, 1});
   cls::FeatureBatch probe_batch{};
   probe_batch.x = probe;
 
@@ -98,7 +108,10 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_INFEROPTIONS_1
+raw score = 2.22045e-16
+positive_threshold = 0.2 -> predicted class = 1
+positive_threshold = 0.5 -> predicted class = 1
+positive_threshold = 0.8 -> predicted class = 0
 ```
 
 ## Changelog

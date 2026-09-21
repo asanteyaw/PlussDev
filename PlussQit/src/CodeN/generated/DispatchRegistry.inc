@@ -16,7 +16,7 @@ inline constexpr OpSig kOpSigs[] = {
   {"lower", "Note lower()"},
   {"strip", "Note strip()"},
 
-  {"contains", "u8list Note::contains(string)"},
+  {"contains", "Note Note::contains(string)"},
 
 
   {"reshape", "Note reshape(IntList sizes)"},
@@ -26,13 +26,12 @@ inline constexpr OpSig kOpSigs[] = {
   {"narrow", "Note narrow(i64 dim, i64 start, i64 len)"},
 
   // Patch8: Unicode-ish
-  {"normalize", "Note normalize(i64 form)"},
   {"casefold", "Note casefold()"},
   {"casefold", "Note casefold(string locale)"},
 
   // Patch8: Regex
-  {"regex_match", "u8list Note regex_match(string pattern)"},
-  {"regex_search", "u8list Note regex_search(string pattern)"},
+  {"regex_match", "Note Note regex_match(string pattern)"},
+  {"regex_search", "Note Note regex_search(string pattern)"},
   {"regex_replace", "Note regex_replace(string pattern, string repl)"},
 
   // Patch8: split/join

@@ -24,7 +24,7 @@ combining marks and the common Latin-1 precomposed letters, so
 ASCII. It does not change how the text renders, only its bytes; pair it with
 [`lengths_chars`](lengths_chars.md) to see the change.
 
-This is the same operation as `normalize(1)`. `to_nfd` is shape-preserving,
+`to_nfd` is shape-preserving,
 cell-independent, idempotent, and returns a fresh `Note`. Requires the
 Unicode backend.
 

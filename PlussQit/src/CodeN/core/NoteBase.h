@@ -242,7 +242,7 @@ public:
   bool is_scalar() const noexcept { return defined() && dim() == 0; }
   bool is_vector() const noexcept { return defined() && dim() == 1; }
   bool is_matrix() const noexcept { return defined() && dim() == 2; }
-  bool is_tensor3() const noexcept { return defined() && dim() == 3; }
+  bool is_rank3() const noexcept { return defined() && dim() == 3; }
 
   NoteDType dtype() const {
     PLUSS_CHECK(defined(), "Note::dtype(): undefined Note");
@@ -265,7 +265,7 @@ public:
   value_type scalar() const;
   ::std::vector<value_type> vector() const;
   ::std::vector<Note> matrix() const;
-  ::std::vector<Note> tensor3() const;
+  ::std::vector<Note> slabs() const;
 
   bool bool_item() const;
   ::std::int64_t int_item() const;
@@ -278,7 +278,7 @@ public:
   ::std::string join_flat(::std::string_view sep = " ") const;
   ::std::string debug(index_type max_items = 12) const;
 
-  // copy_flat_to/for_each_flat/begin/end (and cbegin/cend) all traverse the
+  // copy_flat_to/for_each_flat/begin/end all traverse the
   // packed cell arena directly and so are Text/Bytes only, same as scalar()
   // above -- use bools()/integers()/reals() (plain std::span<const T>,
   // already range-for- and <algorithm>-compatible) to traverse a Bool,
@@ -318,9 +318,6 @@ public:
                 "Note::end(): iteration requires Text or Bytes storage; use bools()/integers()/reals() for other dtypes");
     return const_iterator{impl_, impl_->numel()};
   }
-
-  const_iterator cbegin() const { return begin(); }
-  const_iterator cend() const { return end(); }
 
 protected:
   friend struct ops_internal::NoteAccess;

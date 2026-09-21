@@ -5,7 +5,7 @@
 namespace pluss::ai::ice {
 
 // Ice keeps a local name for downstream source compatibility, but the
-// implementation now delegates to the lower-level NodeK/Series autograd
+// implementation now delegates to the lower-level NodeK/Series autodiff
 // gate so every op in the scope sees the same thread-local no-grad state.
 class NoGradGuard {
 public:

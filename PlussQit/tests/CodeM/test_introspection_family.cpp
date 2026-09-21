@@ -63,7 +63,7 @@ TEST_CASE("dtype and platform predicates return native booleans", "[introspectio
   REQUIRE_FALSE(real.is_mps());
 }
 
-TEST_CASE("autograd scalar and identity predicates inspect different state", "[introspection]") {
+TEST_CASE("autodiff scalar and identity predicates inspect different state", "[introspection]") {
   auto leaf = pluss::make_series({1.0, 2.0});
   leaf.tracks_slope_(true);
   const auto result = leaf.square();

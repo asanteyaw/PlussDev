@@ -77,8 +77,8 @@ Note(shape=[1], dim=1, numel=1, encoding=bytes)
     <span class="label">Previous</span>
     <span class="title">to_utf8_strict</span>
   </a>
-  <a class="next-link" href="tokenize_words.html">
+  <a class="next-link" href="transpose.html">
     <span class="label">Next</span>
-    <span class="title">tokenize_words</span>
+    <span class="title">transpose</span>
   </a>
 </div>

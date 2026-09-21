@@ -191,6 +191,6 @@ undefined unique defined=false
 - [`flatten`](flatten.md): flatten while retaining every cell.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="transpose.html"><span class="label">Previous</span><span class="title">transpose</span></a>
+  <a class="prev-link" href="undefined.html"><span class="label">Previous</span><span class="title">undefined</span></a>
   <a class="next-link" href="unquote.html"><span class="label">Next</span><span class="title">unquote</span></a>
 </div>

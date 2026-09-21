@@ -87,7 +87,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_RANDOMSTATE_1
+a first test row = 0
+b first test row = 0  (same seed as a)
+c first test row = 5  (different seed)
 ```
 
 ## Changelog

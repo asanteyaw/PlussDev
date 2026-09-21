@@ -14,9 +14,10 @@ TokenBatch Note::diff_chars(const Note& other) const
 `diff_chars(other)` compares each cell of `self` against the matching cell of
 `other` one character at a time and returns only the **changes** as a
 `TokenBatch` of tag-prefixed tokens. It is the finest-grained member of the
-diff / align family; the coarser ones are [`diff_words`](diff_words.md),
+diff / align family; the coarser ones are
+[`nlp().diff_words()`](../note-nlp/diff_words.md),
 [`diff_lines`](diff_lines.md), and (sentence granularity, with equal tokens)
-[`align_sentences`](align_sentences.md).
+[`nlp().align_sentences()`](../note-nlp/align_sentences.md).
 
 ### How the comparison works
 
@@ -33,7 +34,8 @@ in reading order, with a one-byte tag:
 The tag is the first byte of the token; the character follows. Characters
 common to both sides produce no token, so a cell whose two sides are
 identical contributes an **empty range**. For the full transcript that keeps
-the unchanged characters as well, run [`align_tokens`](align_tokens.md) — but
+the unchanged characters as well, run
+[`nlp().align_tokens()`](../note-nlp/align_tokens.md), but
 note that aligns words, not characters; there is no equal-included character
 spelling, so reconstruct from the `-`/`+` stream and the original text when
 you need one.
@@ -43,10 +45,11 @@ as `é` or `🎯` is one token, tag included.
 
 ### The `TokenBatch` result
 
-Tokens from all cells are concatenated into one flat rank-`1` token `Note`
-(`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each cell's
-run — cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`. An unchanged
-cell's range is empty (`offsets()[r] == offsets()[r+1]`).
+Tokens from all cells are concatenated into the rank-`1` Note
+`batch.tokens()`. The rank-`1` Int64 Note `batch.offsets()` has length
+`numel + 1` and marks each cell's run: cell `r` owns `tokens.at(k)` for `k`
+in `[offsets[r], offsets[r + 1])`. An unchanged
+cell's range is empty (`offsets[r] == offsets[r + 1]`).
 
 ### Shape, pairing, and rejections
 
@@ -62,7 +65,8 @@ Comparison is per cell and pairwise. `self` and `other` must share
 
 The alignment is `O(m · n)` in characters per cell — practical for words,
 identifiers, and short strings; for long documents prefer
-[`diff_words`](diff_words.md) or [`diff_lines`](diff_lines.md). It is
+[`nlp().diff_words()`](../note-nlp/diff_words.md) or
+[`diff_lines`](diff_lines.md). It is
 deterministic: on a tie the `-` is emitted before the `+`.
 
 ## Example 1: A Character Edit Script
@@ -73,8 +77,8 @@ const auto batch = pluss::make_note({"kitten"})
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -113,8 +117,8 @@ const auto batch = pluss::make_note({"same"})
                        .diff_chars(pluss::make_note({"same"}));
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -130,12 +134,12 @@ An empty token `Note` and an empty range for the one cell.
 
 ## See Also
 
-- [`Note::diff_words`](diff_words.md) / [`Note::diff_lines`](diff_lines.md):
+- [`NoteNlpAccessor::diff_words`](../note-nlp/diff_words.md) / [`Note::diff_lines`](diff_lines.md):
   coarser change-only views.
-- [`Note::align_tokens`](align_tokens.md) /
-  [`Note::align_sentences`](align_sentences.md): transcripts that keep the
+- [`NoteNlpAccessor::align_tokens`](../note-nlp/align_tokens.md) /
+  [`NoteNlpAccessor::align_sentences`](../note-nlp/align_sentences.md): transcripts that keep the
   unchanged tokens.
-- [`Note::tokenize_words`](tokenize_words.md): the `TokenBatch` shape.
+- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): the `TokenBatch` shape.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="defined.html">

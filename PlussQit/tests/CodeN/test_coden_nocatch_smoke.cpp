@@ -111,10 +111,10 @@ void test_basic_extracts() {
       "\\section{Intro}\n"
       "\\begin{equation}E=mc^2\\end{equation}\n"
       "See \\ref{eq:1}\n");
-  auto refs = tex.tex_refs();
+  auto refs = tex.tex().refs();
   expect_true(has_token(refs.tokens(), "eq:1"), "tex_refs extracts reference key");
 
-  auto cmds = tex.tex_commands();
+  auto cmds = tex.tex().commands();
   expect_true(has_token(cmds.tokens(), "\\section"), "tex_commands extracts command tokens");
 }
 
@@ -190,14 +190,14 @@ void test_nlp_extracts_and_filters() {
   std::cout << "[RUN] coden:nlp_extract\n";
   pluss::Note n = pluss::make_note("OpenAI GPT NASA shipped in 2025. Visit https://openai.com");
 
-  auto acr = n.nlp_extract_acronyms();
+  auto acr = n.nlp().acronyms();
   expect_true(has_token(acr.tokens(), "GPT"), "nlp_extract_acronyms finds GPT");
   expect_true(has_token(acr.tokens(), "NASA"), "nlp_extract_acronyms finds NASA");
 
-  auto urls = n.nlp_urls();
+  auto urls = n.nlp().urls();
   expect_true(has_token(urls.tokens(), "https://openai.com"), "nlp_urls finds URL");
 
-  auto filtered = n.nlp_filter_tokens_len_ge(4);
+  auto filtered = n.nlp().min_length(4);
   expect_true(filtered.tokens().numel() > 0, "nlp_filter_tokens_len_ge returns tokens");
 }
 
@@ -210,7 +210,7 @@ void test_nlp_keyword_frequency_order() {
           "omega omega zeta zeta and the"},
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
-  const auto kw = note.nlp_keywords(3);
+  const auto kw = note.nlp().keywords(3);
   const auto kw_offsets = kw.offsets().integers();
   expect_true(kw_offsets.size() == 3, "nlp_keywords returns row offsets");
   expect_true(kw_offsets[0] == 0 && kw_offsets[1] == 3 && kw_offsets[2] == 5,
@@ -222,7 +222,7 @@ void test_nlp_keyword_frequency_order() {
               "nlp_keywords row1 removes stopwords and ranks ties lexically");
 
   const auto stop_only = pluss::make_note("the and in to with");
-  const auto kw_stop_only = stop_only.nlp_keywords(5);
+  const auto kw_stop_only = stop_only.nlp().keywords(5);
   const auto kw_stop_only_offsets = kw_stop_only.offsets().integers();
   expect_true(kw_stop_only_offsets.size() == 2 && kw_stop_only_offsets[0] == 0 && kw_stop_only_offsets[1] == 0,
               "nlp_keywords stopword-only row produces empty token range");
@@ -243,11 +243,11 @@ void test_parallel_lane_parity() {
 
   set_env_mode("PLUSS_CODEN_PARALLEL", "off");
   const auto sorted_off = note2d.sort();
-  const auto kw_off = note2d.nlp_keywords(3);
+  const auto kw_off = note2d.nlp().keywords(3);
 
   set_env_mode("PLUSS_CODEN_PARALLEL", "on");
   const auto sorted_on = note2d.sort();
-  const auto kw_on = note2d.nlp_keywords(3);
+  const auto kw_on = note2d.nlp().keywords(3);
 
   set_env_mode("PLUSS_CODEN_PARALLEL", nullptr);
 
@@ -290,15 +290,15 @@ void test_reference_mode_parity() {
   const auto sort_ref = note2d.sort();
   const auto unique_ref = note1d.unique();
   const auto dedup_ref = note1d.deduplicate();
-  const auto kw_ref = note2d.nlp_keywords(3);
-  const auto inter_ref = note2d.intersect_tokens(scalar);
+  const auto kw_ref = note2d.nlp().keywords(3);
+  const auto inter_ref = note2d.nlp().intersect_tokens(scalar);
 
   set_env_mode("PLUSS_CODEN_EXECUTION_MODE", "optimized");
   const auto sort_opt = note2d.sort();
   const auto unique_opt = note1d.unique();
   const auto dedup_opt = note1d.deduplicate();
-  const auto kw_opt = note2d.nlp_keywords(3);
-  const auto inter_opt = note2d.intersect_tokens(scalar);
+  const auto kw_opt = note2d.nlp().keywords(3);
+  const auto inter_opt = note2d.nlp().intersect_tokens(scalar);
 
   set_env_mode("PLUSS_CODEN_EXECUTION_MODE", nullptr);
   set_env_mode("PLUSS_CODEN_PARALLEL", nullptr);
@@ -318,12 +318,12 @@ void test_diff_align_family() {
   pluss::Note a = pluss::make_note("alpha beta gamma");
   pluss::Note b = pluss::make_note("alpha theta gamma delta");
 
-  auto dw = a.diff_words(b);
+  auto dw = a.nlp().diff_words(b);
   expect_true(has_token(dw.tokens(), "-beta"), "diff_words marks removed tokens");
   expect_true(has_token(dw.tokens(), "+theta"), "diff_words marks inserted tokens");
   expect_true(has_token(dw.tokens(), "+delta"), "diff_words captures tail insertions");
 
-  auto at = a.align_tokens(b);
+  auto at = a.nlp().align_tokens(b);
   expect_true(has_token(at.tokens(), "=alpha"), "align_tokens keeps equal tokens");
   expect_true(has_token(at.tokens(), "=gamma"), "align_tokens keeps equal suffix");
 
@@ -339,27 +339,27 @@ void test_pairwise_set_ops_and_fast_paths() {
   pluss::Note a = pluss::make_note("Alpha beta beta delta");
   pluss::Note b = pluss::make_note("beta theta DELTA");
 
-  auto inter = a.intersect_tokens(b);
+  auto inter = a.nlp().intersect_tokens(b);
   expect_true(has_token(inter.tokens(), "beta"), "intersect_tokens keeps shared token");
   expect_true(has_token(inter.tokens(), "delta"), "intersect_tokens lower-normalizes shared token");
   expect_true(inter.tokens().numel() == 2, "intersect_tokens is unique-set intersection");
 
-  auto jac = a.jaccard_tokens(b);
+  auto jac = a.nlp().jaccard_tokens(b);
   const double jac_v = as_score(jac);
   expect_true(jac_v > 0.49 && jac_v < 0.51, "jaccard_tokens ~= 0.5");
 
-  auto ov = a.overlap_tokens(b);
+  auto ov = a.nlp().overlap_tokens(b);
   const double ov_v = as_score(ov);
   expect_true(ov_v > 0.66 && ov_v < 0.67, "overlap_tokens ~= 2/3");
 
   pluss::Note e = pluss::make_note("");
-  expect_true(as_score(e.jaccard_tokens(e)) == 1.0, "jaccard_tokens empty-empty is 1");
-  expect_true(as_score(e.overlap_tokens(e)) == 1.0, "overlap_tokens empty-empty is 1");
-  expect_true(as_score(e.overlap_tokens(a)) == 0.0, "overlap_tokens empty-vs-nonempty is 0");
+  expect_true(as_score(e.nlp().jaccard_tokens(e)) == 1.0, "jaccard_tokens empty-empty is 1");
+  expect_true(as_score(e.nlp().overlap_tokens(e)) == 1.0, "overlap_tokens empty-empty is 1");
+  expect_true(as_score(e.nlp().overlap_tokens(a)) == 0.0, "overlap_tokens empty-vs-nonempty is 0");
 
   pluss::Note t1 = pluss::make_note("The quantum method is robust and scalable.");
   pluss::Note t2 = pluss::make_note("A scalable quantum pipeline improves method quality.");
-  auto inter_terms = t1.intersect_terms(t2);
+  auto inter_terms = t1.nlp().intersect_terms(t2);
   expect_true(has_token(inter_terms.tokens(), "quantum"), "intersect_terms captures shared term");
   expect_true(has_token(inter_terms.tokens(), "scalable"), "intersect_terms captures second shared term");
 
@@ -369,44 +369,44 @@ void test_pairwise_set_ops_and_fast_paths() {
       std::span<const std::int64_t>(sz.data(), sz.size()));
   pluss::Note scalar = pluss::make_note("beta two");
 
-  auto inter_b = docs.intersect_tokens(scalar);
+  auto inter_b = docs.nlp().intersect_tokens(scalar);
   const auto inter_b_offsets = inter_b.offsets().integers();
   expect_true(inter_b_offsets.size() == 3, "intersect_tokens broadcast preserves row offsets");
   expect_true(inter_b_offsets[1] >= 1, "intersect_tokens broadcast row0 has intersection");
   expect_true(inter_b_offsets[2] >= inter_b_offsets[1], "intersect_tokens broadcast row1 offset monotonic");
 
-  auto punct = docs.split_on_punct();
-  expect_true(has_token(punct.tokens(), "One"), "split_on_punct extracts first token");
-  expect_true(has_token(punct.tokens(), "three"), "split_on_punct extracts trailing token");
+  auto punct = docs.nlp().punct_tokens();
+  expect_true(has_token(punct.tokens(), ","), "punct_tokens extracts comma");
+  expect_true(has_token(punct.tokens(), "!"), "punct_tokens extracts exclamation marks");
 
   pluss::Note words = pluss::make_note("foo_bar don't C3PO");
-  auto w = words.tokenize_words();
+  auto w = words.nlp().tokens();
   expect_true(has_token(w.tokens(), "foo_bar"), "tokenize_words keeps underscore");
   expect_true(has_token(w.tokens(), "don't"), "tokenize_words keeps apostrophe in body");
   expect_true(has_token(w.tokens(), "C3PO"), "tokenize_words keeps alnum word");
 
   pluss::Note sent = pluss::make_note("Hello!!! Next one? version2.0 works.");
-  auto sents = sent.split_sentences();
+  auto sents = sent.nlp().sentences();
   expect_true(has_token(sents.tokens(), "Hello!!!"), "split_sentences keeps punctuation runs");
   expect_true(has_token(sents.tokens(), "Next one?"), "split_sentences finds second sentence");
   expect_true(has_token(sents.tokens(), "version2.0 works."), "split_sentences does not split decimal");
 
   pluss::Note p1 = pluss::make_note("NASA GPT and [12] use x+y with \\alpha.");
   pluss::Note p2 = pluss::make_note("GPT NASA cite [12] and y/x with \\alpha and +.");
-  auto ia = p1.intersect_acronyms(p2);
+  auto ia = p1.nlp().intersect_acronyms(p2);
   expect_true(has_token(ia.tokens(), "nasa"), "intersect_acronyms captures shared acronym");
   expect_true(has_token(ia.tokens(), "gpt"), "intersect_acronyms captures second acronym");
-  expect_true(as_score(p1.jaccard_acronyms(p2)) > 0.99, "jaccard_acronyms ~ 1");
-  expect_true(as_score(p1.overlap_acronyms(p2)) > 0.99, "overlap_acronyms ~ 1");
+  expect_true(as_score(p1.nlp().jaccard_acronyms(p2)) > 0.99, "jaccard_acronyms ~ 1");
+  expect_true(as_score(p1.nlp().overlap_acronyms(p2)) > 0.99, "overlap_acronyms ~ 1");
 
-  auto ic = p1.intersect_citations(p2);
+  auto ic = p1.nlp().intersect_citations(p2);
   expect_true(has_token(ic.tokens(), "[12]"), "intersect_citations captures citation");
-  expect_true(as_score(p1.jaccard_citations(p2)) > 0.99, "jaccard_citations ~ 1");
+  expect_true(as_score(p1.nlp().jaccard_citations(p2)) > 0.99, "jaccard_citations ~ 1");
 
-  auto im = p1.intersect_math_symbols(p2);
+  auto im = p1.nlp().intersect_symbols(p2);
   expect_true(has_token(im.tokens(), "\\alpha"), "intersect_math_symbols captures macro");
   expect_true(has_token(im.tokens(), "+"), "intersect_math_symbols captures operator");
-  expect_true(as_score(p1.overlap_math_symbols(p2)) > 0.4, "overlap_math_symbols positive");
+  expect_true(as_score(p1.nlp().overlap_symbols(p2)) > 0.4, "overlap_math_symbols positive");
 }
 
 void test_encoding_and_shape_ops() {
@@ -447,7 +447,7 @@ void test_encoding_and_shape_ops() {
       std::span<const std::int64_t>(m_sizes.data(), m_sizes.size()));
   auto flat = m.flatten();
   expect_true(flat.dim() == 1 && flat.size(0) == 4, "flatten converts to 1D");
-  auto ex = m.expand_dims(1);
+  auto ex = m.unsqueeze(1);
   expect_true(ex.dim() == 3 && ex.size(0) == 2 && ex.size(1) == 1 && ex.size(2) == 2, "expand_dims inserts singleton axis");
   auto sq = ex.squeeze(1);
   expect_true(sq.dim() == 2 && sq.size(0) == 2 && sq.size(1) == 2, "squeeze removes singleton axis");
@@ -458,8 +458,6 @@ void test_encoding_and_shape_ops() {
   expect_true(rep.at(0) == "b" && rep.at(3) == "b", "repeat preserves chunk ordering");
   auto ri = v.repeat_interleave(2, 0);
   expect_true(ri.size(0) == 6 && ri.at(0) == "b" && ri.at(1) == "b" && ri.at(2) == "a", "repeat_interleave duplicates along dim");
-  auto til = v.tile(std::span<const std::int64_t>(reps2.data(), reps2.size()));
-  expect_true(til.size(0) == 6 && til.at(4) == "a", "tile aliases repeat semantics");
 
   const std::vector<std::int64_t> take_idx{2, 1, -1, 0};
   auto taken = v.take(std::span<const std::int64_t>(take_idx.data(), take_idx.size()));
@@ -581,7 +579,8 @@ void test_argsort_interop_ops() {
                   sorted.at(4) == "b" && sorted.at(5) == "b" && sorted.at(6) == "z",
               "take(argsort()) reproduces lexicographically sorted Note");
 
-  const auto desc = note.argsort(/*descending=*/true, /*stable=*/true).integers();
+  const auto desc_note = note.argsort(/*descending=*/true, /*stable=*/true);
+  const auto desc = desc_note.integers();
   expect_true(desc[0] == 3 && desc[1] == 0 && desc[2] == 2 && desc[3] == 5 && desc[4] == 1 && desc[5] == 6 &&
                   desc[6] == 4,
               "argsort descending stable ordering matches expected permutation");
@@ -591,26 +590,26 @@ void test_high_yield_nlp_and_printing() {
   std::cout << "[RUN] coden:high_yield_nlp_print\n";
   pluss::Note n = pluss::make_note("I can't believe this GREAT product costs 123 dollars in 2026.");
 
-  const std::string expanded = std::string(n.nlp_expand_contractions().at(0));
+  const std::string expanded = std::string(n.nlp().expand_contractions().at(0));
   expect_true(expanded.find("can not") != std::string::npos, "nlp_expand_contractions expands can't");
 
-  const std::string normn = std::string(n.nlp_normalize_numbers().at(0));
+  const std::string normn = std::string(n.nlp().normalize_numbers().at(0));
   expect_true(normn.find("0 dollars in 0") != std::string::npos, "nlp_normalize_numbers masks numeric spans");
 
-  const double sent = as_score(n.nlp_sentiment());
+  const double sent = as_score(n.nlp().sentiment());
   expect_true(sent > 0.5, "nlp_sentiment positive for positive lexicon");
-  const double tox = as_score(n.nlp_toxicity());
+  const double tox = as_score(n.nlp().toxicity());
   expect_true(tox < 0.4, "nlp_toxicity stays low for neutral sentence");
-  expect_true(!std::string(n.nlp_readability_level().at(0)).empty(), "nlp_readability_level emits label");
-  expect_true(!std::string(n.nlp_script().at(0)).empty(), "nlp_script emits script");
+  expect_true(!std::string(n.nlp().readability_level().at(0)).empty(), "nlp_readability_level emits label");
+  expect_true(!std::string(n.nlp().script().at(0)).empty(), "nlp_script emits script");
 
   pluss::Note sw = pluss::make_note("the robust method is in the pipeline");
-  const std::string swr = std::string(sw.nlp_remove_stopwords().at(0));
+  const std::string swr = std::string(sw.nlp().remove_stopwords().at(0));
   expect_true(swr.find("the") == std::string::npos, "nlp_remove_stopwords removes english stopwords");
 
-  const std::string tr = std::string(pluss::make_note("São").transliterate_ascii().at(0));
+  const std::string tr = std::string(pluss::make_note("São").nlp().to_ascii().at(0));
   expect_true(tr == "Sao", "transliterate_ascii strips accent");
-  expect_true(!std::string(pluss::make_note("Robert").phonetic_soundex().at(0)).empty(), "phonetic_soundex emits code");
+  expect_true(!std::string(pluss::make_note("Robert").nlp().soundex().at(0)).empty(), "phonetic_soundex emits code");
 
   std::string latin1 = "caf\xE9";
   auto decoded = pluss::note::bytes(latin1).from_latin1();
@@ -644,35 +643,35 @@ void test_high_yield_nlp_and_printing() {
       "\\textbf{Bold} and \\emph{emph}.\\n"
       "Math: $x+y$ and \\(z\\).\\n\\n\\n"
       "{\\bfseries font} line.");
-  const std::string tex_norm = std::string(tex.tex_normalize_newlines().at(0));
+  const std::string tex_norm = std::string(tex.tex().normalize_newlines().at(0));
   expect_true(tex_norm.find('\r') == std::string::npos, "tex_normalize_newlines removes CR");
 
-  const std::string tex_dedup = std::string(tex.tex_dedup_blank_lines().at(0));
+  const std::string tex_dedup = std::string(tex.tex().dedup_blank_lines().at(0));
   expect_true(tex_dedup.find("\n\n\n") == std::string::npos, "tex_dedup_blank_lines collapses blank runs");
 
-  const std::string escaped = std::string(pluss::make_note("a_b#%").tex_escape().at(0));
+  const std::string escaped = std::string(pluss::make_note("a_b#%").tex().escape().at(0));
   expect_true(escaped.find("\\_") != std::string::npos, "tex_escape escapes underscore");
-  expect_true(std::string(pluss::make_note(escaped).tex_unescape().at(0)) == "a_b#%", "tex_unescape reverses escapes");
+  expect_true(std::string(pluss::make_note(escaped).tex().unescape().at(0)) == "a_b#%", "tex_unescape reverses escapes");
 
-  const std::string no_delims = std::string(tex.tex_remove_math_delimiters().at(0));
+  const std::string no_delims = std::string(tex.tex().remove_math_delimiters().at(0));
   expect_true(no_delims.find("$") == std::string::npos, "tex_remove_math_delimiters strips dollar delimiters");
-  expect_true(std::string(pluss::make_note("x+y").tex_add_math_delimiters().at(0)) == "$x+y$",
+  expect_true(std::string(pluss::make_note("x+y").tex().add_math_delimiters().at(0)) == "$x+y$",
               "tex_add_math_delimiters wraps plain expression");
 
-  const std::string math_only = std::string(tex.tex_math_only().at(0));
+  const std::string math_only = std::string(tex.tex().math_only().at(0));
   expect_true(math_only.find("x+y") != std::string::npos, "tex_math_only extracts math payload");
-  const std::string text_only = std::string(tex.tex_text_only().at(0));
+  const std::string text_only = std::string(tex.tex().text_only().at(0));
   expect_true(text_only.find("Math:") != std::string::npos, "tex_text_only keeps prose payload");
 
-  const std::string no_fmt = std::string(tex.tex_remove_formatting().at(0));
+  const std::string no_fmt = std::string(tex.tex().remove_formatting().at(0));
   expect_true(no_fmt.find("Bold") != std::string::npos, "tex_remove_formatting keeps formatted content");
   expect_true(no_fmt.find("\\textbf") == std::string::npos, "tex_remove_formatting drops formatting commands");
 
-  const std::string md = std::string(tex.tex_to_markdown().at(0));
+  const std::string md = std::string(tex.tex().to_markdown().at(0));
   expect_true(md.find("# Intro") != std::string::npos, "tex_to_markdown converts section to markdown heading");
   expect_true(md.find("**Bold**") != std::string::npos, "tex_to_markdown converts bold command");
 
-  const std::string html = std::string(tex.tex_to_html().at(0));
+  const std::string html = std::string(tex.tex().to_html().at(0));
   expect_true(html.find("<h1>Intro</h1>") != std::string::npos, "tex_to_html converts section heading");
   expect_true(html.find("<strong>Bold</strong>") != std::string::npos, "tex_to_html converts bold command");
 }
@@ -686,72 +685,72 @@ void test_tex_canonicalize_and_macros() {
       "Limits: \\sumlimits_{i=1}^n x_i and x^2 and x'' and \\ldots\n"
       "Accents: \\'{e}.");
 
-  const std::string expanded = std::string(t.tex_expand_macros().at(0));
-  expect_true(expanded.find("x \\in R") != std::string::npos, "tex_expand_macros expands \\RR");
-  expect_true(expanded.find("\\RR") == std::string::npos, "tex_expand_macros removes macro usage");
-  expect_true(expanded.find("\\newcommand") == std::string::npos, "tex_expand_macros strips macro decls");
+  const std::string expanded = std::string(t.tex().macro_subs().at(0));
+  expect_true(expanded.find("x \\in R") != std::string::npos, "macro_subs expands \\RR");
+  expect_true(expanded.find("\\RR") == std::string::npos, "macro_subs removes macro usage");
+  expect_true(expanded.find("\\newcommand") == std::string::npos, "macro_subs strips macro decls");
 
-  const std::string canon = std::string(t.tex_canonicalize_macros().at(0));
+  const std::string canon = std::string(t.tex().canonicalize_macros().at(0));
   expect_true(canon.find("\\frac") != std::string::npos, "tex_canonicalize_macros normalizes \\dfrac");
 
-  const std::string frac = std::string(t.tex_simplify_fractions().at(0));
+  const std::string frac = std::string(t.tex().simplify_fractions().at(0));
   expect_true(frac.find("\\frac{a}{b}") != std::string::npos, "tex_simplify_fractions normalizes frac");
 
-  const std::string sqrtp = std::string(t.tex_convert_sqrt_to_pow().at(0));
-  expect_true(sqrtp.find("^(1/2)") != std::string::npos, "tex_convert_sqrt_to_pow converts sqrt");
+  const std::string sqrtp = std::string(t.tex().sqrt_pow().at(0));
+  expect_true(sqrtp.find("^(1/2)") != std::string::npos, "sqrt_pow converts sqrt");
 
-  const std::string pm = std::string(t.tex_convert_pm_to_plusminus().at(0));
-  expect_true(pm.find("+/-") != std::string::npos, "tex_convert_pm_to_plusminus converts \\pm");
+  const std::string pm = std::string(t.tex().pm_signs().at(0));
+  expect_true(pm.find("+/-") != std::string::npos, "pm_signs converts \\pm");
 
-  const std::string vec = std::string(t.tex_standardize_vectors().at(0));
+  const std::string vec = std::string(t.tex().standardize_vectors().at(0));
   expect_true(vec.find("\\vec{v}") != std::string::npos, "tex_standardize_vectors normalizes vector markup");
 
-  const std::string mat = std::string(t.tex_standardize_matrices().at(0));
+  const std::string mat = std::string(t.tex().standardize_matrices().at(0));
   expect_true(mat.find("\\begin{matrix}") != std::string::npos, "tex_standardize_matrices normalizes matrix env");
 
-  const std::string sums = std::string(t.tex_standardize_summations().at(0));
+  const std::string sums = std::string(t.tex().standardize_summations().at(0));
   expect_true(sums.find("\\sumlimits") == std::string::npos, "tex_standardize_summations removes sumlimits");
 
-  const std::string lims = std::string(t.tex_standardize_limits().at(0));
+  const std::string lims = std::string(t.tex().standardize_limits().at(0));
   expect_true(lims.find("\\limits") == std::string::npos, "tex_standardize_limits strips \\limits");
 
-  const std::string subs = std::string(t.tex_standardize_subscripts().at(0));
+  const std::string subs = std::string(t.tex().standardize_subscripts().at(0));
   expect_true(subs.find("x_{i}") != std::string::npos, "tex_standardize_subscripts braces subscripts");
 
-  const std::string sups = std::string(t.tex_standardize_superscripts().at(0));
+  const std::string sups = std::string(t.tex().standardize_superscripts().at(0));
   expect_true(sups.find("x^{2}") != std::string::npos, "tex_standardize_superscripts braces superscripts");
 
-  const std::string primes = std::string(t.tex_standardize_primes().at(0));
+  const std::string primes = std::string(t.tex().standardize_primes().at(0));
   expect_true(primes.find("\\prime") != std::string::npos, "tex_standardize_primes expands primes");
 
-  const std::string dots = std::string(t.tex_standardize_dots().at(0));
+  const std::string dots = std::string(t.tex().standardize_dots().at(0));
   expect_true(dots.find("\\dots") != std::string::npos, "tex_standardize_dots normalizes dots");
 
-  const std::string acc = std::string(t.tex_remove_accents().at(0));
+  const std::string acc = std::string(t.tex().remove_accents().at(0));
   expect_true(acc.find("e") != std::string::npos, "tex_remove_accents strips accent macros");
 
-  const std::string setm = std::string(t.tex_set_macro("Foo", "Bar").at(0));
+  const std::string setm = std::string(t.tex().set_macro("Foo", "Bar").at(0));
   expect_true(setm.find("\\newcommand{\\Foo}{Bar}") != std::string::npos, "tex_set_macro inserts macro decl");
 
-  const std::string remm = std::string(t.tex_remove_macro("RR").at(0));
+  const std::string remm = std::string(t.tex().remove_macro("RR").at(0));
   expect_true(remm.find("\\newcommand") == std::string::npos, "tex_remove_macro removes macro decl");
 
-  const std::string wrapped = std::string(pluss::make_note("x+y").tex_wrap_inline_math("$").at(0));
+  const std::string wrapped = std::string(pluss::make_note("x+y").tex().wrap_inline_math("$").at(0));
   expect_true(wrapped == "$x+y$", "tex_wrap_inline_math wraps inline math");
 
-  const std::string display = std::string(pluss::make_note("x+y").tex_wrap_display_math("$$").at(0));
+  const std::string display = std::string(pluss::make_note("x+y").tex().wrap_display_math("$$").at(0));
   expect_true(display.find("$$") != std::string::npos, "tex_wrap_display_math wraps display math");
 
-  const std::string bal_br = std::string(pluss::make_note("{a{b}").tex_balance_braces().at(0));
+  const std::string bal_br = std::string(pluss::make_note("{a{b}").tex().balance_braces().at(0));
   expect_true(bal_br.find("}}") != std::string::npos, "tex_balance_braces closes missing braces");
 
-  const std::string bal_math = std::string(pluss::make_note("$x+y").tex_balance_math_delims().at(0));
+  const std::string bal_math = std::string(pluss::make_note("$x+y").tex().balance_math_delims().at(0));
   expect_true(!bal_math.empty() && bal_math.back() == '$', "tex_balance_math_delims closes missing $");
 
-  const std::string inc = std::string(pluss::make_note("\\input{sec1}").tex_expand_inputs().at(0));
-  expect_true(inc.find("[include:sec1]") != std::string::npos, "tex_expand_inputs rewrites inputs");
+  const std::string inc = std::string(pluss::make_note("\\input{sec1}").tex().input_tags().at(0));
+  expect_true(inc.find("[include:sec1]") != std::string::npos, "input_tags rewrites inputs");
 
-  const std::string gfx = std::string(pluss::make_note("\\includegraphics{fig}").tex_resolve_graphics().at(0));
+  const std::string gfx = std::string(pluss::make_note("\\includegraphics{fig}").tex().resolve_graphics().at(0));
   expect_true(gfx.find("[graphic:fig]") != std::string::npos, "tex_resolve_graphics rewrites graphics");
 }
 
@@ -847,7 +846,7 @@ void test_note_factory_paths() {
   pluss::Note lower = s3.lower();
   expect_true(lower.dim() == 3 && lower.sizes() == s3.sizes(), "methods preserve 3D shape");
 
-  pluss::Note escaped = s3.tex_escape();
+  pluss::Note escaped = s3.tex().escape();
   expect_true(escaped.dim() == 3 && escaped.sizes() == s3.sizes(), "tex methods preserve 3D shape");
 }
 

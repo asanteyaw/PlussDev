@@ -85,37 +85,77 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   try {
 
   {
-    stage = "fp64 contract";
+    // Float64 parameters are a supported training dtype (see
+    // pluss::detail::nn::is_training_float_dtype_): a single Adam step must
+    // both run without throwing and match Adam's exact first-step formula
+    // (bias correction at step 1 makes m1_hat = g, m2_hat = g^2, so this is
+    // hand-computable, not approximate) -- p=1.0, g=0.5, lr=0.1, defaults
+    // (beta1=0.9, beta2=0.999, eps=1e-8): m1=0.05, m2=0.00025,
+    // m1_hat=0.5, m2_hat=0.25, denom=sqrt(0.25)+eps=0.5+eps,
+    // delta=lr*m1_hat/denom=0.1*0.5/(0.5+eps)~=0.1, next~=0.9.
+    stage = "fp64 param supported";
     Series fp64_param = pluss::make_series(1.0, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU));
-    pluss::nn::optim::AdamOptions bad_opt{};
-    bool threw = false;
-    try {
-      pluss::nn::optim::Adam bad(std::vector<Series*>{&fp64_param}, bad_opt);
-    } catch (const std::exception&) {
-      threw = true;
+    pluss::nn::optim::AdamOptions fp64_opt{};
+    fp64_opt.learning_rate = 0.1;
+    pluss::nn::optim::Adam fp64_adam(std::vector<Series*>{&fp64_param}, fp64_opt);
+    fp64_adam.step(std::vector<Series>{pluss::make_series(
+        0.5, Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))});
+    if (fp64_param.scalar_type() != ScalarType::Float64) {
+      if (err) *err << "Adam Float64 step must preserve the parameter's dtype\n";
+      return false;
     }
-    if (!threw) {
-      if (err) *err << "Optimizer Float32-only contract mismatch\n";
+    if (!approx(scalar_f64(fp64_param), 0.9, 1e-6)) {
+      if (err) *err << "Adam Float64 explicit step mismatch\n";
       return false;
     }
   }
 
   {
-    stage = "closure loss dtype contract";
-    Series p = pluss::make_series(1.0f, cfg);
-    pluss::nn::optim::AdamOptions opt{};
-    opt.learning_rate = 1e-2;
-    pluss::nn::optim::Adam optimizer(std::vector<Series*>{&p}, opt);
+    // Int64 (not a floating dtype at all) must still be rejected -- keeps
+    // real coverage of the "non-floating parameter" contract now that
+    // Float64 itself is no longer the vehicle for testing it.
+    stage = "non-floating dtype contract";
+    Series int_param = pluss::make_series(
+        std::int64_t{1}, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
+    pluss::nn::optim::AdamOptions bad_opt{};
     bool threw = false;
     try {
-      (void)optimizer.step([&]() -> Series {
-        return p.square().to(ScalarType::Float64);
-      });
+      pluss::nn::optim::Adam bad(std::vector<Series*>{&int_param}, bad_opt);
     } catch (const std::exception&) {
       threw = true;
     }
     if (!threw) {
-      if (err) *err << "Optimizer closure loss dtype contract mismatch\n";
+      if (err) *err << "Optimizer non-floating-dtype contract mismatch\n";
+      return false;
+    }
+  }
+
+  {
+    // A closure loss computed in a DIFFERENT (but still supported) floating
+    // dtype than the parameter is legitimate mixed-precision territory now
+    // that Float64 is a supported training dtype, not a contract violation
+    // -- Series::to() between floating dtypes carries a real reverse-mode
+    // node (confirmed by the [backward-manifest] audit), so the gradient
+    // correctly casts back down to Float32 (p's own dtype) during
+    // `.reverse()`, and the step proceeds normally. p=1.0 (Float32),
+    // loss=p^2 cast to Float64=1.0, g=d(loss)/dp=2.0 (cast back to
+    // Float32), lr=1e-2, Adam defaults: m1=0.2, m2=0.004,
+    // m1_hat=2.0, m2_hat=4.0, denom=sqrt(4.0)+eps=2.0+eps,
+    // delta=0.01*2.0/2.0=0.01, next=1.0-0.01=0.99.
+    stage = "closure loss dtype differs from parameter dtype";
+    Series p = pluss::make_series(1.0f, cfg);
+    pluss::nn::optim::AdamOptions opt{};
+    opt.learning_rate = 1e-2;
+    pluss::nn::optim::Adam optimizer(std::vector<Series*>{&p}, opt);
+    (void)optimizer.step([&]() -> Series {
+      return p.square().to(ScalarType::Float64);
+    });
+    if (p.scalar_type() != ScalarType::Float32) {
+      if (err) *err << "Adam step must preserve the parameter's own dtype even when the loss differs\n";
+      return false;
+    }
+    if (!approx(scalar_f64(p), 0.99, 1e-6)) {
+      if (err) *err << "Adam mixed-precision closure step mismatch\n";
       return false;
     }
   }
@@ -1277,7 +1317,7 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   leaf_sgd.clear();
   leaf_loss.reverse();
   leaf_sgd.step();
-  if (!leaf_param.is_leaf().item<bool>()) {
+  if (!leaf_param.is_leaf()) {
     if (err) *err << "Optimizer step must leave parameters as leaf tensors\n";
     return false;
   }

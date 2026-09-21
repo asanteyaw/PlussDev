@@ -32,9 +32,10 @@ line **in the middle** is a real empty line and is kept: `"a\n\nc"` yields
 
 ### The `TokenBatch` result
 
-All lines from all cells are concatenated into one flat rank-`1` token
-`Note` (`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each
-cell's run: cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`. A cell
+All lines from all cells are concatenated into the rank-`1` Note
+`batch.tokens()`. The rank-`1` Int64 Note `batch.offsets()` has length
+`numel + 1` and marks each cell's run: cell `r` owns `tokens.at(k)` for `k`
+in `[offsets[r], offsets[r + 1])`. A cell
 that produced no lines contributes an empty range.
 
 ## Example 1: Basic Line Split
@@ -45,8 +46,8 @@ const auto batch =
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -125,8 +126,8 @@ const auto batch = pluss::make_note({""}).split_lines();
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -149,9 +150,9 @@ The one input cell maps to the empty range `[0, 0)`.
   runs.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split.html">
+  <a class="prev-link" href="split_chars.html">
     <span class="label">Previous</span>
-    <span class="title">split</span>
+    <span class="title">split_chars</span>
   </a>
   <a class="next-link" href="split_whitespace.html">
     <span class="label">Next</span>

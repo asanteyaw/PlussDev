@@ -117,7 +117,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_MODELSPEC_1
+linear classifier made ok = true
+tree regressor made ok    = true
+kmeans transformer made ok = true
 ```
 
 ### Example 2
@@ -157,7 +159,8 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_MODELSPEC_2
+regression spec into make_classifier: ok = false, message = "make_classifier requires ModelSpec.task = TaskKind::Classification."
+mismatched family/options: ok = false, message = "Tree classifier requires TreeFamilyOptions in ModelSpec.options."
 ```
 
 ### Example 3
@@ -200,7 +203,10 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_MODELSPEC_3
+candidate count = 3
+  family = 0, task = 1
+  family = 0, task = 1
+  family = 1, task = 1
 ```
 
 ## Changelog

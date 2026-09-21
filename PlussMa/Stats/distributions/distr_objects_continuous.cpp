@@ -1,4 +1,5 @@
 #include "distr_fit_common.h"
+#include "pluss/subsp/math/integ.h"
 
 #include <algorithm>
 #include <array>
@@ -205,20 +206,16 @@ std::vector<double> normaltrunc_standard_raw_moments(double alpha, double beta, 
   return moments;
 }
 
+// Composite Simpson's rule (n=2048 fixed nodes by default), used for the
+// MGF-via-numeric-integration call sites below. Delegates to
+// pluss::subsp::math::integ::quadra_scalar (PlussMa/include/pluss/subsp/
+// math/integ.h) rather than reimplementing the rule locally -- this file
+// and distr.cpp each had their own copy of the identical formula (only the
+// node count differed) before this consolidation.
 double integrate_simpson(const std::function<double(double)>& fn, double a, double b, int n = 2048) {
-  if (b <= a) {
-    return 0.0;
-  }
-  if (n % 2 != 0) {
-    ++n;
-  }
-  const double h = (b - a) / static_cast<double>(n);
-  double acc = fn(a) + fn(b);
-  for (int i = 1; i < n; ++i) {
-    const double x = a + h * static_cast<double>(i);
-    acc += fn(x) * ((i % 2 == 0) ? 2.0 : 4.0);
-  }
-  return acc * h / 3.0;
+  pluss::subsp::math::integ::QuadraScalarOptions options;
+  options.nodes = n;
+  return pluss::subsp::math::integ::quadra_scalar(fn, a, b, options).value;
 }
 
 double log_mgf_from_moments_series(const std::function<long double(std::int64_t)>& raw_moment_fn,

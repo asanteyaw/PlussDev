@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_upper() const
+Note Note::is_upper() const
 ```
 
 ## Test Whether A Cell Is Upper-Case
@@ -20,8 +20,8 @@ uncased.
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -30,8 +30,8 @@ const auto n = pluss::make_note(
     {"ABC", "abc", "Abc", "ABC123", "A B", "123", ""});
 const auto mask = n.is_upper();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 

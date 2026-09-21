@@ -30,8 +30,6 @@ inline constexpr OpSig kOpSigs[] = {
   {"Note", "transpose", "Note transpose(int64 dim0, int64 dim1)", 2, ArgKind::kInt64, ArgKind::kInt64, ArgKind::kNone},
   {"Note", "select", "Note select(int64 dim, int64 index)", 2, ArgKind::kInt64, ArgKind::kInt64, ArgKind::kNone},
   {"Note", "narrow", "Note narrow(int64 dim, int64 start, int64 length)", 3, ArgKind::kInt64, ArgKind::kInt64, ArgKind::kInt64},
-  {"Note->u8list", "contains", "u8list contains(string needle)", 1, ArgKind::kString, ArgKind::kNone, ArgKind::kNone},
-  {"Note->i64list", "lengths_bytes", "i64list lengths_bytes()", 0, ArgKind::kNone, ArgKind::kNone, ArgKind::kNone},
   {"Note->TokenBatch", "split_whitespace", "TokenBatch split_whitespace()", 0, ArgKind::kNone, ArgKind::kNone, ArgKind::kNone},
 };
 

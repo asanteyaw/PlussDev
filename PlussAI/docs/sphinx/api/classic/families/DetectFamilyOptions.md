@@ -74,7 +74,12 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_DETECTFAMILYOPTIONS_1
+made.ok() = true
+scores = pluss::Series(shape=[10,1], strides=[1,1], dtype=int64, platform=cpu, numel=10, contiguous=true)
+data=[[1],
+  [1],
+  ...
+ [-1]]
 ```
 
 ## Changelog

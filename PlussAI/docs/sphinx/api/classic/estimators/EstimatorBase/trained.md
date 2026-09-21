@@ -1,54 +1,63 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: c198e893e22a -->
 # `pluss::ai::classic::EstimatorBase::trained`
 
-[Back to `pluss::ai::classic::EstimatorBase`](../EstimatorBase.md)
+`trained` reports whether `learn` has succeeded at least once. It is the
+cheapest possible check before calling `infer` / `assess` (both fail cleanly
+on an untrained estimator regardless, but `trained()` lets you branch without
+constructing a batch first).
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+bool classic::EstimatorBase::trained() const noexcept;
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`false` immediately after construction (from `make_classifier` /
+`make_regressor`, before any `learn` call). `true` once a `learn` call has
+returned an ok `Status`. A `learn` call that fails does not necessarily leave
+`trained()` at its previous value — treat a failed `learn`'s effect on
+`trained()` as unspecified and re-check after every `learn` call rather than
+assuming.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None — `noexcept`, always succeeds.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+`trained()` before and after a successful `learn`.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> made =
+      cls::make_regressor(cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear,
+                                         cls::LinearFamilyOptions{}});
+  std::cout << "trained before = " << std::boolalpha << made.value()->trained() << "\n";
+
+  cls::LabeledBatch batch{};
+  batch.features.x = pluss::make_series({1.0, 2.0, 3.0}, {3}, f64).reshape({3, 1});
+  batch.y = pluss::make_series({2.0, 4.0, 6.0}, {3}, f64);
+  made.value()->learn(batch);
+
+  std::cout << "trained after  = " << made.value()->trained() << "\n";
 
   return 0;
 }
@@ -57,27 +66,38 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+trained before = false
+trained after  = true
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+Using `trained()` to guard a call that would otherwise fail — check first
+rather than reading the error.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> made =
+      cls::make_regressor(cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear,
+                                         cls::LinearFamilyOptions{}});
+
+  cls::FeatureBatch probe{};
+  probe.x = pluss::make_series({1.0}, {1}, f64).reshape({1, 1});
+
+  if (made.value()->trained()) {
+    std::cout << "prediction = " << made.value()->infer(probe).value() << "\n";
+  } else {
+    std::cout << "skipped infer: estimator is not trained yet\n";
+  }
 
   return 0;
 }
@@ -86,27 +106,36 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+skipped infer: estimator is not trained yet
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Two independent estimators built from the same `ModelSpec` — each tracks its
+own `trained()` state; fitting one does not affect the other.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const cls::ModelSpec spec{cls::TaskKind::Regression, cls::ModelFamily::Linear, cls::LinearFamilyOptions{}};
+  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> a = cls::make_regressor(spec);
+  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> b = cls::make_regressor(spec);
+
+  cls::LabeledBatch batch{};
+  batch.features.x = pluss::make_series({1.0, 2.0, 3.0}, {3}, f64).reshape({3, 1});
+  batch.y = pluss::make_series({2.0, 4.0, 6.0}, {3}, f64);
+  a.value()->learn(batch);  // only fit "a"
+
+  std::cout << "a.trained() = " << std::boolalpha << a.value()->trained() << "\n";
+  std::cout << "b.trained() = " << b.value()->trained() << "\n";
 
   return 0;
 }
@@ -115,12 +144,14 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+a.trained() = true
+b.trained() = false
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`learn`](learn.md) — the only method that can move `trained()` to `true`.
+- [`task_kind`](task_kind.md) — the other fixed-vs-mutable state query.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

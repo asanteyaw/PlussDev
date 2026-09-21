@@ -16,7 +16,7 @@ Series::tracks_slope_(bool enabled) const -> Series&
 `tracks_slope_()` mutates whether this `Series` is tracked for reverse-mode
 sensitivity.
 
-This is the root opt-in switch for most autograd examples in the `Series`
+This is the root opt-in switch for most autodiff examples in the `Series`
 reference. If you want a leaf to receive stored sensitivity after a later
 `reverse()` call, this is the method you turn on before building the forward
 computation.

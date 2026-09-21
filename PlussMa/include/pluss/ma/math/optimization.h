@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pluss/subsp/math/optim.h"
+#include "pluss/subsp/math/optim_lsr1.h"
 
 #if __has_include("PlussMa/Math/Numerical/optimization/dfo_solver.h")
 #include "PlussMa/Math/Numerical/optimization/dfo_solver.h"

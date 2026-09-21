@@ -1295,7 +1295,7 @@ std::string html_shell_(std::string_view title,
     }}
 
     function filterTables(query) {{
-      const needle = query.trim().toLowerCase();
+      const needle = query.strip().toLowerCase();
       detailTables.forEach((tbl) => {{
         if (tbl.offsetParent === null) return;
         Array.from(tbl.tBodies).forEach((tbody) => {{

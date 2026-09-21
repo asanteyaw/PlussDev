@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <complex>
 #include <concepts>
 #include <cstdint>
 #include <functional>
@@ -8119,6 +8120,64 @@ inline OptimaState optima(
   return optima(problem, pack_series(initial_params), options);
 }
 
+namespace detail {
+
+inline bool is_complex_(const Series& x) {
+  return x.defined() && x.dtype().is_complex();
+}
+
+// Pluss's counterpart to torch's `torch.view_as_real`: reinterpret a
+// complex Series as a real one with a NEW trailing dimension of size 2
+// (index 0 = real part, index 1 = imaginary part), so `adam_step_inplace`'s
+// existing (already real-dtype-correct) formula runs completely unchanged
+// and applies independently to the real and imaginary channels -- torch's
+// own approach for complex parameters (`_view_as_real` in
+// torch/optim/optimizer.py, applied to param/grad/exp_avg/exp_avg_sq/
+// max_exp_avg_sqs before the ordinary real update in torch/optim/adam.py):
+// a complex gradient's second-moment estimate needs real(g)^2 and imag(g)^2
+// tracked SEPARATELY -- not |g|^2, which mixes them, and not g^2 (what
+// `adam_step_inplace` computed pre-fix), which is itself complex and does
+// not match torch's actual numeric convention. Mirrors
+// `pluss::ai::nn::optim::Optimizer::view_as_real_` in
+// PlussAI/NodeK/NN/optim/optim_base.h exactly (same architecture,
+// oracle-verified there against live torch numbers) -- see that file's own
+// comment for the full derivation, including why no single intermediate
+// fix (e.g. `.square()` -> `.abs2()`) can replicate this: complex DIVISION
+// mixes real/imaginary components, so the whole formula must run twice.
+//
+// Real (non-complex) input passes through unchanged, so call sites don't
+// need to branch. UNLIKE torch's `view_as_real` (a true zero-copy view),
+// this is a COPY -- CodeM has no reinterpret-cast-dtype view primitive
+// (same known, deliberately out-of-scope limitation noted in optim_base.h).
+inline Series view_as_real_(const Series& x) {
+  if (!is_complex_(x)) return x;
+  const Series re = x.real();
+  const Series im = x.imag();
+  return re.pile(std::vector<Series>{im}, re.dim());
+}
+
+// Inverse of view_as_real_: given a real Series shaped [..., 2] (as
+// produced by view_as_real_) and the ORIGINAL complex dtype, reconstruct
+// the complex Series. `original_dtype` not being complex means the value
+// was never converted in the first place -- returns it unchanged. An
+// undefined input (e.g. an AMSGrad max_v buffer nobody has written to yet
+// on a fresh, never-stepped state) passes through unchanged too, matching
+// view_as_real_'s own symmetry.
+inline Series view_as_complex_(const Series& real_view, ScalarType original_dtype) {
+  if (!real_view.defined()) return real_view;
+  if (!pluss::codem::dtype_of(original_dtype).is_complex()) return real_view;
+  const std::int64_t last = real_view.dim() - 1;
+  const Series re = real_view.select(last, 0);
+  const Series im = real_view.select(last, 1);
+  const Series i_unit =
+      pluss::make_series(std::vector<std::complex<double>>{{0.0, 1.0}}, {})
+          .to(original_dtype)
+          .to(re.platform());
+  return re.to(original_dtype).add(im.to(original_dtype).mul(i_unit));
+}
+
+} // namespace detail
+
 struct AdamOptions {
   double learning_rate{1e-3};
   double beta1{0.9};
@@ -8197,17 +8256,44 @@ inline void adam_step_inplace(std::vector<Series>& params,
       }
     }
 
+    // Complex parameters: view as real with a new trailing [.., 2] dim so
+    // the real-valued formula below (unchanged) applies independently to
+    // the real and imaginary channels -- see detail::view_as_real_ above
+    // for the full rationale (mirrors PlussAI/NodeK/NN/optim/adam.h's
+    // apply_group_loop_ exactly, oracle-verified there against live torch).
+    // No-op for real (non-complex) parameters. Order matches that file too:
+    // maximize/weight_decay applied in complex space FIRST (scaling by a
+    // real scalar is unambiguous either way), only THEN view-as-real, since
+    // that's specifically where real/imaginary independence matters.
+    const ScalarType original_dtype = p.scalar_type();
+    p = detail::view_as_real_(p);
+    g = detail::view_as_real_(g);
+    state.m[i] = detail::view_as_real_(state.m[i]);
+    state.v[i] = detail::view_as_real_(state.v[i]);
+    state.max_v[i] = detail::view_as_real_(state.max_v[i]);
+
     state.m[i] = state.m[i].mul(opt.beta1).add(g.mul(1.0 - opt.beta1));
     state.v[i] = state.v[i].mul(opt.beta2).add(g.mul(g).mul(1.0 - opt.beta2));
 
     const Series mhat = state.m[i].div(b1_correction);
     Series vhat = state.v[i].div(b2_correction);
     if (opt.amsgrad) {
+      // Post view-as-real, this is an ordinary elementwise real max over
+      // the real/imaginary channels independently -- the same "no total
+      // order on ℂ" concern that (correctly) blocks Minimax's box
+      // constraints from running on a complex PARAMETER directly does not
+      // apply here, since by this point `state.max_v[i]`/`state.v[i]` are
+      // both already real-valued views, not complex values.
       state.max_v[i] = state.max_v[i].maximum(state.v[i]);
       vhat = state.max_v[i].div(b2_correction);
     }
     const Series update = mhat.div(vhat.sqrt().add(opt.eps)).mul(opt.learning_rate);
-    params[i] = p.sub(update);
+    const Series next_value = p.sub(update);
+
+    state.m[i] = detail::view_as_complex_(state.m[i], original_dtype);
+    state.v[i] = detail::view_as_complex_(state.v[i], original_dtype);
+    state.max_v[i] = detail::view_as_complex_(state.max_v[i], original_dtype);
+    params[i] = detail::view_as_complex_(next_value, original_dtype);
   }
 }
 
@@ -8240,6 +8326,11 @@ struct SeptimaOptions {
     std::int64_t max_line_search_iterations{25};
     double tolerance_change{1e-9};
     double wolfe_c1{1e-4};
+    // Kept for API/ABI compatibility; no longer read by the StrongWolfe line search itself
+    // (Armijo alone is now the acceptance criterion -- see the long comment at that call site
+    // for why backtracking cannot reliably enforce the strong-Wolfe curvature condition, and why
+    // it isn't needed here: update_lbfgs_history_ already applies its own independent curvature
+    // skip, lbfgs_curvature_ok_, before adding any pair to the LBFGS history).
     double wolfe_c2{0.9};
     LbfgsLineSearch line_search{LbfgsLineSearch::None};
   };
@@ -8337,7 +8428,13 @@ struct SeptimaResult {
 namespace detail {
 
 inline bool septima_finite_(const Series& x) {
-  return x.isfinite().all().item<bool>();
+  // CodeM's `isfinite()` predicate has no complex-dtype implementation
+  // (throws "predicate unary: dtype not implemented") -- go through
+  // view_as_real_ first so a complex candidate is checked component-wise
+  // (both the real and imaginary channels must be finite), matching
+  // PlussAI's Minimax::finite_series_ fix for the identical gap. A no-op
+  // for non-complex input.
+  return view_as_real_(x).isfinite().all().item<bool>();
 }
 
 inline bool septima_finite_(const std::vector<Series>& xs) {
@@ -8443,10 +8540,20 @@ inline void septima_validate_params_(const std::vector<Series>& params) {
   }
 }
 
+// Forward declaration: septima_validate_constraints_ below needs to
+// evaluate residuals to check their dtype (an inequality/equality
+// constraint's residual can require realness even when the PARAMETER
+// itself is complex -- see the checks below), but the definition lives
+// further down this file, alongside the rest of the residual-evaluation
+// helpers.
+inline std::vector<Series> septima_evaluate_residuals_(
+    const std::vector<Series>& params,
+    const SeptimaConstraints::ResidualFn& fn,
+    const char* name);
+
 inline void septima_validate_constraints_(const std::vector<Series>& params,
                                           const SeptimaConstraints& constraints,
                                           bool require_trace_callbacks) {
-  (void)require_trace_callbacks;
   if (!constraints.lbs.empty() && constraints.lbs.size() != params.size()) {
     ::pluss::throw_error("subsp::math::optim::septima_step_inplace: lbs size mismatch");
   }
@@ -8478,10 +8585,68 @@ inline void septima_validate_constraints_(const std::vector<Series>& params,
                                    " shape mismatch");
         }
       }
+      // Box constraints project the PARAMETER's own value directly via
+      // .maximum()/.minimum() (septima_project_bounds_) -- no total order
+      // over complex numbers exists, so a complex parameter cannot carry a
+      // box constraint. Mirrors PlussAI::Minimax's identical
+      // validate_bounds_vector_ guard, and for the same reason.
+      if (is_complex_(params[i])) {
+        ::pluss::throw_error(std::string("subsp::math::optim::septima_step_inplace: ") + name +
+                                 " box constraints are not supported for a complex parameter (no "
+                                 "defined ordering convention) -- omit the bound for this parameter, "
+                                 "or clip a real projection of it yourself before the step");
+      }
     }
   };
   check_bound(constraints.lbs, "lbs");
   check_bound(constraints.ubs, "ubs");
+
+  // Inequality residuals feed the dual-ascent multiplier update's
+  // `.maximum(0.0)` (septima_step_inplace_'s lambda_inequalities update)
+  // UNCONDITIONALLY, regardless of enable_constraint_autodiff -- an
+  // ordering operation with no meaning over complex numbers. Checked on
+  // the RESIDUAL's dtype, not the parameter's: a complex parameter with a
+  // real-valued inequality residual (e.g. h(x) = |x|^2 - 1 <= 0) is
+  // perfectly well-posed. Mirrors PlussAI::Minimax's identical, precise
+  // inequality-residual guard.
+  if (constraints.inequalities) {
+    const auto residuals = septima_evaluate_residuals_(params, constraints.inequalities, "inequalities");
+    for (const auto& r : residuals) {
+      if (is_complex_(r)) {
+        ::pluss::throw_error(
+            "subsp::math::optim::septima_step_inplace: inequality residuals must be real-valued (the "
+            "dual multiplier's non-negativity projection has no meaning over complex numbers); return "
+            "a real residual from the inequalities callback even if the parameters themselves are "
+            "complex");
+      }
+    }
+  }
+
+  // Equality residuals only need realness when the constraint-augmented
+  // objective Trace runs (require_trace_callbacks, i.e.
+  // options.enable_constraint_autodiff): its quadratic penalty term
+  // `square(residual)` (septima_constraint_objective_trace_) needs a REAL
+  // reduction to stay a well-defined scalar loss -- the combined objective
+  // is reduced via `.item<double>()` throughout septima()'s main loop and
+  // the LBFGS line search's Armijo check, which would fail to extract a
+  // double from a complex value. The plain dual-ascent multiplier update
+  // itself (`lambda_equalities[i].add(residual.mul(dual_lr))`) is pure
+  // add/mul with no ordering, so with enable_constraint_autodiff == false
+  // a complex equality residual is fine -- same as PlussAI::Minimax's
+  // equality constraints, which have no autodiff-objective path at all.
+  if (require_trace_callbacks && constraints.equalities) {
+    const auto residuals = septima_evaluate_residuals_(params, constraints.equalities, "equalities");
+    for (const auto& r : residuals) {
+      if (is_complex_(r)) {
+        ::pluss::throw_error(
+            "subsp::math::optim::septima_step_inplace: equality residuals must be real-valued when "
+            "enable_constraint_autodiff is true (the augmented-Lagrangian penalty term squares the "
+            "residual to build a real scalar loss); return a real residual, or set "
+            "enable_constraint_autodiff = false to use only the dual-ascent multiplier update, which "
+            "has no such restriction");
+      }
+    }
+  }
 }
 
 inline std::vector<Series> septima_evaluate_residuals_(
@@ -8590,7 +8755,22 @@ inline Series septima_flatten_values_(const std::vector<Series>& values) {
   flat.reserve(values.size());
   for (const auto& value : values) {
     detail::require_defined_(value, "septima_flatten_values_");
-    flat.push_back(value.reshape({value.numel()}));
+    // Complex blocks: view as real first (a new trailing [.., 2] dim --
+    // real and imaginary channels appended, see detail::view_as_real_
+    // above) so every downstream LBFGS primitive (series_dot_,
+    // lbfgs_direction_, update_lbfgs_history_, and the Armijo/curvature/
+    // Wolfe checks in the line search below) operates on an ordinary real
+    // Float64 vector without any of them needing complex-aware logic of
+    // their own -- exactly the standard treatment of optimizing a
+    // real-valued loss over a complex variable (view the problem as a
+    // 2n-dimensional real optimization; matches the same architecture
+    // adam_step_inplace uses, just applied once at the flatten boundary
+    // instead of per moment-buffer, since LBFGS already flattens
+    // everything into one vector regardless). A no-op for a real
+    // (non-complex) block, so this function's real-dtype behavior is
+    // unchanged.
+    const Series real_view = view_as_real_(value);
+    flat.push_back(real_view.reshape({real_view.numel()}));
   }
   if (flat.size() == 1) return flat.front().to(ScalarType::Float64);
   return flat.front().unite(std::vector<Series>(flat.begin() + 1, flat.end()), 0).to(ScalarType::Float64);
@@ -8600,9 +8780,15 @@ inline std::vector<Series> septima_unflatten_values_(const Series& flat_values,
                                                      const std::vector<SeptimaVectorBlockLayout>& layout) {
   detail::require_defined_(flat_values, "septima_unflatten_values_");
   Series flat = flat_values.reshape({flat_values.numel()});
-  std::int64_t total_numel = 0;
-  for (const auto& block : layout) total_numel += block.numel;
-  if (flat.numel() != total_numel) {
+  // A complex block contributes 2x its own (complex) numel to the
+  // flattened real vector -- see septima_flatten_values_'s view_as_real_
+  // above -- so slicing must count real elements, not complex ones.
+  auto real_element_count = [](const SeptimaVectorBlockLayout& block) -> std::int64_t {
+    return pluss::codem::dtype_of(block.scalar_type).is_complex() ? block.numel * 2 : block.numel;
+  };
+  std::int64_t total_real_numel = 0;
+  for (const auto& block : layout) total_real_numel += real_element_count(block);
+  if (flat.numel() != total_real_numel) {
     ::pluss::throw_error("subsp::math::optim::septima_unflatten_values_: flat size mismatch");
   }
 
@@ -8610,13 +8796,43 @@ inline std::vector<Series> septima_unflatten_values_(const Series& flat_values,
   out.reserve(layout.size());
   std::int64_t offset = 0;
   for (const auto& block : layout) {
-    Series piece = flat.slice(0, offset, offset + block.numel, 1);
+    const std::int64_t count = real_element_count(block);
+    Series piece = flat.slice(0, offset, offset + count, 1);
     if (!piece.is_contiguous()) piece = piece.contiguous();
-    piece = block.sizes.empty() ? piece.reshape({}) : piece.reshape(block.sizes);
+    if (pluss::codem::dtype_of(block.scalar_type).is_complex()) {
+      // Reshape the sliced real elements back into the [..,2] view_as_real_
+      // shape (original sizes plus a trailing dim of 2), then reconstruct
+      // the complex value -- the exact inverse of what
+      // septima_flatten_values_ did to this block going in.
+      std::vector<std::int64_t> real_view_shape = block.sizes;
+      real_view_shape.push_back(2);
+      piece = piece.reshape(real_view_shape);
+      piece = view_as_complex_(piece, block.scalar_type);
+    } else {
+      piece = block.sizes.empty() ? piece.reshape({}) : piece.reshape(block.sizes);
+    }
     if (piece.scalar_type() != block.scalar_type) piece = piece.to(block.scalar_type);
     if (piece.platform() != block.platform) piece = piece.to(block.platform);
+    // `piece` is a slice/reshape view chained off `flat_values` (itself
+    // typically a fresh arithmetic result, e.g. flat_params + direction *
+    // step_size in the line search below) -- it still carries that
+    // computation's own source link. Every caller of this function goes on
+    // to treat each returned piece as an INDEPENDENT leaf input to a brand
+    // new value_and_grad/Trace evaluation of the objective; without
+    // severing that residual link first, the autodiff engine has to
+    // reconcile "this is a fresh tracked leaf for this evaluation" against
+    // "this value's own graph says it's derived from something else",
+    // which resulted in every such evaluation coming back with an
+    // undefined/disconnected gradient for that block (confirmed by
+    // instrumenting the strong-Wolfe line search directly: every trial
+    // step, from the initial step size down through 24 halvings, reported
+    // grads_defined=0 while the objective VALUE was perfectly finite).
+    // Minimax's own assign_parameter_ established the same fix for the
+    // same reason ("Optimizer outputs become fresh leaf parameters for the
+    // next iteration").
+    pluss::codem::series_tape::clear_source_link(piece);
     out.push_back(std::move(piece));
-    offset += block.numel;
+    offset += count;
   }
   return out;
 }
@@ -8696,6 +8912,47 @@ inline Trace septima_constraint_objective_trace_(const std::vector<Trace>& vars,
   return objective;
 }
 
+// Evaluates a Trace-based objective's VALUE only, skipping the reverse
+// (backward) pass entirely. Building `vars`/calling `fn` still goes through
+// the ordinary Trace forward machinery, but no sensitivity is ever
+// requested or computed. Used where only the scalar objective is needed --
+// e.g. the LBFGS line search's base-point evaluation below -- so callers
+// don't pay for a full backward pass just to discard the gradient.
+template <class Fn>
+inline Series septima_value_only_(Fn&& fn, const std::vector<Series>& params) {
+  std::vector<Trace> vars;
+  vars.reserve(params.size());
+  for (const auto& p : params) {
+    vars.emplace_back(p);
+  }
+  Trace loss = std::forward<Fn>(fn)(vars);
+  if (!loss.defined()) {
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: objective returned undefined Trace");
+  }
+  return loss.value();
+}
+
+// Constraint-augmented counterpart of septima_augmented_value_grad_ that
+// returns only the (possibly constraint-augmented) scalar value -- see
+// septima_value_only_ above for why this avoids a wasted backward pass.
+inline Series septima_augmented_value_only_(const SeptimaObjectiveTraceFn& objective_trace,
+                                            const std::vector<Series>& params,
+                                            const SeptimaState& state,
+                                            const SeptimaOptions& options,
+                                            const SeptimaConstraints& constraints) {
+  if (!objective_trace) {
+    ::pluss::throw_error("subsp::math::optim::septima_step_inplace: objective callback is required for line search");
+  }
+  if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
+    return septima_value_only_(
+        [&](const std::vector<Trace>& vars) -> Trace {
+          return objective_trace(vars) + septima_constraint_objective_trace_(vars, state, constraints, options);
+        },
+        params);
+  }
+  return septima_value_only_(objective_trace, params);
+}
+
 inline std::pair<Series, std::vector<Series>> septima_augmented_value_grad_(
     const SeptimaObjectiveTraceFn& objective_trace,
     const std::vector<Series>& params,
@@ -8706,14 +8963,36 @@ inline std::pair<Series, std::vector<Series>> septima_augmented_value_grad_(
     ::pluss::throw_error("subsp::math::optim::septima_step_inplace: objective callback is required for line search");
   }
 
+  // A line-search trial point is exactly where a wild step (e.g. saturating
+  // a sigmoid/softplus-transformed parameter) is most likely to disconnect
+  // the backward graph from an input. The library default silently
+  // materializes a *zero* sensitivity for a disconnected input
+  // (DisconnectedSensitivity::Zero), which is indistinguishable from a
+  // genuinely near-zero gradient to every caller below -- Undefined lets
+  // the line search (see its call site) tell the two apart and reject the
+  // trial instead of accepting a fabricated "this looks converged" step.
+  pluss::subsp::math::diff::DerivativePolicy policy{};
+  policy.disconnected_sensitivity = pluss::subsp::math::diff::DisconnectedSensitivity::Undefined;
+  policy.warn_on_disconnected = false;  // septima reports this via rejection + retry, not a log warning
+  // Each line-search trial's (value, grad) pair is extracted and used
+  // immediately below, then never touched again -- there is no legitimate
+  // reason to retain this trial's backward graph afterward. The library
+  // default (keep_graph=true) was previously masked by the false-convergence
+  // bug this function also fixes (septima used to stop after ~2 iterations,
+  // never running long enough for retained graphs to matter); once that bug
+  // is fixed and septima runs its full iteration budget with a real
+  // multi-trial line search, retaining every rejected trial's graph by
+  // default accumulates unboundedly and can exhaust memory.
+  policy.keep_graph = false;
+
   if (options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities)) {
     return value_and_grad(
         [&](const std::vector<Trace>& vars) -> Trace {
           return objective_trace(vars) + septima_constraint_objective_trace_(vars, state, constraints, options);
         },
-        params);
+        params, policy);
   }
-  return value_and_grad(objective_trace, params);
+  return value_and_grad(objective_trace, params, policy);
 }
 
 inline SeptimaState septima_state_like_(const std::vector<Series>& params,
@@ -8873,18 +9152,45 @@ inline double septima_step_inplace_(std::vector<Series>& params,
             "subsp::math::optim::septima_step_inplace: LBFGS strong-wolfe line search requires objective callback");
       }
 
-      const auto [base_value, base_grad] = septima_augmented_value_grad_(
+      // Only the scalar value is needed here (for the Armijo condition
+      // below) -- previously this called septima_augmented_value_grad_ and
+      // discarded the gradient half, paying for a full backward pass every
+      // outer iteration for nothing.
+      const Series base_value = septima_augmented_value_only_(
           *objective_trace,
           params,
           state,
           options,
           constraints);
       if (function_evaluations) ++(*function_evaluations);
-      (void)base_grad;
 
       const double base_objective = base_value.item<double>();
       double step_size = options.lbfgs.learning_rate;
       const std::int64_t ls_iters = std::max<std::int64_t>(1, options.lbfgs.max_line_search_iterations);
+
+      // Accept on the Armijo (sufficient-decrease) condition alone, NOT the full strong-Wolfe
+      // curvature condition -- a plain backtracking search cannot reliably enforce curvature,
+      // since as step_size shrinks toward 0 the trial gradient's directional derivative gtd_new
+      // converges TO gtd itself, making |gtd_new| <= -wolfe_c2*gtd (wolfe_c2<1) HARDER to
+      // satisfy, not easier. This previously caused septima's LBFGS to report "no progress" and
+      // stall after just a few iterations on realistic problems (confirmed directly on a
+      // 5-parameter GARCH QMLE: 28 iterations, gamma/lambda barely moved from their initial
+      // values) -- the exact same structural failure mode found and fixed in this SDK's L-SR1
+      // trust-region optimizer (optim_lsr1.h). Dropping the line search's own curvature check is
+      // safe for LBFGS specifically because `update_lbfgs_history_` already applies an
+      // independent curvature skip (`lbfgs_curvature_ok_`) before adding any (s,y) pair to
+      // history -- the line search enforcing curvature too was redundant "belt and suspenders",
+      // not the only thing keeping the LBFGS approximation well-defined.
+      //
+      // Also track the best (smallest-objective) finite trial seen even when it misses Armijo's
+      // margin: once step_size shrinks far enough, the *required* decrease
+      // (wolfe_c1*step_size*gtd) can fall below the floating-point noise floor of evaluating the
+      // objective, so a genuinely improving trial can still fail the strict inequality. Accepting
+      // it anyway (rather than discarding real, if small, progress) lets septima's own outer
+      // iteration continue instead of reporting a false "no progress".
+      bool have_best = false;
+      double best_objective = base_objective;
+      std::vector<Series> best_params;
 
       for (std::int64_t ls = 0; ls < ls_iters; ++ls) {
         const Series trial_flat = flat_params.add(direction.mul(step_size));
@@ -8904,20 +9210,25 @@ inline double septima_step_inplace_(std::vector<Series>& params,
             options,
             constraints);
         if (function_evaluations) ++(*function_evaluations);
-        if (!septima_finite_(trial_value) || !septima_finite_(trial_grads)) {
+        // Check definedness before finiteness: septima_augmented_value_grad_
+        // now asks for Undefined (not Zero) disconnected sensitivities, so a
+        // disconnected trial point comes back with an undefined Series here
+        // -- calling septima_finite_ on that would itself fail, and more
+        // importantly a disconnected gradient must be rejected exactly like
+        // a non-finite one, not treated as "gradient is legitimately zero".
+        const bool trial_grads_defined =
+            std::all_of(trial_grads.begin(), trial_grads.end(), [](const Series& g) { return g.defined(); });
+        if (!septima_finite_(trial_value) || !trial_grads_defined || !septima_finite_(trial_grads)) {
           step_size *= options.nan_recovery_shrink;
           continue;
         }
 
         const double trial_objective = trial_value.item<double>();
-        const Series trial_grad_flat = septima_flatten_values_(trial_grads).to(flat_params.platform());
-        const double gtd_new = series_dot_(trial_grad_flat, direction);
 
         const bool armijo_ok =
             trial_objective <= base_objective + options.lbfgs.wolfe_c1 * step_size * gtd;
-        const bool curvature_ok = std::abs(gtd_new) <= -options.lbfgs.wolfe_c2 * gtd;
 
-        if (armijo_ok && curvature_ok) {
+        if (armijo_ok) {
           params = std::move(trial_params);
           state.lbfgs_s_history = next_s_history;
           state.lbfgs_y_history = next_y_history;
@@ -8929,8 +9240,24 @@ inline double septima_step_inplace_(std::vector<Series>& params,
           break;
         }
 
+        if (trial_objective < best_objective) {
+          have_best = true;
+          best_objective = trial_objective;
+          best_params = trial_params;
+        }
+
         step_size *= options.nan_recovery_shrink;
         if (step_size <= options.lbfgs.tolerance_change) break;
+      }
+      if (!accepted && have_best) {
+        params = std::move(best_params);
+        state.lbfgs_s_history = next_s_history;
+        state.lbfgs_y_history = next_y_history;
+        state.lbfgs_prev_grad_flat = flat_grad;
+        const Series next_flat = septima_flatten_values_(params).to(flat_params.platform());
+        state.lbfgs_prev_step_flat = next_flat.sub(flat_params);
+        step_inf_norm = septima_max_abs_(state.lbfgs_prev_step_flat);
+        accepted = true;
       }
     } else {
       for (std::int64_t attempt = 0; attempt <= options.nan_recovery_attempts; ++attempt) {
@@ -9042,7 +9369,21 @@ inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
   std::int64_t no_progress_count = 0;
 
   for (std::int64_t iter = 1; iter <= solve_options.max_iterations; ++iter) {
-    const auto [value, grads] = value_and_grad(objective_trace, out.params);
+    // Same rationale as septima_augmented_value_grad_'s internal calls:
+    // request Undefined (not the library default Zero) for disconnected
+    // inputs, so a disconnected gradient at the CURRENT accepted point can
+    // be told apart from a genuinely near-zero one below, instead of
+    // silently reporting gradient_inf_norm == 0.0 (a fabricated
+    // "converged" signal) when the true gradient is simply unavailable.
+    pluss::subsp::math::diff::DerivativePolicy grad_policy{};
+    grad_policy.disconnected_sensitivity = pluss::subsp::math::diff::DisconnectedSensitivity::Undefined;
+    grad_policy.warn_on_disconnected = false;
+    // See septima_augmented_value_grad_'s identical keep_graph rationale:
+    // this iteration's (value, grads) are used immediately below and never
+    // revisited, so there is nothing to gain from retaining the graph and,
+    // over solve_options.max_iterations, real memory to lose by doing so.
+    grad_policy.keep_graph = false;
+    const auto [value, grads] = value_and_grad(objective_trace, out.params, grad_policy);
     ++out.function_evaluations;
     out.objective = value;
 
@@ -9050,23 +9391,44 @@ inline SeptimaResult septima(const SeptimaObjectiveTraceFn& objective_trace,
       ::pluss::throw_error("subsp::math::optim::septima: objective must return a scalar Trace");
     }
     out.objective_value = value.item<double>();
-    if (!std::isfinite(out.objective_value)) {
+
+    const bool grads_defined = std::all_of(grads.begin(), grads.end(), [](const Series& g) { return g.defined(); });
+    const bool grads_finite = grads_defined && detail::septima_finite_(grads);
+
+    if (!std::isfinite(out.objective_value) || !grads_defined || !grads_finite) {
       out.iteration = iter;
-      out.message = "objective became non-finite";
+      out.message = !grads_defined
+                        ? "gradient disconnected from one or more inputs at this point"
+                        : (!grads_finite ? "gradient became non-finite" : "objective became non-finite");
       out.exit_flag = SeptimaExitFlag::NonFiniteEvaluation;
       if (solve_options.stop_on_nonfinite_objective) {
         break;
       }
     }
 
-    out.gradient_inf_norm = 0.0;
-    for (const auto& g : grads) {
-      out.gradient_inf_norm = std::max(out.gradient_inf_norm, detail::septima_max_abs_(g));
+    // If the caller opted out of stopping above, substitute zeros for any
+    // undefined block so the step machinery below (which assumes every
+    // block is a real Series) doesn't itself fail on a value we already
+    // flagged as invalid.
+    std::vector<Series> grads_for_step = grads;
+    if (!grads_defined) {
+      for (std::size_t i = 0; i < grads_for_step.size(); ++i) {
+        if (!grads_for_step[i].defined()) {
+          grads_for_step[i] = pluss::series::zeros_like(out.params[i], out.params[i].scalar_type());
+        }
+      }
+    }
+
+    out.gradient_inf_norm = grads_defined ? 0.0 : std::numeric_limits<double>::infinity();
+    if (grads_defined) {
+      for (const auto& g : grads) {
+        out.gradient_inf_norm = std::max(out.gradient_inf_norm, detail::septima_max_abs_(g));
+      }
     }
 
     out.step_inf_norm = detail::septima_step_inplace_(
         out.params,
-        grads,
+        grads_for_step,
         out.state,
         solve_options.step,
         constraints,

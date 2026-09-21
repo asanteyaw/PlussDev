@@ -48,9 +48,9 @@ untouched.
   `-`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="nlp_remove_urls.html">
+  <a class="prev-link" href="nlp.html">
     <span class="label">Previous</span>
-    <span class="title">nlp_remove_urls</span>
+    <span class="title">nlp</span>
   </a>
   <a class="next-link" href="normalize_ellipsis.html">
     <span class="label">Next</span>

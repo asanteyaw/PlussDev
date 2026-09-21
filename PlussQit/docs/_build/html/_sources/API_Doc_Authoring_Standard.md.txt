@@ -81,10 +81,11 @@ If you find an (or what appears to be an) implementation bug or even a heavily n
 ## Public Presentation
 
 - Use canonical public names; never leak internal namespace or adapter names.
-- Keep public callable names to at most three underscore-separated semantic
-  components. Prefer short domain terms such as `ticks()` over implementation-
-  shaped names such as `ticks()`. Descriptive internal kernel
-  names are exempt. Rename directly rather than retaining a compatibility alias.
+- Keep public callable names to at most three spoken syllables, and never use
+  more than three underscore-separated semantic components. Prefer compact
+  domain terms such as `frac_slash()`, `pm_signs()`, and `sqrt_pow()` over
+  implementation-shaped conversion phrases. Descriptive internal kernel names
+  are exempt. Rename directly rather than retaining a compatibility alias.
 - Put the return type first in C++ signatures.
 - Present option/configuration structures as tables with at least field,
   meaning, and default columns. Add an applicability column when fields affect

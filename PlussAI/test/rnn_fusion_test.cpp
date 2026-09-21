@@ -436,6 +436,68 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  // Value-level regression guard: every LSTM/GRU/RNN check above only ever
+  // uses a single layer, unidirectional, and compares pluss's own "module"
+  // path against pluss's own "functional" path -- both computed by pluss,
+  // so this only proves the two code paths agree with EACH OTHER, not that
+  // either is correct. The multi-layer + bidirectional case (which exercises
+  // the layer/direction indexing and the forward/reverse-time concatenation
+  // in RNN.h) was independently checked against an external reference
+  // implementation and matched to machine precision -- pinning those exact
+  // values here so a future regression in that indexing can't hide behind
+  // module==functional agreement the way it structurally could before.
+  {
+    const std::int64_t bd_in = 2, bd_hidden = 2;
+    const Series bd_x = pluss::make_series(std::vector<double>{0.1, 0.2, -0.1, 0.3}, {2, 1, bd_in}, cfg);
+    pluss::ai::rnn::NetWeight bd_fwd, bd_bwd;
+    bd_fwd.weight_ih = pluss::make_series(
+        std::vector<double>{0.1, -0.2, 0.3, 0.1, -0.1, 0.2, 0.2, -0.1, 0.15, -0.05, 0.25, 0.05, -0.15, 0.1, 0.05, -0.2},
+        {4 * bd_hidden, bd_in}, cfg);
+    bd_fwd.weight_hh = pluss::make_series(
+        std::vector<double>{0.2, 0.1, -0.1, 0.3, 0.1, -0.2, 0.3, 0.2, 0.05, 0.15, -0.1, 0.2, 0.1, -0.05, 0.2, 0.1},
+        {4 * bd_hidden, bd_hidden}, cfg);
+    bd_fwd.bias_ih = pluss::make_series(std::vector<double>{0.05, -0.05, 0.1, 0.0, -0.1, 0.05, 0.0, 0.1}, {4 * bd_hidden}, cfg);
+    bd_fwd.bias_hh = pluss::make_series(std::vector<double>{0.0, 0.05, -0.05, 0.1, 0.05, 0.0, -0.1, 0.0}, {4 * bd_hidden}, cfg);
+    bd_bwd.weight_ih = pluss::make_series(
+        std::vector<double>{-0.1, 0.2, 0.1, -0.2, 0.3, 0.1, -0.2, 0.2, -0.1, 0.05, 0.15, -0.1, 0.2, -0.15, 0.1, 0.05},
+        {4 * bd_hidden, bd_in}, cfg);
+    bd_bwd.weight_hh = pluss::make_series(
+        std::vector<double>{0.1, -0.1, 0.2, 0.2, -0.1, 0.3, 0.1, -0.2, -0.05, 0.1, 0.15, -0.05, 0.2, 0.1, -0.1, 0.05},
+        {4 * bd_hidden, bd_hidden}, cfg);
+    bd_bwd.bias_ih = pluss::make_series(std::vector<double>{0.1, 0.0, -0.05, 0.05, 0.0, -0.1, 0.05, 0.05}, {4 * bd_hidden}, cfg);
+    bd_bwd.bias_hh = pluss::make_series(std::vector<double>{-0.05, 0.1, 0.0, 0.0, 0.1, 0.05, -0.05, -0.1}, {4 * bd_hidden}, cfg);
+
+    const auto [bd_out, bd_state] = pluss::lstm(
+        bd_x, Series(), Series(), std::vector<pluss::ai::rnn::NetWeight>{bd_fwd, bd_bwd},
+        pluss::ai::rnn::NetConfig{
+            .training = false,
+            .batch_first = false,
+            .bidirectional = true,
+            .dropout = 0.0,
+            .num_layers = 1,
+            .use_bias = true,
+            .split_bias = true,
+            .pre_compute_input = true,
+            .proj_size = 0,
+            .nonlinearity = "tanh",
+            .cfg = cfg,
+            .seed = 0ULL,
+        });
+    const std::vector<double> bd_expected_out{
+        -0.010814024518551, 0.022420660300740, 0.041138816095143, -0.024723173071830,
+        -0.024329189526346, 0.022950900467552, 0.031834695303615, -0.023475214358756};
+    const std::vector<double> bd_expected_hn{
+        -0.024329189526346, 0.022950900467552, 0.041138816095143, -0.024723173071830};
+    const std::vector<double> bd_expected_cn{
+        -0.050132598748690, 0.045141294839604, 0.082712510709156, -0.050353038701086};
+    if (!approx_vec(vec_f64(bd_out), bd_expected_out, 1e-9) ||
+        !approx_vec(vec_f64(std::get<0>(bd_state)), bd_expected_hn, 1e-9) ||
+        !approx_vec(vec_f64(std::get<1>(bd_state)), bd_expected_cn, 1e-9)) {
+      if (err) *err << "bidirectional LSTM value regression mismatch\n";
+      return false;
+    }
+  }
+
   const Series conv_input = pluss::make_series(std::vector<double>{
                                                    1.0, 2.0, 3.0,
                                                    4.0, 5.0, 6.0,

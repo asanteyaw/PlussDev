@@ -2,6 +2,10 @@
 
 // OpsInternal.cpp defines Series member functions; it requires the full Series type.
 #include "CodeM/core/Series.h"
+// Series::rrelu() has no ops_internal free function (its fused single-node
+// form lives in compat/Invoke.cpp), so it forwards through the same
+// _compat::invoke registry the generated gelu()/leaky_relu() wrappers use.
+#include "CodeM/compat/Invoke.h"
 
 #include <algorithm>
 #include <array>
@@ -1204,9 +1208,9 @@ static Series maximum_rhs_backward_(const Series& out_sens, const Series& lhs, c
 static Series minimum_lhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
 static Series minimum_rhs_backward_(const Series& out_sens, const Series& lhs, const Series& rhs);
 
-#include "CodeM/generated/SeriesAutogradBinaryReverseGen.h"
+#include "CodeM/generated/SeriesAutodiffBinaryReverseGen.h"
 
-namespace autograd_binary = generated::autograd_binary;
+namespace autodiff_binary = generated::autodiff_binary;
 
 Series add(const Series& a, const Series& b) {
   const auto out_dt = promoted_binary_dtype_(native::cpu::BinaryOpId::Add, a.scalar_type(), b.scalar_type());
@@ -1216,10 +1220,10 @@ Series add(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "add",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Add, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Add, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Add, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Add, g, a, b, out);
       },
       /*lhs_reads_a=*/false, /*lhs_reads_b=*/false,
       /*rhs_reads_a=*/false, /*rhs_reads_b=*/false);
@@ -1234,10 +1238,10 @@ Series sub(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "sub",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Sub, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Sub, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Sub, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Sub, g, a, b, out);
       },
       /*lhs_reads_a=*/false, /*lhs_reads_b=*/false,
       /*rhs_reads_a=*/false, /*rhs_reads_b=*/false);
@@ -1423,10 +1427,10 @@ Series mul(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "mul",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Mul, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Mul, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Mul, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Mul, g, a, b, out);
       },
       // d/da reads b; d/db reads a.
       /*lhs_reads_a=*/false, /*lhs_reads_b=*/true,
@@ -1441,10 +1445,10 @@ Series div(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "div",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Div, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Div, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Div, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Div, g, a, b, out);
       },
       // d/da reads b; d/db reads a and b.
       /*lhs_reads_a=*/false, /*lhs_reads_b=*/true,
@@ -1475,10 +1479,10 @@ Series pow(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "pow",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Pow, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Pow, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Pow, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Pow, g, a, b, out);
       });
   return out;
 }
@@ -1522,17 +1526,17 @@ static Series generated_sigmoid_sensitivity_(const Series& out_sens, const Serie
   return mul(out_sens, conjugate_if_complex_(mul(y, sub(one, y))));
 }
 
-#include "CodeM/generated/SeriesAutogradUnaryReverseGen.h"
+#include "CodeM/generated/SeriesAutodiffUnaryReverseGen.h"
 
-namespace autograd_unary = generated::autograd_unary;
+namespace autodiff_unary = generated::autodiff_unary;
 
 static void maybe_link_unary_rule_(
     const Series& out,
     const Series& a,
     const char* op,
-    autograd_unary::Rule rule) {
+    autodiff_unary::Rule rule) {
   maybe_link_unary_op_(out, a, op, [a, out, rule](const Series& out_sens) {
-    return autograd_unary::apply(rule, out_sens, a, out);
+    return autodiff_unary::apply(rule, out_sens, a, out);
   });
 }
 
@@ -1851,7 +1855,7 @@ Series sqrt(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(aa, "sqrt", native::cpu::sqrt);
   }
-  maybe_link_unary_rule_(out, a, "sqrt", autograd_unary::Rule::Sqrt);
+  maybe_link_unary_rule_(out, a, "sqrt", autodiff_unary::Rule::Sqrt);
   return out;
 }
 Series exp(const Series& a) {
@@ -1869,7 +1873,7 @@ Series exp(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "exp", native::cpu::exp);
   }
-  maybe_link_unary_rule_(out, a, "exp", autograd_unary::Rule::Exp);
+  maybe_link_unary_rule_(out, a, "exp", autodiff_unary::Rule::Exp);
   return out;
 }
 Series log(const Series& a) {
@@ -1887,7 +1891,7 @@ Series log(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "log", native::cpu::log);
   }
-  maybe_link_unary_rule_(out, a, "log", autograd_unary::Rule::Log);
+  maybe_link_unary_rule_(out, a, "log", autodiff_unary::Rule::Log);
   return out;
 }
 
@@ -2010,7 +2014,7 @@ Series sin(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "sin", native::cpu::sin);
   }
-  maybe_link_unary_rule_(out, a, "sin", autograd_unary::Rule::Sin);
+  maybe_link_unary_rule_(out, a, "sin", autodiff_unary::Rule::Sin);
   return out;
 }
 Series cos(const Series& a) {
@@ -2028,7 +2032,7 @@ Series cos(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "cos", native::cpu::cos);
   }
-  maybe_link_unary_rule_(out, a, "cos", autograd_unary::Rule::Cos);
+  maybe_link_unary_rule_(out, a, "cos", autodiff_unary::Rule::Cos);
   return out;
 }
 Series tanh(const Series& a) {
@@ -2046,7 +2050,7 @@ Series tanh(const Series& a) {
   } else {
     out = unary_cpu_with_platform_dispatch_policy_(a, "tanh", native::cpu::tanh);
   }
-  maybe_link_unary_rule_(out, a, "tanh", autograd_unary::Rule::Tanh);
+  maybe_link_unary_rule_(out, a, "tanh", autodiff_unary::Rule::Tanh);
   return out;
 }
 
@@ -2058,12 +2062,12 @@ Series tan(const Series& a) {
     require_mps_support_or_policy_(supported, "tan");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Tan, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "tan", autograd_unary::Rule::Tan);
+      maybe_link_unary_rule_(out, a, "tan", autodiff_unary::Rule::Tan);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "tan", native::cpu::tan);
-  maybe_link_unary_rule_(out, a, "tan", autograd_unary::Rule::Tan);
+  maybe_link_unary_rule_(out, a, "tan", autodiff_unary::Rule::Tan);
   return out;
 }
 Series asin(const Series& a) {
@@ -2074,12 +2078,12 @@ Series asin(const Series& a) {
     require_mps_support_or_policy_(supported, "asin");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Asin, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "asin", autograd_unary::Rule::Asin);
+      maybe_link_unary_rule_(out, a, "asin", autodiff_unary::Rule::Asin);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "asin", native::cpu::asin);
-  maybe_link_unary_rule_(out, a, "asin", autograd_unary::Rule::Asin);
+  maybe_link_unary_rule_(out, a, "asin", autodiff_unary::Rule::Asin);
   return out;
 }
 Series acos(const Series& a) {
@@ -2090,12 +2094,12 @@ Series acos(const Series& a) {
     require_mps_support_or_policy_(supported, "acos");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Acos, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "acos", autograd_unary::Rule::Acos);
+      maybe_link_unary_rule_(out, a, "acos", autodiff_unary::Rule::Acos);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "acos", native::cpu::acos);
-  maybe_link_unary_rule_(out, a, "acos", autograd_unary::Rule::Acos);
+  maybe_link_unary_rule_(out, a, "acos", autodiff_unary::Rule::Acos);
   return out;
 }
 Series atan(const Series& a) {
@@ -2106,12 +2110,12 @@ Series atan(const Series& a) {
     require_mps_support_or_policy_(supported, "atan");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Atan, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "atan", autograd_unary::Rule::Atan);
+      maybe_link_unary_rule_(out, a, "atan", autodiff_unary::Rule::Atan);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "atan", native::cpu::atan);
-  maybe_link_unary_rule_(out, a, "atan", autograd_unary::Rule::Atan);
+  maybe_link_unary_rule_(out, a, "atan", autodiff_unary::Rule::Atan);
   return out;
 }
 Series sinh(const Series& a) {
@@ -2122,12 +2126,12 @@ Series sinh(const Series& a) {
     require_mps_support_or_policy_(supported, "sinh");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Sinh, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "sinh", autograd_unary::Rule::Sinh);
+      maybe_link_unary_rule_(out, a, "sinh", autodiff_unary::Rule::Sinh);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "sinh", native::cpu::sinh);
-  maybe_link_unary_rule_(out, a, "sinh", autograd_unary::Rule::Sinh);
+  maybe_link_unary_rule_(out, a, "sinh", autodiff_unary::Rule::Sinh);
   return out;
 }
 Series cosh(const Series& a) {
@@ -2138,23 +2142,23 @@ Series cosh(const Series& a) {
     require_mps_support_or_policy_(supported, "cosh");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Cosh, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "cosh", autograd_unary::Rule::Cosh);
+      maybe_link_unary_rule_(out, a, "cosh", autodiff_unary::Rule::Cosh);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "cosh", native::cpu::cosh);
-  maybe_link_unary_rule_(out, a, "cosh", autograd_unary::Rule::Cosh);
+  maybe_link_unary_rule_(out, a, "cosh", autodiff_unary::Rule::Cosh);
   return out;
 }
 
 Series log1p(const Series& a) {
   Series out = unary_op_(native::cpu::UnaryOpId::Log1p, a);
-  maybe_link_unary_rule_(out, a, "log1p", autograd_unary::Rule::Log1p);
+  maybe_link_unary_rule_(out, a, "log1p", autodiff_unary::Rule::Log1p);
   return out;
 }
 Series expm1(const Series& a) {
   Series out = unary_op_(native::cpu::UnaryOpId::Expm1, a);
-  maybe_link_unary_rule_(out, a, "expm1", autograd_unary::Rule::Expm1);
+  maybe_link_unary_rule_(out, a, "expm1", autodiff_unary::Rule::Expm1);
   return out;
 }
 Series reciprocal(const Series& a) {
@@ -2165,33 +2169,33 @@ Series reciprocal(const Series& a) {
     require_mps_support_or_policy_(supported, "reciprocal");
     if (supported) {
       native::mps::unary_math(native::mps::UnaryMathOp::Reciprocal, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "reciprocal", autograd_unary::Rule::Reciprocal);
+      maybe_link_unary_rule_(out, a, "reciprocal", autodiff_unary::Rule::Reciprocal);
       return out;
     }
   }
   Series out = unary_cpu_with_platform_dispatch_policy_(a, "reciprocal", native::cpu::reciprocal);
-  maybe_link_unary_rule_(out, a, "reciprocal", autograd_unary::Rule::Reciprocal);
+  maybe_link_unary_rule_(out, a, "reciprocal", autodiff_unary::Rule::Reciprocal);
   return out;
 }
 
 Series erf(const Series& a) {
   if (a.platform() != Platform::CPU) {
     Series out = stable_erf_noncpu_(a);
-    maybe_link_unary_rule_(out, a, "erf", autograd_unary::Rule::Erf);
+    maybe_link_unary_rule_(out, a, "erf", autodiff_unary::Rule::Erf);
     return out;
   }
   Series out = unary_op_(native::cpu::UnaryOpId::Erf, a);
-  maybe_link_unary_rule_(out, a, "erf", autograd_unary::Rule::Erf);
+  maybe_link_unary_rule_(out, a, "erf", autodiff_unary::Rule::Erf);
   return out;
 }
 Series erfc(const Series& a) {
   if (a.platform() != Platform::CPU) {
     Series out = stable_erfc_noncpu_(a);
-    maybe_link_unary_rule_(out, a, "erfc", autograd_unary::Rule::Erfc);
+    maybe_link_unary_rule_(out, a, "erfc", autodiff_unary::Rule::Erfc);
     return out;
   }
   Series out = unary_op_(native::cpu::UnaryOpId::Erfc, a);
-  maybe_link_unary_rule_(out, a, "erfc", autograd_unary::Rule::Erfc);
+  maybe_link_unary_rule_(out, a, "erfc", autodiff_unary::Rule::Erfc);
   return out;
 }
 // psi(x) = d/dx ln|Gamma(x)|. Backing kernel is float-only; non-CPU inputs are
@@ -2244,11 +2248,11 @@ Series asinh(const Series& a) {
     const auto x = aa.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
     Series out = log(add(x, sqrt(add(mul(x, x), one)))).to(aa.scalar_type());
-    maybe_link_unary_rule_(out, a, "asinh", autograd_unary::Rule::Asinh);
+    maybe_link_unary_rule_(out, a, "asinh", autodiff_unary::Rule::Asinh);
     return out;
   }
   Series out = unary_op_(native::cpu::UnaryOpId::Asinh, aa);
-  maybe_link_unary_rule_(out, a, "asinh", autograd_unary::Rule::Asinh);
+  maybe_link_unary_rule_(out, a, "asinh", autodiff_unary::Rule::Asinh);
   return out;
 }
 Series acosh(const Series& a) {
@@ -2257,11 +2261,11 @@ Series acosh(const Series& a) {
     const auto x = aa.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
     Series out = log(add(x, sqrt(mul(sub(x, one), add(x, one))))).to(aa.scalar_type());
-    maybe_link_unary_rule_(out, a, "acosh", autograd_unary::Rule::Acosh);
+    maybe_link_unary_rule_(out, a, "acosh", autodiff_unary::Rule::Acosh);
     return out;
   }
   Series out = unary_op_(native::cpu::UnaryOpId::Acosh, aa);
-  maybe_link_unary_rule_(out, a, "acosh", autograd_unary::Rule::Acosh);
+  maybe_link_unary_rule_(out, a, "acosh", autodiff_unary::Rule::Acosh);
   return out;
 }
 Series atanh(const Series& a) {
@@ -2270,11 +2274,11 @@ Series atanh(const Series& a) {
     const auto x = aa.contiguous().to(ScalarType::Float32);
     const auto one = scalar_like_(x, 1.0);
     Series out = mul(scalar_like_(x, 0.5), log(div(add(one, x), sub(one, x)))).to(aa.scalar_type());
-    maybe_link_unary_rule_(out, a, "atanh", autograd_unary::Rule::Atanh);
+    maybe_link_unary_rule_(out, a, "atanh", autodiff_unary::Rule::Atanh);
     return out;
   }
   Series out = unary_op_(native::cpu::UnaryOpId::Atanh, aa);
-  maybe_link_unary_rule_(out, a, "atanh", autograd_unary::Rule::Atanh);
+  maybe_link_unary_rule_(out, a, "atanh", autodiff_unary::Rule::Atanh);
   return out;
 }
 
@@ -3745,13 +3749,13 @@ Series relu(const Series& a) {
     if (supported) {
       Series out = Series::empty(a.sizes(), a.scalar_type(), a.platform());
       native::mps::unary_math(native::mps::UnaryMathOp::Relu, a.contiguous(), out);
-      maybe_link_unary_rule_(out, a, "relu", autograd_unary::Rule::Relu);
+      maybe_link_unary_rule_(out, a, "relu", autodiff_unary::Rule::Relu);
       return out;
     }
   }
   Series out = a.clone();
   relu_(out);
-  maybe_link_unary_rule_(out, a, "relu", autograd_unary::Rule::Relu);
+  maybe_link_unary_rule_(out, a, "relu", autodiff_unary::Rule::Relu);
   return out;
 }
 
@@ -3774,7 +3778,7 @@ Series sigmoid(const Series& a) {
     const Series one = scalar_like_(a, 1.0);
     out = div(one, add(one, exp(neg(a))));
   }
-  maybe_link_unary_rule_(out, a, "sigmoid", autograd_unary::Rule::Sigmoid);
+  maybe_link_unary_rule_(out, a, "sigmoid", autodiff_unary::Rule::Sigmoid);
   return out;
 }
 Series& sigmoid_(Series& a) {
@@ -4929,10 +4933,10 @@ Series maximum(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "maximum",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Maximum, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Maximum, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Maximum, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Maximum, g, a, b, out);
       });
   return out;
 }
@@ -4970,10 +4974,10 @@ Series minimum(const Series& a, const Series& b) {
   maybe_link_binary_op_(
       out, a, b, "minimum",
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_lhs(autograd_binary::Rule::Minimum, g, a, b, out);
+        return autodiff_binary::apply_lhs(autodiff_binary::Rule::Minimum, g, a, b, out);
       },
       [a, b, out](const Series& g) {
-        return autograd_binary::apply_rhs(autograd_binary::Rule::Minimum, g, a, b, out);
+        return autodiff_binary::apply_rhs(autodiff_binary::Rule::Minimum, g, a, b, out);
       });
   return out;
 }
@@ -5224,7 +5228,7 @@ Series rsqrt(const Series& a) {
       native::cpu::rsqrt(aa, out);
     }
   }
-  maybe_link_unary_rule_(out, a, "rsqrt", autograd_unary::Rule::Rsqrt);
+  maybe_link_unary_rule_(out, a, "rsqrt", autodiff_unary::Rule::Rsqrt);
   return out;
 }
 Series log2(const Series& a) {
@@ -5253,7 +5257,7 @@ Series log2(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::log2(aa, out);
   }
-  maybe_link_unary_rule_(out, a, "log2", autograd_unary::Rule::Log2);
+  maybe_link_unary_rule_(out, a, "log2", autodiff_unary::Rule::Log2);
   return out;
 }
 Series log10(const Series& a) {
@@ -5282,7 +5286,7 @@ Series log10(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::log10(aa, out);
   }
-  maybe_link_unary_rule_(out, a, "log10", autograd_unary::Rule::Log10);
+  maybe_link_unary_rule_(out, a, "log10", autodiff_unary::Rule::Log10);
   return out;
 }
 Series exp2(const Series& a) {
@@ -5311,7 +5315,7 @@ Series exp2(const Series& a) {
     auto aa = a.contiguous().to(out.scalar_type());
     native::cpu::exp2(aa, out);
   }
-  maybe_link_unary_rule_(out, a, "exp2", autograd_unary::Rule::Exp2);
+  maybe_link_unary_rule_(out, a, "exp2", autodiff_unary::Rule::Exp2);
   return out;
 }
 Series cbrt(const Series& a) {
@@ -5341,7 +5345,7 @@ Series cbrt(const Series& a) {
     native::cpu::cbrt(aa, out);
   }
   // d/dx cbrt(x) = 1 / (3 * cbrt(x)^2); vertical tangent (inf) at x = 0.
-  maybe_link_unary_rule_(out, a, "cbrt", autograd_unary::Rule::Cbrt);
+  maybe_link_unary_rule_(out, a, "cbrt", autodiff_unary::Rule::Cbrt);
   return out;
 }
 Series square(const Series& a) {
@@ -5379,8 +5383,8 @@ Series square(const Series& a) {
     // replay does not depend on transient alias lifetimes.
     const Series a_snapshot = a.clone();
     maybe_link_unary_op_(out, a, [a_snapshot, out](const Series& g) {
-      Series grad = autograd_unary::apply(
-          autograd_unary::Rule::Square, g, a_snapshot, out);
+      Series grad = autodiff_unary::apply(
+          autodiff_unary::Rule::Square, g, a_snapshot, out);
       if (a_snapshot.platform() == Platform::MPS) {
         // Force materialization before parent accumulation to avoid transient
         // MPS alias/cache hazards across adjacent backward nodes.
@@ -5389,7 +5393,7 @@ Series square(const Series& a) {
       return grad;
     });
   } else {
-    maybe_link_unary_rule_(out, a, "square", autograd_unary::Rule::Square);
+    maybe_link_unary_rule_(out, a, "square", autodiff_unary::Rule::Square);
   }
   return out;
 }
@@ -7402,7 +7406,20 @@ Series Series::full(pluss::msharp::RangeView::Int sizes, double value, ScalarTyp
 
 Series Series::view(pluss::msharp::RangeView::Int new_sizes) const {
   if (!defined()) PLUSS_FAIL("view: undefined");
-  if (!can_view_as(*this, new_sizes)) PLUSS_FAIL("view: requires contiguous in v0");
+  if (!can_view_as(*this, new_sizes)) {
+    // can_view_as() checks two independent conditions (is_contiguous() and
+    // same_numel()); collapsing both into one "requires contiguous"
+    // message hides a genuine numel mismatch behind a contiguity-sounding
+    // error, which is misleading to debug -- report whichever actually
+    // failed, with the concrete numbers, instead of a fixed string.
+    if (!same_numel(sizes(), new_sizes)) {
+      std::int64_t target_numel = 1;
+      for (auto s : new_sizes) target_numel *= s;
+      PLUSS_FAIL("view: shape's number of elements (" + std::to_string(target_numel) +
+                 ") must match the current number of elements (" + std::to_string(numel()) + ")");
+    }
+    PLUSS_FAIL("view: requires contiguous in v0");
+  }
   sync_mps_alias_source_if_needed_(*this);
   auto impl = pluss::msharp::make_intrusive<SeriesImpl>(
       impl_->storage(), impl_->storage_offset_elems(),
@@ -8187,7 +8204,7 @@ static void guard_direct_inplace_value_op_(std::string_view op, const Series& se
   if (!series_tape::tracks_slope(self)) return;
   PLUSS_FAIL(
       std::string(op) +
-      ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
+      ": in-place mutation on autodiff-tracked Series is disallowed; mutate a detached/separate Series instead");
 }
 
 static Series& finish_direct_inplace_value_op_(Series& self) {
@@ -8965,6 +8982,19 @@ bool Series::is_leaf() const {
   return series_tape::is_leaf(*this);
 }
 
+std::optional<SeriesSource> SeriesBase::source() const {
+  if (!defined()) return std::nullopt;
+  // SeriesBase's only concrete subtype is Series (SeriesSlim.h is the same
+  // class compiled without the generated op-surface mixin, not a distinct
+  // type), so this upcast is safe; it exists purely so series_tape's API
+  // (which needs the full Series type) doesn't have to leak into this
+  // header, and so this stays declared next to sensitivity()/tracks_slope()/
+  // is_leaf() rather than pulling SeriesTape.h into SeriesBase.h.
+  const auto info = series_tape::source_info(static_cast<const Series&>(*this));
+  if (!info) return std::nullopt;
+  return SeriesSource{info->op_name, info->parent_count};
+}
+
 bool Series::is_nonzero() const {
   PLUSS_CHECK(defined(), "is_nonzero: undefined Series");
   PLUSS_CHECK(numel() == 1,
@@ -9493,6 +9523,21 @@ Series& Series::sigmoid_() { guard_direct_inplace_value_op_("sigmoid_", *this); 
 
 Series Series::relu() const { return ops_internal::relu(*this); }
 Series& Series::relu_() { guard_direct_inplace_value_op_("relu_", *this); return assign_direct_inplace_(*this, relu()); }
+
+Series Series::elu(double alpha, double scale, double input_scale) const {
+  return ops_internal::elu(*this, alpha, scale, input_scale);
+}
+Series Series::celu(double alpha) const { return ops_internal::celu(*this, alpha); }
+Series Series::selu() const { return ops_internal::selu(*this); }
+Series Series::hardsigmoid() const { return ops_internal::hardsigmoid(*this); }
+Series Series::hardswish() const { return ops_internal::hardswish(*this); }
+Series Series::mish() const { return ops_internal::mish(*this); }
+Series Series::threshold(double threshold_val, double value) const {
+  return ops_internal::threshold(*this, threshold_val, value);
+}
+Series Series::rrelu(double lower, double upper, bool training) const {
+  return pluss::codem::_compat::invoke("rrelu", *this, {lower, upper, training});
+}
 
 Series& Series::logical_not_() {
   guard_direct_inplace_value_op_("logical_not_", *this);
@@ -10387,6 +10432,69 @@ Series& Series::cumsum_(std::int64_t dim, bool keepdim) {
   return *this;
 }
 
+// trapezoid()/cumulative_trapezoid(): composite (no native kernel, no
+// PlatformScope/CALL_GUARD needed of their own -- every op they call
+// already handles its own platform dispatch and autodiff linkage). Reuses
+// split_wrap_dim_ (already shared by the chunk/split/unbind/tensor_split
+// family above) for negative-dim normalization rather than adding a
+// parallel helper.
+static Series trapezoid_broadcast_x_(const Series& x, const Series& y, std::int64_t dim) {
+  if (x.dim() == y.dim()) return x;
+  PLUSS_CHECK(x.dim() == 1, "trapezoid: x must either match y's rank or be 1-D");
+  std::vector<std::int64_t> shape(static_cast<std::size_t>(y.dim()), 1);
+  shape[static_cast<std::size_t>(dim)] = x.numel();
+  return x.reshape(shape);
+}
+
+// Per-interval trapezoidal contribution (dx_i * (y_i + y_{i+1}) / 2) --
+// the shared building block for both trapezoid() (sum it) and
+// cumulative_trapezoid() (cumsum it).
+static Series trapezoid_terms_(const Series& y, const Series& dx, std::int64_t dim) {
+  const std::int64_t n = y.sizes()[static_cast<std::size_t>(dim)];
+  const Series y_front = y.slice(dim, 0, n - 1);
+  const Series y_back = y.slice(dim, 1, n);
+  return dx.mul(y_front.add(y_back)).mul(0.5);
+}
+
+static Series trapezoid_terms_from_x_(const Series& y, const Series& x, std::int64_t dim) {
+  const Series x_b = trapezoid_broadcast_x_(x, y, dim);
+  const Series dx = x_b.diff(1, dim);
+  return trapezoid_terms_(y, dx, dim);
+}
+
+static Series trapezoid_terms_from_dx_(const Series& y, double dx_value, std::int64_t dim) {
+  const std::int64_t n = y.sizes()[static_cast<std::size_t>(dim)];
+  const Series y_front = y.slice(dim, 0, n - 1);
+  const Series y_back = y.slice(dim, 1, n);
+  return y_front.add(y_back).mul(0.5 * dx_value);
+}
+
+Series Series::SeriesAntidiffProxy::trapezoid(const Series& x, std::int64_t dim) const {
+  PLUSS_CHECK(self().defined(), "trapezoid: expected defined Series");
+  PLUSS_CHECK(x.defined(), "trapezoid: expected defined x");
+  const std::int64_t d = split_wrap_dim_(self(), dim, "trapezoid");
+  return trapezoid_terms_from_x_(self(), x, d).sum(d);
+}
+
+Series Series::SeriesAntidiffProxy::trapezoid(double dx, std::int64_t dim) const {
+  PLUSS_CHECK(self().defined(), "trapezoid: expected defined Series");
+  const std::int64_t d = split_wrap_dim_(self(), dim, "trapezoid");
+  return trapezoid_terms_from_dx_(self(), dx, d).sum(d);
+}
+
+Series Series::SeriesAntidiffProxy::cumulative_trapezoid(const Series& x, std::int64_t dim) const {
+  PLUSS_CHECK(self().defined(), "cumulative_trapezoid: expected defined Series");
+  PLUSS_CHECK(x.defined(), "cumulative_trapezoid: expected defined x");
+  const std::int64_t d = split_wrap_dim_(self(), dim, "cumulative_trapezoid");
+  return trapezoid_terms_from_x_(self(), x, d).cumsum(d);
+}
+
+Series Series::SeriesAntidiffProxy::cumulative_trapezoid(double dx, std::int64_t dim) const {
+  PLUSS_CHECK(self().defined(), "cumulative_trapezoid: expected defined Series");
+  const std::int64_t d = split_wrap_dim_(self(), dim, "cumulative_trapezoid");
+  return trapezoid_terms_from_dx_(self(), dx, d).cumsum(d);
+}
+
 
 
 static void bind_cumprod_backward_(
@@ -10754,11 +10862,44 @@ Series Series::grouped_median(const Series& group_ids, std::int64_t group_count)
               "Series::grouped_median: values must be bool, integral, or floating");
   const auto values_cpu = to(Platform::CPU).contiguous();
   const auto ids_cpu = group_ids.to(Platform::CPU, ScalarType::Int64).contiguous();
-  auto out = native::cpu::grouped_median(values_cpu, ids_cpu, group_count);
-  if (platform() == Platform::CPU) {
-    return out;
-  }
-  return out.to(ScalarType::Float32).to(platform());
+  const auto out_cpu = native::cpu::grouped_median(values_cpu, ids_cpu, group_count);
+  const Series out = (platform() == Platform::CPU) ? out_cpu : out_cpu.to(ScalarType::Float32).to(platform());
+
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(*this)) return out;
+
+  // Same value-equality-mask technique as grouped_mode/median_flat_impl, but
+  // grouped_median averages TWO order statistics for an even-sized group
+  // (numpy's convention -- unlike plain median()'s single-element rule), so
+  // the mask is applied once per bound, each carrying half the incoming
+  // gradient, and summed. For an odd-sized group the two bounds are the same
+  // value, so the two half-weighted masks recombine into exactly the single
+  // full-weight mask median_flat_impl itself would use. Bounds are
+  // recomputed fresh from the already-detached `values_cpu`/`ids_cpu` via
+  // grouped_median_bounds (an independent reselection, not a read-back from
+  // `out_cpu`), so this is correct however many times `.reverse()` runs.
+  const Series self_copy = *this;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "grouped_median";
+  link->parents = {self_copy};
+  link->propagate = [self_copy, values_cpu, ids_cpu, group_count](const Series& out_sens) {
+    const auto [lower, upper] = native::cpu::grouped_median_bounds(values_cpu, ids_cpu, group_count);
+    const Series lower_per_elem = lower.to(values_cpu.scalar_type()).index_select(0, ids_cpu);
+    const Series upper_per_elem = upper.to(values_cpu.scalar_type()).index_select(0, ids_cpu);
+    const Series lower_mask = ops_internal::eq(values_cpu, lower_per_elem).to(values_cpu.scalar_type());
+    const Series upper_mask = ops_internal::eq(values_cpu, upper_per_elem).to(values_cpu.scalar_type());
+    const Series lower_counts_per_elem = lower_mask.grouped_sum(ids_cpu, group_count).index_select(0, ids_cpu);
+    const Series upper_counts_per_elem = upper_mask.grouped_sum(ids_cpu, group_count).index_select(0, ids_cpu);
+    const Series sens_per_elem = out_sens.to(Platform::CPU, values_cpu.scalar_type()).index_select(0, ids_cpu);
+    const Series lower_grad = ops_internal::div(ops_internal::mul(lower_mask, sens_per_elem), lower_counts_per_elem);
+    const Series upper_grad = ops_internal::div(ops_internal::mul(upper_mask, sens_per_elem), upper_counts_per_elem);
+    Series grad = ops_internal::add(lower_grad, upper_grad).mul(0.5);
+    if (grad.platform() != self_copy.platform() || grad.scalar_type() != self_copy.scalar_type()) {
+      grad = grad.to(self_copy.platform(), self_copy.scalar_type());
+    }
+    series_tape::accumulate_sensitivity(self_copy, grad);
+  };
+  series_tape::bind_source_link(out, std::move(link));
+  return out;
 }
 
 Series Series::grouped_mode(const Series& group_ids, std::int64_t group_count) const {
@@ -10769,11 +10910,41 @@ Series Series::grouped_mode(const Series& group_ids, std::int64_t group_count) c
               "Series::grouped_mode: values must be bool, integral, or floating");
   const auto values_cpu = to(Platform::CPU).contiguous();
   const auto ids_cpu = group_ids.to(Platform::CPU, ScalarType::Int64).contiguous();
-  auto out = native::cpu::grouped_mode(values_cpu, ids_cpu, group_count);
-  if (platform() == Platform::CPU) {
-    return out;
-  }
-  return out.to(ScalarType::Float32).to(platform());
+  const auto out_cpu = native::cpu::grouped_mode(values_cpu, ids_cpu, group_count);
+  const Series out = (platform() == Platform::CPU) ? out_cpu : out_cpu.to(ScalarType::Float32).to(platform());
+
+  if (!series_tape::recording_enabled() || !series_tape::tracks_slope(*this)) return out;
+
+  // Each group's mode is its single most-frequent value -- a discrete,
+  // non-smooth selection with no ATen equivalent to check a convention
+  // against. Route gradient to every element that equals its OWN group's
+  // winning value, split evenly among ties within that group: the same
+  // value-equality-mask technique median_flat_impl (Invoke.cpp) uses for
+  // plain median(), generalized to per-group scope via index_select (route
+  // each element to its own group's mode value/count) + grouped_sum (count
+  // ties within a group). Recomputed fresh from `values_cpu`/`ids_cpu`
+  // (CPU copies of already-detached data, not the tracked receiver) so this
+  // is correct however many times `.reverse()` runs.
+  const Series self_copy = *this;
+  auto link = std::make_shared<series_tape::SourceLink>();
+  link->op_name = "grouped_mode";
+  link->parents = {self_copy};
+  link->propagate = [self_copy, values_cpu, ids_cpu, out_cpu, group_count](const Series& out_sens) {
+    const Series out_per_elem = out_cpu.to(values_cpu.scalar_type()).index_select(0, ids_cpu);
+    const Series mask = ops_internal::eq(values_cpu, out_per_elem);
+    const Series weights = mask.to(values_cpu.scalar_type());
+    const Series group_counts = weights.grouped_sum(ids_cpu, group_count);
+    const Series counts_per_elem = group_counts.index_select(0, ids_cpu);
+    const Series sens_cpu = out_sens.to(Platform::CPU, values_cpu.scalar_type());
+    const Series sens_per_elem = sens_cpu.index_select(0, ids_cpu);
+    Series grad = ops_internal::div(ops_internal::mul(weights, sens_per_elem), counts_per_elem);
+    if (grad.platform() != self_copy.platform() || grad.scalar_type() != self_copy.scalar_type()) {
+      grad = grad.to(self_copy.platform(), self_copy.scalar_type());
+    }
+    series_tape::accumulate_sensitivity(self_copy, grad);
+  };
+  series_tape::bind_source_link(out, std::move(link));
+  return out;
 }
 
 } // namespace pluss::codem::ops_internal

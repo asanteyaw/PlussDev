@@ -59,7 +59,7 @@ This is a new object, but still an aliasing object. If one alias mutates the
 shared storage, the other alias sees the same underlying values under its own
 shape interpretation.
 
-## Autograd Behavior
+## Autodiff Behavior
 
 `view()` preserves reverse-mode connectivity.
 

@@ -166,6 +166,6 @@ sort axis 2: rejected
 - `Note::argsort`: return ordering positions when cell positions are needed.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sizes_view.html"><span class="label">Previous</span><span class="title">sizes_view</span></a>
+  <a class="prev-link" href="slabs.html"><span class="label">Previous</span><span class="title">slabs</span></a>
   <a class="next-link" href="split.html"><span class="label">Next</span><span class="title">split</span></a>
 </div>

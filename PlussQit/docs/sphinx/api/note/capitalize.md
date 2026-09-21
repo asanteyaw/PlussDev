@@ -102,9 +102,9 @@ Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
 - [`Note::strip`](strip.md): drop a leading space before capitalizing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="base64_encode.html">
+  <a class="prev-link" href="bools.html">
     <span class="label">Previous</span>
-    <span class="title">base64_encode</span>
+    <span class="title">bools</span>
   </a>
   <a class="next-link" href="casefold.html">
     <span class="label">Next</span>

@@ -2,6 +2,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
+#include "pluss/subsp/math/integ.h"
 
 #include <algorithm>
 #include <cmath>
@@ -435,21 +436,21 @@ std::complex<double> bates_cf_(std::complex<double> phi,
   return h_cf * jump_cf;
 }
 
-double simpson_integral_(const std::function<double(double)>& f,
-                         double a,
-                         double b,
-                         std::int64_t n) {
-  if (n % 2 != 0) {
-    ++n;
-  }
-  const double h = (b - a) / static_cast<double>(n);
-
-  double sum = f(a) + f(b);
-  for (std::int64_t i = 1; i < n; ++i) {
-    const double x = a + h * static_cast<double>(i);
-    sum += ((i % 2 == 0) ? 2.0 : 4.0) * f(x);
-  }
-  return (h / 3.0) * sum;
+// Composite Simpson's rule (scalar characteristic-function inversion
+// integrand, fixed n = options.integration_steps nodes). Delegates to
+// pluss::subsp::math::integ::quadra_scalar (PlussMa/include/pluss/subsp/
+// math/integ.h) rather than reimplementing the rule locally -- this was a
+// THIRD independent copy of the identical formula already consolidated
+// out of PlussMa/Stats/distributions's distr.cpp/distr_objects_continuous.cpp.
+// The Carr-Madan FFT-grid Simpson/Trapezoidal weighting scheme elsewhere in
+// this file (HestonFftQuadrature, heston_fft_grid_values_) is NOT the same
+// computational pattern -- those weights feed an FFT producing an entire
+// strike grid in one transform, not a direct numerical integral -- and is
+// deliberately left untouched.
+double simpson_integral_(const std::function<double(double)>& f, double a, double b, std::int64_t n) {
+  pluss::subsp::math::integ::QuadraScalarOptions options;
+  options.nodes = n;
+  return pluss::subsp::math::integ::quadra_scalar(f, a, b, options).value;
 }
 
 double prob_j_(int numeraire,

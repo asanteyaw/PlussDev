@@ -7044,6 +7044,2788 @@ plussai_classic_families_detectfamilyoptions_example_1/fast:
 .PHONY : plussai_classic_families_detectfamilyoptions_example_1/fast
 
 #=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_learn_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_learn_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_learn_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_learn_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_learn_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_learn_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_learn_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_learn_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_learn_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_learn_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_learn_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_learn_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_learn_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_learn_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_learn_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_learn_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_learn_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_learn_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_learn_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_learn_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_learn_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_learn_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_learn_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_learn_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_infer_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_infer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_infer_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_infer_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_infer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_infer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_infer_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_infer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_infer_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_infer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_infer_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_infer_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_infer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_infer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_infer_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_infer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_infer_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_infer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_infer_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_infer_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_infer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_infer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_infer_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_infer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_assess_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_assess_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_assess_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_assess_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_assess_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_assess_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_assess_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_assess_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_assess_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_assess_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_assess_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_assess_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_assess_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_assess_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_assess_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_assess_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_assess_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_assess_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_assess_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_assess_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_assess_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_assess_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_assess_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_assess_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_taskkind_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_taskkind_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_taskkind_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_taskkind_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_taskkind_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_taskkind_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_taskkind_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_taskkind_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_taskkind_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_taskkind_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_taskkind_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_taskkind_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_taskkind_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_taskkind_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_taskkind_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_taskkind_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_taskkind_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_taskkind_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_taskkind_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_taskkind_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_taskkind_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_taskkind_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_taskkind_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_taskkind_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_trained_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_trained_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_trained_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_trained_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_trained_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_trained_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_trained_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_trained_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_trained_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_trained_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_trained_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_trained_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_trained_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_trained_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_trained_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_trained_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_trained_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_trained_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_trained_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_trained_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_trained_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_trained_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_trained_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_trained_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_dumpstate_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_dumpstate_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_dumpstate_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_dumpstate_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_dumpstate_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_dumpstate_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_dumpstate_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_dumpstate_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_dumpstate_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_dumpstate_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_dumpstate_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_dumpstate_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_dumpstate_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_dumpstate_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_dumpstate_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_dumpstate_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_dumpstate_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_dumpstate_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_dumpstate_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_dumpstate_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_dumpstate_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_dumpstate_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_dumpstate_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_dumpstate_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_loadstate_example_1
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_loadstate_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_loadstate_example_1
+.PHONY : plussai_classic_estimators_estimatorbase_loadstate_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_loadstate_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_loadstate_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_loadstate_example_1.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_loadstate_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_loadstate_example_2
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_loadstate_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_loadstate_example_2
+.PHONY : plussai_classic_estimators_estimatorbase_loadstate_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_loadstate_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_loadstate_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_loadstate_example_2.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_loadstate_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_estimatorbase_loadstate_example_3
+
+# Build rule for target.
+plussai_classic_estimators_estimatorbase_loadstate_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_estimatorbase_loadstate_example_3
+.PHONY : plussai_classic_estimators_estimatorbase_loadstate_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_estimatorbase_loadstate_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_loadstate_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_estimatorbase_loadstate_example_3.dir/build
+.PHONY : plussai_classic_estimators_estimatorbase_loadstate_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_classifierbase_example_1
+
+# Build rule for target.
+plussai_classic_estimators_classifierbase_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_classifierbase_example_1
+.PHONY : plussai_classic_estimators_classifierbase_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_classifierbase_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_classifierbase_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_classifierbase_example_1.dir/build
+.PHONY : plussai_classic_estimators_classifierbase_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_regressorbase_example_1
+
+# Build rule for target.
+plussai_classic_estimators_regressorbase_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_regressorbase_example_1
+.PHONY : plussai_classic_estimators_regressorbase_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_regressorbase_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_regressorbase_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_regressorbase_example_1.dir/build
+.PHONY : plussai_classic_estimators_regressorbase_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_transformerbase_example_1
+
+# Build rule for target.
+plussai_classic_estimators_transformerbase_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_transformerbase_example_1
+.PHONY : plussai_classic_estimators_transformerbase_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_transformerbase_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_transformerbase_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_transformerbase_example_1.dir/build
+.PHONY : plussai_classic_estimators_transformerbase_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_transformerbase_example_2
+
+# Build rule for target.
+plussai_classic_estimators_transformerbase_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_transformerbase_example_2
+.PHONY : plussai_classic_estimators_transformerbase_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_transformerbase_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_transformerbase_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_transformerbase_example_2.dir/build
+.PHONY : plussai_classic_estimators_transformerbase_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_transformerbase_example_3
+
+# Build rule for target.
+plussai_classic_estimators_transformerbase_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_transformerbase_example_3
+.PHONY : plussai_classic_estimators_transformerbase_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_transformerbase_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_transformerbase_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_transformerbase_example_3.dir/build
+.PHONY : plussai_classic_estimators_transformerbase_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_makeclassifier_example_1
+
+# Build rule for target.
+plussai_classic_estimators_makeclassifier_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_makeclassifier_example_1
+.PHONY : plussai_classic_estimators_makeclassifier_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_makeclassifier_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeclassifier_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeclassifier_example_1.dir/build
+.PHONY : plussai_classic_estimators_makeclassifier_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_makeclassifier_example_2
+
+# Build rule for target.
+plussai_classic_estimators_makeclassifier_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_makeclassifier_example_2
+.PHONY : plussai_classic_estimators_makeclassifier_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_makeclassifier_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeclassifier_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeclassifier_example_2.dir/build
+.PHONY : plussai_classic_estimators_makeclassifier_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_makeclassifier_example_3
+
+# Build rule for target.
+plussai_classic_estimators_makeclassifier_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_makeclassifier_example_3
+.PHONY : plussai_classic_estimators_makeclassifier_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_makeclassifier_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeclassifier_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeclassifier_example_3.dir/build
+.PHONY : plussai_classic_estimators_makeclassifier_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_makeregressor_example_1
+
+# Build rule for target.
+plussai_classic_estimators_makeregressor_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_makeregressor_example_1
+.PHONY : plussai_classic_estimators_makeregressor_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_makeregressor_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeregressor_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeregressor_example_1.dir/build
+.PHONY : plussai_classic_estimators_makeregressor_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_makeregressor_example_2
+
+# Build rule for target.
+plussai_classic_estimators_makeregressor_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_makeregressor_example_2
+.PHONY : plussai_classic_estimators_makeregressor_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_makeregressor_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeregressor_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeregressor_example_2.dir/build
+.PHONY : plussai_classic_estimators_makeregressor_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_makeregressor_example_3
+
+# Build rule for target.
+plussai_classic_estimators_makeregressor_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_makeregressor_example_3
+.PHONY : plussai_classic_estimators_makeregressor_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_makeregressor_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeregressor_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_makeregressor_example_3.dir/build
+.PHONY : plussai_classic_estimators_makeregressor_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_maketransformer_example_1
+
+# Build rule for target.
+plussai_classic_estimators_maketransformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_maketransformer_example_1
+.PHONY : plussai_classic_estimators_maketransformer_example_1
+
+# fast build rule for target.
+plussai_classic_estimators_maketransformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_maketransformer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_maketransformer_example_1.dir/build
+.PHONY : plussai_classic_estimators_maketransformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_maketransformer_example_2
+
+# Build rule for target.
+plussai_classic_estimators_maketransformer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_maketransformer_example_2
+.PHONY : plussai_classic_estimators_maketransformer_example_2
+
+# fast build rule for target.
+plussai_classic_estimators_maketransformer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_maketransformer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_maketransformer_example_2.dir/build
+.PHONY : plussai_classic_estimators_maketransformer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_estimators_maketransformer_example_3
+
+# Build rule for target.
+plussai_classic_estimators_maketransformer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_estimators_maketransformer_example_3
+.PHONY : plussai_classic_estimators_maketransformer_example_3
+
+# fast build rule for target.
+plussai_classic_estimators_maketransformer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_maketransformer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_estimators_maketransformer_example_3.dir/build
+.PHONY : plussai_classic_estimators_maketransformer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_makeflow_example_1
+
+# Build rule for target.
+plussai_classic_compose_makeflow_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_makeflow_example_1
+.PHONY : plussai_classic_compose_makeflow_example_1
+
+# fast build rule for target.
+plussai_classic_compose_makeflow_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_makeflow_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_makeflow_example_1.dir/build
+.PHONY : plussai_classic_compose_makeflow_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_makeflow_example_2
+
+# Build rule for target.
+plussai_classic_compose_makeflow_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_makeflow_example_2
+.PHONY : plussai_classic_compose_makeflow_example_2
+
+# fast build rule for target.
+plussai_classic_compose_makeflow_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_makeflow_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_makeflow_example_2.dir/build
+.PHONY : plussai_classic_compose_makeflow_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_makeflow_example_3
+
+# Build rule for target.
+plussai_classic_compose_makeflow_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_makeflow_example_3
+.PHONY : plussai_classic_compose_makeflow_example_3
+
+# fast build rule for target.
+plussai_classic_compose_makeflow_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_makeflow_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_makeflow_example_3.dir/build
+.PHONY : plussai_classic_compose_makeflow_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_transformspec_example_1
+
+# Build rule for target.
+plussai_classic_compose_transformspec_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_transformspec_example_1
+.PHONY : plussai_classic_compose_transformspec_example_1
+
+# fast build rule for target.
+plussai_classic_compose_transformspec_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_transformspec_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_transformspec_example_1.dir/build
+.PHONY : plussai_classic_compose_transformspec_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flowgraphinfo_example_1
+
+# Build rule for target.
+plussai_classic_compose_flowgraphinfo_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flowgraphinfo_example_1
+.PHONY : plussai_classic_compose_flowgraphinfo_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flowgraphinfo_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flowgraphinfo_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flowgraphinfo_example_1.dir/build
+.PHONY : plussai_classic_compose_flowgraphinfo_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addstage_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_addstage_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addstage_example_1
+.PHONY : plussai_classic_compose_flow_addstage_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_addstage_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addstage_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addstage_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_addstage_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addstage_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_addstage_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addstage_example_2
+.PHONY : plussai_classic_compose_flow_addstage_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_addstage_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addstage_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addstage_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_addstage_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addstage_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_addstage_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addstage_example_3
+.PHONY : plussai_classic_compose_flow_addstage_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_addstage_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addstage_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addstage_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_addstage_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addnamedtransform_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_addnamedtransform_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addnamedtransform_example_1
+.PHONY : plussai_classic_compose_flow_addnamedtransform_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_addnamedtransform_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addnamedtransform_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addnamedtransform_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_addnamedtransform_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addnamedtransform_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_addnamedtransform_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addnamedtransform_example_2
+.PHONY : plussai_classic_compose_flow_addnamedtransform_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_addnamedtransform_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addnamedtransform_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addnamedtransform_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_addnamedtransform_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addnamedtransform_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_addnamedtransform_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addnamedtransform_example_3
+.PHONY : plussai_classic_compose_flow_addnamedtransform_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_addnamedtransform_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addnamedtransform_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addnamedtransform_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_addnamedtransform_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addcolumnstage_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_addcolumnstage_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addcolumnstage_example_1
+.PHONY : plussai_classic_compose_flow_addcolumnstage_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_addcolumnstage_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addcolumnstage_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addcolumnstage_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_addcolumnstage_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addcolumnstage_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_addcolumnstage_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addcolumnstage_example_2
+.PHONY : plussai_classic_compose_flow_addcolumnstage_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_addcolumnstage_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addcolumnstage_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addcolumnstage_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_addcolumnstage_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addcolumnstage_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_addcolumnstage_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addcolumnstage_example_3
+.PHONY : plussai_classic_compose_flow_addcolumnstage_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_addcolumnstage_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addcolumnstage_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addcolumnstage_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_addcolumnstage_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addfunctiontransformer_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_addfunctiontransformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addfunctiontransformer_example_1
+.PHONY : plussai_classic_compose_flow_addfunctiontransformer_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_addfunctiontransformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfunctiontransformer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfunctiontransformer_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_addfunctiontransformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addfunctiontransformer_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_addfunctiontransformer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addfunctiontransformer_example_2
+.PHONY : plussai_classic_compose_flow_addfunctiontransformer_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_addfunctiontransformer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfunctiontransformer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfunctiontransformer_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_addfunctiontransformer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addfunctiontransformer_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_addfunctiontransformer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addfunctiontransformer_example_3
+.PHONY : plussai_classic_compose_flow_addfunctiontransformer_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_addfunctiontransformer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfunctiontransformer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfunctiontransformer_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_addfunctiontransformer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addfeaturetransformer_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_addfeaturetransformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addfeaturetransformer_example_1
+.PHONY : plussai_classic_compose_flow_addfeaturetransformer_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_addfeaturetransformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfeaturetransformer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfeaturetransformer_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_addfeaturetransformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addfeaturetransformer_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_addfeaturetransformer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addfeaturetransformer_example_2
+.PHONY : plussai_classic_compose_flow_addfeaturetransformer_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_addfeaturetransformer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfeaturetransformer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfeaturetransformer_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_addfeaturetransformer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_addfeaturetransformer_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_addfeaturetransformer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_addfeaturetransformer_example_3
+.PHONY : plussai_classic_compose_flow_addfeaturetransformer_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_addfeaturetransformer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfeaturetransformer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_addfeaturetransformer_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_addfeaturetransformer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_appendtransform_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_appendtransform_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_appendtransform_example_1
+.PHONY : plussai_classic_compose_flow_appendtransform_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_appendtransform_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_appendtransform_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_appendtransform_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_appendtransform_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_appendtransform_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_appendtransform_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_appendtransform_example_2
+.PHONY : plussai_classic_compose_flow_appendtransform_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_appendtransform_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_appendtransform_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_appendtransform_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_appendtransform_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_appendtransform_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_appendtransform_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_appendtransform_example_3
+.PHONY : plussai_classic_compose_flow_appendtransform_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_appendtransform_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_appendtransform_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_appendtransform_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_appendtransform_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_cleartransforms_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_cleartransforms_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_cleartransforms_example_1
+.PHONY : plussai_classic_compose_flow_cleartransforms_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_cleartransforms_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_cleartransforms_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_cleartransforms_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_cleartransforms_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_cleartransforms_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_cleartransforms_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_cleartransforms_example_2
+.PHONY : plussai_classic_compose_flow_cleartransforms_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_cleartransforms_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_cleartransforms_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_cleartransforms_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_cleartransforms_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_cleartransforms_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_cleartransforms_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_cleartransforms_example_3
+.PHONY : plussai_classic_compose_flow_cleartransforms_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_cleartransforms_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_cleartransforms_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_cleartransforms_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_cleartransforms_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstagekey_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setstagekey_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstagekey_example_1
+.PHONY : plussai_classic_compose_flow_setstagekey_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstagekey_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstagekey_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstagekey_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setstagekey_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstagekey_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setstagekey_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstagekey_example_2
+.PHONY : plussai_classic_compose_flow_setstagekey_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstagekey_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstagekey_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstagekey_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setstagekey_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstagekey_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setstagekey_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstagekey_example_3
+.PHONY : plussai_classic_compose_flow_setstagekey_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstagekey_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstagekey_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstagekey_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setstagekey_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstageroute_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setstageroute_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstageroute_example_1
+.PHONY : plussai_classic_compose_flow_setstageroute_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstageroute_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageroute_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageroute_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setstageroute_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstageroute_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setstageroute_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstageroute_example_2
+.PHONY : plussai_classic_compose_flow_setstageroute_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstageroute_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageroute_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageroute_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setstageroute_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstageroute_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setstageroute_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstageroute_example_3
+.PHONY : plussai_classic_compose_flow_setstageroute_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstageroute_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageroute_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageroute_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setstageroute_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstageremainder_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setstageremainder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstageremainder_example_1
+.PHONY : plussai_classic_compose_flow_setstageremainder_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstageremainder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageremainder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageremainder_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setstageremainder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstageremainder_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setstageremainder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstageremainder_example_2
+.PHONY : plussai_classic_compose_flow_setstageremainder_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstageremainder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageremainder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageremainder_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setstageremainder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setstageremainder_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setstageremainder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setstageremainder_example_3
+.PHONY : plussai_classic_compose_flow_setstageremainder_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setstageremainder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageremainder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setstageremainder_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setstageremainder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setmodel_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setmodel_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setmodel_example_1
+.PHONY : plussai_classic_compose_flow_setmodel_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setmodel_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setmodel_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setmodel_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setmodel_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setmodel_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setmodel_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setmodel_example_2
+.PHONY : plussai_classic_compose_flow_setmodel_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setmodel_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setmodel_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setmodel_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setmodel_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setmodel_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setmodel_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setmodel_example_3
+.PHONY : plussai_classic_compose_flow_setmodel_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setmodel_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setmodel_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setmodel_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setmodel_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setclassifier_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setclassifier_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setclassifier_example_1
+.PHONY : plussai_classic_compose_flow_setclassifier_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setclassifier_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setclassifier_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setclassifier_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setclassifier_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setclassifier_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setclassifier_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setclassifier_example_2
+.PHONY : plussai_classic_compose_flow_setclassifier_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setclassifier_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setclassifier_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setclassifier_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setclassifier_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setclassifier_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setclassifier_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setclassifier_example_3
+.PHONY : plussai_classic_compose_flow_setclassifier_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setclassifier_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setclassifier_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setclassifier_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setclassifier_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setregressor_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setregressor_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setregressor_example_1
+.PHONY : plussai_classic_compose_flow_setregressor_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setregressor_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setregressor_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setregressor_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setregressor_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setregressor_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setregressor_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setregressor_example_2
+.PHONY : plussai_classic_compose_flow_setregressor_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setregressor_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setregressor_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setregressor_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setregressor_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setregressor_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setregressor_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setregressor_example_3
+.PHONY : plussai_classic_compose_flow_setregressor_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setregressor_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setregressor_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setregressor_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setregressor_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_clearmodel_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_clearmodel_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_clearmodel_example_1
+.PHONY : plussai_classic_compose_flow_clearmodel_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_clearmodel_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clearmodel_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clearmodel_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_clearmodel_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_clearmodel_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_clearmodel_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_clearmodel_example_2
+.PHONY : plussai_classic_compose_flow_clearmodel_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_clearmodel_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clearmodel_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clearmodel_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_clearmodel_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_clearmodel_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_clearmodel_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_clearmodel_example_3
+.PHONY : plussai_classic_compose_flow_clearmodel_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_clearmodel_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clearmodel_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clearmodel_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_clearmodel_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_standardscaler_example_1
+
+# Build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_standardscaler_example_1
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_1
+
+# fast build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_1.dir/build
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_standardscaler_example_2
+
+# Build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_standardscaler_example_2
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_2
+
+# fast build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_2.dir/build
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_standardscaler_example_3
+
+# Build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_standardscaler_example_3
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_3
+
+# fast build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_3.dir/build
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_standardscaler_example_4
+
+# Build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_standardscaler_example_4
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_4
+
+# fast build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_4.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_4.dir/build
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_standardscaler_example_5
+
+# Build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_5: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_standardscaler_example_5
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_5
+
+# fast build rule for target.
+plussai_classic_prep_scaling_standardscaler_example_5/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_5.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_standardscaler_example_5.dir/build
+.PHONY : plussai_classic_prep_scaling_standardscaler_example_5/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_minmaxscaler_example_1
+
+# Build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_minmaxscaler_example_1
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_1
+
+# fast build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_1.dir/build
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_minmaxscaler_example_2
+
+# Build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_minmaxscaler_example_2
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_2
+
+# fast build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_2.dir/build
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_minmaxscaler_example_3
+
+# Build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_minmaxscaler_example_3
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_3
+
+# fast build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_3.dir/build
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_minmaxscaler_example_4
+
+# Build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_minmaxscaler_example_4
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_4
+
+# fast build rule for target.
+plussai_classic_prep_scaling_minmaxscaler_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_4.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_minmaxscaler_example_4.dir/build
+.PHONY : plussai_classic_prep_scaling_minmaxscaler_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_robustscaler_example_1
+
+# Build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_robustscaler_example_1
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_1
+
+# fast build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_1.dir/build
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_robustscaler_example_2
+
+# Build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_robustscaler_example_2
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_2
+
+# fast build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_2.dir/build
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_robustscaler_example_3
+
+# Build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_robustscaler_example_3
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_3
+
+# fast build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_3.dir/build
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_robustscaler_example_4
+
+# Build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_robustscaler_example_4
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_4
+
+# fast build rule for target.
+plussai_classic_prep_scaling_robustscaler_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_4.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_robustscaler_example_4.dir/build
+.PHONY : plussai_classic_prep_scaling_robustscaler_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_maxabsscaler_example_1
+
+# Build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_maxabsscaler_example_1
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_1
+
+# fast build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_1.dir/build
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_maxabsscaler_example_2
+
+# Build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_maxabsscaler_example_2
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_2
+
+# fast build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_2.dir/build
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_maxabsscaler_example_3
+
+# Build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_maxabsscaler_example_3
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_3
+
+# fast build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_3.dir/build
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_scaling_maxabsscaler_example_4
+
+# Build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_scaling_maxabsscaler_example_4
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_4
+
+# fast build rule for target.
+plussai_classic_prep_scaling_maxabsscaler_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_4.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_scaling_maxabsscaler_example_4.dir/build
+.PHONY : plussai_classic_prep_scaling_maxabsscaler_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_learn_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_learn_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_learn_example_1
+.PHONY : plussai_classic_compose_flow_learn_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_learn_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learn_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learn_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_learn_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_learn_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_learn_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_learn_example_2
+.PHONY : plussai_classic_compose_flow_learn_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_learn_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learn_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learn_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_learn_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_learn_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_learn_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_learn_example_3
+.PHONY : plussai_classic_compose_flow_learn_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_learn_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learn_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learn_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_learn_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_map_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_map_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_map_example_1
+.PHONY : plussai_classic_compose_flow_map_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_map_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_map_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_map_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_map_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_map_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_map_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_map_example_2
+.PHONY : plussai_classic_compose_flow_map_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_map_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_map_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_map_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_map_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_learnmap_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_learnmap_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_learnmap_example_1
+.PHONY : plussai_classic_compose_flow_learnmap_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_learnmap_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learnmap_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learnmap_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_learnmap_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_learnmap_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_learnmap_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_learnmap_example_2
+.PHONY : plussai_classic_compose_flow_learnmap_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_learnmap_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learnmap_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learnmap_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_learnmap_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_infer_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_infer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_infer_example_1
+.PHONY : plussai_classic_compose_flow_infer_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_infer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_infer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_infer_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_infer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_infer_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_infer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_infer_example_2
+.PHONY : plussai_classic_compose_flow_infer_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_infer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_infer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_infer_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_infer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_infer_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_infer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_infer_example_3
+.PHONY : plussai_classic_compose_flow_infer_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_infer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_infer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_infer_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_infer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_inferscores_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_inferscores_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_inferscores_example_1
+.PHONY : plussai_classic_compose_flow_inferscores_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_inferscores_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_inferscores_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_inferscores_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_inferscores_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_inferscores_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_inferscores_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_inferscores_example_2
+.PHONY : plussai_classic_compose_flow_inferscores_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_inferscores_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_inferscores_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_inferscores_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_inferscores_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_assess_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_assess_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_assess_example_1
+.PHONY : plussai_classic_compose_flow_assess_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_assess_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_assess_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_assess_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_assess_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_assess_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_assess_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_assess_example_2
+.PHONY : plussai_classic_compose_flow_assess_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_assess_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_assess_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_assess_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_assess_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_graphinfo_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_graphinfo_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_graphinfo_example_1
+.PHONY : plussai_classic_compose_flow_graphinfo_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_graphinfo_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_graphinfo_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_graphinfo_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_graphinfo_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_flowsummary_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_flowsummary_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_flowsummary_example_1
+.PHONY : plussai_classic_compose_flow_flowsummary_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_flowsummary_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_flowsummary_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_flowsummary_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_flowsummary_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_marktrained_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_marktrained_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_marktrained_example_1
+.PHONY : plussai_classic_compose_flow_marktrained_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_marktrained_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_marktrained_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_marktrained_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_marktrained_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_marktrained_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_marktrained_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_marktrained_example_2
+.PHONY : plussai_classic_compose_flow_marktrained_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_marktrained_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_marktrained_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_marktrained_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_marktrained_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_nestedparam_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_nestedparam_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_nestedparam_example_1
+.PHONY : plussai_classic_compose_flow_nestedparam_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_nestedparam_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparam_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparam_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_nestedparam_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_nestedparam_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_nestedparam_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_nestedparam_example_2
+.PHONY : plussai_classic_compose_flow_nestedparam_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_nestedparam_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparam_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparam_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_nestedparam_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_nestedparamkeys_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_nestedparamkeys_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_nestedparamkeys_example_1
+.PHONY : plussai_classic_compose_flow_nestedparamkeys_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_nestedparamkeys_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparamkeys_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparamkeys_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_nestedparamkeys_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setnestedparam_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_setnestedparam_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setnestedparam_example_1
+.PHONY : plussai_classic_compose_flow_setnestedparam_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_setnestedparam_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setnestedparam_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setnestedparam_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_setnestedparam_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setnestedparam_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_setnestedparam_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setnestedparam_example_2
+.PHONY : plussai_classic_compose_flow_setnestedparam_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_setnestedparam_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setnestedparam_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setnestedparam_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_setnestedparam_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_dumptransformstates_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_dumptransformstates_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_dumptransformstates_example_1
+.PHONY : plussai_classic_compose_flow_dumptransformstates_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_dumptransformstates_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumptransformstates_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumptransformstates_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_dumptransformstates_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_dumpmodelstate_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_dumpmodelstate_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_dumpmodelstate_example_1
+.PHONY : plussai_classic_compose_flow_dumpmodelstate_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_dumpmodelstate_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumpmodelstate_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumpmodelstate_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_dumpmodelstate_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadtransformstates_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_loadtransformstates_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadtransformstates_example_1
+.PHONY : plussai_classic_compose_flow_loadtransformstates_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadtransformstates_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadtransformstates_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadtransformstates_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_loadtransformstates_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadtransformstates_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_loadtransformstates_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadtransformstates_example_2
+.PHONY : plussai_classic_compose_flow_loadtransformstates_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadtransformstates_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadtransformstates_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadtransformstates_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_loadtransformstates_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadmodelstate_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_loadmodelstate_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadmodelstate_example_1
+.PHONY : plussai_classic_compose_flow_loadmodelstate_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadmodelstate_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadmodelstate_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadmodelstate_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_loadmodelstate_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadmodelstate_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_loadmodelstate_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadmodelstate_example_2
+.PHONY : plussai_classic_compose_flow_loadmodelstate_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadmodelstate_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadmodelstate_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadmodelstate_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_loadmodelstate_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_saveblueprint_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_saveblueprint_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_saveblueprint_example_1
+.PHONY : plussai_classic_compose_flow_saveblueprint_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_saveblueprint_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_saveblueprint_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_saveblueprint_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_saveblueprint_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_saveblueprint_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_saveblueprint_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_saveblueprint_example_2
+.PHONY : plussai_classic_compose_flow_saveblueprint_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_saveblueprint_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_saveblueprint_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_saveblueprint_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_saveblueprint_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadblueprint_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_loadblueprint_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadblueprint_example_1
+.PHONY : plussai_classic_compose_flow_loadblueprint_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadblueprint_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadblueprint_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadblueprint_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_loadblueprint_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadblueprint_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_loadblueprint_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadblueprint_example_2
+.PHONY : plussai_classic_compose_flow_loadblueprint_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadblueprint_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadblueprint_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadblueprint_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_loadblueprint_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_clone_example_1
+
+# Build rule for target.
+plussai_classic_compose_flow_clone_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_clone_example_1
+.PHONY : plussai_classic_compose_flow_clone_example_1
+
+# fast build rule for target.
+plussai_classic_compose_flow_clone_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clone_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clone_example_1.dir/build
+.PHONY : plussai_classic_compose_flow_clone_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_clone_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_clone_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_clone_example_2
+.PHONY : plussai_classic_compose_flow_clone_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_clone_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clone_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clone_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_clone_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_assess_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_assess_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_assess_example_3
+.PHONY : plussai_classic_compose_flow_assess_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_assess_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_assess_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_assess_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_assess_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_clone_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_clone_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_clone_example_3
+.PHONY : plussai_classic_compose_flow_clone_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_clone_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clone_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_clone_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_clone_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_dumpmodelstate_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_dumpmodelstate_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_dumpmodelstate_example_2
+.PHONY : plussai_classic_compose_flow_dumpmodelstate_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_dumpmodelstate_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumpmodelstate_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumpmodelstate_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_dumpmodelstate_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_dumpmodelstate_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_dumpmodelstate_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_dumpmodelstate_example_3
+.PHONY : plussai_classic_compose_flow_dumpmodelstate_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_dumpmodelstate_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumpmodelstate_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumpmodelstate_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_dumpmodelstate_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_dumptransformstates_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_dumptransformstates_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_dumptransformstates_example_2
+.PHONY : plussai_classic_compose_flow_dumptransformstates_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_dumptransformstates_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumptransformstates_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumptransformstates_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_dumptransformstates_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_dumptransformstates_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_dumptransformstates_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_dumptransformstates_example_3
+.PHONY : plussai_classic_compose_flow_dumptransformstates_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_dumptransformstates_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumptransformstates_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_dumptransformstates_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_dumptransformstates_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_flowsummary_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_flowsummary_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_flowsummary_example_2
+.PHONY : plussai_classic_compose_flow_flowsummary_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_flowsummary_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_flowsummary_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_flowsummary_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_flowsummary_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_flowsummary_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_flowsummary_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_flowsummary_example_3
+.PHONY : plussai_classic_compose_flow_flowsummary_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_flowsummary_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_flowsummary_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_flowsummary_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_flowsummary_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_graphinfo_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_graphinfo_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_graphinfo_example_2
+.PHONY : plussai_classic_compose_flow_graphinfo_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_graphinfo_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_graphinfo_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_graphinfo_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_graphinfo_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_graphinfo_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_graphinfo_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_graphinfo_example_3
+.PHONY : plussai_classic_compose_flow_graphinfo_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_graphinfo_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_graphinfo_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_graphinfo_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_graphinfo_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_inferscores_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_inferscores_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_inferscores_example_3
+.PHONY : plussai_classic_compose_flow_inferscores_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_inferscores_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_inferscores_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_inferscores_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_inferscores_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_learnmap_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_learnmap_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_learnmap_example_3
+.PHONY : plussai_classic_compose_flow_learnmap_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_learnmap_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learnmap_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_learnmap_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_learnmap_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadblueprint_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_loadblueprint_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadblueprint_example_3
+.PHONY : plussai_classic_compose_flow_loadblueprint_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadblueprint_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadblueprint_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadblueprint_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_loadblueprint_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadmodelstate_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_loadmodelstate_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadmodelstate_example_3
+.PHONY : plussai_classic_compose_flow_loadmodelstate_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadmodelstate_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadmodelstate_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadmodelstate_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_loadmodelstate_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_loadtransformstates_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_loadtransformstates_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_loadtransformstates_example_3
+.PHONY : plussai_classic_compose_flow_loadtransformstates_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_loadtransformstates_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadtransformstates_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_loadtransformstates_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_loadtransformstates_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_map_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_map_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_map_example_3
+.PHONY : plussai_classic_compose_flow_map_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_map_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_map_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_map_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_map_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_marktrained_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_marktrained_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_marktrained_example_3
+.PHONY : plussai_classic_compose_flow_marktrained_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_marktrained_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_marktrained_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_marktrained_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_marktrained_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_nestedparam_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_nestedparam_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_nestedparam_example_3
+.PHONY : plussai_classic_compose_flow_nestedparam_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_nestedparam_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparam_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparam_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_nestedparam_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_nestedparamkeys_example_2
+
+# Build rule for target.
+plussai_classic_compose_flow_nestedparamkeys_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_nestedparamkeys_example_2
+.PHONY : plussai_classic_compose_flow_nestedparamkeys_example_2
+
+# fast build rule for target.
+plussai_classic_compose_flow_nestedparamkeys_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparamkeys_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparamkeys_example_2.dir/build
+.PHONY : plussai_classic_compose_flow_nestedparamkeys_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_nestedparamkeys_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_nestedparamkeys_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_nestedparamkeys_example_3
+.PHONY : plussai_classic_compose_flow_nestedparamkeys_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_nestedparamkeys_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparamkeys_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_nestedparamkeys_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_nestedparamkeys_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_saveblueprint_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_saveblueprint_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_saveblueprint_example_3
+.PHONY : plussai_classic_compose_flow_saveblueprint_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_saveblueprint_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_saveblueprint_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_saveblueprint_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_saveblueprint_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_compose_flow_setnestedparam_example_3
+
+# Build rule for target.
+plussai_classic_compose_flow_setnestedparam_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_compose_flow_setnestedparam_example_3
+.PHONY : plussai_classic_compose_flow_setnestedparam_example_3
+
+# fast build rule for target.
+plussai_classic_compose_flow_setnestedparam_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setnestedparam_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_compose_flow_setnestedparam_example_3.dir/build
+.PHONY : plussai_classic_compose_flow_setnestedparam_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_onehotencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_onehotencoder_example_1
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_onehotencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_onehotencoder_example_2
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_onehotencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_onehotencoder_example_3
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_onehotencoder_example_4
+
+# Build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_onehotencoder_example_4
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_4
+
+# fast build rule for target.
+plussai_classic_prep_encoding_onehotencoder_example_4/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_4.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_onehotencoder_example_4.dir/build
+.PHONY : plussai_classic_prep_encoding_onehotencoder_example_4/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_frequencyencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_frequencyencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_frequencyencoder_example_1
+.PHONY : plussai_classic_prep_encoding_frequencyencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_frequencyencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_frequencyencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_frequencyencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_frequencyencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_frequencyencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_frequencyencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_frequencyencoder_example_2
+.PHONY : plussai_classic_prep_encoding_frequencyencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_frequencyencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_frequencyencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_frequencyencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_frequencyencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_frequencyencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_frequencyencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_frequencyencoder_example_3
+.PHONY : plussai_classic_prep_encoding_frequencyencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_frequencyencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_frequencyencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_frequencyencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_frequencyencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_ordinalencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_ordinalencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_ordinalencoder_example_1
+.PHONY : plussai_classic_prep_encoding_ordinalencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_ordinalencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_ordinalencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_ordinalencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_ordinalencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_ordinalencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_ordinalencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_ordinalencoder_example_2
+.PHONY : plussai_classic_prep_encoding_ordinalencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_ordinalencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_ordinalencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_ordinalencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_ordinalencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_ordinalencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_ordinalencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_ordinalencoder_example_3
+.PHONY : plussai_classic_prep_encoding_ordinalencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_ordinalencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_ordinalencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_ordinalencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_ordinalencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_labelencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_labelencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_labelencoder_example_1
+.PHONY : plussai_classic_prep_encoding_labelencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_labelencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_labelencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_labelencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_labelencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_labelencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_labelencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_labelencoder_example_2
+.PHONY : plussai_classic_prep_encoding_labelencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_labelencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_labelencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_labelencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_labelencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_labelencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_labelencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_labelencoder_example_3
+.PHONY : plussai_classic_prep_encoding_labelencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_labelencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_labelencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_labelencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_labelencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_basenencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_basenencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_basenencoder_example_1
+.PHONY : plussai_classic_prep_encoding_basenencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_basenencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_basenencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_basenencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_basenencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_basenencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_basenencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_basenencoder_example_2
+.PHONY : plussai_classic_prep_encoding_basenencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_basenencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_basenencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_basenencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_basenencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_basenencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_basenencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_basenencoder_example_3
+.PHONY : plussai_classic_prep_encoding_basenencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_basenencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_basenencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_basenencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_basenencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_hashingencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_hashingencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_hashingencoder_example_1
+.PHONY : plussai_classic_prep_encoding_hashingencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_hashingencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_hashingencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_hashingencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_hashingencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_hashingencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_hashingencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_hashingencoder_example_2
+.PHONY : plussai_classic_prep_encoding_hashingencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_hashingencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_hashingencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_hashingencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_hashingencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_hashingencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_hashingencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_hashingencoder_example_3
+.PHONY : plussai_classic_prep_encoding_hashingencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_hashingencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_hashingencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_hashingencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_hashingencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_targetencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_targetencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_targetencoder_example_1
+.PHONY : plussai_classic_prep_encoding_targetencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_targetencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_targetencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_targetencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_targetencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_targetencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_targetencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_targetencoder_example_2
+.PHONY : plussai_classic_prep_encoding_targetencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_targetencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_targetencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_targetencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_targetencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_targetencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_targetencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_targetencoder_example_3
+.PHONY : plussai_classic_prep_encoding_targetencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_targetencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_targetencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_targetencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_targetencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_woeencoder_example_1
+
+# Build rule for target.
+plussai_classic_prep_encoding_woeencoder_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_woeencoder_example_1
+.PHONY : plussai_classic_prep_encoding_woeencoder_example_1
+
+# fast build rule for target.
+plussai_classic_prep_encoding_woeencoder_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_woeencoder_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_woeencoder_example_1.dir/build
+.PHONY : plussai_classic_prep_encoding_woeencoder_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_woeencoder_example_2
+
+# Build rule for target.
+plussai_classic_prep_encoding_woeencoder_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_woeencoder_example_2
+.PHONY : plussai_classic_prep_encoding_woeencoder_example_2
+
+# fast build rule for target.
+plussai_classic_prep_encoding_woeencoder_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_woeencoder_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_woeencoder_example_2.dir/build
+.PHONY : plussai_classic_prep_encoding_woeencoder_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_encoding_woeencoder_example_3
+
+# Build rule for target.
+plussai_classic_prep_encoding_woeencoder_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_encoding_woeencoder_example_3
+.PHONY : plussai_classic_prep_encoding_woeencoder_example_3
+
+# fast build rule for target.
+plussai_classic_prep_encoding_woeencoder_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_woeencoder_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_encoding_woeencoder_example_3.dir/build
+.PHONY : plussai_classic_prep_encoding_woeencoder_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_simpleimputer_example_1
+
+# Build rule for target.
+plussai_classic_prep_imputation_simpleimputer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_simpleimputer_example_1
+.PHONY : plussai_classic_prep_imputation_simpleimputer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_imputation_simpleimputer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_simpleimputer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_simpleimputer_example_1.dir/build
+.PHONY : plussai_classic_prep_imputation_simpleimputer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_simpleimputer_example_2
+
+# Build rule for target.
+plussai_classic_prep_imputation_simpleimputer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_simpleimputer_example_2
+.PHONY : plussai_classic_prep_imputation_simpleimputer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_imputation_simpleimputer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_simpleimputer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_simpleimputer_example_2.dir/build
+.PHONY : plussai_classic_prep_imputation_simpleimputer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_simpleimputer_example_3
+
+# Build rule for target.
+plussai_classic_prep_imputation_simpleimputer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_simpleimputer_example_3
+.PHONY : plussai_classic_prep_imputation_simpleimputer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_imputation_simpleimputer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_simpleimputer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_simpleimputer_example_3.dir/build
+.PHONY : plussai_classic_prep_imputation_simpleimputer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_neighborimputer_example_1
+
+# Build rule for target.
+plussai_classic_prep_imputation_neighborimputer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_neighborimputer_example_1
+.PHONY : plussai_classic_prep_imputation_neighborimputer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_imputation_neighborimputer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_neighborimputer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_neighborimputer_example_1.dir/build
+.PHONY : plussai_classic_prep_imputation_neighborimputer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_neighborimputer_example_2
+
+# Build rule for target.
+plussai_classic_prep_imputation_neighborimputer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_neighborimputer_example_2
+.PHONY : plussai_classic_prep_imputation_neighborimputer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_imputation_neighborimputer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_neighborimputer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_neighborimputer_example_2.dir/build
+.PHONY : plussai_classic_prep_imputation_neighborimputer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_neighborimputer_example_3
+
+# Build rule for target.
+plussai_classic_prep_imputation_neighborimputer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_neighborimputer_example_3
+.PHONY : plussai_classic_prep_imputation_neighborimputer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_imputation_neighborimputer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_neighborimputer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_neighborimputer_example_3.dir/build
+.PHONY : plussai_classic_prep_imputation_neighborimputer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_iterativeimputer_example_1
+
+# Build rule for target.
+plussai_classic_prep_imputation_iterativeimputer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_iterativeimputer_example_1
+.PHONY : plussai_classic_prep_imputation_iterativeimputer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_imputation_iterativeimputer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_iterativeimputer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_iterativeimputer_example_1.dir/build
+.PHONY : plussai_classic_prep_imputation_iterativeimputer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_iterativeimputer_example_2
+
+# Build rule for target.
+plussai_classic_prep_imputation_iterativeimputer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_iterativeimputer_example_2
+.PHONY : plussai_classic_prep_imputation_iterativeimputer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_imputation_iterativeimputer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_iterativeimputer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_iterativeimputer_example_2.dir/build
+.PHONY : plussai_classic_prep_imputation_iterativeimputer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_imputation_iterativeimputer_example_3
+
+# Build rule for target.
+plussai_classic_prep_imputation_iterativeimputer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_imputation_iterativeimputer_example_3
+.PHONY : plussai_classic_prep_imputation_iterativeimputer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_imputation_iterativeimputer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_iterativeimputer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_imputation_iterativeimputer_example_3.dir/build
+.PHONY : plussai_classic_prep_imputation_iterativeimputer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_vectornormalizer_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_vectornormalizer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_vectornormalizer_example_1
+.PHONY : plussai_classic_prep_transform_vectornormalizer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_vectornormalizer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_vectornormalizer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_vectornormalizer_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_vectornormalizer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_vectornormalizer_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_vectornormalizer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_vectornormalizer_example_2
+.PHONY : plussai_classic_prep_transform_vectornormalizer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_vectornormalizer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_vectornormalizer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_vectornormalizer_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_vectornormalizer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_vectornormalizer_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_vectornormalizer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_vectornormalizer_example_3
+.PHONY : plussai_classic_prep_transform_vectornormalizer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_vectornormalizer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_vectornormalizer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_vectornormalizer_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_vectornormalizer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_quantilemap_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_quantilemap_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_quantilemap_example_1
+.PHONY : plussai_classic_prep_transform_quantilemap_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_quantilemap_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_quantilemap_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_quantilemap_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_quantilemap_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_quantilemap_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_quantilemap_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_quantilemap_example_2
+.PHONY : plussai_classic_prep_transform_quantilemap_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_quantilemap_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_quantilemap_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_quantilemap_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_quantilemap_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_quantilemap_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_quantilemap_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_quantilemap_example_3
+.PHONY : plussai_classic_prep_transform_quantilemap_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_quantilemap_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_quantilemap_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_quantilemap_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_quantilemap_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_powermap_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_powermap_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_powermap_example_1
+.PHONY : plussai_classic_prep_transform_powermap_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_powermap_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_powermap_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_powermap_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_powermap_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_powermap_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_powermap_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_powermap_example_2
+.PHONY : plussai_classic_prep_transform_powermap_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_powermap_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_powermap_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_powermap_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_powermap_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_powermap_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_powermap_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_powermap_example_3
+.PHONY : plussai_classic_prep_transform_powermap_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_powermap_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_powermap_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_powermap_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_powermap_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_thresholdbinarizer_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_thresholdbinarizer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_thresholdbinarizer_example_1
+.PHONY : plussai_classic_prep_transform_thresholdbinarizer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_thresholdbinarizer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_thresholdbinarizer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_thresholdbinarizer_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_thresholdbinarizer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_thresholdbinarizer_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_thresholdbinarizer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_thresholdbinarizer_example_2
+.PHONY : plussai_classic_prep_transform_thresholdbinarizer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_thresholdbinarizer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_thresholdbinarizer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_thresholdbinarizer_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_thresholdbinarizer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_thresholdbinarizer_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_thresholdbinarizer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_thresholdbinarizer_example_3
+.PHONY : plussai_classic_prep_transform_thresholdbinarizer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_thresholdbinarizer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_thresholdbinarizer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_thresholdbinarizer_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_thresholdbinarizer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_polynomiallift_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_polynomiallift_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_polynomiallift_example_1
+.PHONY : plussai_classic_prep_transform_polynomiallift_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_polynomiallift_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_polynomiallift_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_polynomiallift_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_polynomiallift_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_polynomiallift_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_polynomiallift_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_polynomiallift_example_2
+.PHONY : plussai_classic_prep_transform_polynomiallift_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_polynomiallift_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_polynomiallift_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_polynomiallift_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_polynomiallift_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_polynomiallift_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_polynomiallift_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_polynomiallift_example_3
+.PHONY : plussai_classic_prep_transform_polynomiallift_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_polynomiallift_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_polynomiallift_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_polynomiallift_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_polynomiallift_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_functiontransformer_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_functiontransformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_functiontransformer_example_1
+.PHONY : plussai_classic_prep_transform_functiontransformer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_functiontransformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_functiontransformer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_functiontransformer_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_functiontransformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_functiontransformer_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_functiontransformer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_functiontransformer_example_2
+.PHONY : plussai_classic_prep_transform_functiontransformer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_functiontransformer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_functiontransformer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_functiontransformer_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_functiontransformer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_functiontransformer_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_functiontransformer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_functiontransformer_example_3
+.PHONY : plussai_classic_prep_transform_functiontransformer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_functiontransformer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_functiontransformer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_functiontransformer_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_functiontransformer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_featuretransformer_example_1
+
+# Build rule for target.
+plussai_classic_prep_transform_featuretransformer_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_featuretransformer_example_1
+.PHONY : plussai_classic_prep_transform_featuretransformer_example_1
+
+# fast build rule for target.
+plussai_classic_prep_transform_featuretransformer_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_featuretransformer_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_featuretransformer_example_1.dir/build
+.PHONY : plussai_classic_prep_transform_featuretransformer_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_featuretransformer_example_2
+
+# Build rule for target.
+plussai_classic_prep_transform_featuretransformer_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_featuretransformer_example_2
+.PHONY : plussai_classic_prep_transform_featuretransformer_example_2
+
+# fast build rule for target.
+plussai_classic_prep_transform_featuretransformer_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_featuretransformer_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_featuretransformer_example_2.dir/build
+.PHONY : plussai_classic_prep_transform_featuretransformer_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_transform_featuretransformer_example_3
+
+# Build rule for target.
+plussai_classic_prep_transform_featuretransformer_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_transform_featuretransformer_example_3
+.PHONY : plussai_classic_prep_transform_featuretransformer_example_3
+
+# fast build rule for target.
+plussai_classic_prep_transform_featuretransformer_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_featuretransformer_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_transform_featuretransformer_example_3.dir/build
+.PHONY : plussai_classic_prep_transform_featuretransformer_example_3/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_outlier_outlierisolator_example_1
+
+# Build rule for target.
+plussai_classic_prep_outlier_outlierisolator_example_1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_outlier_outlierisolator_example_1
+.PHONY : plussai_classic_prep_outlier_outlierisolator_example_1
+
+# fast build rule for target.
+plussai_classic_prep_outlier_outlierisolator_example_1/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_outlier_outlierisolator_example_1.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_outlier_outlierisolator_example_1.dir/build
+.PHONY : plussai_classic_prep_outlier_outlierisolator_example_1/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_outlier_outlierisolator_example_2
+
+# Build rule for target.
+plussai_classic_prep_outlier_outlierisolator_example_2: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_outlier_outlierisolator_example_2
+.PHONY : plussai_classic_prep_outlier_outlierisolator_example_2
+
+# fast build rule for target.
+plussai_classic_prep_outlier_outlierisolator_example_2/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_outlier_outlierisolator_example_2.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_outlier_outlierisolator_example_2.dir/build
+.PHONY : plussai_classic_prep_outlier_outlierisolator_example_2/fast
+
+#=============================================================================
+# Target rules for targets named plussai_classic_prep_outlier_outlierisolator_example_3
+
+# Build rule for target.
+plussai_classic_prep_outlier_outlierisolator_example_3: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussai_classic_prep_outlier_outlierisolator_example_3
+.PHONY : plussai_classic_prep_outlier_outlierisolator_example_3
+
+# fast build rule for target.
+plussai_classic_prep_outlier_outlierisolator_example_3/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_outlier_outlierisolator_example_3.dir/build.make PlussAI/examples/NodeJ/classic/CMakeFiles/plussai_classic_prep_outlier_outlierisolator_example_3.dir/build
+.PHONY : plussai_classic_prep_outlier_outlierisolator_example_3/fast
+
+#=============================================================================
 # Target rules for targets named plussai_nn_rnn_demo
 
 # Build rule for target.
@@ -8069,6 +10851,32 @@ nn_mps_schedule_family_trainability_test: cmake_check_build_system
 nn_mps_schedule_family_trainability_test/fast:
 	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/build
 .PHONY : nn_mps_schedule_family_trainability_test/fast
+
+#=============================================================================
+# Target rules for targets named nn_optim_complex_test
+
+# Build rule for target.
+nn_optim_complex_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_optim_complex_test
+.PHONY : nn_optim_complex_test
+
+# fast build rule for target.
+nn_optim_complex_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_complex_test.dir/build
+.PHONY : nn_optim_complex_test/fast
+
+#=============================================================================
+# Target rules for targets named nn_optim_float64_test
+
+# Build rule for target.
+nn_optim_float64_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 nn_optim_float64_test
+.PHONY : nn_optim_float64_test
+
+# fast build rule for target.
+nn_optim_float64_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build.make PlussAI/test/CMakeFiles/nn_optim_float64_test.dir/build
+.PHONY : nn_optim_float64_test/fast
 
 #=============================================================================
 # Target rules for targets named nn_optim_foreach_lane_test
@@ -9657,6 +12465,110 @@ plussqit_coden_note_collection_reference_demo/fast:
 .PHONY : plussqit_coden_note_collection_reference_demo/fast
 
 #=============================================================================
+# Target rules for targets named plussqit_coden_note_operator_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_operator_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_operator_reference_demo
+.PHONY : plussqit_coden_note_operator_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_operator_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_operator_reference_demo.dir/build
+.PHONY : plussqit_coden_note_operator_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_note_repeat_order_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_repeat_order_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_repeat_order_reference_demo
+.PHONY : plussqit_coden_note_repeat_order_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_repeat_order_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_repeat_order_reference_demo.dir/build
+.PHONY : plussqit_coden_note_repeat_order_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_note_nlp_mask_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_nlp_mask_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_nlp_mask_reference_demo
+.PHONY : plussqit_coden_note_nlp_mask_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_mask_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_mask_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_mask_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_note_nlp_normalize_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_nlp_normalize_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_nlp_normalize_reference_demo
+.PHONY : plussqit_coden_note_nlp_normalize_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_normalize_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_normalize_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_normalize_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_note_nlp_remove_structure_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_nlp_remove_structure_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_nlp_remove_structure_reference_demo
+.PHONY : plussqit_coden_note_nlp_remove_structure_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_remove_structure_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_structure_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_remove_structure_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_note_nlp_remove_markup_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_nlp_remove_markup_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_nlp_remove_markup_reference_demo
+.PHONY : plussqit_coden_note_nlp_remove_markup_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_nlp_remove_markup_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_nlp_remove_markup_reference_demo.dir/build
+.PHONY : plussqit_coden_note_nlp_remove_markup_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_note_regex_reference_demo
+
+# Build rule for target.
+plussqit_coden_note_regex_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_note_regex_reference_demo
+.PHONY : plussqit_coden_note_regex_reference_demo
+
+# fast build rule for target.
+plussqit_coden_note_regex_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_note_regex_reference_demo.dir/build
+.PHONY : plussqit_coden_note_regex_reference_demo/fast
+
+#=============================================================================
+# Target rules for targets named plussqit_coden_tokenbatch_codec_reference_demo
+
+# Build rule for target.
+plussqit_coden_tokenbatch_codec_reference_demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 plussqit_coden_tokenbatch_codec_reference_demo
+.PHONY : plussqit_coden_tokenbatch_codec_reference_demo
+
+# fast build rule for target.
+plussqit_coden_tokenbatch_codec_reference_demo/fast:
+	$(MAKE) $(MAKESILENT) -f PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build.make PlussQit/CMakeFiles/plussqit_coden_tokenbatch_codec_reference_demo.dir/build
+.PHONY : plussqit_coden_tokenbatch_codec_reference_demo/fast
+
+#=============================================================================
 # Target rules for targets named plussqit_coden_note_docverify_demo
 
 # Build rule for target.
@@ -10918,6 +13830,32 @@ stochvol_models_test/fast:
 .PHONY : stochvol_models_test/fast
 
 #=============================================================================
+# Target rules for targets named integ_test
+
+# Build rule for target.
+integ_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 integ_test
+.PHONY : integ_test
+
+# fast build rule for target.
+integ_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build.make PlussMa/Math/Numerical/integration/test/CMakeFiles/integ_test.dir/build
+.PHONY : integ_test/fast
+
+#=============================================================================
+# Target rules for targets named ode_test
+
+# Build rule for target.
+ode_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ode_test
+.PHONY : ode_test
+
+# fast build rule for target.
+ode_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/ode/test/CMakeFiles/ode_test.dir/build.make PlussMa/Math/Numerical/ode/test/CMakeFiles/ode_test.dir/build
+.PHONY : ode_test/fast
+
+#=============================================================================
 # Target rules for targets named adam_functional_torch_rigor_test
 
 # Build rule for target.
@@ -10983,6 +13921,19 @@ external_reference_parity_test/fast:
 .PHONY : external_reference_parity_test/fast
 
 #=============================================================================
+# Target rules for targets named lsr1_complex_test
+
+# Build rule for target.
+lsr1_complex_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lsr1_complex_test
+.PHONY : lsr1_complex_test
+
+# fast build rule for target.
+lsr1_complex_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/lsr1_complex_test.dir/build
+.PHONY : lsr1_complex_test/fast
+
+#=============================================================================
 # Target rules for targets named mads_blackbox_advanced_test
 
 # Build rule for target.
@@ -11035,6 +13986,32 @@ pattern_search_minimizer_test/fast:
 .PHONY : pattern_search_minimizer_test/fast
 
 #=============================================================================
+# Target rules for targets named septima_adam_complex_test
+
+# Build rule for target.
+septima_adam_complex_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 septima_adam_complex_test
+.PHONY : septima_adam_complex_test
+
+# fast build rule for target.
+septima_adam_complex_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_adam_complex_test.dir/build
+.PHONY : septima_adam_complex_test/fast
+
+#=============================================================================
+# Target rules for targets named septima_lbfgs_complex_test
+
+# Build rule for target.
+septima_lbfgs_complex_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 septima_lbfgs_complex_test
+.PHONY : septima_lbfgs_complex_test
+
+# fast build rule for target.
+septima_lbfgs_complex_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/septima_lbfgs_complex_test.dir/build
+.PHONY : septima_lbfgs_complex_test/fast
+
+#=============================================================================
 # Target rules for targets named septima_optimizer_selection_test
 
 # Build rule for target.
@@ -11085,6 +14062,19 @@ pattern_search_closure_catch2: cmake_check_build_system
 pattern_search_closure_catch2/fast:
 	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build.make PlussMa/Math/Numerical/optimization/test/CMakeFiles/pattern_search_closure_catch2.dir/build
 .PHONY : pattern_search_closure_catch2/fast
+
+#=============================================================================
+# Target rules for targets named random_processes_test
+
+# Build rule for target.
+random_processes_test: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 random_processes_test
+.PHONY : random_processes_test
+
+# fast build rule for target.
+random_processes_test/fast:
+	$(MAKE) $(MAKESILENT) -f PlussMa/Math/Probability/random_processes/test/CMakeFiles/random_processes_test.dir/build.make PlussMa/Math/Probability/random_processes/test/CMakeFiles/random_processes_test.dir/build
+.PHONY : random_processes_test/fast
 
 #=============================================================================
 # Target rules for targets named plussma_optima_penalty_demo
@@ -16759,10 +19749,12 @@ help:
 	@echo "... ice_text_judge_test"
 	@echo "... ice_tft_test"
 	@echo "... ice_time_series_dataset_test"
+	@echo "... integ_test"
 	@echo "... kinetics_test"
 	@echo "... lag_features_test"
 	@echo "... life_contingencies_foundation_test"
 	@echo "... loss_models_foundation_test"
+	@echo "... lsr1_complex_test"
 	@echo "... lymph_balance_factory_test"
 	@echo "... lymph_builder_test"
 	@echo "... lymph_column_router_test"
@@ -16793,6 +19785,8 @@ help:
 	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
 	@echo "... nn_mps_schedule_family_trainability_test"
+	@echo "... nn_optim_complex_test"
+	@echo "... nn_optim_float64_test"
 	@echo "... nn_optim_foreach_lane_test"
 	@echo "... nn_optim_test"
 	@echo "... nn_training_parity_test"
@@ -16834,6 +19828,7 @@ help:
 	@echo "... nodej_weighted_family_test"
 	@echo "... nonparametric_hypothesis_test"
 	@echo "... object_pricing_test"
+	@echo "... ode_test"
 	@echo "... ols_regression_test"
 	@echo "... optima_robustness_catch2"
 	@echo "... parametric_hypothesis_test"
@@ -16845,6 +19840,110 @@ help:
 	@echo "... plussai_adagrad_oop_demo"
 	@echo "... plussai_adam_oop_demo"
 	@echo "... plussai_bike_sharing_end_to_end"
+	@echo "... plussai_classic_compose_flow_addcolumnstage_example_1"
+	@echo "... plussai_classic_compose_flow_addcolumnstage_example_2"
+	@echo "... plussai_classic_compose_flow_addcolumnstage_example_3"
+	@echo "... plussai_classic_compose_flow_addfeaturetransformer_example_1"
+	@echo "... plussai_classic_compose_flow_addfeaturetransformer_example_2"
+	@echo "... plussai_classic_compose_flow_addfeaturetransformer_example_3"
+	@echo "... plussai_classic_compose_flow_addfunctiontransformer_example_1"
+	@echo "... plussai_classic_compose_flow_addfunctiontransformer_example_2"
+	@echo "... plussai_classic_compose_flow_addfunctiontransformer_example_3"
+	@echo "... plussai_classic_compose_flow_addnamedtransform_example_1"
+	@echo "... plussai_classic_compose_flow_addnamedtransform_example_2"
+	@echo "... plussai_classic_compose_flow_addnamedtransform_example_3"
+	@echo "... plussai_classic_compose_flow_addstage_example_1"
+	@echo "... plussai_classic_compose_flow_addstage_example_2"
+	@echo "... plussai_classic_compose_flow_addstage_example_3"
+	@echo "... plussai_classic_compose_flow_appendtransform_example_1"
+	@echo "... plussai_classic_compose_flow_appendtransform_example_2"
+	@echo "... plussai_classic_compose_flow_appendtransform_example_3"
+	@echo "... plussai_classic_compose_flow_assess_example_1"
+	@echo "... plussai_classic_compose_flow_assess_example_2"
+	@echo "... plussai_classic_compose_flow_assess_example_3"
+	@echo "... plussai_classic_compose_flow_clearmodel_example_1"
+	@echo "... plussai_classic_compose_flow_clearmodel_example_2"
+	@echo "... plussai_classic_compose_flow_clearmodel_example_3"
+	@echo "... plussai_classic_compose_flow_cleartransforms_example_1"
+	@echo "... plussai_classic_compose_flow_cleartransforms_example_2"
+	@echo "... plussai_classic_compose_flow_cleartransforms_example_3"
+	@echo "... plussai_classic_compose_flow_clone_example_1"
+	@echo "... plussai_classic_compose_flow_clone_example_2"
+	@echo "... plussai_classic_compose_flow_clone_example_3"
+	@echo "... plussai_classic_compose_flow_dumpmodelstate_example_1"
+	@echo "... plussai_classic_compose_flow_dumpmodelstate_example_2"
+	@echo "... plussai_classic_compose_flow_dumpmodelstate_example_3"
+	@echo "... plussai_classic_compose_flow_dumptransformstates_example_1"
+	@echo "... plussai_classic_compose_flow_dumptransformstates_example_2"
+	@echo "... plussai_classic_compose_flow_dumptransformstates_example_3"
+	@echo "... plussai_classic_compose_flow_flowsummary_example_1"
+	@echo "... plussai_classic_compose_flow_flowsummary_example_2"
+	@echo "... plussai_classic_compose_flow_flowsummary_example_3"
+	@echo "... plussai_classic_compose_flow_graphinfo_example_1"
+	@echo "... plussai_classic_compose_flow_graphinfo_example_2"
+	@echo "... plussai_classic_compose_flow_graphinfo_example_3"
+	@echo "... plussai_classic_compose_flow_infer_example_1"
+	@echo "... plussai_classic_compose_flow_infer_example_2"
+	@echo "... plussai_classic_compose_flow_infer_example_3"
+	@echo "... plussai_classic_compose_flow_inferscores_example_1"
+	@echo "... plussai_classic_compose_flow_inferscores_example_2"
+	@echo "... plussai_classic_compose_flow_inferscores_example_3"
+	@echo "... plussai_classic_compose_flow_learn_example_1"
+	@echo "... plussai_classic_compose_flow_learn_example_2"
+	@echo "... plussai_classic_compose_flow_learn_example_3"
+	@echo "... plussai_classic_compose_flow_learnmap_example_1"
+	@echo "... plussai_classic_compose_flow_learnmap_example_2"
+	@echo "... plussai_classic_compose_flow_learnmap_example_3"
+	@echo "... plussai_classic_compose_flow_loadblueprint_example_1"
+	@echo "... plussai_classic_compose_flow_loadblueprint_example_2"
+	@echo "... plussai_classic_compose_flow_loadblueprint_example_3"
+	@echo "... plussai_classic_compose_flow_loadmodelstate_example_1"
+	@echo "... plussai_classic_compose_flow_loadmodelstate_example_2"
+	@echo "... plussai_classic_compose_flow_loadmodelstate_example_3"
+	@echo "... plussai_classic_compose_flow_loadtransformstates_example_1"
+	@echo "... plussai_classic_compose_flow_loadtransformstates_example_2"
+	@echo "... plussai_classic_compose_flow_loadtransformstates_example_3"
+	@echo "... plussai_classic_compose_flow_map_example_1"
+	@echo "... plussai_classic_compose_flow_map_example_2"
+	@echo "... plussai_classic_compose_flow_map_example_3"
+	@echo "... plussai_classic_compose_flow_marktrained_example_1"
+	@echo "... plussai_classic_compose_flow_marktrained_example_2"
+	@echo "... plussai_classic_compose_flow_marktrained_example_3"
+	@echo "... plussai_classic_compose_flow_nestedparam_example_1"
+	@echo "... plussai_classic_compose_flow_nestedparam_example_2"
+	@echo "... plussai_classic_compose_flow_nestedparam_example_3"
+	@echo "... plussai_classic_compose_flow_nestedparamkeys_example_1"
+	@echo "... plussai_classic_compose_flow_nestedparamkeys_example_2"
+	@echo "... plussai_classic_compose_flow_nestedparamkeys_example_3"
+	@echo "... plussai_classic_compose_flow_saveblueprint_example_1"
+	@echo "... plussai_classic_compose_flow_saveblueprint_example_2"
+	@echo "... plussai_classic_compose_flow_saveblueprint_example_3"
+	@echo "... plussai_classic_compose_flow_setclassifier_example_1"
+	@echo "... plussai_classic_compose_flow_setclassifier_example_2"
+	@echo "... plussai_classic_compose_flow_setclassifier_example_3"
+	@echo "... plussai_classic_compose_flow_setmodel_example_1"
+	@echo "... plussai_classic_compose_flow_setmodel_example_2"
+	@echo "... plussai_classic_compose_flow_setmodel_example_3"
+	@echo "... plussai_classic_compose_flow_setnestedparam_example_1"
+	@echo "... plussai_classic_compose_flow_setnestedparam_example_2"
+	@echo "... plussai_classic_compose_flow_setnestedparam_example_3"
+	@echo "... plussai_classic_compose_flow_setregressor_example_1"
+	@echo "... plussai_classic_compose_flow_setregressor_example_2"
+	@echo "... plussai_classic_compose_flow_setregressor_example_3"
+	@echo "... plussai_classic_compose_flow_setstagekey_example_1"
+	@echo "... plussai_classic_compose_flow_setstagekey_example_2"
+	@echo "... plussai_classic_compose_flow_setstagekey_example_3"
+	@echo "... plussai_classic_compose_flow_setstageremainder_example_1"
+	@echo "... plussai_classic_compose_flow_setstageremainder_example_2"
+	@echo "... plussai_classic_compose_flow_setstageremainder_example_3"
+	@echo "... plussai_classic_compose_flow_setstageroute_example_1"
+	@echo "... plussai_classic_compose_flow_setstageroute_example_2"
+	@echo "... plussai_classic_compose_flow_setstageroute_example_3"
+	@echo "... plussai_classic_compose_flowgraphinfo_example_1"
+	@echo "... plussai_classic_compose_makeflow_example_1"
+	@echo "... plussai_classic_compose_makeflow_example_2"
+	@echo "... plussai_classic_compose_makeflow_example_3"
+	@echo "... plussai_classic_compose_transformspec_example_1"
 	@echo "... plussai_classic_core_assessoptions_example_1"
 	@echo "... plussai_classic_core_inferoptions_example_1"
 	@echo "... plussai_classic_core_randomstate_example_1"
@@ -16869,6 +19968,41 @@ help:
 	@echo "... plussai_classic_data_labeledbatch_example_1"
 	@echo "... plussai_classic_data_labeledbatch_example_2"
 	@echo "... plussai_classic_data_labeledbatch_example_3"
+	@echo "... plussai_classic_estimators_classifierbase_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_assess_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_assess_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_assess_example_3"
+	@echo "... plussai_classic_estimators_estimatorbase_dumpstate_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_dumpstate_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_dumpstate_example_3"
+	@echo "... plussai_classic_estimators_estimatorbase_infer_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_infer_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_infer_example_3"
+	@echo "... plussai_classic_estimators_estimatorbase_learn_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_learn_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_learn_example_3"
+	@echo "... plussai_classic_estimators_estimatorbase_loadstate_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_loadstate_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_loadstate_example_3"
+	@echo "... plussai_classic_estimators_estimatorbase_taskkind_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_taskkind_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_taskkind_example_3"
+	@echo "... plussai_classic_estimators_estimatorbase_trained_example_1"
+	@echo "... plussai_classic_estimators_estimatorbase_trained_example_2"
+	@echo "... plussai_classic_estimators_estimatorbase_trained_example_3"
+	@echo "... plussai_classic_estimators_makeclassifier_example_1"
+	@echo "... plussai_classic_estimators_makeclassifier_example_2"
+	@echo "... plussai_classic_estimators_makeclassifier_example_3"
+	@echo "... plussai_classic_estimators_makeregressor_example_1"
+	@echo "... plussai_classic_estimators_makeregressor_example_2"
+	@echo "... plussai_classic_estimators_makeregressor_example_3"
+	@echo "... plussai_classic_estimators_maketransformer_example_1"
+	@echo "... plussai_classic_estimators_maketransformer_example_2"
+	@echo "... plussai_classic_estimators_maketransformer_example_3"
+	@echo "... plussai_classic_estimators_regressorbase_example_1"
+	@echo "... plussai_classic_estimators_transformerbase_example_1"
+	@echo "... plussai_classic_estimators_transformerbase_example_2"
+	@echo "... plussai_classic_estimators_transformerbase_example_3"
 	@echo "... plussai_classic_families_bayesfamilyoptions_example_1"
 	@echo "... plussai_classic_families_clusterfamilyoptions_example_1"
 	@echo "... plussai_classic_families_decomposefamilyoptions_example_1"
@@ -16882,6 +20016,81 @@ help:
 	@echo "... plussai_classic_families_modelspec_example_3"
 	@echo "... plussai_classic_families_neighborfamilyoptions_example_1"
 	@echo "... plussai_classic_families_treefamilyoptions_example_1"
+	@echo "... plussai_classic_prep_encoding_basenencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_basenencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_basenencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_frequencyencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_frequencyencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_frequencyencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_hashingencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_hashingencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_hashingencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_labelencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_labelencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_labelencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_onehotencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_onehotencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_onehotencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_onehotencoder_example_4"
+	@echo "... plussai_classic_prep_encoding_ordinalencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_ordinalencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_ordinalencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_targetencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_targetencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_targetencoder_example_3"
+	@echo "... plussai_classic_prep_encoding_woeencoder_example_1"
+	@echo "... plussai_classic_prep_encoding_woeencoder_example_2"
+	@echo "... plussai_classic_prep_encoding_woeencoder_example_3"
+	@echo "... plussai_classic_prep_imputation_iterativeimputer_example_1"
+	@echo "... plussai_classic_prep_imputation_iterativeimputer_example_2"
+	@echo "... plussai_classic_prep_imputation_iterativeimputer_example_3"
+	@echo "... plussai_classic_prep_imputation_neighborimputer_example_1"
+	@echo "... plussai_classic_prep_imputation_neighborimputer_example_2"
+	@echo "... plussai_classic_prep_imputation_neighborimputer_example_3"
+	@echo "... plussai_classic_prep_imputation_simpleimputer_example_1"
+	@echo "... plussai_classic_prep_imputation_simpleimputer_example_2"
+	@echo "... plussai_classic_prep_imputation_simpleimputer_example_3"
+	@echo "... plussai_classic_prep_outlier_outlierisolator_example_1"
+	@echo "... plussai_classic_prep_outlier_outlierisolator_example_2"
+	@echo "... plussai_classic_prep_outlier_outlierisolator_example_3"
+	@echo "... plussai_classic_prep_scaling_maxabsscaler_example_1"
+	@echo "... plussai_classic_prep_scaling_maxabsscaler_example_2"
+	@echo "... plussai_classic_prep_scaling_maxabsscaler_example_3"
+	@echo "... plussai_classic_prep_scaling_maxabsscaler_example_4"
+	@echo "... plussai_classic_prep_scaling_minmaxscaler_example_1"
+	@echo "... plussai_classic_prep_scaling_minmaxscaler_example_2"
+	@echo "... plussai_classic_prep_scaling_minmaxscaler_example_3"
+	@echo "... plussai_classic_prep_scaling_minmaxscaler_example_4"
+	@echo "... plussai_classic_prep_scaling_robustscaler_example_1"
+	@echo "... plussai_classic_prep_scaling_robustscaler_example_2"
+	@echo "... plussai_classic_prep_scaling_robustscaler_example_3"
+	@echo "... plussai_classic_prep_scaling_robustscaler_example_4"
+	@echo "... plussai_classic_prep_scaling_standardscaler_example_1"
+	@echo "... plussai_classic_prep_scaling_standardscaler_example_2"
+	@echo "... plussai_classic_prep_scaling_standardscaler_example_3"
+	@echo "... plussai_classic_prep_scaling_standardscaler_example_4"
+	@echo "... plussai_classic_prep_scaling_standardscaler_example_5"
+	@echo "... plussai_classic_prep_transform_featuretransformer_example_1"
+	@echo "... plussai_classic_prep_transform_featuretransformer_example_2"
+	@echo "... plussai_classic_prep_transform_featuretransformer_example_3"
+	@echo "... plussai_classic_prep_transform_functiontransformer_example_1"
+	@echo "... plussai_classic_prep_transform_functiontransformer_example_2"
+	@echo "... plussai_classic_prep_transform_functiontransformer_example_3"
+	@echo "... plussai_classic_prep_transform_polynomiallift_example_1"
+	@echo "... plussai_classic_prep_transform_polynomiallift_example_2"
+	@echo "... plussai_classic_prep_transform_polynomiallift_example_3"
+	@echo "... plussai_classic_prep_transform_powermap_example_1"
+	@echo "... plussai_classic_prep_transform_powermap_example_2"
+	@echo "... plussai_classic_prep_transform_powermap_example_3"
+	@echo "... plussai_classic_prep_transform_quantilemap_example_1"
+	@echo "... plussai_classic_prep_transform_quantilemap_example_2"
+	@echo "... plussai_classic_prep_transform_quantilemap_example_3"
+	@echo "... plussai_classic_prep_transform_thresholdbinarizer_example_1"
+	@echo "... plussai_classic_prep_transform_thresholdbinarizer_example_2"
+	@echo "... plussai_classic_prep_transform_thresholdbinarizer_example_3"
+	@echo "... plussai_classic_prep_transform_vectornormalizer_example_1"
+	@echo "... plussai_classic_prep_transform_vectornormalizer_example_2"
+	@echo "... plussai_classic_prep_transform_vectornormalizer_example_3"
 	@echo "... plussai_func_attention_demo"
 	@echo "... plussai_func_conv_demo"
 	@echo "... plussai_func_rnn_demo"
@@ -17606,9 +20815,17 @@ help:
 	@echo "... plussqit_coden_note_metadata_reference_demo"
 	@echo "... plussqit_coden_note_method_families_demo"
 	@echo "... plussqit_coden_note_method_reference_demo"
+	@echo "... plussqit_coden_note_nlp_mask_reference_demo"
+	@echo "... plussqit_coden_note_nlp_normalize_reference_demo"
+	@echo "... plussqit_coden_note_nlp_remove_markup_reference_demo"
+	@echo "... plussqit_coden_note_nlp_remove_structure_reference_demo"
+	@echo "... plussqit_coden_note_operator_reference_demo"
 	@echo "... plussqit_coden_note_printing_demo"
 	@echo "... plussqit_coden_note_projection_reference_demo"
+	@echo "... plussqit_coden_note_regex_reference_demo"
+	@echo "... plussqit_coden_note_repeat_order_reference_demo"
 	@echo "... plussqit_coden_tests"
+	@echo "... plussqit_coden_tokenbatch_codec_reference_demo"
 	@echo "... plussqit_dispense_demo"
 	@echo "... plussqit_queue_demo"
 	@echo "... plussqit_tests"
@@ -17639,11 +20856,14 @@ help:
 	@echo "... procedure_phase8_test"
 	@echo "... procedure_system_test"
 	@echo "... quantile_regression_test"
+	@echo "... random_processes_test"
 	@echo "... rate_models_test"
 	@echo "... rates_paths_test"
 	@echo "... rnn_fusion_test"
 	@echo "... sabr_slv_pricing_test"
 	@echo "... schedule_test"
+	@echo "... septima_adam_complex_test"
+	@echo "... septima_lbfgs_complex_test"
 	@echo "... septima_optimizer_selection_test"
 	@echo "... septima_rigor_suite_test"
 	@echo "... series_ts_transforms_test"

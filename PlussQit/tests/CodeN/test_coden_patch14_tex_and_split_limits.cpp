@@ -48,14 +48,14 @@ TEST_CASE("CodeN TeX remover variants are concrete", "[coden][patch14]") {
       "\\textcolor{red}{colored}\n"
       "\\begin{equation}x+y\\end{equation}\n");
 
-  auto cleaned = tex.tex_remove_packages()
-                     .tex_remove_labels()
-                     .tex_remove_refs()
-                     .tex_remove_citations()
-                     .tex_remove_graphics()
-                     .tex_remove_urls()
-                     .tex_remove_color()
-                     .tex_remove_env_equation();
+  auto cleaned = tex.tex().remove_packages()
+                     .tex().remove_labels()
+                     .tex().remove_refs()
+                     .tex().remove_citations()
+                     .tex().remove_graphics()
+                     .tex().remove_urls()
+                     .tex().remove_color()
+                     .tex().remove_environment("equation");
 
   const std::string out = std::string(cleaned.at(0));
   REQUIRE(out.find("usepackage") == std::string::npos);

@@ -76,7 +76,7 @@ The return contract is structural:
 
 Backward is just the inverse axis swap, which for a simple two-axis exchange is
 the same swap again. That is why `transpose()` is safe structural code in
-autograd pipelines: it is metadata movement, not lossy arithmetic.
+autodiff pipelines: it is metadata movement, not lossy arithmetic.
 
 ## Verified Examples
 

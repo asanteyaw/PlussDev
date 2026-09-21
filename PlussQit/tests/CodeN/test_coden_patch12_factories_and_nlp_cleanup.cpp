@@ -40,16 +40,16 @@ TEST_CASE("CodeN NLP remover family resolves and applies over Note batches", "[c
   Note note = pluss::make_note(docs, std::span<const std::int64_t>(one_d.data(), one_d.size()));
 
   Note cleaned = note
-      .nlp_remove_urls()
-      .nlp_remove_emails()
-      .nlp_remove_mentions()
-      .nlp_remove_hashtags()
-      .nlp_remove_html()
-      .nlp_remove_markdown()
-      .nlp_remove_code()
-      .nlp_remove_math()
-      .nlp_remove_bullets()
-      .nlp_remove_tables();
+      .nlp().remove_urls()
+      .nlp().remove_emails()
+      .nlp().remove_mentions()
+      .nlp().remove_hashtags()
+      .nlp().remove_html()
+      .nlp().remove_markdown()
+      .nlp().remove_code()
+      .nlp().remove_math()
+      .nlp().remove_bullets()
+      .nlp().remove_tables();
 
   REQUIRE(cleaned.at(0).find("http") == std::string::npos);
   REQUIRE(cleaned.at(0).find('@') == std::string::npos);

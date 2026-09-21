@@ -10,7 +10,7 @@ TEST_CASE("advanced index broadcast", "[indexing]") {
   // Two advanced indices with broadcastable shapes: (2,1) and (1,3)
   auto i0 = pluss::make_series(std::vector<std::int64_t>{0,2}, {2,1});
   auto i1 = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {1,3});
-  auto y = x.index({i0, i1, pluss::Series{}});
+  auto y = x.index({i0, i1, pluss::Slicing::SliceAll()});
   REQUIRE(y.dim() == 3);
 }
 

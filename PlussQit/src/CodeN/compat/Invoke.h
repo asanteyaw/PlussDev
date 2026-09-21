@@ -69,10 +69,6 @@ inline R invoke(::std::string_view op, const Self& self, ArgView args_view = {})
   if constexpr (::std::is_same_v<Self, ::pluss::coden::Note>) {
     if constexpr (::std::is_same_v<R, ::pluss::coden::Note>) {
       return call_note(op, self, args);
-    } else if constexpr (::std::is_same_v<R, ::std::vector<::std::uint8_t>>) {
-      return call_u8list_note(op, self, args);
-    } else if constexpr (::std::is_same_v<R, ::std::vector<::std::int64_t>>) {
-      return call_i64list_note(op, self, args);
     } else if constexpr (::std::is_same_v<R, TokenBatch>) {
       return call_tokenbatch_note(op, self, args);
     } else {

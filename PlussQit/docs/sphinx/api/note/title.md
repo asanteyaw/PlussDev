@@ -90,9 +90,9 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
 - [`Note::swapcase`](swapcase.md): invert the case of every ASCII letter.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tex_to_text.html">
+  <a class="prev-link" href="tex.html">
     <span class="label">Previous</span>
-    <span class="title">tex_to_text</span>
+    <span class="title">tex</span>
   </a>
   <a class="next-link" href="to_ascii.html">
     <span class="label">Next</span>

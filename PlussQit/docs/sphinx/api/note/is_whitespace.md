@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_whitespace() const
+Note Note::is_whitespace() const
 ```
 
 ## Test Whether A Cell Is All Whitespace
@@ -22,8 +22,8 @@ returns `0` (there is no character to be whitespace). If you want
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -31,8 +31,8 @@ length `numel()`.
 const auto n = pluss::make_note({"  ", "\t\n", "", " a ", "abc"});
 const auto mask = n.is_whitespace();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -57,8 +57,8 @@ letter.
     <span class="label">Previous</span>
     <span class="title">is_vector</span>
   </a>
-  <a class="next-link" href="jaccard_acronyms.html">
+  <a class="next-link" href="join.html">
     <span class="label">Next</span>
-    <span class="title">jaccard_acronyms</span>
+    <span class="title">join</span>
   </a>
 </div>

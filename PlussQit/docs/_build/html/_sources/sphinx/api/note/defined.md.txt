@@ -87,7 +87,7 @@ defined=false dim=0 scalar=false
 checks that the handle is defined.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="deduplicate.html"><span class="label">Previous</span><span class="title">deduplicate</span></a>
+  <a class="prev-link" href="debug.html"><span class="label">Previous</span><span class="title">debug</span></a>
   <a class="next-link" href="diff_chars.html"><span class="label">Next</span><span class="title">diff_chars</span></a>
 </div>
 <!-- pluss-hand-authored -->

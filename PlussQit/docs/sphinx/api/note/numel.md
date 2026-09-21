@@ -81,6 +81,6 @@ absent: defined=false numel=0
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="normalize_quotes.html"><span class="label">Previous</span><span class="title">normalize_quotes</span></a>
-  <a class="next-link" href="overlap_acronyms.html"><span class="label">Next</span><span class="title">overlap_acronyms</span></a>
+  <a class="next-link" href="operators.html"><span class="label">Next</span><span class="title">operators</span></a>
 </div>
 <!-- pluss-hand-authored -->

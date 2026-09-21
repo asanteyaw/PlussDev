@@ -24,7 +24,6 @@ namespace pluss::coden::native::cpu {
 ::std::string lstrip_ascii(::std::string_view s, ::std::string_view chars);
 ::std::string rstrip_ascii(::std::string_view s, ::std::string_view chars);
 ::std::string collapse_whitespace_ascii(::std::string_view s);
-::std::string normalize_spaces_ascii(::std::string_view s);
 ::std::string dedent_ascii(::std::string_view s);
 ::std::string indent_ascii(::std::string_view s, ::std::int64_t spaces = 2);
 ::std::string remove_control_ascii(::std::string_view s);
@@ -38,13 +37,11 @@ namespace pluss::coden::native::cpu {
 ::std::string keep_alnum_ascii(::std::string_view s);
 ::std::string keep_alpha_ascii(::std::string_view s);
 ::std::string keep_digits_ascii(::std::string_view s);
-::std::string keep_ascii(::std::string_view s);
 ::std::string keep_printable_ascii(::std::string_view s);
 ::std::string normalize_quotes_utf8(::std::string_view s);
 ::std::string normalize_dashes_utf8(::std::string_view s);
 ::std::string normalize_ellipsis_utf8(::std::string_view s);
 ::std::string strip_accents_utf8(::std::string_view s);
-::std::string strip_diacritics_utf8(::std::string_view s);
 ::std::string strip_zero_width_utf8(::std::string_view s);
 ::std::string strip_bom_utf8(::std::string_view s);
 ::std::string collapse_repeats_ascii(::std::string_view s);
@@ -69,6 +66,7 @@ namespace pluss::coden::native::cpu {
 ::std::string nlp_remove_boilerplate_fast(::std::string_view s);
 ::std::string nlp_remove_tables_fast(::std::string_view s);
 ::std::string nlp_mask_numbers_fast(::std::string_view s);
+::std::string nlp_normalize_numbers_fast(::std::string_view s);
 ::std::string nlp_mask_emails_fast(::std::string_view s);
 ::std::string nlp_mask_urls_fast(::std::string_view s);
 ::std::string nlp_mask_mentions_fast(::std::string_view s);

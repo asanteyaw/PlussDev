@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::antidiff &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::any" href="any.html" />
+    <link rel="prev" title="Series::angle" href="angle.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-antidiff">
+<h1>Series::antidiff<a class="headerlink" href="#series-antidiff" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">antidiff</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesAntidiffAccessor</span>
+
+<span class="n">Series</span><span class="o">::</span><span class="n">antidiff</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesAntidiffProxy</span>
+<span class="n">Series</span><span class="o">::</span><span class="n">antidiff</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesAntidiffProxy</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">antidiff</span></code> is a namespace-like accessor for numerical antidifferentiation of
+an already-sampled <code class="docutils literal notranslate"><span class="pre">Series</span></code>: composite-trapezoidal integration
+(<code class="docutils literal notranslate"><span class="pre">trapezoid</span></code>) and its running form (<code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid</span></code>). Like
+<code class="docutils literal notranslate"><span class="pre">linearalg</span></code>, it does not compute a value by itself — it selects the method
+family and keeps the owning <code class="docutils literal notranslate"><span class="pre">Series</span></code> as the values being integrated.</p>
+</section>
+<section id="why-this-has-its-own-accessor">
+<h2>Why This Has Its Own Accessor<a class="headerlink" href="#why-this-has-its-own-accessor" title="Link to this heading">¶</a></h2>
+<p>The name is deliberate. <code class="docutils literal notranslate"><span class="pre">antidiff</span></code> is the reverse of <code class="docutils literal notranslate"><span class="pre">Series::diff()</span></code>
+(discrete forward differencing, <code class="docutils literal notranslate"><span class="pre">x[i+1]</span> <span class="pre">-</span> <span class="pre">x[i]</span></code>): both operate on an
+already-materialized sequence of numbers, with no reference to any
+generating function. <code class="docutils literal notranslate"><span class="pre">cumsum(diff(x))</span></code> reconstructs <code class="docutils literal notranslate"><span class="pre">x</span></code> exactly (up to one
+boundary value); <code class="docutils literal notranslate"><span class="pre">antidiff().cumulative_trapezoid(x)</span></code> is the same <em>family</em>
+of operation — a cumulative sum built from consecutive differences — but not
+the literal same formula, since it weights each term by the trapezoidal
+rule (approximating an integral) rather than replaying the raw differences.</p>
+<p>This is deliberately <strong>not</strong> a home for continuous integration of an
+arbitrary callable — <code class="docutils literal notranslate"><span class="pre">pluss::integ::quadra</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::integ::aleatoria</span></code>, and
+the <code class="docutils literal notranslate"><span class="pre">Analytica</span></code> closed-form registry (PlussMa) cover that. Those need to
+re-invoke a function at points they choose themselves; a single
+already-computed <code class="docutils literal notranslate"><span class="pre">Series</span></code> cannot provide that, only its own already-sampled
+values. See <a class="reference internal" href="../series-antidiff/trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid</span></code></span></a> for the full
+reasoning.</p>
+</section>
+<section id="calling-styles">
+<h2>Calling Styles<a class="headerlink" href="#calling-styles" title="Link to this heading">¶</a></h2>
+<p>The dot-style form passes the x-coordinates to individual methods:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The proxy style binds the x-coordinates first:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">trapezoid</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Both calls integrate <code class="docutils literal notranslate"><span class="pre">y</span></code> over <code class="docutils literal notranslate"><span class="pre">x</span></code>. A third form needs no x-coordinates at
+all — a uniform spacing <code class="docutils literal notranslate"><span class="pre">dx</span></code> (default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>) is enough:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">area_default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">trapezoid</span><span class="p">();</span><span class="w">      </span><span class="c1">// dx = 1.0</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">area_dx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">trapezoid</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span><span class="w">        </span><span class="c1">// dx = 0.5</span>
+</pre></div>
+</div>
+<p>The zero-argument dot-style form (<code class="docutils literal notranslate"><span class="pre">y.antidiff.trapezoid()</span></code>) resolves based
+on whether a peer was bound: with a bound peer (<code class="docutils literal notranslate"><span class="pre">y.antidiff(x).trapezoid()</span></code>)
+it integrates against that <code class="docutils literal notranslate"><span class="pre">x</span></code>; without one, it falls back to <code class="docutils literal notranslate"><span class="pre">dx</span> <span class="pre">=</span> <span class="pre">1.0</span></code>.</p>
+</section>
+<section id="method-pages">
+<h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../series-antidiff/trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid</span></code></span></a>: total area under <code class="docutils literal notranslate"><span class="pre">y</span></code>
+over <code class="docutils literal notranslate"><span class="pre">x</span></code> (or a uniform spacing), reduced along one dimension</p></li>
+<li><p><a class="reference internal" href="../series-antidiff/cumulative_trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid</span></code></span></a>: the
+running antiderivative, one value per sample point</p></li>
+</ul>
+<p>Use the
+<a class="reference internal" href="../../series_antidiff_accessor_api_reference.html"><span class="std std-doc">SeriesAntidiffAccessor API Reference</span></a>
+as the landing page for this family.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SeriesAntidiffAccessor</span></code> or <code class="docutils literal notranslate"><span class="pre">SeriesAntidiffProxy</span></code>
+A lightweight method-selection object bound to the owning <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and
+optionally to a peer <code class="docutils literal notranslate"><span class="pre">Series</span></code> (the x-coordinates).</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Accessing `antidiff` does not copy numeric data and does not mutate the
+owner.
+</pre></div>
+</div>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;call_style=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">().</span><span class="n">trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dot_style=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;peer_bound=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">(</span><span class="n">x</span><span class="p">).</span><span class="n">trapezoid</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>call_style=pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=22
+dot_style=pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=22
+peer_bound=pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=22
+</pre></div>
+</div>
+<p>All three spellings integrate the same <code class="docutils literal notranslate"><span class="pre">y</span></code> over the same <code class="docutils literal notranslate"><span class="pre">x</span></code> and agree
+exactly.</p>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">antidiff</span></code> is an accessor, not a materialized result.</p></li>
+<li><p>The zero-argument dot-style method (<code class="docutils literal notranslate"><span class="pre">y.antidiff.trapezoid()</span></code>) silently
+uses <code class="docutils literal notranslate"><span class="pre">dx</span> <span class="pre">=</span> <span class="pre">1.0</span></code> unless a peer was bound via <code class="docutils literal notranslate"><span class="pre">y.antidiff(x)</span></code> first — it
+never throws for “forgetting” x, since dx-only integration is a
+legitimate, separate calling form, not an error state.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trapezoid</span></code>/<code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid</span></code> both require <code class="docutils literal notranslate"><span class="pre">x</span></code> (when given) to be
+broadcastable against <code class="docutils literal notranslate"><span class="pre">y</span></code> along the reduced dimension; a genuinely
+incompatible length throws.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../series_antidiff_accessor_api_reference.html"><span class="std std-doc">SeriesAntidiffAccessor API Reference</span></a></p></li>
+<li><p><a class="reference internal" href="../series-antidiff/trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesAntidiffAccessor::trapezoid</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-antidiff/cumulative_trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesAntidiffAccessor::cumulative_trapezoid</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diff</span></code></span></a>: the discrete forward difference <code class="docutils literal notranslate"><span class="pre">antidiff</span></code> reverses.</p></li>
+<li><p><a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::cumsum</span></code></span></a>: the plain (unweighted) cumulative sum
+<code class="docutils literal notranslate"><span class="pre">diff()</span></code>’s output telescopes back through exactly.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="angle.html">
+    <span class="label">Previous</span>
+    <span class="title">angle</span>
+  </a>
+  <a class="next-link" href="any.html">
+    <span class="label">Next</span>
+    <span class="title">any</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="angle.html" title="previous chapter">Series::angle</a></li>
+      <li>Next: <a href="any.html" title="next chapter">Series::any</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/antidiff.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

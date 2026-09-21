@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::int64_t> Note::count_substring(std::string_view needle) const
+Note Note::count_substring(std::string_view needle) const
 ```
 
 ## Count Occurrences Of A Literal Substring In Each Cell
@@ -23,8 +23,8 @@ times. The match is literal — no regex, no case folding.
 
 ### Return value
 
-Not a `Note`: a flat `std::vector<std::int64_t>` with one entry per cell, in
-row-major order, length `numel()`.
+An Int64 `Note` with the receiver's shape, one native count per cell.
+Use `integers()` for a borrowed contiguous host view.
 
 ### Edge cases
 
@@ -38,8 +38,8 @@ row-major order, length `numel()`.
 const auto counts =
     pluss::make_note({"banana", "aaaa", "xyz", ""}).count_substring("a");
 std::cout << "[";
-for (std::size_t i = 0; i < counts.size(); ++i)
-  std::cout << (i ? ", " : "") << counts[i];
+for (std::size_t i = 0; i < counts.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << counts.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -53,7 +53,7 @@ std::cout << "]\n";
 
 ```cpp
 const auto counts = pluss::make_note({"aaaa"}).count_substring("aa");
-std::cout << "[" << counts[0] << "]\n";
+std::cout << "[" << counts.integers()[0] << "]\n";
 ```
 
 ### Output
@@ -66,7 +66,7 @@ std::cout << "[" << counts[0] << "]\n";
 
 ```cpp
 const auto counts = pluss::make_note({"abc"}).count_substring("");
-std::cout << "[" << counts[0] << "]\n";
+std::cout << "[" << counts.integers()[0] << "]\n";
 ```
 
 ### Output
@@ -81,8 +81,8 @@ std::cout << "[" << counts[0] << "]\n";
 const auto counts =
     pluss::make_note({"a-b-c-d", "no dashes"}).count_substring("-");
 std::cout << "[";
-for (std::size_t i = 0; i < counts.size(); ++i)
-  std::cout << (i ? ", " : "") << counts[i];
+for (std::size_t i = 0; i < counts.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << counts.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -95,18 +95,18 @@ std::cout << "]\n";
 ## See Also
 
 - [`Note::contains`](contains.md): the yes/no version.
-- `pluss::coden::Note::count_regex`: count matches of a pattern rather than a
-  literal.
-- [`Note::regex_findall`](regex_findall.md): return the matches, not just
+- [`NoteRegexAccessor::count`](../note-regex/count.md): count matches of a
+  pattern rather than a literal.
+- [`NoteRegexAccessor::findall`](../note-regex/findall.md): return the matches, not just
   their count.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="contiguous.html">
+  <a class="prev-link" href="copy_flat_to.html">
     <span class="label">Previous</span>
-    <span class="title">contiguous</span>
+    <span class="title">copy_flat_to</span>
   </a>
-  <a class="next-link" href="dedent.html">
+  <a class="next-link" href="debug.html">
     <span class="label">Next</span>
-    <span class="title">dedent</span>
+    <span class="title">debug</span>
   </a>
 </div>

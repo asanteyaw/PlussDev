@@ -1,7 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#if defined(PLUSSQIT_AUTOGRAD_TORCH_ORACLE)
+#if defined(PLUSSQIT_AUTODIFF_TORCH_ORACLE)
 
 #include <pluss/codem/codem.h>
 #include <pluss/codem/series_factory.h>
@@ -55,6 +55,9 @@
 #include <ATen/ops/selu.h>
 #include <ATen/ops/silu.h>
 #include <ATen/ops/softplus.h>
+#include <ATen/ops/cat.h>
+#include <ATen/ops/hardshrink.h>
+#include <ATen/ops/hardshrink_backward.h>
 #include <ATen/ops/stack.h>
 #include <ATen/ops/std.h>
 #include <ATen/ops/threshold.h>
@@ -1365,7 +1368,7 @@ TEST_CASE("CPU fused-activation double-backward matches libtorch",
 // ---------------------------------------------------------------------------
 // Pass: binary-op broadcasting edge cases. binary_reverse_cases() above only
 // exercises same-shape 1D operands; broadcasting reduction across mismatched
-// ranks and interior size-1 dims is a classic autograd bug source (the
+// ranks and interior size-1 dims is a classic autodiff bug source (the
 // reverse must sum the cotangent back down to each operand's original shape).
 // ---------------------------------------------------------------------------
 
@@ -4110,6 +4113,108 @@ TEST_CASE("CPU forward-mode linalg matches libtorch jvp", "[autodiff][parity][cp
     require_close(value.to_vec<double>(), torch_values(tv), 2e-9);
     require_close(tangent.to_vec<double>(), torch_values(tt_out), 2e-8);
   }
+}
+
+// Strict Track A: `pile` (torch's `stack`) and `unite` (torch's `cat`) had
+// no dedicated reverse-mode oracle case anywhere in this file -- only
+// exercised transitively inside other composites (batched-matmul chains,
+// the conv/attention/RNN model-code audit). Direct per-op, per-dtype
+// coverage, 3 differentiable inputs each so a wrong per-input gradient
+// split (e.g. swapped/misaligned slices) would show up per-tensor.
+TEST_CASE("CPU pile/unite reverse matches libtorch in float64 and float32",
+          "[autodiff][parity][cpu][torch][structural][dtype]") {
+  const std::vector<double> av{0.6, -1.1, 0.3, 1.8, -0.4, 0.9};   // [2,3]
+  const std::vector<double> bv{-0.7, 1.3, 0.2, -0.5, 0.8, -0.2};  // [2,3]
+  const std::vector<double> cv{0.4, -0.9, 1.1, -0.3, 0.6, -1.4};  // [2,3]
+
+  for (const auto& dt : {std::pair{ScalarType::Float64, at::kDouble}, {ScalarType::Float32, at::kFloat}}) {
+    DYNAMIC_SECTION((dt.first == ScalarType::Float64 ? "pile float64" : "pile float32")) {
+      Series a = make_series(av, {2, 3}).to(dt.first);
+      Series b = make_series(bv, {2, 3}).to(dt.first);
+      Series c = make_series(cv, {2, 3}).to(dt.first);
+      a.tracks_slope_(true);
+      b.tracks_slope_(true);
+      c.tracks_slope_(true);
+      const Series out = a.pile(std::vector<Series>{b, c}, 1);  // -> [2,3,3]
+      out.mul(out).sum().reverse();
+
+      at::Tensor ta = at::tensor(av, at::TensorOptions().dtype(at::kDouble)).to(dt.second).reshape({2, 3}).set_requires_grad(true);
+      at::Tensor tb = at::tensor(bv, at::TensorOptions().dtype(at::kDouble)).to(dt.second).reshape({2, 3}).set_requires_grad(true);
+      at::Tensor tc = at::tensor(cv, at::TensorOptions().dtype(at::kDouble)).to(dt.second).reshape({2, 3}).set_requires_grad(true);
+      at::Tensor tout = at::stack({ta, tb, tc}, 1);
+      tout.mul(tout).sum().backward();
+
+      const double tol = dt.first == ScalarType::Float64 ? 2e-9 : 3e-4;
+      require_close(out.to(ScalarType::Float64).to_vec<double>(), torch_values(tout), tol);
+      require_close(a.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(ta.grad()), tol);
+      require_close(b.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tb.grad()), tol);
+      require_close(c.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tc.grad()), tol);
+    }
+
+    DYNAMIC_SECTION((dt.first == ScalarType::Float64 ? "unite float64" : "unite float32")) {
+      // Different sizes along the concatenated dim (2,3 / 2,2 / 2,4) so a
+      // wrong slice-width in the backward's split would be caught.
+      const std::vector<double> ub{-0.4, 0.7, 0.2, -0.6};                    // [2,2]
+      const std::vector<double> uc{0.5, -0.2, 0.3, 0.8, -0.5, 0.1, -0.3, 0.6};  // [2,4]
+      Series a = make_series(av, {2, 3}).to(dt.first);
+      Series b = make_series(ub, {2, 2}).to(dt.first);
+      Series c = make_series(uc, {2, 4}).to(dt.first);
+      a.tracks_slope_(true);
+      b.tracks_slope_(true);
+      c.tracks_slope_(true);
+      const Series out = a.unite(std::vector<Series>{b, c}, 1);  // -> [2,9]
+      out.mul(out).sum().reverse();
+
+      at::Tensor ta = at::tensor(av, at::TensorOptions().dtype(at::kDouble)).to(dt.second).reshape({2, 3}).set_requires_grad(true);
+      at::Tensor tb = at::tensor(ub, at::TensorOptions().dtype(at::kDouble)).to(dt.second).reshape({2, 2}).set_requires_grad(true);
+      at::Tensor tc = at::tensor(uc, at::TensorOptions().dtype(at::kDouble)).to(dt.second).reshape({2, 4}).set_requires_grad(true);
+      at::Tensor tout = at::cat({ta, tb, tc}, 1);
+      tout.mul(tout).sum().backward();
+
+      const double tol = dt.first == ScalarType::Float64 ? 2e-9 : 3e-4;
+      require_close(out.to(ScalarType::Float64).to_vec<double>(), torch_values(tout), tol);
+      require_close(a.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(ta.grad()), tol);
+      require_close(b.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tb.grad()), tol);
+      require_close(c.sensitivity().to(ScalarType::Float64).to_vec<double>(), torch_values(tc.grad()), tol);
+    }
+  }
+}
+
+// `Series::hardshrink_backward` was flagged NO_NODE by the full-surface
+// backward manifest (had no node at all -- a raw buffer loop, not built
+// from tracked ops) and rewired composite via where()/gt() like
+// hardshrink_impl itself. Verify both the value AND that a reverse-mode
+// node now actually forms, against libtorch's own `at::hardshrink_backward`.
+//
+// Note the pluss call convention is `receiver.hardshrink_backward(arg,
+// lambd)` with **receiver playing torch's `grad_out` role and `arg` playing
+// torch's `self`/input role** (`hardshrink_backward_impl(self, other, s)`
+// at the Invoke.cpp dispatch site maps positionally to
+// `hardshrink_backward_impl(grad_out=self, input=other, lambda=s)`) --
+// the wrapper parameter is named `grad_output` but is used as the original
+// hardshrink input; unusual, but internally consistent and confirmed
+// correct here against the oracle, so left as-is rather than touched as
+// part of this fix.
+TEST_CASE("CPU hardshrink_backward now forms a reverse-mode node and matches libtorch",
+          "[autodiff][parity][cpu][torch][structural]") {
+  const std::vector<double> grad_out_v{1.0, 2.0, 3.0, 4.0, 5.0};
+  const std::vector<double> input_v{-2.0, -0.3, 0.1, 0.8, 3.0};
+  const double lambd = 0.5;
+
+  Series grad_out = make_series(grad_out_v, {5});
+  Series input = make_series(input_v, {5});
+  grad_out.tracks_slope_(true);
+  const Series out = grad_out.hardshrink_backward(input, lambd);
+  out.mul(out).sum().reverse();
+
+  at::Tensor t_grad_out =
+      at::tensor(grad_out_v, at::TensorOptions().dtype(at::kDouble)).set_requires_grad(true);
+  at::Tensor t_input = at::tensor(input_v, at::TensorOptions().dtype(at::kDouble));
+  at::Tensor t_out = at::hardshrink_backward(t_grad_out, t_input, lambd);
+  t_out.mul(t_out).sum().backward();
+
+  require_close(out.to_vec<double>(), torch_values(t_out), 2e-12);
+  require_close(grad_out.sensitivity().to_vec<double>(), torch_values(t_grad_out.grad()), 2e-12);
 }
 
 #endif

@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_title() const
+Note Note::is_title() const
 ```
 
 ## Test Whether A Cell Is Title-Cased
@@ -25,8 +25,8 @@ uncased and does not start or break a word for this check.
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -35,8 +35,8 @@ const auto n = pluss::make_note(
     {"Two Words", "Abc", "TwoWords", "two words", "TWO", "123", ""});
 const auto mask = n.is_title();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -57,9 +57,9 @@ have no cased letters.
   single-case checks.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_tensor3.html">
+  <a class="prev-link" href="is_text.html">
     <span class="label">Previous</span>
-    <span class="title">is_tensor3</span>
+    <span class="title">is_text</span>
   </a>
   <a class="next-link" href="is_upper.html">
     <span class="label">Next</span>

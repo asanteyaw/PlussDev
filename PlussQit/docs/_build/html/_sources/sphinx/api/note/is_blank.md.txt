@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_blank() const
+Note Note::is_blank() const
 ```
 
 ## Test Whether A Cell Has No Visible Content
@@ -22,8 +22,8 @@ empty string and a whitespace-only string the same way.
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -31,8 +31,8 @@ length `numel()`.
 const auto n = pluss::make_note({"", "  ", "\t", " x ", "x"});
 const auto mask = n.is_blank();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -57,8 +57,8 @@ letter.
     <span class="label">Previous</span>
     <span class="title">is_ascii</span>
   </a>
-  <a class="next-link" href="is_bytes.html">
+  <a class="next-link" href="is_bool.html">
     <span class="label">Next</span>
-    <span class="title">is_bytes</span>
+    <span class="title">is_bool</span>
   </a>
 </div>

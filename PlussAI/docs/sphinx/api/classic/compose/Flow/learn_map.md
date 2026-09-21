@@ -1,54 +1,87 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
+<!-- pluss-signature-hash: d619c6cc7d03 -->
 
 # `pluss::ai::classic::Flow::learn_map`
 
-[Back to `pluss::ai::classic::Flow`](../Flow.md)
+`learn_map` fits every transform stage and maps the same batch through them,
+in one call — the stage-only counterpart to [`learn`](learn.md). The model
+(if any) is never touched: `learn_map` is what a transform-only `Flow` uses
+to both fit and produce the transformed representation of its training data
+in one step, the same way [`TransformerBase::learn_map`](../../estimators/TransformerBase.md)
+does for a single kernel.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] classic::StatusOr<pluss::Series> classic::Flow::learn_map(
+    const classic::FeatureBatch& batch,
+    const classic::TrainOptions& learn_options = {},
+    const classic::InferOptions& infer_options = {});
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`batch` — `FeatureBatch`
+: The features to fit every stage on and map through them.
+
+`learn_options` — `TrainOptions`, default `{}`
+: Forwarded to each stage's fit call.
+
+`infer_options` — `InferOptions`, default `{}`
+: Forwarded to each stage's map call, applying its fitted transform to the
+  same batch it was just fit on.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+A `StatusOr<Series>` — the fitted stages' output on `batch`.
+
+**`trained()` afterward depends on whether a model is attached, and this is
+the one place `Flow`'s two roles genuinely diverge:**
+
+- **No model attached** (`has_model() == false`): `trained()` becomes `true`
+  — the stages are everything this `Flow` needs to fit, and they just did.
+- **A model is attached** (`has_model() == true`): `trained()` stays
+  `false` — only the *stages* fit here, and a model that has never seen the
+  transformed data is not a trained `Flow` by this contract. Call
+  [`learn`](learn.md) instead (which calls the model's own `learn` after
+  fitting stages) to reach `trained() == true` on a `Flow` that carries a
+  model.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+Identical to [`learn`](learn.md)'s stage-fitting errors — a stage's own
+`learn_supervised`/`learn_map` failing propagates that `Status` directly, and
+a supervised stage with no target attached fails with the same
+"attach it inside `Flow::learn`" message, since `learn_map` has no target
+parameter to give it one.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+A transform-only `Flow`: `learn_map` alone reaches `trained() == true`.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow;  // no model
+  flow.add_standard_scaler();
+
+  cls::FeatureBatch batch{};
+  batch.x = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64).reshape({4, 1});
+
+  const cls::StatusOr<pluss::Series> mapped = flow.learn_map(batch);
+  std::cout << "ok        = " << std::boolalpha << mapped.ok() << "\n";
+  std::cout << "trained() = " << flow.trained() << "\n";
+  std::cout << "mapped    = " << mapped.value() << "\n";
 
   return 0;
 }
@@ -57,27 +90,45 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok        = true
+trained() = true
+mapped    = pluss::Series(shape=[4,1], strides=[1,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[-1.3416408],
+  [-0.4472136],
+  [0.4472136],
+  [1.3416408]]
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+The divergence: the identical call on a `Flow` that carries a model —
+stages fit, but `trained()` stays `false` until `learn` also fits the model.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
+  cls::StatusOr<cls::Flow> made = cls::make_flow(
+      cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+  cls::Flow flow = made.move_value();
+  flow.add_standard_scaler();
+
+  cls::FeatureBatch batch{};
+  batch.x = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64).reshape({4, 1});
+
+  const cls::StatusOr<pluss::Series> mapped = flow.learn_map(batch);
+  std::cout << "has_model()          = " << std::boolalpha << flow.has_model() << "\n";
+  std::cout << "learn_map ok         = " << mapped.ok() << "\n";
+  std::cout << "trained() after      = " << flow.trained() << "  (model never fit)\n";
 
   return 0;
 }
@@ -86,27 +137,40 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+has_model()          = true
+learn_map ok         = true
+trained() after      = false  (model never fit)
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Calling `learn_map` a second time re-fits from scratch — the second call's
+statistics replace the first's rather than being blended with them.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow;
+  flow.add_standard_scaler();
+
+  cls::FeatureBatch first{};
+  first.x = pluss::make_series({0.0, 10.0}, {2}, f64).reshape({2, 1});
+  const pluss::Series first_mapped = flow.learn_map(first).value();
+
+  cls::FeatureBatch second{};
+  second.x = pluss::make_series({100.0, 300.0}, {2}, f64).reshape({2, 1});
+  const pluss::Series second_mapped = flow.learn_map(second).value();
+
+  std::cout << "first learn_map  = " << first_mapped << "\n";
+  std::cout << "second learn_map = " << second_mapped << "\n";
 
   return 0;
 }
@@ -115,12 +179,21 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+first learn_map  = pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[[-1],
+  [1]]
+second learn_map = pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[[-1],
+  [1]]
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`learn`](learn.md) — fits stages *and* the model, the call that reaches
+  `trained() == true` on a `Flow` with a model.
+- [`map`](map.md) — apply already-fitted stages without refitting.
+- [`TransformerBase::learn_map`](../../estimators/TransformerBase.md) — the
+  single-kernel equivalent every stage implements.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

@@ -60,7 +60,7 @@ int main() {
   std::cout << "formatted:\n" << pluss::note::print(formatted) << "\n\n";
 
   pluss::Note lower = two_d.lower();
-  pluss::Note escaped = three_d.tex_escape();
+  pluss::Note escaped = three_d.tex().escape();
   std::cout << "lower:\n" << pluss::note::print(lower) << "\n\n";
   std::cout << "escaped:\n" << pluss::note::print(escaped) << "\n\n";
 

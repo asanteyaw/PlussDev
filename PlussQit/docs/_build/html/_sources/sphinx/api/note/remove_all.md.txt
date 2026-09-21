@@ -102,7 +102,7 @@ Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
   replacement instead of deleting.
 - `pluss::coden::Note::remove`: delete only the **first** occurrence.
 - [`Note::strip`](strip.md): remove characters only at the cell boundaries.
-- [`Note::nlp_remove_urls`](nlp_remove_urls.md): pattern-based removal (URLs)
+- [`NoteNlpAccessor::remove_urls`](../note-nlp/remove_urls.md): pattern-based removal (URLs)
   with whitespace cleanup.
 
 <div class="pluss-inline-prev-next">

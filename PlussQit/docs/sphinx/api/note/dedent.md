@@ -54,9 +54,9 @@ is unchanged.
 - [`Note::split_lines`](split_lines.md): work with the lines individually.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="count_substring.html">
+  <a class="prev-link" href="debug.html">
     <span class="label">Previous</span>
-    <span class="title">count_substring</span>
+    <span class="title">debug</span>
   </a>
   <a class="next-link" href="deduplicate.html">
     <span class="label">Next</span>

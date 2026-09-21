@@ -134,13 +134,13 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
   occurrence.
 - `pluss::coden::Note::replace_first` / `replace_last` / `replace_n`:
   bounded substitution instead of replace-all.
-- [`Note::regex_findall`](regex_findall.md): when the target is a pattern,
+- [`NoteRegexAccessor::findall`](../note-regex/findall.md): when the target is a pattern,
   not a fixed string.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="remove_symbols.html">
+  <a class="prev-link" href="repeat_interleave.html">
     <span class="label">Previous</span>
-    <span class="title">remove_symbols</span>
+    <span class="title">repeat_interleave</span>
   </a>
   <a class="next-link" href="replace_first.html">
     <span class="label">Next</span>

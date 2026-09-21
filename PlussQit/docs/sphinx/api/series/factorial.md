@@ -257,7 +257,7 @@ Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=tr
 data=[1, 1, 120]
 ```
 
-Example 11. `factorial()` does not participate in autograd.
+Example 11. `factorial()` does not participate in autodiff.
 
 ```cpp
 auto x = pluss::make_series({3, 4, 5}, pluss::ScalarType::Int64);

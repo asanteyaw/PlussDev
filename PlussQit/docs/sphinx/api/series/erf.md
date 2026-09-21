@@ -92,7 +92,7 @@ computation.
 
 ## Examples
 
-The examples build up from the basic shape to dtype handling, the autograd
+The examples build up from the basic shape to dtype handling, the autodiff
 rule, and the failure mode.
 
 Example 1. The signed, bounded, odd shape on a symmetric grid of inputs.

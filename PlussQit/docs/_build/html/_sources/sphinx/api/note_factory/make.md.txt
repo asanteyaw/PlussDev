@@ -48,11 +48,12 @@ lengths at each level become the sizes. Text is stored as-is, cell by cell;
 `make()` does not trim, normalize, case-fold, or re-encode. Multi-byte UTF-8
 (accents, CJK, emoji) is preserved intact.
 
-The result is always **UTF-8 mode** (`encoding=utf8`). `make()` labels the
-content as text but does not validate that every byte is well-formed UTF-8 —
-if the source bytes are not valid text, use [`bytes`](bytes.md) instead, which
-makes the "raw bytes, no guarantees" contract explicit and prints
-accordingly.
+The **text overloads** always produce `NoteDType::Text`
+(`encoding=utf8`). They label the content as text but do not validate that
+every byte is well-formed UTF-8. If the source bytes are not valid text, use
+[`bytes`](bytes.md) instead. Bool, signed-integer, and floating-point overloads
+produce their native dtypes as described above; they do not pass through this
+text path.
 
 ### The `(flat, sizes)` overload
 

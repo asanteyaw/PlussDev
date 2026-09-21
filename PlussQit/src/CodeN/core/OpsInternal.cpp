@@ -18,6 +18,7 @@
 #include <utility>
 #include <regex>
 #include <thread>
+#include <type_traits>
 
 #if defined(PLUSSQIT_HAS_LIBUNISTRING)
 #include <unicase.h>
@@ -701,6 +702,95 @@ static void regex_collect_to(::std::string_view s,
   }
 }
 
+static bool tex_control_word_at(::std::string_view s,
+                                ::std::size_t pos,
+                                ::std::size_t* name_begin,
+                                ::std::size_t* name_end,
+                                ::std::size_t* token_end) {
+  if (pos >= s.size() || s[pos] != '\\' || pos + 1 >= s.size() ||
+      s[pos + 1] == '\\') {
+    return false;
+  }
+  const unsigned char first = static_cast<unsigned char>(s[pos + 1]);
+  if (::std::isalpha(first) == 0 && s[pos + 1] != '@') return false;
+
+  *name_begin = pos + 1;
+  *name_end = pos + 2;
+  while (*name_end < s.size()) {
+    const unsigned char c = static_cast<unsigned char>(s[*name_end]);
+    if (::std::isalpha(c) == 0 && s[*name_end] != '@') break;
+    ++*name_end;
+  }
+  *token_end = *name_end;
+  if (*token_end < s.size() && s[*token_end] == '*') ++*token_end;
+  return true;
+}
+
+static bool tex_group_end(::std::string_view s,
+                          ::std::size_t open_pos,
+                          char open,
+                          char close,
+                          ::std::size_t* next_pos) {
+  if (open_pos >= s.size() || s[open_pos] != open) return false;
+  ::std::int64_t depth = 0;
+  for (::std::size_t i = open_pos; i < s.size(); ++i) {
+    if (s[i] == '\\' && i + 1 < s.size()) {
+      ++i;
+      continue;
+    }
+    if (s[i] == open) {
+      ++depth;
+    } else if (s[i] == close) {
+      if (--depth == 0) {
+        *next_pos = i + 1;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+static void extract_tex_commands_to(::std::string_view s,
+                                    bool with_args,
+                                    ::std::vector<::std::string>& out) {
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      i += (s[i] == '\\' && i + 1 < s.size()) ? 2 : 1;
+      continue;
+    }
+
+    if (with_args) {
+      ::std::size_t cursor = token_end;
+      while (true) {
+        ::std::size_t group_begin = cursor;
+        while (group_begin < s.size() &&
+               (s[group_begin] == ' ' || s[group_begin] == '\t' ||
+                s[group_begin] == '\n' || s[group_begin] == '\r')) {
+          ++group_begin;
+        }
+        if (group_begin >= s.size() ||
+            (s[group_begin] != '[' && s[group_begin] != '{')) {
+          break;
+        }
+        ::std::size_t group_end = 0;
+        const char open = s[group_begin];
+        if (!tex_group_end(s, group_begin, open, open == '[' ? ']' : '}',
+                           &group_end)) {
+          break;
+        }
+        cursor = group_end;
+      }
+      token_end = cursor;
+    }
+
+    out.emplace_back(s.substr(i, token_end - i));
+    i = token_end;
+  }
+}
+
 static void keep_unique_in_place(::std::vector<::std::string>& v) {
   ::std::unordered_set<::std::string> seen;
   ::std::vector<::std::string> out;
@@ -830,7 +920,13 @@ static void emit_char_ngrams(::std::string_view s, ::std::int64_t n, ::std::vect
   if (n <= 0) return;
   ::std::vector<::std::string> chars;
   split_chars_to(s, chars);
-  emit_word_ngrams(chars, n, out);
+  if (chars.size() < static_cast<::std::size_t>(n)) return;
+  for (::std::size_t i = 0; i + static_cast<::std::size_t>(n) <= chars.size(); ++i) {
+    ::std::string gram;
+    for (::std::int64_t j = 0; j < n; ++j)
+      gram.append(chars[i + static_cast<::std::size_t>(j)]);
+    out.push_back(::std::move(gram));
+  }
 }
 
 static void top_k_frequent(::std::span<const ::std::string> words, ::std::int64_t k, ::std::vector<::std::string>& out) {
@@ -965,20 +1061,6 @@ static void token_feature_extract_to(::std::string_view s,
   }
   if (op == "split_unicode_words") {
     tokenize_words_to(s, out);
-    return;
-  }
-  if (op == "find_all") {
-    if (sarg.empty()) return;
-    ::std::size_t pos = 0;
-    ::std::int64_t produced = 0;
-    while (pos <= s.size()) {
-      const ::std::size_t f = s.find(sarg, pos);
-      if (f == ::std::string_view::npos) break;
-      if (iarg >= 0 && produced >= iarg) break;
-      out.emplace_back(s.substr(f, sarg.size()));
-      pos = f + sarg.size();
-      ++produced;
-    }
     return;
   }
   if (op == "find_all_regex") {
@@ -1120,10 +1202,6 @@ static void token_feature_extract_to(::std::string_view s,
     out = ::std::move(keep);
     return;
   }
-  if (op == "nlp_remove_punct_tokens") {
-    tokenize_words_to(s, out);
-    return;
-  }
   if (op == "nlp_stopwords") {
     static const ::std::array<::std::string_view, 24> kStop{
         "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "into",
@@ -1167,17 +1245,17 @@ static void token_feature_extract_to(::std::string_view s,
   if (op == "ngrams_word" || op == "nlp_word_ngrams") {
     ::std::vector<::std::string> words;
     word_tokens_lower(s, words);
-    emit_word_ngrams(words, iarg > 0 ? iarg : 2, out);
+    emit_word_ngrams(words, iarg, out);
     return;
   }
   if (op == "ngrams_char" || op == "nlp_char_ngrams") {
-    emit_char_ngrams(s, iarg > 0 ? iarg : 3, out);
+    emit_char_ngrams(s, iarg, out);
     return;
   }
   if (op == "nlp_keywords") {
     ::std::vector<::std::string> words;
     word_tokens_lower(s, words);
-    top_k_frequent(words, iarg > 0 ? iarg : 10, out);
+    top_k_frequent(words, iarg, out);
     return;
   }
   if (op == "nlp_keyphrases") {
@@ -1185,7 +1263,7 @@ static void token_feature_extract_to(::std::string_view s,
     word_tokens_lower(s, words);
     ::std::vector<::std::string> phrases;
     emit_word_ngrams(words, 2, phrases);
-    top_k_frequent(phrases, iarg > 0 ? iarg : 10, out);
+    top_k_frequent(phrases, iarg, out);
     return;
   }
   if (op == "nlp_urls") {
@@ -1195,6 +1273,12 @@ static void token_feature_extract_to(::std::string_view s,
     }
     static const ::std::regex re(R"((https?:\/\/[^\s<>"')\]]+|www\.[^\s<>"')\]]+))", ::std::regex::icase);
     regex_collect_to(s, re, out);
+    for (auto& url : out) {
+      while (!url.empty() && has_any_char_from(
+                 ::std::string_view(url).substr(url.size() - 1), ".,;:!?")) {
+        url.pop_back();
+      }
+    }
     return;
   }
   if (op == "nlp_emails") {
@@ -1241,7 +1325,7 @@ static void token_feature_extract_to(::std::string_view s,
     keep_unique_in_place(out);
     return;
   }
-  if (op == "nlp_extract_citations" || op == "nlp_extract_bibliography") {
+  if (op == "nlp_extract_citations") {
     if (!has_any_char_from(s, "[(") || !has_ascii_digit(s)) return;
     static const ::std::regex re(R"((\[[0-9]{1,3}\]|\([A-Z][A-Za-z]+,\s*[12][0-9]{3}[a-z]?\)))");
     regex_collect_to(s, re, out);
@@ -1253,7 +1337,7 @@ static void token_feature_extract_to(::std::string_view s,
     regex_collect_to(s, re, out);
     return;
   }
-  if (op == "nlp_named_entities" || op == "nlp_noun_phrases") {
+  if (op == "nlp_named_entities") {
     static const ::std::regex re(R"(\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b)");
     regex_collect_to(s, re, out, 1);
     keep_unique_in_place(out);
@@ -1271,11 +1355,41 @@ static void token_feature_extract_to(::std::string_view s,
     }
     return;
   }
-  if (op == "tex_commands" || op == "tex_command_names" || op == "tex_macros_used") {
+  if (op == "tex_command_names") {
+    for (::std::size_t i = 0; i < s.size();) {
+      if (s[i] != '\\' || i + 1 >= s.size()) {
+        ++i;
+        continue;
+      }
+      if (s[i + 1] == '\\') {
+        i += 2;
+        continue;
+      }
+      const unsigned char first = static_cast<unsigned char>(s[i + 1]);
+      if (::std::isalpha(first) == 0 && s[i + 1] != '@') {
+        i += 2;
+        continue;
+      }
+      ::std::size_t end = i + 2;
+      while (end < s.size()) {
+        const unsigned char c = static_cast<unsigned char>(s[end]);
+        if (::std::isalpha(c) == 0 && s[end] != '@') break;
+        ++end;
+      }
+      if (end < s.size() && s[end] == '*') ++end;
+      out.emplace_back(s.substr(i + 1, end - i - 1));
+      i = end;
+    }
+    return;
+  }
+  if (op == "tex_commands") {
+    extract_tex_commands_to(s, iarg > 0, out);
+    return;
+  }
+  if (op == "tex_macros_used") {
     static const ::std::regex re(R"(\\([A-Za-z@]+[*]?))");
-    const int group = (op == "tex_command_names") ? 1 : 0;
-    regex_collect_to(s, re, out, group, iarg >= 0 ? iarg : -1);
-    if (op == "tex_macros_used") keep_unique_in_place(out);
+    regex_collect_to(s, re, out, 0, iarg >= 0 ? iarg : -1);
+    keep_unique_in_place(out);
     return;
   }
   if (op == "tex_extract_command_args") {
@@ -1302,7 +1416,7 @@ static void token_feature_extract_to(::std::string_view s,
     extract_tex_environment_blocks_to(s, env, out, iarg >= 0 ? iarg : -1);
     return;
   }
-  if (op == "tex_math_blocks" || op == "tex_equations") {
+  if (op == "tex_math_blocks") {
     extract_tex_math_blocks_to(s, out, iarg >= 0 ? iarg : -1);
     return;
   }
@@ -1327,7 +1441,8 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_citations") {
-    static const ::std::regex re(R"(\\cite[a-zA-Z*]*\s*(?:\[[^\]]*\])?\s*\{([^{}]*)\})");
+    static const ::std::regex re(
+        R"(\\cite[a-zA-Z*]*\s*(?:\[[^\]]*\]\s*)*\{([^{}]*)\})");
     regex_collect_to(s, re, out, 1);
     return;
   }
@@ -1347,8 +1462,23 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_bibliography_keys") {
-    static const ::std::regex re(R"(\\(?:cite[a-zA-Z*]*|bibitem)\s*(?:\[[^\]]*\])?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    static const ::std::regex re(
+        R"(\\(?:cite[a-zA-Z*]*\s*(?:\[[^\]]*\]\s*)*|bibitem\s*(?:\[[^\]]*\]\s*)?)\{([^{}]*)\})");
+    const ::std::string owned(s);
+    for (::std::sregex_iterator it(owned.begin(), owned.end(), re), end;
+         it != end; ++it) {
+      const ::std::string keys = (*it)[1].str();
+      for (::std::size_t start = 0; start <= keys.size();) {
+        const auto comma = keys.find(',', start);
+        const auto key = ::pluss::coden::native::cpu::strip_ascii(
+            ::std::string_view(keys).substr(
+                start, comma == ::std::string::npos ? ::std::string::npos
+                                                     : comma - start));
+        if (!key.empty()) out.push_back(key);
+        if (comma == ::std::string::npos) break;
+        start = comma + 1;
+      }
+    }
     return;
   }
   if (op == "tex_sections") {
@@ -1372,8 +1502,9 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_align_blocks") {
-    extract_tex_environment_blocks_to(s, "align", out);
-    extract_tex_environment_blocks_to(s, "align*", out);
+    static const ::std::regex re(
+        R"(\\begin\{(align\*?)\}[\s\S]*?\\end\{\1\})");
+    regex_collect_to(s, re, out);
     return;
   }
   if (op == "tex_figures") {
@@ -1411,7 +1542,8 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_captions") {
-    static const ::std::regex re(R"(\\caption\*?\s*\{([^{}]*)\})");
+    static const ::std::regex re(
+        R"(\\caption\*?\s*(?:\[[^\]]*\]\s*)?\{([^{}]*)\})");
     regex_collect_to(s, re, out, 1);
     return;
   }
@@ -1588,17 +1720,26 @@ static ::std::int64_t coden_parallel_workers(::std::int64_t tasks, ::std::int64_
 
 template <class TokenizeFn>
 static TokenBatch tokenbatch_from_note(const Note& x, const char* op, TokenizeFn&& fn) {
-  if (!x.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0});
+  if (!x.defined()) {
+    NoteImpl::Int64Storage offsets{0};
+    return TokenBatchFactoryAccess::make(
+        Note::undefined(), note_from_int64_storage(::std::move(offsets),
+                                                   ::std::array<::std::int64_t, 1>{1}));
+  }
   const auto& impl = NoteAccess::impl(x);
-  PLUSS_CHECK(!impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (not bytes)");
+  PLUSS_CHECK(impl->is_text(), ::std::string(op) + " requires a UTF-8 Text Note");
   const ::std::int64_t n = impl->numel();
-  ::std::vector<::std::int64_t> offsets(static_cast<::std::size_t>(n) + 1, 0);
+  NoteImpl::Int64Storage offsets(static_cast<::std::size_t>(n) + 1, 0);
   ::std::vector<::std::string> flat_tokens;
 
   const auto workers = coden_parallel_workers(n, /*min_tasks_per_worker=*/256);
   if (workers <= 1) {
     for (::std::int64_t i = 0; i < n; ++i) {
-      fn(impl->bytes_at(i), flat_tokens);
+      ::std::vector<::std::string> row;
+      fn(impl->bytes_at(i), row);
+      flat_tokens.insert(flat_tokens.end(),
+                         ::std::make_move_iterator(row.begin()),
+                         ::std::make_move_iterator(row.end()));
       offsets[static_cast<::std::size_t>(i) + 1] = static_cast<::std::int64_t>(flat_tokens.size());
     }
   } else {
@@ -1644,7 +1785,11 @@ static TokenBatch tokenbatch_from_note(const Note& x, const char* op, TokenizeFn
   for (const auto& tok : flat_tokens) views.push_back(tok);
   const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(flat_tokens.size())};
   Note token_note = note_from_utf8(views, ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
-  return TokenBatchFactoryAccess::make(::std::move(token_note), ::std::move(offsets));
+  const ::std::array<::std::int64_t, 1> offset_shape{
+      static_cast<::std::int64_t>(offsets.size())};
+  return TokenBatchFactoryAccess::make(
+      ::std::move(token_note),
+      note_from_int64_storage(::std::move(offsets), offset_shape));
 }
 
 template <class TokenizePairFn>
@@ -1652,11 +1797,16 @@ static TokenBatch tokenbatch_from_note_pair(const Note& x,
                                             const Note& other,
                                             const char* op,
                                             TokenizePairFn&& fn) {
-  if (!x.defined() || !other.defined()) return TokenBatchFactoryAccess::make(Note::undefined(), {0});
+  if (!x.defined() || !other.defined()) {
+    NoteImpl::Int64Storage offsets{0};
+    return TokenBatchFactoryAccess::make(
+        Note::undefined(), note_from_int64_storage(::std::move(offsets),
+                                                   ::std::array<::std::int64_t, 1>{1}));
+  }
   const auto& x_impl = NoteAccess::impl(x);
   const auto& y_impl = NoteAccess::impl(other);
-  PLUSS_CHECK(!x_impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (lhs is bytes)");
-  PLUSS_CHECK(!y_impl->is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (rhs is bytes)");
+  PLUSS_CHECK(x_impl->is_text(), ::std::string(op) + " requires a UTF-8 Text Note (lhs)");
+  PLUSS_CHECK(y_impl->is_text(), ::std::string(op) + " requires a UTF-8 Text Note (rhs)");
 
   const ::std::int64_t nx = x_impl->numel();
   const ::std::int64_t ny = y_impl->numel();
@@ -1665,7 +1815,7 @@ static TokenBatch tokenbatch_from_note_pair(const Note& x,
   PLUSS_CHECK(nx == ny || bx || by, ::std::string(op) + " expects equal numel or scalar broadcast");
   const ::std::int64_t n = (nx == ny) ? nx : (bx ? ny : nx);
 
-  ::std::vector<::std::int64_t> offsets(static_cast<::std::size_t>(n) + 1, 0);
+  NoteImpl::Int64Storage offsets(static_cast<::std::size_t>(n) + 1, 0);
   ::std::vector<::std::string> flat_tokens;
 
   const auto workers = coden_parallel_workers(n, /*min_tasks_per_worker=*/256);
@@ -1723,7 +1873,11 @@ static TokenBatch tokenbatch_from_note_pair(const Note& x,
   for (const auto& tok : flat_tokens) views.push_back(tok);
   const ::std::array<::std::int64_t, 1> sizes{static_cast<::std::int64_t>(flat_tokens.size())};
   Note token_note = note_from_utf8(views, ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
-  return TokenBatchFactoryAccess::make(::std::move(token_note), ::std::move(offsets));
+  const ::std::array<::std::int64_t, 1> offset_shape{
+      static_cast<::std::int64_t>(offsets.size())};
+  return TokenBatchFactoryAccess::make(
+      ::std::move(token_note),
+      note_from_int64_storage(::std::move(offsets), offset_shape));
 }
 
 template <class TransformPairFn>
@@ -1967,8 +2121,7 @@ static ::std::string maybe_lang(::std::string_view lang) {
 }
 
 static ::std::string nlp_normalize_numbers_text(::std::string_view s) {
-  static const ::std::regex kNum(R"(\b\d+(?:[.,:/-]\d+)*\b)");
-  return ::std::regex_replace(::std::string(s), kNum, "0");
+  return ::pluss::coden::native::cpu::nlp_normalize_numbers_fast(s);
 }
 
 static ::std::string nlp_expand_contractions_text(::std::string_view s) {
@@ -1980,13 +2133,56 @@ static ::std::string nlp_expand_contractions_text(::std::string_view s) {
       {"i've", "i have"}, {"we've", "we have"}, {"they've", "they have"},
       {"i'll", "i will"}, {"you'll", "you will"},
   }};
-  ::std::string out(s);
-  for (const auto& [from, to] : kMap) {
-    const ::std::regex re("\\b" + regex_escape_text(from) + "\\b", ::std::regex::icase);
-    out = ::std::regex_replace(out, re, ::std::string(to));
+  const auto ascii_lower = [](unsigned char c) {
+    return static_cast<char>(::std::tolower(c));
+  };
+  const auto expand_word = [&](::std::string_view word) -> ::std::string {
+    ::std::string lower;
+    lower.reserve(word.size());
+    for (const unsigned char c : word) lower.push_back(ascii_lower(c));
+
+    ::std::string replacement;
+    for (const auto& [from, to] : kMap) {
+      if (lower == from) {
+        replacement.assign(to);
+        break;
+      }
+    }
+    if (replacement.empty() && lower.size() > 3 && lower.ends_with("n't")) {
+      replacement.assign(lower, 0, lower.size() - 3);
+      replacement.append(" not");
+    }
+    if (replacement.empty()) return ::std::string(word);
+
+    const bool all_upper = ::std::any_of(word.begin(), word.end(), [](unsigned char c) {
+      return ::std::isalpha(c) != 0;
+    }) && ::std::none_of(word.begin(), word.end(), [](unsigned char c) {
+      return ::std::islower(c) != 0;
+    });
+    if (all_upper) {
+      for (char& c : replacement) c = static_cast<char>(::std::toupper(static_cast<unsigned char>(c)));
+    } else if (::std::isupper(static_cast<unsigned char>(word.front()))) {
+      replacement.front() = static_cast<char>(::std::toupper(static_cast<unsigned char>(replacement.front())));
+    }
+    return replacement;
+  };
+
+  ::std::string out;
+  out.reserve(s.size());
+  ::std::size_t i = 0;
+  while (i < s.size()) {
+    if (!::std::isalpha(static_cast<unsigned char>(s[i]))) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    const ::std::size_t begin = i++;
+    while (i < s.size() &&
+           (::std::isalpha(static_cast<unsigned char>(s[i])) || s[i] == '\'')) {
+      ++i;
+    }
+    out.append(expand_word(s.substr(begin, i - begin)));
   }
-  out = ::pluss::coden::native::cpu::collapse_whitespace_ascii(out);
-  return ::pluss::coden::native::cpu::strip_ascii(out);
+  return out;
 }
 
 static ::std::string nlp_remove_stopwords_text(::std::string_view s, ::std::string_view lang) {
@@ -2190,7 +2386,7 @@ static ::std::string readability_level_text(::std::string_view s) {
 }
 
 static ::std::string transliterate_ascii_text(::std::string_view s) {
-  ::std::string out = ::pluss::coden::native::cpu::strip_diacritics_utf8(s);
+  ::std::string out = ::pluss::coden::native::cpu::strip_accents_utf8(s);
   for (char& c : out) {
     if (static_cast<unsigned char>(c) >= 0x80u) c = '?';
   }
@@ -2502,8 +2698,47 @@ static ::std::string tex_normalize_newlines_text(::std::string_view s) {
 }
 
 static ::std::string tex_dedup_blank_lines_text(::std::string_view s) {
-  static const ::std::regex kBlankRuns(R"((\n[ \t]*){3,})");
-  return ::std::regex_replace(::std::string(s), kBlankRuns, "\n\n");
+  auto newline_size = [s](::std::size_t pos) -> ::std::size_t {
+    if (pos >= s.size()) return 0;
+    if (s[pos] == '\r') return pos + 1 < s.size() && s[pos + 1] == '\n' ? 2 : 1;
+    return s[pos] == '\n' ? 1 : 0;
+  };
+
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    const auto first_size = newline_size(i);
+    if (first_size == 0) {
+      out.push_back(s[i++]);
+      continue;
+    }
+
+    ::std::size_t cursor = i;
+    ::std::size_t count = 0;
+    ::std::size_t second_begin = i;
+    ::std::size_t second_size = 0;
+    while (const auto size = newline_size(cursor)) {
+      const auto newline_begin = cursor;
+      cursor += size;
+      ++count;
+      if (count == 2) {
+        second_begin = newline_begin;
+        second_size = size;
+      }
+      ::std::size_t next = cursor;
+      while (next < s.size() && (s[next] == ' ' || s[next] == '\t')) ++next;
+      if (newline_size(next) == 0) break;
+      cursor = next;
+    }
+    if (count >= 3) {
+      out.append(s.substr(i, first_size));
+      out.append(s.substr(second_begin, second_size));
+    } else {
+      out.append(s.substr(i, cursor - i));
+    }
+    i = cursor;
+  }
+  return out;
 }
 
 static ::std::string tex_fix_linebreaks_text(::std::string_view s) {
@@ -2606,7 +2841,7 @@ static ::std::string text_to_tex_text(::std::string_view s, ::std::int64_t mode)
     out = ::pluss::coden::native::cpu::replace_bytes(out, "<-", "\\leftarrow ");
 
     static const ::std::regex kSqrt(R"(\\sqrt\s*\(\s*([^)]+)\s*\))");
-    out = ::std::regex_replace(out, kSqrt, "\\\\sqrt{$1}");
+    out = ::std::regex_replace(out, kSqrt, "\\sqrt{$1}");
 
     out = ::pluss::coden::native::cpu::collapse_whitespace_ascii(out);
     out = ::pluss::coden::native::cpu::strip_ascii(out);
@@ -2833,11 +3068,18 @@ static ::std::string tex_remove_math_delimiters_text(::std::string_view s) {
 static ::std::string tex_add_math_delimiters_text(::std::string_view s) {
   const ::std::string t = ::pluss::coden::native::cpu::strip_ascii(s);
   if (t.empty()) return t;
-  if ((starts_with_sv(t, "$") && ends_with_sv(t, "$")) ||
-      (starts_with_sv(t, "\\(") && ends_with_sv(t, "\\)")) ||
-      (starts_with_sv(t, "\\[") && ends_with_sv(t, "\\]"))) {
-    return t;
-  }
+  if (starts_with_sv(t, "$$") || ends_with_sv(t, "$$"))
+    return (starts_with_sv(t, "$$") ? "" : "$$") + t +
+           (ends_with_sv(t, "$$") ? "" : "$$");
+  if (starts_with_sv(t, "\\(") || ends_with_sv(t, "\\)"))
+    return (starts_with_sv(t, "\\(") ? "" : "\\(") + t +
+           (ends_with_sv(t, "\\)") ? "" : "\\)");
+  if (starts_with_sv(t, "\\[") || ends_with_sv(t, "\\]"))
+    return (starts_with_sv(t, "\\[") ? "" : "\\[") + t +
+           (ends_with_sv(t, "\\]") ? "" : "\\]");
+  if (starts_with_sv(t, "$") || ends_with_sv(t, "$"))
+    return (starts_with_sv(t, "$") ? "" : "$") + t +
+           (ends_with_sv(t, "$") ? "" : "$");
   return "$" + t + "$";
 }
 
@@ -2863,22 +3105,100 @@ static ::std::string tex_canon_macro_name(::std::string_view name) {
 }
 
 static ::std::string tex_strip_macro_decls_text(::std::string_view s, ::std::string_view macro_name = {}) {
-  ::std::string out(s);
-  if (macro_name.empty()) {
-    static const ::std::regex kAnyNew(
-        R"(\\(?:re)?newcommand\s*\{\s*\\[A-Za-z@]+\s*\}(?:\s*\[[0-9]+\])?\s*\{[^{}]*\})");
-    static const ::std::regex kAnyDef(R"(\\def\s*\\[A-Za-z@]+\s*\{[^{}]*\})");
-    out = ::std::regex_replace(out, kAnyNew, " ");
-    out = ::std::regex_replace(out, kAnyDef, " ");
-    return out;
-  }
+  const ::std::string wanted = tex_canon_macro_name(macro_name);
+  const auto skip_space = [s](::std::size_t p) {
+    while (p < s.size() &&
+           ::std::isspace(static_cast<unsigned char>(s[p])) != 0)
+      ++p;
+    return p;
+  };
+  const auto skip_brackets = [s, &skip_space](::std::size_t p) {
+    p = skip_space(p);
+    while (p < s.size() && s[p] == '[') {
+      ::std::int64_t depth = 1;
+      ++p;
+      while (p < s.size() && depth > 0) {
+        if (s[p] == '\\' && p + 1 < s.size()) {
+          p += 2;
+          continue;
+        }
+        if (s[p] == '[') ++depth;
+        if (s[p] == ']') --depth;
+        ++p;
+      }
+      if (depth != 0) return ::std::string_view::npos;
+      p = skip_space(p);
+    }
+    return p;
+  };
+  const auto control_word_end = [s](::std::size_t p) {
+    while (p < s.size()) {
+      const unsigned char c = static_cast<unsigned char>(s[p]);
+      if (::std::isalpha(c) == 0 && s[p] != '@') break;
+      ++p;
+    }
+    return p;
+  };
 
-  const ::std::string esc = regex_escape_text(macro_name);
-  const ::std::regex kOneNew(
-      "\\\\(?:re)?newcommand\\s*\\{\\s*\\\\" + esc + "\\s*\\}(?:\\s*\\[[0-9]+\\])?\\s*\\{[^{}]*\\}");
-  const ::std::regex kOneDef("\\\\def\\s*\\\\" + esc + "\\s*\\{[^{}]*\\}");
-  out = ::std::regex_replace(out, kOneNew, " ");
-  out = ::std::regex_replace(out, kOneDef, " ");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    if (s[i] != '\\' || i + 1 >= s.size()) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    if (s[i + 1] == '\\') {
+      out.append(s.substr(i, 2));
+      i += 2;
+      continue;
+    }
+
+    const ::std::size_t command_end = control_word_end(i + 1);
+    const auto command = s.substr(i + 1, command_end - i - 1);
+    ::std::size_t declaration_end = ::std::string_view::npos;
+    ::std::string declared_name;
+
+    if (command == "newcommand" || command == "renewcommand" ||
+        command == "providecommand") {
+      ::std::size_t p = skip_space(command_end);
+      ::std::size_t after_name = 0;
+      ::std::string name_group;
+      if (tex_parse_braced_group(s, p, &after_name, &name_group)) {
+        declared_name = tex_canon_macro_name(name_group);
+        p = skip_brackets(after_name);
+        ::std::string ignored_body;
+        if (p != ::std::string_view::npos &&
+            tex_parse_braced_group(s, p, &declaration_end, &ignored_body)) {
+          // declaration_end is now the first byte after the nested body.
+        }
+      }
+    } else if (command == "def") {
+      ::std::size_t p = skip_space(command_end);
+      if (p < s.size() && s[p] == '\\' && p + 1 < s.size()) {
+        const ::std::size_t name_begin = p + 1;
+        ::std::size_t name_end = control_word_end(name_begin);
+        if (name_end == name_begin) ++name_end;
+        declared_name.assign(s.substr(name_begin, name_end - name_begin));
+        p = name_end;
+        while (p < s.size() && s[p] != '{') {
+          if (s[p] == '\\' && p + 1 < s.size()) ++p;
+          ++p;
+        }
+        ::std::string ignored_body;
+        (void)tex_parse_braced_group(
+            s, p, &declaration_end, &ignored_body);
+      }
+    }
+
+    const bool remove = declaration_end != ::std::string_view::npos &&
+                        (wanted.empty() || declared_name == wanted);
+    if (remove) {
+      out.push_back(' ');
+      i = declaration_end;
+      continue;
+    }
+    out.push_back(s[i++]);
+  }
   return out;
 }
 
@@ -2904,14 +3224,38 @@ static ::std::string tex_apply_macro_map(::std::string text,
   if (map.empty() || max_passes <= 0) return text;
   for (::std::int64_t pass = 0; pass < max_passes; ++pass) {
     bool changed = false;
-    for (const auto& [name, body] : map) {
-      const ::std::regex re("\\\\" + regex_escape_text(name) + "(?![A-Za-z@])");
-      const ::std::string replaced = ::std::regex_replace(text, re, body);
-      if (replaced != text) {
-        changed = true;
-        text = replaced;
+    ::std::string next;
+    next.reserve(text.size());
+    for (::std::size_t i = 0; i < text.size();) {
+      if (text[i] != '\\' || i + 1 >= text.size()) {
+        next.push_back(text[i++]);
+        continue;
       }
+      if (text[i + 1] == '\\') {
+        next.append(text, i, 2);
+        i += 2;
+        continue;
+      }
+      const unsigned char first = static_cast<unsigned char>(text[i + 1]);
+      if (::std::isalpha(first) == 0 && text[i + 1] != '@') {
+        next.push_back(text[i++]);
+        continue;
+      }
+      ::std::size_t end = i + 2;
+      while (end < text.size()) {
+        const unsigned char c = static_cast<unsigned char>(text[end]);
+        if (::std::isalpha(c) == 0 && text[end] != '@') break;
+        ++end;
+      }
+      const auto found = map.find(text.substr(i + 1, end - i - 1));
+      if (found == map.end()) next.append(text, i, end - i);
+      else {
+        next.append(found->second);
+        changed = true;
+      }
+      i = end;
     }
+    text = ::std::move(next);
     if (!changed) break;
   }
   return text;
@@ -2979,18 +3323,55 @@ static ::std::string tex_balance_math_delims_text(::std::string_view s) {
   if (br_open > br_close) {
     for (::std::size_t i = 0; i < br_open - br_close; ++i) out += "\\]";
   }
+  if (par_close > par_open || br_close > br_open) {
+    ::std::string prefix;
+    prefix.reserve(2 * ((par_close > par_open ? par_close - par_open : 0) +
+                        (br_close > br_open ? br_close - br_open : 0)));
+    // Preserve the former ordering while moving the existing bytes only once.
+    for (::std::size_t i = br_open; i < br_close; ++i) prefix += "\\[";
+    for (::std::size_t i = par_open; i < par_close; ++i) prefix += "\\(";
+    out.insert(0, prefix);
+  }
   return out;
 }
 
 static ::std::string tex_canonicalize_macros_text(::std::string_view s) {
-  ::std::string out(s);
   static constexpr ::std::array<::std::pair<::std::string_view, ::std::string_view>, 12> kMap{{
-      {"\\dfrac", "\\frac"}, {"\\tfrac", "\\frac"}, {"\\cfrac", "\\frac"},
-      {"\\operatorname", "\\mathrm"}, {"\\rm", "\\mathrm"}, {"\\bf", "\\mathbf"},
-      {"\\it", "\\mathit"}, {"\\cal", "\\mathcal"}, {"\\Bbb", "\\mathbb"},
-      {"\\lt", "<"}, {"\\gt", ">"}, {"\\leqslant", "\\leq"},
+      {"dfrac", "\\frac"}, {"tfrac", "\\frac"}, {"cfrac", "\\frac"},
+      {"operatorname", "\\mathrm"}, {"rm", "\\mathrm"}, {"bf", "\\mathbf"},
+      {"it", "\\mathit"}, {"cal", "\\mathcal"}, {"Bbb", "\\mathbb"},
+      {"lt", "<"}, {"gt", ">"}, {"leqslant", "\\leq"},
   }};
-  for (const auto& [from, to] : kMap) out = ::pluss::coden::native::cpu::replace_bytes(out, from, to);
+
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    if (s[i] == '\\' && i + 1 < s.size() && s[i + 1] == '\\') {
+      out.append(s.substr(i, 2));
+      i += 2;
+      continue;
+    }
+    if (s[i] != '\\' || i + 1 >= s.size() ||
+        (::std::isalpha(static_cast<unsigned char>(s[i + 1])) == 0 &&
+         s[i + 1] != '@')) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    ::std::size_t end = i + 2;
+    while (end < s.size()) {
+      const unsigned char c = static_cast<unsigned char>(s[end]);
+      if (::std::isalpha(c) == 0 && s[end] != '@') break;
+      ++end;
+    }
+    const auto name = s.substr(i + 1, end - i - 1);
+    const auto replacement = ::std::find_if(
+        kMap.begin(), kMap.end(), [name](const auto& entry) {
+          return entry.first == name;
+        });
+    if (replacement == kMap.end()) out.append(s.substr(i, end - i));
+    else out.append(replacement->second);
+    i = end;
+  }
   return out;
 }
 
@@ -3057,15 +3438,15 @@ static ::std::string tex_wrap_display_math_text(::std::string_view s, ::std::str
 static ::std::string tex_simplify_fractions_text(::std::string_view s) {
   static const ::std::regex kFrac(R"(\\(?:d|t)?frac\s*\{\s*([^{}]+?)\s*\}\s*\{\s*([^{}]+?)\s*\})");
   ::std::string out = tex_canonicalize_macros_text(s);
-  out = ::std::regex_replace(out, kFrac, "\\\\frac{$1}{$2}");
+  out = ::std::regex_replace(out, kFrac, "\\frac{$1}{$2}");
   return out;
 }
 
 static ::std::string tex_simplify_roots_text(::std::string_view s) {
   static const ::std::regex kRootN(R"(\\sqrt\s*\[\s*([^\]]+?)\s*\]\s*\{\s*([^{}]+?)\s*\})");
   static const ::std::regex kRoot(R"(\\sqrt\s*\{\s*([^{}]+?)\s*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), kRootN, "\\\\sqrt[$1]{$2}");
-  out = ::std::regex_replace(out, kRoot, "\\\\sqrt{$1}");
+  ::std::string out = ::std::regex_replace(::std::string(s), kRootN, "\\sqrt[$1]{$2}");
+  out = ::std::regex_replace(out, kRoot, "\\sqrt{$1}");
   return out;
 }
 
@@ -3075,44 +3456,168 @@ static ::std::string tex_simplify_spacing_text(::std::string_view s) {
 }
 
 static ::std::string tex_convert_frac_to_slash_text(::std::string_view s) {
-  static const ::std::regex kFrac(R"(\\(?:d|t)?frac\s*\{\s*([^{}]+?)\s*\}\s*\{\s*([^{}]+?)\s*\})");
-  return ::std::regex_replace(::std::string(s), kFrac, "($1)/($2)");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      if (s[i] == '\\' && i + 1 < s.size() && s[i + 1] == '\\') {
+        out.append("\\\\");
+        i += 2;
+        continue;
+      }
+      out.push_back(s[i++]);
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (token_end != name_end ||
+        (name != "frac" && name != "dfrac" && name != "tfrac" &&
+         name != "cfrac")) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+
+    ::std::size_t num_open = token_end;
+    while (num_open < s.size() &&
+           ::std::isspace(static_cast<unsigned char>(s[num_open]))) {
+      ++num_open;
+    }
+    ::std::size_t num_end = 0;
+    if (!tex_group_end(s, num_open, '{', '}', &num_end)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    ::std::size_t den_open = num_end;
+    while (den_open < s.size() &&
+           ::std::isspace(static_cast<unsigned char>(s[den_open]))) {
+      ++den_open;
+    }
+    ::std::size_t den_end = 0;
+    if (!tex_group_end(s, den_open, '{', '}', &den_end)) {
+      out.append(s.substr(i, num_end - i));
+      i = num_end;
+      continue;
+    }
+    const auto numerator = ::pluss::coden::native::cpu::strip_ascii(
+        s.substr(num_open + 1, num_end - num_open - 2));
+    const auto denominator = ::pluss::coden::native::cpu::strip_ascii(
+        s.substr(den_open + 1, den_end - den_open - 2));
+    out += '(';
+    out += tex_convert_frac_to_slash_text(numerator);
+    out += ")/(";
+    out += tex_convert_frac_to_slash_text(denominator);
+    out += ')';
+    i = den_end;
+  }
+  return out;
 }
 
 static ::std::string tex_convert_sqrt_to_pow_text(::std::string_view s) {
-  static const ::std::regex kRootN(R"(\\sqrt\s*\[\s*([^\]]+?)\s*\]\s*\{\s*([^{}]+?)\s*\})");
-  static const ::std::regex kRoot(R"(\\sqrt\s*\{\s*([^{}]+?)\s*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), kRootN, "($2)^(1/$1)");
-  out = ::std::regex_replace(out, kRoot, "($1)^(1/2)");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        token_end != name_end ||
+        s.substr(name_begin, name_end - name_begin) != "sqrt") {
+      if (s[i] == '\\' && i + 1 < s.size() && s[i + 1] == '\\') {
+        out.append("\\\\");
+        i += 2;
+        continue;
+      }
+      out.push_back(s[i++]);
+      continue;
+    }
+
+    ::std::size_t cursor = token_end;
+    while (cursor < s.size() &&
+           ::std::isspace(static_cast<unsigned char>(s[cursor]))) {
+      ++cursor;
+    }
+    ::std::string degree = "2";
+    if (cursor < s.size() && s[cursor] == '[') {
+      ::std::size_t degree_end = 0;
+      if (!tex_group_end(s, cursor, '[', ']', &degree_end)) {
+        out.append(s.substr(i, token_end - i));
+        i = token_end;
+        continue;
+      }
+      degree = ::pluss::coden::native::cpu::strip_ascii(
+          s.substr(cursor + 1, degree_end - cursor - 2));
+      cursor = degree_end;
+      while (cursor < s.size() &&
+             ::std::isspace(static_cast<unsigned char>(s[cursor]))) {
+        ++cursor;
+      }
+    }
+    ::std::size_t radicand_end = 0;
+    if (!tex_group_end(s, cursor, '{', '}', &radicand_end)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    const auto radicand = ::pluss::coden::native::cpu::strip_ascii(
+        s.substr(cursor + 1, radicand_end - cursor - 2));
+    out += '(';
+    out += tex_convert_sqrt_to_pow_text(radicand);
+    out += ")^(1/";
+    out += tex_convert_sqrt_to_pow_text(degree);
+    out += ')';
+    i = radicand_end;
+  }
   return out;
 }
 
 static ::std::string tex_convert_pm_to_plusminus_text(::std::string_view s) {
-  ::std::string out(s);
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\pm", "+/-");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\mp", "-/+");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      if (s[i] == '\\' && i + 1 < s.size() && s[i + 1] == '\\') {
+        out.append("\\\\");
+        i += 2;
+        continue;
+      }
+      out.push_back(s[i++]);
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (token_end == name_end && name == "pm") out += "+/-";
+    else if (token_end == name_end && name == "mp") out += "-/+";
+    else out.append(s.substr(i, token_end - i));
+    i = token_end;
+  }
   return out;
 }
 
 static ::std::string tex_standardize_vectors_text(::std::string_view s) {
   static const ::std::regex kV1(R"(\\(?:mathbf|boldsymbol|overrightarrow)\s*\{([^{}]+)\})");
   static const ::std::regex kV2(R"(\\vec\s+([A-Za-z]))");
-  ::std::string out = ::std::regex_replace(::std::string(s), kV1, "\\\\vec{$1}");
-  out = ::std::regex_replace(out, kV2, "\\\\vec{$1}");
+  ::std::string out = ::std::regex_replace(::std::string(s), kV1, "\\vec{$1}");
+  out = ::std::regex_replace(out, kV2, "\\vec{$1}");
   return out;
 }
 
 static ::std::string tex_standardize_matrices_text(::std::string_view s) {
   static const ::std::regex kBegin(R"(\\begin\{(?:bmatrix|pmatrix|Bmatrix|vmatrix|Vmatrix|smallmatrix)\})");
   static const ::std::regex kEnd(R"(\\end\{(?:bmatrix|pmatrix|Bmatrix|vmatrix|Vmatrix|smallmatrix)\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), kBegin, "\\\\begin{matrix}");
-  out = ::std::regex_replace(out, kEnd, "\\\\end{matrix}");
+  ::std::string out = ::std::regex_replace(::std::string(s), kBegin, "\\begin{matrix}");
+  out = ::std::regex_replace(out, kEnd, "\\end{matrix}");
   return out;
 }
 
 static ::std::string tex_standardize_integrals_text(::std::string_view s) {
   static const ::std::regex kInt(R"(\\(?:iint|iiint|iiiint|oint|oiint|oiiint)\b)");
-  return ::std::regex_replace(::std::string(s), kInt, "\\\\int");
+  return ::std::regex_replace(::std::string(s), kInt, "\\int");
 }
 
 static ::std::string tex_standardize_summations_text(::std::string_view s) {
@@ -3144,9 +3649,9 @@ static ::std::string tex_standardize_primes_text(::std::string_view s) {
   static const ::std::regex k3(R"(([A-Za-z0-9])''')");
   static const ::std::regex k2(R"(([A-Za-z0-9])'')");
   static const ::std::regex k1(R"(([A-Za-z0-9])')");
-  out = ::std::regex_replace(out, k3, "$1^{\\\\prime\\\\prime\\\\prime}");
-  out = ::std::regex_replace(out, k2, "$1^{\\\\prime\\\\prime}");
-  out = ::std::regex_replace(out, k1, "$1^{\\\\prime}");
+  out = ::std::regex_replace(out, k3, "$1^{\\prime\\prime\\prime}");
+  out = ::std::regex_replace(out, k2, "$1^{\\prime\\prime}");
+  out = ::std::regex_replace(out, k1, "$1^{\\prime}");
   return out;
 }
 
@@ -3160,8 +3665,44 @@ static ::std::string tex_standardize_dots_text(::std::string_view s) {
 }
 
 static ::std::string tex_expand_inputs_text(::std::string_view s) {
-  static const ::std::regex kInp(R"(\\(?:input|include)\s*\{([^{}]+)\})");
-  return ::std::regex_replace(::std::string(s), kInp, "[include:$1]");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    if (s[i] != '\\' || i + 1 >= s.size()) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    if (s[i + 1] == '\\') {
+      out.append(s.substr(i, 2));
+      i += 2;
+      continue;
+    }
+    ::std::size_t end = i + 1;
+    while (end < s.size() &&
+           ::std::isalpha(static_cast<unsigned char>(s[end])) != 0)
+      ++end;
+    const auto command = s.substr(i + 1, end - i - 1);
+    if (command != "input" && command != "include") {
+      out.push_back(s[i++]);
+      continue;
+    }
+    ::std::size_t group_begin = end;
+    while (group_begin < s.size() &&
+           ::std::isspace(static_cast<unsigned char>(s[group_begin])) != 0)
+      ++group_begin;
+    ::std::size_t after_group = 0;
+    ::std::string path;
+    if (!tex_parse_braced_group(s, group_begin, &after_group, &path)) {
+      out.append(s.substr(i, end - i));
+      i = end;
+      continue;
+    }
+    out += "[include:";
+    out += path;
+    out.push_back(']');
+    i = after_group;
+  }
+  return out;
 }
 
 static ::std::string tex_resolve_graphics_text(::std::string_view s) {
@@ -3628,7 +4169,8 @@ Note note_contiguous_view(const Note &source, ::std::int64_t offset,
 }
 
 static void require_text_note(const NoteImpl& impl, const char* op) {
-  PLUSS_CHECK(!impl.is_bytes(), ::std::string(op) + " requires a UTF-8 text Note (not bytes)");
+  PLUSS_CHECK(impl.is_text(),
+              ::std::string(op) + " requires a Text Note");
 }
 
 template <class Transform>
@@ -3797,9 +4339,6 @@ Note swapcase(const Note& x) { return transform_note_text(x, "Note::swapcase", :
 Note strip(const Note& x) { return transform_note_text(x, "Note::strip", [](auto s) { return ::pluss::coden::native::cpu::strip_ascii(s); }); }
 Note lstrip(const Note& x) { return transform_note_text(x, "Note::lstrip", [](auto s) { return ::pluss::coden::native::cpu::lstrip_ascii(s); }); }
 Note rstrip(const Note& x) { return transform_note_text(x, "Note::rstrip", [](auto s) { return ::pluss::coden::native::cpu::rstrip_ascii(s); }); }
-Note trim(const Note& x) { return strip(x); }
-Note trim_left(const Note& x) { return lstrip(x); }
-Note trim_right(const Note& x) { return rstrip(x); }
 Note collapse_whitespace(const Note& x) {
   return transform_note_text(x, "Note::collapse_whitespace", ::pluss::coden::native::cpu::collapse_whitespace_ascii);
 }
@@ -3807,14 +4346,11 @@ Note dedent(const Note& x) { return transform_note_text(x, "Note::dedent", ::plu
 Note indent(const Note& x) {
   return transform_note_text(x, "Note::indent", [](auto s) { return ::pluss::coden::native::cpu::indent_ascii(s, 2); });
 }
-Note normalize_spaces(const Note& x) {
-  return transform_note_text(x, "Note::normalize_spaces", ::pluss::coden::native::cpu::normalize_spaces_ascii);
-}
 Note remove_control_chars(const Note& x) {
   return transform_note_text(x, "Note::remove_control_chars", ::pluss::coden::native::cpu::remove_control_ascii);
 }
-Note remove_non_ascii(const Note& x) {
-  return transform_note_text(x, "Note::remove_non_ascii", ::pluss::coden::native::cpu::remove_non_ascii);
+Note keep_ascii(const Note& x) {
+  return transform_note_text(x, "Note::keep_ascii", ::pluss::coden::native::cpu::remove_non_ascii);
 }
 Note to_ascii(const Note& x) {
   return transform_note_text(x, "Note::to_ascii", ::pluss::coden::native::cpu::to_ascii_lossy);
@@ -3843,9 +4379,6 @@ Note keep_alpha(const Note& x) {
 Note keep_digits(const Note& x) {
   return transform_note_text(x, "Note::keep_digits", ::pluss::coden::native::cpu::keep_digits_ascii);
 }
-Note keep_ascii(const Note& x) {
-  return transform_note_text(x, "Note::keep_ascii", ::pluss::coden::native::cpu::keep_ascii);
-}
 Note keep_printable(const Note& x) {
   return transform_note_text(x, "Note::keep_printable", ::pluss::coden::native::cpu::keep_printable_ascii);
 }
@@ -3860,9 +4393,6 @@ Note normalize_ellipsis(const Note& x) {
 }
 Note strip_accents(const Note& x) {
   return transform_note_text(x, "Note::strip_accents", ::pluss::coden::native::cpu::strip_accents_utf8);
-}
-Note strip_diacritics(const Note& x) {
-  return transform_note_text(x, "Note::strip_diacritics", ::pluss::coden::native::cpu::strip_diacritics_utf8);
 }
 Note strip_zero_width(const Note& x) {
   return transform_note_text(x, "Note::strip_zero_width", ::pluss::coden::native::cpu::strip_zero_width_utf8);
@@ -3893,7 +4423,7 @@ Note nlp_clean(const Note& x) {
   auto out = nlp_normalize_punct(x, false);
   out = remove_control_chars(out);
   out = strip_zero_width(out);
-  out = normalize_spaces(out);
+  out = collapse_whitespace(out);
   out = strip(out);
   return out;
 }
@@ -4026,9 +4556,6 @@ Note phonetic_metaphone(const Note& x) {
         return phonetic_transform_text(
             s, [](::std::string_view w) { return metaphone_simple_word(w); });
       });
-}
-Note phonetic_double_metaphone(const Note& x) {
-  return phonetic_metaphone(x);
 }
 Note nlp_remove_urls(const Note& x) {
   return transform_note_text(x, "Note::nlp_remove_urls", ::pluss::coden::native::cpu::nlp_remove_urls_fast);
@@ -4169,18 +4696,6 @@ Note tex_remove_big_delims(const Note& x) {
 Note tex_remove_spacing_cmds(const Note& x) {
   return transform_note_text(x, "Note::tex_remove_spacing_cmds", [](auto s) { return tex_remove_spacing_cmds_text(s); });
 }
-Note tex_strip_math(const Note& x) {
-  return transform_note_text(x, "Note::tex_strip_math", [](auto s) { return tex_strip_math_text(s); });
-}
-Note tex_strip_text(const Note& x) {
-  return transform_note_text(x, "Note::tex_strip_text", [](auto s) { return tex_strip_text_text(s); });
-}
-Note tex_strip_environments(const Note& x) {
-  return tex_remove_environments(x);
-}
-Note tex_strip_commands(const Note& x) {
-  return tex_remove_commands(x);
-}
 Note tex_balance_braces(const Note& x) {
   return transform_note_text(x, "Note::tex_balance_braces", [](auto s) { return tex_balance_braces_text(s); });
 }
@@ -4193,8 +4708,9 @@ Note tex_canonicalize_macros(const Note& x) {
       x, "Note::tex_canonicalize_macros", [](auto s) { return tex_canonicalize_macros_text(s); });
 }
 Note tex_expand_macros(const Note& x, ::std::int64_t max_passes) {
+  PLUSS_CHECK(max_passes > 0, "Note.tex().macro_subs: max_passes must be positive");
   return transform_note_text(
-      x, "Note::tex_expand_macros", [max_passes](auto s) { return tex_expand_macros_text(s, max_passes); });
+      x, "Note::tex().macro_subs", [max_passes](auto s) { return tex_expand_macros_text(s, max_passes); });
 }
 Note tex_inline_macros(const Note& x) {
   return transform_note_text(x, "Note::tex_inline_macros", [](auto s) { return tex_inline_macros_text(s); });
@@ -4203,10 +4719,7 @@ Note tex_collapse_macros(const Note& x) {
   return transform_note_text(x, "Note::tex_collapse_macros", [](auto s) { return tex_collapse_macros_text(s); });
 }
 Note tex_expand_inputs(const Note& x) {
-  return transform_note_text(x, "Note::tex_expand_inputs", [](auto s) { return tex_expand_inputs_text(s); });
-}
-Note tex_resolve_includes(const Note& x) {
-  return tex_expand_inputs(x);
+  return transform_note_text(x, "Note::tex().input_tags", [](auto s) { return tex_expand_inputs_text(s); });
 }
 Note tex_resolve_graphics(const Note& x) {
   return transform_note_text(x, "Note::tex_resolve_graphics", [](auto s) { return tex_resolve_graphics_text(s); });
@@ -4237,15 +4750,15 @@ Note tex_simplify_spacing(const Note& x) {
 }
 Note tex_convert_frac_to_slash(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_convert_frac_to_slash", [](auto s) { return tex_convert_frac_to_slash_text(s); });
+      x, "Note::tex().frac_slash", [](auto s) { return tex_convert_frac_to_slash_text(s); });
 }
 Note tex_convert_sqrt_to_pow(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_convert_sqrt_to_pow", [](auto s) { return tex_convert_sqrt_to_pow_text(s); });
+      x, "Note::tex().sqrt_pow", [](auto s) { return tex_convert_sqrt_to_pow_text(s); });
 }
 Note tex_convert_pm_to_plusminus(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_convert_pm_to_plusminus", [](auto s) { return tex_convert_pm_to_plusminus_text(s); });
+      x, "Note::tex().pm_signs", [](auto s) { return tex_convert_pm_to_plusminus_text(s); });
 }
 Note tex_standardize_vectors(const Note& x) {
   return transform_note_text(x, "Note::tex_standardize_vectors", [](auto s) { return tex_standardize_vectors_text(s); });
@@ -4302,11 +4815,6 @@ Note tex_normalize_newlines(const Note& x) {
 Note tex_dedup_blank_lines(const Note& x) {
   return transform_note_text(x, "Note::tex_dedup_blank_lines", [](auto s) { return tex_dedup_blank_lines_text(s); });
 }
-Note tex_collapse_whitespace(const Note& x) {
-  return transform_note_text(
-      x, "Note::tex_collapse_whitespace",
-      [](auto s) { return ::pluss::coden::native::cpu::collapse_whitespace_ascii(s); });
-}
 Note tex_fix_linebreaks(const Note& x) {
   return transform_note_text(x, "Note::tex_fix_linebreaks", [](auto s) { return tex_fix_linebreaks_text(s); });
 }
@@ -4362,9 +4870,6 @@ Note lstrip(const Note& x, ::std::string_view chars) {
 Note rstrip(const Note& x, ::std::string_view chars) {
   return transform_note_text(x, "Note::rstrip(chars)", [chars](auto s) { return ::pluss::coden::native::cpu::rstrip_ascii(s, chars); });
 }
-Note trim(const Note& x, ::std::string_view chars) { return strip(x, chars); }
-Note trim_left(const Note& x, ::std::string_view chars) { return lstrip(x, chars); }
-Note trim_right(const Note& x, ::std::string_view chars) { return rstrip(x, chars); }
 
 Note replace(const Note& x, ::std::string_view from, ::std::string_view to) {
   if (!x.defined()) return Note::undefined();
@@ -4473,79 +4978,97 @@ Note json_escape(const Note& x) {
   return transform_note_any(x, [](auto s) { return json_escape_text(s); });
 }
 
-::std::vector<::std::uint8_t> contains(const Note& x, ::std::string_view needle) {
-  ::std::vector<::std::uint8_t> out;
-  if (!x.defined()) return out;
+Note contains(const Note& x, ::std::string_view needle) {
+  PLUSS_CHECK(x.defined(), "Note::contains: receiver must be defined");
   const auto& impl = NoteAccess::impl(x);
-  out.resize(static_cast<::std::size_t>(impl->numel()));
+  PLUSS_CHECK(impl->is_textual(),
+              "Note::contains: operation requires Text or Bytes storage");
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(impl->numel()));
   for (::std::int64_t i = 0; i < impl->numel(); ++i) {
     out[static_cast<::std::size_t>(i)] = ::pluss::coden::native::cpu::contains_bytes(impl->bytes_at(i), needle) ? 1 : 0;
   }
-  return out;
-}
-
-::std::vector<::std::int64_t> lengths_bytes(const Note& x) {
-  ::std::vector<::std::int64_t> out;
-  if (!x.defined()) return out;
-  const auto& impl = NoteAccess::impl(x);
-  out.resize(static_cast<::std::size_t>(impl->numel()));
-  for (::std::int64_t i = 0; i < impl->numel(); ++i) {
-    out[static_cast<::std::size_t>(i)] = static_cast<::std::int64_t>(impl->bytes_at(i).size());
-  }
-  return out;
+  return note_from_bool_storage(::std::move(out), x.sizes_view());
 }
 
 namespace {
 
-// Rebuilds a NoteImpl over `new_sizes`/`new_dim`, gathering output element k
-// from source linear index `old_lin_for_new[k]`. Preserves dtype: Text/Bytes
-// gather arena-backed spans (zero-copy per span); Bool/Int64/Float64 gather
-// into freshly packed contiguous lanes. Shared by every shape/index op below
-// (permute, select, narrow, repeat, repeat_interleave, ...) so none of them
-// hardcode a textual-only storage path.
-::pluss::flame::intrusive_ptr<NoteImpl> gather_note_impl(
+// Rebuilds a NoteImpl by mapping each output lane directly to one source lane.
+// Text/Bytes copy only span metadata; native dtypes copy into packed storage.
+// The callback form lets repetition avoid an O(output-numel) scratch index
+// vector while selection operations can still pass a precomputed map.
+template <class OldIndexAt>
+::pluss::flame::intrusive_ptr<NoteImpl> map_note_impl(
     const NoteImpl& impl,
-    const ::std::vector<::std::int64_t>& old_lin_for_new,
+    ::std::size_t output_numel,
+    OldIndexAt&& old_index_at,
     ::std::array<::std::int64_t, 3> new_sizes,
     ::std::int64_t new_dim) {
   switch (impl.dtype()) {
     case NoteDType::Text:
     case NoteDType::Bytes: {
       const auto& spans = impl.spans();
-      ::std::vector<NoteImpl::OffLen> out(old_lin_for_new.size());
-      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
-        out[i] = spans.at(static_cast<::std::size_t>(old_lin_for_new[i]));
+      ::std::vector<NoteImpl::OffLen> out(output_numel);
+      for (::std::size_t i = 0; i < output_numel; ++i) {
+        out[i] = spans.at(static_cast<::std::size_t>(old_index_at(i)));
       }
       return ::pluss::flame::make_intrusive<NoteImpl>(
           impl.arena(), ::std::move(out), new_sizes, new_dim, impl.dtype());
     }
     case NoteDType::Bool: {
       const auto values = impl.bool_values();
-      NoteImpl::BoolStorage out(old_lin_for_new.size());
-      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
-        out[i] = values[static_cast<::std::size_t>(old_lin_for_new[i])];
+      NoteImpl::BoolStorage out(output_numel);
+      for (::std::size_t i = 0; i < output_numel; ++i) {
+        out[i] = values[static_cast<::std::size_t>(old_index_at(i))];
       }
       return ::pluss::flame::make_intrusive<NoteImpl>(::std::move(out), new_sizes, new_dim);
     }
     case NoteDType::Int64: {
       const auto values = impl.int64_values();
-      NoteImpl::Int64Storage out(old_lin_for_new.size());
-      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
-        out[i] = values[static_cast<::std::size_t>(old_lin_for_new[i])];
+      NoteImpl::Int64Storage out(output_numel);
+      for (::std::size_t i = 0; i < output_numel; ++i) {
+        out[i] = values[static_cast<::std::size_t>(old_index_at(i))];
       }
       return ::pluss::flame::make_intrusive<NoteImpl>(::std::move(out), new_sizes, new_dim);
     }
     case NoteDType::Float64: {
       const auto values = impl.float64_values();
-      NoteImpl::Float64Storage out(old_lin_for_new.size());
-      for (::std::size_t i = 0; i < old_lin_for_new.size(); ++i) {
-        out[i] = values[static_cast<::std::size_t>(old_lin_for_new[i])];
+      NoteImpl::Float64Storage out(output_numel);
+      for (::std::size_t i = 0; i < output_numel; ++i) {
+        out[i] = values[static_cast<::std::size_t>(old_index_at(i))];
       }
       return ::pluss::flame::make_intrusive<NoteImpl>(::std::move(out), new_sizes, new_dim);
     }
   }
   PLUSS_CHECK(false, "gather_note_impl: unhandled Note dtype");
   return {};
+}
+
+::pluss::flame::intrusive_ptr<NoteImpl> gather_note_impl(
+    const NoteImpl& impl,
+    const ::std::vector<::std::int64_t>& old_lin_for_new,
+    ::std::array<::std::int64_t, 3> new_sizes,
+    ::std::int64_t new_dim) {
+  return map_note_impl(
+      impl, old_lin_for_new.size(),
+      [&](::std::size_t i) { return old_lin_for_new.at(i); },
+      new_sizes, new_dim);
+}
+
+::std::int64_t checked_shape_product(
+    const ::std::array<::std::int64_t, 3>& sizes,
+    ::std::int64_t dim,
+    ::std::string_view operation) {
+  ::std::int64_t product = 1;
+  for (::std::int64_t axis = 0; axis < dim; ++axis) {
+    const auto extent = sizes[static_cast<::std::size_t>(axis)];
+    PLUSS_CHECK(extent >= 0,
+                ::std::string(operation) + ": output extents must be non-negative");
+    PLUSS_CHECK(product == 0 ||
+                    extent <= ::std::numeric_limits<::std::int64_t>::max() / product,
+                ::std::string(operation) + ": output shape overflows int64");
+    product *= extent;
+  }
+  return product;
 }
 
 } // namespace
@@ -4745,7 +5268,7 @@ Note flatten(const Note& x) {
   return reshape(x, ::std::span<const ::std::int64_t>(sizes.data(), sizes.size()));
 }
 
-Note expand_dims(const Note& x, ::std::int64_t dim) {
+Note unsqueeze(const Note& x, ::std::int64_t dim) {
   if (!x.defined()) return Note::undefined();
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t old_dim = impl->dim();
@@ -4759,10 +5282,6 @@ Note expand_dims(const Note& x, ::std::int64_t dim) {
     new_sizes[static_cast<::std::size_t>(i)] = old_sizes[static_cast<::std::size_t>(j++)];
   }
   return reshape(x, ::std::span<const ::std::int64_t>(new_sizes.data(), static_cast<::std::size_t>(new_dim)));
-}
-
-Note unsqueeze(const Note& x, ::std::int64_t dim) {
-  return expand_dims(x, dim);
 }
 
 Note squeeze(const Note& x, ::std::int64_t dim) {
@@ -4785,8 +5304,11 @@ Note squeeze(const Note& x, ::std::int64_t dim) {
 
 Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats) {
   if (!x.defined()) return Note::undefined();
-  PLUSS_CHECK(!repeats.empty(), "repeat expects at least one repeat value");
   const auto& impl = NoteAccess::impl(x);
+  const ::std::int64_t input_dim = impl->dim();
+  PLUSS_CHECK(static_cast<::std::int64_t>(repeats.size()) >= input_dim,
+              "repeat dimensions cannot be fewer than the Note rank");
+  PLUSS_CHECK(repeats.size() <= 3, "repeat would exceed Note max rank 3");
 
   ::std::vector<::std::int64_t> reps;
   reps.reserve(repeats.size());
@@ -4795,57 +5317,44 @@ Note repeat(const Note& x, ::std::span<const ::std::int64_t> repeats) {
     reps.push_back(r);
   }
 
-  ::std::int64_t src_dim = impl->dim();
-  ::std::array<::std::int64_t, 3> src_sizes{1, 1, 1};
-  if (src_dim == 0) {
-    src_dim = 1;
-    src_sizes[0] = 1;
-  } else {
-    src_sizes = impl->sizes3();
-  }
-
-  const ::std::int64_t out_dim = ::std::max<::std::int64_t>(src_dim, static_cast<::std::int64_t>(reps.size()));
-  PLUSS_CHECK(out_dim <= 3, "repeat would exceed Note max rank 3");
-
-  ::std::vector<::std::int64_t> reps_aligned(static_cast<::std::size_t>(out_dim), 1);
-  for (::std::int64_t i = 0; i < static_cast<::std::int64_t>(reps.size()); ++i) {
-    reps_aligned[static_cast<::std::size_t>(out_dim - static_cast<::std::int64_t>(reps.size()) + i)] =
-        reps[static_cast<::std::size_t>(i)];
-  }
+  const ::std::int64_t out_dim = static_cast<::std::int64_t>(reps.size());
 
   ::std::array<::std::int64_t, 3> aligned_src{1, 1, 1};
-  for (::std::int64_t i = 0; i < src_dim; ++i) {
-    aligned_src[static_cast<::std::size_t>(out_dim - src_dim + i)] = src_sizes[static_cast<::std::size_t>(i)];
+  const auto src_sizes = impl->sizes3();
+  for (::std::int64_t i = 0; i < input_dim; ++i) {
+    aligned_src[static_cast<::std::size_t>(out_dim - input_dim + i)] =
+        src_sizes[static_cast<::std::size_t>(i)];
   }
 
   ::std::array<::std::int64_t, 3> out_sizes{1, 1, 1};
   for (::std::int64_t i = 0; i < out_dim; ++i) {
-    out_sizes[static_cast<::std::size_t>(i)] =
-        aligned_src[static_cast<::std::size_t>(i)] * reps_aligned[static_cast<::std::size_t>(i)];
+    const auto source_extent = aligned_src[static_cast<::std::size_t>(i)];
+    const auto copies = reps[static_cast<::std::size_t>(i)];
+    PLUSS_CHECK(source_extent == 0 ||
+                    copies <= ::std::numeric_limits<::std::int64_t>::max() / source_extent,
+                "repeat output shape overflows int64");
+    out_sizes[static_cast<::std::size_t>(i)] = source_extent * copies;
   }
 
-  ::std::int64_t out_numel = 1;
-  for (::std::int64_t i = 0; i < out_dim; ++i) out_numel *= out_sizes[static_cast<::std::size_t>(i)];
-  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(out_numel));
+  const auto out_numel = checked_shape_product(out_sizes, out_dim, "repeat");
 
   const auto src_strides = strides3(aligned_src, out_dim);
-  ::std::array<::std::int64_t, 3> out_c{0, 0, 0};
-  ::std::array<::std::int64_t, 3> src_c{0, 0, 0};
-  for (::std::int64_t out_lin = 0; out_lin < out_numel; ++out_lin) {
+  auto source_index = [&](::std::size_t output_index) {
+    ::std::array<::std::int64_t, 3> out_c{0, 0, 0};
+    ::std::array<::std::int64_t, 3> src_c{0, 0, 0};
+    const auto out_lin = static_cast<::std::int64_t>(output_index);
     unravel(out_lin, out_sizes, out_dim, out_c);
     for (::std::int64_t d = 0; d < out_dim; ++d) {
       const auto sz = aligned_src[static_cast<::std::size_t>(d)];
       src_c[static_cast<::std::size_t>(d)] = (sz == 0) ? 0 : (out_c[static_cast<::std::size_t>(d)] % sz);
     }
-    old_lin_for_new[static_cast<::std::size_t>(out_lin)] = ravel(src_c, src_strides, out_dim);
-  }
+    return ravel(src_c, src_strides, out_dim);
+  };
 
-  auto out_impl = gather_note_impl(*impl, old_lin_for_new, out_sizes, out_dim);
+  auto out_impl = map_note_impl(
+      *impl, static_cast<::std::size_t>(out_numel), source_index,
+      out_sizes, out_dim);
   return NoteFactoryAccess::wrap(::std::move(out_impl));
-}
-
-Note tile(const Note& x, ::std::span<const ::std::int64_t> reps) {
-  return repeat(x, reps);
 }
 
 Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim) {
@@ -4854,6 +5363,8 @@ Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim
   const auto& impl = NoteAccess::impl(x);
   const ::std::int64_t old_dim = impl->dim();
   if (old_dim == 0) {
+    PLUSS_CHECK(dim == 0 || dim == -1,
+                "repeat_interleave dim out of range for a scalar Note");
     const ::std::array<::std::int64_t, 1> reps_arr{repeats};
     return repeat(x, ::std::span<const ::std::int64_t>(reps_arr.data(), reps_arr.size()));
   }
@@ -4861,26 +5372,27 @@ Note repeat_interleave(const Note& x, ::std::int64_t repeats, ::std::int64_t dim
 
   const auto old_sizes = impl->sizes3();
   ::std::array<::std::int64_t, 3> new_sizes = old_sizes;
-  new_sizes[static_cast<::std::size_t>(dim)] *= repeats;
-  ::std::int64_t new_numel = 1;
-  for (::std::int64_t i = 0; i < old_dim; ++i) {
-    new_numel *= new_sizes[static_cast<::std::size_t>(i)];
-  }
+  const auto old_extent = old_sizes[static_cast<::std::size_t>(dim)];
+  PLUSS_CHECK(old_extent == 0 ||
+                  repeats <= ::std::numeric_limits<::std::int64_t>::max() / old_extent,
+              "repeat_interleave output shape overflows int64");
+  new_sizes[static_cast<::std::size_t>(dim)] = old_extent * repeats;
+  const auto new_numel =
+      checked_shape_product(new_sizes, old_dim, "repeat_interleave");
 
   const auto old_strides = strides3(old_sizes, old_dim);
-  ::std::vector<::std::int64_t> old_lin_for_new(static_cast<::std::size_t>(new_numel), 0);
-  if (new_numel > 0 && repeats > 0) {
+  auto source_index = [&](::std::size_t output_index) {
     ::std::array<::std::int64_t, 3> new_c{0, 0, 0};
     ::std::array<::std::int64_t, 3> old_c{0, 0, 0};
-    for (::std::int64_t new_lin = 0; new_lin < new_numel; ++new_lin) {
-      unravel(new_lin, new_sizes, old_dim, new_c);
-      old_c = new_c;
-      old_c[static_cast<::std::size_t>(dim)] /= repeats;
-      old_lin_for_new[static_cast<::std::size_t>(new_lin)] = ravel(old_c, old_strides, old_dim);
-    }
-  }
+    unravel(static_cast<::std::int64_t>(output_index), new_sizes, old_dim, new_c);
+    old_c = new_c;
+    old_c[static_cast<::std::size_t>(dim)] /= repeats;
+    return ravel(old_c, old_strides, old_dim);
+  };
 
-  auto out_impl = gather_note_impl(*impl, old_lin_for_new, new_sizes, old_dim);
+  auto out_impl = map_note_impl(
+      *impl, static_cast<::std::size_t>(new_numel), source_index,
+      new_sizes, old_dim);
   return NoteFactoryAccess::wrap(::std::move(out_impl));
 }
 
@@ -5052,51 +5564,75 @@ static ::std::vector<NoteImpl::OffLen> distinct_first_seen_spans_hashed(
 
 } // namespace
 
-::std::vector<::std::int64_t> note_argsort_indices_1d(
+NoteImpl::Int64Storage note_argsort_indices_1d(
     const Note& x,
     bool descending,
     bool stable) {
   PLUSS_CHECK(x.defined(), "note_argsort_indices_1d: Note must be defined");
   const auto& impl = NoteAccess::impl(x);
-  PLUSS_CHECK(impl, "note_argsort_indices_1d: Note impl must be defined");
-  PLUSS_CHECK(impl->dim() <= 1, "note_argsort_indices_1d currently supports 1D/scalar Notes only");
+  PLUSS_CHECK(impl, "Note::argsort: receiver storage must be defined");
+  PLUSS_CHECK(impl->dim() <= 1,
+              "Note::argsort supports only scalar and vector Notes");
 
   const auto n = impl->numel();
-  ::std::vector<::std::int64_t> order(static_cast<::std::size_t>(n));
+  NoteImpl::Int64Storage order(static_cast<::std::size_t>(n));
   ::std::iota(order.begin(), order.end(), 0);
 
-  const auto& spans = impl->spans();
-  const auto arena = impl->arena();
-  auto cmp_asc = [&](::std::int64_t i, ::std::int64_t j) {
-    const auto& a = spans[static_cast<::std::size_t>(i)];
-    const auto& b = spans[static_cast<::std::size_t>(j)];
-    return native::cpu::compare_lex_bytes(
-        arena->view(a.first, a.second),
-        arena->view(b.first, b.second),
-        native::cpu::LexCompareOp::Lt);
-  };
-  auto cmp_desc = [&](::std::int64_t i, ::std::int64_t j) {
-    const auto& a = spans[static_cast<::std::size_t>(i)];
-    const auto& b = spans[static_cast<::std::size_t>(j)];
-    return native::cpu::compare_lex_bytes(
-        arena->view(b.first, b.second),
-        arena->view(a.first, a.second),
-        native::cpu::LexCompareOp::Lt);
+  const auto apply_sort = [&](auto&& comparator) {
+    if (stable) {
+      ::std::stable_sort(order.begin(), order.end(), comparator);
+    } else {
+      ::std::sort(order.begin(), order.end(), comparator);
+    }
   };
 
-  if (descending) {
-    if (stable) {
-      ::std::stable_sort(order.begin(), order.end(), cmp_desc);
-    } else {
-      ::std::sort(order.begin(), order.end(), cmp_desc);
-    }
-  } else {
-    if (stable) {
-      ::std::stable_sort(order.begin(), order.end(), cmp_asc);
-    } else {
-      ::std::sort(order.begin(), order.end(), cmp_asc);
-    }
+  if (impl->is_text() || impl->is_bytes()) {
+    const auto& spans = impl->spans();
+    const auto arena = impl->arena();
+    apply_sort([&](::std::int64_t i, ::std::int64_t j) {
+      const auto& a = spans[static_cast<::std::size_t>(i)];
+      const auto& b = spans[static_cast<::std::size_t>(j)];
+      const auto lhs = descending ? b : a;
+      const auto rhs = descending ? a : b;
+      return native::cpu::compare_lex_bytes(
+          arena->view(lhs.first, lhs.second),
+          arena->view(rhs.first, rhs.second),
+          native::cpu::LexCompareOp::Lt);
+    });
+    return order;
   }
+
+  const auto sort_native = [&](auto values) {
+    using value_type = typename decltype(values)::value_type;
+    apply_sort([&](::std::int64_t i, ::std::int64_t j) {
+      const auto a = values[static_cast<::std::size_t>(i)];
+      const auto b = values[static_cast<::std::size_t>(j)];
+      if constexpr (::std::is_floating_point_v<value_type>) {
+        const bool a_nan = ::std::isnan(a);
+        const bool b_nan = ::std::isnan(b);
+        if (a_nan || b_nan) {
+          if (a_nan && b_nan) return false;
+          return descending ? a_nan : !a_nan;
+        }
+      }
+      return descending ? b < a : a < b;
+    });
+  };
+
+  switch (impl->dtype()) {
+    case NoteDType::Bool:
+      sort_native(impl->bool_values());
+      break;
+    case NoteDType::Int64:
+      sort_native(impl->int64_values());
+      break;
+    case NoteDType::Float64:
+      sort_native(impl->float64_values());
+      break;
+    case NoteDType::Text:
+    case NoteDType::Bytes:
+      break;
+    }
   return order;
 }
 
@@ -5456,30 +5992,28 @@ Note casefold(const Note& x, ::std::string_view locale) {
 #endif
 }
 
-::std::vector<::std::uint8_t> regex_match(const Note& x, ::std::string_view pattern) {
-  ::std::vector<::std::uint8_t> out;
-  if (!x.defined()) return out;
+Note regex_match(const Note& x, ::std::string_view pattern) {
+  PLUSS_CHECK(x.defined(), "regex().match: receiver must be defined");
   const ::std::regex re{::std::string(pattern)};
   const auto& impl = NoteAccess::impl(x);
-  require_text_note(*impl, "Note::regex_match");
-  out.resize(static_cast<::std::size_t>(impl->numel()));
+  require_text_note(*impl, "regex().match");
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(impl->numel()));
   for (::std::int64_t i=0;i<impl->numel();++i) {
     out[static_cast<::std::size_t>(i)] = ::std::regex_match(::std::string(impl->bytes_at(i)), re) ? 1 : 0;
   }
-  return out;
+  return note_from_bool_storage(::std::move(out), x.sizes_view());
 }
 
-::std::vector<::std::uint8_t> regex_search(const Note& x, ::std::string_view pattern) {
-  ::std::vector<::std::uint8_t> out;
-  if (!x.defined()) return out;
+Note regex_search(const Note& x, ::std::string_view pattern) {
+  PLUSS_CHECK(x.defined(), "regex().search: receiver must be defined");
   const ::std::regex re{::std::string(pattern)};
   const auto& impl = NoteAccess::impl(x);
-  require_text_note(*impl, "Note::regex_search");
-  out.resize(static_cast<::std::size_t>(impl->numel()));
+  require_text_note(*impl, "regex().search");
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(impl->numel()));
   for (::std::int64_t i=0;i<impl->numel();++i) {
     out[static_cast<::std::size_t>(i)] = ::std::regex_search(::std::string(impl->bytes_at(i)), re) ? 1 : 0;
   }
-  return out;
+  return note_from_bool_storage(::std::move(out), x.sizes_view());
 }
 
 Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view repl) {
@@ -5492,7 +6026,7 @@ Note regex_replace(const Note& x, ::std::string_view pattern, ::std::string_view
   // flags: bit 0 (1) case-insensitive, bit 1 (2) multiline `^`/`$`.
   const ::std::regex re = make_findall_regex(pattern, flags);
   const auto& impl = NoteAccess::impl(x);
-  require_text_note(*impl, "Note::regex_replace");
+  require_text_note(*impl, "regex().replace");
 
   auto arena = ::pluss::flame::make_intrusive<TextArena>();
   ::std::vector<NoteImpl::OffLen> spans;
@@ -5535,18 +6069,13 @@ TokenBatch split_chars(const Note& x) {
   });
 }
 
-TokenBatch split_graphemes(const Note& x) {
-  return split_chars(x);
-}
-
 TokenBatch tokenize_words(const Note& x, ::std::int64_t flags) {
   return tokenbatch_from_note(x, "Note::tokenize_words", [flags](::std::string_view s, ::std::vector<::std::string>& out) {
     tokenize_words_flagged_to(s, flags, out);
   });
 }
 
-TokenBatch tokenize_sentences(const Note& x, ::std::int64_t flags) {
-  (void)flags;
+TokenBatch tokenize_sentences(const Note& x) {
   return tokenbatch_from_note(x, "Note::tokenize_sentences", [](::std::string_view s, ::std::vector<::std::string>& out) {
     tokenize_sentences_to(s, out);
   });
@@ -5567,14 +6096,14 @@ TokenBatch tokenize_regex(const Note& x, ::std::string_view pattern) {
 
 TokenBatch regex_findall(const Note& x, ::std::string_view pattern, ::std::int64_t flags) {
   const ::std::regex re = make_findall_regex(pattern, flags);
-  return tokenbatch_from_note(x, "Note::regex_findall", [&re](::std::string_view s, ::std::vector<::std::string>& out) {
+  return tokenbatch_from_note(x, "regex().findall", [&re](::std::string_view s, ::std::vector<::std::string>& out) {
     tokenize_regex_to(s, re, out);
   });
 }
 
 TokenBatch regex_split(const Note& x, ::std::string_view pattern, ::std::int64_t limit) {
   const ::std::regex re{::std::string(pattern)};
-  return tokenbatch_from_note(x, "Note::regex_split", [&re, limit](::std::string_view s, ::std::vector<::std::string>& out) {
+  return tokenbatch_from_note(x, "regex().split", [&re, limit](::std::string_view s, ::std::vector<::std::string>& out) {
     regex_split_to(s, re, limit, out);
   });
 }
@@ -5759,27 +6288,3 @@ Note join(const Note& x, ::std::string_view sep) {
   return note_from_utf8(flat, {});
 }
 } // namespace pluss::coden::ops_internal
-
-#ifdef CODEN_ENABLE_SERIES_INTEROP
-#include "CodeM/core/ScalarType.h"
-
-namespace pluss::coden::ops_internal {
-
-pluss::codem::Series note_contains_series(const Note& a, ::std::string_view needle) {
-  auto mask = a.contains(needle); // uint8_t per element
-  auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Bool);
-  auto* p = reinterpret_cast<bool*>(out.raw_mutable_data());
-  for (::std::size_t i = 0; i < mask.size(); ++i) p[i] = (mask[i] != 0);
-  return out;
-}
-
-pluss::codem::Series note_lengths_bytes_series(const Note& a) {
-  auto lens = a.lengths_bytes();
-  auto out = pluss::codem::Series::empty(a.sizes(), pluss::codem::ScalarType::Int64);
-  auto* p = reinterpret_cast<::std::int64_t*>(out.raw_mutable_data());
-  for (::std::size_t i = 0; i < lens.size(); ++i) p[i] = static_cast<::std::int64_t>(lens[i]);
-  return out;
-}
-
-} // namespace pluss::coden::ops_internal
-#endif // CODEN_ENABLE_SERIES_INTEROP

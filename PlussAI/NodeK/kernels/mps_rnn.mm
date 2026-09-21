@@ -238,6 +238,24 @@ bool validate_gru_(const Series& input,
     set_reason_(reason, "MPSGraph GRU operator is unavailable on this OS");
     return false;
   }
+  if (cfg.bidirectional && cfg.split_bias) {
+    // Confirmed live on real MPS hardware: this combination makes
+    // MPSGraphGRUDescriptor build a graph that fails MLIR verification
+    // at EXECUTION time ("'mps.gru' op `bias` length should be 3"),
+    // which aborts the process (SIGABRT, not a catchable pluss::Error)
+    // -- unlike every other precondition here, which fails cleanly.
+    // Non-bidirectional split-bias GRUs and non-split bidirectional GRUs
+    // both work correctly; only the combination is broken. Rejecting it
+    // here converts an uncatchable crash into a normal, catchable
+    // rejection (the same safety margin every other precondition in
+    // this function already provides), while the actual MPSGraph
+    // descriptor/operand construction for this combination remains a
+    // real, separate, not-yet-root-caused bug.
+    set_reason_(reason,
+                "native MPS GRU route does not support bidirectional+split_bias (confirmed crash in "
+                "MPSGraphGRUDescriptor verification, not yet fixed) -- use unified bias for bidirectional GRUs");
+    return false;
+  }
   (void)require_backward;
   const std::int64_t dirs = cfg.bidirectional ? 2 : 1;
   const std::int64_t total_layers = cfg.num_layers * dirs;
@@ -1255,7 +1273,20 @@ bool rnn_route_ready() noexcept {
 }
 
 bool gru_route_enabled() noexcept {
-  return parse_bool_env_("PLUSS_MPS_GRU_ROUTE", true);
+  // Defaults OFF: the native route was found to silently produce WRONG
+  // forward output and gradients (not a crash, not float noise -- sign
+  // flips and multi-unit magnitude errors throughout) for an ordinary
+  // batch_first=false GRU, the most common calling convention. Under
+  // PLUSS_MPS_GRU_ROUTE_STRICT=1 the same input instead throws
+  // ("native route unavailable: ... expects zero-offset contiguous
+  // float32 MPS input/state tensors"), which is the SAFER of the two
+  // failure modes -- silent wrong-answer training is worse than a loud
+  // error. Until the native kernel's correctness is fixed (likely a
+  // weight-layout/gate-order mismatch against the composed-Series
+  // reference GRU), the generic (non-native) path is the only one
+  // verified correct on MPS -- opt back in with PLUSS_MPS_GRU_ROUTE=1
+  // for continued debugging, not for production training.
+  return parse_bool_env_("PLUSS_MPS_GRU_ROUTE", false);
 }
 
 bool gru_route_strict() noexcept {

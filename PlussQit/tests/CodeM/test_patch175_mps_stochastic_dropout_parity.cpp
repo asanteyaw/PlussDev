@@ -207,7 +207,10 @@ TEST_CASE("MPS bernoulli from probability tensor returns an MPS mask", "[mps][st
   const pluss::Series probs = pluss::make_series(std::vector<float>{0.0f, 0.25f, 0.75f, 1.0f}, {4}, cfg);
   const pluss::Series mask = pluss::codem::_compat::invoke("bernoulli", probs);
   REQUIRE(mask.platform() == pluss::pMPS);
-  REQUIRE(mask.scalar_type() == pluss::ScalarType::Bool);
+  // torch.bernoulli(input) preserves input's own dtype (0.0/1.0 values),
+  // it does not return a Bool tensor -- see test_random_sampling_family.cpp
+  // for the same contract verified independently on CPU.
+  REQUIRE(mask.scalar_type() == probs.scalar_type());
   REQUIRE(mask.sizes() == probs.sizes());
 }
 

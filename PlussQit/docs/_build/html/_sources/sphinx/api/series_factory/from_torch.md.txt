@@ -24,7 +24,7 @@ The result is not a restricted interop wrapper. It is an ordinary `Series`:
 you can reshape it, filter it, aggregate it, combine it with other series,
 move it to a Pluss accelerator, or make it the leaf of a new Pluss reverse-mode
 graph. The only information that does not cross the boundary is the source
-library's autograd graph.
+library's autodiff graph.
 
 It is the inverse of the [`Series::tensor()`](../series/tensor.md) method. The
 pair is deliberately asymmetric: you *construct* a series from a tensor with
@@ -120,7 +120,7 @@ std::cout << sensitivity[0] << ", "
 2, 4, 6
 ```
 
-`from_torch()` deliberately does not copy the source tensor's autograd state.
+`from_torch()` deliberately does not copy the source tensor's autodiff state.
 Calling `tracks_slope_(true)` says that the imported values are leaves in a
 **new Pluss graph**. Here the objective is
 
@@ -169,7 +169,7 @@ data=[1, 2, 3]
   alive even if the source variable leaves scope. Treat the tensor and series
   as two lifetime-safe handles on one CPU buffer.
 - A GPU tensor raises `from_torch: CPU only`. Move it to the CPU first.
-- No autograd crosses the boundary: a tensor with `requires_grad` produces a
+- No autodiff crosses the boundary: a tensor with `requires_grad` produces a
   plain series. Call `tracks_slope_(true)` when the imported values should be
   leaves in a new Pluss graph. Returning with `Series::tensor()` likewise
   starts a fresh LibTorch graph rather than reconnecting the graph that existed
@@ -236,7 +236,7 @@ auto prediction = model->forward(training_batch);
 If `model_device` is the CPU, the view remains zero-copy. If it is an
 accelerator, `.to(model_device)` creates an owning device allocation. In both
 cases, the resulting tensor is valid training input; only cross-library
-autograd history is intentionally absent.
+autodiff history is intentionally absent.
 
 ## Summary
 

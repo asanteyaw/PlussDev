@@ -15,7 +15,7 @@ std::vector<std::string_view> Note::vector() const
 accepts every defined rank from zero through three and deliberately discards
 axis boundaries: a scalar becomes one entry, a matrix becomes its rows laid
 end-to-end, and a tensor becomes its final axis changing fastest. If geometry
-must survive extraction, use [`matrix()`](matrix.md), [`tensor3()`](tensor3.md),
+must survive extraction, use [`matrix()`](matrix.md), [`slabs()`](slabs.md),
 or the owning rank-aware [`host()`](host.md).
 
 The outer `std::vector` is newly allocated, but the cell bytes are not copied.
@@ -139,7 +139,7 @@ vector undefined: rejected
 ## See Also
 
 - [`matrix`](matrix.md): preserve or promote to two-dimensional nesting.
-- [`tensor3`](tensor3.md): preserve exact three-dimensional nesting.
+- [`slabs`](slabs.md): preserve exact three-dimensional nesting.
 - [`host`](host.md): copy cells into owning, rank-aware standard containers.
 - [`sizes_view`](sizes_view.md): inspect borrowed geometry without allocation.
 

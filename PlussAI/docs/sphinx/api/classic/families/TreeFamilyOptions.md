@@ -13,10 +13,17 @@ is allowed to grow.
 The split-quality measure: `Gini` (Gini impurity, classification), `Entropy`
 (information gain, classification), `Mse` (mean squared error, regression),
 `Mae` (mean absolute error, regression — more robust to outlier targets than
-`Mse`, at higher computational cost). Pick a classification criterion for a
-`TaskKind::Classification` spec and a regression criterion for
-`TaskKind::Regression`; the two families rarely disagree much in practice, but
-the estimator construction path enforces the task/criterion pairing.
+`Mse`, at higher computational cost).
+
+**The task/criterion pairing is required, and — like
+[`LinearFamilyOptions::objective`](LinearFamilyOptions.md#objective) —
+checked at `learn(...)` rather than at construction:** `make_classifier`
+accepts any `criterion` value, but a classifier's first `learn` call rejects
+`Mse`/`Mae` (`"Tree classifier currently supports TreeCriterion::Gini or
+TreeCriterion::Entropy only."`), and symmetrically a regressor's `learn`
+rejects `Gini`/`Entropy` (`"Tree regressor currently supports
+TreeCriterion::Mse or TreeCriterion::Mae."`). Set `criterion` to match
+`.task` explicitly.
 
 ### `max_depth`
 
@@ -100,7 +107,8 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_TREEFAMILYOPTIONS_1
+max_depth = 1 train accuracy : 0.625
+max_depth = -1 train accuracy: 0.75
 ```
 
 ## Changelog

@@ -127,12 +127,12 @@ The `Note` is rank 1, so axis `1` does not exist.
 - [`Note::reshape`](reshape.md): regroup the same cells without moving them.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="transliterate_greek.html">
+  <a class="prev-link" href="to_windows1252_lossy.html">
     <span class="label">Previous</span>
-    <span class="title">transliterate_greek</span>
+    <span class="title">to_windows1252_lossy</span>
   </a>
-  <a class="next-link" href="unique.html">
+  <a class="next-link" href="undefined.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">undefined</span>
   </a>
 </div>

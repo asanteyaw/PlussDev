@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::int64_t> Note::lengths_bytes() const
+Note Note::lengths_bytes() const
 ```
 
 ## Measure Every Cell In Bytes
@@ -24,11 +24,11 @@ neither is exact — that requires grapheme and East-Asian-width analysis.
 
 ### Return value
 
-Like [`contains`](contains.md), this does **not** return a `Note`. It is a
-flat `std::vector<std::int64_t>` with one entry per cell, in row-major order,
-length equal to `numel()`. An empty cell measures `0`. Whitespace and control
-bytes count like any other byte, so trim with [`strip`](strip.md) first if
-boundary padding should not be counted.
+The result is an Int64 `Note` with exactly the receiver's shape. Each native
+lane contains one byte count; no count is formatted as text. `integers()`
+provides a borrowed contiguous span when host code needs the lanes. An empty
+cell measures `0`. Whitespace and control bytes count like any other byte, so
+trim with [`strip`](strip.md) first if boundary padding should not be counted.
 
 The scan is linear in total input size.
 
@@ -37,8 +37,8 @@ The scan is linear in total input size.
 ```cpp
 const auto lens = pluss::make_note({"", "a", "abc"}).lengths_bytes();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -54,8 +54,8 @@ std::cout << "]\n";
 const auto lens =
     pluss::make_note({"café", "日本語", "🎯"}).lengths_bytes();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -74,8 +74,8 @@ the emoji `"🎯"` is a single 4-byte character.
 const auto lens =
     pluss::make_note({"  id-01  ", "\tAB\t"}).strip().lengths_bytes();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -87,14 +87,14 @@ std::cout << "]\n";
 
 After [`strip`](strip.md), only `"id-01"` (5) and `"AB"` (2) remain.
 
-## Example 4: Higher-Rank Input Is Flattened Row-Major
+## Example 4: Higher-Rank Shape Is Preserved
 
 ```cpp
 const auto lens =
     pluss::make_note({{"a", "bb"}, {"ccc", "dddd"}}).lengths_bytes();
 std::cout << "[";
-for (std::size_t i = 0; i < lens.size(); ++i)
-  std::cout << (i ? ", " : "") << lens[i];
+for (std::size_t i = 0; i < lens.integers().size(); ++i)
+  std::cout << (i ? ", " : "") << lens.integers()[i];
 std::cout << "]\n";
 ```
 
@@ -109,8 +109,8 @@ std::cout << "]\n";
 - `pluss::coden::Note::lengths_chars`: the same measurement counted in
   Unicode characters rather than bytes.
 - [`Note::strip`](strip.md): remove boundary whitespace before measuring.
-- [`Note::contains`](contains.md): the other cell-wise inspector that
-  returns a flat vector instead of a `Note`.
+- [`Note::contains`](contains.md): a cell-wise inspector returning a Bool
+  Note with the same shape.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="keep_printable.html">

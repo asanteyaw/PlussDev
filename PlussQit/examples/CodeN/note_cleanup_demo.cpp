@@ -13,10 +13,10 @@ int main() {
                                "<b>Row2</b>", "- Row3"},
       std::span<const std::int64_t>(sizes.data(), sizes.size()));
 
-  pluss::Note cleaned = n1.nlp_remove_urls()
-                          .nlp_remove_emails()
-                          .nlp_remove_html()
-                          .nlp_remove_bullets();
+  pluss::Note cleaned = n1.nlp().remove_urls()
+                          .nlp().remove_emails()
+                          .nlp().remove_html()
+                          .nlp().remove_bullets();
 
   std::cout << "dim=" << cleaned.dim() << " numel=" << cleaned.numel() << "\n";
   for (std::int64_t i = 0; i < cleaned.numel(); ++i) {

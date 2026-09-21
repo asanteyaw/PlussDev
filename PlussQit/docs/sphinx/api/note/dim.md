@@ -80,7 +80,7 @@ defined=false dim=0 scalar=false
 ```
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="diff_words.html"><span class="label">Previous</span><span class="title">diff_words</span></a>
-  <a class="next-link" href="empty.html"><span class="label">Next</span><span class="title">empty</span></a>
+  <a class="prev-link" href="diff_lines.html"><span class="label">Previous</span><span class="title">diff_lines</span></a>
+  <a class="next-link" href="dtype.html"><span class="label">Next</span><span class="title">dtype</span></a>
 </div>
 <!-- pluss-hand-authored -->

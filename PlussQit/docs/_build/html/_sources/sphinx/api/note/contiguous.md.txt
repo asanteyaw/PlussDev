@@ -55,8 +55,8 @@ The transposed `Note` is returned exactly as `transpose` produced it —
     <span class="label">Previous</span>
     <span class="title">contains_any_digit</span>
   </a>
-  <a class="next-link" href="count_substring.html">
+  <a class="next-link" href="copy_flat_to.html">
     <span class="label">Next</span>
-    <span class="title">count_substring</span>
+    <span class="title">copy_flat_to</span>
   </a>
 </div>

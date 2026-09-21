@@ -19,8 +19,10 @@ option(PLUSSMA_MATH_ENABLE_NUMERICAL "Build PlussMa Math::Numerical" ON)
 option(PLUSSMA_MATH_ENABLE_PROBABILITY "Build PlussMa Math::Probability" ON)
 
 # Math::Numerical modules
+option(PLUSSMA_MATH_NUMERICAL_ENABLE_INTEGRATION "Build PlussMa Math::Numerical::integration" ON)
 option(PLUSSMA_MATH_NUMERICAL_ENABLE_INTERPOLATION "Build PlussMa Math::Numerical::interpolation" ON)
 option(PLUSSMA_MATH_NUMERICAL_ENABLE_LINEAR_ALGEBRA "Build PlussMa Math::Numerical::linear_algebra" ON)
+option(PLUSSMA_MATH_NUMERICAL_ENABLE_ODE "Build PlussMa Math::Numerical::ode" ON)
 option(PLUSSMA_MATH_NUMERICAL_ENABLE_OPTIMIZATION "Build PlussMa Math::Numerical::optimization" ON)
 option(PLUSSMA_MATH_NUMERICAL_ENABLE_SPECTRAL_METHODS "Build PlussMa Math::Numerical::spectral_methods" ON)
 

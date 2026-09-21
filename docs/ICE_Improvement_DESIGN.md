@@ -5,7 +5,7 @@ The governing principle would be exactly what you said: **centralize shared beha
 Two additional cross-cutting requirements need to be treated as first-class parts of this redesign rather than afterthoughts:
 
 1. **Regularization must be centralized by kind.** Architectural regularization (dropout, stochastic masking, train/eval-dependent behavior), objective regularization (weight decay, explicit penalty terms, label smoothing, auxiliary losses), and loop regularization (early stopping, validation monitoring, restore-best, patience/min-delta policy) should each live in one shared place with one shared policy surface, not be reintroduced model by model.
-2. **No-grad must move down to NodeK.** The current `ice::NoGradGuard` is only a local workaround that toggles registered parameter leaves. That is not the same thing as a real libtorch-style execution-mode guard. A proper solution belongs in the lower-level autograd/runtime layer so that `infer()`, `assess()`, checkpoint evaluation, post-training scoring, and any future model family all benefit from the same mechanism.
+2. **No-grad must move down to NodeK.** The current `ice::NoGradGuard` is only a local workaround that toggles registered parameter leaves. That is not the same thing as a real libtorch-style execution-mode guard. A proper solution belongs in the lower-level autodiff/runtime layer so that `infer()`, `assess()`, checkpoint evaluation, post-training scoring, and any future model family all benefit from the same mechanism.
 
 This redesign therefore treats regularization and no-grad as foundation work, not polish.
 
@@ -22,14 +22,14 @@ This redesign therefore treats regularization and no-grad as foundation work, no
   - `GradMode::set_enabled(bool)`
   - `AutoGradMode(bool enabled)`
   - `NoGradGuard`
-- Every graph-building path in NodeK should consult this one shared thread-local state before attaching autograd metadata or edges. The rule is: if grad mode is off, differentiable ops still run numerically but do not extend the backward graph.
+- Every graph-building path in NodeK should consult this one shared thread-local state before attaching autodiff metadata or edges. The rule is: if grad mode is off, differentiable ops still run numerically but do not extend the backward graph.
 - `ice::Model::infer()` and `ice::Model::assess()` should stop owning a private workaround and instead delegate to this lower-level guard.
 - This is deliberately modeled after libtorch's public and source-level shape:
   - `c10::GradMode`
   - `c10::AutoGradMode`
   - `c10::NoGradGuard`
   - and, later if NodeK's runtime grows the necessary machinery, an `InferenceMode`-style stricter/faster mode.
-- Important boundary: **do not jump straight to a fake `InferenceMode` clone**. PyTorch's `InferenceMode` also manipulates dispatch/autograd key state and version/view behavior, not just a boolean flag. Until NodeK has equivalent lower-level execution-state plumbing, the correct first milestone is a real `NoGradGuard`, not a misleading pseudo-inference mode.
+- Important boundary: **do not jump straight to a fake `InferenceMode` clone**. PyTorch's `InferenceMode` also manipulates dispatch/autodiff key state and version/view behavior, not just a boolean flag. Until NodeK has equivalent lower-level execution-state plumbing, the correct first milestone is a real `NoGradGuard`, not a misleading pseudo-inference mode.
 
 **Phase 2: Central trainer engine**
 - Introduce `ice::Coach` as the one true training orchestrator.
@@ -218,6 +218,6 @@ The lower-level no-grad recommendation above is not arbitrary. It is modeled on 
   - `GradMode::set_enabled(bool)`
   - `AutoGradMode(bool)`
   - `NoGradGuard : AutoGradMode(false)`
-- PyTorch's stricter `InferenceMode` goes further and also manipulates autograd/dispatch execution state, which is why it should **not** be faked in NodeK before the lower-level runtime can support that cleanly.
+- PyTorch's stricter `InferenceMode` goes further and also manipulates autodiff/dispatch execution state, which is why it should **not** be faked in NodeK before the lower-level runtime can support that cleanly.
 
 If you approve, I’d begin with **Phase 1, 1.5, and 2 together**, because `Batch` without `Coach` is just a container, `Coach` without `Batch` still leaves the current shape problem unresolved, and a centralized trainer should not be built on top of a temporary Ice-local no-grad workaround.

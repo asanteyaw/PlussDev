@@ -1,0 +1,70 @@
+=== clean ===
+composed cleanup
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\"Ship\"-now... next"]
+content retained
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["I CAN'T pay 1,250"]
+
+=== contractions ===
+grammar and case
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["I can not; You are ready, but they did not.", "CAN NOT Will not I AM we are shell'code"]
+whitespace retained
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  it is\tstill\nthere  "]
+
+=== numbers ===
+numeric runs
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["0 0 0 +0 x0y"]
+separator boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["0 0 0 0..0 and no digits"]
+numbers idempotent=true
+
+=== punctuation ===
+default
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\"naïve\"-wait..."]
+explicit false
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\"naïve\"-wait..."]
+ASCII only
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\"na?ve\"-wait..."]
+
+=== shared contract ===
+matrix clean
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["can't", "12"], 
+  ["\"yes\"", "plain"]
+]
+matrix contractions
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [" can not ", "12"], 
+  ["“yes”", "plain"]
+]
+matrix numbers
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [" can't ", "0"], 
+  ["“yes”", "plain"]
+]
+matrix punctuation
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [" can't ", "12"], 
+  ["\"yes\"", "plain"]
+]
+clean idempotent=true
+empty
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+undefined defined=false
+Bytes: rejected
+Bool: rejected
+Int64: rejected
+Float64: rejected

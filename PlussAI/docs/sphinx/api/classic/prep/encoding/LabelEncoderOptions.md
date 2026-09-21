@@ -1,35 +1,47 @@
 # `pluss::ai::classic::prep::LabelEncoderOptions`
 
-Category cap, overflow policy, unknown bucket, 0-based codes.
-
-<!-- one paragraph on the role of this bag: which call consumes it and when -->
+The vocabulary cap, overflow policy, unknown-bucket toggle, and index base
+consumed by [`LabelEncoder::learn`](LabelEncoder.md) / `map` — field-for-field
+identical to [`OrdinalEncoderOptions`](OrdinalEncoderOptions.md), with one
+different default.
 
 ## Fields
 
 ### `max_categories`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`std::int64_t max_categories = 256`
+
+As [`OrdinalEncoderOptions::max_categories`](OrdinalEncoderOptions.md#max_categories).
 
 ### `overflow`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`CategoryOverflowPolicy overflow = CategoryOverflowPolicy::KeepMostFrequent`
+
+As [`OneHotEncoderOptions::overflow`](OneHotEncoderOptions.md#overflow).
 
 ### `include_unknown_bucket`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`bool include_unknown_bucket = true`
+
+As [`OrdinalEncoderOptions::include_unknown_bucket`](OrdinalEncoderOptions.md#include_unknown_bucket).
 
 ### `one_based`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`bool one_based = false`
+
+**Defaults `false`** here, unlike `OrdinalEncoderOptions` (`true`) — the
+0-indexed convention a classification target's fitted class labels are
+expected to follow through `classic`. Set `true` only if a specific
+downstream consumer genuinely needs a 1-indexed label.
 
 ## Guidance
 
-<!-- how the defaults fit together; which fields to touch only with a reason -->
+Leave every field at its default unless encoding a target with a
+cardinality above 256 distinct classes (raise `max_categories`) or a
+specific reason to depart from 0-indexed labels (`one_based = true`).
 
 ## See Also
 
-<!-- the consuming symbol(s) -->
+- [`LabelEncoder`](LabelEncoder.md) — the consuming type.
+- [`OrdinalEncoderOptions`](OrdinalEncoderOptions.md) — the identical
+  fields, `one_based` defaulting `true`, meant for a feature column.

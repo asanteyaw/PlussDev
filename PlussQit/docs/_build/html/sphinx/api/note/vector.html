@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -52,7 +52,7 @@
 accepts every defined rank from zero through three and deliberately discards
 axis boundaries: a scalar becomes one entry, a matrix becomes its rows laid
 end-to-end, and a tensor becomes its final axis changing fastest. If geometry
-must survive extraction, use <a class="reference internal" href="matrix.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix()</span></code></span></a>, <a class="reference internal" href="tensor3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tensor3()</span></code></span></a>,
+must survive extraction, use <a class="reference internal" href="matrix.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix()</span></code></span></a>, <a class="reference internal" href="slabs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slabs()</span></code></span></a>,
 or the owning rank-aware <a class="reference internal" href="host.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">host()</span></code></span></a>.</p>
 <p>The outer <code class="docutils literal notranslate"><span class="pre">std::vector</span></code> is newly allocated, but the cell bytes are not copied.
 Each element is a borrowed view into the source arena. The operation therefore
@@ -173,7 +173,7 @@ contract.</p>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="matrix.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">matrix</span></code></span></a>: preserve or promote to two-dimensional nesting.</p></li>
-<li><p><a class="reference internal" href="tensor3.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tensor3</span></code></span></a>: preserve exact three-dimensional nesting.</p></li>
+<li><p><a class="reference internal" href="slabs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slabs</span></code></span></a>: preserve exact three-dimensional nesting.</p></li>
 <li><p><a class="reference internal" href="host.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">host</span></code></span></a>: copy cells into owning, rank-aware standard containers.</p></li>
 <li><p><a class="reference internal" href="sizes_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sizes_view</span></code></span></a>: inspect borrowed geometry without allocation.</p></li>
 </ul>
@@ -266,6 +266,8 @@ contract.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

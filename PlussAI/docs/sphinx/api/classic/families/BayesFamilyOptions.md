@@ -89,7 +89,8 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_BAYESFAMILYOPTIONS_1
+Gaussian train accuracy:     1
+Multinomial train accuracy:  1
 ```
 
 ## Changelog

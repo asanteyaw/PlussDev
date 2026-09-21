@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Note TeX Accessor API Reference &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=15722e59" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/api_nav.js?v=cf848246"></script>
+    <script src="../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="NoteTexAccessor::add_math_delimiters" href="api/note-tex/add_math_delimiters.html" />
+    <link rel="prev" title="Note::tex" href="api/note/tex.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="note-tex-accessor-api-reference">
+<h1>Note TeX Accessor API Reference<a class="headerlink" href="#note-tex-accessor-api-reference" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="note_api_reference.html"><span class="doc std std-doc">Back to Note API Reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">Note::tex()</span></code> is the TeX/LaTeX-source operation boundary for Note. It keeps
+generic text mechanics on <code class="docutils literal notranslate"><span class="pre">Note</span></code> while collecting operations whose meaning
+depends on TeX syntax: comments, preamble, math delimiters, commands,
+environments, macros, and the semantic structures (theorems, citations,
+labels, sections, …) that TeX/LaTeX source encodes.</p>
+<p>The accessor is zero-overhead plumbing: obtaining it performs no transform
+and does not enlarge <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Every terminal method is still batched over all
+cells and returns either a shape-preserving <code class="docutils literal notranslate"><span class="pre">Note</span></code> or a closed <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>
+containing Text tokens and Int64 offsets.</p>
+<p><a class="reference internal" href="tokenbatch_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code></span></a> has its own method reference. Use
+it to learn the flattened token Note, cumulative offsets, defined/empty
+state, and borrowed-reference lifetime shared by every ragged extraction
+result.</p>
+<section id="canonical-surface">
+<h2>Canonical Surface<a class="headerlink" href="#canonical-surface" title="Link to this heading">¶</a></h2>
+<p>The accessor deliberately omits duplicate spellings. Earlier flat-<code class="docutils literal notranslate"><span class="pre">Note</span></code>
+<code class="docutils literal notranslate"><span class="pre">tex_*</span></code> methods that were pure aliases — 15 <code class="docutils literal notranslate"><span class="pre">tex_replace_&lt;greek-letter&gt;()</span></code>
+convenience wrappers around <code class="docutils literal notranslate"><span class="pre">replace_command(name,</span> <span class="pre">repl)</span></code> with a literal
+command name baked in, 12 <code class="docutils literal notranslate"><span class="pre">tex_remove_env_&lt;name&gt;()</span></code> wrappers around
+<code class="docutils literal notranslate"><span class="pre">remove_environment(name)</span></code>, 12 <code class="docutils literal notranslate"><span class="pre">tex_extract_env_&lt;name&gt;()</span></code> wrappers plus
+<code class="docutils literal notranslate"><span class="pre">tex_arrays()</span></code> and 6 semantic-block wrappers (<code class="docutils literal notranslate"><span class="pre">tex_theorems()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tex_lemmas()</span></code>, …) all around what is now <code class="docutils literal notranslate"><span class="pre">extract_environment(name)</span></code> —
+were deleted rather than carried over (reference pages for these three
+generic methods are not yet written). <code class="docutils literal notranslate"><span class="pre">extract_environment(name)</span></code> also
+gained real capability in the move: it now always returns the full closed
+<code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> (tokens plus row offsets), where the old flat
+<code class="docutils literal notranslate"><span class="pre">Note::tex_extract_environment(name)</span></code> silently discarded the offsets and
+returned only the flat token <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">collapse_whitespace()</span></code> is intentionally absent from this accessor. Its former
+implementation was exactly the root <a class="reference internal" href="api/note/collapse_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::collapse_whitespace</span></code></span></a>
+operation, with no TeX-specific rule, so the duplicate spelling was removed.</p>
+<p>Writing the <code class="docutils literal notranslate"><span class="pre">standardize_*</span></code> family surfaced a genuine bug, since fixed at the
+source rather than documented as a workaround: seven internal TeX-generation
+helpers (backing <code class="docutils literal notranslate"><span class="pre">standardize_vectors</span></code>, <code class="docutils literal notranslate"><span class="pre">standardize_matrices</span></code>,
+<code class="docutils literal notranslate"><span class="pre">standardize_integrals</span></code>, <code class="docutils literal notranslate"><span class="pre">standardize_primes</span></code>, <code class="docutils literal notranslate"><span class="pre">simplify_fractions</span></code>,
+<code class="docutils literal notranslate"><span class="pre">simplify_roots</span></code>, and the <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">&gt;=</span> <span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">\sqrt(...)</span></code> path of <code class="docutils literal notranslate"><span class="pre">to_latex</span></code>,
+reference page not yet written) inserted a doubled
+backslash into their output — <code class="docutils literal notranslate"><span class="pre">\\vec{v}</span></code> instead of <code class="docutils literal notranslate"><span class="pre">\vec{v}</span></code> — which real
+LaTeX reads as a forced linebreak followed by literal text, not the intended
+command. Every affected method now emits the single, TeX-correct backslash;
+the fix carries no behavioral change beyond removing the extra character.</p>
+</section>
+<section id="coverage">
+<h2>Coverage<a class="headerlink" href="#coverage" title="Link to this heading">¶</a></h2>
+<p>This reference is under active construction. Thirty-one methods have full,
+compiled-and-verified teaching pages so far:</p>
+<div class="toctree-wrapper compound">
+</div>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/note-tex/add_math_delimiters.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add_math_delimiters</span></code></span></a>: make every
+non-empty cell one complete math fragment while preserving an existing
+outer delimiter style.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/align_blocks.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_blocks</span></code></span></a>: extract complete <code class="docutils literal notranslate"><span class="pre">align</span></code> and
+<code class="docutils literal notranslate"><span class="pre">align*</span></code> environments in document order with per-cell offsets.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/balance_braces.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">balance_braces</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/balance_math_delims.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">balance_math_delims</span></code></span></a>: repair lexical
+group and math-delimiter structure without pretending to validate TeX.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/bibliography_keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bibliography_keys</span></code></span></a>: extract individual
+citation and <code class="docutils literal notranslate"><span class="pre">bibitem</span></code> identifiers as a closed ragged result.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/canonicalize_macros.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">canonicalize_macros</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/collapse_macros.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">collapse_macros</span></code></span></a>: normalize built-in
+control words or compact source by removing local declarations.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/captions.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">captions</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">citations</span></code></span></a>: extract semantic command arguments
+while retaining per-cell ownership.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/command_names.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">command_names</span></code></span></a>: inventory lexical TeX
+control words without confusing control symbols for names.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/commands.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">commands</span></code></span></a>: extract either bare control-word
+lexemes or complete calls with balanced attached argument groups.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/frac_slash.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">frac_slash</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/sqrt_pow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sqrt_pow</span></code></span></a>: translate
+balanced fraction and root constructs into explicit arithmetic text.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/pm_signs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pm_signs</span></code></span></a>: render
+paired-sign control words without corrupting longer command names.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/dedup_blank_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dedup_blank_lines</span></code></span></a>: cap vertical
+whitespace while preserving the source line-ending convention.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/display_math.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">display_math</span></code></span></a>: extract complete display
+fragments while retaining their original delimiters and cell ownership.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/env_names.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">env_names</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/envs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">envs</span></code></span></a>: inventory environment openers or extract
+complete begin/end regions.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/input_tags.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">input_tags</span></code></span></a>: retain external-input targets as
+visible tags without reading the filesystem.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/macro_subs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macro_subs</span></code></span></a>: substitute cell-local simple
+macros with an explicit, deterministic recursion bound.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/escape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">escape</span></code></span></a> / <a class="reference internal" href="api/note-tex/to_text.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_text</span></code></span></a>:
+protect literal text for TeX source or reduce authored TeX to readable text.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/standardize_vectors.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_vectors</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/standardize_matrices.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_matrices</span></code></span></a>: canonicalize
+vector notation and bracketed matrix environments to one spelling each.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/standardize_integrals.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_integrals</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/standardize_summations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_summations</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/standardize_limits.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_limits</span></code></span></a>: collapse
+multi-integral and summation command spellings, and strip the
+<code class="docutils literal notranslate"><span class="pre">\limits</span></code>/<code class="docutils literal notranslate"><span class="pre">\nolimits</span></code> position modifier.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/standardize_subscripts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_subscripts</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/standardize_superscripts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_superscripts</span></code></span></a> /
+<a class="reference internal" href="api/note-tex/standardize_primes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_primes</span></code></span></a>: brace every
+bare <code class="docutils literal notranslate"><span class="pre">_</span></code>/<code class="docutils literal notranslate"><span class="pre">^</span></code> script and rewrite trailing <code class="docutils literal notranslate"><span class="pre">'</span></code> marks as an explicit <code class="docutils literal notranslate"><span class="pre">\prime</span></code>
+superscript.</p></li>
+<li><p><a class="reference internal" href="api/note-tex/standardize_dots.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize_dots</span></code></span></a>: collapse ellipsis
+command spellings to <code class="docutils literal notranslate"><span class="pre">\dots</span></code>.</p></li>
+</ul>
+<p>The remaining 69 methods on the accessor — cleanup, math-delimiter
+handling, construct removal, environment extraction, macro expansion,
+format conversion, structural and semantic extraction, and command/symbol
+replacement — are implemented, tested, and reachable today as
+<code class="docutils literal notranslate"><span class="pre">note.tex().&lt;method&gt;()</span></code>; their individual reference pages are still being
+written.</p>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="note_api_reference.html">
+    <span class="label">Previous</span>
+    <span class="title">Note API Reference</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="note_api_reference.html">Note API Reference</a><ul>
+      <li>Previous: <a href="api/note/tex.html" title="previous chapter">Note::tex</a></li>
+      <li>Next: <a href="api/note-tex/add_math_delimiters.html" title="next chapter">NoteTexAccessor::add_math_delimiters</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/sphinx/note_tex_accessor_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

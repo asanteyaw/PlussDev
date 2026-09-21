@@ -135,7 +135,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_LINEARFAMILYOPTIONS_1
+true value at x = 10       : 100
+strength = 1e-6 prediction : 100
+strength = 1e3  prediction : 58.4296
 ```
 
 ### Example 2
@@ -184,7 +186,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_LINEARFAMILYOPTIONS_2
+true trend at x = 7 (ignoring the outlier): 14
+LeastSquares prediction : 32.6667
+RobustLeast prediction  : 15.8653
 ```
 
 ## Changelog

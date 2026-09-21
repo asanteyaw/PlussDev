@@ -57,7 +57,7 @@ std::cout << "before=" << (x.tracks_slope() ? "true" : "false") << "\n";
 ```
 
 So ordinary construction gives you a normal numeric `Series`, not a tracked
-autograd leaf.
+autodiff leaf.
 
 ### Output
 

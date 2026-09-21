@@ -70,6 +70,6 @@ matrix=true empty=true numel=0
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="is_lower.html"><span class="label">Previous</span><span class="title">is_lower</span></a>
-  <a class="next-link" href="is_scalar.html"><span class="label">Next</span><span class="title">is_scalar</span></a>
+  <a class="next-link" href="is_rank3.html"><span class="label">Next</span><span class="title">is_rank3</span></a>
 </div>
 <!-- pluss-hand-authored -->

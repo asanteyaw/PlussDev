@@ -198,8 +198,8 @@ pluss::note::select: condition/choice count mismatch
     <span class="label">Previous</span>
     <span class="title">rep</span>
   </a>
-  <a class="next-link" href="../../note_factory_api_reference.html">
+  <a class="next-link" href="unpack.html">
     <span class="label">Next</span>
-    <span class="title">Note Factory API Reference</span>
+    <span class="title">unpack</span>
   </a>
 </div>

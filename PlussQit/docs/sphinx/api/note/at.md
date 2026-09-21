@@ -138,6 +138,6 @@ at(2): rejected
 - [`take`](take.md): gather several flat positions into a new Note.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="align_tokens.html"><span class="label">Previous</span><span class="title">align_tokens</span></a>
+  <a class="prev-link" href="argsort.html"><span class="label">Previous</span><span class="title">argsort</span></a>
   <a class="next-link" href="at_indices.html"><span class="label">Next</span><span class="title">at_indices</span></a>
 </div>

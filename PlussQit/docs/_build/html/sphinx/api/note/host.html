@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -97,7 +97,7 @@ before branching. Calling <code class="docutils literal notranslate"><span class
 there is no rank or storage to materialize.</p>
 <p>The operation allocates and copies <code class="docutils literal notranslate"><span class="pre">O(numel()</span> <span class="pre">+</span> <span class="pre">total</span> <span class="pre">text</span> <span class="pre">bytes)</span></code>. It preserves
 embedded zero bytes and raw-byte content because <code class="docutils literal notranslate"><span class="pre">std::string</span></code> is length-aware;
-it does not transcode, parse, or validate. Prefer <code class="docutils literal notranslate"><span class="pre">matrix()</span></code> or <code class="docutils literal notranslate"><span class="pre">tensor3()</span></code> when
+it does not transcode, parse, or validate. Prefer <code class="docutils literal notranslate"><span class="pre">matrix()</span></code> or <code class="docutils literal notranslate"><span class="pre">slabs()</span></code> when
 the goal is decomposition without copying.</p>
 </section>
 <section id="example-1-scalar-payload">
@@ -347,6 +347,8 @@ last=0.75 dtype=Float64
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

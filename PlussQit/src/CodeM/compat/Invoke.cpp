@@ -95,7 +95,7 @@ std::atomic<bool>& strict_unrouted_flag_() {
   // Default: a call that reaches the generic unrouted backstop on CPU throws.
   // A generated method overload with no route would otherwise return the
   // receiver unchanged (a silent identity), which is indistinguishable from a
-  // correct no-op and acquires a wrong identity derivative under autograd.
+  // correct no-op and acquires a wrong identity derivative under autodiff.
   // Set env PLUSS_STRICT_UNROUTED=0 to restore the old warn-and-passthrough
   // behavior during migration of a specific call site.
   static std::atomic<bool> flag{[] {
@@ -1049,7 +1049,7 @@ static Series put_dispatch_copy_(
   const bool track_self = series_tape::recording_enabled() && series_tape::tracks_slope(self);
   auto out = self.clone();
   // Build value update on a detached working buffer; we manually re-attach
-  // the autograd link for supported index_put_ patterns below.
+  // the autodiff link for supported index_put_ patterns below.
   series_tape::set_tracks_slope(out, false);
   Series idx = index;
   if (idx.platform() != out.platform()) idx = idx.to(out.platform());
@@ -1065,7 +1065,7 @@ static Series put_dispatch_copy_(
     if (supports_put_autodiff_1d_(self, idx, val)) {
       bind_put_backward_1d_(out, self, idx, src, accumulate);
     } else {
-      // Generic index-list fallback keeps autograd connected for broader
+      // Generic index-list fallback keeps autodiff connected for broader
       // index_put_ patterns (mirrors SeriesList path behavior).
       bind_put_backward_index_list_(out, self, std::vector<Series>{idx}, src, accumulate);
     }
@@ -1087,7 +1087,7 @@ static Series& put_dispatch_inplace_(
   Series val = src;
   if (val.platform() != self.platform()) val = val.to(self.platform());
   if (val.scalar_type() != self.scalar_type()) val = val.to(self.scalar_type());
-  // Route through functional copy path so autograd links are preserved.
+  // Route through functional copy path so autodiff links are preserved.
   self = put_dispatch_copy_(self, idx, val, accumulate);
   if (keep_self_sensitivity) {
     series_tape::set_keep_sensitivity(self, true);
@@ -1933,7 +1933,20 @@ static Series bernoulli_sample_from_probs_cpu_(const Series& probs) {
     PLUSS_CHECK(std::isfinite(values[i]) && values[i] >= 0.0 && values[i] <= 1.0,
                 "bernoulli: probabilities must be finite and in [0, 1]");
   }
-  auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0);
+  // Explicit Platform::CPU, not the ambient platform scope: this helper is
+  // CPU-only by name and by the `p = probs.to(Platform::CPU)...` line just
+  // above, but Series::rand's 3-arg overload resolves its platform from
+  // the current PlatformScope, which is still MPS when called from
+  // bernoulli_sample_from_probs_mps_ below -- allocating a Float64 tensor
+  // under an ambient MPS scope trips Series::platform(MPS)'s Float64 guard
+  // even though this function never intends to touch MPS at all.
+  auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0, Platform::CPU);
+  // torch parity: torch.bernoulli(input) preserves input's own dtype
+  // (values 0.0/1.0), it does NOT return a Bool mask -- confirmed against
+  // aten/native_functions.yaml's `bernoulli(Tensor self, ...) -> Tensor`
+  // signature and torch's own documented behavior. lt() itself returns
+  // Bool; this cast is the intentional, correct conversion back to probs'
+  // dtype, not a bug.
   return ops_internal::lt(u, p).to(probs.scalar_type());
 }
 
@@ -3686,7 +3699,13 @@ static double random_default_upper_(ScalarType dtype) {
   }
 }
 
+static void ensure_bitshift_int_like_(const Series& s) {
+  PLUSS_CHECK(!is_floating_dtype(s.scalar_type()) && !is_complex_dtype(s.scalar_type()),
+              "bitwise: dtype must be integer/bool");
+}
+
 static Series bitshift_scalar_impl(const Series& self, std::int64_t shift, bool left) {
+  ensure_bitshift_int_like_(self);
   auto x = self.to(ScalarType::Int64).contiguous();
   auto out = Series::empty(x.sizes(), ScalarType::Int64);
   const auto n = x.numel();
@@ -3701,6 +3720,8 @@ static Series bitshift_scalar_impl(const Series& self, std::int64_t shift, bool 
 }
 
 static Series bitshift_series_impl(const Series& self, const Series& other, bool left) {
+  ensure_bitshift_int_like_(self);
+  ensure_bitshift_int_like_(other);
   auto a = self.to(ScalarType::Int64);
   auto b = other.to(ScalarType::Int64);
   auto shape = SeriesIterator::broadcast_shape(a.sizes(), b.sizes());
@@ -3825,20 +3846,22 @@ static Series hardshrink_impl(const Series& self, double lambda) {
 
 static Series hardshrink_backward_impl(const Series& grad_out, const Series& input, double lambda) {
   const double l = std::abs(lambda);
-  auto g = grad_out.to(ScalarType::Float64);
-  auto x = input.to(ScalarType::Float64);
-  auto shape = SeriesIterator::broadcast_shape(g.sizes(), x.sizes());
-  auto gg = expand_impl(g, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto xx = expand_impl(x, std::span<const std::int64_t>(shape.data(), shape.size())).contiguous();
-  auto out = Series::empty(shape, ScalarType::Float64);
-  const auto n = out.numel();
-  const auto* gp = reinterpret_cast<const double*>(gg.raw_data());
-  const auto* xp = reinterpret_cast<const double*>(xx.raw_data());
-  auto* op = reinterpret_cast<double*>(out.raw_data());
-  for (std::int64_t i = 0; i < n; ++i) {
-    op[i] = (std::abs(xp[i]) > l) ? gp[i] : 0.0;
-  }
-  return out.to(grad_out.scalar_type());
+  // where(|input| > lambda, grad_out, 0): built from tracked ops (matches
+  // hardshrink_impl's own style) instead of a raw buffer loop, so this
+  // itself forms a proper reverse-mode node. That also makes it correct for
+  // free per torch's own recursive derivatives.yaml formula --
+  // hardshrink_backward's backward w.r.t. grad_out is `hardshrink_backward`
+  // again with the same mask, which is exactly what `where`'s own backward
+  // already gives (the mask selects grad_out verbatim where kept, so the
+  // upstream gradient flows straight back through the same mask). input's
+  // contribution is legitimately zero (torch: self -> zeros_like(grad)),
+  // which the non-differentiable `gt` comparison feeding the mask already
+  // gives for free.
+  const Series x = dtype_of(input.scalar_type()).is_floating()
+                       ? input
+                       : input.to(compat_real_dtype_for_(input));
+  const Series keep = ops_internal::gt(ops_internal::abs(x), scalar_like(x, l));
+  return ops_internal::where(keep, grad_out, scalar_like(grad_out, 0.0));
 }
 
 static Series heaviside_impl(const Series& self, const Series& values) {
@@ -6018,7 +6041,7 @@ static std::string functional_bridge_target_op_(std::string_view inplace_op) {
   return std::string(inplace_op.substr(0, inplace_op.size() - 1));
 }
 
-static void check_inplace_autograd_write_(std::string_view op, const Series& self) {
+static void check_inplace_autodiff_write_(std::string_view op, const Series& self) {
   if (!inplace_op_mutates_value_(op)) return;
   if (!series_tape::recording_enabled()) return;
   if (!series_tape::tracks_slope(self)) return;
@@ -6037,7 +6060,7 @@ static void check_inplace_autograd_write_(std::string_view op, const Series& sel
       inplace_op_has_functional_bridge_(op)) return;
   throw_error(
       std::string(op) +
-      ": in-place mutation on autograd-tracked Series is disallowed; mutate a detached/separate Series instead");
+      ": in-place mutation on autodiff-tracked Series is disallowed; mutate a detached/separate Series instead");
 }
 
 class InplaceVersionGuard final {
@@ -7373,7 +7396,7 @@ if (is_numeric_scalar_arg(args[0]) &&
         // returns an independent buffer (the native gather kernels never
         // alias the source), so the storage-independence contract holds with
         // no extra copy. A trailing .clone() that once sat here was silently
-        // detaching the result from the autograd graph -- Series::clone()
+        // detaching the result from the autodiff graph -- Series::clone()
         // registers no backward, unlike Series::contiguous() -- so gradients
         // could never reach a parameter through a narrow_copy(); confirmed in
         // a real training loop. See PlussAI/Ice/ICE_BLUEPRINT.md's TFT
@@ -7717,7 +7740,7 @@ Series& invoke_any_(std::string_view op, Series& self, const Args& args) {
     op = canonical_inplace_op(op);
     ops_internal::PlatformScope platform_scope(self.platform());
     validate_series_arg_platforms(op, self, args);
-    check_inplace_autograd_write_(op, self);
+    check_inplace_autodiff_write_(op, self);
     const bool tracked_mutation_with_bridge =
         inplace_functional_bridge_enabled_() &&
         inplace_op_mutates_value_(op) &&

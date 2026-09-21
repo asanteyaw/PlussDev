@@ -94,9 +94,9 @@ defined non-Bytes Note.
 - `pluss::coden::Note::to_utf8_lossy`: switch a bytes-mode `Note` to text.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_blank.html">
+  <a class="prev-link" href="is_bool.html">
     <span class="label">Previous</span>
-    <span class="title">is_blank</span>
+    <span class="title">is_bool</span>
   </a>
   <a class="next-link" href="is_digit.html">
     <span class="label">Next</span>

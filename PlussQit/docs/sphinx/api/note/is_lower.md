@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_lower() const
+Note Note::is_lower() const
 ```
 
 ## Test Whether A Cell Is Lower-Case
@@ -23,8 +23,8 @@ is treated as uncased — it neither satisfies nor breaks the check — so
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -33,8 +33,8 @@ const auto n = pluss::make_note(
     {"abc", "ABC", "Abc", "abc123", "123", "", "a b", "café"});
 const auto mask = n.is_lower();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -54,9 +54,9 @@ cased letter at all.
 - [`Note::lower`](lower.md): convert to lower-case (Unicode-aware).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_digit.html">
+  <a class="prev-link" href="is_int64.html">
     <span class="label">Previous</span>
-    <span class="title">is_digit</span>
+    <span class="title">is_int64</span>
   </a>
   <a class="next-link" href="is_matrix.html">
     <span class="label">Next</span>

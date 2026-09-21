@@ -1,54 +1,64 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
+<!-- pluss-signature-hash: 8ff442e9ff91 -->
 
 # `pluss::ai::classic::Flow::flow_summary`
 
-[Back to `pluss::ai::classic::Flow`](../Flow.md)
+`flow_summary` renders the same structural state
+[`graph_info()`](graph_info.md) exposes as a value type, as one
+human-readable multi-line string — a header line (task, stage count,
+trained, model) followed by one line per stage (its key, kind, route width,
+remainder policy). Reach for it when you want to print or log a flow's shape
+(a debugging session, a training log); reach for
+[`graph_info()`](graph_info.md) when you need the values themselves.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] std::string classic::Flow::flow_summary() const;
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+A `std::string`, never empty (even a bare `Flow{}` produces a header line
+with `stages=0`). The exact format is a debugging convenience, not a
+persistence format — use [`save_blueprint`](save_blueprint.md) /
+[`load_blueprint`](load_blueprint.md) if you need to reconstruct a `Flow`
+from text.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None — like `graph_info()`, this only reads existing state.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+A two-stage classification flow's summary, printed directly.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
+  cls::StatusOr<cls::Flow> made = cls::make_flow(
+      cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+  cls::Flow flow = made.move_value();
+  flow.add_standard_scaler({}, {0});
+  flow.add_one_hot_encoder({}, {1});
+  flow.set_stage_key(0, "scale");
+  flow.set_stage_key(1, "encode");
+
+  std::cout << flow.flow_summary() << "\n";
 
   return 0;
 }
@@ -57,27 +67,26 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+task=0 stages=2 trained=0 model=1
+[0] scale kind=standard_scaler route=1 remainder=pass
+[1] encode kind=one_hot_encoder route=1 remainder=pass
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+An empty `Flow{}`'s summary — a header line, no stage lines.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow;
+  std::cout << flow.flow_summary() << "\n";
 
   return 0;
 }
@@ -86,27 +95,30 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+task=2 stages=0 trained=0 model=0
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+`set_nested_param`'s `kind` write swaps a stage's transform in place —
+reflected immediately in the next `flow_summary()` call.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow;
+  flow.add_standard_scaler();
+  flow.set_stage_key(0, "prep");
+  std::cout << "before: " << flow.flow_summary() << "\n";
+
+  flow.set_nested_param("prep::kind", static_cast<double>(static_cast<int>(cls::TransformKind::MinMaxScaler)));
+  std::cout << "after:  " << flow.flow_summary() << "\n";
 
   return 0;
 }
@@ -115,12 +127,18 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+before: task=2 stages=1 trained=0 model=0
+[0] prep kind=standard_scaler route=0 remainder=pass
+after:  task=2 stages=1 trained=0 model=0
+[0] prep kind=minmax_scaler route=0 remainder=pass
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`graph_info`](graph_info.md) — the same state as a structured value
+  instead of a string.
+- [`save_blueprint`](save_blueprint.md) — the actual reconstructible
+  serialization format.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

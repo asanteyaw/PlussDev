@@ -115,7 +115,8 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_NEIGHBORFAMILYOPTIONS_1
+standardize = false train accuracy: 1
+standardize = true  train accuracy: 1
 ```
 
 ## Changelog

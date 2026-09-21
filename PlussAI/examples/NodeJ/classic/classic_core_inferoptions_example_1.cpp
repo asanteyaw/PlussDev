@@ -20,12 +20,14 @@ int main() {
 
   cls::LinearFamilyOptions linear{};
   linear.objective = cls::LinearObjective::Logistic;  // classification needs Logistic or Hinge
+  linear.regularization_strength = 1.0;  // soften the fit so the boundary score isn't saturated
   cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
       cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
   made.value()->learn(batch);
 
-  // A probe row right at the model's decision boundary.
-  const cls::Series probe = pluss::make_series({3.0}, {1}, f64).reshape({1, 1});
+  // A probe row right at the model's decision boundary (halfway between the
+  // classes, at x = 2.75).
+  const cls::Series probe = pluss::make_series({2.75}, {1}, f64).reshape({1, 1});
   cls::FeatureBatch probe_batch{};
   probe_batch.x = probe;
 

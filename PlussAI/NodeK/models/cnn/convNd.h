@@ -215,12 +215,24 @@ inline Series conv2d_impl_(const Series& input,
   const std::int64_t out_h = output_extent_(padded_h, kernel_h, stride[0], dilation[0]);
   const std::int64_t out_w = output_extent_(padded_w, kernel_w, stride[1], dilation[1]);
 
-  Series patches = padded.unfold(2, effective_kh, stride[0]).unfold(4, effective_kw, stride[1]);
+  // unfold appends its new window dim at the very END (see unfold_impl in
+  // Invoke.cpp -- out_sizes.push_back), not adjacent to the unfolded dim.
+  // So after unfolding dim2 (H), the layout is [B,Cin,outH,W,kh] with W
+  // still at index 3 -- the second unfold must target dim 3 (W) to extract
+  // width windows, not dim 4 (which by then is the kh window itself, a
+  // completely different axis). Unfolding dim 4 there silently produced a
+  // structurally-similar-shaped but semantically wrong result (a window
+  // over the *kernel_h* axis using the *kernel_w* size/step) -- correct by
+  // construction only in the degenerate in_channels==1 case, wrong for any
+  // real multi-channel 2D convolution. Caught via a Track A drill pass
+  // comparing pluss::ai::conv1d/conv2d directly against libtorch.
+  Series patches = padded.unfold(2, effective_kh, stride[0]).unfold(3, effective_kw, stride[1]);
+  // patches is now [B(0), Cin(1), outH(2), outW(3), kh(4), kw(5)].
   if (dilation[0] > 1) {
     std::vector<std::int64_t> kh_idx(static_cast<std::size_t>(kernel_h));
     for (std::int64_t i = 0; i < kernel_h; ++i) kh_idx[static_cast<std::size_t>(i)] = i * dilation[0];
     const Series idx = pluss::make_series(kh_idx, {kernel_h}, Config{}.with_dtype(ScalarType::Int64).with_platform(patches.platform()));
-    patches = patches.index_select(3, idx);
+    patches = patches.index_select(4, idx);
   }
   if (dilation[1] > 1) {
     std::vector<std::int64_t> kw_idx(static_cast<std::size_t>(kernel_w));
@@ -229,7 +241,11 @@ inline Series conv2d_impl_(const Series& input,
     patches = patches.index_select(5, idx);
   }
 
-  const std::array<std::int64_t, 6> permute_order{0, 2, 4, 1, 3, 5};
+  // [B,Cin,outH,outW,kh,kw] -> [B,outH,outW,Cin,kh,kw], so the last 3 dims
+  // reshape to exactly (in_channels, kernel_h, kernel_w) -- matching
+  // flat_weight's natural [out_channels, in_channels*kernel_h*kernel_w]
+  // layout below.
+  const std::array<std::int64_t, 6> permute_order{0, 2, 3, 1, 4, 5};
   const Series cols =
       patches.permute(std::span<const std::int64_t>(permute_order.data(), permute_order.size()))
           .contiguous()

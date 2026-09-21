@@ -105,6 +105,6 @@ undefined: rejected
 - [`is_scalar`](is_scalar.md): require rank zero rather than one element.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="overlap_tokens.html"><span class="label">Previous</span><span class="title">overlap_tokens</span></a>
-  <a class="next-link" href="permute.html"><span class="label">Next</span><span class="title">permute</span></a>
+  <a class="prev-link" href="operators.html"><span class="label">Previous</span><span class="title">operators</span></a>
+  <a class="next-link" href="pack.html"><span class="label">Next</span><span class="title">pack</span></a>
 </div>

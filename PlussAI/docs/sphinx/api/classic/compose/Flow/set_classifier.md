@@ -1,54 +1,69 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 1fe0cb62d2de -->
 # `pluss::ai::classic::Flow::set_classifier`
 
-[Back to `pluss::ai::classic::Flow`](../Flow.md)
+`set_classifier` attaches an already-built `ClassifierBase` directly,
+bypassing [`ModelSpec`](../../families/ModelSpec.md)/
+[`make_classifier`](../../estimators/make_classifier.md) entirely — useful
+when the classifier came from somewhere other than a `ModelSpec` (loaded
+state, a custom subclass). Unlike [`set_model`](set_model.md), there is no
+spec behind the attached model: [`has_model_spec()`](../Flow.md#state)
+becomes `false`.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+classic::Status classic::Flow::set_classifier(std::unique_ptr<classic::ClassifierBase> model);
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`model` — `std::unique_ptr<ClassifierBase>`
+: Ownership transfers to the `Flow`. Replaces any existing
+  classifier or regressor outright — `set_classifier` and
+  [`set_regressor`](set_regressor.md) are mutually exclusive, not additive.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+A `Status`. `.ok()` on success —
+[`has_model()`](../Flow.md#state) becomes `true`,
+[`has_model_spec()`](../Flow.md#state) becomes `false`,
+[`task_kind()`](../Flow.md#state) becomes `Classification`, and
+[`trained()`](../Flow.md#state) resets to `false`. Any prior
+[`transform_specs()`](../TransformSpec.md) stages are untouched.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+- `Status::invalid_argument` — `model` is null.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+Attaching a classifier built by hand via
+[`make_classifier`](../../estimators/make_classifier.md), rather than through
+`Flow`'s own [`set_model`](set_model.md).
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
+  cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> model_or =
+      cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+
+  cls::Flow flow{};
+  const cls::Status s = flow.set_classifier(model_or.move_value());
+  std::cout << "ok = " << std::boolalpha << s.ok() << "\n";
+  std::cout << "has_model() = " << flow.has_model() << "\n";
+  std::cout << "has_model_spec() = " << flow.has_model_spec() << "\n";
+  std::cout << "task_kind() == Classification: " << (flow.task_kind() == cls::TaskKind::Classification) << "\n";
 
   return 0;
 }
@@ -57,27 +72,30 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok = true
+has_model() = true
+has_model_spec() = false
+task_kind() == Classification: true
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+A null model.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::Flow flow{};
+  const cls::Status s = flow.set_classifier(nullptr);
+  std::cout << "ok = " << std::boolalpha << s.ok() << "\n";
+  std::cout << "message = \"" << s.message << "\"\n";
+  std::cout << "has_model() = " << flow.has_model() << "\n";
 
   return 0;
 }
@@ -86,27 +104,37 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+ok = false
+message = "Flow::set_classifier requires a non-null model."
+has_model() = false
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Replacing a `set_model`-built classifier: `has_model_spec()` drops to
+`false` since there is no `ModelSpec` behind a hand-built model, while
+`has_model()` stays `true` throughout.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
+  cls::Flow flow =
+      cls::make_flow(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear}).move_value();
+  std::cout << "has_model_spec() after make_flow() = " << std::boolalpha << flow.has_model_spec() << "\n";
+
+  cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> replacement =
+      cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+  flow.set_classifier(replacement.move_value());
+  std::cout << "has_model_spec() after set_classifier() = " << flow.has_model_spec() << "\n";
+  std::cout << "has_model() after set_classifier() = " << flow.has_model() << "\n";
 
   return 0;
 }
@@ -115,12 +143,17 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+has_model_spec() after make_flow() = true
+has_model_spec() after set_classifier() = false
+has_model() after set_classifier() = true
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`set_regressor`](set_regressor.md) — the mutually-exclusive counterpart.
+- [`set_model`](set_model.md) — build from a `ModelSpec` instead of an
+  already-built model.
+- [`clear_model`](clear_model.md) — remove whichever of the two is set.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

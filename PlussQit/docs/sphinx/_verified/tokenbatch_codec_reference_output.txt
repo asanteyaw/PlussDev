@@ -1,0 +1,32 @@
+=== TokenBatch states ===
+default: defined=false empty=true
+default tokens: rejected
+default offsets: rejected
+populated: defined=true empty=false
+tokens dtype=Text shape=[3] values=["red", "green", "blue"]
+offsets dtype=Int64 shape=[4] values=[0, 2, 2, 3]
+row 0: ["red", "green"]
+row 1: []
+row 2: ["blue"]
+all-empty: defined=true empty=true tokens-defined=true offsets=[0, 0, 0]
+propagated: defined=true empty=true tokens-defined=false offsets=[0]
+shared handles: retained-first=red copied-last=blue
+
+=== unpack round trips ===
+undefined: defined=false
+text scalar: defined=true dtype=Text shape=[] bytes=53
+bytes matrix: defined=true dtype=Bytes shape=[2, 2] bytes=77
+bool matrix: defined=true dtype=Bool shape=[2, 2] bytes=44
+int matrix: defined=true dtype=Int64 shape=[2, 2] bytes=72
+float matrix: defined=true dtype=Float64 shape=[2, 2] bytes=72
+empty matrix: defined=true dtype=Bool shape=[0, 5] bytes=40
+embedded zero: length=3 middle=0 second=tail
+owned after buffer: alpha
+float bits: negzero=0x8000000000000000 nan=0x7ff8000000000000
+header: magic=PNOT version=1 rank=1 bytes=42
+bad magic: rejected
+bad version: rejected
+bad dtype: rejected
+noncanonical bool: rejected
+trailing byte: rejected
+truncated: rejected

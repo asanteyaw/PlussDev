@@ -35,9 +35,10 @@ negative `limit` (the default) means unlimited.
 
 ### The `TokenBatch` result
 
-All tokens from all cells are concatenated into one flat rank-`1` token
-`Note` (`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each
-cell's run: cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`.
+All tokens from all cells are concatenated into the rank-`1` Note
+`batch.tokens()`. The rank-`1` Int64 Note `batch.offsets()` has length
+`numel + 1` and marks each cell's run: cell `r` owns `tokens.at(k)` for `k`
+in `[offsets[r], offsets[r + 1])`.
 
 ## Example 1: Runs Collapse; No Empty Tokens
 
@@ -47,8 +48,8 @@ const auto batch =
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -101,8 +102,8 @@ const auto batch = pluss::make_note({"   ", ""}).split_whitespace();
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -122,7 +123,7 @@ Both input cells map to empty ranges.
   that splits a **single** string into a 1-D `Note`.
 - [`Note::split`](split.md): literal single-delimiter field splitting that
   keeps empty fields.
-- [`Note::tokenize_words`](tokenize_words.md): word tokens that also drop
+- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): word tokens that also drop
   punctuation, not just whitespace.
 
 <div class="pluss-inline-prev-next">

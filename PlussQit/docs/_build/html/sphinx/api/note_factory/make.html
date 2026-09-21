@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -82,11 +82,12 @@ column</p></li>
 lengths at each level become the sizes. Text is stored as-is, cell by cell;
 <code class="docutils literal notranslate"><span class="pre">make()</span></code> does not trim, normalize, case-fold, or re-encode. Multi-byte UTF-8
 (accents, CJK, emoji) is preserved intact.</p>
-<p>The result is always <strong>UTF-8 mode</strong> (<code class="docutils literal notranslate"><span class="pre">encoding=utf8</span></code>). <code class="docutils literal notranslate"><span class="pre">make()</span></code> labels the
-content as text but does not validate that every byte is well-formed UTF-8 —
-if the source bytes are not valid text, use <a class="reference internal" href="bytes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bytes</span></code></span></a> instead, which
-makes the “raw bytes, no guarantees” contract explicit and prints
-accordingly.</p>
+<p>The <strong>text overloads</strong> always produce <code class="docutils literal notranslate"><span class="pre">NoteDType::Text</span></code>
+(<code class="docutils literal notranslate"><span class="pre">encoding=utf8</span></code>). They label the content as text but do not validate that
+every byte is well-formed UTF-8. If the source bytes are not valid text, use
+<a class="reference internal" href="bytes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bytes</span></code></span></a> instead. Bool, signed-integer, and floating-point overloads
+produce their native dtypes as described above; they do not pass through this
+text path.</p>
 <section id="the-flat-sizes-overload">
 <h3>The <code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">sizes)</span></code> overload<a class="headerlink" href="#the-flat-sizes-overload" title="Link to this heading">¶</a></h3>
 <p>When text arrives already flattened from another system — a <code class="docutils literal notranslate"><span class="pre">std::vector</span></code> of
@@ -474,6 +475,8 @@ a single string.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SeriesAntidiffAccessor::cumulative_trapezoid &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series Factory API Reference" href="../../series_factory_api_reference.html" />
+    <link rel="prev" title="SeriesAntidiffAccessor::trapezoid" href="trapezoid.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="seriesantidiffaccessor-cumulative-trapezoid">
+<h1>SeriesAntidiffAccessor::cumulative_trapezoid<a class="headerlink" href="#seriesantidiffaccessor-cumulative-trapezoid" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_antidiff_accessor_api_reference.html"><span class="std std-doc">Back to SeriesAntidiffAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">SeriesAntidiffAccessor</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesAntidiffAccessor</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesAntidiffAccessor</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesAntidiffProxy</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesAntidiffProxy</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">SeriesAntidiffProxy</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+
+<span class="n">Series</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">integ</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">integ</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">dx</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">integ</span><span class="o">::</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid()</span></code> computes the <em>running</em> antiderivative of
+already-sampled data: the same composite-trapezoidal area
+<a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code></span></a> computes, but kept at every partial sum
+instead of only the final total. Where <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code> returns one number (or
+one per batch row), <code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid()</span></code> returns one value per sample
+after the first — an approximation of <code class="docutils literal notranslate"><span class="pre">F(x_i)</span> <span class="pre">=</span> <span class="pre">integral_{x_0}^{x_i}</span> <span class="pre">y</span> <span class="pre">dx</span></code>
+for each <code class="docutils literal notranslate"><span class="pre">i</span></code>, in the same sense that <code class="docutils literal notranslate"><span class="pre">Series::cumsum()</span></code> is the running form
+of <code class="docutils literal notranslate"><span class="pre">Series::sum()</span></code>.</p>
+<p>This is torch parity: <code class="docutils literal notranslate"><span class="pre">torch.cumulative_trapezoid</span></code> is <code class="docutils literal notranslate"><span class="pre">torch.trapezoid</span></code>’s
+own running counterpart, and, like <code class="docutils literal notranslate"><span class="pre">trapezoid</span></code>, real torch declares it with
+no dedicated kernel — computed compositionally, the same approach taken
+here.</p>
+</section>
+<section id="relationship-to-trapezoid">
+<h2>Relationship To <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code><a class="headerlink" href="#relationship-to-trapezoid" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid()</span></code>’s <strong>last</strong> entry along <code class="docutils literal notranslate"><span class="pre">dim</span></code> always equals
+<code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s result computed over the identical <code class="docutils literal notranslate"><span class="pre">y</span></code>/<code class="docutils literal notranslate"><span class="pre">x</span></code>/<code class="docutils literal notranslate"><span class="pre">dx</span></code> — the total
+area is exactly the running sum’s final term. This is not a coincidence of
+implementation; it follows from what a running sum means, and it is a
+useful cross-check when verifying either method independently (see
+Example 4, which confirms both methods’ gradients agree at that shared
+point too).</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>Identical to <a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code></span></a>’s: <strong>x</strong> (coordinates, optional),
+<strong>dx</strong> (uniform spacing, used when <code class="docutils literal notranslate"><span class="pre">x</span></code> is omitted), and <strong>dim</strong> (the axis to
+accumulate along, default <code class="docutils literal notranslate"><span class="pre">-1</span></code>). The three calling forms
+(<code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid(x)</span></code>, <code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid(dx)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid()</span></code>) resolve exactly the same way <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s do —
+see <a class="reference internal" href="../series/antidiff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::antidiff</span></code></span></a> for the peer-binding rule
+behind the zero-argument form.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code>
+A new <code class="docutils literal notranslate"><span class="pre">Series</span></code> with <code class="docutils literal notranslate"><span class="pre">dim</span></code>’s length reduced by one (the running sum
+starts after the first pair of samples, so an <code class="docutils literal notranslate"><span class="pre">n</span></code>-sample axis produces
+<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> cumulative values) — the same convention <code class="docutils literal notranslate"><span class="pre">torch.</span>&#160;&#160;&#160;&#160; <span class="pre">cumulative_trapezoid</span></code> uses. Leading dimensions are preserved
+(see Batching below).</p>
+</section>
+<section id="batching">
+<h2>Batching<a class="headerlink" href="#batching" title="Link to this heading">¶</a></h2>
+<p>Like <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>, the accumulation happens along <code class="docutils literal notranslate"><span class="pre">dim</span></code> specifically,
+never a hardcoded axis, so <code class="docutils literal notranslate"><span class="pre">y</span></code> may carry leading batch dimensions sharing
+the same <code class="docutils literal notranslate"><span class="pre">x</span></code>; each batch row gets its own independent running sum in one
+call. See Example 3.</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p>No custom backward rule exists here either — the gradient is inherited
+entirely from the composed <code class="docutils literal notranslate"><span class="pre">diff</span></code>/<code class="docutils literal notranslate"><span class="pre">slice</span></code>/<code class="docutils literal notranslate"><span class="pre">mul</span></code>/<code class="docutils literal notranslate"><span class="pre">add</span></code>/<code class="docutils literal notranslate"><span class="pre">cumsum</span></code> ops. Because
+the last cumulative entry equals <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own total, differentiating
+through <em>only</em> that last entry reproduces <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s exact gradient
+(the trapezoid weight of each sample) — Example 4 verifies this directly
+rather than asserting it.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The two binary call styles are equivalent.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;call_style=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">().</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dot_style=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>call_style=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.5, 3, 9.5, 22]
+dot_style=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.5, 3, 9.5, 22]
+</pre></div>
+</div>
+<p>Note the last entry, <code class="docutils literal notranslate"><span class="pre">22</span></code>, matches <a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code></span></a>’s own
+result for this exact <code class="docutils literal notranslate"><span class="pre">y</span></code>/<code class="docutils literal notranslate"><span class="pre">x</span></code> (see that page’s Example 1).</p>
+<p>Example 2. A uniform <code class="docutils literal notranslate"><span class="pre">dx</span></code> versus the zero-argument default (<code class="docutils literal notranslate"><span class="pre">dx</span> <span class="pre">=</span> <span class="pre">1.0</span></code>).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;with_dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;no_arg_default=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">cumulative_trapezoid</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Halving the spacing halves every running value, exactly as it halves
+<code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own total.</p>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>with_dx=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.25, 1.5, 4.75, 11]
+no_arg_default=pluss::Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[0.5, 3, 9.5, 22]
+</pre></div>
+</div>
+<p>Example 3. Batching: one call accumulates two independent rows sharing the
+same <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Each row’s last entry matches <a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own batched
+result</span></a> for the identical data (<code class="docutils literal notranslate"><span class="pre">7.5</span></code> and <code class="docutils literal notranslate"><span class="pre">75</span></code>).</p>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1.5, 4, 7.5],
+  [15, 40, 75]]
+</pre></div>
+</div>
+<p>Example 4. Differentiating through only the LAST cumulative entry
+reproduces <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own gradient exactly — an independent
+cross-check that the two methods’ reverse-mode paths agree, not just their
+forward values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">});</span>
+<span class="n">y</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">cum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cum</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">cum</span><span class="p">.</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">last</span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dLast_dy=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dLast_dy=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[0.5, 1, 1, 1, 0.5]
+</pre></div>
+</div>
+<p>Identical to <a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own gradient example</span></a> for the
+same data — <code class="docutils literal notranslate"><span class="pre">[0.5,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">0.5]</span></code>, the trapezoid weight of each sample.</p>
+<p>Example 5. Complex <code class="docutils literal notranslate"><span class="pre">y</span></code> works with no special handling, same as
+<code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&gt;</span><span class="p">{{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">})</span>
+<span class="w">              </span><span class="p">.</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Complex128</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}).</span><span class="n">to</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Complex128</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;complex_cumarea=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="p">.</span><span class="n">antidiff</span><span class="p">.</span><span class="n">cumulative_trapezoid</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The last entry, <code class="docutils literal notranslate"><span class="pre">(3+6j)</span></code>, matches
+<a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own complex example</span></a>.</p>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>complex_cumarea=pluss::Series(shape=[2], strides=[1], dtype=complex128, platform=cpu, numel=2, contiguous=true)
+data=[(0.5+1j), (3+6j)]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="gotchas-and-failure-modes">
+<h2>Gotchas And Failure Modes<a class="headerlink" href="#gotchas-and-failure-modes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The output has one FEWER entry along <code class="docutils literal notranslate"><span class="pre">dim</span></code> than the input — an
+<code class="docutils literal notranslate"><span class="pre">n</span></code>-sample axis produces <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code> cumulative values, matching
+<code class="docutils literal notranslate"><span class="pre">torch.cumulative_trapezoid</span></code>’s own convention. Reaching for element <code class="docutils literal notranslate"><span class="pre">i</span></code>
+of the result gives the area up through sample <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">+</span> <span class="pre">1</span></code>, not sample <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p></li>
+<li><p>The same peer-binding, broadcasting, and descending-<code class="docutils literal notranslate"><span class="pre">x</span></code> behavior as
+<a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code></span></a> applies here — see that page’s own Gotchas
+section.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid()</span></code> is out-of-place; it never mutates <code class="docutils literal notranslate"><span class="pre">y</span></code> or <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid()</span></code> is <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s running form: the same
+composite-trapezoidal formula, kept at every partial sum instead of
+collapsed to one total. Its last entry always equals <code class="docutils literal notranslate"><span class="pre">trapezoid()</span></code>’s own
+result over identical data — use that identity to sanity-check either one
+independently.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="trapezoid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesAntidiffAccessor::trapezoid</span></code></span></a>: the total-area form
+of this same computation.</p></li>
+<li><p><a class="reference internal" href="../series/cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::cumsum</span></code></span></a>: the plain running sum this
+method’s weighted version builds on.</p></li>
+<li><p><a class="reference internal" href="../series/diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::diff</span></code></span></a>: the discrete forward difference the
+<code class="docutils literal notranslate"><span class="pre">antidiff</span></code> accessor reverses.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="trapezoid.html">
+    <span class="label">Previous</span>
+    <span class="title">trapezoid</span>
+  </a>
+  <a class="next-link" href="../../series_api_reference.html">
+    <span class="label">Next</span>
+    <span class="title">Series API Reference</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+  <li><a href="../../series_antidiff_accessor_api_reference.html">SeriesAntidiffAccessor API Reference</a><ul>
+      <li>Previous: <a href="trapezoid.html" title="previous chapter">SeriesAntidiffAccessor::trapezoid</a></li>
+      <li>Next: <a href="../../series_factory_api_reference.html" title="next chapter">Series Factory API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series-antidiff/cumulative_trapezoid.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

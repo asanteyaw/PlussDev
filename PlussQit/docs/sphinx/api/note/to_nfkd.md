@@ -22,7 +22,7 @@ marks exposed for a follow-up pass such as
 [`strip_accents`](strip_accents.md). Like NFKC it is **lossy** — do not use
 it where the compatibility distinctions carry meaning.
 
-This is the same operation as `normalize(3)`. `to_nfkd` is shape-preserving,
+`to_nfkd` is shape-preserving,
 cell-independent, idempotent, and returns a fresh `Note`. Requires the
 Unicode backend.
 

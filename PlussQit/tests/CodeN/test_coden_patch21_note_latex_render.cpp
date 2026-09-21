@@ -4,11 +4,11 @@
 #include <pluss/pluss.h>
 
 TEST_CASE("CodeN Note text/LaTeX conversion helpers are concrete", "[coden][patch21]") {
-  SECTION("text_to_latex escapes plain text and can map math words") {
-    auto escaped = pluss::make_note("x_1 & 50% complete").text_to_latex();
+  SECTION("tex().to_latex escapes plain text and can map math words") {
+    auto escaped = pluss::make_note("x_1 & 50% complete").tex().to_latex();
     REQUIRE(escaped.at(0) == "x\\_1 \\& 50\\% complete");
 
-    auto mapped = pluss::make_note("alpha + beta <= gamma").text_to_latex(2);
+    auto mapped = pluss::make_note("alpha + beta <= gamma").tex().to_latex(2);
     const std::string latex = std::string(mapped.at(0));
     REQUIRE(latex.find("\\alpha") != std::string::npos);
     REQUIRE(latex.find("\\beta") != std::string::npos);
@@ -19,21 +19,21 @@ TEST_CASE("CodeN Note text/LaTeX conversion helpers are concrete", "[coden][patc
     REQUIRE(latex.back() == '$');
   }
 
-  SECTION("latex_to_text strips TeX control flow into plain text") {
+  SECTION("tex().to_text strips TeX control flow into plain text") {
     auto latex = pluss::make_note(
         "\\section{Intro}\n"
         "Body: value is $x^2$.\n"
         "\\textbf{Bold words}.\n");
-    auto plain = latex.latex_to_text();
+    auto plain = latex.tex().to_text();
     const std::string out = std::string(plain.at(0));
     REQUIRE(out.find('\\') == std::string::npos);
     REQUIRE(out.find('$') == std::string::npos);
     REQUIRE(out.find("Body") != std::string::npos);
   }
 
-  SECTION("render_latex renders common math commands to readable output") {
+  SECTION("tex().render renders common math commands to readable output") {
     auto latex = pluss::make_note("$\\frac{1}{2}\\alpha + x^{2} - y_1$");
-    auto rendered = latex.render_latex();
+    auto rendered = latex.tex().render();
     const std::string out = std::string(rendered.at(0));
     REQUIRE(out.find("\\frac") == std::string::npos);
     REQUIRE(out.find("\\alpha") == std::string::npos);

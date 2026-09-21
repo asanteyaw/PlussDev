@@ -69,13 +69,17 @@ sooner at a coarser one.
 
 `bool warm_start = false`
 
-`false` (the default): `learn` always starts from a fresh, untrained state,
-even if the estimator already held a previous fit — the previous state is
-discarded first. `true`: reuse the estimator's current parameters as the
+Documented intent: `false` (the default) starts every `learn` from a fresh,
+untrained state; `true` would reuse the estimator's current parameters as the
 solver's starting point instead of reinitializing, so a second `learn` call
-refines rather than restarts. Only meaningful for iterative families; the
-receiving estimator must already be trained for there to be anything to warm
--start from.
+refines rather than restarts.
+
+**Verified current behavior: this field is not consulted by any estimator
+family's fit kernel.** It round-trips through `Flow` persistence (a saved
+bundle remembers the value you set), but setting it to `true` has no
+observable effect on a `learn` call today — a second `learn` with
+`warm_start = true` produces the identical result a second `learn` with the
+default `false` would. Do not rely on it to skip re-fitting from scratch.
 
 ### `track_diagnostics`
 
@@ -234,13 +238,16 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_TRAINOPTIONS_1
+default fit ok = true
+tight fit ok   = true
 ```
 
 ### Example 2
 
-`class_weight = Balanced` on an imbalanced binary target — the minority class
-stops being outvoted.
+`class_weight = Balanced` on an imbalanced binary target — the decision score
+at a point between the clusters shifts toward the minority class, even though
+neither weighting misclassifies a single training row (the data is close to
+linearly separable, so the hard labels alone would not show the effect).
 
 ```cpp
 #include <pluss/pluss.h>
@@ -265,21 +272,27 @@ int main() {
   cls::LinearFamilyOptions linear{};
   linear.objective = cls::LinearObjective::Logistic;  // classification needs Logistic or Hinge
 
-  auto fit_and_predict = [&](cls::ClassWeightMode mode) {
+  // A probe between the two clusters -- both fits classify every training
+  // row correctly regardless of weighting, so the effect only shows up as a
+  // shift in the raw decision score at a point neither cluster owns outright.
+  cls::FeatureBatch probe{};
+  probe.x = pluss::make_series({3.0}, {1}, f64).reshape({1, 1});
+
+  auto fit_and_score = [&](cls::ClassWeightMode mode) {
     cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
         cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
     cls::TrainOptions opts{};
     opts.class_weight = mode;
     made.value()->learn(batch, opts);
-    cls::StatusOr<cls::Series> pred = made.value()->infer(batch.features);
-    return pred.value();
+    return made.value()->infer_scores(probe).value().item<double>();
   };
 
-  const cls::Series unweighted = fit_and_predict(cls::ClassWeightMode::None);
-  const cls::Series balanced = fit_and_predict(cls::ClassWeightMode::Balanced);
+  const double unweighted_score = fit_and_score(cls::ClassWeightMode::None);
+  const double balanced_score = fit_and_score(cls::ClassWeightMode::Balanced);
 
-  std::cout << "unweighted predictions = " << unweighted << "\n";
-  std::cout << "balanced predictions   = " << balanced << "\n";
+  std::cout << "unweighted score at x=3.0 = " << unweighted_score << "\n";
+  std::cout << "balanced score at x=3.0   = " << balanced_score
+            << "  (pulled toward the minority class)\n";
 
   return 0;
 }
@@ -288,13 +301,16 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_TRAINOPTIONS_2
+unweighted score at x=3.0 = -3.06951
+balanced score at x=3.0   = -2.12014  (pulled toward the minority class)
 ```
 
 ### Example 3
 
-`warm_start` — a second `learn` call refines the existing fit instead of
-starting over, versus the default that discards it.
+`max_iterations` controlling how far an iterative solver gets. Ordinary least
+squares is a closed-form solve — `max_iterations` does not apply to it — so
+this uses `Logistic`, which genuinely iterates: the raw decision score for the
+same probe row grows as the solver is allowed more steps.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -307,28 +323,30 @@ int main() {
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const cls::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}, f64).reshape({6, 1});
-  const cls::Series y = pluss::make_series({2.0, 4.0, 6.0, 8.0, 10.0, 12.0}, {6}, f64);
+  const cls::Series x = pluss::make_series(
+      {1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5}, {8}, f64).reshape({8, 1});
+  const cls::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
   cls::LabeledBatch batch{};
   batch.features.x = x;
   batch.y = y;
+  cls::FeatureBatch probe{};
+  probe.x = pluss::make_series({4.5}, {1}, f64).reshape({1, 1});
 
-  cls::StatusOr<std::unique_ptr<cls::RegressorBase>> made =
-      cls::make_regressor(cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear,
-                                         cls::LinearFamilyOptions{}});
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
 
-  cls::TrainOptions fresh{};
-  fresh.max_iterations = 1;  // deliberately under-converged
-  made.value()->learn(batch, fresh);
-  const bool trained_after_one_pass = made.value()->trained();
+  auto fit_and_score = [&](std::int64_t max_iterations) {
+    cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
+        cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+    cls::TrainOptions opts{};
+    opts.max_iterations = max_iterations;
+    made.value()->learn(batch, opts);
+    return made.value()->infer_scores(probe).value().item<double>();
+  };
 
-  cls::TrainOptions warm{};
-  warm.warm_start = true;
-  warm.max_iterations = 1;
-  made.value()->learn(batch, warm);  // continues from the under-converged fit
-
-  std::cout << "trained after 1 iteration = " << std::boolalpha << trained_after_one_pass << "\n";
-  std::cout << "still trained after warm-started pass = " << made.value()->trained() << "\n";
+  std::cout << "score after max_iterations = 1 : " << fit_and_score(1) << "\n";
+  std::cout << "score after max_iterations = 2 : " << fit_and_score(2) << "\n";
+  std::cout << "score after max_iterations = 1000 (default) : " << fit_and_score(1000) << "\n";
 
   return 0;
 }
@@ -337,7 +355,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_TRAINOPTIONS_3
+score after max_iterations = 1 : 2.66666
+score after max_iterations = 2 : 4.7008
+score after max_iterations = 1000 (default) : 53.3503
 ```
 
 ## Changelog

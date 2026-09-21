@@ -57,7 +57,13 @@ TEST_CASE("Series::pos bounds-checked scalar selection", "[index][pos]") {
   REQUIRE(picked_from_base.dim() == 0);
   REQUIRE(picked_from_base.item<double>() == 3.0);
 
-  REQUIRE_THROWS(s.pos(-1));
+  // Negative indices are Python-style (pos(-1) == the last element), not
+  // an error -- pos() itself intentionally does `if (index < 0) index +=
+  // size`, matching the same convention pluss::Slicing::SliceFrom(-1,-1)
+  // uses elsewhere. Only an index that is STILL negative after that
+  // wraparound (or positive and out of range) should throw.
+  REQUIRE(s.pos(-1).item<double>() == 3.0);
+  REQUIRE_THROWS(s.pos(-4));
   REQUIRE_THROWS(s.pos(3));
 
   Series m = pluss::series::ones({2, 2}, ScalarType::Float64);
@@ -77,8 +83,12 @@ TEST_CASE("Series::pos(row, col) bounds-checked scalar selection", "[index][pos]
   REQUIRE(picked_from_base.dim() == 0);
   REQUIRE(picked_from_base.item<double>() == 2.0);
 
-  REQUIRE_THROWS(m.pos(-1, 0));
-  REQUIRE_THROWS(m.pos(0, -1));
+  // Same Python-style negative-index convention as pos(index) above.
+  REQUIRE(m.pos(-1, 0).item<double>() == 3.0);
+  REQUIRE(m.pos(0, -1).item<double>() == 2.0);
+  REQUIRE(m.pos(-1, -1).item<double>() == 4.0);
+  REQUIRE_THROWS(m.pos(-3, 0));
+  REQUIRE_THROWS(m.pos(0, -3));
   REQUIRE_THROWS(m.pos(2, 0));
   REQUIRE_THROWS(m.pos(0, 2));
 
@@ -101,9 +111,13 @@ TEST_CASE("Series::pos(i, j, k) bounds-checked scalar selection", "[index][pos]"
   REQUIRE(picked_from_base.dim() == 0);
   REQUIRE(picked_from_base.item<double>() == 3.0);
 
-  REQUIRE_THROWS(t.pos(-1, 0, 0));
-  REQUIRE_THROWS(t.pos(0, -1, 0));
-  REQUIRE_THROWS(t.pos(0, 0, -1));
+  // Same Python-style negative-index convention as pos(index) above.
+  REQUIRE(t.pos(-1, 0, 0).item<double>() == 5.0);
+  REQUIRE(t.pos(0, -1, 0).item<double>() == 3.0);
+  REQUIRE(t.pos(0, 0, -1).item<double>() == 2.0);
+  REQUIRE_THROWS(t.pos(-3, 0, 0));
+  REQUIRE_THROWS(t.pos(0, -3, 0));
+  REQUIRE_THROWS(t.pos(0, 0, -3));
   REQUIRE_THROWS(t.pos(2, 0, 0));
   REQUIRE_THROWS(t.pos(0, 2, 0));
   REQUIRE_THROWS(t.pos(0, 0, 2));

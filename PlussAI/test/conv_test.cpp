@@ -129,6 +129,34 @@ bool run_conv_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  // Multi-channel regression guard: every other case in this file uses
+  // in_channels==1, which can't catch a channel/kernel axis mixup in the
+  // unfold-based patch extraction (conv2d_impl_ in convNd.h) -- a real bug
+  // found and fixed this way (the second unfold call was targeting the
+  // just-created kernel-height window dim instead of the width dim, an
+  // error invisible whenever in_channels==1 since there's no channel axis
+  // to get crossed with the kernel axes). Expected values cross-checked
+  // against an independent reference cross-correlation implementation.
+  {
+    const Series mc_input = pluss::make_series(
+        std::vector<double>{
+            1.0, 1.1, 1.2, 1.3, 1.4, 1.5,  1.6, 1.7, 1.8, 1.9, 2.0, 2.1,
+            2.2, 2.3, 2.4, 2.5, 2.6, 2.7,  2.8, 2.9, 3.0, 3.1, 3.2, 3.3},
+        {2, 2, 6}, cfg);
+    const Series mc_weight = pluss::make_series(
+        std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8}, {2, 2, 2}, cfg);
+    const Series mc_out = pluss::conv1d(mc_input, mc_weight, Series(), 1, 0, 1, 1);
+    const std::vector<double> mc_expected{
+        1.48, 1.58, 1.68, 1.78, 1.88,
+        3.64, 3.90, 4.16, 4.42, 4.68,
+        2.68, 2.78, 2.88, 2.98, 3.08,
+        6.76, 7.02, 7.28, 7.54, 7.80};
+    if (!approx_vec(vec_f64(mc_out), mc_expected)) {
+      if (err) *err << "conv1d multi-channel output mismatch\n";
+      return false;
+    }
+  }
+
   const Series conv1_unbatched = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {1, 6}, cfg);
   if (!approx_vec(vec_f64(pluss::conv1d(conv1_unbatched, conv1_weight, conv1_bias, 1, 1, 1, 1)),
                   std::vector<double>{3.5, 5.5, 7.5, 9.5, 11.5, -0.5})) {

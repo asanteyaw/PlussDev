@@ -118,6 +118,29 @@ struct DataReader final {
     assign_init_list_(list);
   }
 
+  // Every OTHER flat-data container form (std::span, std::vector,
+  // std::array, raw array, raw pointer) has this same (data), (data, span
+  // sizes), (data, initializer_list sizes) trio -- a plain
+  // `std::initializer_list<T>` had only the first, so
+  // `make_series({1.0, 2.0, 3.0, 4.0}, {2, 2})` fell through to
+  // with_sizes()'s HostBuffer-only check and threw ("explicit sizes are
+  // only supported for host-buffer inputs"), even though a flat
+  // initializer_list is exactly as reshape-able as any other flat
+  // container. Routed through assign_host_span_ (same as std::array/raw
+  // array below), not assign_init_list_, since HostBuffer is precisely
+  // the container type with_sizes() already knows how to reshape.
+  template <class T>
+  DataReader(std::initializer_list<T> list, std::span<const std::int64_t> sizes) {
+    assign_host_span_(std::span<const T>(list.begin(), list.size()));
+    with_sizes(sizes);
+  }
+
+  template <class T>
+  DataReader(std::initializer_list<T> list, std::initializer_list<std::int64_t> sizes) {
+    assign_host_span_(std::span<const T>(list.begin(), list.size()));
+    with_sizes(sizes);
+  }
+
   DataReader(std::initializer_list<NestedSeriesLiteral> list) {
     assign_nested_(list);
   }
@@ -262,9 +285,28 @@ struct DataReader final {
       sizes_.assign(sizes.begin(), sizes.end());
       return *this;
     }
+    if (type_ == ContainerType::InitList) {
+      // `staged_cpu_` here is already an ordinary materialized Series
+      // (built by assign_init_list_/assign_nested_), so an explicit shape
+      // override is just an ordinary reshape -- exactly what a caller
+      // would do by hand with `make_series(list).reshape(shape)`. This is
+      // what actually makes `make_series({1,2,3,4}, {2,2})` (the
+      // Option-based two-argument spelling, which routes here via
+      // apply_option_) work: without this branch, a flat initializer_list
+      // was the one flat-data container form that COULDN'T be reshaped
+      // this way, unlike std::span/std::vector/std::array/raw arrays/raw
+      // pointers, which all go through the HostBuffer branch above.
+      const std::int64_t target_numel = numel_from_sizes_(sizes);
+      PLUSS_CHECK(target_numel == element_count_,
+                  "DataReader::with_sizes: shape's number of elements (" + std::to_string(target_numel) +
+                      ") must match the current number of elements (" + std::to_string(element_count_) + ")");
+      staged_cpu_ = staged_cpu_.reshape(sizes);
+      sizes_.assign(sizes.begin(), sizes.end());
+      return *this;
+    }
     PLUSS_CHECK(
         same_shape_(sizes_, sizes),
-        "DataReader::with_sizes: explicit sizes are only supported for host-buffer inputs");
+        "DataReader::with_sizes: explicit sizes are only supported for host-buffer or initializer_list inputs");
     return *this;
   }
 

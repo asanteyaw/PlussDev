@@ -1,0 +1,261 @@
+=== analysis ===
+-- language --
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["en", "en", "en", "ru"]
+-- script --
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Latin", "Latin", "Latin", "Cyrillic"]
+-- sentiment --
+Note(shape=[4], dim=1, numel=4, dtype=Float64)
+[1, 0.5, 0.5, 0.5]
+-- toxicity --
+Note(shape=[2], dim=1, numel=2, dtype=Float64)
+[0, 1]
+-- readability_grade --
+Note(shape=[2], dim=1, numel=2, dtype=Float64)
+[0, 40.64]
+-- readability_level --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["elementary", "college"]
+-- spam_score --
+Note(shape=[4], dim=1, numel=4, dtype=Float64)
+[0, 1, 0, 0]
+-- formality --
+Note(shape=[2], dim=1, numel=2, dtype=Float64)
+[0.166667, 1]
+-- subjectivity --
+Note(shape=[2], dim=1, numel=2, dtype=Float64)
+[0.2, 0.771429]
+
+=== sentence and lexical analysis ===
+-- sentences --
+tokens=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Alice visited New York.", "Bob is running quickly!", "The systems were tested and studies improved."]
+offsets=[0, 2, 3]
+-- punct_tokens --
+tokens=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[".", "!", "."]
+offsets=[0, 2, 3]
+-- stems --
+tokens=Note(shape=[15], dim=1, numel=15, encoding=utf8)
+["alice", "visit", "new", "york", "bob", "is", "runn", "quickly", "the", "system", "were", "test", "and", "studi", "improv"]
+offsets=[0, 8, 15]
+-- lemmas --
+tokens=Note(shape=[15], dim=1, numel=15, encoding=utf8)
+["alice", "visit", "new", "york", "bob", "be", "run", "quickly", "the", "system", "be", "test", "and", "study", "improv"]
+offsets=[0, 8, 15]
+-- pos_tags --
+tokens=Note(shape=[15], dim=1, numel=15, encoding=utf8)
+["Alice/NNP", "visited/VBD", "New/NNP", "York/NNP", "Bob/NNP", "is/NN", "running/VBG", "quickly/NN", "The/NNP", "systems/NN", "were/NN", "tested/VBD", "and/NN", "studies/NN", "improved/VBD"]
+offsets=[0, 8, 15]
+-- named_entities --
+tokens=Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Alice", "New York", "Bob", "The"]
+offsets=[0, 3, 4]
+
+=== ranking and ngrams ===
+-- keywords(2) --
+tokens=Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["red", "blue", "learning", "machine"]
+offsets=[0, 2, 4]
+-- keyphrases(2) --
+tokens=Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["red blue", "blue red", "machine learning", "improves machine"]
+offsets=[0, 2, 4]
+-- char_ngrams(3) --
+tokens=Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["caf", "afe"]
+offsets=[0, 2, 2]
+-- word_ngrams(2) --
+tokens=Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["red blue", "blue red", "red green", "green red", "red blue", "machine learning", "learning improves", "improves machine", "machine learning", "learning systems"]
+offsets=[0, 5, 10]
+
+=== named extraction ===
+-- acronyms --
+tokens=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["NASA", "AI", "API"]
+offsets=[0, 2, 3]
+-- citations --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["[7]"]
+offsets=[0, 1, 1]
+-- definitions --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["API"]
+offsets=[0, 0, 1]
+-- emails --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["ada@example.com"]
+offsets=[0, 1, 1]
+-- hashtags --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["#AI"]
+offsets=[0, 1, 1]
+-- math_symbols --
+tokens=Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["/", "/", "=", "\\alpha", "+"]
+offsets=[0, 5, 5]
+-- mentions --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["@ada"]
+offsets=[0, 1, 1]
+-- numbers --
+tokens=Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["12.50", "7"]
+offsets=[0, 2, 2]
+-- terms --
+tokens=Note(shape=[13], dim=1, numel=13, encoding=utf8)
+["nasa", "about", "ada@example.com", "https://example.com", "cost", "alpha", "means", "application", "interface", "robust", "parser", "terms", "remain"]
+offsets=[0, 6, 13]
+-- urls --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["https://example.com"]
+offsets=[0, 1, 1]
+
+=== token sequence transforms ===
+-- alpha_tokens --
+tokens=Note(shape=[8], dim=1, numel=8, encoding=utf8)
+["The", "Fox", "fox", "jumps", "quickly", "beta", "Alpha", "beta"]
+offsets=[0, 5, 8]
+-- alnum_tokens --
+tokens=Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["The", "Fox", "fox", "42", "jumps", "quickly", "beta", "Alpha", "beta", "7"]
+offsets=[0, 6, 10]
+-- lower_tokens --
+tokens=Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["the", "fox", "fox", "42", "jumps", "quickly", "beta", "alpha", "beta", "7"]
+offsets=[0, 6, 10]
+-- match_tokens('^[A-Z]') --
+tokens=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["The", "Fox", "Alpha"]
+offsets=[0, 2, 3]
+-- max_length(4) --
+tokens=Note(shape=[7], dim=1, numel=7, encoding=utf8)
+["The", "Fox", "fox", "42", "beta", "beta", "7"]
+offsets=[0, 4, 7]
+-- min_length(5) --
+tokens=Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["jumps", "quickly", "Alpha"]
+offsets=[0, 2, 3]
+-- shuffle_tokens --
+tokens=Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["fox", "Fox", "quickly", "The", "jumps", "42", "Alpha", "beta", "7", "beta"]
+offsets=[0, 6, 10]
+-- sort_tokens --
+tokens=Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["42", "fox", "fox", "jumps", "quickly", "the", "7", "alpha", "beta", "beta"]
+offsets=[0, 6, 10]
+-- unique_tokens --
+tokens=Note(shape=[8], dim=1, numel=8, encoding=utf8)
+["the", "fox", "42", "jumps", "quickly", "beta", "alpha", "7"]
+offsets=[0, 5, 8]
+-- without_numbers --
+tokens=Note(shape=[8], dim=1, numel=8, encoding=utf8)
+["The", "Fox", "fox", "jumps", "quickly", "beta", "Alpha", "beta"]
+offsets=[0, 5, 8]
+-- without_stopwords --
+tokens=Note(shape=[9], dim=1, numel=9, encoding=utf8)
+["fox", "fox", "42", "jumps", "quickly", "beta", "alpha", "beta", "7"]
+offsets=[0, 5, 9]
+
+=== removal ===
+-- remove_latex --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep **bold** [label](https://x.test) and ; mention @ada.", "Quote \"remove me\" (draft) then keep. Hidden Visible"]
+-- remove_markdown --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep bold label and $x+y$; mention @ada.", "Quote \"remove me\" (draft) then keep.\\section{Hidden} Visible"]
+-- remove_math --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep **bold** [label](https://x.test) and ; mention @ada.", "Quote \"remove me\" (draft) then keep.\\section{Hidden} Visible"]
+-- remove_mentions --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep **bold** [label](https://x.test) and $x+y$; mention .", "Quote \"remove me\" (draft) then keep.\\section{Hidden} Visible"]
+-- remove_parentheticals --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep **bold** [label] and $x+y$; mention @ada.", "Quote \"remove me\" then keep.\\section{Hidden} Visible"]
+-- remove_quotes --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep **bold** [label](https://x.test) and $x+y$; mention @ada.", "Quote (draft) then keep.\\section{Hidden} Visible"]
+-- remove_stopwords --
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["report Ada", "note detail"]
+-- remove_tables --
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["before after"]
+
+=== shared contracts ===
+-- language matrix --
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["en", "unknown"], 
+  ["en", "en"]
+]
+-- acronyms matrix --
+tokens=Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["NASA"]
+offsets=[0, 1, 1, 1, 1]
+-- empty score --
+Note(shape=[0], dim=1, numel=0, dtype=Float64)
+[]
+undefined language defined=false
+undefined terms: batch-defined=true tokens-defined=false offsets=[0]
+Bytes analysis: rejected
+Bool extraction: rejected
+keywords zero: rejected
+keyphrases zero: rejected
+char_ngrams zero: rejected
+word_ngrams zero: rejected
+min_length negative: rejected
+max_length negative: rejected
+empty match pattern: rejected
+unsupported stopword language: rejected
+
+=== per-method dtype contracts ===
+script undefined-defined=false Bytes=rejected
+sentiment undefined-defined=false Bytes=rejected
+toxicity undefined-defined=false Bytes=rejected
+readability_grade undefined-defined=false Bytes=rejected
+readability_level undefined-defined=false Bytes=rejected
+spam_score undefined-defined=false Bytes=rejected
+formality undefined-defined=false Bytes=rejected
+subjectivity undefined-defined=false Bytes=rejected
+remove_latex undefined-defined=false Bytes=rejected
+remove_markdown undefined-defined=false Bytes=rejected
+remove_math undefined-defined=false Bytes=rejected
+remove_mentions undefined-defined=false Bytes=rejected
+remove_parentheticals undefined-defined=false Bytes=rejected
+remove_quotes undefined-defined=false Bytes=rejected
+remove_stopwords undefined-defined=false Bytes=rejected
+remove_tables undefined-defined=false Bytes=rejected
+acronyms tokens-defined=false offset0=0 Bool=rejected
+alnum_tokens tokens-defined=false offset0=0 Bool=rejected
+alpha_tokens tokens-defined=false offset0=0 Bool=rejected
+char_ngrams tokens-defined=false offset0=0 Bool=rejected
+citations tokens-defined=false offset0=0 Bool=rejected
+definitions tokens-defined=false offset0=0 Bool=rejected
+emails tokens-defined=false offset0=0 Bool=rejected
+hashtags tokens-defined=false offset0=0 Bool=rejected
+keyphrases tokens-defined=false offset0=0 Bool=rejected
+keywords tokens-defined=false offset0=0 Bool=rejected
+lemmas tokens-defined=false offset0=0 Bool=rejected
+lower_tokens tokens-defined=false offset0=0 Bool=rejected
+match_tokens tokens-defined=false offset0=0 Bool=rejected
+math_symbols tokens-defined=false offset0=0 Bool=rejected
+max_length tokens-defined=false offset0=0 Bool=rejected
+mentions tokens-defined=false offset0=0 Bool=rejected
+min_length tokens-defined=false offset0=0 Bool=rejected
+named_entities tokens-defined=false offset0=0 Bool=rejected
+numbers tokens-defined=false offset0=0 Bool=rejected
+pos_tags tokens-defined=false offset0=0 Bool=rejected
+punct_tokens tokens-defined=false offset0=0 Bool=rejected
+sentences tokens-defined=false offset0=0 Bool=rejected
+shuffle_tokens tokens-defined=false offset0=0 Bool=rejected
+sort_tokens tokens-defined=false offset0=0 Bool=rejected
+stems tokens-defined=false offset0=0 Bool=rejected
+unique_tokens tokens-defined=false offset0=0 Bool=rejected
+urls tokens-defined=false offset0=0 Bool=rejected
+without_numbers tokens-defined=false offset0=0 Bool=rejected
+without_stopwords tokens-defined=false offset0=0 Bool=rejected
+word_ngrams tokens-defined=false offset0=0 Bool=rejected

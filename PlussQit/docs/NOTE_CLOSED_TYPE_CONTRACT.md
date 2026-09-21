@@ -53,7 +53,7 @@ appropriate when the operation crosses an explicit object or host boundary.
 | scalar/cell extraction | typed scalar or owning typed reference | explicit boundary from a Note to one host value |
 | host export, iteration, streaming, debug rendering | native host type | explicit interoperability boundary |
 
-`matrix()` and `tensor3()` are decompositions, not host exports. Their target
+`matrix()` and `slabs()` are decompositions, not host exports. Their target
 forms are `std::vector<Note>` containing row or slab views that share storage
 with the source. `host()` is the explicit owning conversion when nested host
 containers are wanted.
@@ -128,7 +128,7 @@ text extraction, which remains available for Text and Bytes Notes.
 
 Direct low-level callers are not source-compatible where a return type changes:
 comparisons and predicates become Bool Notes, measurements and `argsort()` become
-Int64 Notes, score methods become Float64 Notes, `matrix()` and `tensor3()`
+Int64 Notes, score methods become Float64 Notes, `matrix()` and `slabs()`
 become Note decompositions, and `TokenBatch::offsets()` becomes an Int64 Note.
 The two Series-returning compatibility helpers, `contains_series()` and
 `lengths_bytes_series()`, are removed rather than retained as aliases.
@@ -144,11 +144,11 @@ not accepted as ABI proof.
 | --- | --- | --- |
 | 1 | contract and complete surface inventory | manifest is reproducible, CMake checks staleness, downstream risks are recorded |
 | 2 | dtype tag and typed storage core | all five dtypes satisfy ownership, shape, copy/move, and alignment tests |
-| 3 | factories, typed access, views, and host export | every dtype round-trips without text encoding; row/slab views share storage |
+| 3 | factories, typed access, views, host export, and serialization | every dtype round-trips without text encoding; row/slab views share storage; versioned binary round trips preserve dtype, shape, and payload bits |
 | 4 | Bool predicates and comparisons | exact shape/broadcast/error parity, then batched contiguous Bool kernels |
 | 5 | Int64 measurements and Float64 scores | native precision and boundary behavior, then vectorized numeric output |
 | 6 | `TokenBatch` and ragged offsets | tokens plus Int64 offsets validate segmentation without host containers |
-| 7 | transformations, selections, operators, and in-place paths | dtype-preserving closed results and transactional validation |
+| 7 | structural extraction | `matrix()` and `slabs()` decompose into storage-sharing Notes; `vector()` remains an explicit host boundary |
 | 8 | downstream migration, benchmarks, documentation, and ABI cleanup | PlussQit, PlussMic, NodeB, and Ice pass; no legacy escape aliases remain |
 
 Pass 1 deliberately changes no runtime behavior. It closes only when every
@@ -159,7 +159,34 @@ identical to the checked-in contract.
 
 | Pass | Status | Evidence |
 | --- | --- | --- |
-| 1 | complete | 514-signature manifest is reproducible and enforced by the CodeN build |
+| 1 | complete | complete signature manifest is reproducible and enforced by the CodeN build; the exact count is generated rather than copied here |
 | 2 | complete | five-state dtype tag, discriminated payload, checked shape/cardinality, 64-byte native lanes, zero-copy kernel-buffer adoption, normal and sanitizer tests |
-| 3 | complete | typed scalar/vector/explicit-shape factories, checked native extraction, dtype-aware host/rendering, and storage-sharing row/slab views pass normal and sanitizer suites |
-| 4-8 | pending | no acceptance claim until the matching pass gates succeed |
+| 3 | complete | typed scalar/vector/explicit-shape factories, checked native extraction, dtype-aware host/rendering, versioned `pack()`/`unpack()`, and storage-sharing row/slab views pass normal and sanitizer suites |
+| 4 | complete | 17 content predicates, 18 comparison call forms, four logical operators, and two scalar Bool reductions use closed Bool Notes with exact-shape/scalar broadcasting |
+| 5 | complete | all six measurement/count/ordering results are shape-preserving Int64 Notes, all 16 score results are Float64 Notes, and focused scalar, shaped, count, and ordering tests pass; generated count kernels write directly into one aligned Int64 result buffer, while `take(Int64 Note)` keeps `take(argsort())` inside the Note family and preserves the receiver dtype |
+| 6 | complete | all 134 ragged signatures return `TokenBatch`; `tokens()` is a Text/Bytes Note and `offsets()` is an Int64 Note; token kernels move their aligned offset storage directly into the offset Note, and the central construction boundary rejects the wrong dtype, rank, origin, ordering, or terminal offset |
+| 7 | complete | `matrix()` returns storage-sharing row Notes, `slabs()` returns storage-sharing slab Notes, and `vector()` remains the explicit borrowed-text host extraction boundary |
+| 8 | complete for the closed-Note migration | the 529-signature audit and 54 focused normal tests pass; 1,054 assertions in 86 CodeN cases pass under ASan; all 37 Ice, NodeB, and unaffected PlussMic integration tests pass; the two Series escape aliases and their build option are absent from source and symbols; scoped allocation tests and the CPU benchmark cover small and large Bool/Int64 results |
+
+The remaining `plussmic_table_csv` failure is not a closed-Note regression. Its
+DataFrame median test expects the conventional midpoint `25` for
+`{10, 20, 30, 40}`, while the current reduction delegates to the Series
+`nanmedian()` order-statistic rule and returns `20`. That independent semantic
+defect remains visible rather than weakening the test to close this migration.
+
+## Pass 8 CPU Baseline
+
+The current optimized CPU build, using 200,000 lanes and eight measured rounds,
+records the following representative closed-result paths. Allocation counts and
+bytes cover aligned native lane storage; the tracker is scoped and therefore
+adds only one predictable null thread-local check when inactive.
+
+| Kernel | Small throughput | Large throughput | Native allocations/call | Large bytes/call |
+| --- | ---: | ---: | ---: | ---: |
+| `contains()` -> Bool | 69.8 million lanes/s | 130.6 million lanes/s | 1 | 200,000 |
+| Bool `operator|` | 130.7 million lanes/s | 2.85 billion lanes/s | 1 | 200,000 |
+| `lengths_bytes()` -> Int64 | 175.6 million lanes/s | 2.61 billion lanes/s | 1 | 1,600,000 |
+
+These figures are a local regression baseline, not a portable performance
+promise. The executable at `examples/CodeN/coden_cpu_perf_bench.cpp` reproduces
+the measurements and reports latency, throughput, allocation count, and bytes.

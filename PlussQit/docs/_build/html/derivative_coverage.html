@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=41aa11a5"></script>
+    <script src="_static/api_nav.js?v=cf848246"></script>
     <script src="_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -46,16 +46,16 @@ transitive (composite) gradients for everything built out of those.</p>
 <ul class="simple">
 <li><p><strong>28</strong> declarative unary primitive rules</p></li>
 <li><p><strong>7</strong> declarative binary primitive rules</p></li>
-<li><p><strong>82</strong> ops with an explicit hand-written reverse node</p></li>
-<li><p><strong>117</strong> ops total with a dedicated derivative</p></li>
+<li><p><strong>99</strong> ops with an explicit hand-written reverse node</p></li>
+<li><p><strong>134</strong> ops total with a dedicated derivative</p></li>
 <li><p>everything else on the public surface is composite-transitive or
 non-differentiable; correctness is pinned by
-<code class="docutils literal notranslate"><span class="pre">tests/CodeM/test_autograd_sweep.cpp</span></code> (finite-difference) and
+<code class="docutils literal notranslate"><span class="pre">tests/CodeM/test_autodiff_sweep.cpp</span></code> (finite-difference) and
 <code class="docutils literal notranslate"><span class="pre">tests/CodeM/test_patch177_cpu_torch_autograd_parity.cpp</span></code> (libtorch oracle)</p></li>
 </ul>
 <p>This table is a <strong>static index</strong> parsed from the sources. The runtime-
 authoritative list of what actually forms a reverse node is the
-<code class="docutils literal notranslate"><span class="pre">[autograd-sweep]</span></code> classification report; per-op libtorch parity lives in
+<code class="docutils literal notranslate"><span class="pre">[autodiff-sweep]</span></code> classification report; per-op libtorch parity lives in
 the oracle’s <code class="docutils literal notranslate"><span class="pre">[generated]</span></code> / <code class="docutils literal notranslate"><span class="pre">[parity]</span></code> cases. Regenerate this file with
 <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">tools/audit/gen_derivative_coverage.py</span></code> after changing
 <code class="docutils literal notranslate"><span class="pre">derivatives.yaml</span></code> or a <code class="docutils literal notranslate"><span class="pre">maybe_link_*</span></code> call site.</p>
@@ -326,6 +326,12 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diagonal_scatter</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dropout</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">elu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expand</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
@@ -333,6 +339,24 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gather</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gelu_exact</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gelu_tanh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">grouped_median</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grouped_mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hardsigmoid</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hardswish</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hilbert</span></code></p></td>
@@ -359,20 +383,32 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kthvalue</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">layer_norm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lgamma</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">logaddexp</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">log_softmax</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">logaddexp</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_binary_op</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">logaddexp2</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">logaddexp2</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_binary_op</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">logcdf</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">logcdf</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_normal_stat_backward</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">logpdf</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">logpdf</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_normal_stat_backward</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">logsumexp</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">masked_scatter</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
@@ -386,38 +422,44 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mean</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mish</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code>, <code class="docutils literal notranslate"><span class="pre">bind_selection_permutation_backward</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mov</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mov</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nan_to_num</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nan_to_num</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nanmedian</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nanmedian</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_selection_permutation_backward</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">neg</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">neg</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pdf</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pdf</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_normal_stat_backward</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">permute</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">permute</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_alias_lineage</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pile</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pile</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prod</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prod</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">real</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">real</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reshape_contiguous</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reshape_contiguous</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rrelu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scatter</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
@@ -428,8 +470,14 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">select</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_alias_lineage</span></code>, <code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slice</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">silu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">slice</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_alias_lineage</span></code>, <code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">softmax</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sort</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_selection_permutation_backward</span></code></p></td>
@@ -482,28 +530,31 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">take</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">topk</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_unary_op</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topk</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_selection_permutation_backward</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transpose</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transpose</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_alias_lineage</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">triu</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">triu</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">bind_triangular_mask_backward</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unite</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">unite</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">unsqueeze</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unsqueeze</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_alias_lineage</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unwrap</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">unwrap</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">view</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">view</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">maybe_link_alias_lineage</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">where</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">where</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SourceLink</span></code></p></td>
 </tr>
 </tbody>
@@ -577,6 +628,8 @@ selected indices, views / alias lineage, and the matmul / linalg family).</p>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Series derivative coverage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#declarative-primitive-rules-derivatives-yaml">Declarative primitive rules (<code class="docutils literal notranslate"><span class="pre">derivatives.yaml</span></code>)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#explicit-hand-written-reverse-nodes">Explicit hand-written reverse nodes</a></li>

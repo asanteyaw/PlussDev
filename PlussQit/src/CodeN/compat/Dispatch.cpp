@@ -65,6 +65,12 @@ namespace pluss::coden::_compat {
   // Present a public-facing message: `<op>: <underlying error>`. The `lane`
   // (adapter routing label) is internal and is not surfaced to callers.
   (void)lane;
+  if (op == "count_regex") op = "regex().count";
+  else if (op == "regex_findall") op = "regex().findall";
+  else if (op == "regex_match") op = "regex().match";
+  else if (op == "regex_replace") op = "regex().replace";
+  else if (op == "regex_search") op = "regex().search";
+  else if (op == "regex_split") op = "regex().split";
   ::pluss::codem::throw_error(::std::string(op) + ": " + e.what());
 }
 
@@ -94,16 +100,16 @@ static bool in_set_sv(::std::string_view op, const ::std::array<T, N>& set) {
 
 static bool is_token_feature_op(::std::string_view op) {
   static constexpr auto kOps = ::std::array{
-      "split_sentences", "find_all", "find_all_regex", "ngrams_char", "ngrams_word",
+      "split_sentences", "find_all_regex", "ngrams_char", "ngrams_word",
       "filter_tokens", "map_tokens", "sort_tokens", "unique_tokens",
       "split_csv", "split_tsv", "split_on_punct", "split_on_camelcase", "split_on_casechange",
       "split_on_snakecase", "split_unicode_words",
       "nlp_tokens", "nlp_words", "nlp_sentences", "nlp_stems", "nlp_lemmas",
-      "nlp_pos_tags", "nlp_named_entities", "nlp_noun_phrases", "nlp_keywords", "nlp_keyphrases",
+      "nlp_pos_tags", "nlp_named_entities", "nlp_keywords", "nlp_keyphrases",
       "nlp_bigrams", "nlp_trigrams", "nlp_char_ngrams", "nlp_word_ngrams", "nlp_hashtags",
       "nlp_mentions", "nlp_urls", "nlp_emails", "nlp_numbers", "nlp_extract_acronyms",
       "nlp_extract_definitions", "nlp_extract_terms", "nlp_extract_citations",
-      "nlp_extract_bibliography", "nlp_extract_math_symbols", "nlp_stopwords", "nlp_chunks",
+      "nlp_extract_math_symbols", "nlp_stopwords", "nlp_chunks",
       "nlp_verb_phrases", "nlp_stopwords_removed_tokens", "nlp_filter_tokens_alpha",
       "nlp_filter_tokens_alnum", "nlp_filter_tokens_len_ge", "nlp_filter_tokens_len_le",
       "nlp_filter_tokens_regex", "nlp_lowercase_tokens", "nlp_unique_tokens", "nlp_sort_tokens",
@@ -117,7 +123,7 @@ static bool is_token_feature_op(::std::string_view op) {
       "tex_math_blocks", "tex_inline_math", "tex_display_math", "tex_labels", "tex_refs",
       "tex_citations", "tex_packages", "tex_includes", "tex_macros_defined", "tex_macros_used",
       "tex_bibliography_keys", "tex_sections", "tex_subsections", "tex_subsubsections",
-      "tex_equations", "tex_headings", "tex_captions", "tex_corollaries", "tex_definitions",
+      "tex_headings", "tex_captions", "tex_corollaries", "tex_definitions",
       "tex_examples", "tex_figures", "tex_footnotes", "tex_lemmas", "tex_proofs", "tex_tables",
       "tex_theorems", "tex_todos", "tex_warnings", "tex_detect_errors"};
   if (in_set_sv(op, kTexOps)) return true;
@@ -127,7 +133,7 @@ static bool is_token_feature_op(::std::string_view op) {
 }
 
 static bool token_feature_uses_str_arg(::std::string_view op) {
-  return op == "find_all" || op == "find_all_regex" || op == "tex_extract_command_args" ||
+  return op == "find_all_regex" || op == "tex_extract_command_args" ||
          op == "nlp_named_entities" || op == "nlp_pos_tags" || op == "filter_tokens" ||
          op == "map_tokens" || op == "nlp_filter_tokens_regex" || op == "nlp_stopwords";
 }
@@ -271,12 +277,14 @@ static ::std::int64_t count_utf8_graphemes(::std::string_view s) {
 #endif
 }
 
-static ::std::vector<::std::uint8_t> default_u8list_note(::std::string_view op,
-                                                          const ::pluss::coden::Note& self,
-                                                          const CodenValues& args) {
-  ::std::vector<::std::uint8_t> out;
-  if (!self.defined()) return out;
-  out.resize(static_cast<::std::size_t>(self.numel()), 0);
+static ::pluss::coden::Note default_bool_note(::std::string_view op,
+                                              const ::pluss::coden::Note& self,
+                                              const CodenValues& args) {
+  PLUSS_CHECK(self.defined(),
+              "CodeN predicate requires a defined Note receiver");
+  PLUSS_CHECK(self.is_text() || self.is_bytes(),
+              "CodeN predicate requires Text or Bytes storage");
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(self.numel()));
   for (::std::int64_t i = 0; i < self.numel(); ++i) {
     const auto s = self.at(i);
     bool v = false;
@@ -300,26 +308,36 @@ static ::std::vector<::std::uint8_t> default_u8list_note(::std::string_view op,
     }
     out[static_cast<::std::size_t>(i)] = v ? 1 : 0;
   }
-  return out;
+  return ops_internal::note_from_bool_storage(::std::move(out),
+                                               self.sizes_view());
 }
 
-static ::std::vector<::std::int64_t> default_i64list_note(::std::string_view op,
-                                                           const ::pluss::coden::Note& self,
-                                                           const CodenValues& args) {
-  ::std::vector<::std::int64_t> out;
-  if (!self.defined()) return out;
-  out.resize(static_cast<::std::size_t>(self.numel()), 0);
+static ::pluss::coden::Note default_int64_note(
+    ::std::string_view op, const ::pluss::coden::Note& self,
+    const CodenValues& args) {
+  PLUSS_CHECK(self.defined(), "CodeN measurement requires a defined Note");
+  PLUSS_CHECK(self.is_text() || self.is_bytes(),
+              "CodeN measurement requires Text or Bytes storage");
+  NoteImpl::Int64Storage out(static_cast<::std::size_t>(self.numel()), 0);
   const bool has_sub = (op == "count_substring" && args.size() == 1);
   const bool has_re = (op == "count_regex" && args.size() == 1);
   const ::std::string_view needle = has_sub ? as_str(args[0]) : ::std::string_view{};
   ::std::regex re;
   if (has_re) re = ::std::regex(::std::string(as_str(args[0])));
-  for (::std::int64_t i = 0; i < self.numel(); ++i) {
-    const auto s = self.at(i);
-    if (op == "lengths_bytes") out[static_cast<::std::size_t>(i)] = static_cast<::std::int64_t>(s.size());
-    else if (op == "lengths_chars") out[static_cast<::std::size_t>(i)] = count_utf8_codepoints(s);
-    else if (op == "lengths_graphemes") out[static_cast<::std::size_t>(i)] = count_utf8_graphemes(s);
-    else if (has_sub) {
+  if (op == "lengths_bytes") {
+    const auto& spans = ops_internal::NoteAccess::impl(self)->spans();
+    for (::std::int64_t i = 0; i < self.numel(); ++i)
+      out[static_cast<::std::size_t>(i)] =
+          static_cast<::std::int64_t>(spans[static_cast<::std::size_t>(i)].second);
+  } else if (op == "lengths_chars") {
+    for (::std::int64_t i = 0; i < self.numel(); ++i)
+      out[static_cast<::std::size_t>(i)] = count_utf8_codepoints(self.at(i));
+  } else if (op == "lengths_graphemes") {
+    for (::std::int64_t i = 0; i < self.numel(); ++i)
+      out[static_cast<::std::size_t>(i)] = count_utf8_graphemes(self.at(i));
+  } else if (has_sub) {
+    for (::std::int64_t i = 0; i < self.numel(); ++i) {
+      const auto s = self.at(i);
       if (needle.empty()) {
         out[static_cast<::std::size_t>(i)] = 0;
       } else {
@@ -332,13 +350,17 @@ static ::std::vector<::std::int64_t> default_i64list_note(::std::string_view op,
         }
         out[static_cast<::std::size_t>(i)] = count;
       }
-    } else if (has_re) {
+    }
+  } else if (has_re) {
+    for (::std::int64_t i = 0; i < self.numel(); ++i) {
+      const auto s = self.at(i);
       const ::std::string owned(s);
       out[static_cast<::std::size_t>(i)] = static_cast<::std::int64_t>(
           ::std::distance(::std::sregex_iterator(owned.begin(), owned.end(), re), ::std::sregex_iterator{}));
     }
   }
-  return out;
+  return ops_internal::note_from_int64_storage(::std::move(out),
+                                                self.sizes_view());
 }
 
 static const CodenValue::IntList& as_intlist(const CodenValue& a) {
@@ -375,6 +397,31 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
 ::pluss::coden::Note call_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
   const ::std::string op_snapshot(op);
   try {
+  struct IntNoteOp { ::std::string_view name; ::std::size_t argc; };
+  static constexpr ::std::array<IntNoteOp, 5> kIntNoteOps{{
+      {"lengths_bytes", 0}, {"lengths_chars", 0},
+      {"lengths_graphemes", 0}, {"count_substring", 1},
+      {"count_regex", 1}}};
+  for (const auto& candidate : kIntNoteOps) {
+    if (op == candidate.name && args.size() == candidate.argc) {
+      return default_int64_note(op, self, args);
+    }
+  }
+  if (op == "contains" && args.size() == 1) return ops_internal::contains(self, as_str(args[0]));
+  if (op == "regex_match" && args.size() == 1) return ops_internal::regex_match(self, as_str(args[0]));
+  if (op == "regex_search" && args.size() == 1) return ops_internal::regex_search(self, as_str(args[0]));
+  struct BoolNoteOp { ::std::string_view name; ::std::size_t argc; };
+  static constexpr ::std::array<BoolNoteOp, 14> kBoolNoteOps{{
+      {"starts_with", 1}, {"ends_with", 1}, {"is_ascii", 0},
+      {"is_utf8_valid", 0}, {"is_blank", 0}, {"is_whitespace", 0},
+      {"is_alpha", 0}, {"is_alnum", 0}, {"is_digit", 0},
+      {"is_lower", 0}, {"is_upper", 0}, {"is_title", 0},
+      {"contains_any_digit", 0}, {"contains_any_alpha", 0}}};
+  for (const auto& candidate : kBoolNoteOps) {
+    if (op == candidate.name && args.size() == candidate.argc) {
+      return default_bool_note(op, self, args);
+    }
+  }
   if (op == "lower" && args.empty()) return ops_internal::lower(self);
   if (op == "upper" && args.empty()) return ops_internal::upper(self);
   if (op == "title" && args.empty()) return ops_internal::title(self);
@@ -383,15 +430,11 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "strip" && args.empty()) return ops_internal::strip(self);
   if (op == "lstrip" && args.empty()) return ops_internal::lstrip(self);
   if (op == "rstrip" && args.empty()) return ops_internal::rstrip(self);
-  if (op == "trim" && args.empty()) return ops_internal::trim(self);
-  if (op == "trim_left" && args.empty()) return ops_internal::trim_left(self);
-  if (op == "trim_right" && args.empty()) return ops_internal::trim_right(self);
   if (op == "collapse_whitespace" && args.empty()) return ops_internal::collapse_whitespace(self);
   if (op == "dedent" && args.empty()) return ops_internal::dedent(self);
   if (op == "indent" && args.empty()) return ops_internal::indent(self);
-  if (op == "normalize_spaces" && args.empty()) return ops_internal::normalize_spaces(self);
   if (op == "remove_control_chars" && args.empty()) return ops_internal::remove_control_chars(self);
-  if (op == "remove_non_ascii" && args.empty()) return ops_internal::remove_non_ascii(self);
+  if (op == "keep_ascii" && args.empty()) return ops_internal::keep_ascii(self);
   if (op == "to_ascii" && args.empty()) return ops_internal::to_ascii(self);
   if (op == "to_nfc" && args.empty()) return ops_internal::normalize(self, 0);
   if (op == "to_nfd" && args.empty()) return ops_internal::normalize(self, 1);
@@ -405,13 +448,11 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "keep_alnum" && args.empty()) return ops_internal::keep_alnum(self);
   if (op == "keep_alpha" && args.empty()) return ops_internal::keep_alpha(self);
   if (op == "keep_digits" && args.empty()) return ops_internal::keep_digits(self);
-  if (op == "keep_ascii" && args.empty()) return ops_internal::keep_ascii(self);
   if (op == "keep_printable" && args.empty()) return ops_internal::keep_printable(self);
   if (op == "normalize_quotes" && args.empty()) return ops_internal::normalize_quotes(self);
   if (op == "normalize_dashes" && args.empty()) return ops_internal::normalize_dashes(self);
   if (op == "normalize_ellipsis" && args.empty()) return ops_internal::normalize_ellipsis(self);
   if (op == "strip_accents" && args.empty()) return ops_internal::strip_accents(self);
-  if (op == "strip_diacritics" && args.empty()) return ops_internal::strip_diacritics(self);
   if (op == "strip_zero_width" && args.empty()) return ops_internal::strip_zero_width(self);
   if (op == "strip_bom" && args.empty()) return ops_internal::strip_bom(self);
   if (op == "collapse_repeats" && args.empty()) return ops_internal::collapse_repeats(self);
@@ -419,7 +460,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "collapse_spaces" && args.empty()) return ops_internal::collapse_spaces(self);
   if (op == "collapse_newlines" && args.empty()) return ops_internal::collapse_newlines(self);
   if (op == "nlp_clean" && args.empty()) return ops_internal::nlp_clean(self);
-  if (op == "nlp_normalize_unicode" && args.empty()) return ops_internal::normalize(self, 2);
   if (op == "nlp_normalize_punct" && args.empty()) return ops_internal::nlp_normalize_punct(self, false);
   if (op == "nlp_normalize_numbers" && args.empty()) return ops_internal::nlp_normalize_numbers(self);
   if (op == "nlp_expand_contractions" && args.empty()) return ops_internal::nlp_expand_contractions(self);
@@ -445,10 +485,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "transliterate_cyrillic" && args.empty()) return ops_internal::transliterate_cyrillic(self);
   if (op == "phonetic_soundex" && args.empty()) return ops_internal::phonetic_soundex(self);
   if (op == "phonetic_metaphone" && args.empty()) return ops_internal::phonetic_metaphone(self);
-  if (op == "phonetic_double_metaphone" && args.empty()) return ops_internal::phonetic_double_metaphone(self);
-  if (op == "nlp_remove_numbers" && args.empty()) return ops_internal::remove_digits(self);
-  if (op == "nlp_remove_punct" && args.empty()) return ops_internal::remove_punctuation(self);
-  if (op == "nlp_remove_diacritics" && args.empty()) return ops_internal::strip_diacritics(self);
   if (op == "nlp_remove_urls" && args.empty()) return ops_internal::nlp_remove_urls(self);
   if (op == "nlp_remove_emails" && args.empty()) return ops_internal::nlp_remove_emails(self);
   if (op == "nlp_remove_mentions" && args.empty()) return ops_internal::nlp_remove_mentions(self);
@@ -480,7 +516,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_strip_metadata" && args.empty()) return ops_internal::tex_strip_metadata(self);
   if (op == "tex_normalize_newlines" && args.empty()) return ops_internal::tex_normalize_newlines(self);
   if (op == "tex_dedup_blank_lines" && args.empty()) return ops_internal::tex_dedup_blank_lines(self);
-  if (op == "tex_collapse_whitespace" && args.empty()) return ops_internal::tex_collapse_whitespace(self);
   if (op == "tex_fix_linebreaks" && args.empty()) return ops_internal::tex_fix_linebreaks(self);
   if (op == "tex_escape" && args.empty()) return ops_internal::tex_escape(self);
   if (op == "tex_unescape" && args.empty()) return ops_internal::tex_unescape(self);
@@ -506,10 +541,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_remove_left_right" && args.empty()) return ops_internal::tex_remove_left_right(self);
   if (op == "tex_remove_big_delims" && args.empty()) return ops_internal::tex_remove_big_delims(self);
   if (op == "tex_remove_spacing_cmds" && args.empty()) return ops_internal::tex_remove_spacing_cmds(self);
-  if (op == "tex_strip_math" && args.empty()) return ops_internal::tex_strip_math(self);
-  if (op == "tex_strip_text" && args.empty()) return ops_internal::tex_strip_text(self);
-  if (op == "tex_strip_environments" && args.empty()) return ops_internal::tex_strip_environments(self);
-  if (op == "tex_strip_commands" && args.empty()) return ops_internal::tex_strip_commands(self);
   if (op == "tex_balance_braces" && args.empty()) return ops_internal::tex_balance_braces(self);
   if (op == "tex_balance_math_delims" && args.empty()) return ops_internal::tex_balance_math_delims(self);
   if (op == "tex_canonicalize_macros" && args.empty()) return ops_internal::tex_canonicalize_macros(self);
@@ -517,7 +548,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_inline_macros" && args.empty()) return ops_internal::tex_inline_macros(self);
   if (op == "tex_collapse_macros" && args.empty()) return ops_internal::tex_collapse_macros(self);
   if (op == "tex_expand_inputs" && args.empty()) return ops_internal::tex_expand_inputs(self);
-  if (op == "tex_resolve_includes" && args.empty()) return ops_internal::tex_resolve_includes(self);
   if (op == "tex_resolve_graphics" && args.empty()) return ops_internal::tex_resolve_graphics(self);
   if (op == "tex_simplify_fractions" && args.empty()) return ops_internal::tex_simplify_fractions(self);
   if (op == "tex_simplify_roots" && args.empty()) return ops_internal::tex_simplify_roots(self);
@@ -551,20 +581,9 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_to_markdown" && args.empty()) return ops_internal::tex_to_markdown(self, 0);
   if (op == "tex_to_html" && args.empty()) return ops_internal::tex_to_html(self, 0);
   if (op == "tex_sanitize" && args.empty()) return ops_internal::tex_sanitize(self, 0);
-  if (op == "nlp_simplify_whitespace" && args.empty()) return ops_internal::collapse_whitespace(self);
-  if (op == "nlp_sentencecase" && args.empty()) return ops_internal::capitalize(self);
-  if (op == "nlp_remove_nonprintable" && args.empty()) return ops_internal::remove_control_chars(self);
-  if (op == "nlp_remove_accents" && args.empty()) return ops_internal::strip_accents(self);
-  if (op == "nlp_normalize_whitespace" && args.empty()) return ops_internal::normalize_spaces(self);
-  if (op == "nlp_normalize_newlines" && args.empty()) return ops_internal::collapse_newlines(self);
-  if (op == "nlp_normalize_case" && args.empty()) return ops_internal::lower(self);
-
   if (op == "strip" && args.size() == 1) return ops_internal::strip(self, as_str(args[0]));
   if (op == "lstrip" && args.size() == 1) return ops_internal::lstrip(self, as_str(args[0]));
   if (op == "rstrip" && args.size() == 1) return ops_internal::rstrip(self, as_str(args[0]));
-  if (op == "trim" && args.size() == 1) return ops_internal::trim(self, as_str(args[0]));
-  if (op == "trim_left" && args.size() == 1) return ops_internal::trim_left(self, as_str(args[0]));
-  if (op == "trim_right" && args.size() == 1) return ops_internal::trim_right(self, as_str(args[0]));
 
   if (op == "join" && (args.empty() || args.size() == 1)) {
     ::std::string_view sep = args.empty() ? ::std::string_view{} : as_str(args[0]);
@@ -601,8 +620,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "deduplicate" && args.empty()) {
     return ops_internal::deduplicate(self, ::std::numeric_limits<::std::int64_t>::min());
   }
-  if (op == "nlp_clean" && args.size() == 1) return ops_internal::nlp_clean(self); // flags reserved
-  if (op == "nlp_normalize_unicode" && args.size() == 1) return ops_internal::normalize(self, as_i64(args[0]));
   if (op == "nlp_normalize_punct" && args.size() == 1) return ops_internal::nlp_normalize_punct(self, as_bool(args[0]));
   if (op == "nlp_remove_stopwords" && args.size() == 1) return ops_internal::nlp_remove_stopwords(self, as_str(args[0]));
   if (op == "nlp_remove_html" && args.size() == 1) return ops_internal::nlp_remove_html(self);
@@ -610,12 +627,7 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "nlp_remove_code" && args.size() == 1) return ops_internal::nlp_remove_code(self);
   if (op == "nlp_remove_math" && args.size() == 1) return ops_internal::nlp_remove_math(self);
   if (op == "nlp_remove_latex" && args.size() == 1) return ops_internal::nlp_remove_latex(self);
-  if (op == "nlp_remove_boilerplate" && args.size() == 1) return ops_internal::nlp_remove_boilerplate(self);
-  if (op == "nlp_remove_tables" && args.size() == 1) return ops_internal::nlp_remove_tables(self);
-  if (op == "nlp_remove_headers" && args.size() == 1) return ops_internal::nlp_remove_headers(self);
-  if (op == "nlp_remove_footers" && args.size() == 1) return ops_internal::nlp_remove_footers(self);
   if (op == "nlp_mask_pii" && args.size() == 1) return ops_internal::nlp_mask_pii(self, as_i64(args[0]));
-  if (op == "nlp_join_tokens" && args.size() == 1) return ops_internal::join(self, as_str(args[0]));
   if (op == "tex_extract_environment" && args.size() == 1) {
     ::std::string extract_op = "tex_extract_env_";
     extract_op.append(as_str(args[0]));
@@ -638,11 +650,9 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_sanitize" && args.size() == 1) return ops_internal::tex_sanitize(self, as_i64(args[0]));
 
   if (op == "reshape" && args.size() == 1) return ops_internal::reshape(self, as_intlist(args[0]));
-  if (op == "expand_dims" && args.size() == 1) return ops_internal::expand_dims(self, as_i64(args[0]));
   if (op == "unsqueeze" && args.size() == 1) return ops_internal::unsqueeze(self, as_i64(args[0]));
   if (op == "squeeze" && args.size() == 1) return ops_internal::squeeze(self, as_i64(args[0]));
   if (op == "repeat" && args.size() == 1) return ops_internal::repeat(self, as_intlist(args[0]));
-  if (op == "tile" && args.size() == 1) return ops_internal::tile(self, as_intlist(args[0]));
   if (op == "sort" && args.size() == 1) return ops_internal::sort(self, as_i64(args[0]));
   if (op == "unique" && args.size() == 1) return ops_internal::unique(self, as_i64(args[0]));
   if (op == "deduplicate" && args.size() == 1) return ops_internal::deduplicate(self, as_i64(args[0]));
@@ -652,7 +662,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "select" && args.size() == 2) return ops_internal::select(self, as_i64(args[0]), as_i64(args[1]));
   if (op == "narrow" && args.size() == 3) return ops_internal::narrow(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]));
 
-  if (op == "normalize" && args.size() == 1) return ops_internal::normalize(self, as_i64(args[0]));
   if (op == "casefold" && (args.size() == 0 || args.size() == 1)) {
     ::std::string_view loc = args.empty() ? ::std::string_view{} : as_str(args[0]);
     return ops_internal::casefold(self, loc);
@@ -683,75 +692,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   }
 }
 
-::std::vector<::std::uint8_t> call_u8list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
-  const ::std::string op_snapshot(op);
-  try {
-  if (op == "contains" && args.size() == 1) return ops_internal::contains(self, as_str(args[0]));
-  if (op == "regex_match" && args.size() == 1) return ops_internal::regex_match(self, as_str(args[0]));
-  if (op == "regex_search" && args.size() == 1) return ops_internal::regex_search(self, as_str(args[0]));
-  // The remaining per-cell predicates below all migrated their PUBLIC Note
-  // signature to a shape-preserving Bool Note (pass 4 of the Note redesign);
-  // kDeclNoteU8ListSigs is auto-derived from that same public declaration
-  // list and no longer lists them, so they're allow-listed explicitly here
-  // instead of going through has_decl_sig -- this is the internal u8list
-  // path the Note-returning wrappers in NoteMethodDefsGen.h still call to do
-  // the actual per-element computation before packaging the result as a
-  // Bool Note.
-  struct BoolNoteInternalOp { ::std::string_view name; ::std::size_t argc; };
-  static constexpr ::std::array<BoolNoteInternalOp, 14> kBoolNoteInternalOps{{
-      {"starts_with", 1}, {"ends_with", 1}, {"is_ascii", 0}, {"is_utf8_valid", 0},
-      {"is_blank", 0}, {"is_whitespace", 0}, {"is_alpha", 0}, {"is_alnum", 0},
-      {"is_digit", 0}, {"is_lower", 0}, {"is_upper", 0}, {"is_title", 0},
-      {"contains_any_digit", 0}, {"contains_any_alpha", 0}}};
-  for (const auto& allowed : kBoolNoteInternalOps) {
-    if (op == allowed.name && args.size() == allowed.argc) return default_u8list_note(op, self, args);
-  }
-  if (has_decl_sig(kDeclNoteU8ListSigs, op, args.size())) return default_u8list_note(op, self, args);
-  fail("Note->u8list", op, args.size());
-  } catch (const ::pluss::Error&) {
-    throw;
-  } catch (const ::std::exception& e) {
-    rethrow_dispatch_error_("Note->u8list", op_snapshot, e);
-  } catch (...) {
-    ::pluss::codem::throw_error(
-        ::std::string("CodeN Note->u8list dispatch failed for '") + op_snapshot +
-        "': unknown non-std exception");
-  }
-}
-
-::std::vector<::std::int64_t> call_i64list_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
-  const ::std::string op_snapshot(op);
-  try {
-  if (op == "lengths_bytes" && args.empty()) return ops_internal::lengths_bytes(self);
-  // The remaining per-cell measurement/count ops below all migrated their
-  // PUBLIC Note signature to a shape-preserving Int64 Note (pass 5 of the
-  // Note redesign); kDeclNoteI64ListSigs is auto-derived from that same
-  // public declaration list and no longer lists them, so they're
-  // allow-listed explicitly here instead of going through has_decl_sig --
-  // this is the internal i64list path the Note-returning wrappers in
-  // NoteMethodDefsGen.h still call to do the actual per-element computation
-  // before packaging the result as an Int64 Note. (Mirrors the analogous
-  // kBoolNoteInternalOps allowlist in call_u8list_note above.)
-  struct IntNoteInternalOp { ::std::string_view name; ::std::size_t argc; };
-  static constexpr ::std::array<IntNoteInternalOp, 4> kIntNoteInternalOps{{
-      {"lengths_chars", 0}, {"lengths_graphemes", 0},
-      {"count_substring", 1}, {"count_regex", 1}}};
-  for (const auto& allowed : kIntNoteInternalOps) {
-    if (op == allowed.name && args.size() == allowed.argc) return default_i64list_note(op, self, args);
-  }
-  if (has_decl_sig(kDeclNoteI64ListSigs, op, args.size())) return default_i64list_note(op, self, args);
-  fail("Note->i64list", op, args.size());
-  } catch (const ::pluss::Error&) {
-    throw;
-  } catch (const ::std::exception& e) {
-    rethrow_dispatch_error_("Note->i64list", op_snapshot, e);
-  } catch (...) {
-    ::pluss::codem::throw_error(
-        ::std::string("CodeN Note->i64list dispatch failed for '") + op_snapshot +
-        "': unknown non-std exception");
-  }
-}
-
 TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Note& self, const CodenValues& args) {
   const ::std::string op_snapshot(op);
   try {
@@ -762,11 +702,9 @@ TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Not
   if (op == "split_lines" && args.empty()) return ops_internal::split_lines(self, false);
   if (op == "split_lines" && args.size() == 1) return ops_internal::split_lines(self, as_bool(args[0]));
   if (op == "split_chars" && args.empty()) return ops_internal::split_chars(self);
-  if (op == "split_graphemes" && args.empty()) return ops_internal::split_graphemes(self);
   if (op == "tokenize_words" && args.empty()) return ops_internal::tokenize_words(self, 0);
   if (op == "tokenize_words" && args.size() == 1) return ops_internal::tokenize_words(self, as_i64(args[0]));
-  if (op == "tokenize_sentences" && args.empty()) return ops_internal::tokenize_sentences(self, 0);
-  if (op == "tokenize_sentences" && args.size() == 1) return ops_internal::tokenize_sentences(self, as_i64(args[0]));
+  if (op == "tokenize_sentences" && args.empty()) return ops_internal::tokenize_sentences(self);
   if (op == "tokenize_punct" && args.empty()) return ops_internal::tokenize_punct(self);
   if (op == "tokenize_regex" && args.size() == 1) return ops_internal::tokenize_regex(self, as_str(args[0]));
   if (op == "regex_findall" && args.size() == 1) return ops_internal::regex_findall(self, as_str(args[0]), 0);
@@ -786,6 +724,9 @@ TokenBatch call_tokenbatch_note(::std::string_view op, const ::pluss::coden::Not
   if (is_token_feature_op(op)) {
     if (args.empty()) return ops_internal::token_feature(self, op);
     if (args.size() == 1) {
+      if (op == "tex_commands") {
+        return ops_internal::token_feature(self, op, as_bool(args[0]) ? 1 : 0);
+      }
       if (token_feature_uses_str_arg(op)) return ops_internal::token_feature(self, op, -1, as_str(args[0]));
       return ops_internal::token_feature(self, op, as_i64(args[0]));
     }

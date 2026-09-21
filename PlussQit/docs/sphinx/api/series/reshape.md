@@ -54,7 +54,7 @@ That returned series may be:
 So the promise is about the final logical shape, not about which storage route
 was taken to get there.
 
-## Autograd Behavior
+## Autodiff Behavior
 
 `reshape()` preserves reverse-mode connectivity in both execution paths.
 

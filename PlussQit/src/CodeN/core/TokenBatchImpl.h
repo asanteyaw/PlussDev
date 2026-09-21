@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 #include "MSharp/IntrusivePtr.h"
 
 namespace pluss::coden {
@@ -33,7 +30,7 @@ struct TokenBatchImpl final : ::pluss::msharp::RefCounted {
 
 namespace ops_internal {
 struct TokenBatchFactoryAccess {
-  static TokenBatch make(Note tokens, ::std::vector<::std::int64_t> offsets);
+  static TokenBatch make(Note tokens, Note offsets);
 };
 } // namespace ops_internal
 

@@ -70,8 +70,8 @@ ASCII punctuation/controls would have been removed.
     <span class="label">Previous</span>
     <span class="title">remove_suffix</span>
   </a>
-  <a class="next-link" href="replace.html">
+  <a class="next-link" href="repeat.html">
     <span class="label">Next</span>
-    <span class="title">replace</span>
+    <span class="title">repeat</span>
   </a>
 </div>

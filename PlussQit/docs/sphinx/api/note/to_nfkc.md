@@ -24,7 +24,7 @@ the same text — but note it is **lossy**: `x²` and `x2` become identical, so
 never NFKC-normalise content where the distinction matters (mathematical
 notation, code). For a lossless normalisation use [`to_nfc`](to_nfc.md).
 
-This is the same operation as `normalize(2)`. `to_nfkc` is shape-preserving,
+`to_nfkc` is shape-preserving,
 cell-independent, idempotent, and returns a fresh `Note`. Requires the
 Unicode backend.
 

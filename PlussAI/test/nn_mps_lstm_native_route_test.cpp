@@ -640,6 +640,37 @@ bool run_native_gru_route_check(std::ostream* err = nullptr) {
     };
   };
 
+  // bidirectional+split_bias on the native MPS GRU route is confirmed
+  // broken: MPSGraphGRUDescriptor builds a graph that fails MLIR
+  // verification at EXECUTION time ("'mps.gru' op `bias` length should be
+  // 3"), which aborts the process (SIGABRT) rather than throwing a
+  // catchable error. validate_gru_() now rejects this combination up
+  // front specifically so it fails cleanly instead -- this check confirms
+  // that clean rejection, not that the native route supports it (it does
+  // not, as of this writing; fixing the underlying descriptor/operand
+  // construction is a separate, not-yet-done piece of work).
+  {
+    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
+    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "1");
+    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", "1");
+    auto params = make_split_params();
+    bool threw = false;
+    try {
+      pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    if (!threw) {
+      if (err) *err << "bidirectional split-bias native MPS GRU route should be rejected under strict mode, "
+                       "but no exception was thrown\n";
+      return false;
+    }
+  }
+
+  // The generic (non-native) fallback path -- what PLUSS_MPS_GRU_ROUTE=0
+  // (today's default) actually uses -- still needs to compute this
+  // correctly, since bidirectional+split_bias GRUs are an ordinary,
+  // supported configuration; only the NATIVE MPSGraph route rejects it.
   Series split_ref_y;
   Series split_ref_h;
   {
@@ -649,55 +680,11 @@ bool run_native_gru_route_check(std::ostream* err = nullptr) {
     std::tie(split_ref_y, split_ref_h) =
         pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
   }
-
-  Series split_got_y;
-  Series split_got_h;
-  {
-    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
-    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "1");
-    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", "1");
-    auto params = make_split_params();
-    std::tie(split_got_y, split_got_h) =
-        pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
-  }
-
-  if (split_got_y.platform() != pluss::pMPS ||
-      split_got_h.platform() != pluss::pMPS ||
-      !close_vec(vec_f64(split_got_y), vec_f64(split_ref_y), 4e-3, 4e-3) ||
-      !close_vec(vec_f64(split_got_h), vec_f64(split_ref_h), 4e-3, 4e-3)) {
-    if (err) *err << "bidirectional split-bias native MPS GRU route mismatch against Series fallback\n";
+  if (split_ref_y.platform() != pluss::pMPS || split_ref_h.platform() != pluss::pMPS) {
+    if (err) *err << "bidirectional split-bias GRU fallback path did not produce an MPS result\n";
     return false;
   }
-
-  auto split_gradient_trace = [&](const char* route_enabled) {
-    ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
-    ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", route_enabled);
-    ScopedEnvVar strict("PLUSS_MPS_GRU_ROUTE_STRICT", route_enabled);
-    Series xg = x.clone();
-    Series hxg = hx.clone();
-    xg.tracks_slope_(true);
-    hxg.tracks_slope_(true);
-    auto params = make_split_params();
-    for (auto& p : params) {
-      p.weight_ih.tracks_slope_(true);
-      p.weight_hh.tracks_slope_(true);
-      p.bias_ih.tracks_slope_(true);
-      p.bias_hh.tracks_slope_(true);
-    }
-    auto [y, h] = pluss::ai::rnn::gru(xg, hxg, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), split_cfg);
-    y.square().sum().add(h.square().sum()).reverse();
-    std::vector<std::vector<double>> grads;
-    grads.push_back(vec_f64(xg.sensitivity()));
-    grads.push_back(vec_f64(hxg.sensitivity()));
-    for (const auto& p : params) {
-      grads.push_back(vec_f64(p.weight_ih.sensitivity()));
-      grads.push_back(vec_f64(p.weight_hh.sensitivity()));
-      grads.push_back(vec_f64(p.bias_ih.sensitivity()));
-      grads.push_back(vec_f64(p.bias_hh.sensitivity()));
-    }
-    return grads;
-  };
-  return compare_gradient_traces("bidirectional split-bias native MPS GRU", split_gradient_trace, 5e-3, 5e-3, err);
+  return true;
 }
 
 } // namespace

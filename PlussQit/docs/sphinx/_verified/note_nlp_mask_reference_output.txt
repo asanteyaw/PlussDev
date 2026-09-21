@@ -1,0 +1,119 @@
+=== numbers ===
+numeric runs
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["IDs [NUM], [NUM], [NUM], +[NUM] and none"]
+separator boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["[NUM] [NUM] [NUM] [NUM]; [NUM]..[NUM] and x[NUM]y"]
+
+=== emails ===
+email forms
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["[EMAIL]", "[EMAIL]"]
+email boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["mail [EMAIL], keep a@b and @handle"]
+
+=== urls ===
+URL forms
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["[URL]", "[URL]"]
+URL punctuation
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["([URL]), [URL]! not ftp://x.io"]
+
+=== mentions ===
+mention boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["[MENTION] [[MENTION]], tag:[MENTION]; x@y.io mid@name"]
+
+=== hashtags ===
+hashtag boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["[HASHTAG] ([HASHTAG]); [[HASHTAG]] C# mid#word"]
+
+=== dates ===
+date forms
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["[DATE]", "[DATE]", "[DATE]", "[DATE]", "[DATE]"]
+date boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["keep 2024-13-01 and 2024-01/02; syntax [DATE]"]
+
+=== times ===
+time forms
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["[TIME]", "[TIME]", "[TIME]", "[TIME]"]
+time boundaries
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["keep 24:00 19:30pm 12:60; mask [TIME]"]
+
+=== currency ===
+currency symbols
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["[CUR]", "[CUR]", "[CUR]", "[CUR]", "[CUR]"]
+currency codes
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["[CUR]", "[CUR]", "[CUR]", "keep 99"]
+
+=== pii composition ===
+all categories
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["mail [EMAIL] via [URL] to [MENTION] [HASHTAG] on [DATE] at [TIME] for [CUR] id [NUM]"]
+numbers only
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["mail a@b.io via https://x.io to @ann #team on [NUM] at [NUM]pm for €[NUM] id [NUM]"]
+emails and URLs
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["mail [EMAIL] via [URL] to @ann #team on 2024-01-02 at 7pm for €20 id 42"]
+unknown positive bits
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["mail a@b.io via https://x.io to @ann #team on 2024-01-02 at 7pm for €20 id 42"]
+
+=== shared contract ===
+matrix currency
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["[CUR]", "a@b.io"], 
+  ["7pm", "#tag"]
+]
+placeholders unchanged
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["[NUM] [EMAIL] [URL] [MENTION] [HASHTAG] [DATE] [TIME] [CUR]"]
+empty
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+undefined defined=false
+Bytes: rejected
+Bool: rejected
+Int64: rejected
+Float64: rejected
+
+=== per-method contracts ===
+currency empty dim=1 numel=0
+currency undefined=false
+currency Bytes: rejected
+dates empty dim=1 numel=0
+dates undefined=false
+dates Bytes: rejected
+emails empty dim=1 numel=0
+emails undefined=false
+emails Bytes: rejected
+hashtags empty dim=1 numel=0
+hashtags undefined=false
+hashtags Bytes: rejected
+mentions empty dim=1 numel=0
+mentions undefined=false
+mentions Bytes: rejected
+numbers empty dim=1 numel=0
+numbers undefined=false
+numbers Bytes: rejected
+times empty dim=1 numel=0
+times undefined=false
+times Bytes: rejected
+urls empty dim=1 numel=0
+urls undefined=false
+urls Bytes: rejected
+pii empty dim=1 numel=0
+pii undefined=false
+pii Bytes: rejected

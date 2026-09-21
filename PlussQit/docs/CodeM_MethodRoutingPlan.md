@@ -55,7 +55,7 @@ Priority constructors:
 Status:
 - Explicit `NotImplemented` factory stubs added in `include/pluss/codem/series_factory.h`.
 
-## Rank 5: Autograd/Device/Meta Surface
+## Rank 5: Autodiff/Device/Meta Surface
 
 1. Out-of-scope for CPU-only runtime, but wrappers should remain generated for compatibility.
 2. Must throw explicit, deterministic errors when invoked.

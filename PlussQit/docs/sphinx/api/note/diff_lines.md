@@ -14,9 +14,10 @@ TokenBatch Note::diff_lines(const Note& other) const
 `diff_lines(other)` compares each cell of `self` against the matching cell of
 `other` one **line** at a time and returns only the changed lines as a
 `TokenBatch` of tag-prefixed tokens. It is the line-granularity member of the
-diff / align family, alongside [`diff_words`](diff_words.md),
+diff / align family, alongside [`nlp().diff_words()`](../note-nlp/diff_words.md),
 [`diff_chars`](diff_chars.md), and the equal-included
-[`align_sentences`](align_sentences.md) / [`align_tokens`](align_tokens.md).
+[`nlp().align_sentences()`](../note-nlp/align_sentences.md) /
+[`nlp().align_tokens()`](../note-nlp/align_tokens.md).
 
 ### How the comparison works
 
@@ -40,9 +41,10 @@ against the original line list.
 
 ### The `TokenBatch` result
 
-Tokens from all cells are concatenated into one flat rank-`1` token `Note`
-(`batch.tokens()`); `batch.offsets()` (length `numel + 1`) marks each cell's
-run — cell `r` is `tokens()[offsets()[r] .. offsets()[r+1])`. Unchanged
+Tokens from all cells are concatenated into the rank-`1` Note
+`batch.tokens()`. The rank-`1` Int64 Note `batch.offsets()` has length
+`numel + 1` and marks each cell's run: cell `r` owns `tokens.at(k)` for `k`
+in `[offsets[r], offsets[r + 1])`. Unchanged
 cells have an empty range.
 
 ### Shape, pairing, and rejections
@@ -68,8 +70,8 @@ const auto batch = pluss::make_note({"alpha\nbeta\ngamma"})
 
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -91,8 +93,8 @@ const auto batch = pluss::make_note({"one\ntwo"})
                        .diff_lines(pluss::make_note({"one\ntwo"}));
 std::cout << pluss::note::print(batch.tokens()) << "\n";
 std::cout << "offsets: [";
-for (std::size_t i = 0; i < batch.offsets().size(); ++i)
-  std::cout << (i ? ", " : "") << batch.offsets()[i];
+for (std::size_t i = 0; i < batch.offsets().integers().size(); ++i)
+  std::cout << (i ? ", " : "") << batch.offsets().integers()[i];
 std::cout << "]\n";
 ```
 
@@ -124,18 +126,18 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
 ## See Also
 
 - [`Note::split_lines`](split_lines.md): the line split used here.
-- [`Note::diff_words`](diff_words.md) / [`Note::diff_chars`](diff_chars.md):
+- [`NoteNlpAccessor::diff_words`](../note-nlp/diff_words.md) / [`Note::diff_chars`](diff_chars.md):
   finer-grained change views.
-- [`Note::align_tokens`](align_tokens.md) /
-  [`Note::align_sentences`](align_sentences.md): equal-included transcripts.
+- [`NoteNlpAccessor::align_tokens`](../note-nlp/align_tokens.md) /
+  [`NoteNlpAccessor::align_sentences`](../note-nlp/align_sentences.md): equal-included transcripts.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="diff_chars.html">
     <span class="label">Previous</span>
     <span class="title">diff_chars</span>
   </a>
-  <a class="next-link" href="diff_words.html">
+  <a class="next-link" href="dim.html">
     <span class="label">Next</span>
-    <span class="title">diff_words</span>
+    <span class="title">dim</span>
   </a>
 </div>

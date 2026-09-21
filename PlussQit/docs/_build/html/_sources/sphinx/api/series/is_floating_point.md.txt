@@ -146,7 +146,7 @@ i.dtype()=int64 is_floating_point=false
 after to(Float64): is_floating_point=true
 ```
 
-Reverse-mode autograd needs a floating dtype — `tracks_slope_` on an integer
+Reverse-mode autodiff needs a floating dtype — `tracks_slope_` on an integer
 `Series` has nothing to accumulate into. `is_floating_point()` is the guard
 before enabling gradient tracking on data of unknown provenance.
 
@@ -172,7 +172,7 @@ before enabling gradient tracking on data of unknown provenance.
 - metadata-only — `NaN`/`inf` content does not change it
 - complex is excluded despite having float components; add `|| is_complex()`
   for an "any continuous data" test
-- the standard guard before enabling reverse-mode autograd
+- the standard guard before enabling reverse-mode autodiff
 
 ## See Also
 

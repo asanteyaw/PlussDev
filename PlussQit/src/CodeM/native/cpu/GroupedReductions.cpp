@@ -174,6 +174,62 @@ Series grouped_median_impl_(
   return out;
 }
 
+// Same selection as grouped_median_impl_ (same nth_element target ranks),
+// but keeps the lower/upper order statistics separate instead of averaging
+// them into one value -- read-only, for Series::grouped_median's reverse-mode
+// node to route gradient to the specific elements each bound came from.
+// Independent recomputation, not a refactor of grouped_median_impl_: the
+// forward path above is untouched, zero risk of it regressing.
+template <class T>
+void grouped_median_bounds_impl_(
+    const Series& values_raw,
+    const Series& group_ids_raw,
+    std::int64_t group_count,
+    std::vector<double>& lower_out,
+    std::vector<double>& upper_out) {
+  const auto values = values_raw.contiguous();
+  const auto group_ids = group_ids_raw.contiguous();
+
+  std::vector<double> grouped_values;
+  std::vector<std::int64_t> grouped_rows;
+  std::vector<std::int64_t> offsets;
+  compact_by_group_<T>(
+      values,
+      group_ids,
+      group_count,
+      grouped_values,
+      grouped_rows,
+      offsets,
+      "native::cpu::grouped_median_bounds");
+
+  lower_out.assign(static_cast<std::size_t>(group_count), std::numeric_limits<double>::quiet_NaN());
+  upper_out.assign(static_cast<std::size_t>(group_count), std::numeric_limits<double>::quiet_NaN());
+  for (std::int64_t group = 0; group < group_count; ++group) {
+    const auto begin_index = offsets[static_cast<std::size_t>(group)];
+    const auto stop_index = offsets[static_cast<std::size_t>(group + 1)];
+    const auto n = stop_index - begin_index;
+    if (n <= 0) {
+      continue;
+    }
+
+    auto begin = grouped_values.begin() + begin_index;
+    auto stop = grouped_values.begin() + stop_index;
+    auto upper_it = begin + n / 2;
+    std::nth_element(begin, upper_it, stop);
+    const auto upper = *upper_it;
+    if (n % 2 != 0) {
+      lower_out[static_cast<std::size_t>(group)] = upper;
+      upper_out[static_cast<std::size_t>(group)] = upper;
+      continue;
+    }
+
+    auto lower_it = begin + (n / 2 - 1);
+    std::nth_element(begin, lower_it, stop);
+    lower_out[static_cast<std::size_t>(group)] = *lower_it;
+    upper_out[static_cast<std::size_t>(group)] = upper;
+  }
+}
+
 template <class T>
 Series grouped_mode_impl_(
     const Series& values_raw,
@@ -268,8 +324,8 @@ Series grouped_mode_impl_(
   return out;
 }
 
-template <template <class> class Kernel>
-Series dispatch_grouped_numeric_(
+template <class Ret, template <class> class Kernel>
+Ret dispatch_grouped_numeric_(
     const Series& values,
     const Series& group_ids,
     std::int64_t group_count,
@@ -321,6 +377,22 @@ struct MedianKernel {
 };
 
 template <class T>
+struct MedianBoundsKernel {
+  std::pair<Series, Series> operator()(
+      const Series& values,
+      const Series& group_ids,
+      std::int64_t group_count) const {
+    std::vector<double> lower, upper;
+    grouped_median_bounds_impl_<T>(values, group_ids, group_count, lower, upper);
+    auto lower_out = Series::empty({group_count}, ScalarType::Float64, Platform::CPU);
+    auto upper_out = Series::empty({group_count}, ScalarType::Float64, Platform::CPU);
+    write_float64_output_(lower_out, lower);
+    write_float64_output_(upper_out, upper);
+    return {lower_out, upper_out};
+  }
+};
+
+template <class T>
 struct ModeKernel {
   Series operator()(
       const Series& values,
@@ -341,11 +413,27 @@ Series grouped_median(
       group_ids,
       group_count,
       "native::cpu::grouped_median");
-  return dispatch_grouped_numeric_<MedianKernel>(
+  return dispatch_grouped_numeric_<Series, MedianKernel>(
       values,
       group_ids,
       group_count,
       "native::cpu::grouped_median");
+}
+
+std::pair<Series, Series> grouped_median_bounds(
+    const Series& values,
+    const Series& group_ids,
+    std::int64_t group_count) {
+  require_grouped_args_(
+      values,
+      group_ids,
+      group_count,
+      "native::cpu::grouped_median_bounds");
+  return dispatch_grouped_numeric_<std::pair<Series, Series>, MedianBoundsKernel>(
+      values,
+      group_ids,
+      group_count,
+      "native::cpu::grouped_median_bounds");
 }
 
 Series grouped_mode(
@@ -357,7 +445,7 @@ Series grouped_mode(
       group_ids,
       group_count,
       "native::cpu::grouped_mode");
-  return dispatch_grouped_numeric_<ModeKernel>(
+  return dispatch_grouped_numeric_<Series, ModeKernel>(
       values,
       group_ids,
       group_count,

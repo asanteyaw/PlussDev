@@ -10,6 +10,7 @@
 #include <map>
 #include <numeric>
 #include <random>
+#include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -25,9 +26,9 @@ namespace {
   return pluss::make_series(indices, {static_cast<std::int64_t>(indices.size())}, index_config());
 }
 
-[[nodiscard]] Status validate_holdout_args(std::int64_t sample_count, const SplitOptions& options) {
+[[nodiscard]] Status validate_holdout_args(std::int64_t sample_count, const SplitOptions& options, const char* where) {
   if (sample_count < 2) {
-    return Status::invalid_argument("holdout_split requires sample_count >= 2.");
+    return Status::invalid_argument(std::string(where) + " requires sample_count >= 2.");
   }
   if (!std::isfinite(options.holdout_fraction) || !(options.holdout_fraction > 0.0 && options.holdout_fraction < 1.0)) {
     return Status::invalid_argument("SplitOptions.holdout_fraction must be finite and in (0, 1).");
@@ -35,9 +36,9 @@ namespace {
   return Status::success();
 }
 
-[[nodiscard]] Status validate_fold_args(std::int64_t sample_count, const SplitOptions& options) {
+[[nodiscard]] Status validate_fold_args(std::int64_t sample_count, const SplitOptions& options, const char* where) {
   if (sample_count < 2) {
-    return Status::invalid_argument("crossval_plan requires sample_count >= 2.");
+    return Status::invalid_argument(std::string(where) + " requires sample_count >= 2.");
   }
   if (options.folds < 2) {
     return Status::invalid_argument("SplitOptions.folds must be >= 2.");
@@ -320,7 +321,7 @@ void shuffle_like_numpy(std::vector<T>& values, NumpyRandomState& rng) {
 } // namespace
 
 StatusOr<IndexSplit> holdout_split(std::int64_t sample_count, const SplitOptions& options) {
-  Status args_status = validate_holdout_args(sample_count, options);
+  Status args_status = validate_holdout_args(sample_count, options, "holdout_split");
   if (!args_status.ok()) return StatusOr<IndexSplit>(std::move(args_status));
 
   const std::int64_t test_count = holdout_test_count(sample_count, options.holdout_fraction);
@@ -357,7 +358,7 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
   const std::vector<double>& label_values = labels_or.value();
   const std::int64_t sample_count = static_cast<std::int64_t>(label_values.size());
 
-  Status args_status = validate_holdout_args(sample_count, options);
+  Status args_status = validate_holdout_args(sample_count, options, "strat_holdout_split");
   if (!args_status.ok()) return StatusOr<IndexSplit>(std::move(args_status));
 
   std::vector<std::vector<std::int64_t>> buckets = class_partitions(label_values);
@@ -412,7 +413,7 @@ StatusOr<IndexSplit> strat_holdout_split(const Series& labels, const SplitOption
 }
 
 StatusOr<SplitPlan> crossval_plan(std::int64_t sample_count, const SplitOptions& options) {
-  Status args_status = validate_fold_args(sample_count, options);
+  Status args_status = validate_fold_args(sample_count, options, "crossval_plan");
   if (!args_status.ok()) return StatusOr<SplitPlan>(std::move(args_status));
 
   const std::vector<std::int64_t> indices = make_indices(sample_count, options);
@@ -484,7 +485,7 @@ StatusOr<SplitPlan> ts_crossval_plan(std::int64_t sample_count, const SplitOptio
   const std::vector<double>& label_values = labels_or.value();
   const std::int64_t sample_count = static_cast<std::int64_t>(label_values.size());
 
-  Status args_status = validate_fold_args(sample_count, options);
+  Status args_status = validate_fold_args(sample_count, options, "stratified_crossval_plan");
   if (!args_status.ok()) return StatusOr<SplitPlan>(std::move(args_status));
 
   const std::int64_t fold_count = options.folds;
@@ -564,7 +565,7 @@ StatusOr<SplitPlan> group_crossval_plan(const Series& groups, const SplitOptions
 
   const std::vector<double>& group_values = groups_or.value();
   const std::int64_t sample_count = static_cast<std::int64_t>(group_values.size());
-  Status args_status = validate_fold_args(sample_count, options);
+  Status args_status = validate_fold_args(sample_count, options, "group_crossval_plan");
   if (!args_status.ok()) return StatusOr<SplitPlan>(std::move(args_status));
 
   std::vector<double> unique_groups{};

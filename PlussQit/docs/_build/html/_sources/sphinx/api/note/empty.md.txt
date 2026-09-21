@@ -76,7 +76,7 @@ absent: defined=false empty=true
 ```
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dim.html"><span class="label">Previous</span><span class="title">dim</span></a>
-  <a class="next-link" href="ends_with.html"><span class="label">Next</span><span class="title">ends_with</span></a>
+  <a class="prev-link" href="dtype.html"><span class="label">Previous</span><span class="title">dtype</span></a>
+  <a class="next-link" href="end.html"><span class="label">Next</span><span class="title">end</span></a>
 </div>
 <!-- pluss-hand-authored -->

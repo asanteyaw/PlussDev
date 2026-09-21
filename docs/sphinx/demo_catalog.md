@@ -11,7 +11,7 @@
 - `PlussQit/examples/CodeM/aux_let_transmit_demo.cpp`: `suppose`, `let`, and `transmit` working together in one workflow.
 - `PlussQit/examples/CodeM/suppose_demo.cpp`: focused `suppose` / `let_as(...)` patterns.
 - `PlussQit/examples/translate_demo.cpp`: `transform_axis(...)` for `Series`, `Note`, `Timeline`, and `TimeIndex`.
-- `PlussQit/examples/CodeM/autograd_optim_demo.cpp`: end-to-end autodiff, transforms, and optimizer integration.
+- `PlussQit/examples/CodeM/autodiff_optim_demo.cpp`: end-to-end autodiff, transforms, and optimizer integration.
 - `PlussQit/examples/CodeM/autodiff_minimal_demo.cpp`: shortest reverse + `value_and_grad` usage.
 - `PlussQit/examples/CodeM/autodiff_derivatives_demo.cpp`: scalar first/second derivative checks.
 - `PlussQit/examples/CodeM/another_auto_diff_demo.cpp`: duplicate scalar derivative smoke for regression coverage.

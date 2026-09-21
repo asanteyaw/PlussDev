@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Note::split_lines" href="split_lines.html" />
+    <link rel="next" title="Note::split_chars" href="split_chars.html" />
     <link rel="prev" title="Note::sort" href="sort.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -55,7 +55,7 @@ structural splitter — the right tool for CSV-ish fields, <code class="docutils
 <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-&gt;</span> <span class="pre">b</span></code> arrows, and other formats with a known separator. When the boundary
 is “any run of whitespace,” use <a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_whitespace</span></code></span></a>;
 when it is a line break, use <a class="reference internal" href="split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split_lines</span></code></span></a>; when it is a
-pattern, use <code class="docutils literal notranslate"><span class="pre">regex_split</span></code>.</p>
+pattern, use <a class="reference internal" href="../note-regex/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">regex().split()</span></code></span></a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">delim</span></code> is matched <strong>literally</strong> (no regex) and must be <strong>non-empty</strong> — an
 empty delimiter throws <code class="docutils literal notranslate"><span class="pre">pluss::Error</span></code>. It may be more than one character
 (<code class="docutils literal notranslate"><span class="pre">&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;</span></code> is a single four-byte delimiter).</p>
@@ -78,9 +78,10 @@ unlimited.</p>
 </section>
 <section id="the-tokenbatch-result">
 <h3>The <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code> result<a class="headerlink" href="#the-tokenbatch-result" title="Link to this heading">¶</a></h3>
-<p>All pieces from all cells are concatenated into one flat rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> token
-<code class="docutils literal notranslate"><span class="pre">Note</span></code> (<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>); <code class="docutils literal notranslate"><span class="pre">batch.offsets()</span></code> (length <code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code>) marks each
-cell’s run — cell <code class="docutils literal notranslate"><span class="pre">r</span></code> is <code class="docutils literal notranslate"><span class="pre">tokens()[offsets()[r]</span> <span class="pre">..</span> <span class="pre">offsets()[r+1])</span></code>. Every
+<p>All pieces from all cells are concatenated into the rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> Note
+<code class="docutils literal notranslate"><span class="pre">batch.tokens()</span></code>. The rank-<code class="docutils literal notranslate"><span class="pre">1</span></code> Int64 Note <code class="docutils literal notranslate"><span class="pre">batch.offsets()</span></code> has length
+<code class="docutils literal notranslate"><span class="pre">numel</span> <span class="pre">+</span> <span class="pre">1</span></code> and marks each cell’s run: cell <code class="docutils literal notranslate"><span class="pre">r</span></code> owns <code class="docutils literal notranslate"><span class="pre">tokens.at(k)</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span></code>
+in <code class="docutils literal notranslate"><span class="pre">[offsets[r],</span> <span class="pre">offsets[r</span> <span class="pre">+</span> <span class="pre">1])</span></code>. Every
 cell contributes at least one piece, so no offset range is empty.</p>
 </section>
 </section>
@@ -90,8 +91,8 @@ cell contributes at least one piece, so no offset range is empty.</p>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -113,8 +114,8 @@ piece.</p>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">batch</span><span class="p">.</span><span class="n">tokens</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets: [&quot;</span><span class="p">;</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">batch</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -197,8 +198,8 @@ last piece.</p>
 <li><p><a class="reference internal" href="split_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_whitespace</span></code></span></a>: split on runs of
 whitespace, dropping empty fields.</p></li>
 <li><p><a class="reference internal" href="split_lines.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::split_lines</span></code></span></a>: split on line breaks.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pluss::coden::Note::regex_split</span></code>: split on a regular expression.</p></li>
-<li><p><a class="reference internal" href="tokenize_words.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::tokenize_words</span></code></span></a>: word tokens rather than
+<li><p><a class="reference internal" href="../note-regex/split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteRegexAccessor::split</span></code></span></a>: split on a regular expression.</p></li>
+<li><p><a class="reference internal" href="../note-nlp/tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::tokens</span></code></span></a>: word tokens rather than
 delimiter fields.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -206,9 +207,9 @@ delimiter fields.</p></li>
     <span class="label">Previous</span>
     <span class="title">sort</span>
   </a>
-  <a class="next-link" href="split_lines.html">
+  <a class="next-link" href="split_chars.html">
     <span class="label">Next</span>
-    <span class="title">split_lines</span>
+    <span class="title">split_chars</span>
   </a>
 </div>
 </section>
@@ -296,6 +297,8 @@ delimiter fields.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -306,7 +309,7 @@ delimiter fields.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
       <li>Previous: <a href="sort.html" title="previous chapter">Note::sort</a></li>
-      <li>Next: <a href="split_lines.html" title="next chapter">Note::split_lines</a></li>
+      <li>Next: <a href="split_chars.html" title="next chapter">Note::split_chars</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

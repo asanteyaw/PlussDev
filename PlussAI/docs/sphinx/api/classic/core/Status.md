@@ -41,29 +41,33 @@ other page's `Status::xxx(...)` cross-reference points at.
 
 ## State
 
-```cpp
-enum class classic::StatusCode : unsigned char {
-  Ok = 0,
-  InvalidArgument = 1,
-  Precondition = 2,
-  ShapeMismatch = 3,
-  NotImplemented = 4,
-  NumericalFailure = 5,
-  Internal = 6,
-};
-```
-
 `code` — `StatusCode`
-: Which of the seven outcomes this is. `Ok` is the only success value; the
-  other six are all failure, distinguished by what kind of failure:
-  `InvalidArgument` (a parameter's value is not acceptable — wrong range,
-  empty required list), `Precondition` (the call is not valid in this state —
-  learning an already-trained estimator without `warm_start`), `ShapeMismatch`
-  (a `Series`/batch dimension does not match what the call needs),
-  `NotImplemented` (a real gap — the operation is not supported for this
-  type), `NumericalFailure` (the underlying computation could not produce a
-  finite result — a singular matrix, a non-converging solve), `Internal` (a
-  library-side inconsistency, not something a caller's input can fix).
+: Which of seven outcomes this is. Exactly one is success; the other six are
+  all failure, distinguished by what kind:
+
+  `Ok`
+  : Success. The only value `.ok()` accepts.
+
+  `InvalidArgument`
+  : A parameter's value is not acceptable on its own terms — wrong range, an
+    empty required list.
+
+  `Precondition`
+  : The call is not valid in the object's current state — learning an
+    already-trained estimator without `warm_start`, for instance.
+
+  `ShapeMismatch`
+  : A `Series` or batch dimension does not match what the call needs.
+
+  `NotImplemented`
+  : A real gap — the operation is not supported for this type.
+
+  `NumericalFailure`
+  : The underlying computation could not produce a finite result — a
+    singular matrix, a non-converging solve.
+
+  `Internal`
+  : A library-side inconsistency, not something a caller's input can fix.
 
 `message` — `std::string`
 : A human-readable explanation, always present on a failure `Status` and
@@ -146,7 +150,14 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_EXAMPLE_1
+code = 0, ok = true, message = ""
+code = 1, ok = false, message = "feature_names must not be empty"
+code = 2, ok = false, message = "learn() requires an untrained estimator"
+code = 3, ok = false, message = "y.numel() must equal x.sizes().front()"
+code = 4, ok = false, message = "dump_state() is not implemented for this estimator"
+code = 5, ok = false, message = "Cholesky factorization encountered a non-finite pivot"
+code = 6, ok = false, message = "unreachable branch in family dispatch"
+default-constructed ok = true
 ```
 
 A `Status` as it actually arrives — the return value of a real call, checked

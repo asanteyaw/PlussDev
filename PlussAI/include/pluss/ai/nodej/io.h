@@ -15,7 +15,7 @@ inline constexpr std::uint32_t k_flow_bundle_schema = 5U;
 
 struct FlowBundleMetadata {
   std::uint32_t schema_version = k_flow_bundle_schema;
-  std::string producer = "pluss.ai.nodej";
+  std::string producer = "pluss.ai.classic";
   std::string producer_version = "0.1.0";
   std::uint64_t created_unix_nanos = 0;
 };

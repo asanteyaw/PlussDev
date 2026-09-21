@@ -3,12 +3,22 @@
 #include <cstdint>
 #include <limits>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 #include <pluss/pluss.h>
 
 namespace {
+
+static_assert(std::is_same_v<decltype(
+    std::declval<const pluss::Note&>().contains(std::string_view{})),
+    pluss::Note>);
+static_assert(std::is_same_v<decltype(
+    std::declval<const pluss::Note&>() == std::declval<const pluss::Note&>()),
+    pluss::Note>);
+static_assert(std::is_same_v<decltype(
+    std::declval<const pluss::Note&>().any()), pluss::Note>);
 // Predicate/comparison methods now return a shape-preserving Bool Note
 // (pass 4); flatten to a plain vector<uint8_t> for the REQUIRE comparisons
 // below.
@@ -51,19 +61,19 @@ TEST_CASE("CodeN tokenization families return structured TokenBatch", "[coden][p
   REQUIRE(lines.tokens().at(1) == "Two!");
   REQUIRE(lines.tokens().at(2) == "A,b;c");
 
-  auto words = n.tokenize_words();
+  auto words = n.nlp().tokens();
   REQUIRE(words.tokens().numel() >= 4);
   REQUIRE(words.tokens().at(0) == "One");
   REQUIRE(words.tokens().at(1) == "Two");
 
-  auto punct = n.tokenize_punct();
+  auto punct = n.nlp().punct_tokens();
   REQUIRE(punct.tokens().numel() >= 4);
 
-  auto findall = n.regex_findall("[A-Za-z]+");
+  auto findall = n.regex().findall("[A-Za-z]+");
   REQUIRE(findall.tokens().numel() >= 4);
   REQUIRE(findall.tokens().at(0) == "One");
 
-  auto split_re = n.regex_split("[,;]");
+  auto split_re = n.regex().split("[,;]");
   REQUIRE(split_re.tokens().numel() >= 4);
 }
 
@@ -75,13 +85,13 @@ TEST_CASE("CodeN TeX cleanup family has concrete behavior", "[coden][patch13]") 
       "Text \\textbf{bold} and $x+y$.\n"
       "\\end{document}\n");
 
-  auto stripped = tex.tex_strip_comments();
+  auto stripped = tex.tex().strip_comments();
   REQUIRE(stripped.at(0).find("% header comment") == std::string::npos);
 
-  auto body = stripped.tex_strip_preamble();
+  auto body = stripped.tex().strip_preamble();
   REQUIRE(body.at(0).find("\\documentclass") == std::string::npos);
 
-  auto plain = body.tex_to_text();
+  auto plain = body.tex().to_text();
   REQUIRE(plain.at(0).find('\\') == std::string::npos);
   REQUIRE(plain.at(0).find("Text") != std::string::npos);
   REQUIRE(plain.at(0).find("bold") != std::string::npos);
@@ -90,24 +100,24 @@ TEST_CASE("CodeN TeX cleanup family has concrete behavior", "[coden][patch13]") 
 TEST_CASE("CodeN tokenize/regex/tex parameterized overloads take effect", "[coden][patch13]") {
   // regex_findall(pattern, flags): bit 0 = case-insensitive.
   pluss::Note s = pluss::make_note("AbCdE");
-  REQUIRE(s.regex_findall("[a-z]+").tokens().numel() == 2);     // "b", "d"
-  REQUIRE(s.regex_findall("[a-z]+", 0).tokens().numel() == 2);
-  auto ci = s.regex_findall("[a-z]+", 1);
+  REQUIRE(s.regex().findall("[a-z]+").tokens().numel() == 2);     // "b", "d"
+  REQUIRE(s.regex().findall("[a-z]+", 0).tokens().numel() == 2);
+  auto ci = s.regex().findall("[a-z]+", 1);
   REQUIRE(ci.tokens().numel() == 1);
   REQUIRE(ci.tokens().at(0) == "AbCdE");
 
   // tokenize_words(flags): bit 0 = case-fold each token.
   pluss::Note w = pluss::make_note("One TWO three");
-  REQUIRE(w.tokenize_words().tokens().at(1) == "TWO");
-  auto wl = w.tokenize_words(1);
+  REQUIRE(w.nlp().tokens().tokens().at(1) == "TWO");
+  auto wl = w.nlp().tokens(1);
   REQUIRE(wl.tokens().at(0) == "one");
   REQUIRE(wl.tokens().at(1) == "two");
   REQUIRE(wl.tokens().at(2) == "three");
 
-  // tex_to_text(mode): mode >= 1 also case-folds the recovered text.
+  // tex().to_text(mode): mode >= 1 also case-folds the recovered text.
   pluss::Note t = pluss::make_note("\\textbf{Hello} World");
-  REQUIRE(t.tex_to_text().at(0) == "Hello World");
-  REQUIRE(t.tex_to_text(1).at(0) == "hello world");
+  REQUIRE(t.tex().to_text().at(0) == "Hello World");
+  REQUIRE(t.tex().to_text(1).at(0) == "hello world");
 }
 
 TEST_CASE("CodeN capitalize matches Python str.capitalize semantics", "[coden][patch13]") {
@@ -129,12 +139,12 @@ TEST_CASE("CodeN lengths_graphemes clusters combining marks", "[coden][patch13]"
 
 TEST_CASE("CodeN regex_replace(pattern, repl, flags) honors the flags bitmask", "[coden][patch13]") {
   pluss::Note n = pluss::make_note("Hello HELLO hello");
-  REQUIRE(n.regex_replace("hello", "hi").at(0) == "Hello HELLO hi");
-  REQUIRE(n.regex_replace("hello", "hi", 0).at(0) == "Hello HELLO hi");
-  REQUIRE(n.regex_replace("hello", "hi", 1).at(0) == "hi hi hi");  // bit 0 = icase
+  REQUIRE(n.regex().replace("hello", "hi").at(0) == "Hello HELLO hi");
+  REQUIRE(n.regex().replace("hello", "hi", 0).at(0) == "Hello HELLO hi");
+  REQUIRE(n.regex().replace("hello", "hi", 1).at(0) == "hi hi hi");  // bit 0 = icase
   // Capture-group back-references still work.
   REQUIRE(pluss::make_note("2026-08-02")
-              .regex_replace(R"((\d{4})-(\d{2})-(\d{2}))", "$3/$2/$1")
+              .regex().replace(R"((\d{4})-(\d{2})-(\d{2}))", "$3/$2/$1")
               .at(0) == "02/08/2026");
 }
 
@@ -163,8 +173,8 @@ TEST_CASE("CodeN character-property predicates match Python str.isX semantics", 
   pluss::Note r = pluss::make_note(
       std::vector<std::string>{"2026", "year 2026"},
       std::array<std::int64_t, 1>{2});
-  REQUIRE(flags(r.regex_match(R"(\d+)"))  == std::vector<std::uint8_t>({1, 0}));
-  REQUIRE(flags(r.regex_search(R"(\d+)")) == std::vector<std::uint8_t>({1, 1}));
+  REQUIRE(flags(r.regex().match(R"(\d+)"))  == std::vector<std::uint8_t>({1, 0}));
+  REQUIRE(flags(r.regex().search(R"(\d+)")) == std::vector<std::uint8_t>({1, 1}));
 }
 
 TEST_CASE("CodeN comparisons produce shape-preserving broadcasting Bool Notes",
@@ -204,12 +214,106 @@ TEST_CASE("CodeN comparisons produce shape-preserving broadcasting Bool Notes",
   REQUIRE(flags(p & scalar_true) == flags(p));
   REQUIRE((p & scalar_true).sizes() == p.sizes());
 
-  REQUIRE_FALSE(p.any() == false);
-  REQUIRE(p.any());
-  REQUIRE_FALSE(p.all());
-  REQUIRE((p | ~p).all());
+  REQUIRE(p.any().is_bool());
+  REQUIRE(p.any().dim() == 0);
+  REQUIRE(p.any().bool_item());
+  REQUIRE_FALSE(p.all().bool_item());
+  REQUIRE((p | ~p).all().bool_item());
+
+  const auto empty = pluss::note::make(
+      std::vector<bool>{}, std::array<std::int64_t, 2>{0, 3});
+  REQUIRE_FALSE(empty.any().bool_item());
+  REQUIRE(empty.all().bool_item());
 
   REQUIRE_THROWS(p & a);  // mixed Bool/Text operands are rejected
+
+  // Equal cardinality is not broadcasting: differently shaped arrays must
+  // fail before an output allocation is observable.
+  const auto matrix = pluss::note::make(
+      std::vector<bool>{true, false, true, false},
+      std::array<std::int64_t, 2>{2, 2});
+  const auto vector = pluss::note::make(
+      std::vector<bool>{true, false, true, false});
+  REQUIRE_THROWS(matrix & vector);
+}
+
+TEST_CASE("Note text operators require compatible shapes and text storage",
+          "[coden][operators]") {
+  const auto matrix = pluss::note::make(
+      std::vector<std::string>{"a", "b", "c", "d"},
+      std::array<std::int64_t, 2>{2, 2});
+  const auto vector = pluss::note::make({"1", "2", "3", "4"});
+
+  REQUIRE_THROWS(matrix + vector);
+  REQUIRE_THROWS(pluss::note::make(std::vector<bool>{true, false}) * 2);
+  REQUIRE_THROWS(pluss::note::make(std::vector<std::int64_t>{1, 2}) +
+                 pluss::note::make(std::vector<std::int64_t>{3, 4}));
+
+  const auto suffix = pluss::note::make("!");
+  REQUIRE((matrix + suffix).sizes() == matrix.sizes());
+}
+
+TEST_CASE("every content predicate preserves rank and validates its domain",
+          "[coden][patch13][pass4]") {
+  const auto text = pluss::note::make(
+      std::vector<std::string>{"abc", "123", "", " A "},
+      std::array<std::int64_t, 2>{2, 2});
+  const std::vector<pluss::Note> results{
+      text.contains("a"), text.starts_with("a"), text.ends_with("3"),
+      text.regex().match("[a-z]+"), text.regex().search("[A-Z]"),
+      text.is_ascii(), text.is_utf8_valid(), text.is_blank(),
+      text.is_alpha(), text.is_alnum(), text.is_digit(), text.is_lower(),
+      text.is_upper(), text.is_title(), text.is_whitespace(),
+      text.contains_any_digit(), text.contains_any_alpha(),
+  };
+  REQUIRE(results.size() == 17);
+  for (const auto& result : results) {
+    REQUIRE(result.is_bool());
+    REQUIRE(result.sizes() == std::vector<std::int64_t>{2, 2});
+  }
+
+  const auto empty = pluss::note::make(
+      std::vector<std::string>{}, std::array<std::int64_t, 2>{0, 4});
+  REQUIRE(empty.contains("x").sizes() ==
+          std::vector<std::int64_t>{0, 4});
+  REQUIRE(empty.is_ascii().bools().empty());
+
+  REQUIRE_THROWS(pluss::Note::undefined().is_alpha());
+  REQUIRE_THROWS(pluss::note::make({true, false}).contains("true"));
+  REQUIRE_THROWS(text.regex().match("["));
+
+  const std::string raw{"A\0B", 3};
+  const auto bytes = pluss::note::bytes(raw);
+  REQUIRE(bytes.contains(std::string_view{"\0", 1}).bool_item());
+  REQUIRE(bytes.is_ascii().bool_item());
+  REQUIRE_THROWS(bytes.regex().search("A"));
+}
+
+TEST_CASE("all comparison call forms preserve operand order",
+          "[coden][patch13][pass4]") {
+  const auto values = pluss::note::make({"a", "b", "c"});
+  const auto peers = pluss::note::make({"a", "c", "b"});
+
+  REQUIRE((flags(values == peers) == std::vector<std::uint8_t>{1, 0, 0}));
+  REQUIRE((flags(values != peers) == std::vector<std::uint8_t>{0, 1, 1}));
+  REQUIRE((flags(values < peers) == std::vector<std::uint8_t>{0, 1, 0}));
+  REQUIRE((flags(values <= peers) == std::vector<std::uint8_t>{1, 1, 0}));
+  REQUIRE((flags(values > peers) == std::vector<std::uint8_t>{0, 0, 1}));
+  REQUIRE((flags(values >= peers) == std::vector<std::uint8_t>{1, 0, 1}));
+
+  REQUIRE((flags(values == "b") == std::vector<std::uint8_t>{0, 1, 0}));
+  REQUIRE((flags(values != "b") == std::vector<std::uint8_t>{1, 0, 1}));
+  REQUIRE((flags(values < "b") == std::vector<std::uint8_t>{1, 0, 0}));
+  REQUIRE((flags(values <= "b") == std::vector<std::uint8_t>{1, 1, 0}));
+  REQUIRE((flags(values > "b") == std::vector<std::uint8_t>{0, 0, 1}));
+  REQUIRE((flags(values >= "b") == std::vector<std::uint8_t>{0, 1, 1}));
+
+  REQUIRE((flags("b" == values) == std::vector<std::uint8_t>{0, 1, 0}));
+  REQUIRE((flags("b" != values) == std::vector<std::uint8_t>{1, 0, 1}));
+  REQUIRE((flags("b" < values) == std::vector<std::uint8_t>{0, 0, 1}));
+  REQUIRE((flags("b" <= values) == std::vector<std::uint8_t>{0, 1, 1}));
+  REQUIRE((flags("b" > values) == std::vector<std::uint8_t>{1, 0, 0}));
+  REQUIRE((flags("b" >= values) == std::vector<std::uint8_t>{1, 1, 0}));
 }
 
 TEST_CASE("CodeN Note-vs-Note comparisons are dtype-generic, not text-only",
@@ -257,6 +361,13 @@ TEST_CASE("CodeN Note-vs-Note comparisons are dtype-generic, not text-only",
   // Comparing a numeric Note against a string literal is rejected with a
   // purpose-built message rather than an incidental accessor error.
   REQUIRE_THROWS(x == "2");
+
+  const auto matrix = pluss::note::make(
+      std::vector<std::int64_t>{1, 2, 3, 4},
+      std::array<std::int64_t, 2>{2, 2});
+  const auto vector = pluss::note::make(
+      std::vector<std::int64_t>{1, 2, 3, 4});
+  REQUIRE_THROWS(matrix == vector);
 }
 
 TEST_CASE("CodeN measurement/count/ordering methods produce shape-preserving Int64 Notes",
@@ -279,7 +390,7 @@ TEST_CASE("CodeN measurement/count/ordering methods produce shape-preserving Int
   REQUIRE(std::vector<std::int64_t>(counts.integers().begin(), counts.integers().end()) ==
           std::vector<std::int64_t>({2, 0, 2}));
 
-  const auto re_counts = text.count_regex(R"(an)");
+  const auto re_counts = text.regex().count(R"(an)");
   REQUIRE(re_counts.is_int64());
   REQUIRE(std::vector<std::int64_t>(re_counts.integers().begin(), re_counts.integers().end()) ==
           std::vector<std::int64_t>({2, 0, 2}));
@@ -296,7 +407,25 @@ TEST_CASE("CodeN measurement/count/ordering methods produce shape-preserving Int
   REQUIRE(order.sizes() == std::vector<std::int64_t>{3});
   REQUIRE(std::vector<std::int64_t>(order.integers().begin(), order.integers().end()) ==
           std::vector<std::int64_t>({1, 2, 0}));
-  REQUIRE(letters.take(order.integers()).at(0) == "a");
+  const auto sorted = letters.take(order);
+  REQUIRE(sorted.vector() == std::vector<std::string_view>{"a", "b", "c"});
+
+  // take(Note) is the closed consumption path for an Int64 index Note and
+  // preserves the receiver dtype for every native lane family.
+  const auto pick = pluss::note::make({2, 0});
+  const auto flags = pluss::note::make({true, false, true}).take(pick);
+  REQUIRE(flags.is_bool());
+  REQUIRE(std::vector<std::uint8_t>(flags.bools().begin(), flags.bools().end()) ==
+          std::vector<std::uint8_t>{1, 1});
+  const auto ints = pluss::note::make({10, 20, 30}).take(pick);
+  REQUIRE(ints.is_int64());
+  REQUIRE(std::vector<std::int64_t>(ints.integers().begin(), ints.integers().end()) ==
+          std::vector<std::int64_t>{30, 10});
+  const auto reals = pluss::note::make({1.5, 2.5, 3.5}).take(pick);
+  REQUIRE(reals.is_float64());
+  REQUIRE(std::vector<double>(reals.reals().begin(), reals.reals().end()) ==
+          std::vector<double>{3.5, 1.5});
+  REQUIRE_THROWS(letters.take(pluss::note::make({true, false})));
 }
 
 TEST_CASE("CodeN character-class filters keep the right classes", "[coden][patch13]") {
@@ -314,7 +443,7 @@ TEST_CASE("CodeN whitespace/layout normalization family", "[coden][patch13]") {
   // collapse_whitespace trims and folds any whitespace run to one space.
   REQUIRE(pluss::make_note("  a  b\tc \n").collapse_whitespace().at(0) == "a b c");
   // normalize_spaces is the same operation.
-  REQUIRE(pluss::make_note("  a  b\tc \n").normalize_spaces().at(0) == "a b c");
+  REQUIRE(pluss::make_note("  a  b\tc \n").collapse_whitespace().at(0) == "a b c");
   // collapse_spaces folds space/tab runs only; newlines and edges untouched.
   REQUIRE(pluss::make_note("a   b\n c").collapse_spaces().at(0) == "a b\n c");
   REQUIRE(pluss::make_note("a\n\n\n\nb").collapse_newlines().at(0) == "a\nb");
@@ -368,31 +497,31 @@ std::vector<std::int64_t> batch_offsets(const pluss::coden::TokenBatch& b) {
 TEST_CASE("CodeN diff/align family tags and shape", "[coden][patch13]") {
   // diff_words: only '-' (in self) and '+' (in other) tokens; punctuation dropped.
   auto dw = pluss::make_note("the quick brown fox")
-                .diff_words(pluss::make_note("the slow brown fox"));
+                .nlp().diff_words(pluss::make_note("the slow brown fox"));
   REQUIRE(batch_tokens(dw) == std::vector<std::string>({"-quick", "+slow"}));
   REQUIRE(batch_offsets(dw) == std::vector<std::int64_t>({0, 2}));
 
   // align_tokens: same alignment, but unchanged words are kept as '=' tokens.
   auto at = pluss::make_note("the quick brown fox")
-                .align_tokens(pluss::make_note("the slow brown fox"));
+                .nlp().align_tokens(pluss::make_note("the slow brown fox"));
   REQUIRE(batch_tokens(at) ==
           std::vector<std::string>({"=the", "-quick", "+slow", "=brown", "=fox"}));
 
   // Identical cells: diff_* yields an empty range, align_* yields all '='.
-  REQUIRE(pluss::make_note("no change").diff_words(pluss::make_note("no change"))
+  REQUIRE(pluss::make_note("no change").nlp().diff_words(pluss::make_note("no change"))
               .tokens().numel() == 0);
   REQUIRE(batch_tokens(pluss::make_note("no change")
-                           .align_tokens(pluss::make_note("no change"))) ==
+                           .nlp().align_tokens(pluss::make_note("no change"))) ==
           std::vector<std::string>({"=no", "=change"}));
 
   // Punctuation-only edits are invisible to diff_words.
-  REQUIRE(pluss::make_note("stop here").diff_words(pluss::make_note("stop, here!"))
+  REQUIRE(pluss::make_note("stop here").nlp().diff_words(pluss::make_note("stop, here!"))
               .tokens().numel() == 0);
 
   // Scalar broadcast on the right-hand side.
   auto bc = pluss::make_note(std::vector<std::string>{"a b c", "a x c"},
                              std::array<std::int64_t, 1>{2})
-                .diff_words(pluss::make_note("a b c"));
+                .nlp().diff_words(pluss::make_note("a b c"));
   REQUIRE(batch_offsets(bc) == std::vector<std::int64_t>({0, 0, 2}));
   REQUIRE(batch_tokens(bc) == std::vector<std::string>({"-x", "+b"}));
 
@@ -407,16 +536,16 @@ TEST_CASE("CodeN diff/align family tags and shape", "[coden][patch13]") {
 
   // align_sentences keeps '=' sentences.
   auto as = pluss::make_note("One. Two. Three.")
-                .align_sentences(pluss::make_note("One. Two changed. Three."));
+                .nlp().align_sentences(pluss::make_note("One. Two changed. Three."));
   REQUIRE(batch_tokens(as) ==
           std::vector<std::string>({"=One.", "-Two.", "+Two changed.", "=Three."}));
 
   // Rejections: bytes-mode lhs, and numel mismatch with neither side scalar.
-  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).diff_words(pluss::make_note("y")),
+  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).nlp().diff_words(pluss::make_note("y")),
                     pluss::Error);
   REQUIRE_THROWS_AS(
       pluss::make_note(std::vector<std::string>{"a", "b"}, std::array<std::int64_t, 1>{2})
-          .diff_words(pluss::make_note(std::vector<std::string>{"a", "b", "c"},
+          .nlp().diff_words(pluss::make_note(std::vector<std::string>{"a", "b", "c"},
                                       std::array<std::int64_t, 1>{3})),
       pluss::Error);
 }
@@ -424,7 +553,7 @@ TEST_CASE("CodeN diff/align family tags and shape", "[coden][patch13]") {
 TEST_CASE("CodeN TokenBatch offsets is a closed Int64 Note", "[coden][patch13][pass6]") {
   pluss::Note docs = pluss::make_note(
       std::vector<std::string>{"a bb", "ccc", ""}, std::array<std::int64_t, 1>{3});
-  const auto batch = docs.tokenize_words();
+  const auto batch = docs.nlp().tokens();
 
   // offsets() is a real Note -- typed, shaped, and dtype-tagged -- not a
   // borrowed std::vector<int64_t>&.
@@ -448,41 +577,41 @@ TEST_CASE("CodeN TokenBatch offsets is a closed Int64 Note", "[coden][patch13][p
 
 TEST_CASE("CodeN set-similarity family: intersect / jaccard / overlap", "[coden][patch13]") {
   // intersect_tokens: shared words, self order, deduped, case-folded.
-  auto it = pluss::make_note("fox fox dog cat fox").intersect_tokens(pluss::make_note("cat FOX"));
+  auto it = pluss::make_note("fox fox dog cat fox").nlp().intersect_tokens(pluss::make_note("cat FOX"));
   REQUIRE(batch_tokens(it) == std::vector<std::string>({"fox", "cat"}));
 
   // intersect_terms drops stopwords and words shorter than 4.
   auto trm = pluss::make_note("The cat sat on the warm mat")
-                 .intersect_terms(pluss::make_note("a warm mat and a cat"));
+                 .nlp().intersect_terms(pluss::make_note("a warm mat and a cat"));
   REQUIRE(batch_tokens(trm) == std::vector<std::string>({"warm"}));
 
   // intersect_acronyms: 2+ uppercase runs, lowercased; empty without caps.
-  REQUIRE(batch_tokens(pluss::make_note("NASA ESA NOAA").intersect_acronyms(pluss::make_note("ESA NASA"))) ==
+  REQUIRE(batch_tokens(pluss::make_note("NASA ESA NOAA").nlp().intersect_acronyms(pluss::make_note("ESA NASA"))) ==
           std::vector<std::string>({"nasa", "esa"}));
-  REQUIRE(pluss::make_note("nasa esa").intersect_acronyms(pluss::make_note("nasa")).tokens().numel() == 0);
+  REQUIRE(pluss::make_note("nasa esa").nlp().intersect_acronyms(pluss::make_note("nasa")).tokens().numel() == 0);
 
   // intersect_citations keeps brackets.
-  REQUIRE(batch_tokens(pluss::make_note("[1] [2] [10]").intersect_citations(pluss::make_note("[2] [3] [10]"))) ==
+  REQUIRE(batch_tokens(pluss::make_note("[1] [2] [10]").nlp().intersect_citations(pluss::make_note("[2] [3] [10]"))) ==
           std::vector<std::string>({"[2]", "[10]"}));
 
   // jaccard_tokens = |A n B| / |A u B|; symmetric; edge cases. Now a native
   // Float64 Note (pass 8 cleanup) rather than a formatted Text Note.
-  REQUIRE(pluss::make_note("the quick brown fox").jaccard_tokens(pluss::make_note("the quick red fox")).float_item() == 0.6);
-  REQUIRE(pluss::make_note("a b c").jaccard_tokens(pluss::make_note("d e f")).float_item() == 0.0);
-  REQUIRE(pluss::make_note("x y").jaccard_tokens(pluss::make_note("y x")).float_item() == 1.0);
-  REQUIRE(pluss::make_note("").jaccard_tokens(pluss::make_note("")).float_item() == 1.0);        // both empty
-  REQUIRE(pluss::make_note("a b").jaccard_tokens(pluss::make_note("")).float_item() == 0.0);     // one empty
+  REQUIRE(pluss::make_note("the quick brown fox").nlp().jaccard_tokens(pluss::make_note("the quick red fox")).float_item() == 0.6);
+  REQUIRE(pluss::make_note("a b c").nlp().jaccard_tokens(pluss::make_note("d e f")).float_item() == 0.0);
+  REQUIRE(pluss::make_note("x y").nlp().jaccard_tokens(pluss::make_note("y x")).float_item() == 1.0);
+  REQUIRE(pluss::make_note("").nlp().jaccard_tokens(pluss::make_note("")).float_item() == 1.0);        // both empty
+  REQUIRE(pluss::make_note("a b").nlp().jaccard_tokens(pluss::make_note("")).float_item() == 0.0);     // one empty
 
   // overlap_tokens = |A n B| / min(|A|,|B|): 1.0 when the smaller set is contained.
-  REQUIRE(pluss::make_note("quick brown fox").overlap_tokens(pluss::make_note("the quick brown fox jumps")).float_item() == 1.0);
-  const auto overlap_two_thirds = pluss::make_note("a b c d").overlap_tokens(pluss::make_note("c d e")).float_item();
+  REQUIRE(pluss::make_note("quick brown fox").nlp().overlap_tokens(pluss::make_note("the quick brown fox jumps")).float_item() == 1.0);
+  const auto overlap_two_thirds = pluss::make_note("a b c d").nlp().overlap_tokens(pluss::make_note("c d e")).float_item();
   REQUIRE((overlap_two_thirds > 0.6666 && overlap_two_thirds < 0.6667));
-  REQUIRE(pluss::make_note("a b").overlap_tokens(pluss::make_note("")).float_item() == 0.0);
+  REQUIRE(pluss::make_note("a b").nlp().overlap_tokens(pluss::make_note("")).float_item() == 0.0);
 
   // jaccard / overlap preserve input shape; intersect flattens to a TokenBatch.
   auto j2d = pluss::make_note(std::vector<std::string>{"cat dog", "sun moon", "red blue", "up down"},
                               std::array<std::int64_t, 2>{2, 2})
-                 .jaccard_tokens(pluss::make_note(std::vector<std::string>{"cat fish", "sun moon", "red green", "left right"},
+                 .nlp().jaccard_tokens(pluss::make_note(std::vector<std::string>{"cat fish", "sun moon", "red green", "left right"},
                                                   std::array<std::int64_t, 2>{2, 2}));
   REQUIRE(j2d.dim() == 2);
   REQUIRE(j2d.numel() == 4);
@@ -490,10 +619,10 @@ TEST_CASE("CodeN set-similarity family: intersect / jaccard / overlap", "[coden]
   REQUIRE(j2d.reals()[1] == 1.0);   // "sun moon" vs "sun moon"
 
   // Rejections mirror the diff/align family.
-  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).jaccard_tokens(pluss::make_note("y")), pluss::Error);
+  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).nlp().jaccard_tokens(pluss::make_note("y")), pluss::Error);
   REQUIRE_THROWS_AS(
       pluss::make_note(std::vector<std::string>{"a", "b"}, std::array<std::int64_t, 1>{2})
-          .intersect_tokens(pluss::make_note(std::vector<std::string>{"a", "b", "c"}, std::array<std::int64_t, 1>{3})),
+          .nlp().intersect_tokens(pluss::make_note(std::vector<std::string>{"a", "b", "c"}, std::array<std::int64_t, 1>{3})),
       pluss::Error);
 }
 
@@ -551,44 +680,39 @@ TEST_CASE("CodeN encoding / transcode family", "[coden][patch13]") {
 
 TEST_CASE("CodeN transliteration / phonetics family", "[coden][patch13]") {
   // transliterate_ascii: fold Latin-1 accents, '?' for anything else.
-  REQUIRE(pluss::make_note("café señor Ærø").transliterate_ascii().at(0) == "cafe senor AEro");
-  REQUIRE(pluss::make_note("ĥ").transliterate_ascii().at(0) == "??");        // Latin Extended-A
-  REQUIRE(pluss::make_note("ā").to_nfd().transliterate_ascii().at(0) == "a"); // NFD widens the fold
-  REQUIRE(pluss::make_note("plain 1").transliterate_ascii().at(0) == "plain 1");
-  // transliterate_latin is an exact synonym.
-  REQUIRE(pluss::make_note("café").transliterate_latin().at(0) ==
-          pluss::make_note("café").transliterate_ascii().at(0));
+  REQUIRE(pluss::make_note("café señor Ærø").nlp().to_ascii().at(0) == "cafe senor AEro");
+  REQUIRE(pluss::make_note("ĥ").nlp().to_ascii().at(0) == "??");        // Latin Extended-A
+  REQUIRE(pluss::make_note("ā").to_nfd().nlp().to_ascii().at(0) == "a"); // NFD widens the fold
+  REQUIRE(pluss::make_note("plain 1").nlp().to_ascii().at(0) == "plain 1");
 
   // transliterate_greek: accented vowels handled, combining marks dropped,
   // both cases -> lower Latin, non-Greek passes through.
-  REQUIRE(pluss::make_note("Ελλάς").transliterate_greek().at(0) == "ellas");
-  REQUIRE(pluss::make_note("θΧΩ").transliterate_greek().at(0) == "thcho");
-  REQUIRE(pluss::make_note("x=Α").transliterate_greek().at(0) == "x=a");
-  REQUIRE(pluss::make_note("ἄνθρωπος").to_nfd().transliterate_greek().at(0) == "anthropos");
+  REQUIRE(pluss::make_note("Ελλάς").nlp().to_greek().at(0) == "ellas");
+  REQUIRE(pluss::make_note("θΧΩ").nlp().to_greek().at(0) == "thcho");
+  REQUIRE(pluss::make_note("x=Α").nlp().to_greek().at(0) == "x=a");
+  REQUIRE(pluss::make_note("ἄνθρωπος").to_nfd().nlp().to_greek().at(0) == "anthropos");
 
   // transliterate_cyrillic: multi-letter sounds; hard/soft signs dropped.
-  REQUIRE(pluss::make_note("Щи").transliterate_cyrillic().at(0) == "shchi");
-  REQUIRE(pluss::make_note("подъезд").transliterate_cyrillic().at(0) == "podezd");
-  REQUIRE(pluss::make_note("день").transliterate_cyrillic().at(0) == "den");
+  REQUIRE(pluss::make_note("Щи").nlp().to_cyrillic().at(0) == "shchi");
+  REQUIRE(pluss::make_note("подъезд").nlp().to_cyrillic().at(0) == "podezd");
+  REQUIRE(pluss::make_note("день").nlp().to_cyrillic().at(0) == "den");
 
   // phonetic_soundex: NARA rules incl. H/W transparency and first-letter dedup.
-  REQUIRE(pluss::make_note({"Robert", "Rupert", "Rubin"}).phonetic_soundex().at(0) == "R163");
-  REQUIRE(pluss::make_note({"Robert", "Rupert", "Rubin"}).phonetic_soundex().at(1) == "R163");
-  REQUIRE(pluss::make_note("Ashcraft").phonetic_soundex().at(0) == "A261");   // H bridges S and C
-  REQUIRE(pluss::make_note("Pfister").phonetic_soundex().at(0) == "P236");    // leading f repeats P's code
-  REQUIRE(pluss::make_note("John Smith").phonetic_soundex().at(0) == "J500 S530");
-  REQUIRE(pluss::make_note("A").phonetic_soundex().at(0) == "A000");
-  REQUIRE(pluss::make_note("").phonetic_soundex().at(0) == "");
+  REQUIRE(pluss::make_note({"Robert", "Rupert", "Rubin"}).nlp().soundex().at(0) == "R163");
+  REQUIRE(pluss::make_note({"Robert", "Rupert", "Rubin"}).nlp().soundex().at(1) == "R163");
+  REQUIRE(pluss::make_note("Ashcraft").nlp().soundex().at(0) == "A261");   // H bridges S and C
+  REQUIRE(pluss::make_note("Pfister").nlp().soundex().at(0) == "P236");    // leading f repeats P's code
+  REQUIRE(pluss::make_note("John Smith").nlp().soundex().at(0) == "J500 S530");
+  REQUIRE(pluss::make_note("A").nlp().soundex().at(0) == "A000");
+  REQUIRE(pluss::make_note("").nlp().soundex().at(0) == "");
 
-  // phonetic_metaphone: consonant skeleton; double_metaphone is the same.
-  REQUIRE(pluss::make_note("programming").phonetic_metaphone().at(0) == "PRGRMNG");
-  REQUIRE(pluss::make_note("quick brown fox").phonetic_metaphone().at(0) == "QCK BRN FX");
-  REQUIRE(pluss::make_note("Thompson").phonetic_double_metaphone().at(0) ==
-          pluss::make_note("Thompson").phonetic_metaphone().at(0));
+  // Metaphone is the canonical consonant-skeleton operation.
+  REQUIRE(pluss::make_note("programming").nlp().metaphone().at(0) == "PRGRMNG");
+  REQUIRE(pluss::make_note("quick brown fox").nlp().metaphone().at(0) == "QCK BRN FX");
 
   // bytes-mode input is rejected by the whole family.
-  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).transliterate_greek(), pluss::Error);
-  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).phonetic_soundex(), pluss::Error);
+  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).nlp().to_greek(), pluss::Error);
+  REQUIRE_THROWS_AS(pluss::note::bytes({"x"}).nlp().soundex(), pluss::Error);
 }
 
 TEST_CASE("CodeN shape / layout family", "[coden][patch13]") {
@@ -635,7 +759,7 @@ TEST_CASE("CodeN shape / layout family", "[coden][patch13]") {
   REQUIRE(v6.unsqueeze(1).sizes() == std::vector<std::int64_t>{6, 1});
   REQUIRE(v6.unsqueeze(-1).sizes() == std::vector<std::int64_t>{6, 1});
   REQUIRE(s.unsqueeze(0).sizes() == std::vector<std::int64_t>{1});
-  REQUIRE(v6.expand_dims(0).sizes() == v6.unsqueeze(0).sizes());
+  REQUIRE(v6.unsqueeze(0).sizes() == v6.unsqueeze(0).sizes());
   REQUIRE_THROWS_AS(v6.reshape(std::vector<std::int64_t>{1, 2, 3}).unsqueeze(0), pluss::Error);
 
   // ---- transpose ----

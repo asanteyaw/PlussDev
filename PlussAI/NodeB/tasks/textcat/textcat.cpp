@@ -246,7 +246,7 @@ struct TextCatStage::Impl {
   // TaskBackend::Sequence state: a small embedding table and a linear
   // softmax head, jointly trained end to end via real backpropagation
   // (see TextCatStage::learn). Stored as plain host vectors post-training
-  // so inference in `apply()` never needs to touch the autograd graph.
+  // so inference in `apply()` never needs to touch the autodiff graph.
   std::vector<std::string> sequence_vocabulary{};
   std::unordered_map<std::string, std::int64_t> sequence_token_to_id{};
   std::vector<std::vector<double>> sequence_embedding{};   // [vocab, width]

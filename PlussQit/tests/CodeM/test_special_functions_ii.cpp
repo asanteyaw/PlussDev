@@ -7,7 +7,7 @@
 
 using pluss::ScalarType;
 
-TEST_CASE("autograd recording guards are public pluss types", "[public-api][no-grad]") {
+TEST_CASE("autodiff recording guards are public pluss types", "[public-api][no-grad]") {
   auto x = pluss::make_series({2.0});
   x.tracks_slope_(true);
 

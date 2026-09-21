@@ -13,7 +13,24 @@
 
 namespace pluss::codem::series_tape {
 
-// Renamed internal autograd terms:
+// INTERNAL ENGINE NAMESPACE -- not the public Series surface, even though
+// this header is transitively reachable from public includes (it's used by
+// pluss/subsp/math/diff.h and other engine-internal headers). End users
+// should reach for the Series member surface instead:
+//   - Series::source()          <- reverse-mode node info (see SourceInfo
+//                                  below); this is the one most users want.
+//   - Series::tracks_slope()    <- was requires_grad
+//   - Series::sensitivity()     <- was grad
+//   - Series::has_sensitivity()
+//   - Series::is_leaf()
+// The free functions below (source_info/source_link/bind_source_link/
+// accumulate_sensitivity/...) exist for op implementations (OpsInternal.cpp,
+// Invoke.cpp) and the autodiff test suite to wire and inspect the tape
+// directly; they carry engine-internal detail (capture file/line, the raw
+// propagate closure) that the public wrapper deliberately does not expose.
+//
+// Renamed internal terms (previously torch-style autograd naming; this
+// engine consistently calls the whole system "autodiff"):
 // - tracks_slope  (was requires_grad)
 // - sensitivity   (was grad)
 // - source_link   (was grad_fn)

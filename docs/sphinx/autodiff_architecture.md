@@ -509,7 +509,7 @@ Compatibility with existing `Series` consumers is a design requirement.
 
 ### Current Autodiff Work and Compatibility
 
-The current autograd work should be viewed as:
+The current autodiff work should be viewed as:
 
 - the beginning of Layer 1
 - not a final public API contract
@@ -620,7 +620,7 @@ The intended destination is:
 - **JAX-grade transform surface**
 - **Pluss-native optimization and naming**
 
-The current tape and autograd work is not a false start. It is the base engine layer.
+The current tape and autodiff work is not a false start. It is the base engine layer.
 
 Future implementation should therefore:
 

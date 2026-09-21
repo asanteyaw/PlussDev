@@ -253,27 +253,45 @@ private:
       }
 
       Series parameter_value = *param_ptr;
-      const GroupScalars scalars = resolve_group_scalars_(group, parameter_value);
-      if (options.weight_decay != 0.0) {
-        sensitivity = sensitivity.add(parameter_value.mul(scalars.weight_decay));
+      {
+        const GroupScalars wd_scalars = resolve_group_scalars_(group, parameter_value);
+        if (options.weight_decay != 0.0) {
+          sensitivity = sensitivity.add(parameter_value.mul(wd_scalars.weight_decay));
+        }
       }
 
-      square_avg_[i] = square_avg_[i].mul(scalars.alpha).add(sensitivity.square().mul(scalars.one_minus_alpha));
+      // Complex parameters: view as real with a new trailing [.., 2] dim
+      // (real(g)^2 and imag(g)^2 tracked independently, matching torch's
+      // own `_view_as_real` in torch/optim/rmsprop.py -- capturable mode is
+      // rejected for complex above). No-op for real parameters.
+      const ScalarType original_dtype = parameter_value.scalar_type();
+      sensitivity = view_as_real_(sensitivity);
+      parameter_value = view_as_real_(parameter_value);
+      Series square_avg_value = view_as_real_(square_avg_[i]);
+      Series grad_avg_value = view_as_real_(grad_avg_[i]);
+      Series momentum_value = view_as_real_(momentum_buffer_[i]);
 
-      Series denominator = square_avg_[i].sqrt().add(scalars.epsilon);
+      const GroupScalars scalars = resolve_group_scalars_(group, parameter_value);
+      square_avg_value = square_avg_value.mul(scalars.alpha).add(sensitivity.abs2().mul(scalars.one_minus_alpha));
+
+      Series denominator = square_avg_value.sqrt().add(scalars.epsilon);
       if (options.centered) {
-        grad_avg_[i] = grad_avg_[i].mul(scalars.alpha).add(sensitivity.mul(scalars.one_minus_alpha));
-        denominator = square_avg_[i].sub(grad_avg_[i].square()).clamp_min(0.0).sqrt().add(scalars.epsilon);
+        grad_avg_value = grad_avg_value.mul(scalars.alpha).add(sensitivity.mul(scalars.one_minus_alpha));
+        denominator = square_avg_value.sub(grad_avg_value.abs2()).clamp_min(0.0).sqrt().add(scalars.epsilon);
       }
 
       Series update = sensitivity.div(denominator);
       if (options.momentum > 0.0) {
-        momentum_buffer_[i] = momentum_buffer_[i].mul(scalars.momentum).add(update);
-        update = momentum_buffer_[i];
+        momentum_value = momentum_value.mul(scalars.momentum).add(update);
+        update = momentum_value;
       }
 
       const Series next_value = parameter_value.sub(update.mul(scalars.learning_rate));
-      assign_parameter_(*param_ptr, next_value);
+
+      square_avg_[i] = view_as_complex_(square_avg_value, original_dtype);
+      grad_avg_[i] = view_as_complex_(grad_avg_value, original_dtype);
+      momentum_buffer_[i] = view_as_complex_(momentum_value, original_dtype);
+      assign_parameter_(*param_ptr, view_as_complex_(next_value, original_dtype));
     }
   }
 
@@ -318,11 +336,11 @@ private:
       g_batch = g_batch.add(p_batch.mul(scalars.weight_decay));
     }
 
-    square_batch = square_batch.mul(scalars.alpha).add(g_batch.square().mul(scalars.one_minus_alpha));
+    square_batch = square_batch.mul(scalars.alpha).add(g_batch.abs2().mul(scalars.one_minus_alpha));
     Series denominator = square_batch.sqrt().add(scalars.epsilon);
     if (options.centered) {
       grad_avg_batch = grad_avg_batch.mul(scalars.alpha).add(g_batch.mul(scalars.one_minus_alpha));
-      denominator = square_batch.sub(grad_avg_batch.square()).clamp_min(0.0).sqrt().add(scalars.epsilon);
+      denominator = square_batch.sub(grad_avg_batch.abs2()).clamp_min(0.0).sqrt().add(scalars.epsilon);
     }
 
     Series update = g_batch.div(denominator);
@@ -386,13 +404,13 @@ private:
     }
 
     square_batch = square_batch.mul(scalars.alpha);
-    square_batch = square_batch.add(g_batch.square().mul(scalars.one_minus_alpha));
+    square_batch = square_batch.add(g_batch.abs2().mul(scalars.one_minus_alpha));
     Series denominator = square_batch.sqrt();
     denominator = denominator.add(scalars.epsilon);
     if (options.centered) {
       grad_avg_batch = grad_avg_batch.mul(scalars.alpha);
       grad_avg_batch = grad_avg_batch.add(g_batch.mul(scalars.one_minus_alpha));
-      denominator = square_batch.sub(grad_avg_batch.square()).clamp_min(0.0).sqrt().add(scalars.epsilon);
+      denominator = square_batch.sub(grad_avg_batch.abs2()).clamp_min(0.0).sqrt().add(scalars.epsilon);
     }
 
     g_batch = g_batch.div(denominator);
@@ -485,6 +503,17 @@ private:
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
         ::pluss::throw_error("pluss::ai::nn::optim::RMSprop: capturable mode expects defined group parameters");
+      }
+      // Capturable mode is CUDA-graph-capture oriented (torch itself only
+      // supports it on cuda/xpu/hpu); complex-parameter support in this pass
+      // targets the ordinary Loop lane only (see view_as_real_/
+      // view_as_complex_ in optim_base.h) and was never exercised against
+      // capturable's own per-group bias-correction-power scalars, which are
+      // typed to match the group's parameters. Reject rather than risk a
+      // silently wrong interaction.
+      if (pluss::codem::dtype_of(anchor->scalar_type()).is_complex()) {
+        ::pluss::throw_error(
+            "pluss::ai::nn::optim::RMSprop: capturable mode is not supported for complex parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];

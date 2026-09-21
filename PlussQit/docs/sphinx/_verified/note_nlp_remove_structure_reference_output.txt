@@ -1,0 +1,75 @@
+=== boilerplate ===
+recognized lines
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Project note This copyrighted study remains."]
+ordinary vocabulary
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[" Privacy engineering\nand contractual terms remain unchanged. "]
+
+=== brackets ===
+balanced and unmatched
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["Keep final ; literal unmatched (kept", "Nested end; closing ] stays"]
+only unmatched
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  unmatched ( text  "]
+
+=== bullets ===
+unordered ordered and Unicode
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["alpha beta gamma first second round triangle hyphen -word 3.14 value Éclair"]
+standalone Unicode
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["standalone"]
+ordinary lines
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["First line.\n-word stays"]
+
+=== code ===
+inline fenced and indented
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["Keep here. plain"]
+first-line indent
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["visible"]
+tilde fence
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["visible"]
+unmatched delimiter
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["  an unmatched `\nremains  "]
+
+=== shared contract ===
+matrix boilerplate
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", "a (draft)"], 
+  ["- item", "use `x` now"]
+]
+matrix brackets
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["Copyright 2026", "a"], 
+  ["- item", "use `x` now"]
+]
+matrix bullets
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["Copyright 2026", "a (draft)"], 
+  ["item", "use `x` now"]
+]
+matrix code
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["Copyright 2026", "a (draft)"], 
+  ["- item", "use now"]
+]
+boilerplate idempotent=true
+empty
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+undefined defined=false
+Bytes: rejected
+Bool: rejected
+Int64: rejected
+Float64: rejected

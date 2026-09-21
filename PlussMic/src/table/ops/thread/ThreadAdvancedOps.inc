@@ -1686,7 +1686,7 @@ Thread note_has_(const Thread& source,
   if (options.regex) {
     if (options.case_sensitive) {
       (void)compile_regex_(needle, "Thread::nt().has");
-      return note_bool_result_(source, source.as_note().regex_search(needle));
+      return note_bool_result_(source, source.as_note().regex().search(needle));
     }
     const auto expression = compile_regex_(needle, options, "Thread::nt().has");
     std::vector<std::uint8_t> values;
@@ -1782,14 +1782,14 @@ Thread Thread::matches(std::string_view pattern) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::matches: expected Note payload");
   (void)compile_regex_(pattern, "Thread::matches");
-  return note_bool_result_(*this, as_note().regex_search(pattern));
+  return note_bool_result_(*this, as_note().regex().search(pattern));
 }
 
 Thread Thread::fullmatch(std::string_view pattern) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::fullmatch: expected Note payload");
   (void)compile_regex_(pattern, "Thread::fullmatch");
-  return note_bool_result_(*this, as_note().regex_match(pattern));
+  return note_bool_result_(*this, as_note().regex().match(pattern));
 }
 
 DataFrame Thread::extract(
@@ -2046,9 +2046,18 @@ Thread Thread::chars(
 Thread Thread::normalize(UnicodeForm form) const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::normalize: expected Note payload");
-  return Thread(
-      as_note().normalize(static_cast<std::int64_t>(form)),
-      validity_mask());
+  const auto& note = as_note();
+  switch (form) {
+    case UnicodeForm::NFC:
+      return Thread(note.to_nfc(), validity_mask());
+    case UnicodeForm::NFD:
+      return Thread(note.to_nfd(), validity_mask());
+    case UnicodeForm::NFKC:
+      return Thread(note.to_nfkc(), validity_mask());
+    case UnicodeForm::NFKD:
+      return Thread(note.to_nfkd(), validity_mask());
+  }
+  PLUSS_FAIL("Thread::normalize: unsupported Unicode form");
 }
 
 Thread Thread::encode(std::string_view encoding) const {
@@ -2077,7 +2086,7 @@ Thread Thread::replace(std::string_view from,
   }
   if (options.regex && options.case_sensitive && options.limit < 0) {
     (void)compile_regex_(from, "Thread::replace");
-    return Thread(as_note().regex_replace(from, to), validity_mask());
+    return Thread(as_note().regex().replace(from, to), validity_mask());
   }
   std::optional<std::regex> expression;
   if (options.regex) {

@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=41aa11a5"></script>
+    <script src="_static/api_nav.js?v=cf848246"></script>
     <script src="_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -161,9 +161,6 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_functions()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_numbers()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_identifiers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_convert_frac_to_slash()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_convert_sqrt_to_pow()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_convert_pm_to_plusminus()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_remove_left_right()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_remove_big_delims()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_remove_spacing_cmds()</span> <span class="pre">const</span></code></p></li>
@@ -207,8 +204,8 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">tex_replace_omega(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
-<section id="nlp-cleanup-normalization-75">
-<h2>NLP cleanup &amp; normalization (75)<a class="headerlink" href="#nlp-cleanup-normalization-75" title="Link to this heading">¶</a></h2>
+<section id="nlp-cleanup-normalization-64">
+<h2>NLP cleanup &amp; normalization (64)<a class="headerlink" href="#nlp-cleanup-normalization-64" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_tokens()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_words()</span> <span class="pre">const</span></code></p></li>
@@ -229,19 +226,13 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_language()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_script()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_clean()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_normalize_unicode()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_normalize_punct()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_stopwords()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_urls()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_emails()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_mentions()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_hashtags()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_numbers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_punct()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_diacritics()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_expand_contractions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_simplify_whitespace()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_sentencecase()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">nlp_is_language(::std::string_view</span> <span class="pre">lang)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_stopwords(::std::string_view</span> <span class="pre">lang)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_language_confidence()</span> <span class="pre">const</span></code></p></li>
@@ -264,11 +255,6 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_footers()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_boilerplate()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_tables()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_nonprintable()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_remove_accents()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_normalize_whitespace()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_normalize_newlines()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_normalize_case()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_normalize_numbers()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_mask_numbers()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Chord</span> <span class="pre">nlp_mask_emails()</span> <span class="pre">const</span></code></p></li>
@@ -398,7 +384,6 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">contains(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">starts_with(::std::string_view</span> <span class="pre">prefix)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">ends_with(::std::string_view</span> <span class="pre">suffix)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">find_all(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">find_all_regex(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
@@ -447,286 +432,35 @@ signatures left to the per-method reference pages.</p>
 <hr class="docutils" />
 <section id="note-method-index">
 <h1>Note method index<a class="headerlink" href="#note-method-index" title="Link to this heading">¶</a></h1>
-<p>This is a <strong>navigation index</strong>: semantics are described at a high level here, with exact
-signatures left to the per-method reference pages.</p>
-<section id="tex-latex-152">
-<h2>TeX / LaTeX (152)<a class="headerlink" href="#tex-latex-152" title="Link to this heading">¶</a></h2>
+<p>This file is generated from the public surface of CodeN and is meant as a <strong>navigation index</strong>.
+Semantics are described at a high level; see the corresponding header for exact signatures.</p>
+<section id="tex-latex-1-accessor">
+<h2>TeX / LaTeX (1 accessor)<a class="headerlink" href="#tex-latex-1-accessor" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_comments()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_preamble()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_metadata()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_normalize_newlines()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_dedup_blank_lines()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_collapse_whitespace()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_fix_linebreaks()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_sanitize()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_escape()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_unescape()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_math_delimiters()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_add_math_delimiters()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_math_only()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_text_only()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_commands()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_environments()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_labels()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_refs()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_citations()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_graphics()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_tables()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_figures()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_packages()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_bibliography()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_balance_braces()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_balance_math_delims()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_canonicalize_macros()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_expand_macros()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_inline_macros()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_simplify_fractions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_simplify_roots()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_simplify_spacing()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_formatting()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_accents()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_font_commands()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_math()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_text()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_environments()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_strip_commands()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_collapse_macros()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_expand_inputs()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_resolve_includes()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_resolve_graphics()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_color()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_hyperref()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_urls()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_convert_frac_to_slash()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_convert_sqrt_to_pow()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_convert_pm_to_plusminus()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_left_right()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_big_delims()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_spacing_cmds()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_vectors()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_matrices()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_integrals()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_summations()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_limits()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_subscripts()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_superscripts()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_primes()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_standardize_dots()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_to_text()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_to_markdown()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_to_html()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_commands()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_command_names()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_environments()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_environment_names()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_math_blocks(::std::int64_t</span> <span class="pre">max_count)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_inline_math()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_display_math()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_labels()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_refs()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_citations()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_packages()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_includes()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_macros_defined()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_macros_used()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_bibliography_keys()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_sections()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_subsections()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_subsubsections()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_equations(::std::int64_t</span> <span class="pre">max_count)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_align_blocks()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_arrays()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_tabular_blocks()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_headings(::std::int64_t</span> <span class="pre">max_depth)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_symbols()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_greek()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_operators()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_functions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_numbers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_identifiers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_equation()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_equation()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_align()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_align()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_align_()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_align_()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_gather()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_gather()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_multline()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_multline()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_array()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_array()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_cases()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_cases()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_tabular()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_tabular()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_figure()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_figure()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_table()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_table()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_itemize()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_itemize()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_env_enumerate()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_env_enumerate()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_alpha(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_beta(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_gamma(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_delta(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_epsilon(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_varepsilon(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_theta(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_vartheta(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_lambda(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_mu(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_pi(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_sigma(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_phi(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_varphi(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_omega(::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_extract_environment(::std::string_view</span> <span class="pre">name)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_environment(::std::string_view</span> <span class="pre">name)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_extract_command_args(::std::string_view</span> <span class="pre">cmd)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_replace_command(::std::string_view</span> <span class="pre">cmd,</span> <span class="pre">::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_set_macro(::std::string_view</span> <span class="pre">name,</span> <span class="pre">::std::string_view</span> <span class="pre">body)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_remove_macro(::std::string_view</span> <span class="pre">name)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_wrap_inline_math(::std::string_view</span> <span class="pre">delim)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tex_wrap_display_math(::std::string_view</span> <span class="pre">delim)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_theorems()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_proofs()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_definitions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_lemmas()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_corollaries()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_examples()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_tables()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_figures()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_captions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_footnotes()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_todos()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tex_warnings()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NoteTexAccessor</span> <span class="pre">tex()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
+</ul>
+<p>The former flat <code class="docutils literal notranslate"><span class="pre">Note::tex_*</span></code> spellings have been removed. TeX operations
+live on <code class="docutils literal notranslate"><span class="pre">note.tex()</span></code>; use the <a class="reference internal" href="sphinx/note_tex_accessor_api_reference.html"><span class="std std-doc">Note TeX Accessor API Reference</span></a> for the
+canonical method inventory and per-operation teaching pages.</p>
+</section>
+<section id="accessors-2">
+<h2>Accessors (2)<a class="headerlink" href="#accessors-2" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor</span> <span class="pre">nlp()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NoteRegexAccessor</span> <span class="pre">regex()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
 </ul>
 </section>
-<section id="nlp-cleanup-normalization-89">
-<h2>NLP cleanup &amp; normalization (89)<a class="headerlink" href="#nlp-cleanup-normalization-89" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_clean()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_normalize_unicode()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_normalize_punct()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_stopwords()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_urls()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_emails()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_mentions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_hashtags()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_numbers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_punct()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_diacritics()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_expand_contractions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_simplify_whitespace()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_sentencecase()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_html()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_markdown()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_code()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_math()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_latex()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_brackets()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_parentheticals()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_quotes()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_bullets()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_headers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_footers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_boilerplate()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_tables()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_nonprintable()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_remove_accents()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_normalize_whitespace()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_normalize_newlines()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_normalize_case()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_normalize_numbers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_numbers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_emails()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_urls()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_mentions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_hashtags()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_dates()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_times()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_currency()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_mask_pii()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_words()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_sentences()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_stems()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_lemmas()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_pos_tags()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_named_entities()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_noun_phrases()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_keywords(::std::int64_t</span> <span class="pre">k)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_keyphrases(::std::int64_t</span> <span class="pre">k)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_bigrams()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_trigrams()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_char_ngrams(::std::int64_t</span> <span class="pre">n)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_word_ngrams(::std::int64_t</span> <span class="pre">n)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_hashtags()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_mentions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_urls()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_emails()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_numbers()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_extract_acronyms()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_extract_definitions()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_extract_terms()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_extract_citations()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_extract_bibliography()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_extract_math_symbols()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_language()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_script()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_sentiment()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_toxicity()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_readability_grade()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_readability_level()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_spam_score()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_formality()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_subjectivity()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_lowercase_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_remove_stopword_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_remove_punct_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_remove_number_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_filter_tokens_alpha()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_filter_tokens_alnum()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_filter_tokens_len_ge(::std::int64_t</span> <span class="pre">n)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_filter_tokens_len_le(::std::int64_t</span> <span class="pre">n)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_filter_tokens_regex(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">nlp_join_tokens(::std::string_view</span> <span class="pre">sep)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_shuffle_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_unique_tokens()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">nlp_sort_tokens()</span> <span class="pre">const</span></code></p></li>
-</ul>
-</section>
-<section id="tokenization-splitting-10">
-<h2>Tokenization &amp; splitting (10)<a class="headerlink" href="#tokenization-splitting-10" title="Link to this heading">¶</a></h2>
+<section id="tokenization-splitting-4">
+<h2>Tokenization &amp; splitting (4)<a class="headerlink" href="#tokenization-splitting-4" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split(::std::string_view</span> <span class="pre">delim)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split_whitespace()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split_lines()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split_sentences()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split_graphemes()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split_chars()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tokenize_words()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tokenize_sentences()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tokenize_punct()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tokenize_regex(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
-<section id="id1">
-<h2>Regex (5)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">regex_replace(::std::string_view</span> <span class="pre">pattern,</span> <span class="pre">::std::string_view</span> <span class="pre">repl)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">regex_match(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">regex_search(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">regex_findall(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">regex_split(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
-</ul>
-</section>
-<section id="unicode-casing-21">
-<h2>Unicode &amp; casing (21)<a class="headerlink" href="#unicode-casing-21" title="Link to this heading">¶</a></h2>
+<section id="unicode-casing-19">
+<h2>Unicode &amp; casing (19)<a class="headerlink" href="#unicode-casing-19" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">lower()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">upper()</span> <span class="pre">const</span></code></p></li>
@@ -734,7 +468,6 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">capitalize()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">casefold()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">swapcase()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">normalize_spaces()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_ascii()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_nfkc()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_nfc()</span> <span class="pre">const</span></code></p></li>
@@ -744,35 +477,30 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">normalize_dashes()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">normalize_ellipsis()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">strip_accents()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">strip_diacritics()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_utf8_strict()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_utf8_lossy()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_latin1_lossy()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_windows1252_lossy()</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
-<section id="id2">
-<h2>Whitespace &amp; layout (12)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<section id="whitespace-layout-9">
+<h2>Whitespace &amp; layout (9)<a class="headerlink" href="#whitespace-layout-9" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">strip()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">lstrip()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">rstrip()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">trim()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">trim_left()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">trim_right()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">collapse_whitespace()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">dedent()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">indent()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">collapse_spaces()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">collapse_newlines()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_whitespace()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_whitespace()</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
-<section id="id3">
-<h2>Filtering &amp; cleaning (19)<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<section id="filtering-cleaning-18">
+<h2>Filtering &amp; cleaning (18)<a class="headerlink" href="#filtering-cleaning-18" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_control_chars()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_non_ascii()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_punctuation()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_digits()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_letters()</span> <span class="pre">const</span></code></p></li>
@@ -803,18 +531,15 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">hex_decode()</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
-<section id="search-match-9">
-<h2>Search &amp; match (9)<a class="headerlink" href="#search-match-9" title="Link to this heading">¶</a></h2>
+<section id="search-match-7">
+<h2>Search &amp; match (7)<a class="headerlink" href="#search-match-7" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">contains(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">starts_with(::std::string_view</span> <span class="pre">prefix)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">ends_with(::std::string_view</span> <span class="pre">suffix)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">find_all(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">find_all_regex(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">contains_any_digit()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">contains_any_alpha()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">contains(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">starts_with(::std::string_view</span> <span class="pre">prefix)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">ends_with(::std::string_view</span> <span class="pre">suffix)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">contains_any_digit()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">contains_any_alpha()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::int64_t&gt;</span> <span class="pre">count_substring(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::int64_t&gt;</span> <span class="pre">count_regex(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
 <section id="replace-transform-4">
@@ -833,15 +558,15 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">reshape(::std::span&lt;const</span> <span class="pre">::std::int64_t&gt;</span> <span class="pre">sizes)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">flatten()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">sort()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">argsort(bool</span> <span class="pre">descending</span> <span class="pre">=</span> <span class="pre">false,</span> <span class="pre">bool</span> <span class="pre">stable</span> <span class="pre">=</span> <span class="pre">true)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">unique()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">squeeze(::std::int64_t</span> <span class="pre">dim)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">unsqueeze(::std::int64_t</span> <span class="pre">dim)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">repeat(::std::span&lt;const</span> <span class="pre">::std::int64_t&gt;</span> <span class="pre">repeats)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">tile(::std::span&lt;const</span> <span class="pre">::std::int64_t&gt;</span> <span class="pre">reps)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">repeat(::pluss::msharp::RangeView::Int</span> <span class="pre">repeats)</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
-<section id="other-47">
-<h2>Other (47)<a class="headerlink" href="#other-47" title="Link to this heading">¶</a></h2>
+<section id="other-33">
+<h2>Other (33)<a class="headerlink" href="#other-33" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove(::std::string_view</span> <span class="pre">needle)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">ensure_prefix(::std::string_view</span> <span class="pre">prefix)</span> <span class="pre">const</span></code></p></li>
@@ -849,14 +574,11 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">surround(::std::string_view</span> <span class="pre">left,</span> <span class="pre">::std::string_view</span> <span class="pre">right)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">quote()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">unquote()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">normalize(::std::int64_t</span> <span class="pre">form)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_ascii()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_utf8_valid()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_blank()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_ascii()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_utf8_valid()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_blank()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::int64_t&gt;</span> <span class="pre">lengths_chars()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::int64_t&gt;</span> <span class="pre">lengths_graphemes()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">ngrams_char(::std::int64_t</span> <span class="pre">n)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">ngrams_word(::std::int64_t</span> <span class="pre">n)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">transpose(::std::int64_t</span> <span class="pre">dim0,</span> <span class="pre">::std::int64_t</span> <span class="pre">dim1)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">permute(::std::span&lt;const</span> <span class="pre">::std::int64_t&gt;</span> <span class="pre">dims)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">select(::std::int64_t</span> <span class="pre">dim,</span> <span class="pre">::std::int64_t</span> <span class="pre">index)</span> <span class="pre">const</span></code></p></li>
@@ -867,31 +589,147 @@ signatures left to the per-method reference pages.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">html_escape()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">html_unescape()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">json_escape()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_alpha()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_alnum()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_digit()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_lower()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_upper()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">::std::vector&lt;::std::uint8_t&gt;</span> <span class="pre">is_title()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_alpha()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_alnum()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_digit()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_lower()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_upper()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">is_title()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">from_latin1()</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">from_windows1252()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">transliterate_ascii()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">transliterate_latin()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">transliterate_greek()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">transliterate_cyrillic()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">phonetic_soundex()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">phonetic_metaphone()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">phonetic_double_metaphone()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">diff_words(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">diff_lines(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">diff_chars(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">align_tokens(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">align_sentences(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">deduplicate()</span> <span class="pre">const</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">expand_dims(::std::int64_t</span> <span class="pre">dim)</span> <span class="pre">const</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">repeat_interleave(::std::int64_t</span> <span class="pre">repeats,</span> <span class="pre">::std::int64_t</span> <span class="pre">dim)</span> <span class="pre">const</span></code></p></li>
 </ul>
 </section>
+</section>
+<section id="notenlpaccessor-method-index">
+<h1>NoteNlpAccessor method index<a class="headerlink" href="#notenlpaccessor-method-index" title="Link to this heading">¶</a></h1>
+<p>The accessor returned by <code class="docutils literal notranslate"><span class="pre">Note::nlp()</span></code> owns the linguistic surface. Its 100
+canonical methods intentionally omit forwarding aliases.</p>
+<section id="cleanup-analysis-masking-and-extraction">
+<h2>Cleanup, analysis, masking, and extraction<a class="headerlink" href="#cleanup-analysis-masking-and-extraction" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">clean()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">expand_contractions()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">normalize_numbers()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">normalize_punct(bool</span> <span class="pre">ascii_only</span> <span class="pre">=</span> <span class="pre">false)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_stopwords(::std::string_view</span> <span class="pre">language</span> <span class="pre">=</span> <span class="pre">&quot;en&quot;)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">language()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">script()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">sentiment()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">toxicity()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">readability_grade()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">readability_level()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">spam_score()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">formality()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">subjectivity()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_currency()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_dates()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_emails()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_hashtags()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_mentions()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_numbers()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_pii(::std::int64_t</span> <span class="pre">flags</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_times()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">mask_urls()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_boilerplate()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_brackets()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_bullets()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_code()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_emails()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_footers()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_hashtags()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_headers()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_html()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_latex()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_markdown()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_math()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_mentions()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_parentheticals()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_quotes()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_tables()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">remove_urls()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">tokens(::std::int64_t</span> <span class="pre">flags</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">sentences()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">punct_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">stems()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">lemmas()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">pos_tags()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">named_entities()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">keywords(::std::int64_t</span> <span class="pre">count)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">keyphrases(::std::int64_t</span> <span class="pre">count)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">char_ngrams(::std::int64_t</span> <span class="pre">width)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">word_ngrams(::std::int64_t</span> <span class="pre">width)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">hashtags()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">mentions()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">urls()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">emails()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">numbers()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">acronyms()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">definitions()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">terms()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">citations()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">math_symbols()</span> <span class="pre">const</span></code></p></li>
+</ul>
+</section>
+<section id="token-transforms-and-representations">
+<h2>Token transforms and representations<a class="headerlink" href="#token-transforms-and-representations" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">lower_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">without_stopwords()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">without_numbers()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">alpha_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">alnum_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">min_length(::std::int64_t</span> <span class="pre">length)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">max_length(::std::int64_t</span> <span class="pre">length)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">match_tokens(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">shuffle_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">unique_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">sort_tokens()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_ascii()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_greek()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">to_cyrillic()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">soundex()</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">metaphone()</span> <span class="pre">const</span></code></p></li>
+</ul>
+</section>
+<section id="linguistic-comparison-and-alignment">
+<h2>Linguistic comparison and alignment<a class="headerlink" href="#linguistic-comparison-and-alignment" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">intersect_acronyms(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">intersect_citations(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">intersect_symbols(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">intersect_tokens(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">intersect_terms(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">jaccard_acronyms(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">jaccard_citations(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">jaccard_symbols(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">jaccard_tokens(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">jaccard_terms(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">overlap_acronyms(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">overlap_citations(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">overlap_symbols(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">overlap_tokens(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">overlap_terms(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">diff_words(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">align_tokens(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">align_sentences(const</span> <span class="pre">Note&amp;</span> <span class="pre">other)</span> <span class="pre">const</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="noteregexaccessor-method-index">
+<h1>NoteRegexAccessor method index<a class="headerlink" href="#noteregexaccessor-method-index" title="Link to this heading">¶</a></h1>
+<p>The accessor returned by <code class="docutils literal notranslate"><span class="pre">Note::regex()</span></code> owns the six canonical pattern
+operations. Default arguments cover the former convenience overloads.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">count(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">findall(::std::string_view</span> <span class="pre">pattern,</span> <span class="pre">::std::int64_t</span> <span class="pre">flags</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">match(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note</span> <span class="pre">search(::std::string_view</span> <span class="pre">pattern)</span> <span class="pre">const</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TokenBatch</span> <span class="pre">split(::std::string_view</span> <span class="pre">pattern,</span> <span class="pre">::std::int64_t</span> <span class="pre">limit</span> <span class="pre">=</span> <span class="pre">-1)</span> <span class="pre">const</span></code></p></li>
+</ul>
 </section>
 
 
@@ -960,7 +798,7 @@ signatures left to the per-method reference pages.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#chord-method-index">Chord method index</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#tex-latex-157">TeX / LaTeX (157)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#nlp-cleanup-normalization-75">NLP cleanup &amp; normalization (75)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nlp-cleanup-normalization-64">NLP cleanup &amp; normalization (64)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tokenization-splitting-17">Tokenization &amp; splitting (17)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#regex-5">Regex (5)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unicode-casing-17">Unicode &amp; casing (17)</a></li>
@@ -973,20 +811,26 @@ signatures left to the per-method reference pages.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#note-method-index">Note method index</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#tex-latex-152">TeX / LaTeX (152)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#nlp-cleanup-normalization-89">NLP cleanup &amp; normalization (89)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#tokenization-splitting-10">Tokenization &amp; splitting (10)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">Regex (5)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#unicode-casing-21">Unicode &amp; casing (21)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Whitespace &amp; layout (12)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">Filtering &amp; cleaning (19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tex-latex-1-accessor">TeX / LaTeX (1 accessor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accessors-2">Accessors (2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tokenization-splitting-4">Tokenization &amp; splitting (4)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unicode-casing-19">Unicode &amp; casing (19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#whitespace-layout-9">Whitespace &amp; layout (9)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filtering-cleaning-18">Filtering &amp; cleaning (18)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#encoding-bytes-6">Encoding / bytes (6)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#search-match-9">Search &amp; match (9)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#search-match-7">Search &amp; match (7)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#replace-transform-4">Replace &amp; transform (4)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tensor-shape-note-9">Tensor / shape (Note) (9)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#other-47">Other (47)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-33">Other (33)</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#notenlpaccessor-method-index">NoteNlpAccessor method index</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cleanup-analysis-masking-and-extraction">Cleanup, analysis, masking, and extraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#token-transforms-and-representations">Token transforms and representations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linguistic-comparison-and-alignment">Linguistic comparison and alignment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

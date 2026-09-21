@@ -123,5 +123,5 @@ sizes_view undefined: rejected
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sizes.html"><span class="label">Previous</span><span class="title">sizes</span></a>
-  <a class="next-link" href="sort.html"><span class="label">Next</span><span class="title">sort</span></a>
+  <a class="next-link" href="slabs.html"><span class="label">Next</span><span class="title">slabs</span></a>
 </div>

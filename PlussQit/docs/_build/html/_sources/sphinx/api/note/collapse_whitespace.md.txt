@@ -25,8 +25,7 @@ common indentation.
 
 `collapse_whitespace` changes only spacing — no letters, punctuation, or
 non-ASCII are touched. It is shape-preserving, cell-independent, and returns
-a fresh `Note`. `normalize_spaces()` is the same operation under a different
-name.
+a fresh `Note`.
 
 ## Example 1: A Batch
 

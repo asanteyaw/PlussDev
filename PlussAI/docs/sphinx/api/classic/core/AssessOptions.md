@@ -94,7 +94,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_ASSESSOPTIONS_1
+assess ok = true
+values = pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 1, 1]
 ```
 
 ## Changelog

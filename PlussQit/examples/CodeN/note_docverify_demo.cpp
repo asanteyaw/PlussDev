@@ -110,12 +110,12 @@ int main() {
 
   {
     auto note = pluss::make_note({"Order 17 ships on 2026-08-02", "Ticket 204 closes at 18:30"});
-    print_batch("regex_findall_digits", note.regex_findall(R"(\d+)"));
-    print_batch("regex_findall_caps", pluss::make_note({"AX-17", "BY_204"}).regex_findall(R"([A-Z]+)"));
-    print_batch("regex_findall_tags", pluss::make_note({"#alpha update", "ship #beta now"}).regex_findall(R"(#\w+)"));
-    print_batch("tokenize_words", pluss::make_note({"One.\nTwo!", "A,b;c"}).tokenize_words());
-    print_batch("tokenize_words_lower", pluss::make_note({"Ada LOVELACE", "Grace Hopper"}).lower().tokenize_words());
-    print_batch("tokenize_words_punct", pluss::make_note({"price=12.50, paid!", "ref:A-17"}).tokenize_words());
+    print_batch("regex_findall_digits", note.regex().findall(R"(\d+)"));
+    print_batch("regex_findall_caps", pluss::make_note({"AX-17", "BY_204"}).regex().findall(R"([A-Z]+)"));
+    print_batch("regex_findall_tags", pluss::make_note({"#alpha update", "ship #beta now"}).regex().findall(R"(#\w+)"));
+    print_batch("tokenize_words", pluss::make_note({"One.\nTwo!", "A,b;c"}).nlp().tokens());
+    print_batch("tokenize_words_lower", pluss::make_note({"Ada LOVELACE", "Grace Hopper"}).lower().nlp().tokens());
+    print_batch("tokenize_words_punct", pluss::make_note({"price=12.50, paid!", "ref:A-17"}).nlp().tokens());
   }
 
   {
@@ -123,14 +123,14 @@ int main() {
         "Visit https://pluss.dev and email team@pluss.dev",
         "Mirror http://docs.pluss.dev for release notes",
     });
-    print_lines("nlp_remove_urls", dirty.nlp_remove_urls());
-    print_mask("nlp_remove_urls_contains_http", dirty.nlp_remove_urls().contains("http"));
+    print_lines("nlp_remove_urls", dirty.nlp().remove_urls());
+    print_mask("nlp_remove_urls_contains_http", dirty.nlp().remove_urls().contains("http"));
   }
 
   {
     auto tex = pluss::make_note({"Price is 50% of $x+y$", R"(Use \alpha and \beta.)"});
-    print_lines("tex_escape", tex.tex_escape());
-    print_lines("tex_escape_plain", pluss::make_note({"chapter title", "plain text"}).tex_escape());
+    print_lines("tex_escape", tex.tex().escape());
+    print_lines("tex_escape_plain", pluss::make_note({"chapter title", "plain text"}).tex().escape());
     print_lines(
         "tex_to_text",
         pluss::make_note(
@@ -140,8 +140,8 @@ int main() {
             "Text \\textbf{bold} and $x+y$.\n"
             "\\label{l1}\\ref{l1}\\cite{k}\\href{https://x.y}{link}\n"
             "\\end{document}\n")
-            .tex_to_text());
-    print_lines("tex_to_text_inline", pluss::make_note("\\textit{Hello}").tex_to_text());
+            .tex().to_text());
+    print_lines("tex_to_text_inline", pluss::make_note("\\textit{Hello}").tex().to_text());
   }
 
   {
@@ -149,8 +149,8 @@ int main() {
         "Email bob@example.com at 9:30am on 2025-01-03, pay $12.50 to @alice #ops",
         "Backup contact: jane@pluss.dev",
     });
-    print_lines("nlp_mask_pii", pii.nlp_mask_pii());
-    print_mask("nlp_mask_pii_contains_email", pii.nlp_mask_pii().contains("[EMAIL]"));
+    print_lines("nlp_mask_pii", pii.nlp().mask_pii());
+    print_mask("nlp_mask_pii_contains_email", pii.nlp().mask_pii().contains("[EMAIL]"));
   }
 
   {

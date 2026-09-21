@@ -42,6 +42,8 @@ the type and its factory surface are kept apart because "I need a `Note`" and
   into a 1-D `Note`.
 - **Assemble and choose** — `format` fills a `{placeholder}` template;
   `select` builds a `Note` by ordered `Series` conditions.
+- **Restore packed storage** — `unpack` validates and reconstructs the stable
+  binary envelope emitted by `Note::pack()`.
 - **Render** — `print` produces a diagnostic representation (`std::cout << n`
   works too).
 
@@ -82,14 +84,17 @@ appends a `Triggered at:` location line, which the output blocks omit.
 deterministic; the pages use seeded calls so their output is stable. `perm`,
 `arange`, and every other factory here are already deterministic.
 
-Every deterministic output on these pages is produced by
-`examples/CodeN/note_factory_reference_demo.cpp`.
+Deterministic construction output is produced by
+`examples/CodeN/note_factory_reference_demo.cpp`; the binary round-trip and
+rejection cases for `unpack` are produced by
+`examples/CodeN/tokenbatch_codec_reference_demo.cpp`.
 
 Every `pluss::note::*` factory has a page: the core constructors (`make`,
 `bytes`), the shape-first family (`full`, `empty`, `rep`, and the four
 `*_like` factories), the generative builders (`arange`, `perm`, `rand`,
 `rand_between`), the text-splitting factories (`from_lines`, `from_words`),
-and assembly and rendering (`format`, `select`, `print`).
+assembly and rendering (`format`, `select`, `print`), and validated binary
+reconstruction (`unpack`).
 
 ```{toctree}
 :hidden:
@@ -113,6 +118,7 @@ api/note_factory/rand
 api/note_factory/rand_between
 api/note_factory/rep
 api/note_factory/select
+api/note_factory/unpack
 ```
 
 <div class="pluss-inline-prev-next">

@@ -25,8 +25,7 @@ renders, only its bytes, so pair it with
 [`lengths_bytes`](lengths_bytes.md) or [`lengths_chars`](lengths_chars.md)
 to see the effect.
 
-This is the same operation as the form-parameterised primitive
-`normalize(0)`. `to_nfc` is shape-preserving, cell-independent, idempotent,
+`to_nfc` is shape-preserving, cell-independent, idempotent,
 and returns a fresh `Note`. Requires the Unicode backend.
 
 ## Example 1: A Decomposed Accent Is Composed

@@ -210,7 +210,7 @@ to_torch: undefined
   storage (many in-place ops allocate fresh storage rather than mutating), a
   tensor captured earlier keeps pointing at the old buffer. Re-export after
   such an operation.
-- No autograd crosses the boundary. A `torch::Tensor` from `tensor()` does not
+- No autodiff crosses the boundary. A `torch::Tensor` from `tensor()` does not
   carry pluss sensitivities, and `requires_grad` on the torch side does not
   reach back.
 - Direct export is CPU-only. Transfer the returned tensor with `.to(device)`
@@ -229,7 +229,7 @@ to_torch: undefined
 - requires a `-DPLUSS_ENABLE_TORCH=ON` build
 - the reverse of [`pluss::series::from_torch`](../series_factory/from_torch.md);
   there is no free `to_torch`
-- not an autograd boundary — grad is managed separately on each side
+- not an autodiff boundary — grad is managed separately on each side
 
 ## See Also
 

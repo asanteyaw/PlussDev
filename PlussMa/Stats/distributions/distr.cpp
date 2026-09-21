@@ -4,6 +4,7 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/codem.h"
 #include "pluss/codem/series_factory.h"
+#include "pluss/subsp/math/integ.h"
 
 #include <algorithm>
 #include <cmath>
@@ -564,16 +565,14 @@ double sample_inverse_gaussian_scalar_(double theta, double chi, std::mt19937_64
   return (uniform(rng) >= theta / (theta + y)) ? (theta * theta / y) : y;
 }
 
+// Composite Simpson's rule (n=256 fixed nodes), used for scalar CDF-from-PDF
+// integration below. Delegates to pluss::subsp::math::integ::quadra_scalar
+// (PlussMa/include/pluss/subsp/math/integ.h) rather than reimplementing the
+// rule locally -- this file and distr_objects_continuous.cpp each had their
+// own copy of the identical formula (only the node count differed) before
+// this consolidation.
 double integrate_simpson_scalar_(const std::function<double(double)>& fn, double a, double b) {
-  constexpr int n = 256;
-  if (b <= a) return 0.0;
-  const double h = (b - a) / static_cast<double>(n);
-  double acc = fn(a) + fn(b);
-  for (int i = 1; i < n; ++i) {
-    const double x = a + h * static_cast<double>(i);
-    acc += fn(x) * ((i % 2 == 0) ? 2.0 : 4.0);
-  }
-  return acc * h / 3.0;
+  return pluss::subsp::math::integ::quadra_scalar(fn, a, b).value;
 }
 
 double erfinv_approx_scalar_(double x) {

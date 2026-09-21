@@ -52,8 +52,8 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">html_unescape</span>
   </a>
-  <a class="next-link" href="intersect_acronyms.html">
+  <a class="next-link" href="int_item.html">
     <span class="label">Next</span>
-    <span class="title">intersect_acronyms</span>
+    <span class="title">int_item</span>
   </a>
 </div>

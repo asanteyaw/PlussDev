@@ -1,11 +1,11 @@
-# CodeM Autograd Parity Blueprint (CPU-First)
+# CodeM Autodiff Parity Blueprint (CPU-First)
 
 ## Objective
-Close remaining autograd method and result parity gaps against Torch-referenced behavior while keeping Pluss-native API naming and semantics.
+Close remaining autodiff method and result parity gaps against Torch-referenced behavior while keeping Pluss-native API naming and semantics.
 
 ## Doctrine Locks
 - No verbatim Torch method names on the public Pluss surface.
-- Keep canonical autograd naming as `reverse`, `tracks_slope`, `sensitivity`, `clear_sensitivity`.
+- Keep canonical autodiff naming as `reverse`, `tracks_slope`, `sensitivity`, `clear_sensitivity`.
 - Prefer `Series`-native/data-parallel kernels and avoid host scalarization unless unavoidable.
 - CPU parity is the correctness benchmark; MPS/CUDA must match CPU parity behavior/tolerances.
 
@@ -64,7 +64,7 @@ Patched files:
 Status: **Completed**
 
 Scope:
-- Add deterministic CPU parity harness comparing Pluss vs Torch references for selected autograd families:
+- Add deterministic CPU parity harness comparing Pluss vs Torch references for selected autodiff families:
   - indexing/gather/select/take
   - reductions and simple training lanes
   - repeated-index accumulation and mask routes

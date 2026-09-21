@@ -121,7 +121,7 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
 - `pluss::coden::Note::base64_decode`: the inverse.
 - [`Note::url_encode`](url_encode.md): percent-encoding for the same
   "make it ASCII-safe" goal, keyed to URL syntax instead of transfer size.
-- [`Note::tex_escape`](tex_escape.md): escaping for a specific consumer
+- [`NoteTexAccessor::escape`](../note-tex/escape.md): escaping for a specific consumer
   (TeX) rather than a general binary-safe encoding.
 
 <div class="pluss-inline-prev-next">
@@ -129,8 +129,8 @@ Note(shape=[2], dim=1, numel=2, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">base64_decode</span>
   </a>
-  <a class="next-link" href="capitalize.html">
+  <a class="next-link" href="begin.html">
     <span class="label">Next</span>
-    <span class="title">capitalize</span>
+    <span class="title">begin</span>
   </a>
 </div>

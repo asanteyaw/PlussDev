@@ -11,8 +11,8 @@ project(PlussQit LANGUAGES CXX)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 option(PLUSS_ENABLE_TORCH "Enable LibTorch interop" OFF)
-option(PLUSSQIT_AUTOGRAD_TORCH_ORACLE "Build direct CPU autograd comparisons against LibTorch" OFF)
-if(PLUSS_ENABLE_TORCH OR PLUSSQIT_AUTOGRAD_TORCH_ORACLE)
+option(PLUSSQIT_AUTODIFF_TORCH_ORACLE "Build direct CPU autodiff comparisons against LibTorch's autograd" OFF)
+if(PLUSS_ENABLE_TORCH OR PLUSSQIT_AUTODIFF_TORCH_ORACLE)
   if(NOT Torch_DIR)
     set(_pluss_torch_candidates "")
 
@@ -86,7 +86,6 @@ option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
 option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimeIndex)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
-option(PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP "Enable CodeN helpers that return CodeM::Series" OFF)
 option(PLUSSQIT_ENABLE_CUDA "Enable CUDA runtime probing for CodeM (kernels still WIP)" OFF)
 option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
 set(PLUSSQIT_CPU_BLAS_BACKEND "AUTO" CACHE STRING
@@ -175,7 +174,7 @@ file(MAKE_DIRECTORY ${PLUSSQIT_GEN_DIR})
 set(CODEM_NATIVE_YAML ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/native_functions.yaml)
 set(CODEM_DERIVATIVES_YAML ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/native/derivatives.yaml)
 set(CODEM_GEN_SCRIPT  ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ops.py)
-set(CODEM_AUTOGRAD_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_autograd_gen.py)
+set(CODEM_AUTODIFF_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_autodiff_gen.py)
 set(SERIES_METHODS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/generate_series_methods_gen_h.py)
 set(SERIES_METHODS_SEED_LIST ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_seed.txt)
 set(SERIES_METHODS_TYPED_YAML ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/series_methods_typed.yaml)
@@ -187,9 +186,9 @@ set(SERIES_OPSINTERNAL_CPP ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeM/core/OpsInterna
 
 set(SERIES_OPSINTERNAL_DECLS ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.inc)
 set(SERIES_OPSINTERNAL_DEFS  ${PLUSSQIT_GEN_DIR}/CodeM/Series/SeriesOpsInternalMethods.cpp.inc)
-set(SERIES_AUTOGRAD_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradUnaryReverseGen.h)
-set(SERIES_AUTOGRAD_BINARY_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradBinaryReverseGen.h)
-set(SERIES_AUTOGRAD_DIFF_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutogradDiffUnaryGen.inc)
+set(SERIES_AUTODIFF_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutodiffUnaryReverseGen.h)
+set(SERIES_AUTODIFF_BINARY_REVERSE_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutodiffBinaryReverseGen.h)
+set(SERIES_AUTODIFF_DIFF_GEN ${PLUSSQIT_GEN_DIR}/CodeM/generated/SeriesAutodiffDiffUnaryGen.inc)
 
 add_custom_command(
   OUTPUT ${SERIES_OPSINTERNAL_DECLS} ${SERIES_OPSINTERNAL_DEFS}
@@ -221,15 +220,15 @@ add_custom_command(
 )
 
 add_custom_command(
-  OUTPUT ${SERIES_AUTOGRAD_REVERSE_GEN} ${SERIES_AUTOGRAD_BINARY_REVERSE_GEN} ${SERIES_AUTOGRAD_DIFF_GEN}
+  OUTPUT ${SERIES_AUTODIFF_REVERSE_GEN} ${SERIES_AUTODIFF_BINARY_REVERSE_GEN} ${SERIES_AUTODIFF_DIFF_GEN}
   COMMAND ${CMAKE_COMMAND} -E make_directory ${PLUSSQIT_GEN_DIR}/CodeM/generated
-  COMMAND ${Python3_EXECUTABLE} ${CODEM_AUTOGRAD_GEN_SCRIPT}
+  COMMAND ${Python3_EXECUTABLE} ${CODEM_AUTODIFF_GEN_SCRIPT}
           --spec ${CODEM_DERIVATIVES_YAML}
-          --out-reverse ${SERIES_AUTOGRAD_REVERSE_GEN}
-          --out-binary-reverse ${SERIES_AUTOGRAD_BINARY_REVERSE_GEN}
-          --out-diff ${SERIES_AUTOGRAD_DIFF_GEN}
-  DEPENDS ${CODEM_DERIVATIVES_YAML} ${CODEM_AUTOGRAD_GEN_SCRIPT}
-  COMMENT "Generating Series autograd helpers from derivatives.yaml"
+          --out-reverse ${SERIES_AUTODIFF_REVERSE_GEN}
+          --out-binary-reverse ${SERIES_AUTODIFF_BINARY_REVERSE_GEN}
+          --out-diff ${SERIES_AUTODIFF_DIFF_GEN}
+  DEPENDS ${CODEM_DERIVATIVES_YAML} ${CODEM_AUTODIFF_GEN_SCRIPT}
+  COMMENT "Generating Series autodiff helpers from derivatives.yaml"
 )
 
 add_custom_command(
@@ -376,8 +375,8 @@ add_library(plussqit_codem
   ${SERIES_OPSINTERNAL_DECLS}
   ${SERIES_OPSINTERNAL_DEFS}
   ${SERIES_METHODS_GEN_HEADER}
-  ${SERIES_AUTOGRAD_REVERSE_GEN}
-  ${SERIES_AUTOGRAD_DIFF_GEN}
+  ${SERIES_AUTODIFF_REVERSE_GEN}
+  ${SERIES_AUTODIFF_DIFF_GEN}
   ${PLUSSQIT_CODEM_CORE_CPP}
   ${PLUSSQIT_CODEM_MPS_SRC}
   ${PLUSSQIT_CODEM_CUDA_KERNEL_SRC}
@@ -574,8 +573,8 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_series_trig_reference_demo examples/CodeM/series_trig_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_trig_reference_demo PRIVATE PlussQit::CodeM)
 
-  add_executable(plussqit_codem_series_autograd_reference_demo examples/CodeM/series_autograd_reference_demo.cpp)
-  target_link_libraries(plussqit_codem_series_autograd_reference_demo PRIVATE PlussQit::CodeM)
+  add_executable(plussqit_codem_series_autodiff_reference_demo examples/CodeM/series_autodiff_reference_demo.cpp)
+  target_link_libraries(plussqit_codem_series_autodiff_reference_demo PRIVATE PlussQit::CodeM)
 
   add_executable(plussqit_codem_series_linearalg_product_reference_demo examples/CodeM/series_linearalg_product_reference_demo.cpp)
   target_link_libraries(plussqit_codem_series_linearalg_product_reference_demo PRIVATE PlussQit::CodeM)
@@ -613,13 +612,13 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_signal_demo examples/CodeM/signal_demo.cpp)
   target_link_libraries(plussqit_codem_signal_demo PRIVATE PlussQit::CodeM)
 
-  add_executable(plussqit_codem_autograd_optim_demo examples/CodeM/autograd_optim_demo.cpp)
-  target_link_libraries(plussqit_codem_autograd_optim_demo PRIVATE PlussQit::CodeM)
+  add_executable(plussqit_codem_autodiff_optim_demo examples/CodeM/autodiff_optim_demo.cpp)
+  target_link_libraries(plussqit_codem_autodiff_optim_demo PRIVATE PlussQit::CodeM)
   if (TARGET pluss)
-    target_link_libraries(plussqit_codem_autograd_optim_demo PRIVATE pluss)
+    target_link_libraries(plussqit_codem_autodiff_optim_demo PRIVATE pluss)
   endif()
   if (PLUSSMA_INCLUDE_DIR)
-    target_include_directories(plussqit_codem_autograd_optim_demo PRIVATE ${PLUSSMA_INCLUDE_DIR})
+    target_include_directories(plussqit_codem_autodiff_optim_demo PRIVATE ${PLUSSMA_INCLUDE_DIR})
   endif()
 
   add_executable(plussqit_codem_autodiff_derivatives_demo examples/CodeM/autodiff_derivatives_demo.cpp)
@@ -633,6 +632,9 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
 
   add_executable(plussqit_codem_mps_bulk_bench_demo examples/CodeM/mps_bulk_bench_demo.cpp)
   target_link_libraries(plussqit_codem_mps_bulk_bench_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_custom_autodiff_mps_training_demo examples/CodeM/custom_autodiff_mps_training_demo.cpp)
+  target_link_libraries(plussqit_codem_custom_autodiff_mps_training_demo PRIVATE PlussQit::CodeM)
 
 endif()
 
@@ -707,6 +709,10 @@ target_include_directories(plussqit_coden
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+if(PLUSSTILS_INCLUDE_DIR)
+  target_include_directories(plussqit_coden PUBLIC
+    $<BUILD_INTERFACE:${PLUSSTILS_INCLUDE_DIR}>)
+endif()
 
 target_compile_features(plussqit_coden PUBLIC cxx_std_20)
 target_compile_definitions(plussqit_coden PRIVATE CODEN_BUILD_MAIN_LIB)
@@ -724,12 +730,6 @@ if(PLUSSQIT_UNISTRING_INCLUDE_DIR AND PLUSSQIT_UNISTRING_LIBRARY)
     plussqit_coden PRIVATE PLUSSQIT_HAS_LIBUNISTRING=1)
   target_link_libraries(
     plussqit_coden PUBLIC ${PLUSSQIT_UNISTRING_LIBRARY})
-endif()
-
-# Optional: CodeN <-> CodeM interop (guards the tiny surface in Note.h)
-if (PLUSSQIT_CODEN_ENABLE_SERIES_INTEROP AND PLUSSQIT_BUILD_CODEM)
-  target_compile_definitions(plussqit_coden PUBLIC CODEN_ENABLE_SERIES_INTEROP)
-  target_link_libraries(plussqit_coden PUBLIC PlussQit::CodeM)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
@@ -770,17 +770,6 @@ if (PLUSSQIT_BUILD_EXAMPLES)
     target_link_libraries(plussqit_coden_note_factory_reference_demo PRIVATE PlussQit::CodeM)
   endif()
 
-  # The method verifier is added once its generated source is present. Keeping
-  # the configure step valid allows partial documentation worktrees to build.
-  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/CodeN/note_method_reference_demo.cpp")
-    add_executable(plussqit_coden_note_method_reference_demo
-      examples/CodeN/note_method_reference_demo.cpp)
-    target_link_libraries(plussqit_coden_note_method_reference_demo PRIVATE PlussQit::CodeN)
-    if (TARGET plussqit_codem)
-      target_link_libraries(plussqit_coden_note_method_reference_demo PRIVATE PlussQit::CodeM)
-    endif()
-  endif()
-
   add_executable(plussqit_coden_note_base_methods_demo examples/CodeN/note_base_methods_demo.cpp)
   target_link_libraries(plussqit_coden_note_base_methods_demo PRIVATE PlussQit::CodeN)
   if (TARGET plussqit_codem)
@@ -801,6 +790,27 @@ if (PLUSSQIT_BUILD_EXAMPLES)
     target_link_libraries(plussqit_coden_note_access_reference_demo PRIVATE PlussQit::CodeM)
   endif()
 
+  add_executable(plussqit_coden_note_iteration_reference_demo
+    examples/CodeN/note_iteration_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_iteration_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_iteration_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_state_reference_demo
+    examples/CodeN/note_state_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_state_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_state_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_tex_reference_demo
+    examples/CodeN/note_tex_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_tex_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_tex_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
   add_executable(plussqit_coden_note_projection_reference_demo
     examples/CodeN/note_projection_reference_demo.cpp)
   target_link_libraries(plussqit_coden_note_projection_reference_demo PRIVATE PlussQit::CodeN)
@@ -813,6 +823,69 @@ if (PLUSSQIT_BUILD_EXAMPLES)
   target_link_libraries(plussqit_coden_note_collection_reference_demo PRIVATE PlussQit::CodeN)
   if (TARGET plussqit_codem)
     target_link_libraries(plussqit_coden_note_collection_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_operator_reference_demo
+    examples/CodeN/note_operator_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_operator_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_operator_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_repeat_order_reference_demo
+    examples/CodeN/note_repeat_order_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_repeat_order_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_repeat_order_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_nlp_mask_reference_demo
+    examples/CodeN/note_nlp_mask_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_nlp_mask_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_nlp_mask_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_nlp_normalize_reference_demo
+    examples/CodeN/note_nlp_normalize_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_nlp_normalize_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_nlp_normalize_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_nlp_remove_structure_reference_demo
+    examples/CodeN/note_nlp_remove_structure_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_nlp_remove_structure_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_nlp_remove_structure_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_nlp_remove_markup_reference_demo
+    examples/CodeN/note_nlp_remove_markup_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_nlp_remove_markup_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_nlp_remove_markup_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_nlp_remaining_reference_demo
+    examples/CodeN/note_nlp_remaining_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_nlp_remaining_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_nlp_remaining_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_note_regex_reference_demo
+    examples/CodeN/note_regex_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_note_regex_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_note_regex_reference_demo PRIVATE PlussQit::CodeM)
+  endif()
+
+  add_executable(plussqit_coden_tokenbatch_codec_reference_demo
+    examples/CodeN/tokenbatch_codec_reference_demo.cpp)
+  target_link_libraries(plussqit_coden_tokenbatch_codec_reference_demo PRIVATE PlussQit::CodeN)
+  if (TARGET plussqit_codem)
+    target_link_libraries(plussqit_coden_tokenbatch_codec_reference_demo PRIVATE PlussQit::CodeM)
   endif()
 
   add_executable(plussqit_coden_note_docverify_demo examples/CodeN/note_docverify_demo.cpp)
@@ -1116,8 +1189,8 @@ if (PLUSSQIT_BUILD_TESTS)
     )
     target_link_libraries(plussqit_codem_autodiff_tests PRIVATE PlussQit::CodeM Catch2::Catch2WithMain)
     target_compile_features(plussqit_codem_autodiff_tests PRIVATE cxx_std_20)
-    if(PLUSSQIT_AUTOGRAD_TORCH_ORACLE)
-      target_compile_definitions(plussqit_codem_autodiff_tests PRIVATE PLUSSQIT_AUTOGRAD_TORCH_ORACLE=1)
+    if(PLUSSQIT_AUTODIFF_TORCH_ORACLE)
+      target_compile_definitions(plussqit_codem_autodiff_tests PRIVATE PLUSSQIT_AUTODIFF_TORCH_ORACLE=1)
       target_link_libraries(plussqit_codem_autodiff_tests PRIVATE ${TORCH_LIBRARIES})
       set_source_files_properties(
         tests/CodeM/test_patch177_cpu_torch_autograd_parity.cpp

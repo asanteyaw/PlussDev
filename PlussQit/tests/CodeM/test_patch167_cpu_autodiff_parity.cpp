@@ -37,7 +37,7 @@ void require_close_vec(const Series& got,
 
 } // namespace
 
-TEST_CASE("cpu autograd parity harness matches reference indexing gradients", "[autodiff][parity][cpu]") {
+TEST_CASE("cpu autodiff parity harness matches reference indexing gradients", "[autodiff][parity][cpu]") {
   const ParityTolerance tol{};
 
   {
@@ -95,7 +95,7 @@ TEST_CASE("cpu autograd parity harness matches reference indexing gradients", "[
   }
 }
 
-TEST_CASE("cpu autograd parity harness matches reference reduction gradients", "[autodiff][parity][cpu]") {
+TEST_CASE("cpu autodiff parity harness matches reference reduction gradients", "[autodiff][parity][cpu]") {
   Series x = make_series(std::vector<double>{0.2, -0.3, 0.4}, {3}).to(ScalarType::Float64);
   REQUIRE(x.platform() == Platform::CPU);
   x.tracks_slope_(true);
@@ -114,7 +114,7 @@ TEST_CASE("cpu autograd parity harness matches reference reduction gradients", "
   require_close_vec(x.sensitivity(), expected, ParityTolerance{1e-11, 1e-10}, "scalar_objective");
 }
 
-TEST_CASE("cpu autograd parity harness matches reference simple training lane gradients", "[autodiff][parity][cpu]") {
+TEST_CASE("cpu autodiff parity harness matches reference simple training lane gradients", "[autodiff][parity][cpu]") {
   const Series x = make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}).to(ScalarType::Float64);
   const Series y_true = make_series(std::vector<double>{2.0, 4.0, 6.0}, {3}).to(ScalarType::Float64);
   REQUIRE(x.platform() == Platform::CPU);

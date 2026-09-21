@@ -281,6 +281,27 @@ private:
       }
 
       Series parameter_value = *param_ptr;
+      if (options.weight_decay != 0.0) {
+        if (options.decoupled_weight_decay) {
+          const Series decay_one = scalar_on_(1.0, parameter_value);
+          const Series decay = scalar_on_(options.learning_rate * options.weight_decay, parameter_value);
+          parameter_value = parameter_value.mul(decay_one.sub(decay));
+        } else {
+          sensitivity = sensitivity.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
+        }
+      }
+
+      // Complex parameters: view as real with a new trailing [.., 2] dim
+      // (real(g)^2 and imag(g)^2 tracked independently, matching torch's
+      // own `_view_as_real` in torch/optim/nadam.py -- capturable mode is
+      // rejected for complex above, so `capturable` is guaranteed false
+      // whenever original_dtype is complex). No-op for real parameters.
+      const ScalarType original_dtype = parameter_value.scalar_type();
+      sensitivity = view_as_real_(sensitivity);
+      parameter_value = view_as_real_(parameter_value);
+      Series exp_avg_value = view_as_real_(exp_avg_[i]);
+      Series exp_avg_sq_value = view_as_real_(exp_avg_sq_[i]);
+
       const Series one = scalar_on_(1.0, parameter_value);
       const Series beta1 = scalar_on_(options.beta1, parameter_value);
       const Series beta2 = scalar_on_(options.beta2, parameter_value);
@@ -288,27 +309,19 @@ private:
       const Series one_minus_beta2 = one.sub(beta2);
       const Series lr = scalar_on_(options.learning_rate, parameter_value);
       const Series eps = scalar_on_(options.epsilon, parameter_value);
-      if (options.weight_decay != 0.0) {
-        if (options.decoupled_weight_decay) {
-          const Series decay = scalar_on_(options.learning_rate * options.weight_decay, parameter_value);
-          parameter_value = parameter_value.mul(one.sub(decay));
-        } else {
-          sensitivity = sensitivity.add(parameter_value.mul(scalar_on_(options.weight_decay, parameter_value)));
-        }
-      }
 
-      exp_avg_[i] = exp_avg_[i].mul(beta1).add(sensitivity.mul(one_minus_beta1));
-      exp_avg_sq_[i] = exp_avg_sq_[i].mul(beta2).add(sensitivity.square().mul(one_minus_beta2));
+      exp_avg_value = exp_avg_value.mul(beta1).add(sensitivity.mul(one_minus_beta1));
+      exp_avg_sq_value = exp_avg_sq_value.mul(beta2).add(sensitivity.abs2().mul(one_minus_beta2));
 
       const Series denom = capturable
-                               ? exp_avg_sq_[i].div(cap_terms.one_minus_beta2_pow).sqrt().add(eps)
-                               : exp_avg_sq_[i].div(scalar_on_(one_minus_beta2_pow, parameter_value)).sqrt().add(eps);
+                               ? exp_avg_sq_value.div(cap_terms.one_minus_beta2_pow).sqrt().add(eps)
+                               : exp_avg_sq_value.div(scalar_on_(one_minus_beta2_pow, parameter_value)).sqrt().add(eps);
       const Series g_hat = capturable
                                ? sensitivity.div(cap_terms.one_minus_mu_prod)
                                : sensitivity.div(scalar_on_(one_minus_mu_prod, parameter_value));
       const Series m_hat = capturable
-                               ? exp_avg_[i].div(cap_terms.one_minus_mu_prod_next)
-                               : exp_avg_[i].div(scalar_on_(one_minus_mu_prod_next, parameter_value));
+                               ? exp_avg_value.div(cap_terms.one_minus_mu_prod_next)
+                               : exp_avg_value.div(scalar_on_(one_minus_mu_prod_next, parameter_value));
       const Series nesterov_m = capturable
                                     ? g_hat.mul(scalar_on_(1.0, parameter_value).sub(cap_terms.mu_t))
                                           .add(m_hat.mul(cap_terms.mu_t_next))
@@ -316,7 +329,9 @@ private:
                                           .add(m_hat.mul(scalar_on_(mu_t_next, parameter_value)));
       const Series delta = nesterov_m.div(denom).mul(lr);
 
-      assign_parameter_(*param_ptr, parameter_value.sub(delta));
+      exp_avg_[i] = view_as_complex_(exp_avg_value, original_dtype);
+      exp_avg_sq_[i] = view_as_complex_(exp_avg_sq_value, original_dtype);
+      assign_parameter_(*param_ptr, view_as_complex_(parameter_value.sub(delta), original_dtype));
     }
   }
 
@@ -389,7 +404,7 @@ private:
     }
 
     m_batch = m_batch.mul(beta1).add(g_batch.mul(one_minus_beta1));
-    v_batch = v_batch.mul(beta2).add(g_batch.square().mul(one_minus_beta2));
+    v_batch = v_batch.mul(beta2).add(g_batch.abs2().mul(one_minus_beta2));
 
     const Series denom = capturable
                              ? v_batch.div(cap_terms.one_minus_beta2_pow).sqrt().add(eps)
@@ -489,7 +504,7 @@ private:
     m_batch = m_batch.mul(beta1);
     m_batch = m_batch.add(g_batch.mul(one_minus_beta1));
     v_batch = v_batch.mul(beta2);
-    v_batch = v_batch.add(g_batch.square().mul(one_minus_beta2));
+    v_batch = v_batch.add(g_batch.abs2().mul(one_minus_beta2));
 
     Series denom = capturable
                        ? v_batch.div(cap_terms.one_minus_beta2_pow).sqrt()
@@ -592,6 +607,17 @@ private:
       const Series* anchor = params[group.indices.front()];
       if (anchor == nullptr || !anchor->defined()) {
         ::pluss::throw_error("pluss::ai::nn::optim::NAdam: capturable mode expects defined group parameters");
+      }
+      // Capturable mode is CUDA-graph-capture oriented (torch itself only
+      // supports it on cuda/xpu/hpu); complex-parameter support in this pass
+      // targets the ordinary Loop lane only (see view_as_real_/
+      // view_as_complex_ in optim_base.h) and was never exercised against
+      // capturable's own per-group bias-correction-power scalars, which are
+      // typed to match the group's parameters. Reject rather than risk a
+      // silently wrong interaction.
+      if (pluss::codem::dtype_of(anchor->scalar_type()).is_complex()) {
+        ::pluss::throw_error(
+            "pluss::ai::nn::optim::NAdam: capturable mode is not supported for complex parameters");
       }
       for (std::size_t i : group.indices) {
         const Series* p = params[i];

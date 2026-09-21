@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::contains(std::string_view needle) const
+Note Note::contains(std::string_view needle) const
 ```
 
 ## Test Every Cell For A Literal Substring
@@ -16,7 +16,7 @@ anywhere inside it. It is the predicate half of the substring family: use it
 to build a mask for filtering, counting, or branching, when the question is
 "which cells mention this?" rather than "rewrite the matches" (that is
 [`replace`](replace.md) / [`remove_all`](remove_all.md)) or "pull the matches
-out" (that is [`regex_findall`](regex_findall.md)).
+out" (that is [`regex().findall()`](../note-regex/findall.md)).
 
 The match is a **literal byte-substring** search — no regular-expression
 metacharacters, no word boundaries, no normalization. `needle` and the cell
@@ -26,24 +26,20 @@ case-insensitive check.
 
 ### Return value
 
-The result is **not** a `Note`. It is a flat `std::vector<std::uint8_t>` with
-one entry per cell — `1` where `needle` was found, `0` where it was not — in
-row-major order. For a rank-`0` `Note` the vector has one entry; for a
-rank-`2` or rank-`3` `Note` the cells are flattened in the same order
-[`print`](../../note_api_reference.md) walks them. The length always equals
-`numel()`.
-
-Returning a plain `std::uint8_t` vector (rather than a boolean `Series`) keeps
-the predicate cheap and lets you feed it straight into indexing loops or into
-`pluss::make_series` if you want Series-side masking.
+The result is a Bool `Note` with the receiver's exact shape. Matching cells
+contain native `true` lanes and nonmatching cells contain `false`; neither is
+stored as text. That keeps the mask inside the Note family so it can be
+combined with other masks using `&`, `|`, `^`, or `~` without losing rank.
+Use `bools()` only at an explicit host boundary; it returns a borrowed,
+contiguous `std::span<const std::uint8_t>` and does not allocate.
 
 ### Edge cases
 
 - An **empty `needle`** is contained in every cell, including empty cells, so
   every entry is `1`.
 - A `needle` longer than a cell can never match that cell: its entry is `0`.
-- The scan is linear in total input size and does no allocation beyond the
-  result vector.
+- The scan is linear in total input size and allocates one contiguous Bool
+  result buffer.
 
 ## Example 1: A Basic Mask
 
@@ -51,8 +47,8 @@ the predicate cheap and lets you feed it straight into indexing loops or into
 const auto n = pluss::make_note({"midterm_1", "final_exam", "quiz"});
 const auto mask = n.contains("exam");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -70,8 +66,8 @@ Only `"final_exam"` contains the substring `exam`.
 const auto n = pluss::make_note({"midterm_1", "final_exam", "quiz"});
 const auto mask = n.contains("EXAM");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -89,8 +85,8 @@ std::cout << "]\n";
 const auto mask =
     pluss::make_note({"Exam 1", "FINAL EXAM", "Quiz"}).lower().contains("exam");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -105,8 +101,8 @@ std::cout << "]\n";
 ```cpp
 const auto mask = pluss::make_note({"abc", "", "x"}).contains("");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -120,7 +116,7 @@ std::cout << "]\n";
 
 ```cpp
 const auto mask = pluss::make_note({"ab"}).contains("abcd");
-std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
+std::cout << "[" << static_cast<int>(mask.bools()[0]) << "]\n";
 ```
 
 ### Output
@@ -129,14 +125,14 @@ std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
 [0]
 ```
 
-## Example 6: Higher-Rank Input Is Flattened Row-Major
+## Example 6: Higher-Rank Shape Is Preserved
 
 ```cpp
 const auto mask =
     pluss::make_note({{"apple", "grape"}, {"plum", "pear"}}).contains("p");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -146,11 +142,12 @@ std::cout << "]\n";
 [1, 1, 1, 1]
 ```
 
-Four cells, flattened in row-major order; every one contains a `p`.
+The host view is read row-major for display, but `mask.sizes()` remains
+`{2, 2}`. The operation does not flatten the Bool Note.
 
 ## See Also
 
-- [`Note::regex_findall`](regex_findall.md): when you need the matching
+- [`NoteRegexAccessor::findall`](../note-regex/findall.md): when you need the matching
   substrings, not just a yes/no.
 - [`Note::replace`](replace.md) / [`Note::remove_all`](remove_all.md):
   rewrite or delete matches instead of testing for them.

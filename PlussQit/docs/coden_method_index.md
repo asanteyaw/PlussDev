@@ -124,9 +124,6 @@ signatures left to the per-method reference pages.
 - `TokenBatch tex_extract_functions() const`
 - `TokenBatch tex_extract_numbers() const`
 - `TokenBatch tex_extract_identifiers() const`
-- `Chord tex_convert_frac_to_slash() const`
-- `Chord tex_convert_sqrt_to_pow() const`
-- `Chord tex_convert_pm_to_plusminus() const`
 - `Chord tex_remove_left_right() const`
 - `Chord tex_remove_big_delims() const`
 - `Chord tex_remove_spacing_cmds() const`
@@ -169,7 +166,7 @@ signatures left to the per-method reference pages.
 - `Chord tex_replace_psi(::std::string_view repl) const`
 - `Chord tex_replace_omega(::std::string_view repl) const`
 
-## NLP cleanup & normalization (75)
+## NLP cleanup & normalization (64)
 
 - `TokenBatch nlp_tokens() const`
 - `TokenBatch nlp_words() const`
@@ -190,19 +187,13 @@ signatures left to the per-method reference pages.
 - `Chord nlp_language() const`
 - `Chord nlp_script() const`
 - `Chord nlp_clean() const`
-- `Chord nlp_normalize_unicode() const`
 - `Chord nlp_normalize_punct() const`
 - `Chord nlp_remove_stopwords() const`
 - `Chord nlp_remove_urls() const`
 - `Chord nlp_remove_emails() const`
 - `Chord nlp_remove_mentions() const`
 - `Chord nlp_remove_hashtags() const`
-- `Chord nlp_remove_numbers() const`
-- `Chord nlp_remove_punct() const`
-- `Chord nlp_remove_diacritics() const`
 - `Chord nlp_expand_contractions() const`
-- `Chord nlp_simplify_whitespace() const`
-- `Chord nlp_sentencecase() const`
 - `bool nlp_is_language(::std::string_view lang) const`
 - `TokenBatch nlp_stopwords(::std::string_view lang) const`
 - `Chord nlp_language_confidence() const`
@@ -225,11 +216,6 @@ signatures left to the per-method reference pages.
 - `Chord nlp_remove_footers() const`
 - `Chord nlp_remove_boilerplate() const`
 - `Chord nlp_remove_tables() const`
-- `Chord nlp_remove_nonprintable() const`
-- `Chord nlp_remove_accents() const`
-- `Chord nlp_normalize_whitespace() const`
-- `Chord nlp_normalize_newlines() const`
-- `Chord nlp_normalize_case() const`
 - `Chord nlp_normalize_numbers() const`
 - `Chord nlp_mask_numbers() const`
 - `Chord nlp_mask_emails() const`
@@ -345,7 +331,6 @@ signatures left to the per-method reference pages.
 - `bool contains(::std::string_view needle) const`
 - `bool starts_with(::std::string_view prefix) const`
 - `bool ends_with(::std::string_view suffix) const`
-- `TokenBatch find_all(::std::string_view needle) const`
 - `TokenBatch find_all_regex(::std::string_view pattern) const`
 
 ## Replace & transform (5)
@@ -390,278 +375,30 @@ signatures left to the per-method reference pages.
 
 # Note method index
 
-This is a **navigation index**: semantics are described at a high level here, with exact
-signatures left to the per-method reference pages.
+This file is generated from the public surface of CodeN and is meant as a **navigation index**.
+Semantics are described at a high level; see the corresponding header for exact signatures.
 
-## TeX / LaTeX (152)
+## TeX / LaTeX (1 accessor)
 
-- `Note tex_strip_comments() const`
-- `Note tex_strip_preamble() const`
-- `Note tex_strip_metadata() const`
-- `Note tex_normalize_newlines() const`
-- `Note tex_dedup_blank_lines() const`
-- `Note tex_collapse_whitespace() const`
-- `Note tex_fix_linebreaks() const`
-- `Note tex_sanitize() const`
-- `Note tex_escape() const`
-- `Note tex_unescape() const`
-- `Note tex_remove_math_delimiters() const`
-- `Note tex_add_math_delimiters() const`
-- `Note tex_math_only() const`
-- `Note tex_text_only() const`
-- `Note tex_remove_commands() const`
-- `Note tex_remove_environments() const`
-- `Note tex_remove_labels() const`
-- `Note tex_remove_refs() const`
-- `Note tex_remove_citations() const`
-- `Note tex_remove_graphics() const`
-- `Note tex_remove_tables() const`
-- `Note tex_remove_figures() const`
-- `Note tex_remove_packages() const`
-- `Note tex_remove_bibliography() const`
-- `Note tex_balance_braces() const`
-- `Note tex_balance_math_delims() const`
-- `Note tex_canonicalize_macros() const`
-- `Note tex_expand_macros() const`
-- `Note tex_inline_macros() const`
-- `Note tex_simplify_fractions() const`
-- `Note tex_simplify_roots() const`
-- `Note tex_simplify_spacing() const`
-- `Note tex_remove_formatting() const`
-- `Note tex_remove_accents() const`
-- `Note tex_remove_font_commands() const`
-- `Note tex_strip_math() const`
-- `Note tex_strip_text() const`
-- `Note tex_strip_environments() const`
-- `Note tex_strip_commands() const`
-- `Note tex_collapse_macros() const`
-- `Note tex_expand_inputs() const`
-- `Note tex_resolve_includes() const`
-- `Note tex_resolve_graphics() const`
-- `Note tex_remove_color() const`
-- `Note tex_remove_hyperref() const`
-- `Note tex_remove_urls() const`
-- `Note tex_convert_frac_to_slash() const`
-- `Note tex_convert_sqrt_to_pow() const`
-- `Note tex_convert_pm_to_plusminus() const`
-- `Note tex_remove_left_right() const`
-- `Note tex_remove_big_delims() const`
-- `Note tex_remove_spacing_cmds() const`
-- `Note tex_standardize_vectors() const`
-- `Note tex_standardize_matrices() const`
-- `Note tex_standardize_integrals() const`
-- `Note tex_standardize_summations() const`
-- `Note tex_standardize_limits() const`
-- `Note tex_standardize_subscripts() const`
-- `Note tex_standardize_superscripts() const`
-- `Note tex_standardize_primes() const`
-- `Note tex_standardize_dots() const`
-- `Note tex_to_text() const`
-- `Note tex_to_markdown() const`
-- `Note tex_to_html() const`
-- `TokenBatch tex_commands() const`
-- `TokenBatch tex_command_names() const`
-- `TokenBatch tex_environments() const`
-- `TokenBatch tex_environment_names() const`
-- `TokenBatch tex_math_blocks(::std::int64_t max_count) const`
-- `TokenBatch tex_inline_math() const`
-- `TokenBatch tex_display_math() const`
-- `TokenBatch tex_labels() const`
-- `TokenBatch tex_refs() const`
-- `TokenBatch tex_citations() const`
-- `TokenBatch tex_packages() const`
-- `TokenBatch tex_includes() const`
-- `TokenBatch tex_macros_defined() const`
-- `TokenBatch tex_macros_used() const`
-- `TokenBatch tex_bibliography_keys() const`
-- `TokenBatch tex_sections() const`
-- `TokenBatch tex_subsections() const`
-- `TokenBatch tex_subsubsections() const`
-- `TokenBatch tex_equations(::std::int64_t max_count) const`
-- `TokenBatch tex_align_blocks() const`
-- `TokenBatch tex_arrays() const`
-- `TokenBatch tex_tabular_blocks() const`
-- `TokenBatch tex_headings(::std::int64_t max_depth) const`
-- `TokenBatch tex_extract_symbols() const`
-- `TokenBatch tex_extract_greek() const`
-- `TokenBatch tex_extract_operators() const`
-- `TokenBatch tex_extract_functions() const`
-- `TokenBatch tex_extract_numbers() const`
-- `TokenBatch tex_extract_identifiers() const`
-- `TokenBatch tex_extract_env_equation() const`
-- `Note tex_remove_env_equation() const`
-- `TokenBatch tex_extract_env_align() const`
-- `Note tex_remove_env_align() const`
-- `TokenBatch tex_extract_env_align_() const`
-- `Note tex_remove_env_align_() const`
-- `TokenBatch tex_extract_env_gather() const`
-- `Note tex_remove_env_gather() const`
-- `TokenBatch tex_extract_env_multline() const`
-- `Note tex_remove_env_multline() const`
-- `TokenBatch tex_extract_env_array() const`
-- `Note tex_remove_env_array() const`
-- `TokenBatch tex_extract_env_cases() const`
-- `Note tex_remove_env_cases() const`
-- `TokenBatch tex_extract_env_tabular() const`
-- `Note tex_remove_env_tabular() const`
-- `TokenBatch tex_extract_env_figure() const`
-- `Note tex_remove_env_figure() const`
-- `TokenBatch tex_extract_env_table() const`
-- `Note tex_remove_env_table() const`
-- `TokenBatch tex_extract_env_itemize() const`
-- `Note tex_remove_env_itemize() const`
-- `TokenBatch tex_extract_env_enumerate() const`
-- `Note tex_remove_env_enumerate() const`
-- `Note tex_replace_alpha(::std::string_view repl) const`
-- `Note tex_replace_beta(::std::string_view repl) const`
-- `Note tex_replace_gamma(::std::string_view repl) const`
-- `Note tex_replace_delta(::std::string_view repl) const`
-- `Note tex_replace_epsilon(::std::string_view repl) const`
-- `Note tex_replace_varepsilon(::std::string_view repl) const`
-- `Note tex_replace_theta(::std::string_view repl) const`
-- `Note tex_replace_vartheta(::std::string_view repl) const`
-- `Note tex_replace_lambda(::std::string_view repl) const`
-- `Note tex_replace_mu(::std::string_view repl) const`
-- `Note tex_replace_pi(::std::string_view repl) const`
-- `Note tex_replace_sigma(::std::string_view repl) const`
-- `Note tex_replace_phi(::std::string_view repl) const`
-- `Note tex_replace_varphi(::std::string_view repl) const`
-- `Note tex_replace_omega(::std::string_view repl) const`
-- `Note tex_extract_environment(::std::string_view name) const`
-- `Note tex_remove_environment(::std::string_view name) const`
-- `TokenBatch tex_extract_command_args(::std::string_view cmd) const`
-- `Note tex_replace_command(::std::string_view cmd, ::std::string_view repl) const`
-- `Note tex_set_macro(::std::string_view name, ::std::string_view body) const`
-- `Note tex_remove_macro(::std::string_view name) const`
-- `Note tex_wrap_inline_math(::std::string_view delim) const`
-- `Note tex_wrap_display_math(::std::string_view delim) const`
-- `TokenBatch tex_theorems() const`
-- `TokenBatch tex_proofs() const`
-- `TokenBatch tex_definitions() const`
-- `TokenBatch tex_lemmas() const`
-- `TokenBatch tex_corollaries() const`
-- `TokenBatch tex_examples() const`
-- `TokenBatch tex_tables() const`
-- `TokenBatch tex_figures() const`
-- `TokenBatch tex_captions() const`
-- `TokenBatch tex_footnotes() const`
-- `TokenBatch tex_todos() const`
-- `TokenBatch tex_warnings() const`
+- `NoteTexAccessor tex() const noexcept`
 
-## NLP cleanup & normalization (89)
+The former flat `Note::tex_*` spellings have been removed. TeX operations
+live on `note.tex()`; use the [Note TeX Accessor API Reference](sphinx/note_tex_accessor_api_reference.md) for the
+canonical method inventory and per-operation teaching pages.
 
-- `Note nlp_clean() const`
-- `Note nlp_normalize_unicode() const`
-- `Note nlp_normalize_punct() const`
-- `Note nlp_remove_stopwords() const`
-- `Note nlp_remove_urls() const`
-- `Note nlp_remove_emails() const`
-- `Note nlp_remove_mentions() const`
-- `Note nlp_remove_hashtags() const`
-- `Note nlp_remove_numbers() const`
-- `Note nlp_remove_punct() const`
-- `Note nlp_remove_diacritics() const`
-- `Note nlp_expand_contractions() const`
-- `Note nlp_simplify_whitespace() const`
-- `Note nlp_sentencecase() const`
-- `Note nlp_remove_html() const`
-- `Note nlp_remove_markdown() const`
-- `Note nlp_remove_code() const`
-- `Note nlp_remove_math() const`
-- `Note nlp_remove_latex() const`
-- `Note nlp_remove_brackets() const`
-- `Note nlp_remove_parentheticals() const`
-- `Note nlp_remove_quotes() const`
-- `Note nlp_remove_bullets() const`
-- `Note nlp_remove_headers() const`
-- `Note nlp_remove_footers() const`
-- `Note nlp_remove_boilerplate() const`
-- `Note nlp_remove_tables() const`
-- `Note nlp_remove_nonprintable() const`
-- `Note nlp_remove_accents() const`
-- `Note nlp_normalize_whitespace() const`
-- `Note nlp_normalize_newlines() const`
-- `Note nlp_normalize_case() const`
-- `Note nlp_normalize_numbers() const`
-- `Note nlp_mask_numbers() const`
-- `Note nlp_mask_emails() const`
-- `Note nlp_mask_urls() const`
-- `Note nlp_mask_mentions() const`
-- `Note nlp_mask_hashtags() const`
-- `Note nlp_mask_dates() const`
-- `Note nlp_mask_times() const`
-- `Note nlp_mask_currency() const`
-- `Note nlp_mask_pii() const`
-- `TokenBatch nlp_tokens() const`
-- `TokenBatch nlp_words() const`
-- `TokenBatch nlp_sentences() const`
-- `TokenBatch nlp_stems() const`
-- `TokenBatch nlp_lemmas() const`
-- `TokenBatch nlp_pos_tags() const`
-- `TokenBatch nlp_named_entities() const`
-- `TokenBatch nlp_noun_phrases() const`
-- `TokenBatch nlp_keywords(::std::int64_t k) const`
-- `TokenBatch nlp_keyphrases(::std::int64_t k) const`
-- `TokenBatch nlp_bigrams() const`
-- `TokenBatch nlp_trigrams() const`
-- `TokenBatch nlp_char_ngrams(::std::int64_t n) const`
-- `TokenBatch nlp_word_ngrams(::std::int64_t n) const`
-- `TokenBatch nlp_hashtags() const`
-- `TokenBatch nlp_mentions() const`
-- `TokenBatch nlp_urls() const`
-- `TokenBatch nlp_emails() const`
-- `TokenBatch nlp_numbers() const`
-- `TokenBatch nlp_extract_acronyms() const`
-- `TokenBatch nlp_extract_definitions() const`
-- `TokenBatch nlp_extract_terms() const`
-- `TokenBatch nlp_extract_citations() const`
-- `TokenBatch nlp_extract_bibliography() const`
-- `TokenBatch nlp_extract_math_symbols() const`
-- `Note nlp_language() const`
-- `Note nlp_script() const`
-- `Note nlp_sentiment() const`
-- `Note nlp_toxicity() const`
-- `Note nlp_readability_grade() const`
-- `Note nlp_readability_level() const`
-- `Note nlp_spam_score() const`
-- `Note nlp_formality() const`
-- `Note nlp_subjectivity() const`
-- `TokenBatch nlp_lowercase_tokens() const`
-- `TokenBatch nlp_remove_stopword_tokens() const`
-- `TokenBatch nlp_remove_punct_tokens() const`
-- `TokenBatch nlp_remove_number_tokens() const`
-- `TokenBatch nlp_filter_tokens_alpha() const`
-- `TokenBatch nlp_filter_tokens_alnum() const`
-- `TokenBatch nlp_filter_tokens_len_ge(::std::int64_t n) const`
-- `TokenBatch nlp_filter_tokens_len_le(::std::int64_t n) const`
-- `TokenBatch nlp_filter_tokens_regex(::std::string_view pattern) const`
-- `Note nlp_join_tokens(::std::string_view sep) const`
-- `TokenBatch nlp_shuffle_tokens() const`
-- `TokenBatch nlp_unique_tokens() const`
-- `TokenBatch nlp_sort_tokens() const`
+## Accessors (2)
 
-## Tokenization & splitting (10)
+- `NoteNlpAccessor nlp() const noexcept`
+- `NoteRegexAccessor regex() const noexcept`
+
+## Tokenization & splitting (4)
 
 - `TokenBatch split(::std::string_view delim) const`
 - `TokenBatch split_whitespace() const`
 - `TokenBatch split_lines() const`
-- `TokenBatch split_sentences() const`
-- `TokenBatch split_graphemes() const`
 - `TokenBatch split_chars() const`
-- `TokenBatch tokenize_words() const`
-- `TokenBatch tokenize_sentences() const`
-- `TokenBatch tokenize_punct() const`
-- `TokenBatch tokenize_regex(::std::string_view pattern) const`
 
-## Regex (5)
-
-- `Note regex_replace(::std::string_view pattern, ::std::string_view repl) const`
-- `::std::vector<::std::uint8_t> regex_match(::std::string_view pattern) const`
-- `::std::vector<::std::uint8_t> regex_search(::std::string_view pattern) const`
-- `TokenBatch regex_findall(::std::string_view pattern) const`
-- `TokenBatch regex_split(::std::string_view pattern) const`
-
-## Unicode & casing (21)
+## Unicode & casing (19)
 
 - `Note lower() const`
 - `Note upper() const`
@@ -669,7 +406,6 @@ signatures left to the per-method reference pages.
 - `Note capitalize() const`
 - `Note casefold() const`
 - `Note swapcase() const`
-- `Note normalize_spaces() const`
 - `Note to_ascii() const`
 - `Note to_nfkc() const`
 - `Note to_nfc() const`
@@ -679,31 +415,26 @@ signatures left to the per-method reference pages.
 - `Note normalize_dashes() const`
 - `Note normalize_ellipsis() const`
 - `Note strip_accents() const`
-- `Note strip_diacritics() const`
 - `Note to_utf8_strict() const`
 - `Note to_utf8_lossy() const`
 - `Note to_latin1_lossy() const`
 - `Note to_windows1252_lossy() const`
 
-## Whitespace & layout (12)
+## Whitespace & layout (9)
 
 - `Note strip() const`
 - `Note lstrip() const`
 - `Note rstrip() const`
-- `Note trim() const`
-- `Note trim_left() const`
-- `Note trim_right() const`
 - `Note collapse_whitespace() const`
 - `Note dedent() const`
 - `Note indent() const`
 - `Note collapse_spaces() const`
 - `Note collapse_newlines() const`
-- `::std::vector<::std::uint8_t> is_whitespace() const`
+- `Note is_whitespace() const`
 
-## Filtering & cleaning (19)
+## Filtering & cleaning (18)
 
 - `Note remove_control_chars() const`
-- `Note remove_non_ascii() const`
 - `Note remove_punctuation() const`
 - `Note remove_digits() const`
 - `Note remove_letters() const`
@@ -731,17 +462,14 @@ signatures left to the per-method reference pages.
 - `Note hex_encode() const`
 - `Note hex_decode() const`
 
-## Search & match (9)
+## Search & match (7)
 
-- `::std::vector<::std::uint8_t> contains(::std::string_view needle) const`
-- `::std::vector<::std::uint8_t> starts_with(::std::string_view prefix) const`
-- `::std::vector<::std::uint8_t> ends_with(::std::string_view suffix) const`
-- `TokenBatch find_all(::std::string_view needle) const`
-- `TokenBatch find_all_regex(::std::string_view pattern) const`
-- `::std::vector<::std::uint8_t> contains_any_digit() const`
-- `::std::vector<::std::uint8_t> contains_any_alpha() const`
+- `Note contains(::std::string_view needle) const`
+- `Note starts_with(::std::string_view prefix) const`
+- `Note ends_with(::std::string_view suffix) const`
+- `Note contains_any_digit() const`
+- `Note contains_any_alpha() const`
 - `::std::vector<::std::int64_t> count_substring(::std::string_view needle) const`
-- `::std::vector<::std::int64_t> count_regex(::std::string_view pattern) const`
 
 ## Replace & transform (4)
 
@@ -756,13 +484,13 @@ signatures left to the per-method reference pages.
 - `Note reshape(::std::span<const ::std::int64_t> sizes) const`
 - `Note flatten() const`
 - `Note sort() const`
+- `Note argsort(bool descending = false, bool stable = true) const`
 - `Note unique() const`
 - `Note squeeze(::std::int64_t dim) const`
 - `Note unsqueeze(::std::int64_t dim) const`
-- `Note repeat(::std::span<const ::std::int64_t> repeats) const`
-- `Note tile(::std::span<const ::std::int64_t> reps) const`
+- `Note repeat(::pluss::msharp::RangeView::Int repeats) const`
 
-## Other (47)
+## Other (33)
 
 - `Note remove(::std::string_view needle) const`
 - `Note ensure_prefix(::std::string_view prefix) const`
@@ -770,14 +498,11 @@ signatures left to the per-method reference pages.
 - `Note surround(::std::string_view left, ::std::string_view right) const`
 - `Note quote() const`
 - `Note unquote() const`
-- `Note normalize(::std::int64_t form) const`
-- `::std::vector<::std::uint8_t> is_ascii() const`
-- `::std::vector<::std::uint8_t> is_utf8_valid() const`
-- `::std::vector<::std::uint8_t> is_blank() const`
+- `Note is_ascii() const`
+- `Note is_utf8_valid() const`
+- `Note is_blank() const`
 - `::std::vector<::std::int64_t> lengths_chars() const`
 - `::std::vector<::std::int64_t> lengths_graphemes() const`
-- `TokenBatch ngrams_char(::std::int64_t n) const`
-- `TokenBatch ngrams_word(::std::int64_t n) const`
 - `Note transpose(::std::int64_t dim0, ::std::int64_t dim1) const`
 - `Note permute(::std::span<const ::std::int64_t> dims) const`
 - `Note select(::std::int64_t dim, ::std::int64_t index) const`
@@ -788,26 +513,135 @@ signatures left to the per-method reference pages.
 - `Note html_escape() const`
 - `Note html_unescape() const`
 - `Note json_escape() const`
-- `::std::vector<::std::uint8_t> is_alpha() const`
-- `::std::vector<::std::uint8_t> is_alnum() const`
-- `::std::vector<::std::uint8_t> is_digit() const`
-- `::std::vector<::std::uint8_t> is_lower() const`
-- `::std::vector<::std::uint8_t> is_upper() const`
-- `::std::vector<::std::uint8_t> is_title() const`
+- `Note is_alpha() const`
+- `Note is_alnum() const`
+- `Note is_digit() const`
+- `Note is_lower() const`
+- `Note is_upper() const`
+- `Note is_title() const`
 - `Note from_latin1() const`
 - `Note from_windows1252() const`
-- `Note transliterate_ascii() const`
-- `Note transliterate_latin() const`
-- `Note transliterate_greek() const`
-- `Note transliterate_cyrillic() const`
-- `Note phonetic_soundex() const`
-- `Note phonetic_metaphone() const`
-- `Note phonetic_double_metaphone() const`
-- `TokenBatch diff_words(const Note& other) const`
 - `TokenBatch diff_lines(const Note& other) const`
 - `TokenBatch diff_chars(const Note& other) const`
+- `Note deduplicate() const`
+- `Note repeat_interleave(::std::int64_t repeats, ::std::int64_t dim) const`
+
+# NoteNlpAccessor method index
+
+The accessor returned by `Note::nlp()` owns the linguistic surface. Its 100
+canonical methods intentionally omit forwarding aliases.
+
+## Cleanup, analysis, masking, and extraction
+
+- `Note clean() const`
+- `Note expand_contractions() const`
+- `Note normalize_numbers() const`
+- `Note normalize_punct(bool ascii_only = false) const`
+- `Note remove_stopwords(::std::string_view language = "en") const`
+- `Note language() const`
+- `Note script() const`
+- `Note sentiment() const`
+- `Note toxicity() const`
+- `Note readability_grade() const`
+- `Note readability_level() const`
+- `Note spam_score() const`
+- `Note formality() const`
+- `Note subjectivity() const`
+- `Note mask_currency() const`
+- `Note mask_dates() const`
+- `Note mask_emails() const`
+- `Note mask_hashtags() const`
+- `Note mask_mentions() const`
+- `Note mask_numbers() const`
+- `Note mask_pii(::std::int64_t flags = 0) const`
+- `Note mask_times() const`
+- `Note mask_urls() const`
+- `Note remove_boilerplate() const`
+- `Note remove_brackets() const`
+- `Note remove_bullets() const`
+- `Note remove_code() const`
+- `Note remove_emails() const`
+- `Note remove_footers() const`
+- `Note remove_hashtags() const`
+- `Note remove_headers() const`
+- `Note remove_html() const`
+- `Note remove_latex() const`
+- `Note remove_markdown() const`
+- `Note remove_math() const`
+- `Note remove_mentions() const`
+- `Note remove_parentheticals() const`
+- `Note remove_quotes() const`
+- `Note remove_tables() const`
+- `Note remove_urls() const`
+- `TokenBatch tokens(::std::int64_t flags = 0) const`
+- `TokenBatch sentences() const`
+- `TokenBatch punct_tokens() const`
+- `TokenBatch stems() const`
+- `TokenBatch lemmas() const`
+- `TokenBatch pos_tags() const`
+- `TokenBatch named_entities() const`
+- `TokenBatch keywords(::std::int64_t count) const`
+- `TokenBatch keyphrases(::std::int64_t count) const`
+- `TokenBatch char_ngrams(::std::int64_t width) const`
+- `TokenBatch word_ngrams(::std::int64_t width) const`
+- `TokenBatch hashtags() const`
+- `TokenBatch mentions() const`
+- `TokenBatch urls() const`
+- `TokenBatch emails() const`
+- `TokenBatch numbers() const`
+- `TokenBatch acronyms() const`
+- `TokenBatch definitions() const`
+- `TokenBatch terms() const`
+- `TokenBatch citations() const`
+- `TokenBatch math_symbols() const`
+
+## Token transforms and representations
+
+- `TokenBatch lower_tokens() const`
+- `TokenBatch without_stopwords() const`
+- `TokenBatch without_numbers() const`
+- `TokenBatch alpha_tokens() const`
+- `TokenBatch alnum_tokens() const`
+- `TokenBatch min_length(::std::int64_t length) const`
+- `TokenBatch max_length(::std::int64_t length) const`
+- `TokenBatch match_tokens(::std::string_view pattern) const`
+- `TokenBatch shuffle_tokens() const`
+- `TokenBatch unique_tokens() const`
+- `TokenBatch sort_tokens() const`
+- `Note to_ascii() const`
+- `Note to_greek() const`
+- `Note to_cyrillic() const`
+- `Note soundex() const`
+- `Note metaphone() const`
+
+## Linguistic comparison and alignment
+
+- `TokenBatch intersect_acronyms(const Note& other) const`
+- `TokenBatch intersect_citations(const Note& other) const`
+- `TokenBatch intersect_symbols(const Note& other) const`
+- `TokenBatch intersect_tokens(const Note& other) const`
+- `TokenBatch intersect_terms(const Note& other) const`
+- `Note jaccard_acronyms(const Note& other) const`
+- `Note jaccard_citations(const Note& other) const`
+- `Note jaccard_symbols(const Note& other) const`
+- `Note jaccard_tokens(const Note& other) const`
+- `Note jaccard_terms(const Note& other) const`
+- `Note overlap_acronyms(const Note& other) const`
+- `Note overlap_citations(const Note& other) const`
+- `Note overlap_symbols(const Note& other) const`
+- `Note overlap_tokens(const Note& other) const`
+- `Note overlap_terms(const Note& other) const`
+- `TokenBatch diff_words(const Note& other) const`
 - `TokenBatch align_tokens(const Note& other) const`
 - `TokenBatch align_sentences(const Note& other) const`
-- `Note deduplicate() const`
-- `Note expand_dims(::std::int64_t dim) const`
-- `Note repeat_interleave(::std::int64_t repeats, ::std::int64_t dim) const`
+
+# NoteRegexAccessor method index
+
+The accessor returned by `Note::regex()` owns the six canonical pattern
+operations. Default arguments cover the former convenience overloads.
+
+- `Note count(::std::string_view pattern) const`
+- `TokenBatch findall(::std::string_view pattern, ::std::int64_t flags = 0) const`
+- `Note match(::std::string_view pattern) const`
+- `Note search(::std::string_view pattern) const`
+- `TokenBatch split(::std::string_view pattern, ::std::int64_t limit = -1) const`

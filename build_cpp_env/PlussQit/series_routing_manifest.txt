@@ -32,7 +32,7 @@ ROUTED	airy()
 ROUTED	alias()
 ROUTED	align_as(const Series&)
 ROUTED	align_to(pluss::msharp::RangeView::Int)	permute: duplicate dim
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:7176 (Series pluss::codem::Series::permute(p
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:7476 (Series pluss::codem::Series::permute(p
 ROUTED	all()
 ROUTED	all(std::int64_t)
 ROUTED	amax()
@@ -73,9 +73,9 @@ ROUTED	as_strided_(pluss::msharp::RangeView::Int)
 ROUTED	as_strided_(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)
 ROUTED	as_strided_(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int, std::int64_t)
 ROUTED	as_strided_scatter(const Series&, pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)	as_strided_scatter: src shape must equal the requested view shape
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5378
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5617
 ROUTED	as_strided_scatter(const Series&, pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int, std::int64_t)	as_strided_scatter: src shape must equal the requested view shape
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5378
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5617
 ROUTED	atan2(const Series&)
 ROUTED	atan2_(const Series&)
 ROUTED	baddbmm(const Series&, const Series&, double, double)	baddbmm: expected two 3D Series
@@ -98,17 +98,21 @@ ROUTED	bessely(double)
 ROUTED	beta(double)
 ROUTED	betaln(double)
 ROUTED	bincount()	bincount: input must be integer
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6528 (Series pluss::codem::ops_inte
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6828 (Series pluss::codem::ops_inte
 ROUTED	bitwise_and_(const Series&)	bitwise: dtype must be integer/bool
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
-ROUTED	bitwise_left_shift(const Series&)
-ROUTED	bitwise_left_shift_(const Series&)
+ROUTED	bitwise_left_shift(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3691 (void pluss::codem::_compat::
+ROUTED	bitwise_left_shift_(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3691 (void pluss::codem::_compat::
 ROUTED	bitwise_not_()	bitwise: dtype must be integer/bool
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
 ROUTED	bitwise_or_(const Series&)	bitwise: dtype must be integer/bool
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
-ROUTED	bitwise_right_shift(const Series&)
-ROUTED	bitwise_right_shift_(const Series&)
+ROUTED	bitwise_right_shift(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3691 (void pluss::codem::_compat::
+ROUTED	bitwise_right_shift_(const Series&)	bitwise: dtype must be integer/bool
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3691 (void pluss::codem::_compat::
 ROUTED	bitwise_xor_(const Series&)	bitwise: dtype must be integer/bool
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Bitwise.cpp:40 (void pluss::codem::native
 ROUTED	block(std::int64_t, std::int64_t, std::int64_t, std::int64_t)
@@ -145,7 +149,7 @@ ROUTED	cov(std::int64_t)
 ROUTED	cplxpair()
 ROUTED	cross(const Series&)
 ROUTED	cross(const Series&, std::int64_t)	cross: expected dim extent == 3
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3663 (Series pluss::codem::_compat::cr
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3902 (Series pluss::codem::_compat::cr
 ROUTED	crow_indices()
 ROUTED	cube()
 ROUTED	cummax()
@@ -174,7 +178,7 @@ ROUTED	diagflat(std::int64_t)
 ROUTED	diagonal()
 ROUTED	diagonal(std::int64_t)
 ROUTED	diagonal(std::int64_t, std::int64_t, std::int64_t)	diagonal: dim1 and dim2 must differ
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:7068 (Series pluss::codem::_compat
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:7333 (Series pluss::codem::_compat
 ROUTED	diagonal_scatter(const Series&)
 ROUTED	diagonal_scatter(const Series&, std::int64_t)
 ROUTED	diff(std::int64_t)
@@ -189,7 +193,7 @@ ROUTED	div_(double)
 ROUTED	divide(const Series&)
 ROUTED	divide_(const Series&)
 ROUTED	dot(const Series&)	dot: expected two 1D Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:6633 (Series pluss::codem::_compat::invoke
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:6898 (Series pluss::codem::_compat::invoke
 ROUTED	dst()
 ROUTED	dst(std::int64_t)
 ROUTED	ediff1d()
@@ -208,7 +212,7 @@ ROUTED	expand_like(const Series&)
 ROUTED	exponential_()
 ROUTED	exponential_(double)
 ROUTED	factorial()	factorial: expects integral or bool dtype, got float64
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4928 (Series pl
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5167 (Series pl
 ROUTED	fftshift()
 ROUTED	fill_(double)
 ROUTED	fill_diagonal_(double)
@@ -237,9 +241,9 @@ ROUTED	fmod_(double)
 ROUTED	frac()
 ROUTED	frac_()
 ROUTED	gcd(const Series&)	gcd: integer inputs required
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3497 (Series pluss::codem::_compat::gcd_i
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3734 (Series pluss::codem::_compat::gcd_i
 ROUTED	gcd_(const Series&)	gcd: integer inputs required
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3497 (Series pluss::codem::_compat::gcd_i
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3734 (Series pluss::codem::_compat::gcd_i
 ROUTED	ge(const Series&)
 ROUTED	ge_(const Series&)
 ROUTED	gelu()
@@ -266,12 +270,12 @@ ROUTED	hilbert()
 ROUTED	hilbert(std::int64_t)
 ROUTED	histc()
 ROUTED	histc(std::int64_t)	histc: bins must be > 0
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6548 (Series pluss::codem::ops_internal::hi
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6848 (Series pluss::codem::ops_internal::hi
 ROUTED	histcounts()
 ROUTED	histcounts(std::int64_t)	histc: bins must be > 0
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6548 (Series pluss::codem::ops_internal::hi
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6848 (Series pluss::codem::ops_internal::hi
 ROUTED	histcounts(std::int64_t, double, double)	histc: bins must be > 0
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6548 (Series pluss::codem::ops_internal::hi
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:6848 (Series pluss::codem::ops_internal::hi
 ROUTED	hypot(const Series&)
 ROUTED	hypot_(const Series&)
 ROUTED	i0()
@@ -293,21 +297,21 @@ ROUTED	igammac_(const Series&)
 ROUTED	igammac_(double)
 ROUTED	imag()
 ROUTED	index_add(std::int64_t, const Series&, const Series&)	index_add: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Seri
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Seri
 ROUTED	index_add(std::int64_t, const Series&, const Series&, double)	index_add: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Seri
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Seri
 ROUTED	index_add_(std::int64_t, const Series&, const Series&)	index_add: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Seri
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Seri
 ROUTED	index_add_(std::int64_t, const Series&, const Series&, double)	index_add: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Seri
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Seri
 ROUTED	index_copy(std::int64_t, const Series&, const Series&)	index_copy: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Ser
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Ser
 ROUTED	index_copy_(std::int64_t, const Series&, const Series&)	index_copy: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Ser
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Ser
 ROUTED	index_fill(std::int64_t, const Series&, double)	index_fill: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Ser
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Ser
 ROUTED	index_fill_(std::int64_t, const Series&, double)	index_fill: index must be a scalar or one-dimensional Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5565 (Ser
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5804 (Ser
 ROUTED	index_reduce(std::int64_t, const Series&, const Series&, const std::string&)	index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:
 ROUTED	index_reduce(std::int64_t, const Series&, const Series&, const std::string&, bool)	index_reduce: reduce must be one of 'prod', 'mean', 'amax', or 'amin'
@@ -326,18 +330,19 @@ ROUTED	isclose(const Series&, double, double, bool)
 ROUTED	isneginf()
 ROUTED	isposinf()
 ROUTED	isreal()
-ROUTED	istft()
+ROUTED	istft(std::int64_t, std::int64_t, std::int64_t, const Series&, bool, bool, bool, std::int64_t)	istft: expected 0 < hop_length <= win_length <= n_fft
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3404 (Series plu
 ROUTED	kron(const Series&)
 ROUTED	kthvalue(std::int64_t)	kthvalue: k must be >= 1
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4330 (Series pluss::codem::_compat::kthvalue_
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4569 (Series pluss::codem::_compat::kthvalue_
 ROUTED	kthvalue(std::int64_t, std::int64_t)	kthvalue: k must be >= 1
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4330 (Series pluss::codem::_compat::kthvalue_
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4569 (Series pluss::codem::_compat::kthvalue_
 ROUTED	kthvalue(std::int64_t, std::int64_t, bool)	kthvalue: k must be >= 1
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4330 (Series pluss::codem::_compat::kthvalue_
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4569 (Series pluss::codem::_compat::kthvalue_
 ROUTED	lcm(const Series&)	lcm: integer inputs required
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3516 (Series pluss::codem::_compat::lcm_i
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3753 (Series pluss::codem::_compat::lcm_i
 ROUTED	lcm_(const Series&)	lcm: integer inputs required
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3516 (Series pluss::codem::_compat::lcm_i
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3753 (Series pluss::codem::_compat::lcm_i
 ROUTED	ldexp(const Series&)
 ROUTED	ldexp(double)
 ROUTED	ldexp_(const Series&)
@@ -369,11 +374,11 @@ ROUTED	logaddexp2(double)
 ROUTED	logcumsumexp()
 ROUTED	logcumsumexp(std::int64_t)
 ROUTED	logical_and_(const Series&)	logical_and: expects bool tensors
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2351 (Series pluss::codem::ops_in
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2387 (Series pluss::codem::ops_in
 ROUTED	logical_or_(const Series&)	logical_or: expects bool tensors
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2361 (Series pluss::codem::ops_int
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2397 (Series pluss::codem::ops_int
 ROUTED	logical_xor_(const Series&)	logical_xor: expects bool tensors
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2371 (Series pluss::codem::ops_in
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2407 (Series pluss::codem::ops_in
 ROUTED	logit(double)
 ROUTED	logit_(double)
 ROUTED	logsumexp()
@@ -382,13 +387,13 @@ ROUTED	logsumexp(std::int64_t, bool)
 ROUTED	lt(const Series&)
 ROUTED	lt_(const Series&)
 ROUTED	masked_fill(const Series&, double)	masked_fill: mask must be bool
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2472 (Series pluss::codem::ops_inter
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2508 (Series pluss::codem::ops_inter
 ROUTED	masked_fill(const Series&, const Series&)	masked_fill: mask must be bool
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2472 (Series pluss::codem::ops_inter
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2508 (Series pluss::codem::ops_inter
 ROUTED	masked_fill_(const Series&, double)	masked_fill_: mask must be bool
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2485 (Series &pluss::codem::ops_int
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2521 (Series &pluss::codem::ops_int
 ROUTED	masked_fill_(const Series&, const Series&)	masked_fill_: mask must be bool
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2485 (Series &pluss::codem::ops_int
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/core/OpsInternal.cpp:2521 (Series &pluss::codem::ops_int
 ROUTED	matmul(const Series&)	matmul: shape mismatch
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
 ROUTED	max()
@@ -415,22 +420,22 @@ ROUTED	mul(const Series&)
 ROUTED	mul_(const Series&)
 ROUTED	mul_(double)
 ROUTED	multinomial()	multinomial: probabilities must be finite and nonnegative
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5108 (Series
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5347 (Series
 ROUTED	multinomial(std::int64_t)	multinomial: num_samples must be greater than zero
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5087 (Series pluss:
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5326 (Series pluss:
 ROUTED	multinomial(std::int64_t, bool)	multinomial: num_samples must be greater than zero
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5087 (Series pluss:
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5326 (Series pluss:
 ROUTED	multiply(const Series&)
 ROUTED	multiply(double)
 ROUTED	multiply_(const Series&)
 ROUTED	multiply_(double)
 ROUTED	mv(const Series&)	mv: expected a 2D matrix and a 1D vector
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:6618 (Series pluss::codem::_c
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:6883 (Series pluss::codem::_c
 ROUTED	mvlgamma()
 ROUTED	mvlgamma(std::int64_t)	mvlgamma: p must be >= 1
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4992 (Series pluss::codem::_compat::mvlgamma_
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5231 (Series pluss::codem::_compat::mvlgamma_
 ROUTED	mvlgamma_(std::int64_t)	mvlgamma: p must be >= 1
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4992 (Series pluss::codem::_compat::mvlgamma_
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5231 (Series pluss::codem::_compat::mvlgamma_
 ROUTED	nan_to_num()
 ROUTED	nanmean()
 ROUTED	nanmean(std::int64_t)
@@ -509,9 +514,9 @@ ROUTED	rad2deg()
 ROUTED	rad2deg_()
 ROUTED	random_()
 ROUTED	random_(std::int64_t)	random_: expected hi > lo
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3384 (Series pluss::codem::_compat::random_l
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3613 (Series pluss::codem::_compat::random_l
 ROUTED	random_(std::int64_t, std::int64_t)	random_: expected hi > lo
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3384 (Series pluss::codem::_compat::random_l
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3613 (Series pluss::codem::_compat::random_l
 ROUTED	ravel()
 ROUTED	real()
 ROUTED	record_stream()
@@ -549,7 +554,7 @@ ROUTED	roll(pluss::msharp::RangeView::Int, pluss::msharp::RangeView::Int)
 ROUTED	rot90()
 ROUTED	rot90(std::int64_t)
 ROUTED	rot90(std::int64_t, std::int64_t, std::int64_t)	rot90: dims must be different
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3919 (Series pluss::codem::_compat::rot9
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4158 (Series pluss::codem::_compat::rot9
 ROUTED	row_indices()
 ROUTED	rsqrt()
 ROUTED	rsqrt_()
@@ -566,7 +571,7 @@ Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/c
 ROUTED	scatter_reduce_(std::int64_t, const Series&, const Series&, const std::string&, bool, bool, double)	scatter_reduce_: index must be int64
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/ScatterKernels.cpp:50 (void pluss::codem
 ROUTED	select_scatter(const Series&, std::int64_t, std::int64_t)	select_scatter: src shape must match self.select(dim, index)
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5509 (Ser
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5748 (Ser
 ROUTED	set_()
 ROUTED	set_(const Series&)
 ROUTED	set_data(const Series&)
@@ -583,9 +588,9 @@ ROUTED	sinc_()
 ROUTED	size()
 ROUTED	slice_inverse(std::int64_t, std::int64_t, std::int64_t)
 ROUTED	slice_scatter(const Series&, std::int64_t, std::int64_t, std::int64_t)	slice_scatter: src shape must match the selected slice of self
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5539 (S
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5778 (S
 ROUTED	slice_scatter(const Series&, std::int64_t, std::int64_t, std::int64_t, std::int64_t)	slice_scatter: step must be > 0
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5522 (Series pluss::codem::_compat::sl
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:5761 (Series pluss::codem::_compat::sl
 ROUTED	smm()
 ROUTED	smm(const Series&)	matmul: shape mismatch
 Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/native/cpu/Matmul.cpp:84 (Series pluss::codem::native::cpu::(anon
@@ -610,7 +615,8 @@ ROUTED	squeeze_(std::int64_t)
 ROUTED	sspaddmm()
 ROUTED	standardize()
 ROUTED	standardize(std::int64_t)
-ROUTED	stft()
+ROUTED	stft(std::int64_t, std::int64_t, std::int64_t, const Series&, bool, const std::string&, bool, bool, bool)	stft: n_fft must be > 0
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3317 (Series pluss::codem::_compat::stft_impl(
 ROUTED	sub(const Series&)
 ROUTED	sub(const Series&, double)
 ROUTED	sub(double, double)
@@ -663,9 +669,9 @@ ROUTED	true_divide_(const Series&)
 ROUTED	true_divide_(double)
 ROUTED	type_as(const Series&)
 ROUTED	unflatten(std::int64_t, pluss::msharp::RangeView::Int)	unflatten: product mismatch
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3945 (Series pluss::codem::_compat::unflat
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4184 (Series pluss::codem::_compat::unflat
 ROUTED	unfold(std::int64_t, std::int64_t, std::int64_t)	unfold: size and step must be > 0
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3955 (Series pluss::codem::_compat::
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:4194 (Series pluss::codem::_compat::
 ROUTED	uniform_()
 ROUTED	uniform_(double, double)
 ROUTED	unique()
@@ -678,7 +684,7 @@ ROUTED	unwrap(double, std::int64_t)
 ROUTED	values_copy()
 ROUTED	values_view()
 ROUTED	vdot(const Series&)	vdot: expected two 1D Series
-Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3350 (Series pluss::codem::_compat::vdot_
+Triggered at: /Users/yawasante/software/cxx/PlussDev/PlussQit/src/CodeM/compat/Invoke.cpp:3579 (Series pluss::codem::_compat::vdot_
 ROUTED	view_as(const Series&)
 ROUTED	xlogy(const Series&)
 ROUTED	xlogy(double)

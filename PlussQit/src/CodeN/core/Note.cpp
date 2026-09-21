@@ -12,7 +12,8 @@ namespace pluss::coden {
 
 namespace {
 
-static ::std::string escape_for_debug(::std::string_view s) {
+static ::std::string escape_for_debug(::std::string_view s,
+                                      bool escape_non_ascii) {
   ::std::string out;
   out.reserve(s.size() + 8);
   for (unsigned char c : s) {
@@ -23,7 +24,7 @@ static ::std::string escape_for_debug(::std::string_view s) {
       case '\r': out += "\\r"; break;
       case '\t': out += "\\t"; break;
       default:
-        if (c >= 0x20 && c != 0x7F) {
+        if (c >= 0x20 && c != 0x7F && (!escape_non_ascii || c < 0x80)) {
           out.push_back(static_cast<char>(c));
         } else {
           out += "\\x";
@@ -52,6 +53,9 @@ enum class NoteCmpOp : ::std::uint8_t {
 
 void validate_note_pair_for_text_ops(const Note& lhs, const Note& rhs, ::std::string_view where) {
   PLUSS_CHECK(lhs.defined() && rhs.defined(), ::std::string(where) + ": operands must be defined");
+  PLUSS_CHECK((lhs.is_text() || lhs.is_bytes()) &&
+                  (rhs.is_text() || rhs.is_bytes()),
+              ::std::string(where) + ": both operands must be Text or Bytes Notes");
   const bool lhs_bytes = static_cast<const NoteBase&>(lhs).is_bytes();
   const bool rhs_bytes = static_cast<const NoteBase&>(rhs).is_bytes();
   PLUSS_CHECK(lhs_bytes == rhs_bytes, ::std::string(where) + ": mixed bytes/utf8 operands are not supported");
@@ -59,7 +63,9 @@ void validate_note_pair_for_text_ops(const Note& lhs, const Note& rhs, ::std::st
   const auto ny = rhs.numel();
   const bool bx = (nx == 1);
   const bool by = (ny == 1);
-  PLUSS_CHECK(nx == ny || bx || by, ::std::string(where) + ": expected equal numel or scalar broadcast");
+  PLUSS_CHECK(bx || by || lhs.sizes() == rhs.sizes(),
+              ::std::string(where) +
+                  ": expected equal shapes or scalar broadcast");
 }
 
 Note note_concat_pair(const Note& lhs, const Note& rhs) {
@@ -100,12 +106,17 @@ Note note_concat_pair(const Note& lhs, const Note& rhs) {
 
 Note note_repeat_scalar(const Note& n, ::std::int64_t times) {
   PLUSS_CHECK(n.defined(), "Note::operator*: operand must be defined");
+  PLUSS_CHECK(n.is_text() || n.is_bytes(),
+              "Note::operator*: operand must be a Text or Bytes Note");
   PLUSS_CHECK(times >= 0, "Note::operator*: repeat count must be >= 0");
   ::std::vector<::std::string> out;
   out.reserve(static_cast<::std::size_t>(n.numel()));
   for (::std::int64_t i = 0; i < n.numel(); ++i) {
     const auto s = n.at(i);
     ::std::string z;
+    PLUSS_CHECK(times == 0 ||
+                    s.size() <= z.max_size() / static_cast<::std::size_t>(times),
+                "Note::operator*: repeated cell exceeds maximum string size");
     const auto reserve = static_cast<::std::size_t>(times) * s.size();
     z.reserve(reserve);
     for (::std::int64_t k = 0; k < times; ++k) {
@@ -150,7 +161,9 @@ void validate_note_pair_for_compare_(const Note& lhs, const Note& rhs, ::std::st
   const auto ny = rhs.numel();
   const bool bx = (nx == 1);
   const bool by = (ny == 1);
-  PLUSS_CHECK(nx == ny || bx || by, ::std::string(where) + ": expected equal numel or scalar broadcast");
+  PLUSS_CHECK(bx || by || lhs.sizes() == rhs.sizes(),
+              ::std::string(where) +
+                  ": expected equal shapes or scalar broadcast");
 }
 
 template <class Span>
@@ -161,7 +174,7 @@ Note note_compare_numeric_(const Note& lhs, const Note& rhs, NoteCmpOp op,
   const bool bx = (nx == 1);
   const bool by = (ny == 1);
   const auto n = (nx == ny) ? nx : (bx ? ny : nx);
-  ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(n));
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(n));
   for (::std::int64_t i = 0; i < n; ++i) {
     out[static_cast<::std::size_t>(i)] = apply_numeric_cmp_(
         lhs_values[static_cast<::std::size_t>(bx ? 0 : i)],
@@ -169,8 +182,8 @@ Note note_compare_numeric_(const Note& lhs, const Note& rhs, NoteCmpOp op,
   }
   const Note& shape_src = (nx == ny) ? lhs : (bx ? rhs : lhs);
   const auto shape = note_shape(shape_src);
-  return ops_internal::note_from_bool(
-      ::std::span<const ::std::uint8_t>(out.data(), out.size()),
+  return ops_internal::note_from_bool_storage(
+      ::std::move(out),
       ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
 }
 
@@ -217,13 +230,13 @@ Note note_compare_pair(const Note& lhs, const Note& rhs, NoteCmpOp op) {
   const bool bx = (nx == 1);
   const bool by = (ny == 1);
   const auto n = (nx == ny) ? nx : (bx ? ny : nx);
-  ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(n), 0);
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(n), 0);
 
   const auto wrap = [&]() {
     const Note& shape_src = (nx == ny) ? lhs : (bx ? rhs : lhs);
     const auto shape = note_shape(shape_src);
-    return ops_internal::note_from_bool(
-        ::std::span<const ::std::uint8_t>(out.data(), out.size()),
+    return ops_internal::note_from_bool_storage(
+        ::std::move(out),
         ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
   };
 
@@ -272,14 +285,14 @@ Note note_compare_scalar(const Note& lhs, ::std::string_view rhs, NoteCmpOp op) 
   PLUSS_CHECK(lhs.defined(), "Note::compare: lhs must be defined");
   PLUSS_CHECK(lhs.is_text() || lhs.is_bytes(),
               "Note::compare: comparing against a string requires a Text or Bytes Note");
-  ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(lhs.numel()), 0);
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(lhs.numel()), 0);
   for (::std::int64_t i = 0; i < lhs.numel(); ++i) {
     out[static_cast<::std::size_t>(i)] =
         static_cast<::std::uint8_t>(note_compare_strings(lhs.at(i), rhs, op));
   }
   const auto shape = note_shape(lhs);
-  return ops_internal::note_from_bool(
-      ::std::span<const ::std::uint8_t>(out.data(), out.size()),
+  return ops_internal::note_from_bool_storage(
+      ::std::move(out),
       ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
 }
 
@@ -345,9 +358,9 @@ NoteBase::value_type NoteBase::scalar() const {
   return out;
 }
 
-::std::vector<Note> NoteBase::tensor3() const {
-  PLUSS_CHECK(defined(), "tensor3() on undefined Note");
-  PLUSS_CHECK(dim() == 3, "tensor3() requires a 3D Note");
+::std::vector<Note> NoteBase::slabs() const {
+  PLUSS_CHECK(defined(), "slabs() on undefined Note");
+  PLUSS_CHECK(dim() == 3, "slabs() requires a rank-3 Note");
 
   const auto d0 = size(0);
   const auto d1 = size(1);
@@ -477,7 +490,7 @@ NoteBase::HostAny NoteBase::host() const {
   for (index_type i = 0; i < shown; ++i) {
     if (i != 0) oss << ", ";
     if (is_text() || is_bytes()) {
-      oss << '"' << escape_for_debug(impl_->bytes_at(i)) << '"';
+      oss << '"' << escape_for_debug(impl_->bytes_at(i), is_bytes()) << '"';
     } else if (is_bool()) {
       oss << (impl_->bool_values()[static_cast<::std::size_t>(i)] ? "true" : "false");
     } else if (is_int64()) {
@@ -486,7 +499,7 @@ NoteBase::HostAny NoteBase::host() const {
       oss << impl_->float64_values()[static_cast<::std::size_t>(i)];
     }
   }
-  if (numel() > shown) oss << ", ...";
+  if (numel() > shown) oss << (shown == 0 ? "..." : ", ...");
   oss << "])";
   return oss.str();
 }
@@ -527,18 +540,6 @@ TextRef Note::owned() const {
   return cell(0);
 }
 
-Note Note::latex_to_text(::std::int64_t mode) const {
-  return ops_internal::tex_to_text(*this, mode);
-}
-
-Note Note::text_to_latex(::std::int64_t mode) const {
-  return ops_internal::text_to_tex(*this, mode);
-}
-
-Note Note::render_latex(::std::int64_t mode) const {
-  return ops_internal::tex_render(*this, mode);
-}
-
 Note Note::take(pluss::msharp::RangeView::Int indices) const {
   if (!defined()) return Note::undefined();
   const auto& p = impl();
@@ -547,22 +548,69 @@ Note Note::take(pluss::msharp::RangeView::Int indices) const {
   // take() gathers over the flattened (row-major) cells regardless of rank and
   // always returns a rank-1 Note of the picked cells.
   const auto n = p->numel();
-  const auto& src = p->spans();
-  ::std::vector<NoteImpl::OffLen> out;
-  out.reserve(indices.size());
-
-  for (const auto idx_raw : indices) {
-    ::std::int64_t idx = idx_raw;
+  const auto normalize = [n](::std::int64_t idx) {
     if (idx < 0) idx += n;
     PLUSS_CHECK(idx >= 0 && idx < n, "Note::take index out of range");
-    out.push_back(src[static_cast<::std::size_t>(idx)]);
+    return idx;
+  };
+  for (const auto idx_raw : indices) {
+    ::std::int64_t idx = idx_raw;
+    (void)normalize(idx);
   }
 
   ::std::array<::std::int64_t, 3> shape{0, 1, 1};
-  shape[0] = static_cast<::std::int64_t>(out.size());
-  auto out_impl = ::pluss::flame::make_intrusive<NoteImpl>(
-      p->arena(), ::std::move(out), shape, /*dim=*/1, p->dtype());
-  return Note(::std::move(out_impl));
+  shape[0] = static_cast<::std::int64_t>(indices.size());
+  switch (p->dtype()) {
+    case NoteDType::Text:
+    case NoteDType::Bytes: {
+      const auto& src = p->spans();
+      ::std::vector<NoteImpl::OffLen> out;
+      out.reserve(indices.size());
+      for (const auto raw : indices) {
+        const auto idx = normalize(raw);
+        out.push_back(src[static_cast<::std::size_t>(idx)]);
+      }
+      return Note(::pluss::flame::make_intrusive<NoteImpl>(
+          p->arena(), ::std::move(out), shape, 1, p->dtype()));
+    }
+    case NoteDType::Bool: {
+      const auto src = p->bool_values();
+      NoteImpl::BoolStorage out(indices.size());
+      ::std::size_t i = 0;
+      for (const auto raw : indices) {
+        out[i++] = src[static_cast<::std::size_t>(normalize(raw))];
+      }
+      return Note(::pluss::flame::make_intrusive<NoteImpl>(
+          ::std::move(out), shape, 1));
+    }
+    case NoteDType::Int64: {
+      const auto src = p->int64_values();
+      NoteImpl::Int64Storage out(indices.size());
+      ::std::size_t i = 0;
+      for (const auto raw : indices) {
+        out[i++] = src[static_cast<::std::size_t>(normalize(raw))];
+      }
+      return Note(::pluss::flame::make_intrusive<NoteImpl>(
+          ::std::move(out), shape, 1));
+    }
+    case NoteDType::Float64: {
+      const auto src = p->float64_values();
+      NoteImpl::Float64Storage out(indices.size());
+      ::std::size_t i = 0;
+      for (const auto raw : indices) {
+        out[i++] = src[static_cast<::std::size_t>(normalize(raw))];
+      }
+      return Note(::pluss::flame::make_intrusive<NoteImpl>(
+          ::std::move(out), shape, 1));
+    }
+  }
+  PLUSS_CHECK(false, "Note::take encountered an invalid dtype");
+}
+
+Note Note::take(const Note& indices) const {
+  PLUSS_CHECK(indices.defined(), "Note::take indices must be defined");
+  PLUSS_CHECK(indices.is_int64(), "Note::take indices must be an Int64 Note");
+  return take(indices.integers());
 }
 
 Note Note::operator+(const Note& other) const { return note_concat_pair(*this, other); }
@@ -629,15 +677,6 @@ namespace {
 
 enum class NoteBoolOp : ::std::uint8_t { And = 0, Or = 1, Xor = 2 };
 
-::std::uint8_t apply_bool_op(::std::uint8_t a, ::std::uint8_t b, NoteBoolOp op) {
-  switch (op) {
-    case NoteBoolOp::And: return static_cast<::std::uint8_t>(a && b);
-    case NoteBoolOp::Or:  return static_cast<::std::uint8_t>(a || b);
-    case NoteBoolOp::Xor: return static_cast<::std::uint8_t>((a != 0) != (b != 0));
-  }
-  return 0;
-}
-
 Note note_bool_pair(const Note& lhs, const Note& rhs, NoteBoolOp op, const char* where) {
   PLUSS_CHECK(lhs.defined() && rhs.defined(), ::std::string(where) + ": operands must be defined");
   PLUSS_CHECK(lhs.is_bool() && rhs.is_bool(), ::std::string(where) + ": both operands must be Bool Notes");
@@ -645,21 +684,47 @@ Note note_bool_pair(const Note& lhs, const Note& rhs, NoteBoolOp op, const char*
   const auto ny = rhs.numel();
   const bool bx = (nx == 1);
   const bool by = (ny == 1);
-  PLUSS_CHECK(nx == ny || bx || by, ::std::string(where) + ": expected equal numel or scalar broadcast");
+  PLUSS_CHECK(bx || by || lhs.sizes() == rhs.sizes(),
+              ::std::string(where) +
+                  ": expected equal shapes or scalar broadcast");
   const auto n = (nx == ny) ? nx : (bx ? ny : nx);
 
   const auto lhs_bools = lhs.bools();
   const auto rhs_bools = rhs.bools();
-  ::std::vector<::std::uint8_t> out(static_cast<::std::size_t>(n));
-  for (::std::int64_t i = 0; i < n; ++i) {
-    out[static_cast<::std::size_t>(i)] = apply_bool_op(
-        lhs_bools[static_cast<::std::size_t>(bx ? 0 : i)],
-        rhs_bools[static_cast<::std::size_t>(by ? 0 : i)], op);
+  NoteImpl::BoolStorage out(static_cast<::std::size_t>(n));
+  auto write = [&](auto combine) {
+    if (bx) {
+      const auto scalar = lhs_bools.front();
+      for (::std::int64_t i = 0; i < n; ++i)
+        out[static_cast<::std::size_t>(i)] =
+            combine(scalar, rhs_bools[static_cast<::std::size_t>(i)]);
+    } else if (by) {
+      const auto scalar = rhs_bools.front();
+      for (::std::int64_t i = 0; i < n; ++i)
+        out[static_cast<::std::size_t>(i)] =
+            combine(lhs_bools[static_cast<::std::size_t>(i)], scalar);
+    } else {
+      for (::std::int64_t i = 0; i < n; ++i)
+        out[static_cast<::std::size_t>(i)] = combine(
+            lhs_bools[static_cast<::std::size_t>(i)],
+            rhs_bools[static_cast<::std::size_t>(i)]);
+    }
+  };
+  switch (op) {
+    case NoteBoolOp::And:
+      write([](auto a, auto b) { return static_cast<::std::uint8_t>(a & b); });
+      break;
+    case NoteBoolOp::Or:
+      write([](auto a, auto b) { return static_cast<::std::uint8_t>(a | b); });
+      break;
+    case NoteBoolOp::Xor:
+      write([](auto a, auto b) { return static_cast<::std::uint8_t>(a ^ b); });
+      break;
   }
   const Note& shape_src = (nx == ny) ? lhs : (bx ? rhs : lhs);
   const auto shape = note_shape(shape_src);
-  return ops_internal::note_from_bool(
-      ::std::span<const ::std::uint8_t>(out.data(), out.size()),
+  return ops_internal::note_from_bool_storage(
+      ::std::move(out),
       ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
 }
 
@@ -678,35 +743,41 @@ Note Note::operator~() const {
   PLUSS_CHECK(defined(), "Note::operator~: operand must be defined");
   PLUSS_CHECK(is_bool(), "Note::operator~: operand must be a Bool Note");
   const auto lanes = bools();
-  ::std::vector<::std::uint8_t> out(lanes.size());
+  NoteImpl::BoolStorage out(lanes.size());
   for (::std::size_t i = 0; i < lanes.size(); ++i) {
     out[i] = static_cast<::std::uint8_t>(lanes[i] == 0);
   }
   const auto shape = sizes();
-  return ops_internal::note_from_bool(
-      ::std::span<const ::std::uint8_t>(out.data(), out.size()),
+  return ops_internal::note_from_bool_storage(
+      ::std::move(out),
       ::std::span<const ::std::int64_t>(shape.data(), shape.size()));
 }
 
-bool Note::any() const {
+Note Note::any() const {
   PLUSS_CHECK(defined(), "Note::any: operand must be defined");
   PLUSS_CHECK(is_bool(), "Note::any: operand must be a Bool Note");
   const auto lanes = bools();
-  return ::std::any_of(lanes.begin(), lanes.end(), [](::std::uint8_t b) { return b != 0; });
+  NoteImpl::BoolStorage out{static_cast<::std::uint8_t>(
+      ::std::any_of(lanes.begin(), lanes.end(),
+                    [](::std::uint8_t b) { return b != 0; }))};
+  return ops_internal::note_from_bool_storage(::std::move(out), {});
 }
 
-bool Note::all() const {
+Note Note::all() const {
   PLUSS_CHECK(defined(), "Note::all: operand must be defined");
   PLUSS_CHECK(is_bool(), "Note::all: operand must be a Bool Note");
   const auto lanes = bools();
-  return ::std::all_of(lanes.begin(), lanes.end(), [](::std::uint8_t b) { return b != 0; });
+  NoteImpl::BoolStorage out{static_cast<::std::uint8_t>(
+      ::std::all_of(lanes.begin(), lanes.end(),
+                    [](::std::uint8_t b) { return b != 0; }))};
+  return ops_internal::note_from_bool_storage(::std::move(out), {});
 }
 
 Note Note::argsort(bool descending, bool stable) const {
   PLUSS_CHECK(defined(), "Note::argsort on undefined Note");
-  const auto order = ops_internal::note_argsort_indices_1d(*this, descending, stable);
+  auto order = ops_internal::note_argsort_indices_1d(*this, descending, stable);
   const ::std::array<::std::int64_t, 1> shape{static_cast<::std::int64_t>(order.size())};
-  return ops_internal::note_from_int64(order, shape);
+  return ops_internal::note_from_int64_storage(::std::move(order), shape);
 }
 
 Note operator+(::std::string_view prefix, const Note& rhs) {
@@ -759,20 +830,3 @@ Note operator>=(::std::string_view lhs, const Note& rhs) {
 }
 
 } // namespace pluss::coden
-
-#ifdef CODEN_ENABLE_SERIES_INTEROP
-#include "CodeM/core/ScalarType.h"
-#include "CodeM/core/SeriesSlim.h"
-
-namespace pluss::coden {
-
-pluss::codem::Series Note::contains_series(::std::string_view needle) const {
-  return ops_internal::note_contains_series(*this, needle);
-}
-
-pluss::codem::Series Note::lengths_bytes_series() const {
-  return ops_internal::note_lengths_bytes_series(*this);
-}
-
-} // namespace pluss::coden
-#endif // CODEN_ENABLE_SERIES_INTEROP

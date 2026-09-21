@@ -69,7 +69,7 @@ defined=false dim=0 scalar=false
 ```
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_matrix.html"><span class="label">Previous</span><span class="title">is_matrix</span></a>
-  <a class="next-link" href="is_tensor3.html"><span class="label">Next</span><span class="title">is_tensor3</span></a>
+  <a class="prev-link" href="is_rank3.html"><span class="label">Previous</span><span class="title">is_rank3</span></a>
+  <a class="next-link" href="is_text.html"><span class="label">Next</span><span class="title">is_text</span></a>
 </div>
 <!-- pluss-hand-authored -->

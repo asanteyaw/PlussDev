@@ -3,6 +3,7 @@
 #include "pluss/codem/series_factory.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <future>
 #include <limits>
@@ -376,15 +377,21 @@ template <class ModelT>
                                                                const TrainOptions& train_options,
                                                                const AssessOptions& assess_options,
                                                                const IndexSplit& split) {
+  const auto fit_start = std::chrono::steady_clock::now();
   Status learn_status = model.learn(train, train_options);
+  const auto fit_end = std::chrono::steady_clock::now();
   if (!learn_status.ok()) return StatusOr<FoldAssessResult>(std::move(learn_status));
+  const auto score_start = std::chrono::steady_clock::now();
   StatusOr<Series> fold_metrics_or = model.assess(test, assess_options);
+  const auto score_end = std::chrono::steady_clock::now();
   if (!fold_metrics_or.ok()) return StatusOr<FoldAssessResult>(fold_metrics_or.status());
   Series fold_metrics = fold_metrics_or.move_value().to(ScalarType::Float64);
   FoldAssessResult fold{};
   fold.metrics = fold_metrics.reshape({fold_metrics.numel()});
   fold.train_indices = split.train_indices;
   fold.test_indices = split.test_indices;
+  fold.fit_time_seconds = std::chrono::duration<double>(fit_end - fit_start).count();
+  fold.score_time_seconds = std::chrono::duration<double>(score_end - score_start).count();
   return StatusOr<FoldAssessResult>(std::move(fold));
 }
 

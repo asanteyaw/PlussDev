@@ -148,8 +148,8 @@ negative.
     <span class="label">Previous</span>
     <span class="title">matrix</span>
   </a>
-  <a class="next-link" href="nlp_mask_pii.html">
+  <a class="next-link" href="nlp.html">
     <span class="label">Next</span>
-    <span class="title">nlp_mask_pii</span>
+    <span class="title">nlp</span>
   </a>
 </div>

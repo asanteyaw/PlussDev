@@ -103,7 +103,8 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_ENSEMBLEFAMILYOPTIONS_1
+learners = 1   train accuracy: 0.625
+learners = 100 train accuracy: 0.75
 ```
 
 ## Changelog

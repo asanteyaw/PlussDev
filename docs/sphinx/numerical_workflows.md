@@ -154,7 +154,7 @@ See [Optimization User Guide](plussma_optimization_user_guide.md) and
 [Optimization Cookbook](plussma_optimization_cookbook.md) for the concrete
 solver families and option structs available in your build.
 
-## Differentiation and autograd
+## Differentiation and autodiff
 
 Core differentiable workflows use `Series` and the math diff layer:
 
@@ -170,8 +170,8 @@ auto grad = pluss::subsp::math::diff::grad(f, x);
 
 See:
 
-- [Autograd Guide](autograd.md)
-- [Autograd API Reference](autograd_api_reference.md)
+- [Autodiff Guide](autodiff.md)
+- [Autodiff API Reference](autodiff_api_reference.md)
 - [Autodiff Architecture](autodiff_architecture.md)
 
 ## Torch interop

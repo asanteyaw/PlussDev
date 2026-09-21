@@ -3219,7 +3219,7 @@ struct SupervisedFitOptions {
 
 Status SupervisedEncoderBase::learn(const FeatureBatch&, const TrainOptions&) {
   return Status::invalid_argument(std::string(encoder_name_())
-                                  + " is supervised; provide a target via learn_supervised() or attach it as a stage in Model::learn(x, y).");
+                                  + " is supervised; provide a target via learn_supervised() or attach it as a stage in Flow::learn(labeled_batch).");
 }
 
 StatusOr<Series> SupervisedEncoderBase::learn_map(const FeatureBatch&, const TrainOptions&, const InferOptions&) {

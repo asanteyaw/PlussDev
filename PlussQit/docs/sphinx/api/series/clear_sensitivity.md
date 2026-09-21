@@ -39,7 +39,7 @@ This is a state-reset operation on `self`.
 ## Returns
 
 `void`
-    The method mutates stored autograd state and does not return a value.
+    The method mutates stored autodiff state and does not return a value.
 
 ## Mathematical Meaning
 

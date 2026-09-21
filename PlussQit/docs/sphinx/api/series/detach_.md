@@ -36,7 +36,7 @@ After `detach_()` on the current handle:
 - later reverse-mode built from that receiver no longer propagates through the
   earlier path
 
-The important mental model is "this handle becomes a new autograd boundary."
+The important mental model is "this handle becomes a new autodiff boundary."
 
 That means the numeric value remains, but the reverse-mode history attached to
 this handle is cut.

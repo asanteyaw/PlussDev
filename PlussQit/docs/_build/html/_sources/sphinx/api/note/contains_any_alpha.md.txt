@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::contains_any_alpha() const
+Note Note::contains_any_alpha() const
 ```
 
 ## Test Whether A Cell Has At Least One Letter
@@ -22,8 +22,8 @@ The check is **ASCII-only** — a cell whose only letters are non-ASCII (`é`,
 
 ### Return value
 
-A flat `std::vector<std::uint8_t>` of `0`/`1`, one per cell, row-major,
-length `numel()`.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -31,8 +31,8 @@ length `numel()`.
 const auto n = pluss::make_note({"abc", "abc123", "123", "-42-", "", "a1"});
 const auto mask = n.contains_any_alpha();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 

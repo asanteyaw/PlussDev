@@ -87,8 +87,8 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">ensure_suffix</span>
   </a>
-  <a class="next-link" href="from_latin1.html">
+  <a class="next-link" href="float_item.html">
     <span class="label">Next</span>
-    <span class="title">from_latin1</span>
+    <span class="title">float_item</span>
   </a>
 </div>

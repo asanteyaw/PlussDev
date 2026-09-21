@@ -1,25 +1,37 @@
 # `pluss::ai::classic::prep::VectorNormalizerOptions`
 
-Norm choice and the zero-norm floor.
-
-<!-- one paragraph on the role of this bag: which call consumes it and when -->
+The norm choice and degenerate-row floor consumed by
+[`VectorNormalizer::map`](VectorNormalizer.md).
 
 ## Fields
 
 ### `norm`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`VectorNorm norm = VectorNorm::L2`
+
+Which norm to divide each row by:
+
+- `L1` — sum of absolute values. Makes every row's features sum (in
+  absolute value) to `1`; common for frequency/count-style rows.
+- `L2` (the default) — Euclidean norm. Preserves the row's direction on the
+  unit hypersphere; the usual choice for embedding-style vectors.
+- `Linf` — maximum absolute value. Scales the row so its single largest
+  entry becomes `±1`.
 
 ### `floor`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`double floor = 1e-12`
+
+The minimum row norm `map` will actually divide by. A row whose norm does
+not reach this (an all-zero, or entirely missing, row) is left unchanged
+instead. Must be a positive, finite number.
 
 ## Guidance
 
-<!-- how the defaults fit together; which fields to touch only with a reason -->
+`L2` is the right default for most uses. Reach for `L1` when the row's
+values are counts or frequencies that should sum to a fixed total; reach for
+`Linf` when only the single largest feature's scale should anchor the row.
 
 ## See Also
 
-<!-- the consuming symbol(s) -->
+- [`VectorNormalizer`](VectorNormalizer.md) — the consuming type.

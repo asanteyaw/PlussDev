@@ -177,7 +177,7 @@ Execution commands (current):
 Current status:
 
 - `plussqit_codem_autodiff_tests` passes after CodeM-only test dependency cleanup and added stability/validation coverage.
-- Added deterministic CPU autograd parity harness (`test_patch167_cpu_autodiff_parity.cpp`) covering indexing/gather/select/take, reduction objective gradients, and a simple training lane with fixed reference vectors/tolerances.
+- Added deterministic CPU autodiff parity harness (`test_patch167_cpu_autodiff_parity.cpp`) covering indexing/gather/select/take, reduction objective gradients, and a simple training lane with fixed reference vectors/tolerances.
 - Added engine integrity stress gates for mutation/versioning and one-shot graph misuse (`SeriesTape` + `test_patch67_autodiff_transforms.cpp`).
 - Added initial device-lift autodiff parity lanes in MPS/CUDA gate suites (`test_patch149_mps_torch_family_parity.cpp`, `test_patch148_cuda_torch_family_parity.cpp`) using CPU as value/sensitivity baseline.
 - Expanded `nn_training_parity_test` CPU-first Torch-validation lanes to include RNN, Schedule, Conv, and Transformer trajectory checks (CSV-env gated).

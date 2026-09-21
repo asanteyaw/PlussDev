@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::starts_with(std::string_view prefix) const
+Note Note::starts_with(std::string_view prefix) const
 ```
 
 ## Test Every Cell For A Literal Prefix
@@ -21,10 +21,9 @@ case first with [`lower`](lower.md) for a case-insensitive check.
 
 ### Return value
 
-Like [`contains`](contains.md), the result is **not** a `Note`. It is a flat
-`std::vector<std::uint8_t>` with one entry per cell — `1` where the cell
-starts with `prefix`, `0` otherwise — in row-major order, length equal to
-`numel()`.
+Like [`contains`](contains.md), the result is a Bool `Note` with the
+receiver's shape: `true` where the cell starts with `prefix`, `false`
+otherwise. `bools()` exposes a borrowed contiguous host view when needed.
 
 ### Edge cases
 
@@ -37,8 +36,8 @@ starts with `prefix`, `0` otherwise — in row-major order, length equal to
 const auto mask =
     pluss::make_note({"the end", "The end", "in the end"}).starts_with("the");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -56,8 +55,8 @@ case, and in `"in the end"` the match is not at position 0.
 ```cpp
 const auto mask = pluss::make_note({"x", ""}).starts_with("");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 
@@ -71,7 +70,7 @@ std::cout << "]\n";
 
 ```cpp
 const auto mask = pluss::make_note({"ab"}).starts_with("abcd");
-std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
+std::cout << "[" << static_cast<int>(mask.bools()[0]) << "]\n";
 ```
 
 ### Output
@@ -86,8 +85,8 @@ std::cout << "[" << static_cast<int>(mask[0]) << "]\n";
 const auto mask =
     pluss::make_note({{"img_1", "img_2"}, {"vid_1", "img_3"}}).starts_with("img_");
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 

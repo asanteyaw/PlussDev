@@ -132,7 +132,7 @@ matrix undefined: rejected
 ## See Also
 
 - [`vector`](vector.md): flatten any rank to one borrowed sequence.
-- [`tensor3`](tensor3.md): extract exact three-dimensional nesting.
+- [`slabs`](slabs.md): extract exact three-dimensional nesting.
 - [`host`](host.md): copy lanes into owning standard-library storage.
 - [`reshape`](reshape.md): change Note geometry rather than only its C++ projection.
 

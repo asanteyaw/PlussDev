@@ -118,7 +118,7 @@ This section applies to all changes to `OutputEngine` and printing behavior.
 
 2. MPS/CUDA native step-path coverage across core optimizers.
 
-3. Broader autograd backward coverage for key training/indexing/reduction ops.
+3. Broader autodiff backward coverage for key training/indexing/reduction ops.
 
 4. Engine semantics parity (versioning, in-place safety, fail-loud diagnostics).
 

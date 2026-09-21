@@ -33,7 +33,7 @@ Precomposed letters outside that Latin-1 set — Latin Extended-A and beyond
 To fold those too, decompose first: `to_nfd().strip_accents()`.
 
 `strip_accents` is shape-preserving, cell-independent, and returns a fresh
-`Note`. `strip_diacritics()` is the same operation under a different name.
+`Note`.
 
 ## Example 1: Common Accents Are Folded
 

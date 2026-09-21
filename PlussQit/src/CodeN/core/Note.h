@@ -3,6 +3,7 @@
 #include "pluss/export.h"
 #include "MSharp/RangeView.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <array>
 #include <span>
@@ -13,6 +14,9 @@
 
 #include "CodeN/core/Errors.h"
 #include "CodeN/core/NoteBase.h"
+#include "CodeN/core/NoteNlp.h"
+#include "CodeN/core/NoteRegex.h"
+#include "CodeN/core/NoteTex.h"
 #include "CodeN/core/TextRef.h"
 
 namespace pluss::codem {
@@ -58,6 +62,10 @@ public:
   ::std::span<const ::std::int64_t> sizes_view() const;
   ::std::string_view at(::std::int64_t linear) const;
 
+  // Stable, versioned binary representation. Unlike print()/host(), pack()
+  // preserves dtype, rank, shape, scalar identity, and every payload bit.
+  ::std::vector<::std::byte> pack() const;
+
   // Owning per-cell access. `cell(i)` and `cell_at({i,j,...})` return a TextRef
   // that co-owns the backing storage, so the result stays valid after this
   // Note is destroyed (unlike the borrowed view from `at`). `owned()` is the
@@ -66,10 +74,8 @@ public:
   TextRef cell_at(::std::span<const ::std::int64_t> indices) const;
   TextRef owned() const;
 
-  Note latex_to_text(::std::int64_t mode = 0) const;
-  Note text_to_latex(::std::int64_t mode = 0) const;
-  Note render_latex(::std::int64_t mode = 0) const;
   Note take(pluss::msharp::RangeView::Int indices) const;
+  Note take(const Note& indices) const;
 
   // Ordering positions: the permutation of linear indices (0..numel()-1)
   // that would sort this Note's cells, as a 1-D Int64 Note -- closed over
@@ -84,7 +90,7 @@ public:
   // Supported semantics:
   // - `+` : element-wise concatenation with scalar broadcast.
   // - `*` : repeat each element `times` (times >= 0).
-  // - comparisons: lexical element-wise compare with scalar broadcast.
+  // - comparisons: dtype-aware element-wise compare with scalar broadcast.
   Note operator+(const Note& other) const;
   Note operator+(::std::string_view suffix) const;
   Note& operator+=(const Note& other);
@@ -115,15 +121,19 @@ public:
   Note operator^(const Note& other) const;
   Note operator~() const;
 
-  // Full reductions over a Bool Note (requires is_bool()).
-  bool any() const;
-  bool all() const;
+  // Full reductions stay in the closed family as scalar Bool Notes.
+  Note any() const;
+  Note all() const;
 
-#ifdef CODEN_ENABLE_SERIES_INTEROP
-  // Interop helpers returning CodeM Series.
-  pluss::codem::Series contains_series(::std::string_view needle) const;
-  pluss::codem::Series lengths_bytes_series() const;
-#endif
+  // Linguistic analysis and corpus-cleanup namespace. Returning this small
+  // proxy by value keeps Note itself a one-pointer intrusive handle.
+  NoteNlpAccessor nlp() const noexcept { return NoteNlpAccessor(*this); }
+
+  // Pattern matching, extraction, substitution, and splitting.
+  NoteRegexAccessor regex() const noexcept { return NoteRegexAccessor(*this); }
+
+  // TeX/LaTeX-source cleanup, extraction, conversion, and rendering.
+  NoteTexAccessor tex() const noexcept { return NoteTexAccessor(*this); }
 
 private:
   Note() = default;

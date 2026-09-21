@@ -177,7 +177,7 @@ Cache by:
 1. Plan objects immutable after compile.
 2. Shared cache guarded by lock-free map or coarse mutex in phase 1.
 
-## 9. Autograd behavior
+## 9. Autodiff behavior
 
 ### 9.1 Differentiability policy
 

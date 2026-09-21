@@ -22,11 +22,13 @@ empty vector rows=1 width=0
 matrix rank3: rejected
 matrix undefined: rejected
 
-=== tensor3 exact rank ===
+=== slabs exact rank ===
 shape=[2, 2, 2] [1][0][1]=101 [1][1][0]=110
-empty slabs=2 rows=0,0
-tensor3 rank1: rejected
-tensor3 undefined: rejected
+empty slabs=2 shapes=[0, 3],[0, 3]
+int64=true values=20,23
+slabs=0
+slabs rank1: rejected
+slabs undefined: rejected
 
 === borrowed bytes ===
 size=3 values=65,0,66

@@ -23,6 +23,9 @@ notes. This page is the curated entry point into them.
   separate handwritten construction reference for `pluss::note::*` — text and
   bytes constructors, shape-first and like-factories, generative builders, and
   text-splitting and assembly factories.
+- [TokenBatch API Reference](sphinx/tokenbatch_api_reference.md): the closed
+  ragged text result returned by tokenizers and extractors, including flat
+  token storage, row offsets, state, and ownership.
 - [Timeline API Reference](sphinx/timeline_api_reference.md): the handwritten
   per-method reference for `Timeline` — the general temporal payload for scalar,
   vector, and N-D time data.
@@ -50,6 +53,7 @@ sphinx/series_api_reference
 sphinx/series_factory_api_reference
 sphinx/note_api_reference
 sphinx/note_factory_api_reference
+sphinx/tokenbatch_api_reference
 sphinx/timeline_api_reference
 sphinx/timeline_factory_api_reference
 sphinx/duration_api_reference

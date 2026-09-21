@@ -1,54 +1,69 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
+<!-- pluss-signature-hash: 020138db4d6b -->
 
 # `pluss::ai::classic::Flow::dump_model_state`
 
-[Back to `pluss::ai::classic::Flow`](../Flow.md)
+`dump_model_state` returns the attached classifier's or regressor's own
+[`EstimatorBase::dump_state()`](../../estimators/EstimatorBase/dump_state.md)
+result directly — the model half of persisting a `Flow`, paired with
+[`load_model_state`](load_model_state.md). A transform-only `Flow` (no model)
+has nothing to dump here; see Returns.
 
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] classic::StatusOr<std::vector<pluss::Series>> classic::Flow::dump_model_state() const;
 ```
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+A `StatusOr<std::vector<Series>>` — the model's fitted parameters, exactly as
+that model family's own `dump_state()` would return them. **A `Flow` with no
+model attached (`has_model() == false`) returns an empty vector, not an
+error** — this is not a failure, it is the correct "nothing to persist" answer
+for a transform-only pipeline.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+Whatever the attached model's own `dump_state()` can fail with — see
+[`EstimatorBase::dump_state`](../../estimators/EstimatorBase/dump_state.md#errors).
+No `Flow`-level validation of its own; this is a direct pass-through.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
-
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+A model-backed flow's state dumped, and a transform-only flow's empty dump
+side by side.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::StatusOr<cls::Flow> made = cls::make_flow(
+      cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear, cls::LinearFamilyOptions{}});
+  cls::Flow with_model = made.move_value();
+  cls::LabeledBatch batch{};
+  batch.features.x = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64).reshape({4, 1});
+  batch.y = pluss::make_series({2.0, 4.0, 6.0, 8.0}, {4}, f64);
+  with_model.learn(batch);
+  std::cout << "with model:    dumped tensors = " << with_model.dump_model_state().value().size() << "\n";
+
+  cls::Flow transform_only;
+  transform_only.add_standard_scaler();
+  transform_only.learn_map(batch.features);
+  std::cout << "transform-only: dumped tensors = " << transform_only.dump_model_state().value().size() << "\n";
 
   return 0;
 }
@@ -57,27 +72,42 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+with model:    dumped tensors = 2
+transform-only: dumped tensors = 0
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+The full round trip: dump a fitted model's state, restore it onto a fresh
+`Flow` built from the same `ModelSpec`, and confirm identical predictions.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
+  const pluss::Config f64 =
+      pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const cls::ModelSpec spec{cls::TaskKind::Regression, cls::ModelFamily::Linear, cls::LinearFamilyOptions{}};
+  cls::Flow original = cls::make_flow(spec).move_value();
+  cls::LabeledBatch batch{};
+  batch.features.x = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64).reshape({4, 1});
+  batch.y = pluss::make_series({2.0, 4.0, 6.0, 8.0}, {4}, f64);
+  original.learn(batch);
+  const std::vector<pluss::Series> state = original.dump_model_state().value();
+
+  cls::Flow restored = cls::make_flow(spec).move_value();
+  restored.load_model_state(state);
+  restored.mark_trained(true);
+
+  cls::FeatureBatch probe{};
+  probe.x = pluss::make_series({5.0}, {1}, f64).reshape({1, 1});
+  std::cout << "original predicts = " << original.infer(probe).value().item<double>() << "\n";
+  std::cout << "restored predicts = " << restored.infer(probe).value().item<double>() << "\n";
 
   return 0;
 }
@@ -86,27 +116,34 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+original predicts = 10
+restored predicts = 10
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Dumping an attached-but-unfit model's state — the family still returns a
+state list rather than an error, the same honest behavior
+[`EstimatorBase::dump_state`](../../estimators/EstimatorBase/dump_state.md#errors)
+documents for its own untrained case.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace cls = pluss::ai::classic;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  cls::StatusOr<cls::Flow> made = cls::make_flow(
+      cls::ModelSpec{cls::TaskKind::Regression, cls::ModelFamily::Linear, cls::LinearFamilyOptions{}});
+  cls::Flow flow = made.move_value();  // has a model, never learned
+
+  const cls::StatusOr<std::vector<pluss::Series>> state = flow.dump_model_state();
+  std::cout << "trained() = " << std::boolalpha << flow.trained() << "\n";
+  std::cout << "dump ok   = " << state.ok() << "\n";
+  std::cout << "tensors   = " << state.value().size() << "\n";
 
   return 0;
 }
@@ -115,12 +152,18 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+trained() = false
+dump ok   = true
+tensors   = 2
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`load_model_state`](load_model_state.md) — the restoring half.
+- [`dump_transform_states`](dump_transform_states.md) — the stages' own
+  state, dumped separately.
+- [`EstimatorBase::dump_state`](../../estimators/EstimatorBase/dump_state.md) —
+  the contract this delegates to.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

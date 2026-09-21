@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../_static/api_nav.js?v=cf848246"></script>
     <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -62,7 +62,7 @@ naming-and-organization note.</p></li>
 <h2>Coverage<a class="headerlink" href="#coverage" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Series</span></code> exposes a large public method surface, and this reference currently
 covers a working subset, prioritized by how load-bearing each family is
-(indexing/shape, factories, then the autograd-sensitive family) rather than by
+(indexing/shape, factories, then the autodiff-sensitive family) rather than by
 code generation order. Every page here is real, hand-verified prose — nothing
 below is a mechanically generated stub.</p>
 <p>The current handwritten shape and slice/indexing cluster now covers:</p>
@@ -152,13 +152,16 @@ summary results</p></li>
 <li><p>elementwise comparison/bounds helpers and a few load-bearing utility ops</p></li>
 <li><p>reduction and scan core: <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">prod</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">argmax</span></code>,
 <code class="docutils literal notranslate"><span class="pre">argmin</span></code>, <code class="docutils literal notranslate"><span class="pre">amax</span></code>, <code class="docutils literal notranslate"><span class="pre">amin</span></code>, <code class="docutils literal notranslate"><span class="pre">norm</span></code>, <code class="docutils literal notranslate"><span class="pre">cumsum</span></code>, <code class="docutils literal notranslate"><span class="pre">cumprod</span></code></p></li>
-<li><p>autograd and state controls: <code class="docutils literal notranslate"><span class="pre">tracks_slope</span></code>, <code class="docutils literal notranslate"><span class="pre">tracks_slope_</span></code>, <code class="docutils literal notranslate"><span class="pre">reverse</span></code>,
+<li><p>autodiff and state controls: <code class="docutils literal notranslate"><span class="pre">tracks_slope</span></code>, <code class="docutils literal notranslate"><span class="pre">tracks_slope_</span></code>, <code class="docutils literal notranslate"><span class="pre">reverse</span></code>,
 <code class="docutils literal notranslate"><span class="pre">detach</span></code>, <code class="docutils literal notranslate"><span class="pre">detach_</span></code>, <code class="docutils literal notranslate"><span class="pre">retain_grad</span></code>, <code class="docutils literal notranslate"><span class="pre">retains_grad</span></code>, <code class="docutils literal notranslate"><span class="pre">has_sensitivity</span></code>,
 <code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">clear_sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_version</span></code></p></li>
 <li><p>accessors: <code class="docutils literal notranslate"><span class="pre">stat</span></code></p></li>
 <li><p>linear-algebra accessor entrypoint: <code class="docutils literal notranslate"><span class="pre">linearalg</span></code>, with its complete product,
 determinant, transformation, factorization, norm, and solver surface
 documented in the dedicated accessor reference</p></li>
+<li><p>antiderivative accessor entrypoint: <code class="docutils literal notranslate"><span class="pre">antidiff</span></code>, with its <code class="docutils literal notranslate"><span class="pre">trapezoid</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cumulative_trapezoid</span></code> methods documented in the dedicated accessor
+reference</p></li>
 </ul>
 <p>The complete handwritten <code class="docutils literal notranslate"><span class="pre">SeriesStatAccessor</span></code> reference covers:</p>
 <ul class="simple">
@@ -178,11 +181,14 @@ documented in the dedicated accessor reference</p></li>
 <a class="reference internal" href="series_linearalg_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor</span></code></span></a></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">traverse</span></code> -&gt;
 <a class="reference internal" href="series_traverse_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesTraverseAccessor</span></code></span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">antidiff</span></code> -&gt;
+<a class="reference internal" href="series_antidiff_accessor_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesAntidiffAccessor</span></code></span></a></p></li>
 </ul>
-<p>All three accessor references are complete across their public surfaces. Start
+<p>All four accessor references are complete across their public surfaces. Start
 with <a class="reference internal" href="api/series/stat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::stat</span></code></span></a>,
-<a class="reference internal" href="api/series/linearalg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::linearalg</span></code></span></a>, or
-<a class="reference internal" href="api/series/traverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse</span></code></span></a> for the entrypoint itself, or jump
+<a class="reference internal" href="api/series/linearalg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::linearalg</span></code></span></a>,
+<a class="reference internal" href="api/series/traverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::traverse</span></code></span></a>, or
+<a class="reference internal" href="api/series/antidiff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::antidiff</span></code></span></a> for the entrypoint itself, or jump
 straight to a dedicated accessor reference from the sidebar. <code class="docutils literal notranslate"><span class="pre">traverse</span></code> is the
 value-driven search family — one call from a condition to the coordinates,
 matched values, and flat offsets of every position that satisfies it.</p>
@@ -279,6 +285,8 @@ matched values, and flat offsets of every position that satisfies it.</p>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

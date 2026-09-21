@@ -103,18 +103,35 @@ int main() {
   const auto cube = pluss::note::make(
       std::vector<std::string>{"000", "001", "010", "011", "100", "101", "110", "111"},
       std::array<std::int64_t, 3>{2, 2, 2});
-  const auto t3 = cube.tensor3();
-  std::cout << "\n=== tensor3 exact rank ===\n"
+  const auto t3 = cube.slabs();
+  std::cout << "\n=== slabs exact rank ===\n"
             << "shape=";
   print_shape(cube.sizes_view());
   std::cout << " [1][0][1]=" << t3[1].at(1)
             << " [1][1][0]=" << t3[1].at(2) << '\n';
   const auto empty3 = pluss::note::make(
-      std::vector<std::string>{}, std::array<std::int64_t, 3>{2, 0, 3}).tensor3();
+      std::vector<std::string>{}, std::array<std::int64_t, 3>{2, 0, 3}).slabs();
   std::cout << "empty slabs=" << empty3.size()
-            << " rows=" << empty3[0].size(0) << ',' << empty3[1].size(0) << '\n';
-  rejected("tensor3 rank1", [&] { (void)pluss::note::make({"x"}).tensor3(); });
-  rejected("tensor3 undefined", [&] { (void)pluss::Note::undefined().tensor3(); });
+            << " shapes=[" << empty3[0].size(0) << ", " << empty3[0].size(1)
+            << "],[" << empty3[1].size(0) << ", " << empty3[1].size(1) << "]\n";
+
+  std::vector<pluss::Note> retained_slabs;
+  {
+    const auto integer_cube = pluss::note::make(
+        std::vector<std::int64_t>{10, 11, 12, 13, 20, 21, 22, 23},
+        std::array<std::int64_t, 3>{2, 2, 2});
+    retained_slabs = integer_cube.slabs();
+  }
+  std::cout << std::boolalpha
+            << "int64=" << retained_slabs[1].is_int64()
+            << " values=" << retained_slabs[1].integers()[0] << ','
+            << retained_slabs[1].integers()[3] << '\n';
+
+  const auto no_slabs = pluss::note::make(
+      std::vector<std::string>{}, std::array<std::int64_t, 3>{0, 4, 5}).slabs();
+  std::cout << "slabs=" << no_slabs.size() << '\n';
+  rejected("slabs rank1", [&] { (void)pluss::note::make({"x"}).slabs(); });
+  rejected("slabs undefined", [&] { (void)pluss::Note::undefined().slabs(); });
 
   std::cout << "\n=== borrowed bytes ===\n";
   const std::array<std::byte, 3> raw{std::byte{'A'}, std::byte{0}, std::byte{'B'}};

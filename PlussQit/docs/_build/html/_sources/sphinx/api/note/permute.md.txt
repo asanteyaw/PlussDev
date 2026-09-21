@@ -139,8 +139,8 @@ permute expects dims.size() == dim
     <span class="label">Previous</span>
     <span class="title">owned</span>
   </a>
-  <a class="next-link" href="phonetic_metaphone.html">
+  <a class="next-link" href="quote.html">
     <span class="label">Next</span>
-    <span class="title">phonetic_metaphone</span>
+    <span class="title">quote</span>
   </a>
 </div>

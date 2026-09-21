@@ -247,7 +247,7 @@ TEST_CASE("CodeN nlp_keywords frequency ordering and stopword filtering", "[code
           "omega omega zeta zeta and the"},
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
-  const auto kw = note.nlp_keywords(3);
+  const auto kw = note.nlp().keywords(3);
   const auto kw_offsets = kw.offsets().integers();
   REQUIRE(kw_offsets.size() == 3);
   REQUIRE(kw_offsets[0] == 0);
@@ -264,7 +264,7 @@ TEST_CASE("CodeN nlp_keywords frequency ordering and stopword filtering", "[code
   REQUIRE(kw.tokens().at(4) == "zeta");
 
   const auto stop_only = pluss::make_note("the and in to with");
-  const auto kw_stop_only = stop_only.nlp_keywords(5);
+  const auto kw_stop_only = stop_only.nlp().keywords(5);
   const auto kw_stop_only_offsets = kw_stop_only.offsets().integers();
   REQUIRE(kw_stop_only_offsets.size() == 2);
   REQUIRE(kw_stop_only_offsets[0] == 0);
@@ -285,11 +285,11 @@ TEST_CASE("CodeN parallel lane execution parity (sort + tokenbatch)", "[coden][p
 
   set_env_mode("PLUSS_CODEN_PARALLEL", "off");
   const auto sorted_off = note2d.sort();
-  const auto kw_off = note2d.nlp_keywords(3);
+  const auto kw_off = note2d.nlp().keywords(3);
 
   set_env_mode("PLUSS_CODEN_PARALLEL", "on");
   const auto sorted_on = note2d.sort();
-  const auto kw_on = note2d.nlp_keywords(3);
+  const auto kw_on = note2d.nlp().keywords(3);
 
   set_env_mode("PLUSS_CODEN_PARALLEL", nullptr);
 
@@ -330,16 +330,16 @@ TEST_CASE("CodeN reference mode parity across optimized routes", "[coden][perf][
   const auto sort_ref = note2d.sort();
   const auto unique_ref = note1d.unique();
   const auto dedup_ref = note1d.deduplicate();
-  const auto kw_ref = note2d.nlp_keywords(3);
-  const auto inter_ref = note2d.intersect_tokens(scalar);
+  const auto kw_ref = note2d.nlp().keywords(3);
+  const auto inter_ref = note2d.nlp().intersect_tokens(scalar);
 
   // Optimized run.
   set_env_mode("PLUSS_CODEN_EXECUTION_MODE", "optimized");
   const auto sort_opt = note2d.sort();
   const auto unique_opt = note1d.unique();
   const auto dedup_opt = note1d.deduplicate();
-  const auto kw_opt = note2d.nlp_keywords(3);
-  const auto inter_opt = note2d.intersect_tokens(scalar);
+  const auto kw_opt = note2d.nlp().keywords(3);
+  const auto inter_opt = note2d.nlp().intersect_tokens(scalar);
 
   set_env_mode("PLUSS_CODEN_EXECUTION_MODE", nullptr);
   set_env_mode("PLUSS_CODEN_PARALLEL", nullptr);

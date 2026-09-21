@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-std::vector<std::uint8_t> Note::is_alpha() const
+Note Note::is_alpha() const
 ```
 
 ## Test Whether Every Character In A Cell Is A Letter
@@ -26,9 +26,9 @@ use a regex predicate with an explicit class.
 
 ### Return value
 
-Not a `Note`: a flat `std::vector<std::uint8_t>` of `0`/`1`, one entry per
-cell, in row-major order, length `numel()`. An **empty cell is `0`** (there
-is no character to be a letter), matching the rest of the `is_*` family.
+A Bool `Note` with the receiver's shape, one native truth value per cell.
+An **empty cell is `false`** because there is no character to classify.
+Use `bools()` for a borrowed contiguous host view.
 
 ## Example 1: A Batch
 
@@ -37,8 +37,8 @@ const auto n = pluss::make_note(
     {"abc", "ABC", "Abc", "abc123", "123", "", "a b", "café"});
 const auto mask = n.is_alpha();
 std::cout << "[";
-for (std::size_t i = 0; i < mask.size(); ++i)
-  std::cout << (i ? ", " : "") << static_cast<int>(mask[i]);
+for (std::size_t i = 0; i < mask.bools().size(); ++i)
+  std::cout << (i ? ", " : "") << static_cast<int>(mask.bools()[i]);
 std::cout << "]\n";
 ```
 

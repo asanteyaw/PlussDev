@@ -1,0 +1,427 @@
+
+=== make/scalar ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"Final Exam Review"
+
+=== make/1d ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Ada Lovelace", "Grace Hopper", "Linus"]
+
+=== make/2d ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["r0c0", "r0c1"], 
+  ["r1c0", "r1c1"]
+]
+
+=== make/3d ===
+Note(shape=[2, 2, 2], dim=3, numel=8, encoding=utf8)
+[
+  [
+    ["a", "b"], 
+    ["c", "d"]
+  ], 
+  [
+    ["e", "f"], 
+    ["g", "h"]
+  ]
+]
+
+=== make_note/shortcut ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["draft", "review", "final"]
+
+=== make_note/char ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"Q"
+
+=== make/flat+sizes ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=utf8)
+[
+  ["p", "q", "r"], 
+  ["s", "t", "u"]
+]
+
+=== make/utf8 ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["café", "naïve", "日本語", "🎯"]
+
+=== make/empty-string ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+""
+
+=== make/reject-ragged ===
+pluss::note::make: ragged nested initializer_list is not supported
+
+=== make/reject-flat-mismatch ===
+Note payload count must equal shape cardinality
+
+=== make/reject-4d ===
+pluss::note::make: supports up to 3D nested initializer_list
+
+=== bytes/scalar ===
+Note(shape=[], dim=0, numel=1, encoding=bytes)
+b"plain ascii bytes"
+
+=== bytes/1d ===
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[b"AB", b"\xDE\xAD\xBE\xEF"]
+
+=== bytes/1d-hex ===
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[hex[41 42], hex[de ad be ef]]
+
+=== bytes/flat+sizes ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=bytes)
+[
+  [b"one", b"two"], 
+  [b"three", b"four"]
+]
+
+=== bytes/raw-span ===
+Note(shape=[], dim=0, numel=1, encoding=bytes)
+b"Hi!\x00"
+
+=== bytes/raw-span-hex ===
+Note(shape=[], dim=0, numel=1, encoding=bytes)
+hex[48 69 21 00]
+
+=== bytes/nul-truncation ===
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[hex[], hex[6b 65 70 74]]
+
+=== bytes/escaped-vs-hex/escaped ===
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[b"\xC3\xA9", b"\xFF"]
+
+=== bytes/escaped-vs-hex/hex ===
+Note(shape=[2], dim=1, numel=2, encoding=bytes)
+[hex[c3 a9], hex[ff]]
+
+=== full/2d ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=utf8)
+[
+  ["TODO", "TODO", "TODO"], 
+  ["TODO", "TODO", "TODO"]
+]
+
+=== full/scalar ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"x"
+
+=== full/empty-axis ===
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+
+=== empty/2d ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", ""], 
+  ["", ""]
+]
+
+=== rep/1d ===
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["-", "-", "-", "-", "-"]
+
+=== rep/2d ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["ab", "ab"], 
+  ["ab", "ab"]
+]
+
+=== full_like ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=utf8)
+[
+  ["?", "?", "?"], 
+  ["?", "?", "?"]
+]
+
+=== empty_like ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=utf8)
+[
+  ["", "", ""], 
+  ["", "", ""]
+]
+
+=== full_bytes_like ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=bytes)
+[
+  [hex[de ad], hex[de ad], hex[de ad]], 
+  [hex[de ad], hex[de ad], hex[de ad]]
+]
+
+=== empty_bytes_like ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=bytes)
+[
+  [b"", b"", b""], 
+  [b"", b"", b""]
+]
+
+=== full/reject-4d ===
+Note supports up to 3D
+
+=== full/reject-negative ===
+sizes must be non-negative
+
+=== rand/1d-caps ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["W", "I", "K", "O", "V", "A"]
+
+=== rand/1d-lower ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["w", "i", "k", "o", "v", "a"]
+
+=== rand/2d ===
+Note(shape=[2, 4], dim=2, numel=8, encoding=utf8)
+[
+  ["H", "C", "O", "W"], 
+  ["M", "B", "G", "B"]
+]
+
+=== rand/scalar ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"D"
+
+=== rand/same-seed-again ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["W", "I", "K", "O", "V", "A"]
+
+=== rand_between/digits ===
+Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["6", "0", "8", "2", "4", "1", "3", "9", "8", "6"]
+
+=== rand_between/az ===
+Note(shape=[2, 3], dim=2, numel=6, encoding=utf8)
+[
+  ["w", "a", "i"], 
+  ["c", "u", "r"]
+]
+
+=== rand_between/reject-lo-gt-hi ===
+pluss::note::rand_between: expected lo <= hi
+
+=== rand_between/reject-multichar ===
+pluss::note::rand_between: expected a single ASCII character
+
+=== arange/az ===
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["a", "b", "c", "d", "e"]
+
+=== arange/step2 ===
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["a", "c", "e", "g", "i"]
+
+=== arange/exclusive ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["a", "b", "c", "d"]
+
+=== arange/descending ===
+Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["e", "d", "c", "b", "a"]
+
+=== arange/digits ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["0", "3", "6", "9"]
+
+=== arange/end-not-landed ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["a", "c", "e"]
+
+=== arange/empty-wrong-direction ===
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+
+=== arange/reject-step0 ===
+pluss::note::arange: step cannot be 0
+
+=== perm/combination ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["ab", "ac", "bc"]
+
+=== perm/permutation ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["ab", "ac", "ba", "bc", "ca", "cb"]
+
+=== perm/with-replacement ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["aa", "ab", "bb"]
+
+=== perm/dedup-default ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["aa", "ab"]
+
+=== perm/pick-zero ===
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[""]
+
+=== perm/pick-too-large ===
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+
+=== perm/non-unique ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["aa", "ab", "ab"]
+
+=== from_lines/basic ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["alpha", "beta", "gamma"]
+
+=== from_lines/trailing-newline ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["alpha", "beta"]
+
+=== from_lines/blank-kept ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["alpha", "", "gamma"]
+
+=== from_lines/drop-empty ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["alpha", "gamma"]
+
+=== from_lines/keep-ends ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["alpha\n", "beta"]
+
+=== from_lines/empty ===
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+
+=== from_words/basic ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["the", "quick", "brown"]
+
+=== from_words/mixed-space ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["tab", "and", "newline"]
+
+=== from_words/single ===
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["single"]
+
+=== from_words/empty ===
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+
+=== format/plain ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"Hello, Ada!"
+
+=== format/escape-braces ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"{literal} and 7"
+
+=== format/arithmetic ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2 + 3 = 5"
+
+=== format/division ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"2.5"
+
+=== format/string-concat ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"hi there"
+
+=== format/ternary ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"many"
+
+=== format/bool-and-compare ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"true"
+
+=== format/vector-index-size ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"first=a count=3"
+
+=== format/builtin-sqrt ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"4"
+
+=== format/builtin-min-max ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"1/9"
+
+=== format/join ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"x-y-z"
+
+=== format/accumulate ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"10"
+
+=== format/callable ===
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"HI!"
+
+=== format/reject-missing-binding ===
+pluss::note::format: missing binding 'absent'
+
+=== format/reject-unmatched-brace ===
+pluss::note::format: unmatched '{' in format template
+
+=== format/reject-duplicate-binding ===
+pluss::note::format: duplicate binding 'x'
+
+=== select/single-string-sugar ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["YES", "no", "YES"]
+
+=== select/single-note-choice ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["HIT", "miss", "HIT"]
+
+=== select/ordered-first-true-wins ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["early", "early", "late", "none"]
+
+=== select/broadcast-scalar-choice ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["X", "."], 
+  [".", "X"]
+]
+
+=== select/reject-non-bool ===
+pluss::note::select: conditions must use Bool dtype
+
+=== select/reject-count-mismatch ===
+pluss::note::select: condition/choice count mismatch
+
+=== print/default ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["one", "two", "three"]
+
+=== print/header-only ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+
+=== print/values-only ===
+["one", "two", "three"]
+
+=== print/metadata-none ===
+["one", "two", "three"]
+
+=== print/metadata-compact ===
+Note(shape=[3], encoding=utf8)
+["one", "two", "three"]
+
+=== print/edge-items ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["a", ..., "f"]
+
+=== print/no-quotes ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+[one, two, three]
+
+=== print/cell-clip ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["short", "a-much-..."]
+
+=== print/ostream ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["one", "two", "three"]
+
+=== print-forms/identical ===
+true

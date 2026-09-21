@@ -36,7 +36,7 @@ TEST_CASE("contiguous advanced indices keep position (Torch-ish)", "[indexing]")
   auto i1 = pluss::make_series(std::vector<std::int64_t>{0,1}, {2,1});
   auto i2 = pluss::make_series(std::vector<std::int64_t>{1,2,3}, {1,3});
   // indices: : , i1, i2
-  auto y = x.index({pluss::Series{}, i1, i2});
+  auto y = x.index({pluss::Slicing::SliceAll(), i1, i2});
   // Torch-ish: output dims should be [dim0, adv_shape] => (2,2,3)
   REQUIRE(y.dim() == 3);
   REQUIRE(y.sizes()[0] == 2);

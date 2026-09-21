@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -225,7 +225,7 @@ whole backing buffer.</p>
 storage (many in-place ops allocate fresh storage rather than mutating), a
 tensor captured earlier keeps pointing at the old buffer. Re-export after
 such an operation.</p></li>
-<li><p>No autograd crosses the boundary. A <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> from <code class="docutils literal notranslate"><span class="pre">tensor()</span></code> does not
+<li><p>No autodiff crosses the boundary. A <code class="docutils literal notranslate"><span class="pre">torch::Tensor</span></code> from <code class="docutils literal notranslate"><span class="pre">tensor()</span></code> does not
 carry pluss sensitivities, and <code class="docutils literal notranslate"><span class="pre">requires_grad</span></code> on the torch side does not
 reach back.</p></li>
 <li><p>Direct export is CPU-only. Transfer the returned tensor with <code class="docutils literal notranslate"><span class="pre">.to(device)</span></code>
@@ -245,7 +245,7 @@ with <code class="docutils literal notranslate"><span class="pre">.contiguous()<
 <li><p>requires a <code class="docutils literal notranslate"><span class="pre">-DPLUSS_ENABLE_TORCH=ON</span></code> build</p></li>
 <li><p>the reverse of <a class="reference internal" href="../series_factory/from_torch.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pluss::series::from_torch</span></code></span></a>;
 there is no free <code class="docutils literal notranslate"><span class="pre">to_torch</span></code></p></li>
-<li><p>not an autograd boundary — grad is managed separately on each side</p></li>
+<li><p>not an autodiff boundary — grad is managed separately on each side</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -352,6 +352,8 @@ consumer needs one.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

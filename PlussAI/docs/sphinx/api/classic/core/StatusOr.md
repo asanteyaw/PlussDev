@@ -122,7 +122,10 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_STATUSOR_1
+bad.ok()      = false
+bad.status()  = code 1, "SplitOptions.folds must be <= sample_count."
+good.ok()     = true
+good fold count = 4
 ```
 
 ### Example 2
@@ -170,7 +173,11 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_STATUSOR_2
+from_value.ok() = true, value = 42
+from_status.ok() = false, value() returns = 0  <- default T, not a crash
+mismatched.ok() = false, value() returns = 7  <- still 7, ok() lied to you if unchecked
+matched.ok() = true, value() = 9
+correctly handled failure: no candidates
 ```
 
 ### Example 3
@@ -207,7 +214,9 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_STATUSOR_3
+made.ok() = true
+flow.has_model_spec() = true
+flow.trained()        = false
 ```
 
 ## Changelog

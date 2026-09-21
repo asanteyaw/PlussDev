@@ -89,7 +89,12 @@ int main() {
 Output
 
 ```text
-PENDING_VERIFICATION_CLUSTERFAMILYOPTIONS_1
+made.ok() = true
+cluster assignments = pluss::Series(shape=[4,1], strides=[1,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1],
+  [1],
+  [0],
+  [0]]
 ```
 
 ## Changelog

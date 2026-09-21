@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=41aa11a5"></script>
+    <script src="../../../_static/api_nav.js?v=cf848246"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -58,7 +58,7 @@ a reference that keeps the tensor’s memory alive for the series’ lifetime.</
 you can reshape it, filter it, aggregate it, combine it with other series,
 move it to a Pluss accelerator, or make it the leaf of a new Pluss reverse-mode
 graph. The only information that does not cross the boundary is the source
-library’s autograd graph.</p>
+library’s autodiff graph.</p>
 <p>It is the inverse of the <a class="reference internal" href="../series/tensor.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code></span></a> method. The
 pair is deliberately asymmetric: you <em>construct</em> a series from a tensor with
 this factory, and once you have a series the way back is a method call, not
@@ -145,7 +145,7 @@ data=
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2, 4, 6
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">from_torch()</span></code> deliberately does not copy the source tensor’s autograd state.
+<p><code class="docutils literal notranslate"><span class="pre">from_torch()</span></code> deliberately does not copy the source tensor’s autodiff state.
 Calling <code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> says that the imported values are leaves in a
 <strong>new Pluss graph</strong>. Here the objective is</p>
 <p>[
@@ -190,7 +190,7 @@ pointer. The series retains a tensor handle internally, so its storage stays
 alive even if the source variable leaves scope. Treat the tensor and series
 as two lifetime-safe handles on one CPU buffer.</p></li>
 <li><p>A GPU tensor raises <code class="docutils literal notranslate"><span class="pre">from_torch:</span> <span class="pre">CPU</span> <span class="pre">only</span></code>. Move it to the CPU first.</p></li>
-<li><p>No autograd crosses the boundary: a tensor with <code class="docutils literal notranslate"><span class="pre">requires_grad</span></code> produces a
+<li><p>No autodiff crosses the boundary: a tensor with <code class="docutils literal notranslate"><span class="pre">requires_grad</span></code> produces a
 plain series. Call <code class="docutils literal notranslate"><span class="pre">tracks_slope_(true)</span></code> when the imported values should be
 leaves in a new Pluss graph. Returning with <code class="docutils literal notranslate"><span class="pre">Series::tensor()</span></code> likewise
 starts a fresh LibTorch graph rather than reconnecting the graph that existed
@@ -249,7 +249,7 @@ transferred to the model’s device:</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">model_device</span></code> is the CPU, the view remains zero-copy. If it is an
 accelerator, <code class="docutils literal notranslate"><span class="pre">.to(model_device)</span></code> creates an owning device allocation. In both
 cases, the resulting tensor is valid training input; only cross-library
-autograd history is intentionally absent.</p>
+autodiff history is intentionally absent.</p>
 </section>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
@@ -366,6 +366,8 @@ when a shared view is not what you want.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
