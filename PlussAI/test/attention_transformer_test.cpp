@@ -37,7 +37,7 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
   const Config cfg = f64();
   const Series x = pluss::series::rand({2, 4, 8}, cfg, 71ULL);
 
-  const auto [sa_out, sa_w] = pluss::scaled_attention(x, x, x);
+  const auto [sa_out, sa_w] = pluss::nn::scaled_attention(x, x, x);
   if (!same_shape(sa_out, {2, 4, 8}) || !same_shape(sa_w, {2, 4, 4})) {
     if (err) *err << "scaled_attention shape mismatch\n";
     return false;
@@ -50,7 +50,7 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
     }
   }
 
-  const Series functional_causal_mask = pluss::square_subsequent_mask(4, Config{}.with_dtype(ScalarType::Bool).with_platform(pluss::pCPU));
+  const Series functional_causal_mask = pluss::nn::square_subsequent_mask(4, Config{}.with_dtype(ScalarType::Bool).with_platform(pluss::pCPU));
   if (functional_causal_mask.scalar_type() != ScalarType::Bool || !same_shape(functional_causal_mask, {4, 4})) {
     if (err) *err << "square_subsequent_mask should return bool [L,L]\n";
     return false;
@@ -61,13 +61,13 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  const auto [sa_masked_out, sa_masked_w] = pluss::scaled_attention(x, x, x, functional_causal_mask);
-  const auto [sa_causal_out, sa_causal_w] = pluss::scaled_attention(
+  const auto [sa_masked_out, sa_masked_w] = pluss::nn::scaled_attention(x, x, x, functional_causal_mask);
+  const auto [sa_causal_out, sa_causal_w] = pluss::nn::scaled_attention(
       x,
       x,
       x,
       Series(),
-      pluss::AttentionOptions{
+      pluss::nn::AttentionOptions{
           .dropout = 0.0,
           .training = true,
           .causal = true,
@@ -113,14 +113,14 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
         std::vector<double>{0.3, -0.2, 0.1, 0.2, 0.1, 0.3, 0.2, -0.1, -0.1, 0.2, 0.3, 0.1, 0.2, 0.1, -0.2, 0.3}, {4, 4}, cfg);
     const Series mv_wo = pluss::make_series(
         std::vector<double>{0.1, 0.3, -0.2, 0.1, 0.2, -0.1, 0.3, 0.2, -0.1, 0.2, 0.1, 0.3, 0.3, 0.1, -0.1, 0.2}, {4, 4}, cfg);
-    pluss::MultiheadWeights mv_weights{.q_weight = mv_wq, .k_weight = mv_wk, .v_weight = mv_wv, .out_weight = mv_wo};
-    pluss::MultiheadOptions mv_opts{
+    pluss::nn::MultiheadWeights mv_weights{.q_weight = mv_wq, .k_weight = mv_wk, .v_weight = mv_wv, .out_weight = mv_wo};
+    pluss::nn::MultiheadOptions mv_opts{
         .num_heads = 2,
         .batch_first = true,
         .average_weights = false,
-        .attention = pluss::AttentionOptions{.dropout = 0.0, .training = false, .causal = false, .scale = 0.0, .seed = 0},
+        .attention = pluss::nn::AttentionOptions{.dropout = 0.0, .training = false, .causal = false, .scale = 0.0, .seed = 0},
     };
-    const auto [mv_out, mv_w] = pluss::multihead_attention(mv_q, mv_k, mv_v, mv_weights, mv_opts);
+    const auto [mv_out, mv_w] = pluss::nn::multihead_attention(mv_q, mv_k, mv_v, mv_weights, mv_opts);
     const std::vector<double> expected_out{
         0.064249862178061, 0.170567291658355, 0.097149769912421, 0.171874252878933,
         0.064546457228141, 0.171234349971743, 0.097488281854749, 0.172789345016007};
@@ -152,7 +152,7 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
   const Series bv = pluss::series::zeros({8}, cfg);
   const Series bo = pluss::series::zeros({8}, cfg);
 
-  pluss::MultiheadWeights weights{
+  pluss::nn::MultiheadWeights weights{
       .q_weight = wq,
       .k_weight = wk,
       .v_weight = wv,
@@ -162,11 +162,11 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
       .v_bias = bv,
       .out_bias = bo,
   };
-  pluss::MultiheadOptions mh_opts{
+  pluss::nn::MultiheadOptions mh_opts{
       .num_heads = 2,
       .batch_first = true,
       .average_weights = true,
-      .attention = pluss::AttentionOptions{
+      .attention = pluss::nn::AttentionOptions{
           .dropout = 0.0,
           .training = true,
           .causal = false,
@@ -174,7 +174,7 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
           .seed = 97ULL,
       },
   };
-  const auto [mh_out, mh_w] = pluss::multihead_attention(x, x, x, weights, mh_opts);
+  const auto [mh_out, mh_w] = pluss::nn::multihead_attention(x, x, x, weights, mh_opts);
   if (!same_shape(mh_out, {2, 4, 8}) || !same_shape(mh_w, {2, 4, 4})) {
     if (err) *err << "functional multihead_attention shape mismatch\n";
     return false;

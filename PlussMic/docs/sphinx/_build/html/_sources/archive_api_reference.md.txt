@@ -1,0 +1,82 @@
+# Archive API Reference
+
+This page documents the full public `Archive` surface for depth-stacked catalogs.
+
+## Using This Reference
+
+- Use the left sidebar to open one method page at a time.
+- Each method page contains its own signatures, parameter details, notes, verified outputs, and working previous/next navigation.
+- This landing page stays intentionally short so the content panel is not one giant scroll of every method.
+
+## Method Pages
+
+The sidebar lists methods alphabetically. You can also use the search box to jump directly to a method name.
+
+## Accessors
+
+`Archive` exposes nested accessors, each with its own method pages and sidebar:
+
+- `plot()` -> [`ArchivePlotAccessor`](archive_plot_accessor_api_reference.md)
+- `label()` -> [`ArchiveLabelAccessor`](archive_label_accessor_api_reference.md)
+- `keyaxis()` -> [`ArchiveKeyAxisAccessor`](archive_keyaxis_accessor_api_reference.md)
+- `cast()` -> [`ArchiveCastAccessor`](archive_cast_accessor_api_reference.md)
+- `tl()` -> [`ArchiveTimelineAccessor`](archive_timeline_accessor_api_reference.md)
+- `ts()` -> [`ArchiveTimeSeriesAccessor`](archive_ts_accessor_api_reference.md)
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+archive_plot_accessor_api_reference
+archive_label_accessor_api_reference
+archive_keyaxis_accessor_api_reference
+archive_cast_accessor_api_reference
+archive_timeline_accessor_api_reference
+archive_ts_accessor_api_reference
+api/archive/aggregate_over_catalogs
+api/archive/astype
+api/archive/bfill
+api/archive/cast
+api/archive/catalog
+api/archive/catalogs
+api/archive/defined
+api/archive/depth
+api/archive/distinct
+api/archive/dloc
+api/archive/drop
+api/archive/dropnull
+api/archive/empty
+api/archive/ffill
+api/archive/fillnull
+api/archive/freq
+api/archive/has
+api/archive/head
+api/archive/invalid
+api/archive/isnull
+api/archive/keyaxis
+api/archive/keys
+api/archive/label
+api/archive/loc
+api/archive/map_catalogs
+api/archive/maxkeys
+api/archive/maxrecords
+api/archive/minkeys
+api/archive/minrecords
+api/archive/ndistinct
+api/archive/nkeys
+api/archive/notnull
+api/archive/nrecords
+api/archive/plot
+api/archive/rename
+api/archive/scribbelize
+api/archive/shape
+api/archive/show
+api/archive/size
+api/archive/slice_depth
+api/archive/tabelize
+api/archive/tail
+api/archive/tl
+api/archive/to_string
+api/archive/ts
+api/archive/unique
+```

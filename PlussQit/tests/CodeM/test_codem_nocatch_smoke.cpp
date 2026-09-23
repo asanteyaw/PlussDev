@@ -216,9 +216,9 @@ void test_factories() {
   std::cout << "[RUN] factories:bernoulli\n";
   auto b01 = pluss::series::bernoulli({16}, 0.5, pluss::ScalarType::Bool, 7);
   expect_true(b01.numel() == 16, "bernoulli factory works");
-  std::cout << "[RUN] factories:zeroes_like\n";
-  auto zlike = pluss::series::zeroes_like(s2);
-  expect_true(zlike.scalar_type() == s2.scalar_type(), "zeroes_like alias works");
+  std::cout << "[RUN] factories:zeros_like\n";
+  auto zlike = pluss::series::zeros_like(s2);
+  expect_true(zlike.scalar_type() == s2.scalar_type(), "zeros_like inherits dtype");
   std::cout << "[RUN] factories:value_literal\n";
   auto t = pluss::make_series({1, 2, 3});
   expect_true(t.numel() == 3, "value literal works");

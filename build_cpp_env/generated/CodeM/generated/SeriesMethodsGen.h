@@ -427,10 +427,7 @@
 
   // `ceil_` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `celu` (staged migration off variadic surface).
-  Series celu() const { return pluss::codem::_compat::invoke("celu", *this); }
-
-  Series celu(double alpha) const { return pluss::codem::_compat::invoke("celu", *this, {alpha}); }
+  // `celu` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `celu_` (staged migration off variadic surface).
   Series& celu_() const { return pluss::codem::_compat::invoke_("celu_", *this); }
@@ -644,12 +641,7 @@
   // Typed wrappers for `ediff1d` (staged migration off variadic surface).
   Series ediff1d() const { return pluss::codem::_compat::invoke("ediff1d", *this); }
 
-  // Typed wrappers for `elu` (staged migration off variadic surface).
-  Series elu() const { return pluss::codem::_compat::invoke("elu", *this); }
-
-  Series elu(double alpha) const { return pluss::codem::_compat::invoke("elu", *this, {alpha}); }
-
-  Series elu(double alpha, double scale, double input_scale) const { return pluss::codem::_compat::invoke("elu", *this, {alpha, scale, input_scale}); }
+  // `elu` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `elu_` (staged migration off variadic surface).
   Series& elu_() const { return pluss::codem::_compat::invoke_("elu_", *this); }
@@ -852,14 +844,12 @@
   // Typed wrappers for `hardshrink_backward` (staged migration off variadic surface).
   Series hardshrink_backward(const Series& grad_output, double lambd) const { return pluss::codem::_compat::invoke("hardshrink_backward", *this, {grad_output, lambd}); }
 
-  // Typed wrappers for `hardsigmoid` (staged migration off variadic surface).
-  Series hardsigmoid() const { return pluss::codem::_compat::invoke("hardsigmoid", *this); }
+  // `hardsigmoid` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `hardsigmoid_` (staged migration off variadic surface).
   Series& hardsigmoid_() const { return pluss::codem::_compat::invoke_("hardsigmoid_", *this); }
 
-  // Typed wrappers for `hardswish` (staged migration off variadic surface).
-  Series hardswish() const { return pluss::codem::_compat::invoke("hardswish", *this); }
+  // `hardswish` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `hardswish_` (staged migration off variadic surface).
   Series& hardswish_() const { return pluss::codem::_compat::invoke_("hardswish_", *this); }
@@ -1277,8 +1267,7 @@
   // Typed wrappers for `minimum` (staged migration off variadic surface).
   Series minimum(const Series& rhs) const { return pluss::codem::_compat::invoke("minimum", *this, {rhs}); }
 
-  // Typed wrappers for `mish` (staged migration off variadic surface).
-  Series mish() const { return pluss::codem::_compat::invoke("mish", *this); }
+  // `mish` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `mish_` (staged migration off variadic surface).
   Series& mish_() const { return pluss::codem::_compat::invoke_("mish_", *this); }
@@ -1679,12 +1668,7 @@
   // Typed wrappers for `row_indices` (staged migration off variadic surface).
   Series row_indices() const { return pluss::codem::_compat::invoke("row_indices", *this); }
 
-  // Typed wrappers for `rrelu` (staged migration off variadic surface).
-  Series rrelu(bool training) const { return pluss::codem::_compat::invoke("rrelu", *this, {training}); }
-
-  Series rrelu(double lower, double upper) const { return pluss::codem::_compat::invoke("rrelu", *this, {lower, upper}); }
-
-  Series rrelu(double lower, double upper, bool training) const { return pluss::codem::_compat::invoke("rrelu", *this, {lower, upper, training}); }
+  // `rrelu` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `rrelu_` (staged migration off variadic surface).
   Series& rrelu_(bool training) const { return pluss::codem::_compat::invoke_("rrelu_", *this, {training}); }
@@ -1732,8 +1716,7 @@
   // Typed wrappers for `select_scatter` (staged migration off variadic surface).
   Series select_scatter(const Series& src, std::int64_t dim, std::int64_t index) const { return pluss::codem::_compat::invoke("select_scatter", *this, {src, dim, index}); }
 
-  // Typed wrappers for `selu` (staged migration off variadic surface).
-  Series selu() const { return pluss::codem::_compat::invoke("selu", *this); }
+  // `selu` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `selu_` (staged migration off variadic surface).
   Series& selu_() const { return pluss::codem::_compat::invoke_("selu_", *this); }
@@ -1953,8 +1936,7 @@
 
   // `tensor_split` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
-  // Typed wrappers for `threshold` (staged migration off variadic surface).
-  Series threshold(double threshold_val, double value) const { return pluss::codem::_compat::invoke("threshold", *this, {threshold_val, value}); }
+  // `threshold` has concrete declarations/definitions; variadic wrapper intentionally skipped.
 
   // Typed wrappers for `threshold_` (staged migration off variadic surface).
   Series& threshold_(double threshold_val, double value) const { return pluss::codem::_compat::invoke_("threshold_", *this, {threshold_val, value}); }

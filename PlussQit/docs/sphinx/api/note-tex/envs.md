@@ -28,7 +28,7 @@ different number of environments per cell without nested host containers.
 
 `envs()` performs extraction only. It does not render content, remove the
 regions from the receiver, or validate commands inside a body. Use
-`remove_environment(name)` for removal and `extract_environment(name)` when a
+`strip_env(name)` for removal and `env(name)` when a
 known environment kind should be selected directly. Undefined input returns an
 undefined token Note with offsets `[0]`; non-text input is rejected.
 
@@ -110,8 +110,8 @@ environments Int64: rejected
 ## See Also
 
 - [`env_names`](env_names.md): inventory openers without requiring closers.
-- `extract_environment`: extract only one requested environment kind.
-- `remove_environment`: remove one requested environment kind.
+- [`env`](env.md): extract only one requested environment kind.
+- `strip_env`: remove one requested environment kind.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="env_names.html"><span class="label">Previous</span><span class="title">env_names</span></a>

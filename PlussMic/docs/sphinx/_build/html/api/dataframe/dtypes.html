@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::dtypes &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::duplicated" href="duplicated.html" />
+    <link rel="prev" title="DataFrame::dropnull" href="dropnull.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 32b1b06ab8af -->
+<section id="dataframe-dtypes">
+<h1>DataFrame::dtypes<a class="headerlink" href="#dataframe-dtypes" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">dtypes</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DTypes</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns the concrete dtype of every feature in the frame — not just the coarse payload
+family (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>) but the specific scalar type
+underneath, formatted as <code class="docutils literal notranslate"><span class="pre">&quot;&lt;Family&gt;&lt;ConcreteType&gt;&quot;</span></code>, for example <code class="docutils literal notranslate"><span class="pre">Series&lt;float64&gt;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Series&lt;int64&gt;</span></code>, or <code class="docutils literal notranslate"><span class="pre">Note&lt;utf8&gt;</span></code>. This is the schema-inspection method to reach for when
+you need to know both <em>what kind</em> of column you have and <em>what precision or storage
+type</em> it actually holds — before deciding whether a cast, a join, or a numeric operation
+is safe.</p>
+<p><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrame::DTypes</span></code> object rather than a raw map or vector — an
+ordered <code class="docutils literal notranslate"><span class="pre">(feature</span> <span class="pre">name,</span> <span class="pre">dtype</span> <span class="pre">string)</span></code> view. It supports <code class="docutils literal notranslate"><span class="pre">size()</span></code>, <code class="docutils literal notranslate"><span class="pre">empty()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">contains(name)</span></code>, <code class="docutils literal notranslate"><span class="pre">at(name)</span></code> / <code class="docutils literal notranslate"><span class="pre">operator[](name)</span></code>, <code class="docutils literal notranslate"><span class="pre">entries()</span></code> (the whole
+<code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">dtype)</span></code> list by reference), <code class="docutils literal notranslate"><span class="pre">payloads()</span></code> (the dtype strings alone,
+value-owned), range-based iteration, and its own <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> for a quick printout.
+<code class="docutils literal notranslate"><span class="pre">ptypes()</span></code> returns the <em>same</em> object with coarser type strings; its page carries
+the <a class="reference internal" href="ptypes.html"><span class="std std-doc">full <code class="docutils literal notranslate"><span class="pre">DTypes</span></code> member reference</span></a>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DTypes</span></code>
+An ordered <code class="docutils literal notranslate"><span class="pre">(feature</span> <span class="pre">name,</span> <span class="pre">dtype</span> <span class="pre">string)</span></code> view — one entry per column, in the
+frame’s feature order. Iterate it for pairs, look one up with <code class="docutils literal notranslate"><span class="pre">at(&quot;name&quot;)</span></code> /
+<code class="docutils literal notranslate"><span class="pre">operator[]</span></code>, take the whole list with <code class="docutils literal notranslate"><span class="pre">entries()</span></code>, or take just the dtype
+strings (value-owned) with <code class="docutils literal notranslate"><span class="pre">payloads()</span></code>. Full member reference on the
+<a class="reference internal" href="ptypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptypes()</span></code> page</span></a>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Inspect concrete dtypes before deciding whether to cast anything.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;passed&quot;</span><span class="p">,</span><span class="w">     </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;raw_name&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">dtypes</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>features  dtype
+--------  --------
+student_id  Series&lt;float64&gt;
+passed  Series&lt;float64&gt;
+raw_name  Note&lt;utf8&gt;
+</pre></div>
+</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">student_id</span></code> and <code class="docutils literal notranslate"><span class="pre">passed</span></code> came in as <code class="docutils literal notranslate"><span class="pre">Series&lt;float64&gt;</span></code> even though <code class="docutils literal notranslate"><span class="pre">passed</span></code> clearly
+holds a 0/1 flag — the loader/constructor did not infer <code class="docutils literal notranslate"><span class="pre">bool</span></code> on its own. That is
+precisely the kind of thing <code class="docutils literal notranslate"><span class="pre">dtypes()</span></code> exists to surface before you commit to a
+computation: follow up with
+<a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">astype({&quot;passed&quot;},</span> <span class="pre">pluss::ScalarType::Bool)</span></code></span></a> once you have confirmed it
+from this output, rather than assuming the flag column is already boolean.</p>
+<p>Note the row alignment above is not a typo: <code class="docutils literal notranslate"><span class="pre">DTypes::operator&lt;&lt;</span></code> prints a fixed
+<code class="docutils literal notranslate"><span class="pre">&quot;features</span>&#160; <span class="pre">dtype&quot;</span></code> header and a fixed-width separator, then each <code class="docutils literal notranslate"><span class="pre">name</span>&#160; <span class="pre">dtype</span></code> pair with
+a plain two-space gap and no further column padding — unlike <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s own renderer,
+this printout does not widen its columns to fit the longest name.</p>
+<p>Example 2. Look up one feature’s dtype directly, without iterating everything.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">raw</span><span class="p">.</span><span class="n">dtypes</span><span class="p">();</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="s">&quot;passed&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">[</span><span class="s">&quot;passed&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// &quot;Series&lt;float64&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code> reports the <em>concrete</em> dtype (<code class="docutils literal notranslate"><span class="pre">Series&lt;float64&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">Note&lt;utf8&gt;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Timeline&lt;datetime64[ns,</span> <span class="pre">UTC]&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex&lt;datetime64[ns,</span> <span class="pre">UTC]&gt;</span></code>). Use
+<a class="reference internal" href="ptypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ptypes()</span></code></span></a> instead when you only need the coarse payload family without
+the concrete scalar type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is intentionally reported separately from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>: a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> stores
+temporal <em>values</em>, while a <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> is the temporal <em>axis</em> payload used for
+time-label alignment and resampling — they are different roles even when the
+underlying concrete type looks similar.</p></li>
+<li><p>Iteration order matches the frame’s current feature order, the same order
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> returns.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ptypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ptypes</span></code></span></a>: the coarse payload family only.</p></li>
+<li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cast</span></code></span></a>, <a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::astype</span></code></span></a>: change dtypes after
+inspecting them here.</p></li>
+<li><p><a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::info</span></code></span></a>: dtypes alongside null counts, case range, and memory in
+one combined report.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dropnull.html">
+    <span class="label">Previous</span>
+    <span class="title">dropnull</span>
+  </a>
+  <a class="next-link" href="duplicated.html">
+    <span class="label">Next</span>
+    <span class="title">duplicated</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="dropnull.html" title="previous chapter">DataFrame::dropnull</a></li>
+      <li>Next: <a href="duplicated.html" title="next chapter">DataFrame::duplicated</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/dtypes.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

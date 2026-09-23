@@ -11,7 +11,7 @@
 namespace {
 
 bool run_fusion_route_checks(std::ostream* err = nullptr) {
-  if (pluss::cublas_fusion_ready() != pluss::cuda::cublas_available()) {
+  if (pluss::nn::cublas_fusion_ready() != pluss::cuda::cublas_available()) {
     if (err) *err << "cublas_fusion_ready must match cuda::cublas_available\n";
     return false;
   }
@@ -20,7 +20,7 @@ bool run_fusion_route_checks(std::ostream* err = nullptr) {
   const pluss::Series x = pluss::series::rand({5, 7}, cfg, 13ULL);
   const pluss::Series w = pluss::series::rand({3, 7}, cfg, 17ULL);
   const pluss::Series b = pluss::series::rand({3}, cfg, 19ULL);
-  const pluss::Series y = pluss::fusion(x, w, b);
+  const pluss::Series y = pluss::nn::fusion(x, w, b);
   const pluss::Series y_ref = x.matmul(w.t()).add(b);
   const double max_abs = y.sub(y_ref).abs().max().item<double>();
   if (!(max_abs <= 1e-12)) {
@@ -29,7 +29,7 @@ bool run_fusion_route_checks(std::ostream* err = nullptr) {
   }
 
   if (pluss::cuda::is_ready()) {
-    const pluss::Series y_cuda = pluss::fusion(x.to(pluss::pCUDA), w.to(pluss::pCUDA), b.to(pluss::pCUDA)).to(pluss::pCPU);
+    const pluss::Series y_cuda = pluss::nn::fusion(x.to(pluss::pCUDA), w.to(pluss::pCUDA), b.to(pluss::pCUDA)).to(pluss::pCPU);
     const double max_abs_cuda = y.sub(y_cuda).abs().max().item<double>();
     if (!(max_abs_cuda <= 1e-6)) {
       if (err) *err << "CPU/CUDA fusion mismatch too large\n";

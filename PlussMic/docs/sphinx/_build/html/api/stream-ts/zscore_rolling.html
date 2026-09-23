@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>StreamTimeSeriesAccessor::zscore_rolling &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="StreamLabelAccessor API Reference" href="../../stream_lbl_accessor_api_reference.html" />
+    <link rel="prev" title="StreamTimeSeriesAccessor::timed" href="timed.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 68bbd64d1ff4 -->
+<section id="streamtimeseriesaccessor-zscore-rolling">
+<h1>StreamTimeSeriesAccessor::zscore_rolling<a class="headerlink" href="#streamtimeseriesaccessor-zscore-rolling" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../stream_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to StreamTimeSeriesAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="w"> </span><span class="n">StreamTimeSeriesAccessor</span><span class="o">::</span><span class="n">zscore_rolling</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">min_periods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">epsilon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes a <strong>rolling z-score</strong>: at each position, <code class="docutils literal notranslate"><span class="pre">(x</span> <span class="pre">-</span> <span class="pre">rolling_mean)</span> <span class="pre">/</span> <span class="pre">rolling_std</span></code>, using a trailing window of <code class="docutils literal notranslate"><span class="pre">window</span></code> positions ending at (and
+including) that position. The rolling mean and standard deviation use a
+<strong>population</strong> convention (dividing by the window’s observed count, not
+count <code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">1</span></code>) — there is no <code class="docutils literal notranslate"><span class="pre">ddof</span></code> parameter here. A position is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if
+the rolling standard deviation isn’t usefully positive
+(<code class="docutils literal notranslate"><span class="pre">|std|</span> <span class="pre">&lt;=</span> <span class="pre">epsilon</span></code>), isn’t finite, or <code class="docutils literal notranslate"><span class="pre">x</span></code> itself isn’t finite at that
+position.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>a single missing value poisons every window it touches
+Unlike <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>/<a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">expanding()</span></code></span></a>/
+<a class="reference internal" href="grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">grouped()</span></code></span></a>, this method’s underlying engine does <strong>not</strong> skip
+missing values within a window — it accumulates every position in the
+window with plain floating-point arithmetic, so one missing entry makes the
+mean <em>and</em> std (and therefore the z-score) come back <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for every
+position whose window still contains it. The effect clears on its own once
+the missing position scrolls out of the trailing window.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
+Same precondition as every method on this accessor — see
+<a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>’s own important callout for the exact throw
+message pattern.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>window</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+The trailing window size, in positions. Must be positive, or it throws.</p>
+<p><strong>min_periods</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+The minimum number of positions that must actually exist in a window
+near the start of the stream.</p>
+<p><strong>epsilon</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>, default <code class="docutils literal notranslate"><span class="pre">1e-12</span></code>)
+The smallest rolling standard deviation still treated as usefully
+nonzero. Must be positive, or it throws.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Stream</span></code>
+A new stream, same length as the bound source, holding the rolling
+z-score at each position.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A rolling z-score over a clean (no missing values) stream.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">zscore_rolling</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[float64]  records=5
+label=no  mask=no  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | nan                                                                                                      
+1            | 1                                                                                                        
+2            | 1.22474487139                                                                                            
+3            | 1.22474487139                                                                                            
+4            | 1.22474487139                                                                                            
+========================================================================================================================
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code>’s window is just itself — a single-value window always has a
+standard deviation of exactly <code class="docutils literal notranslate"><span class="pre">0</span></code>, which is below <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>, so it’s <code class="docutils literal notranslate"><span class="pre">nan</span></code>.
+Position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s window is <code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">20)</span></code>: mean <code class="docutils literal notranslate"><span class="pre">15</span></code>, population std <code class="docutils literal notranslate"><span class="pre">5</span></code>, so
+<code class="docutils literal notranslate"><span class="pre">(20</span> <span class="pre">-</span> <span class="pre">15)</span> <span class="pre">/</span> <span class="pre">5</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The rolling mean/std here always use a <strong>population</strong> convention.</p></li>
+<li><p>A window whose standard deviation is <code class="docutils literal notranslate"><span class="pre">0</span></code> produces <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, not a division
+by a near-zero number.</p></li>
+<li><p>See the important callouts above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">window</span></code> must be <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">0</span></code>, or it throws. <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> must be <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">0</span></code>, or it
+throws <code class="docutils literal notranslate"><span class="pre">&quot;subsp::stats::ts::zscore_rolling:</span> <span class="pre">epsilon</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">&gt;</span> <span class="pre">0&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::rolling</span></code></span></a>: the fixed-window engine
+used for most other window statistics, which does skip missing values
+within a window rather than poisoning it.</p></li>
+<li><p><a class="reference internal" href="rolling_block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::rolling_block</span></code></span></a>: shares this
+method’s underlying rolling-mean/rolling-std engine.</p></li>
+<li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>
+<li><p><a class="reference internal" href="../thread-ts/zscore_rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::zscore_rolling</span></code></span></a>: the
+underlying single-thread engine, with the fully worked
+missing-value-poisons-the-window example.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="timed.html">
+    <span class="label">Previous</span>
+    <span class="title">timed</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../stream_api_reference.html">Stream API Reference</a><ul>
+  <li><a href="../../stream_ts_accessor_api_reference.html">StreamTimeSeriesAccessor API Reference</a><ul>
+      <li>Previous: <a href="timed.html" title="previous chapter">StreamTimeSeriesAccessor::timed</a></li>
+      <li>Next: <a href="../../stream_lbl_accessor_api_reference.html" title="next chapter">StreamLabelAccessor API Reference</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/stream-ts/zscore_rolling.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

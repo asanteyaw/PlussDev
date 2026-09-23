@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFramePlotAccessor::density &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFramePlotAccessor::heatmap" href="heatmap.html" />
+    <link rel="prev" title="DataFramePlotAccessor::corr_heatmap" href="corr_heatmap.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1102243bd05b -->
+<section id="dataframeplotaccessor-density">
+<h1>DataFramePlotAccessor::density<a class="headerlink" href="#dataframeplotaccessor-density" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">density</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">128</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">density</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DensityPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">density</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">128</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">density</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DensityPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">density</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">128</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">density</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DensityPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws a kernel-density estimate (a smoothed distribution curve) for one or more numeric
+features. Unlike <a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hist()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">density()</span></code> <strong>always</strong> overlays every requested
+feature’s curve on a single shared pane, regardless of how many features are requested —
+there is no mosaic-grid mode here. A legend is shown automatically whenever more than one
+feature is requested.</p>
+<p>Follows the same numeric-feature validation as <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a> for its <code class="docutils literal notranslate"><span class="pre">features</span></code>
+parameter, though <code class="docutils literal notranslate"><span class="pre">density()</span></code> has no empty-list “infer everything” shorthand of its own —
+every overload requires at least one named feature.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A single numeric feature to draw as one density curve.</p>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView&lt;std::string_view&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>)
+Several numeric features, each drawn as its own curve on the shared pane.</p>
+<p><strong>points</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">128</span></code>)
+The number of evaluation points used to draw each curve. Internally clamped to a
+minimum of <code class="docutils literal notranslate"><span class="pre">16</span></code> regardless of what’s passed — <code class="docutils literal notranslate"><span class="pre">density(feature,</span> <span class="pre">1)</span></code> still draws a
+16-point curve, not a degenerate one-point line.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">DensityPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">DensityPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">std::int64_t</span> <span class="pre">points{128};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">alpha{1.0};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">line_width{1.5};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing one kernel-density curve per requested feature,
+x-axis labeled <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>, y-axis labeled <code class="docutils literal notranslate"><span class="pre">&quot;density&quot;</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A single feature, default point count.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">exams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">71.0</span><span class="p">,</span><span class="w"> </span><span class="mf">82.0</span><span class="p">,</span><span class="w"> </span><span class="mf">93.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">74.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;final&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">85.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">92.0</span><span class="p">,</span><span class="w"> </span><span class="mf">78.0</span><span class="p">,</span><span class="w"> </span><span class="mf">88.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">density</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 1" src="../../_images/density-11.svg" /></p>
+<p>Example 2. A single feature with an explicit point count.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">density</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">256</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Higher <code class="docutils literal notranslate"><span class="pre">points</span></code> gives a smoother-looking curve at higher compute cost; lower <code class="docutils literal notranslate"><span class="pre">points</span></code>
+(clamped to a minimum of 16) gives a coarser one.</p>
+<p><img alt="Output of Example 2" src="../../_images/density-21.svg" /></p>
+<p>Example 3. Two features, overlaid on the same pane, via <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">density</span><span class="p">({</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">});</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;both_density.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Both curves share one pane and one set of axes; a legend labeled <code class="docutils literal notranslate"><span class="pre">&quot;midterm&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;final&quot;</span></code>
+appears automatically since more than one feature was requested — contrast
+<a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hist()</span></code></span></a>, which would instead place these on two separate panes.</p>
+<p><img alt="Output of Example 3" src="../../_images/density-31.svg" /></p>
+<p>Example 4. The same multi-feature call via a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">{</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">density</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">names</span><span class="p">));</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 4" src="../../_images/density-41.svg" /></p>
+<p>Example 5. An explicit <code class="docutils literal notranslate"><span class="pre">DensityPlotOptions</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DensityPlotOptions</span><span class="w"> </span><span class="n">density_options</span><span class="p">;</span>
+<span class="n">density_options</span><span class="p">.</span><span class="n">points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span><span class="p">;</span>
+<span class="n">density_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.7</span><span class="p">;</span>
+<span class="n">density_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">density</span><span class="p">(</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">density_options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 5" src="../../_images/density-5.svg" /></p>
+<p>Example 6. Multiple features with an explicit options object.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exams</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">density</span><span class="p">({</span><span class="s">&quot;midterm&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;final&quot;</span><span class="p">},</span><span class="w"> </span><span class="n">density_options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 6" src="../../_images/density-6.svg" /></p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Always overlays every requested feature on one shared pane — never a mosaic, unlike
+<a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hist()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">points</span></code> is clamped to a minimum of <code class="docutils literal notranslate"><span class="pre">16</span></code> regardless of what’s requested.</p></li>
+<li><p>No empty-list “infer everything” shorthand — at least one feature must be named
+explicitly on every overload.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::hist</span></code></span></a>: binned frequency counts instead of a smoothed
+curve, with its mosaic-grid layout for multiple features.</p></li>
+<li><p><a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::box</span></code></span></a> / <a class="reference internal" href="violin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">violin</span></code></span></a>: other distribution-shape
+summaries.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="corr_heatmap.html">
+    <span class="label">Previous</span>
+    <span class="title">corr_heatmap</span>
+  </a>
+  <a class="next-link" href="heatmap.html">
+    <span class="label">Next</span>
+    <span class="title">heatmap</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="corr_heatmap.html" title="previous chapter">DataFramePlotAccessor::corr_heatmap</a></li>
+      <li>Next: <a href="heatmap.html" title="next chapter">DataFramePlotAccessor::heatmap</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-plot/density.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

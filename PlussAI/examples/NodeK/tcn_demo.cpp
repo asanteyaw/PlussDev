@@ -69,19 +69,19 @@ int main() {
       .kernel_size = 1,
       .stride = 1,
       .padding = 0,
-      .padding_lr = pluss::causal_padding1d(1, 1),
+      .padding_lr = pluss::nn::causal_padding1d(1, 1),
       .dilation = 1,
       .groups = 1,
       .bias = true,
       .cfg = cfg,
       .seed = 101ULL,
   });
-  nn::Conv1d block1_a(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::causal_padding1d(3, 1), .dilation = 1, .groups = 1, .bias = true, .cfg = cfg, .seed = 103ULL});
-  nn::Conv1d block1_b(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::causal_padding1d(3, 1), .dilation = 1, .groups = 1, .bias = true, .cfg = cfg, .seed = 107ULL});
-  nn::Conv1d block2_a(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::causal_padding1d(3, 2), .dilation = 2, .groups = 1, .bias = true, .cfg = cfg, .seed = 109ULL});
-  nn::Conv1d block2_b(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::causal_padding1d(3, 2), .dilation = 2, .groups = 1, .bias = true, .cfg = cfg, .seed = 113ULL});
-  nn::Conv1d block3_a(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::causal_padding1d(3, 4), .dilation = 4, .groups = 1, .bias = true, .cfg = cfg, .seed = 127ULL});
-  nn::Conv1d block3_b(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::causal_padding1d(3, 4), .dilation = 4, .groups = 1, .bias = true, .cfg = cfg, .seed = 131ULL});
+  nn::Conv1d block1_a(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::nn::causal_padding1d(3, 1), .dilation = 1, .groups = 1, .bias = true, .cfg = cfg, .seed = 103ULL});
+  nn::Conv1d block1_b(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::nn::causal_padding1d(3, 1), .dilation = 1, .groups = 1, .bias = true, .cfg = cfg, .seed = 107ULL});
+  nn::Conv1d block2_a(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::nn::causal_padding1d(3, 2), .dilation = 2, .groups = 1, .bias = true, .cfg = cfg, .seed = 109ULL});
+  nn::Conv1d block2_b(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::nn::causal_padding1d(3, 2), .dilation = 2, .groups = 1, .bias = true, .cfg = cfg, .seed = 113ULL});
+  nn::Conv1d block3_a(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::nn::causal_padding1d(3, 4), .dilation = 4, .groups = 1, .bias = true, .cfg = cfg, .seed = 127ULL});
+  nn::Conv1d block3_b(pluss::nn::Conv1dOptions{.in_channels = 8, .out_channels = 8, .kernel_size = 3, .stride = 1, .padding = 0, .padding_lr = pluss::nn::causal_padding1d(3, 4), .dilation = 4, .groups = 1, .bias = true, .cfg = cfg, .seed = 131ULL});
   nn::Fusion head(8, 1, true, cfg, 137ULL);
 
   const Series stem = input_proj->forward(features).relu();
@@ -95,7 +95,7 @@ int main() {
   std::cout << "task: next-step time-series forecasting with a strictly causal, dilated torch-like TCN stack\n";
   std::cout << "user-defined hyperparameters: kernel_size, stride, padding or padding_lr, dilation, groups, bias, channels, depth\n";
   std::cout << "dilation schedule used here: [1, 2, 4]\n";
-  std::cout << "causal padding helper: pluss::causal_padding1d(kernel_size, dilation)\n";
+  std::cout << "causal padding helper: pluss::nn::causal_padding1d(kernel_size, dilation)\n";
   std::cout << "input shape: " << features.sizes()[0] << " x " << features.sizes()[1] << " x " << features.sizes()[2] << "\n";
   std::cout << "latent shape after block 3: " << block3.sizes()[0] << " x " << block3.sizes()[1] << " x " << block3.sizes()[2] << "\n";
   std::cout << "prediction shape: " << prediction.sizes()[0] << " x " << prediction.sizes()[1] << " x " << prediction.sizes()[2] << "\n";

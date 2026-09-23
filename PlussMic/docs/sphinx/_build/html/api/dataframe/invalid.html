@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::invalid &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::isnull" href="isnull.html" />
+    <link rel="prev" title="DataFrame::interp" href="interp.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ea75a19adafb -->
+<section id="dataframe-invalid">
+<h1>DataFrame::invalid<a class="headerlink" href="#dataframe-invalid" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">invalid</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>A same-shape boolean mask, like <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>, but broader for numeric
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> features: a cell is <code class="docutils literal notranslate"><span class="pre">true</span></code> if it is either genuinely missing (masked <code class="docutils literal notranslate"><span class="pre">NULL</span></code>,
+the only thing <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> catches) <strong>or</strong> a non-finite floating-point value — <code class="docutils literal notranslate"><span class="pre">NaN</span></code> or
+<code class="docutils literal notranslate"><span class="pre">+/-Infinity</span></code> — even when that value carries no validity mask at all. For every
+non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> feature kind (<code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), <code class="docutils literal notranslate"><span class="pre">invalid()</span></code> is identical
+to <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> — there is no equivalent “non-finite” concept for those kinds.</p>
+<p>This distinction matters in practice: a raw <code class="docutils literal notranslate"><span class="pre">NaN</span></code> sitting in a <code class="docutils literal notranslate"><span class="pre">Series</span></code> column that was
+never explicitly masked as missing (for example, produced by a <code class="docutils literal notranslate"><span class="pre">0.0</span> <span class="pre">/</span> <span class="pre">0.0</span></code> upstream) is
+invisible to <code class="docutils literal notranslate"><span class="pre">isnull()</span></code>, but is caught by <code class="docutils literal notranslate"><span class="pre">invalid()</span></code>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
+<p>Feature names to check. Leave empty (the default) to check every feature on the frame;
+pass a subset to restrict the result to just those columns.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A frame with the same case axis as the source and one boolean feature per checked
+column: <code class="docutils literal notranslate"><span class="pre">true</span></code> where that cell is either masked-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> or (for a <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature)
+non-finite; <code class="docutils literal notranslate"><span class="pre">false</span></code> elsewhere.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Contrast <code class="docutils literal notranslate"><span class="pre">invalid()</span></code> against <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> on a frame with both an unmasked
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> and a genuinely masked null.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}),</span>
+<span class="w">                </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
+<span class="w">                </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | a     b   
+-----------------
+0    | 1     x   
+1    | nan   y   
+2    | 3     NULL
+3    | NULL  z   
+-----------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | a      b    
+-------------------
+0    | false  false
+1    | false  false
+2    | false  true 
+3    | true   false
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">invalid</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | a      b    
+-------------------
+0    | false  false
+1    | true   false
+2    | false  true 
+3    | true   false
+-------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">b</span></code> (a <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature) is identical between the two masks — case <code class="docutils literal notranslate"><span class="pre">2</span></code>’s masked-empty
+cell is the only invalid entry either way. <code class="docutils literal notranslate"><span class="pre">a</span></code> (a <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature) differs at case
+<code class="docutils literal notranslate"><span class="pre">1</span></code>: the raw <code class="docutils literal notranslate"><span class="pre">NaN</span></code> there was never masked as missing, so <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> reports <code class="docutils literal notranslate"><span class="pre">false</span></code>,
+but <code class="docutils literal notranslate"><span class="pre">invalid()</span></code> reports <code class="docutils literal notranslate"><span class="pre">true</span></code> — it treats a non-finite float as invalid regardless of
+whether a validity mask was ever attached to that cell.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>For any non-<code class="docutils literal notranslate"><span class="pre">Series</span></code> feature, <code class="docutils literal notranslate"><span class="pre">invalid()</span></code> and <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> produce identical results —
+the “non-finite” extension only applies to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> data, since concepts like
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> and <code class="docutils literal notranslate"><span class="pre">Infinity</span></code> are specific to floating-point representation.</p></li>
+<li><p>A masked-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> cell is always <code class="docutils literal notranslate"><span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">invalid()</span></code> too, whatever its
+underlying (masked-over) raw bits happen to be — being masked is sufficient on its
+own, independent of the finiteness check.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">invalid()</span></code> instead of <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> whenever upstream numeric computation (division,
+logarithms, and similar) could have produced <code class="docutils literal notranslate"><span class="pre">NaN</span></code> or <code class="docutils literal notranslate"><span class="pre">Infinity</span></code> without an explicit
+validity mask ever being attached.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::isnull</span></code></span></a>: the narrower mask — masked-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> only, with no
+finiteness check on <code class="docutils literal notranslate"><span class="pre">Series</span></code> features.</p></li>
+<li><p><a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::notnull</span></code></span></a>: the inverse of <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> specifically (not the
+inverse of <code class="docutils literal notranslate"><span class="pre">invalid()</span></code>).</p></li>
+<li><p><a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::fillnull</span></code></span></a> / <a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::dropnull</span></code></span></a>: act on
+missing cells once you’ve located them.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="interp.html">
+    <span class="label">Previous</span>
+    <span class="title">interp</span>
+  </a>
+  <a class="next-link" href="isnull.html">
+    <span class="label">Next</span>
+    <span class="title">isnull</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="interp.html" title="previous chapter">DataFrame::interp</a></li>
+      <li>Next: <a href="isnull.html" title="next chapter">DataFrame::isnull</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/invalid.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -50,7 +50,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
                                                  {1, 1, 2, 2},
                                                  cfg);
   const Series conv2_bias = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
-  const Series conv2_out = pluss::conv(conv2_input, conv2_weight, conv2_bias, 1, 0, 1, 1);
+  const Series conv2_out = pluss::nn::conv(conv2_input, conv2_weight, conv2_bias, 1, 0, 1, 1);
   if (!approx_vec(vec_f64(conv2_out), std::vector<double>{-3.5, -3.5, -3.5, -3.5})) {
     if (err) *err << "conv2d functional output mismatch\n";
     return false;
@@ -95,7 +95,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
                                                  {1, 1, 2, 2, 2},
                                                  cfg);
   const Series conv3_bias = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
-  const Series conv3_out = pluss::conv3d(conv3_input, conv3_weight, conv3_bias, 1, 0, 1, 1);
+  const Series conv3_out = pluss::nn::conv3d(conv3_input, conv3_weight, conv3_bias, 1, 0, 1, 1);
   if (!approx_vec(vec_f64(conv3_out), std::vector<double>{-12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5, -12.5})) {
     if (err) *err << "conv3d functional output mismatch\n";
     return false;
@@ -123,7 +123,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
   const Series conv1_input = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {1, 1, 6}, cfg);
   const Series conv1_weight = pluss::make_series(std::vector<double>{1.0, -1.0, 2.0}, {1, 1, 3}, cfg);
   const Series conv1_bias = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
-  const Series conv1_out = pluss::conv1d(conv1_input, conv1_weight, conv1_bias, 1, 1, 1, 1);
+  const Series conv1_out = pluss::nn::conv1d(conv1_input, conv1_weight, conv1_bias, 1, 1, 1, 1);
   if (!approx_vec(vec_f64(conv1_out), std::vector<double>{3.5, 5.5, 7.5, 9.5, 11.5, -0.5})) {
     if (err) *err << "conv1d functional output mismatch\n";
     return false;
@@ -145,7 +145,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
         {2, 2, 6}, cfg);
     const Series mc_weight = pluss::make_series(
         std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8}, {2, 2, 2}, cfg);
-    const Series mc_out = pluss::conv1d(mc_input, mc_weight, Series(), 1, 0, 1, 1);
+    const Series mc_out = pluss::nn::conv1d(mc_input, mc_weight, Series(), 1, 0, 1, 1);
     const std::vector<double> mc_expected{
         1.48, 1.58, 1.68, 1.78, 1.88,
         3.64, 3.90, 4.16, 4.42, 4.68,
@@ -158,7 +158,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
   }
 
   const Series conv1_unbatched = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {1, 6}, cfg);
-  if (!approx_vec(vec_f64(pluss::conv1d(conv1_unbatched, conv1_weight, conv1_bias, 1, 1, 1, 1)),
+  if (!approx_vec(vec_f64(pluss::nn::conv1d(conv1_unbatched, conv1_weight, conv1_bias, 1, 1, 1, 1)),
                   std::vector<double>{3.5, 5.5, 7.5, 9.5, 11.5, -0.5})) {
     if (err) *err << "conv1d unbatched output mismatch\n";
     return false;
@@ -185,8 +185,8 @@ bool run_conv_checks(std::ostream* err = nullptr) {
 
   const Series causal_input = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {1, 1, 4}, cfg);
   const Series causal_weight = pluss::make_series(std::vector<double>{0.0, 0.0, 1.0}, {1, 1, 3}, cfg);
-  const auto causal_pad = pluss::causal_padding1d(3, 1);
-  const Series causal_out = pluss::conv1d(causal_input, causal_weight, Series(), causal_pad, 1, 1, 1);
+  const auto causal_pad = pluss::nn::causal_padding1d(3, 1);
+  const Series causal_out = pluss::nn::conv1d(causal_input, causal_weight, Series(), causal_pad, 1, 1, 1);
   if (!approx_vec(vec_f64(causal_out), std::vector<double>{1.0, 2.0, 3.0, 4.0})) {
     if (err) *err << "conv1d causal output mismatch\n";
     return false;
@@ -214,8 +214,8 @@ bool run_conv_checks(std::ostream* err = nullptr) {
   const Series tcn_signal = pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, -1.0}, {1, 1, 8}, cfg);
   const Series tcn_k1 = pluss::make_series(std::vector<double>{0.25, 0.5, 0.25}, {1, 1, 3}, cfg);
   const Series tcn_k2 = pluss::make_series(std::vector<double>{1.0, 0.0, -1.0}, {1, 1, 3}, cfg);
-  const Series stage1 = pluss::conv1d(tcn_signal, tcn_k1, Series(), pluss::causal_padding1d(3, 1), 1, 1, 1).relu();
-  const Series stage2_func = pluss::conv1d(stage1, tcn_k2, Series(), pluss::causal_padding1d(3, 2), 1, 2, 1);
+  const Series stage1 = pluss::nn::conv1d(tcn_signal, tcn_k1, Series(), pluss::nn::causal_padding1d(3, 1), 1, 1, 1).relu();
+  const Series stage2_func = pluss::nn::conv1d(stage1, tcn_k2, Series(), pluss::nn::causal_padding1d(3, 2), 1, 2, 1);
 
   pluss::nn::Conv1d tcn_layer1(pluss::nn::Conv1dOptions{
       .in_channels = 1,
@@ -223,7 +223,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
       .kernel_size = 3,
       .stride = 1,
       .padding = 0,
-      .padding_lr = pluss::causal_padding1d(3, 1),
+      .padding_lr = pluss::nn::causal_padding1d(3, 1),
       .dilation = 1,
       .groups = 1,
       .bias = false,
@@ -236,7 +236,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
       .kernel_size = 3,
       .stride = 1,
       .padding = 0,
-      .padding_lr = pluss::causal_padding1d(3, 2),
+      .padding_lr = pluss::nn::causal_padding1d(3, 2),
       .dilation = 2,
       .groups = 1,
       .bias = false,

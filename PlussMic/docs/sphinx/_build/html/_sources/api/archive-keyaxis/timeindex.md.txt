@@ -1,0 +1,101 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b34bfba8b98c -->
+
+# ArchiveKeyAxisAccessor::timeindex
+
+[Back to ArchiveKeyAxisAccessor API Reference](../../archive_keyaxis_accessor_api_reference)
+
+## Signature
+
+```cpp
+Archive ArchiveKeyAxisAccessor::timeindex() const
+```
+
+## What It Does
+
+Returns a new archive where **every catalog** in the stack has been narrowed to only
+its `TimeIndex`-kind keys — each catalog filtered independently, by delegating to that
+catalog's own
+[`CatalogKeyAxisAccessor::timeindex`](../catalog-keyaxis/timeindex.md).
+
+```{important} Each catalog is filtered independently — no cross-catalog key uniformity required
+Same rule as [`like()`](like.md): `timeindex()` never validates keys across catalogs. A
+ragged archive (different key sets per catalog) works without throwing, and the result
+can end up just as ragged.
+```
+
+```{important} TimeIndex is distinct from Timeline
+`TimeIndex`-kind (a positional/period index) and `Timeline`-kind (an absolute
+timestamp axis) are different payload kinds with separate filters here — see
+[`timeline()`](timeline.md) for the sibling method. A `Timeline`-kind key is excluded
+from `timeindex()`'s result, and vice versa.
+```
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Archive`
+    A new archive of the same depth, with each catalog narrowed to its own
+    `TimeIndex`-kind keys.
+
+## Examples
+
+Example 1. A catalog with a mix of `Series` and `TimeIndex` keys is narrowed down to
+just the `TimeIndex`-kind one.
+
+```cpp
+using namespace pluss::kindle::literals;
+
+auto c0 = pluss::kindle::Catalog({
+    "n"_k  = pluss::kindle::Stream(pluss::make_series({1.0})),
+    "ti"_k = pluss::kindle::Stream(pluss::make_timeindex({0, 1, 2})),
+});
+auto archive = pluss::kindle::Archive({c0});
+
+auto out = archive.keyaxis().timeindex();
+std::cout << out.catalog(0);
+```
+
+### Output
+
+```text
+========================================================================================================================
+kindle::Catalog  keys=1
+keys: [ti]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+ti                       | TimeIndex    | TimeIndex        | 3       | [0, 1, 2]                                        
+========================================================================================================================
+```
+
+## Notes
+
+- See both important callouts above.
+- A catalog with zero `TimeIndex`-kind keys becomes a valid, defined, empty catalog in
+  the result.
+
+## See Also
+
+- [`ArchiveKeyAxisAccessor::timeline`](timeline.md): the absolute-timestamp sibling
+  filter.
+- [`ArchiveKeyAxisAccessor::series`](series.md) / [`note()`](note.md): the other kind
+  filters.
+- [`CatalogKeyAxisAccessor::timeindex`](../catalog-keyaxis/timeindex.md): the
+  single-catalog delegate this method applies to every catalog independently.
+- [`Archive::keyaxis`](../archive/keyaxis.md): the entry point this accessor is reached
+  from.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="suffix.html">
+    <span class="label">Previous</span>
+    <span class="title">suffix</span>
+  </a>
+  <a class="next-link" href="timeline.html">
+    <span class="label">Next</span>
+    <span class="title">timeline</span>
+  </a>
+</div>

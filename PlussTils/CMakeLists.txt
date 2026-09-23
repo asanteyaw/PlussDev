@@ -3,6 +3,7 @@ project(PlussTils LANGUAGES CXX)
 include(GNUInstallDirs)
 
 add_subdirectory(view)
+add_subdirectory(src/PlussBI)
 
 add_library(PlussTilsCore STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/env/env.cpp
@@ -24,6 +25,9 @@ add_library(Pluss::Tils ALIAS PlussTils)
 target_link_libraries(PlussTils INTERFACE PlussTilsCore)
 if(TARGET PlussTilsView)
     target_link_libraries(PlussTils INTERFACE PlussTilsView)
+endif()
+if(TARGET PlussBI)
+    target_link_libraries(PlussTils INTERFACE PlussBI)
 endif()
 if(TARGET PlussQit)
     target_link_libraries(PlussTils INTERFACE PlussQit)

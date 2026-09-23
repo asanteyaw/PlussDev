@@ -109,6 +109,20 @@
     return /\/api\/(?:plussai_[^/]+|lymph\/.+|lymph\.html)$/.test(window.location.pathname);
   }
 
+  // True on any page api_nav.js already owns (sets <body class="apiref-page">
+  // and builds its own .apiref-nav sidebar tree, independently of this
+  // file's buildApiTreeSidebar()/buildMethodSidebar()/buildPrevNext() path,
+  // which predates api_nav.js and is otherwise dead: window.PLUSS_API_TREE
+  // is never assigned anymore, so isPlussApiPage() above always returns
+  // false and buildApiTreeSidebar() itself would crash (reads
+  // PLUSS_API_TREE.children) if that early return were ever removed. Do not
+  // reactivate that path -- gate the *legacy* method-sidebar/prev-next
+  // fallback further down on this instead, so it never fires on a page
+  // api_nav.js already fully navigates.
+  function hasModernApiNav() {
+    return document.body.classList.contains("apiref-page");
+  }
+
   function isPlussAiApiPage() {
     return siteBrandFromTitle() === "PlussAI" && /\/api\//.test(window.location.pathname);
   }
@@ -659,6 +673,16 @@
   }
 
   function buildPrevNext(methodNav) {
+    // A page apiref.py already hand-wires (every classic/nn/... page under
+    // the modern api_nav.js tree) ships its own static
+    // .pluss-inline-prev-next block in the rendered HTML -- present from
+    // first paint, no dependency on this script's or api_nav.js's relative
+    // DOMContentLoaded timing. Never build the legacy JS-injected pager
+    // (#pluss-prev-next) on top of it; that produced a redundant second
+    // prev/next bar on every such page.
+    if (document.querySelector(".pluss-inline-prev-next")) {
+      return;
+    }
     if (methodNav && methodNav.items && methodNav.items.length) {
       const bodywrapper = document.querySelector(".bodywrapper");
       if (!bodywrapper) {
@@ -789,7 +813,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     buildTopbar();
-    const hasApiTree = buildApiTreeSidebar();
+    const hasApiTree = buildApiTreeSidebar() || hasModernApiNav();
     const methodNav = hasApiTree ? null : buildMethodSidebar();
     const sectionNav = hasApiTree ? null : (methodNav ? null : buildSectionSidebar());
 

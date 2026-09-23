@@ -5289,8 +5289,12 @@ static Series ldexp_impl(const Series& self, const Series& exponents) {
 }
 
 static Series prelu_impl(const Series& self, const Series& weight) {
-  auto x = self.to(ScalarType::Float64);
-  auto w = weight.to(ScalarType::Float64);
+  // compat_real_dtype_for_ picks Float32 on MPS (which has no Float64
+  // support at all) and Float64 elsewhere -- unconditionally promoting to
+  // Float64 here would make prelu() unusable on MPS.
+  const ScalarType dt = compat_real_dtype_for_(self);
+  auto x = self.to(dt);
+  auto w = weight.to(dt);
   auto zero = scalar_like(x, 0.0);
   auto pos = ops_internal::gt(x, zero);
   auto neg = ops_internal::mul(w, x);
@@ -5304,7 +5308,7 @@ static Series prelu_impl(const Series& self, double weight) {
   // Build the slope in a real dtype so an integral `self` does not truncate it.
   const ScalarType wdt = dtype_of(self.scalar_type()).is_floating()
                              ? self.scalar_type()
-                             : ScalarType::Float64;
+                             : compat_real_dtype_for_(self);
   return prelu_impl(self, Series::full({1}, weight, wdt).to(self.platform()));
 }
 
@@ -7181,6 +7185,22 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       const Series& other = as_series(args[0]);
       const double s = as_double(args[1]);
       // Torch-style add/sub signatures: add(other, alpha), sub(other, alpha)
+      //
+      // NOTE: an earlier version of this code special-cased alpha==1 to
+      // skip the mul_scalar(other, 1.0) identity multiply, both as a perf
+      // win and to close a buffer-pool race this multiply's throwaway
+      // temporary could trigger under MPS's async commit mode (see
+      // MPSRuntime.mm's RuntimeContext::mode comment for the full story --
+      // that race is now fixed at its actual source by defaulting to
+      // CommitAndWait). That skip was reverted: it changed the reverse-mode
+      // tape's structure (one fewer node) in a way that broke complex64
+      // linalg backward passes (det/inverse/triangular_solve/
+      // cholesky_solve reverse-mode all rely on the tape shape as built
+      // here), confirmed live via test_patch175_mps_stochastic_dropout_
+      // parity.cpp's "MPS complex64 small linalg keeps complex lanes and
+      // reverse-mode" case. Since the sync-mode fix alone already closes
+      // the buffer race, this identity multiply is once again just a minor,
+      // safe inefficiency rather than something worth the correctness risk.
       if (op == "add") return ops_internal::add(self, mul_scalar(other, s));
       if (op == "sub") return ops_internal::sub(self, mul_scalar(other, s));
       if (op == "where") return self.where(other, s);

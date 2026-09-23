@@ -50,9 +50,8 @@ adds read as commands here).
 ### `mode`
 
 `mode = 0` (the default) applies the pipeline above. `mode >= 1` additionally
-case-folds the recovered text (ASCII lowercase), matching the "sanitize"
-convention used elsewhere in the library — handy when the output feeds a
-case-insensitive index or key. Negative values behave like `0`.
+case-folds the recovered text (ASCII lowercase), which is useful when the
+output feeds a case-insensitive index or key. Negative values behave like `0`.
 
 The operation is shape-preserving, cell-independent, and returns a fresh
 `Note`.
@@ -152,8 +151,12 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
   this text" pass, keyed to identifiers rather than markup.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="standardize_dots.html">
+  <a class="prev-link" href="to_markdown.html">
     <span class="label">Previous</span>
-    <span class="title">standardize_dots</span>
+    <span class="title">to_markdown</span>
+  </a>
+  <a class="next-link" href="todos.html">
+    <span class="label">Next</span>
+    <span class="title">todos</span>
   </a>
 </div>

@@ -2,6 +2,7 @@
 
 #include "pluss/bi/session.h"
 
+#include "BI_tools/browser_launch.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/pl.h"
 #include "pluss/tils/aux/scalar_cast.h"
@@ -78,6 +79,21 @@ namespace detail {
     std::int64_t width,
     std::int64_t height,
     std::string_view svg_payload = {});
+
+// Studio::show()'s runtime host selector. `BackendPreference::Auto` -- the
+// default -- now means "open a real OS browser tab" rather than "pick a
+// native WebKit/WebView2 backend automatically": browser hosting is the
+// primary PlussBI runtime (see ARCHITECTURE.md). Explicitly requesting
+// `NativeWebView`/`PlussWebView`/`PlussWebViewOnly` still routes through
+// PlussTilsView's native windowing for callers that want it.
+[[nodiscard]] inline bool launch_html_(
+    const std::string& html, const pluss::view::HtmlWindowOptions& options) {
+  if (options.backend_preference != pluss::view::BackendPreference::Auto) {
+    return pluss::view::show_html_window(html, options);
+  }
+  const auto path = pluss::bi_tools::open_html_in_browser(html, options.title);
+  return !path.empty();
+}
 
 [[nodiscard]] inline bool frame_has_feature_(
     const pluss::table::DataFrame& frame,
@@ -1104,7 +1120,7 @@ public:
         width,
         height,
         options.svg_payload);
-    return pluss::view::show_html_window(html, options);
+    return detail::launch_html_(html, options);
   }
 
   bool show(
@@ -1136,7 +1152,7 @@ public:
         effective.width,
         effective.height,
         effective.svg_payload);
-    return pluss::view::show_html_window(html, effective);
+    return detail::launch_html_(html, effective);
   }
 
   void save(std::string_view path) const;

@@ -1,0 +1,196 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9e2b05366704 -->
+
+# Thread::mode
+
+[Back to Thread API Reference](../../thread_api_reference)
+
+## Signature
+
+```cpp
+Thread::mode(bool drop_nulls = true) const -> Thread
+```
+
+## What It Does
+
+Returns every value tied for the **most frequently observed** in the thread —
+not just one. If several values are equally the most common, `mode()` returns
+all of them, in ascending order (alphabetical for `Note`, chronological for
+`Timeline`/`TimeIndex`), rather than picking one arbitrarily. Works on numeric
+`Series`, `Note`, `Timeline`, and `TimeIndex` payloads.
+
+`drop_nulls` controls whether missing entries can compete for "most frequent"
+at all:
+
+- **`true`** (the default): missing entries never become part of the result,
+  no matter how many there are — only real, observed values compete.
+- **`false`**: missing entries compete on equal footing with real values. If
+  "missing" turns out to be the single most frequent "value," a `NULL` entry
+  is included in the result (appended after every tied real-value mode).
+
+Throws if there are no values to consider at all (an empty thread, or one that
+is entirely missing while `drop_nulls = true`).
+
+## Parameters
+
+**drop_nulls** (`bool`, default `true`)
+    `true`: missing entries are excluded from mode candidacy entirely.
+    `false`: missing entries compete for "most frequent" like any other value.
+
+## Returns
+
+`Thread`
+    A new thread holding every value tied for most frequent, in ascending
+    order. Length `1` if there's a single mode, longer if there's a tie.
+
+## Examples
+
+Example 1. A single, unambiguous mode.
+
+```cpp
+using namespace pluss::table;
+
+auto values = Thread(pluss::make_series({10.0, 20.0, 10.0, 30.0, 20.0, 20.0}));
+auto out = values.mode();
+std::cout << out;
+```
+
+### Output
+
+```text
+0  20
+
+ptype: Series
+```
+
+`20.0` occurs three times, more than any other value.
+
+Example 2. A tie returns every tied value, in ascending order.
+
+```cpp
+auto tied = Thread(pluss::make_series({10.0, 20.0, 10.0, 20.0, 30.0}));
+auto out2 = tied.mode();
+std::cout << out2;
+```
+
+### Output
+
+```text
+0  10
+1  20
+
+ptype: Series
+```
+
+Both `10.0` and `20.0` occur twice; `30.0` occurs once and doesn't qualify.
+
+Example 3. `drop_nulls = true` (the default) excludes missing entries from
+candidacy, even when they're the single most common "value" in the thread.
+
+```cpp
+auto mostly_missing = Thread(
+    pluss::make_series({10.0, 10.0, 1.0, 1.0, 1.0}),
+    pluss::make_series(std::vector<bool>{true, true, false, false, false})
+);
+auto out3 = mostly_missing.mode();
+std::cout << out3;
+```
+
+### Output
+
+```text
+0  10
+
+ptype: Series
+```
+
+Three of the five entries are missing — more than any real value's count — but
+they're excluded from competing at all, so `10.0` (observed twice) wins.
+
+Example 4. `drop_nulls = false` lets missing entries win, appearing as a
+`NULL` entry in the result.
+
+```cpp
+auto out4 = mostly_missing.mode(false);
+std::cout << out4;
+```
+
+### Output
+
+```text
+0  NULL
+
+ptype: Series
+```
+
+Now missing (three occurrences) beats `10.0`'s two, so the sole mode is
+`NULL`.
+
+Example 5. `Note`-kind threads work the same way, alphabetically ordered on
+ties.
+
+```cpp
+auto words = Thread(pluss::make_note({"apple", "banana", "apple", "cherry"}));
+auto out5 = words.mode();
+std::cout << out5;
+```
+
+### Output
+
+```text
+0  apple
+
+ptype: Note
+```
+
+Example 6. No values at all throws.
+
+```cpp
+auto empty = Thread(pluss::make_series(std::vector<double>{}));
+try {
+  auto bad = empty.mode();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Thread::mode: no values
+```
+
+## Notes
+
+- Returns every tied value, not just one — length `1` only when there's a
+  single unambiguous mode.
+- With `drop_nulls = true`, missing entries never compete, regardless of how
+  frequent they are.
+- With `drop_nulls = false`, a `NULL` entry appears in the result (after every
+  tied real-value mode) if missing is itself the single most frequent
+  "value."
+- Throws `"Thread::mode: no values"` for an empty thread, or one with nothing
+  left to consider.
+- For a numeric `Series` payload, restricted to numeric dtypes — a non-numeric
+  `Series` throws `"Thread::mode: expected a real numeric Series Thread"`.
+
+## See Also
+
+- [`Thread::freq`](freq.md): the full frequency breakdown this method's
+  "most frequent" answer is drawn from.
+- [`Thread::describe`](describe.md): for `Note`-kind threads, reports the
+  single most frequent value (`top`) and its count (`freq`) — `mode()` returns
+  every tied top value, `describe()` only the first alphabetically.
+- [`Thread::median`](median.md): the middle value, a different measure of
+  central tendency for numeric data.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="mod.html">
+    <span class="label">Previous</span>
+    <span class="title">mod</span>
+  </a>
+  <a class="next-link" href="mul.html">
+    <span class="label">Next</span>
+    <span class="title">mul</span>
+  </a>
+</div>

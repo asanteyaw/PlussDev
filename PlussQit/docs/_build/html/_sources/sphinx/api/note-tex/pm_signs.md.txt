@@ -115,11 +115,11 @@ plus-minus Int64: rejected
 
 ## See Also
 
-- `extract_operators`: extract mathematical operator tokens without rewriting.
+- [`ops`](ops.md): extract mathematical operator tokens without rewriting.
 - `to_text`: reduce a broader TeX fragment to readable text.
 - `frac_slash`: convert structured fractions to plain division.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="macro_subs.html"><span class="label">Previous</span><span class="title">macro_subs</span></a>
-  <a class="next-link" href="sqrt_pow.html"><span class="label">Next</span><span class="title">sqrt_pow</span></a>
+  <a class="prev-link" href="packages.html"><span class="label">Previous</span><span class="title">packages</span></a>
+  <a class="next-link" href="prime_norm.html"><span class="label">Next</span><span class="title">prime_norm</span></a>
 </div>

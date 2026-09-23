@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::take &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::tally" href="tally.html" />
+    <link rel="prev" title="DataFrame::tail" href="tail.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7fc65cf6281f -->
+<section id="dataframe-take">
+<h1>DataFrame::take<a class="headerlink" href="#dataframe-take" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">take</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns a new frame built from exactly the case positions listed in <code class="docutils literal notranslate"><span class="pre">indices</span></code>, in
+exactly the order given. Unlike <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">indices</span></code> doesn’t need to be
+contiguous or ascending — you can reorder rows, reverse a frame, or repeat a row
+multiple times by listing its position more than once. This is the general-purpose
+row-selection primitive several other methods (<a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>,
+<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head()</span></code></span></a>, <a class="reference internal" href="tail.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tail()</span></code></span></a>, <a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sample()</span></code></span></a>,
+<a class="reference internal" href="shuffle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shuffle()</span></code></span></a>) are built on top of internally.</p>
+<p>Every requested position is resolved with Python-style negative-index support (<code class="docutils literal notranslate"><span class="pre">-1</span></code>
+means the last case), but — unlike <code class="docutils literal notranslate"><span class="pre">slice()</span></code>’s clamping behavior — an out-of-range
+position (after negative normalization) is a validation error here, not silently
+clamped. Case labels on the result follow the same positions and order as <code class="docutils literal notranslate"><span class="pre">indices</span></code>:
+row <code class="docutils literal notranslate"><span class="pre">5</span></code> keeps its original label <code class="docutils literal notranslate"><span class="pre">5</span></code> even if it now appears first in the result.</p>
+<p>The second overload accepts the positions as a numeric <code class="docutils literal notranslate"><span class="pre">Thread</span></code> instead of a
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code> — convenient when the indices already exist as a computed <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+(the output of another selection or a boolean-to-position conversion) rather
+than a literal list. A non-numeric <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind) throws.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>indices</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Int</span></code>, first overload)</p>
+<p>The case positions to select, in the exact order the result should have. Negative
+values are interpreted relative to the end of the frame. The same position may appear
+more than once — the corresponding row is duplicated once per occurrence.</p>
+<p><strong>indices</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>, second overload)</p>
+<p>The same case positions, supplied as a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind <code class="docutils literal notranslate"><span class="pre">Thread</span></code> instead of a
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>. Same negative-index and repetition rules apply. A non-numeric <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::take:</span> <span class="pre">indices</span> <span class="pre">thread</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Series&quot;</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with one row per entry in <code class="docutils literal notranslate"><span class="pre">indices</span></code>, in that exact order, holding
+every feature of the source frame and the original case label of each selected
+position.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Reorder and duplicate rows in a single call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">picked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">take</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">picked</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================================================
+     | order_id  city    product  units  unit_price  discount
+-------------------------------------------------------------
+5    | 106       Kumasi  Monitor  2      nan         0.12    
+0    | 101       Accra   Laptop   2      1200        0.1     
+0    | 101       Accra   Laptop   2      1200        0.1     
+2    | 103       Tema    Laptop   1      1150        nan     
+-------------------------------------------------------------
+[4 cs x 6 feat]
+</pre></div>
+</div>
+<p>The result has four rows even though only three distinct positions were requested,
+because case <code class="docutils literal notranslate"><span class="pre">0</span></code> was listed twice — it appears twice in the output, each copy keeping
+the label <code class="docutils literal notranslate"><span class="pre">0</span></code>. The row order follows <code class="docutils literal notranslate"><span class="pre">indices</span></code> exactly, not the source frame’s order.</p>
+<p>Example 2. Reverse the entire frame.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">reversed_order</span><span class="p">{</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">reversed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">reversed_order</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reversed</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================================================
+     | order_id  city    product     units  unit_price  discount
+----------------------------------------------------------------
+5    | 106       Kumasi  Monitor     2      nan         0.12    
+4    | 105       Kumasi  Headphones  4      42          0.05    
+3    | 104       Tema    Monitor     3      320         0.08    
+2    | 103       Tema    Laptop      1      1150        nan     
+1    | 102       Accra   Headphones  5      45.5        0.05    
+0    | 101       Accra   Laptop      2      1200        0.1     
+----------------------------------------------------------------
+[6 cs x 6 feat]
+</pre></div>
+</div>
+<p>Every row is present exactly once, but the case order — and the case labels — run
+from <code class="docutils literal notranslate"><span class="pre">5</span></code> down to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>Example 3. The second overload accepts the positions as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> instead
+of a <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> — the same selection as Example 1, expressed with an
+already-existing numeric <code class="docutils literal notranslate"><span class="pre">Thread</span></code> of indices.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">picked2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">idx</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">picked2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================================================
+     | order_id  city    product  units  unit_price  discount
+-------------------------------------------------------------
+5    | 106       Kumasi  Monitor  2      nan         0.12    
+0    | 101       Accra   Laptop   2      1200        0.1     
+0    | 101       Accra   Laptop   2      1200        0.1     
+2    | 103       Tema    Laptop   1      1150        nan     
+-------------------------------------------------------------
+[4 cs x 6 feat]
+</pre></div>
+</div>
+<p>Same result as Example 1 — the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload is a drop-in alternative
+when the indices are already wrapped in a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> rather than a bare
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>/<code class="docutils literal notranslate"><span class="pre">std::vector</span></code>.</p>
+<p>Example 4 (edge case). A non-numeric <code class="docutils literal notranslate"><span class="pre">Thread</span></code> throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">bad_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">bad_idx</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::take: indices thread must be a Series
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Unlike <code class="docutils literal notranslate"><span class="pre">slice()</span></code>, an out-of-range position in <code class="docutils literal notranslate"><span class="pre">indices</span></code> (after negative-index
+normalization) is a validation error, not silently clamped.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">take()</span></code> is the primitive <code class="docutils literal notranslate"><span class="pre">slice()</span></code>, <code class="docutils literal notranslate"><span class="pre">head()</span></code>, <code class="docutils literal notranslate"><span class="pre">tail()</span></code>, <code class="docutils literal notranslate"><span class="pre">sample()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">shuffle()</span></code>/<code class="docutils literal notranslate"><span class="pre">reshuffle()</span></code> all delegate to internally, so its result-shape guarantees
+(feature order, dtypes, original case labels) apply to all of them.</p></li>
+<li><p>Repeating a position produces a row-level duplicate in the result, including a
+duplicated case label — useful for bootstrapped resampling or building a synthetic
+frame from an existing one’s rows.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-indices overload requires a numeric (<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind) <code class="docutils literal notranslate"><span class="pre">Thread</span></code>; a
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::take:</span> <span class="pre">indices</span> <span class="pre">thread</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">a</span> <span class="pre">Series&quot;</span></code> — see Example 4.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::slice</span></code></span></a>: the contiguous-range special case of this method.</p></li>
+<li><p><a class="reference internal" href="sample.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sample</span></code></span></a>: a random subset of positions, built on <code class="docutils literal notranslate"><span class="pre">take()</span></code>.</p></li>
+<li><p><a class="reference internal" href="case_study.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::case_study</span></code></span></a>: a richer, selector-based way to pick rows
+(and optionally features) by position, label, or boolean mask.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tail.html">
+    <span class="label">Previous</span>
+    <span class="title">tail</span>
+  </a>
+  <a class="next-link" href="tally.html">
+    <span class="label">Next</span>
+    <span class="title">tally</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="tail.html" title="previous chapter">DataFrame::tail</a></li>
+      <li>Next: <a href="tally.html" title="next chapter">DataFrame::tally</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/take.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

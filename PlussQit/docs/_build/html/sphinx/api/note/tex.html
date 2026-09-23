@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -58,7 +58,7 @@ command/symbol replacement without crowding the general Note surface with
 dtype. It returns a temporary proxy containing one pointer to the receiver;
 the selected operation performs the work. This keeps <code class="docutils literal notranslate"><span class="pre">Note</span></code> itself a
 one-pointer intrusive handle while allowing fluent pipelines:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">source</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">strip_comments</span><span class="p">().</span><span class="n">tex</span><span class="p">().</span><span class="n">remove_labels</span><span class="p">();</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">cleaned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">source</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">strip_comments</span><span class="p">().</span><span class="n">tex</span><span class="p">().</span><span class="n">strip_labels</span><span class="p">();</span>
 <span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">plain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cleaned</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">to_text</span><span class="p">();</span>
 </pre></div>
 </div>

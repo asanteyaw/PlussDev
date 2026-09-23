@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::top &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::transform" href="transform.html" />
+    <link rel="prev" title="DataFrame::to_string" href="to_string.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: be88ea043bdd -->
+<section id="dataframe-top">
+<h1>DataFrame::top<a class="headerlink" href="#dataframe-top" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">top</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns the <code class="docutils literal notranslate"><span class="pre">n</span></code> rows with the largest values in <code class="docutils literal notranslate"><span class="pre">feature</span></code>, with every other feature
+carried along unchanged — the whole row moves together, not just the sorted column.
+This is exactly <code class="docutils literal notranslate"><span class="pre">arrange({feature},</span> <span class="pre">/*ascending=*/false)</span></code> followed by
+<a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">head(n)</span></code></span></a>; it exists as a single call for the extremely common
+“give me the top N by X” query.</p>
+<p>Missing values in <code class="docutils literal notranslate"><span class="pre">feature</span></code> always sort to the very end, regardless of the descending
+direction — a row with a missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value can only appear in the result if <code class="docutils literal notranslate"><span class="pre">n</span></code>
+is large enough to reach that far down the ranking.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The name of the feature to rank by, largest first.</p>
+<p><strong>n</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
+<p>How many top-ranked rows to return. Values larger than <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> return the whole
+frame, sorted, rather than erroring.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with <code class="docutils literal notranslate"><span class="pre">n</span></code> rows (or fewer, if the source frame is smaller), sorted by
+<code class="docutils literal notranslate"><span class="pre">feature</span></code> in descending order, with every feature preserved.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Get the three highest-priced orders.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">priciest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">top</span><span class="p">(</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">priciest</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============================================================
+     | order_id  city   product  units  unit_price  discount
+------------------------------------------------------------
+0    | 101       Accra  Laptop   2      1200        0.1     
+2    | 103       Tema   Laptop   1      1150        NULL    
+3    | 104       Tema   Monitor  3      320         0.08    
+------------------------------------------------------------
+[3 cs x 6 feat]
+</pre></div>
+</div>
+<p>The three rows with the largest <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> values (<code class="docutils literal notranslate"><span class="pre">1200</span></code>, <code class="docutils literal notranslate"><span class="pre">1150</span></code>, <code class="docutils literal notranslate"><span class="pre">320</span></code>) come back
+with every feature intact — <code class="docutils literal notranslate"><span class="pre">discount</span></code>’s own missing value at case <code class="docutils literal notranslate"><span class="pre">2</span></code> rides along
+unaffected, since the ranking only cares about <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>. Case <code class="docutils literal notranslate"><span class="pre">5</span></code>, whose
+<code class="docutils literal notranslate"><span class="pre">unit_price</span></code> is missing, does not appear: missing values are always ranked last, no
+matter how few rows are requested.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">top()</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">arrange({feature},</span> <span class="pre">false).head(n)</span></code>; reach for <code class="docutils literal notranslate"><span class="pre">arrange()</span></code>
+directly if you need more than one sort key or an ascending mix.</p></li>
+<li><p>A missing value in <code class="docutils literal notranslate"><span class="pre">feature</span></code> sorts to the very end regardless of direction — it can
+only appear in a <code class="docutils literal notranslate"><span class="pre">top()</span></code> result if <code class="docutils literal notranslate"><span class="pre">n</span></code> is large enough to include it.</p></li>
+<li><p>For the smallest values instead of the largest, use <a class="reference internal" href="bottom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bottom()</span></code></span></a>, which
+shares this exact signature.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="bottom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::bottom</span></code></span></a>: the ascending counterpart, returning the smallest
+<code class="docutils literal notranslate"><span class="pre">n</span></code> rows by <code class="docutils literal notranslate"><span class="pre">feature</span></code>.</p></li>
+<li><p><a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::arrange</span></code></span></a>: the general sorting method this is built
+on, supporting multiple keys and mixed sort directions.</p></li>
+<li><p><a class="reference internal" href="head.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::head</span></code></span></a>: the plain positional prefix <code class="docutils literal notranslate"><span class="pre">top()</span></code> applies after
+sorting.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="to_string.html">
+    <span class="label">Previous</span>
+    <span class="title">to_string</span>
+  </a>
+  <a class="next-link" href="transform.html">
+    <span class="label">Next</span>
+    <span class="title">transform</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="to_string.html" title="previous chapter">DataFrame::to_string</a></li>
+      <li>Next: <a href="transform.html" title="next chapter">DataFrame::transform</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/top.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

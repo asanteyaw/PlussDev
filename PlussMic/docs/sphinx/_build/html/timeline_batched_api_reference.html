@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Timeline (tl) and Batched DataFrame Operations &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=76d8b11c"></script>
+    <script src="_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Thread And Atlas Guide" href="thread_atlas.html" />
+    <link rel="prev" title="Time-Series Accessor Guide" href="time_series_accessor_guide.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="timeline-tl-and-batched-dataframe-operations">
+<h1>Timeline (<code class="docutils literal notranslate"><span class="pre">tl</span></code>) and Batched DataFrame Operations<a class="headerlink" href="#timeline-tl-and-batched-dataframe-operations" title="Link to this heading">¶</a></h1>
+<p>This page covers the Pluss-native timeline surface and the batched numeric
+delegation path added for multi-feature DataFrame operations.</p>
+<section id="api-signature">
+<h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread::tl()</span> <span class="pre">-&gt;</span> <span class="pre">ThreadTimelineAccessor</span></code><br />
+<code class="docutils literal notranslate"><span class="pre">DataFrame::tl(feature:</span> <span class="pre">string_view)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameTimelineAccessor</span></code><br />
+<code class="docutils literal notranslate"><span class="pre">DataFrame::tl(features:</span> <span class="pre">initializer_list&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameTimelineAccessor</span></code><br />
+<code class="docutils literal notranslate"><span class="pre">DataFrame::tl(features:</span> <span class="pre">RangeView&lt;string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameTimelineAccessor</span></code><br />
+<code class="docutils literal notranslate"><span class="pre">Atlas::tl(feature:</span> <span class="pre">string_view)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code><br />
+<code class="docutils literal notranslate"><span class="pre">Atlas::tl(features:</span> <span class="pre">initializer_list&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code><br />
+<code class="docutils literal notranslate"><span class="pre">Atlas::tl(features:</span> <span class="pre">RangeView&lt;string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">AtlasTimelineAccessor</span></code></p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tl()</span></code> is the datetime/timeline surface. It is separate from <code class="docutils literal notranslate"><span class="pre">ts()</span></code>: <code class="docutils literal notranslate"><span class="pre">tl()</span></code>
+extracts and transforms datetime payloads, while <code class="docutils literal notranslate"><span class="pre">ts()</span></code> remains the time-series
+analytics surface for returns, lag/lead, rolling blocks, resampling, and
+alignment.</p>
+</section>
+<section id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code>: one Timeline or TimeIndex feature name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">features</span></code>: zero or more Timeline/TimeIndex feature names. Empty selection
+is valid only after an intentional selection where every feature in the
+current frame is Timeline/TimeIndex, for example
+<code class="docutils literal notranslate"><span class="pre">df.features({&quot;event_time&quot;}).tl()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code>: calendar/time unit accepted by <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> rounding methods, such as
+<code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>, or compatible CodeH units.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">periods</span></code>: signed number of frequency steps to shift.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code>: shift/period frequency such as <code class="docutils literal notranslate"><span class="pre">&quot;D&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimelineLocalizeOptions</span></code>: option struct with <code class="docutils literal notranslate"><span class="pre">.tz</span></code>, <code class="docutils literal notranslate"><span class="pre">.fold</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">.nonexistent</span></code> fields.</p></li>
+</ul>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Thread-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<li><p>DataFrame-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with selected features replaced
+by the transformed result.</p></li>
+<li><p>Atlas-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> after applying the DataFrame operation
+to each frame.</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TimeUnit</span></code> controls epoch extraction:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeUnit::Nanos</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeUnit::Micros</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeUnit::Millis</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TimeUnit::Seconds</span></code></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">TimelineLocalizeOptions</span></code> supports C++20 designated initializers:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimelineLocalizeOptions</span><span class="p">{.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;UTC&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">fold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">nonexistent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;raise&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="example-1-thread-timeline-extraction">
+<h3>Example 1: Thread timeline extraction<a class="headerlink" href="#example-1-thread-timeline-extraction" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">iso</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">iso</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">years</span></code> is a numeric Thread containing calendar years.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iso</span></code> is a Note Thread containing formatted ISO-like datetime strings.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code> is a numeric Thread containing epoch seconds.</p></li>
+</ul>
+</section>
+<section id="example-2-thread-reduction-preserves-timeline-payload">
+<h3>Example 2: Thread reduction preserves timeline payload<a class="headerlink" href="#example-2-thread-reduction-preserves-timeline-payload" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">first_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">min</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">last_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">max</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">first_time</span></code> is a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> wrapping a one-element Timeline payload.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last_time</span></code> is a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> wrapping a one-element Timeline payload.</p></li>
+</ul>
+</section>
+<section id="example-3-dataframe-timeline-transformation">
+<h3>Example 3: DataFrame timeline transformation<a class="headerlink" href="#example-3-dataframe-timeline-transformation" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">year_frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;event_time&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">rename</span><span class="p">({{</span><span class="s">&quot;event_time&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;event_year&quot;</span><span class="p">}});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">rounded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;event_time&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">monthly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;event_time&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">period</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">year_frame</span></code> keeps the original frame shape and replaces <code class="docutils literal notranslate"><span class="pre">event_time</span></code> with
+the extracted year, renamed to <code class="docutils literal notranslate"><span class="pre">event_year</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rounded</span></code> keeps <code class="docutils literal notranslate"><span class="pre">event_time</span></code> as a Timeline/TimeIndex feature rounded down to
+day precision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">monthly</span></code> keeps <code class="docutils literal notranslate"><span class="pre">event_time</span></code> as a Timeline/TimeIndex feature bucketed to the
+start of its calendar month.</p></li>
+</ul>
+</section>
+<section id="example-4-option-struct-localization">
+<h3>Example 4: Option-struct localization<a class="headerlink" href="#example-4-option-struct-localization" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">localized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;event_time&quot;</span><span class="p">}).</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span>
+<span class="w">    </span><span class="n">TimelineLocalizeOptions</span><span class="p">{.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;UTC&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">fold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">nonexistent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;raise&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">localized</span></code> is a DataFrame with <code class="docutils literal notranslate"><span class="pre">event_time</span></code> localized using the supplied
+timezone rules.</p></li>
+</ul>
+</section>
+<section id="example-5-atlas-level-timeline-delegation">
+<h3>Example 5: Atlas-level timeline delegation<a class="headerlink" href="#example-5-atlas-level-timeline-delegation" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="w"> </span><span class="nf">atlas</span><span class="p">({</span><span class="n">jan</span><span class="p">,</span><span class="w"> </span><span class="n">feb</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">months</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">tl</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">month</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">months</span></code> is an Atlas with each frame transformed through selected
+DataFrame timeline features.</p></li>
+</ul>
+</section>
+<section id="example-6-batched-numeric-dataframe-math">
+<h3>Example 6: Batched numeric DataFrame math<a class="headerlink" href="#example-6-batched-numeric-dataframe-math" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scaled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;expense&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;margin&quot;</span><span class="p">}).</span><span class="n">mul</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">compared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;expense&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;margin&quot;</span><span class="p">}).</span><span class="n">gt</span><span class="p">(</span><span class="mf">20.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">combined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;expense&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;margin&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">scaled</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;expense&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;margin&quot;</span><span class="p">}));</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scaled</span></code> is a DataFrame where compatible numeric features are packed into a
+matrix batch, multiplied once, and unpacked.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compared</span></code> is a boolean DataFrame using the same batched scalar comparison
+path where dtype/platform compatibility allows it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">combined</span></code> uses the DataFrame-vs-DataFrame batched pair path for compatible
+numeric feature groups, falling back per Thread for mixed payloads.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+  <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+      <li>Previous: <a href="time_series_accessor_guide.html" title="previous chapter">Time-Series Accessor Guide</a></li>
+      <li>Next: <a href="thread_atlas.html" title="next chapter">Thread And Atlas Guide</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/timeline_batched_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

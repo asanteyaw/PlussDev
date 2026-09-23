@@ -86,6 +86,6 @@ collapse Int64: rejected
 - [`Note::collapse_whitespace`](../note/collapse_whitespace.md): whitespace-only normalization on the root text surface.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="citations.html"><span class="label">Previous</span><span class="title">citations</span></a>
+  <a class="prev-link" href="cmd_sub.html"><span class="label">Previous</span><span class="title">cmd_sub</span></a>
   <a class="next-link" href="command_names.html"><span class="label">Next</span><span class="title">command_names</span></a>
 </div>

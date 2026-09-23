@@ -38,14 +38,14 @@ TEST_CASE("CodeN TeX named-environment extraction family is concrete", "[coden][
       "\\caption{Figure cap}\n");
 
   // theorem/lemma no longer have dedicated methods (they were pure aliases
-  // of extract_environment(name) with no unique logic of their own); the
+  // of env(name) with no unique logic of their own); the
   // generic form is the one, closed-TokenBatch-returning surface for any
   // environment name.
-  auto th = tex.tex().extract_environment("theorem");
+  auto th = tex.tex().env("theorem");
   REQUIRE(th.tokens().numel() >= 1);
   REQUIRE(th.tokens().at(0).find("theorem") != std::string::npos);
 
-  auto le = tex.tex().extract_environment("lemma");
+  auto le = tex.tex().env("lemma");
   REQUIRE(le.tokens().numel() >= 1);
   REQUIRE(le.tokens().at(0).find("lemma") != std::string::npos);
 

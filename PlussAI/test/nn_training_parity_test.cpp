@@ -403,7 +403,7 @@ std::pair<Series, Series> make_conv_data() {
   const Series input = pluss::make_series(values, {batch, 1, length}, cfg);
   const Series kernel = pluss::make_series(std::vector<float>{0.25f, -0.1f, 0.35f}, {1, 1, 3}, cfg);
   const Series bias = pluss::make_series(std::vector<float>{0.05f}, {1}, cfg);
-  const Series target = pluss::conv1d(input, kernel, bias, 1, 1, 1, 1);
+  const Series target = pluss::nn::conv1d(input, kernel, bias, 1, 1, 1, 1);
   return {input, target};
 }
 

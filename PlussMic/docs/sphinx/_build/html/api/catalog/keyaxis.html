@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Catalog::keyaxis &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Catalog::keys" href="keys.html" />
+    <link rel="prev" title="Catalog::isnull" href="isnull.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: edb2adc5ba27 -->
+<section id="catalog-keyaxis">
+<h1>Catalog::keyaxis<a class="headerlink" href="#catalog-keyaxis" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Catalog</span><span class="o">::</span><span class="n">keyaxis</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">CatalogKeyAxisAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>The entry point into operations on the <strong>key axis</strong> — the stream <em>names</em> themselves,
+rather than their contents. <code class="docutils literal notranslate"><span class="pre">keyaxis()</span></code> binds the current catalog and hands back a
+<code class="docutils literal notranslate"><span class="pre">CatalogKeyAxisAccessor</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CatalogKeyAxisAccessor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="n">like</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">needle</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">case_sensitive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">match</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">series</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">note</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">timeline</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">timeindex</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">prefix</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">prefix</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Catalog</span><span class="w"> </span><span class="nf">suffix</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">suffix</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>All eight methods are <strong>filters</strong> on the key axis:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">like()</span></code>/<code class="docutils literal notranslate"><span class="pre">match()</span></code></strong> filter by key text.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">series()</span></code>/<code class="docutils literal notranslate"><span class="pre">note()</span></code>/<code class="docutils literal notranslate"><span class="pre">timeline()</span></code>/<code class="docutils literal notranslate"><span class="pre">timeindex()</span></code></strong> filter by stream payload kind.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">prefix()</span></code>/<code class="docutils literal notranslate"><span class="pre">suffix()</span></code></strong> filter by whether a key starts/ends with the requested token.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>prefix()/suffix() are key filters
+<code class="docutils literal notranslate"><span class="pre">prefix(&quot;user_&quot;)</span></code> means “keep only keys starting with <code class="docutils literal notranslate"><span class="pre">user_</span></code>”, and <code class="docutils literal notranslate"><span class="pre">suffix(&quot;_raw&quot;)</span></code>
+means “keep only keys ending with <code class="docutils literal notranslate"><span class="pre">_raw</span></code>”. They do <strong>not</strong> rename keys.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code> (parameters belong to the individual <code class="docutils literal notranslate"><span class="pre">CatalogKeyAxisAccessor</span></code> methods, not to
+<code class="docutils literal notranslate"><span class="pre">keyaxis()</span></code> itself).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CatalogKeyAxisAccessor</span></code>
+A binder for the current catalog — call one of its eight methods to filter by
+key text or stream kind.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">like()</span></code> filters keys by substring — case-sensitive by default.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;user_id&quot;</span><span class="n">_k</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;user_name&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;signup_date&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keyaxis</span><span class="p">().</span><span class="n">like</span><span class="p">(</span><span class="s">&quot;user&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=2
+keys: [user_id, user_name]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+user_id                  | Series       | Series[float64]  | 3       | [1, 2, 3]                                        
+user_name                | Note         | Note             | 3       | [Ada, Bola, Chen]                                
+========================================================================================================================
+</pre></div>
+</div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">prefix()</span></code> filters to keys that <em>start with</em> the requested token.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;user_id&quot;</span><span class="n">_k</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;user_name&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;signup_date&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keyaxis</span><span class="p">().</span><span class="n">prefix</span><span class="p">(</span><span class="s">&quot;user_&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>user_id user_name
+</pre></div>
+</div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">suffix()</span></code> filters to keys that <em>end with</em> the requested token.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;id_raw&quot;</span><span class="n">_k</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;name_raw&quot;</span><span class="n">_k</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;signup_date&quot;</span><span class="n">_k</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keyaxis</span><span class="p">().</span><span class="n">suffix</span><span class="p">(</span><span class="s">&quot;_raw&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id_raw name_raw
+</pre></div>
+</div>
+<p>Example 4. Filter to only streams of a given payload kind with <code class="docutils literal notranslate"><span class="pre">series()</span></code>/<code class="docutils literal notranslate"><span class="pre">note()</span></code>/
+<code class="docutils literal notranslate"><span class="pre">timeline()</span></code>/<code class="docutils literal notranslate"><span class="pre">timeindex()</span></code>, instead of by name.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;user_id&quot;</span><span class="n">_k</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;user_name&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;signup_date&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keyaxis</span><span class="p">().</span><span class="n">note</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Catalog  keys=1
+keys: [user_name]
+------------------------------------------------------------------------------------------------------------------------
+key                      | kind         | dtype            | cs      | preview                                          
+------------------------------------------------------------------------------------------------------------------------
+user_name                | Note         | Note             | 3       | [Ada, Bola, Chen]                                
+========================================================================================================================
+</pre></div>
+</div>
+<p>Example 5. A <code class="docutils literal notranslate"><span class="pre">like()</span></code>/<code class="docutils literal notranslate"><span class="pre">match()</span></code>/<code class="docutils literal notranslate"><span class="pre">prefix()</span></code>/<code class="docutils literal notranslate"><span class="pre">suffix()</span></code> filter that matches nothing returns
+an empty catalog
+(zero keys) rather than throwing.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;user_id&quot;</span><span class="n">_k</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;user_name&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">keyaxis</span><span class="p">().</span><span class="n">like</span><span class="p">(</span><span class="s">&quot;zzz&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">nkeys</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>All eight methods filter down to a subset of streams; none of them rename keys.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">like()</span></code> defaults to case-sensitive matching; pass <code class="docutils literal notranslate"><span class="pre">false</span></code> as the second argument for a
+case-insensitive substring search.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">match()</span></code> takes a full regular expression rather than a plain substring.</p></li>
+<li><p>A filter that matches nothing returns an empty (zero-key) catalog rather than throwing.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys</span></code></span></a>: select streams by explicit name list, rather than by
+substring/regex/kind match.</p></li>
+<li><p><a class="reference internal" href="rename.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::rename</span></code></span></a>: rename specific streams explicitly when you actually want
+key transformation rather than selection.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="isnull.html">
+    <span class="label">Previous</span>
+    <span class="title">isnull</span>
+  </a>
+  <a class="next-link" href="keys.html">
+    <span class="label">Next</span>
+    <span class="title">keys</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
+      <li>Previous: <a href="isnull.html" title="previous chapter">Catalog::isnull</a></li>
+      <li>Next: <a href="keys.html" title="next chapter">Catalog::keys</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog/keyaxis.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

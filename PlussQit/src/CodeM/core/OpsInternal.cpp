@@ -7900,6 +7900,12 @@ Series Series::to(Platform target, ScalarType dst) const {
   if (target == Platform::MPS) {
     PLUSS_CHECK(dst != ScalarType::Float64,
                 "Series::to(MPS, float64): float64 is unsupported on MPS");
+    // Moving platform before dtype would pass through an intermediate
+    // MPS+Float64 state whenever the source is Float64 (e.g. a common CPU
+    // Float64 -> MPS Float32 transition), tripping platform()'s own guard
+    // even though this function just proved the *final* state is valid.
+    // Cast first (still on the source platform, unrestricted), then move.
+    return to(dst).to(target);
   }
   return to(target).to(dst);
 }

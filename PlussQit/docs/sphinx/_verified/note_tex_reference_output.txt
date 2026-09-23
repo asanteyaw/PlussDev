@@ -150,6 +150,558 @@ two passes: Note(shape=[], dim=0, numel=1, encoding=utf8)
 "Value: done; prefix: \\Alpha."
 Note(shape=[2], dim=1, numel=2, encoding=utf8)
 ["mass: kg", "length: m"]
+
+=== command arguments ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A {nested} title", "Second", "Third"]
+offsets=[0, 2, 2, 3, 3]
+shape=[2, 2]
+
+=== named environment ===
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\\begin{proof}outer \\begin{proof}inner\\end{proof} tail\\end{proof}"]
+offsets=[0, 1, 1, 1, 1]
+
+=== math extractors ===
+math_funcs: Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["sin", "sqrt"]
+offsets=[0, 1, 2, 2, 2]
+greek: Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["alpha", "beta"]
+offsets=[0, 1, 2, 2, 2]
+ids: Note(shape=[12], dim=1, numel=12, encoding=utf8)
+["x_1", "sin", "alpha", "beta", "leq", "y", "sqrt", "z", "argmax_x", "f", "x", "approx"]
+offsets=[0, 3, 8, 8, 12]
+nums: Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["2.5", "2", "10"]
+offsets=[0, 1, 2, 2, 3]
+ops: Note(shape=[5], dim=1, numel=5, encoding=utf8)
+["+", "=", "\\leq", "^", "\\approx"]
+offsets=[0, 2, 4, 4, 5]
+symbols: Note(shape=[10], dim=1, numel=10, encoding=utf8)
+["+", "\\sin", "\\alpha", "=", "\\beta", "\\leq", "^", "\\sqrt", "\\argmax", "\\approx"]
+offsets=[0, 4, 8, 8, 10]
+
+=== figures ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\begin{figure*}wide\\end{figure*}", "\\begin{figure}plain\\end{figure}", "\\begin{figure}outer \\begin{figure}inner\\end{figure} tail\\end{figure}"]
+offsets=[0, 2, 3, 3, 3]
+
+=== fix linebreaks ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["alpha\n\nbeta\n", "already\n\nclean"], 
+  ["tail\n", ""]
+]
+idempotent=true
+
+=== footnotes ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["first", "outer {nested} note"]
+offsets=[0, 2, 2, 2]
+
+=== headings ===
+depth=1 Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Front", "Start", "Top {title}"]
+offsets=[0, 3, 3, 3, 3]
+depth=2 Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Front", "Start", "Top {title}", "Detail"]
+offsets=[0, 3, 4, 4, 4]
+depth=4 Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["Front", "Start", "Top {title}", "Detail", "Deep", "Leaf"]
+offsets=[0, 3, 6, 6, 6]
+headings(0): rejected
+headings(5): rejected
+
+=== includes ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["chapters/{intro}", "plot.pdf", "appendix"]
+offsets=[0, 2, 3, 3]
+
+=== inline math ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["$x+\\$y$", "\\(z\\)"]
+offsets=[0, 2, 2, 2, 2]
+
+=== labels ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["eq:{energy}", "sec:intro"]
+offsets=[0, 1, 2, 2]
+
+=== macros defined ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["\\RR", "\\vecx", "\\unit", "\\pair"]
+offsets=[0, 2, 4, 4]
+
+=== macros used ===
+Note(shape=[6], dim=1, numel=6, encoding=utf8)
+["\\alpha", "\\beta", "\\section*", "\\section", "\\beta", "\\delta"]
+offsets=[0, 4, 6]
+
+=== math blocks ===
+all: Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["$x+\\$y$", "$$display$$", "\\(z\\)", "\\[block\\]"]
+offsets=[0, 3, 4, 4, 4]
+first: Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["$x+\\$y$", "\\[block\\]"]
+offsets=[0, 1, 2, 2, 2]
+zero: Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets=[0, 0, 0, 0, 0]
+math_blocks(-2): rejected
+
+=== math only ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["x+\\$y z q", "a+b"], 
+  ["", ""]
+]
+projected shape=[2, 2]
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["$x+\\$y$", "$$z$$", "\\(q\\)", "\\[a+b\\]"]
+
+=== line norm ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a\nb\nc\n", "stable"], 
+  ["", "x\n"]
+]
+same_shape=true idempotent=true
+
+=== packages ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["geometry", "xcolor", "amsmath", "hyperref"]
+offsets=[0, 2, 4, 4]
+
+=== refs ===
+Note(shape=[7], dim=1, numel=7, encoding=utf8)
+["eq:{energy}", "eq:two", "sec:a", "sec:b", "fig:a", "fig:b", "name:a"]
+offsets=[0, 3, 7, 7]
+
+=== deaccent ===
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["e S c oo \\text{keep}", "cafe deja"], 
+  ["\\\\'{e} \\unknown{x}", ""]
+]
+shape=[2, 2] dtype=Text
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"\\'{e}"
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"e"
+
+=== strip bib ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Before middle after", "A Z", "\\\\bibliography{escaped} \\bibliography{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["A B", ""], 
+  ["plain", ""]
+]
+shape=[2, 2]
+receiver unchanged=true idempotent=true
+
+=== strip size ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["( x ) + [y]", "\\\\Bigl literal \\BiglExtra keep", "plain"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["\\{a\\}", "|x|"], 
+  ["\\left(y\\right)", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip cites ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["A B C", "\\\\cite{escaped} \\cite{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["Lead tail", ""], 
+  ["uncited prose", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip color ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A bold {nested} B box C", "framed tail", "\\\\textcolor{red}{escaped} \\textcolor{red}{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["white", "red"], 
+  ["plain", ""]
+]
+shape=[2, 2]
+receiver unchanged=true idempotent=true
+
+=== strip cmds ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B C", "price \\$5 and \\\\alpha literal", "{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["A B", "x y"], 
+  ["plain", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip env ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B", "\\\\begin{proof}escaped\\end{proof}", "\\begin{proof}unfinished"]
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["A B", "C \\begin{figure}plain\\end{figure} D"]
+strip_env(bad name): rejected
+
+=== strip envs ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B", "C D E", "\\\\begin{proof}escaped\\end{proof} \\begin{proof}unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["x y", "plain"], 
+  ["", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip figs ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B", "C D E", "\\includegraphics{kept.png} \\begin{figure}unfinished"]
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"A B"
+idempotent=true
+
+=== strip fmt ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A bold and nested B", "under x code", "\\\\textbf{escaped} \\textbf{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["x", "plain"], 
+  ["y", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip fonts ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A { bold} B { italic} C", "wrapped mono", "\\\\bfseries escaped \\bfseriesExtra kept"]
+Note(shape=[], dim=0, numel=1, encoding=utf8)
+"roman sans caps"
+idempotent=true
+
+=== strip graphics ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B", "C D E", "\\\\includegraphics{escaped} \\includegraphics{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", "plain"], 
+  ["", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip links ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A visible {label} B", "C jump \\textbf{here} D E", "\\\\href{escaped}{kept} \\href{broken}{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["one", ""], 
+  ["plain", ""]
+]
+shape=[2, 2]
+receiver unchanged=true idempotent=true
+
+=== strip labels ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["A B C", "\\\\label{escaped} \\labelled{long} \\label{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["x y", ""], 
+  ["plain", ""]
+]
+shape=[2, 2]
+receiver unchanged=true idempotent=true
+
+=== strip lr ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["( x ) + \\{ y \\}", ". f |_0^1 + \\leftarrow + \\rightarrow", "\\\\left literal \\leftover kept"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["[a]", "plain"], 
+  ["\\langle b\\rangle", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip macro ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B \\RR{x} C", "\\renewcommand{\\ZZ}{Z} \\RR{q}", "\\\\newcommand{\\RR}{escaped} \\newcommand{\\RR}{unfinished"]
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B \\RR{x} C", "\\renewcommand{\\ZZ}{Z} \\RR{q}", "\\\\newcommand{\\RR}{escaped} \\newcommand{\\RR}{unfinished"]
+idempotent=true other macro kept=true
+strip_macro(bad name): rejected
+
+=== strip delims ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A x+1 B y C z D q", "price \\$5; escaped \\\\(literal\\\\); unmatched tail", "plain text"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a", "b"], 
+  ["\\$3", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip pkgs ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B", "C D E", "\\\\usepackage{escaped} \\usepackages{long} \\usepackage{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", "plain"], 
+  ["x y", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip refs ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B C D", "", "\\\\ref{escaped} \\reference{long} \\ref{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["x y", ""], 
+  ["plain", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== cmd sub ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["[$&] + \\alpha* + \\alphabet + \\\\alpha", "\\alpha* + [$&]", "plain"]
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\alpha + STAR + \\alphabet + \\\\alpha", "STAR + \\alpha", "plain"]
+leading slash same=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["A", "\\beta"], 
+  ["", "A+A"]
+]
+shape=[2, 2]
+cmd_sub(bad name): rejected
+
+=== graphics tags ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A [graphic:plots/{loss}.pdf] B", "\\\\includegraphics{escaped} \\includegraphicsx{long}", "\\includegraphics[width=2cm]{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["[graphic:a.png]", "plain"], 
+  ["x [graphic:b.pdf] y", ""]
+]
+shape=[2, 2]
+
+=== render ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["(1)/(2)α + x² - y₁", "Rate ≤ ∞; kept", "escaped alpha and $5"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["x₁", "α"], 
+  ["plain", ""]
+]
+shape=[2, 2]
+one= two=done
+render(0): rejected
+
+=== sections ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["A {nested} title", "Second"]
+offsets=[0, 2, 2, 2]
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A", "B", "C"]
+offsets=[0, 1, 1, 3, 3]
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets=[0, 0, 0]
+
+=== strip space ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["a b c d e f g h i", "x y z q", "\\\\quad \\quadratic \\hspace{unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a b", "plain"], 
+  ["c d", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== strip tables ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["before after", "x y z", "\\\\begin{table}escaped\\\\end{table} \\begin{table}unfinished"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", "plain"], 
+  ["x y", ""]
+]
+shape=[2, 2]
+idempotent=true
+
+=== set macro ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\newcommand{\\unit}{\\mathrm{kg}}\nvalue=\\unit", "\\newcommand{\\unit}{\\mathrm{kg}}\nplain source", "\\newcommand{\\unit}{\\mathrm{kg}}\n\\unit + \\unitless"]
+leading slash same=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["\\newcommand{\\unit}{s}\na", "\\newcommand{\\unit}{s}\nb"], 
+  ["\\newcommand{\\unit}{s}\n", "\\newcommand{\\unit}{s}\n\\unit"]
+]
+shape=[2, 2]
+set_macro(bad name): rejected
+set_macro(unbalanced body): rejected
+
+=== simplify fractions ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\frac{a + {b}}{\\frac{c}{d}}", "\\frac{x}{y} + \\frac{1}{2}", "\\operatorname{x} \\fraction{a}{b} \\\\dfrac{a}{b} \\frac{broken}"]
+idempotent=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["\\frac{a}{b}", "plain"], 
+  ["\\frac{x}{y}", ""]
+]
+shape=[2, 2]
+
+=== simplify roots ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\sqrt[3]{a + \\sqrt{{b}}}", "\\sqrt{x} + \\sqrt[n + 1]{y}", "\\sqrted{x} \\\\sqrt{x} \\sqrt[3]oops \\sqrt{broken"]
+idempotent=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["\\sqrt{a}", "plain"], 
+  ["\\sqrt[4]{b}", ""]
+]
+shape=[2, 2]
+
+=== strip comments ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["keep \\% percent \nnext", "alpha \r\nbeta", "one \rtwo", "100\\% visible"]
+idempotent=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a \nb", "plain"], 
+  ["\nnext", ""]
+]
+shape=[2, 2]
+
+=== strip metadata ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A B", "x y", "\\\\date{x} \\titlecase{y}"]
+idempotent=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["", "plain"], 
+  ["x y", ""]
+]
+shape=[2, 2]
+
+=== strip preamble ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Body \\begin{figure}x\\end{figure}", "head \\begin{document}body", "\\\\begin{document}escaped\\\\end{document}", "plain body"]
+idempotent=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["A", "plain"], 
+  ["", ""]
+]
+shape=[2, 2]
+
+=== subsections ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Nested {title}", "Second", "Third"]
+offsets=[0, 2, 2, 3]
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["A", "B", "C"]
+offsets=[0, 1, 1, 3, 3]
+
+=== subsubsections ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["Deep {title}", "Second", "Third"]
+offsets=[0, 2, 3, 3]
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets=[0, 0, 0]
+
+=== tables ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\begin{table*}star\\end{table*}", "\\begin{table}plain\\end{table}", "\\begin{table}outer \\begin{table}inner\\end{table} tail\\end{table}"]
+offsets=[0, 2, 3, 3]
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["\\begin{table}A\\end{table}", "\\begin{table*}B\\end{table*}"]
+offsets=[0, 1, 1, 2, 2]
+
+=== tabular blocks ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\begin{tabular*}wide\\end{tabular*}", "\\begin{tabular}plain\\end{tabular}", "\\begin{tabular}inside\\end{tabular}"]
+offsets=[0, 2, 3, 3]
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets=[0, 0, 0]
+
+=== text only ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["Before after", "A B C", "price \\ unfinished", ""]
+idempotent=true
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["left", "right"], 
+  ["plain", ""]
+]
+shape=[2, 2]
+
+=== to html ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["<h1>Intro</h1><h2>Detail</h2><h3>Fine</h3>", "<strong>Bold</strong> and <em>emphasis</em><br/>next <li> first", "See label .", "warn"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["<h1>A</h1>", "<strong>B</strong>"], 
+  ["plain", ""]
+]
+shape=[2, 2]
+
+=== to latex ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["x\\_1 \\& 50\\% complete", "alpha + beta <= gamma", "plain words", "sqrt(x) -> infty"]
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["x\\_1 \\& 50\\% complete", "\\alpha + \\beta \\leq \\gamma", "plain words", "\\sqrt{x} \\to \\infty"]
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["$x\\_1 \\& 50\\% complete$", "$\\alpha + \\beta \\leq \\gamma$", "plain words", "$\\sqrt{x} \\to \\infty$"]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["a\\_b", "alpha"], 
+  ["x+y", ""]
+]
+shape=[2, 2]
+to_latex(-1): rejected
+to_latex(3): rejected
+
+=== tail boundaries ===
+undefined=false,false,false,false,false,false,false
+subsections Int64: rejected
+subsubsections Int64: rejected
+tables Int64: rejected
+tabular blocks Int64: rejected
+text only Int64: rejected
+to html Int64: rejected
+to latex Int64: rejected
+
+=== normalization boundaries ===
+undefined=false,false,false,false,false,false
+set macro Int64: rejected
+fractions Int64: rejected
+roots Int64: rejected
+comments Int64: rejected
+metadata Int64: rejected
+preamble Int64: rejected
+
+=== extractor boundaries ===
+undefined=false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false
+args(empty): rejected
+env(bad name): rejected
 undefined=false,false,false,false,false
 macro_subs(0): rejected
 align Int64: rejected
@@ -171,3 +723,106 @@ environment names Int64: rejected
 environments Int64: rejected
 input tags Int64: rejected
 macro substitutions Int64: rejected
+command arguments Int64: rejected
+named environment Int64: rejected
+math functions Int64: rejected
+Greek commands Int64: rejected
+identifiers Int64: rejected
+numbers Int64: rejected
+operators Int64: rejected
+symbols Int64: rejected
+figures Int64: rejected
+linebreaks Int64: rejected
+footnotes Int64: rejected
+headings Int64: rejected
+includes Int64: rejected
+inline math Int64: rejected
+labels Int64: rejected
+macro defs Int64: rejected
+macro use Int64: rejected
+math blocks Int64: rejected
+math only Int64: rejected
+line norm Int64: rejected
+packages Int64: rejected
+refs Int64: rejected
+deaccent Int64: rejected
+strip bib Int64: rejected
+strip size Int64: rejected
+strip cites Int64: rejected
+strip color Int64: rejected
+strip cmds Int64: rejected
+strip env Int64: rejected
+strip envs Int64: rejected
+strip figs Int64: rejected
+strip fmt Int64: rejected
+strip fonts Int64: rejected
+strip graphics Int64: rejected
+strip links Int64: rejected
+strip labels Int64: rejected
+strip lr Int64: rejected
+strip macro Int64: rejected
+strip delims Int64: rejected
+strip pkgs Int64: rejected
+strip refs Int64: rejected
+cmd sub Int64: rejected
+graphics tags Int64: rejected
+render Int64: rejected
+sections Int64: rejected
+strip space Int64: rejected
+strip tables Int64: rejected
+
+=== to markdown ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["# Intro ## Detail ### Fine", "**Bold** and *emphasis* - first", "warn link ."]
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["# intro ## detail ### fine", "**bold** and *emphasis* - first", "warn link ."]
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["# A", "**B**"], 
+  ["plain", ""]
+]
+shape=[2, 2]
+
+=== todos ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["fix this", "and this too", "lone"]
+offsets=[0, 2, 2, 3]
+Note(shape=[0], dim=1, numel=0, encoding=utf8)
+[]
+offsets=[0, 0, 0]
+
+=== warnings ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\PackageWarning{mypkg}{deprecated macro}", "Undefined control sequence", "LaTeX Error: File not found"]
+offsets=[0, 1, 2, 3, 3]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["\\PackageError{mypkg}{bad option}{See the docs.}"]
+
+=== wrap inline math ===
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["$x+y$", "", "$already$", "\\(also\\)"]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["~a=b~"]
+
+=== wrap display math ===
+Note(shape=[3], dim=1, numel=3, encoding=utf8)
+["\\[\nx+y\n\\]", "", "\\[\n$already$\n\\]"]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["$$\nx+y\n$$"]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["~\nx+y\n~"]
+
+=== unescape ===
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["a_b $x$ 50% cost #1 & more {y} ~ ^ \\", "nothing special here"]
+Note(shape=[1], dim=1, numel=1, encoding=utf8)
+["a_b $x$ 50% cost #1 & more {y} ~ ^ \\"]
+
+=== final tranche boundaries ===
+undefined=false,false,false,false,false,false
+to markdown Int64: rejected
+todos Int64: rejected
+warnings Int64: rejected
+wrap inline math Int64: rejected
+wrap display math Int64: rejected
+unescape Int64: rejected

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameLabelAccessor::swap &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameLabelAccessor::symdiff" href="symdiff.html" />
+    <link rel="prev" title="DataFrameLabelAccessor::sort" href="sort.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: cd517d466c79 -->
+<section id="dataframelabelaccessor-swap">
+<h1>DataFrameLabelAccessor::swap<a class="headerlink" href="#dataframelabelaccessor-swap" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_label_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameLabelAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">right</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Swaps the positions of two case-label levels, by name — a convenience for
+<code class="docutils literal notranslate"><span class="pre">order()</span></code> with just those two levels’ positions exchanged and every other
+level left where it was. Requires a structured frame with both <code class="docutils literal notranslate"><span class="pre">left</span></code> and
+<code class="docutils literal notranslate"><span class="pre">right</span></code> as existing level names; <code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code> must differ.</p>
+<p>Like <a class="reference internal" href="order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a> (which this method is built on), the composite
+display string is rebuilt using whichever separator (custom or default) was
+used when the levels were originally created.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>left</strong> / <strong>right</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The two level names to exchange. Must both exist, and must differ from each
+other.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with the same rows and values, <code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code>’s level
+positions swapped.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Swap a 2-level frame’s only two levels.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Boston&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;NYC&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;LA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SF&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grouped</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">swap</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+            | sales
+-------------------
+east/Boston | 10   
+east/NYC    | 20   
+west/LA     | 30   
+west/SF     | 40   
+-------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+            | sales
+-------------------
+Boston/east | 10   
+NYC/east    | 20   
+LA/west     | 30   
+SF/west     | 40   
+-------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">city</span></code> now comes first — and as with <a class="reference internal" href="order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>, the custom <code class="docutils literal notranslate"><span class="pre">&quot;/&quot;</span></code>
+separator from <code class="docutils literal notranslate"><span class="pre">set()</span></code> is preserved in the rebuilt composite label.</p>
+<p>Example 2. Swap the outer two levels of a 3-level frame — the untouched
+middle level stays exactly where it was.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Boston&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;LA&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;quarter&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">grouped3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales3</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grouped3</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">swapped3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped3</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">swap</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;quarter&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">swapped3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output (before)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================
+               | sales
+----------------------
+east/Boston/Q1 | 10   
+west/LA/Q2     | 20   
+----------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (after)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>======================
+               | sales
+----------------------
+Q1/Boston/east | 10   
+Q2/LA/west     | 20   
+----------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">swap(&quot;region&quot;,</span> <span class="pre">&quot;quarter&quot;)</span></code> exchanges only the outer two levels’ positions —
+<code class="docutils literal notranslate"><span class="pre">city</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;Boston&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;LA&quot;</span></code>) stays in the middle of the composite label both
+before and after, exactly as <code class="docutils literal notranslate"><span class="pre">swap</span></code>’s “every other level left where it was”
+description promises. This differs from Example 1’s 2-level case, where
+swapping is necessarily a full reversal since there’s no third level to hold
+in place.</p>
+<p>Example 3. Pass the same name for both <code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code>, or an unknown
+level name, to see each throw.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">swap</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">swap</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;country&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::label().swap: label names must differ
+DataFrame::label().swap: unknown label &#39;country&#39;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">swap(&quot;region&quot;,</span> <span class="pre">&quot;region&quot;)</span></code> names the same level twice, which isn’t a
+coherent swap, so it’s rejected before even checking whether the name
+exists. <code class="docutils literal notranslate"><span class="pre">swap(&quot;region&quot;,</span> <span class="pre">&quot;country&quot;)</span></code> fails differently — <code class="docutils literal notranslate"><span class="pre">&quot;region&quot;</span></code> is valid,
+but <code class="docutils literal notranslate"><span class="pre">&quot;country&quot;</span></code> isn’t one of <code class="docutils literal notranslate"><span class="pre">grouped</span></code>’s levels (<code class="docutils literal notranslate"><span class="pre">&quot;region&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;city&quot;</span></code>).</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>With only two levels, <code class="docutils literal notranslate"><span class="pre">swap(a,</span> <span class="pre">b)</span></code> and <code class="docutils literal notranslate"><span class="pre">order({b,</span> <span class="pre">a})</span></code> produce identical
+results — <code class="docutils literal notranslate"><span class="pre">swap</span></code> is purely a convenience for that common case.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">left</span></code> and <code class="docutils literal notranslate"><span class="pre">right</span></code> must both be existing level names and must differ, or the
+call throws.</p></li>
+<li><p>Same separator behavior as <a class="reference internal" href="order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>: a custom separator is
+preserved.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::order</span></code></span></a>: the general form for reordering
+any number of levels, which this method delegates to.</p></li>
+<li><p><a class="reference internal" href="names.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::names</span></code></span></a>,
+<a class="reference internal" href="rename.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::rename</span></code></span></a>: inspect or rename levels
+without changing their order.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sort.html">
+    <span class="label">Previous</span>
+    <span class="title">sort</span>
+  </a>
+  <a class="next-link" href="symdiff.html">
+    <span class="label">Next</span>
+    <span class="title">symdiff</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_label_accessor_api_reference.html">DataFrameLabelAccessor API Reference</a><ul>
+      <li>Previous: <a href="sort.html" title="previous chapter">DataFrameLabelAccessor::sort</a></li>
+      <li>Next: <a href="symdiff.html" title="next chapter">DataFrameLabelAccessor::symdiff</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-label/swap.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

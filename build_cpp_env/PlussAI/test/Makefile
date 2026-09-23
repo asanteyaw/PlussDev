@@ -585,6 +585,20 @@ nn_loss_test/fast:
 .PHONY : nn_loss_test/fast
 
 # Convenience name for target.
+PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/rule
+
+# Convenience name for target.
+nn_mps_gru_native_route_test: PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/rule
+.PHONY : nn_mps_gru_native_route_test
+
+# fast build rule for target.
+nn_mps_gru_native_route_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/build
+.PHONY : nn_mps_gru_native_route_test/fast
+
+# Convenience name for target.
 PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule
 .PHONY : PlussAI/test/CMakeFiles/nn_mps_lstm_native_route_test.dir/rule
@@ -611,6 +625,20 @@ nn_mps_matmul_sum_sensitivity_test: PlussAI/test/CMakeFiles/nn_mps_matmul_sum_se
 nn_mps_matmul_sum_sensitivity_test/fast:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build
 .PHONY : nn_mps_matmul_sum_sensitivity_test/fast
+
+# Convenience name for target.
+PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/rule:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/rule
+.PHONY : PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/rule
+
+# Convenience name for target.
+nn_mps_rng_platform_parity_test: PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/rule
+.PHONY : nn_mps_rng_platform_parity_test
+
+# fast build rule for target.
+nn_mps_rng_platform_parity_test/fast:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/build
+.PHONY : nn_mps_rng_platform_parity_test/fast
 
 # Convenience name for target.
 PlussAI/test/CMakeFiles/nn_mps_schedule_family_trainability_test.dir/rule:
@@ -2012,6 +2040,30 @@ nn_loss_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_loss_test.dir/build.make PlussAI/test/CMakeFiles/nn_loss_test.dir/nn_loss_test.cpp.s
 .PHONY : nn_loss_test.cpp.s
 
+nn_mps_gru_native_route_test.o: nn_mps_gru_native_route_test.cpp.o
+.PHONY : nn_mps_gru_native_route_test.o
+
+# target to build an object file
+nn_mps_gru_native_route_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/nn_mps_gru_native_route_test.cpp.o
+.PHONY : nn_mps_gru_native_route_test.cpp.o
+
+nn_mps_gru_native_route_test.i: nn_mps_gru_native_route_test.cpp.i
+.PHONY : nn_mps_gru_native_route_test.i
+
+# target to preprocess a source file
+nn_mps_gru_native_route_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/nn_mps_gru_native_route_test.cpp.i
+.PHONY : nn_mps_gru_native_route_test.cpp.i
+
+nn_mps_gru_native_route_test.s: nn_mps_gru_native_route_test.cpp.s
+.PHONY : nn_mps_gru_native_route_test.s
+
+# target to generate assembly for a file
+nn_mps_gru_native_route_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_gru_native_route_test.dir/nn_mps_gru_native_route_test.cpp.s
+.PHONY : nn_mps_gru_native_route_test.cpp.s
+
 nn_mps_lstm_native_route_test.o: nn_mps_lstm_native_route_test.cpp.o
 .PHONY : nn_mps_lstm_native_route_test.o
 
@@ -2059,6 +2111,30 @@ nn_mps_matmul_sum_sensitivity_test.s: nn_mps_matmul_sum_sensitivity_test.cpp.s
 nn_mps_matmul_sum_sensitivity_test.cpp.s:
 	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_matmul_sum_sensitivity_test.dir/nn_mps_matmul_sum_sensitivity_test.cpp.s
 .PHONY : nn_mps_matmul_sum_sensitivity_test.cpp.s
+
+nn_mps_rng_platform_parity_test.o: nn_mps_rng_platform_parity_test.cpp.o
+.PHONY : nn_mps_rng_platform_parity_test.o
+
+# target to build an object file
+nn_mps_rng_platform_parity_test.cpp.o:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/nn_mps_rng_platform_parity_test.cpp.o
+.PHONY : nn_mps_rng_platform_parity_test.cpp.o
+
+nn_mps_rng_platform_parity_test.i: nn_mps_rng_platform_parity_test.cpp.i
+.PHONY : nn_mps_rng_platform_parity_test.i
+
+# target to preprocess a source file
+nn_mps_rng_platform_parity_test.cpp.i:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/nn_mps_rng_platform_parity_test.cpp.i
+.PHONY : nn_mps_rng_platform_parity_test.cpp.i
+
+nn_mps_rng_platform_parity_test.s: nn_mps_rng_platform_parity_test.cpp.s
+.PHONY : nn_mps_rng_platform_parity_test.s
+
+# target to generate assembly for a file
+nn_mps_rng_platform_parity_test.cpp.s:
+	cd /Users/yawasante/software/cxx/PlussDev/build_cpp_env && $(MAKE) $(MAKESILENT) -f PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/build.make PlussAI/test/CMakeFiles/nn_mps_rng_platform_parity_test.dir/nn_mps_rng_platform_parity_test.cpp.s
+.PHONY : nn_mps_rng_platform_parity_test.cpp.s
 
 nn_mps_schedule_family_trainability_test.o: nn_mps_schedule_family_trainability_test.cpp.o
 .PHONY : nn_mps_schedule_family_trainability_test.o
@@ -3351,8 +3427,10 @@ help:
 	@echo "... nn_elu_layernorm_embedding_test"
 	@echo "... nn_grad_mode_test"
 	@echo "... nn_loss_test"
+	@echo "... nn_mps_gru_native_route_test"
 	@echo "... nn_mps_lstm_native_route_test"
 	@echo "... nn_mps_matmul_sum_sensitivity_test"
+	@echo "... nn_mps_rng_platform_parity_test"
 	@echo "... nn_mps_schedule_family_trainability_test"
 	@echo "... nn_optim_complex_test"
 	@echo "... nn_optim_float64_test"
@@ -3489,12 +3567,18 @@ help:
 	@echo "... nn_loss_test.o"
 	@echo "... nn_loss_test.i"
 	@echo "... nn_loss_test.s"
+	@echo "... nn_mps_gru_native_route_test.o"
+	@echo "... nn_mps_gru_native_route_test.i"
+	@echo "... nn_mps_gru_native_route_test.s"
 	@echo "... nn_mps_lstm_native_route_test.o"
 	@echo "... nn_mps_lstm_native_route_test.i"
 	@echo "... nn_mps_lstm_native_route_test.s"
 	@echo "... nn_mps_matmul_sum_sensitivity_test.o"
 	@echo "... nn_mps_matmul_sum_sensitivity_test.i"
 	@echo "... nn_mps_matmul_sum_sensitivity_test.s"
+	@echo "... nn_mps_rng_platform_parity_test.o"
+	@echo "... nn_mps_rng_platform_parity_test.i"
+	@echo "... nn_mps_rng_platform_parity_test.s"
 	@echo "... nn_mps_schedule_family_trainability_test.o"
 	@echo "... nn_mps_schedule_family_trainability_test.i"
 	@echo "... nn_mps_schedule_family_trainability_test.s"

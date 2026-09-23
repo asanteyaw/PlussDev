@@ -125,9 +125,9 @@ macro substitutions Int64: rejected
 - `collapse_macros`: remove declarations and canonicalize built-in spellings
   without substituting local uses.
 - `set_macro`: install or replace one declaration.
-- `remove_macro`: remove one declaration without expanding uses.
+- [`strip_macro`](strip_macro.md): remove one declaration without expanding uses.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="input_tags.html"><span class="label">Previous</span><span class="title">input_tags</span></a>
-  <a class="next-link" href="pm_signs.html"><span class="label">Next</span><span class="title">pm_signs</span></a>
+  <a class="prev-link" href="macro_defs.html"><span class="label">Previous</span><span class="title">macro_defs</span></a>
+  <a class="next-link" href="macro_use.html"><span class="label">Next</span><span class="title">macro_use</span></a>
 </div>

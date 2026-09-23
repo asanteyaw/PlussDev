@@ -289,7 +289,7 @@ Public docs and examples must not expose internal coded framework names such as:
 Use the public names instead:
 
 - `pluss::ai::classic`
-- `pluss::ai::nets`
+- `pluss::ai::nn`
 - `pluss::ai::nlp`
 
 or use the public `lymph::...` aliases when the contract is intentionally

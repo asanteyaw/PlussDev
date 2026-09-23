@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Part II: Installation, Includes, and Build Setup &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=15722e59" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Part III: The Table Model" href="part03_table_model.html" />
+    <link rel="prev" title="Part I: Orientation" href="part01_orientation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="part-ii-installation-includes-and-build-setup">
+<h1>Part II: Installation, Includes, and Build Setup<a class="headerlink" href="#part-ii-installation-includes-and-build-setup" title="Link to this heading">¶</a></h1>
+<p>PlussMic is usually consumed through the Pluss SDK. In a downstream project,
+link <code class="docutils literal notranslate"><span class="pre">Pluss::SDK</span></code> and include either the Pluss umbrella header or the PlussMic
+module header.</p>
+<section id="recommended-include">
+<h2>Recommended include<a class="headerlink" href="#recommended-include" title="Link to this heading">¶</a></h2>
+<p>For applications:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/pluss.h&gt;</span>
+</pre></div>
+</div>
+<p>For code that only wants PlussMic:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;pluss/mic.h&gt;</span></code> includes table, loader, Kindle, and Scribble surfaces:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/scribble/scribble.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/kindle/kindle.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/loader/loader.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;pluss/table/table.h&quot;</span>
+</pre></div>
+</div>
+<p>It also includes PlussPl when available, which enables table plotting.</p>
+</section>
+<section id="minimal-consumer-cmake">
+<h2>Minimal consumer CMake<a class="headerlink" href="#minimal-consumer-cmake" title="Link to this heading">¶</a></h2>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.28</span><span class="p">)</span>
+<span class="nb">project</span><span class="p">(</span><span class="s">plussmic_app</span><span class="w"> </span><span class="s">LANGUAGES</span><span class="w"> </span><span class="s">CXX</span><span class="p">)</span>
+
+<span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="s">20</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD_REQUIRED</span><span class="w"> </span><span class="s">ON</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_EXTENSIONS</span><span class="w"> </span><span class="s">OFF</span><span class="p">)</span>
+
+<span class="nb">find_package</span><span class="p">(</span><span class="s">Pluss</span><span class="w"> </span><span class="s">CONFIG</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+
+<span class="nb">add_executable</span><span class="p">(</span><span class="s">plussmic_app</span><span class="w"> </span><span class="s">main.cpp</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">plussmic_app</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">Pluss::SDK</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Configure against a staged SDK:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_PREFIX_PATH<span class="o">=</span>/path/to/pluss-sdk
+cmake<span class="w"> </span>--build<span class="w"> </span>build
+</pre></div>
+</div>
+</section>
+<section id="minimal-program">
+<h2>Minimal program<a class="headerlink" href="#minimal-program" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">})},</span>
+<span class="w">      </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">,</span><span class="w"> </span><span class="mf">140.0</span><span class="p">})},</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">();</span>
+<span class="w">  </span><span class="n">df</span><span class="p">.</span><span class="n">describe</span><span class="p">();</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="optional-dependencies">
+<h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading">¶</a></h2>
+<p>PlussMic can expose functionality conditionally based on how the SDK was built.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Dependency</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Excel loading/saving</p></td>
+<td><p>Excel support in the PlussMic build, commonly via libzip-backed paths</p></td>
+</tr>
+<tr class="row-odd"><td><p>Parquet loading/saving</p></td>
+<td><p>Arrow/Parquet dependencies discovered during SDK build</p></td>
+</tr>
+<tr class="row-even"><td><p>Plot exports</p></td>
+<td><p>PlussPl availability</p></td>
+</tr>
+<tr class="row-odd"><td><p>Popup display</p></td>
+<td><p>GTK/WebKit or supported platform display stack</p></td>
+</tr>
+<tr class="row-even"><td><p>URL loading</p></td>
+<td><p>curl support in the SDK build</p></td>
+</tr>
+</tbody>
+</table>
+<p>If an optional format is missing, rebuild the SDK in an environment where that
+dependency is available, then reconfigure your consumer project.</p>
+</section>
+<section id="development-build-inside-this-repository">
+<h2>Development build inside this repository<a class="headerlink" href="#development-build-inside-this-repository" title="Link to this heading">¶</a></h2>
+<p>From the repository root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>--preset<span class="w"> </span>cpp_env
+cmake<span class="w"> </span>--workflow<span class="w"> </span>--preset<span class="w"> </span>cpp_env_build
+</pre></div>
+</div>
+<p>Useful PlussMic examples live under:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>PlussMic/examples/table/
+PlussMic/examples/kindle/
+PlussMic/examples/scribble/
+</pre></div>
+</div>
+<p>The examples are a good way to verify that a build has working table I/O,
+display, plotting, and model conversion.</p>
+</section>
+<section id="header-choices">
+<h2>Header choices<a class="headerlink" href="#header-choices" title="Link to this heading">¶</a></h2>
+<p>Use broad headers while learning:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/pluss.h&gt;</span>
+</pre></div>
+</div>
+<p>Use module headers for production libraries with tighter dependencies:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/mic.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/table/table.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/loader/loader.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/kindle/kindle.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;pluss/scribble/scribble.h&gt;</span>
+</pre></div>
+</div>
+<p>Use source-local headers only when working inside the Pluss repository.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../manual.html">PlussMic User Manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../manual.html#how-to-read-this-manual">How to read this manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../manual.html#example-policy">Example policy</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../manual.html#verified-examples">Verified examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../manual.html">PlussMic User Manual</a><ul>
+      <li>Previous: <a href="part01_orientation.html" title="previous chapter">Part I: Orientation</a></li>
+      <li>Next: <a href="part03_table_model.html" title="next chapter">Part III: The Table Model</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/manual/part02_installation.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -20,9 +20,3 @@
 #include "NodeK/NN/modules/cnn/NNconvNd.h"
 #include "NodeK/NN/modules/cnn/NNconv3d.h"
 #include "NodeK/NN/optim/optim.h"
-
-namespace pluss::ai {
-
-namespace nets = ::pluss::ai::nn;
-
-} // namespace pluss::ai

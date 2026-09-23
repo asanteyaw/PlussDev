@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::info &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::info_string" href="info_string.html" />
+    <link rel="prev" title="DataFrame::height" href="height.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8cb01b1c4b3c -->
+<section id="dataframe-info">
+<h1>DataFrame::info<a class="headerlink" href="#dataframe-info" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">info</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
+
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">info</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">os</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">void</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">info()</span></code> prints a concise, two-part health check of a frame: a short <strong>summary block</strong>
+(shape, case range, null-row count, a per-ptype feature tally, and an estimated memory
+footprint) followed by a <strong>feature inventory</strong> listing every column with its non-null
+count and its logical payload type. It is the fastest way to answer the three questions you
+almost always ask right after loading or deriving a frame: <em>how big is this, what shape
+are the columns, and where is data missing?</em></p>
+<p>Unlike <a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">describe()</span></code></span></a>, which summarizes the <strong>values</strong> of numeric features
+(mean, spread, quantiles), <code class="docutils literal notranslate"><span class="pre">info()</span></code> summarizes the <strong>structure</strong> of the whole frame,
+including non-numeric columns. Reach for <code class="docutils literal notranslate"><span class="pre">info()</span></code> first when you inspect a frame you did
+not build yourself — after <code class="docutils literal notranslate"><span class="pre">load_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">load_excel</span></code>, a <code class="docutils literal notranslate"><span class="pre">join</span></code>, or a grouped <code class="docutils literal notranslate"><span class="pre">agg()</span></code> result — and use
+<code class="docutils literal notranslate"><span class="pre">describe()</span></code> once you already know the shape is what you expect and want to look at the
+numbers themselves.</p>
+<p>Both overloads compute the same content; the first prints to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>, the second writes
+to any <code class="docutils literal notranslate"><span class="pre">std::ostream</span></code> you provide (useful for capturing the report into a log file or a
+string stream instead of the terminal).</p>
+<p><code class="docutils literal notranslate"><span class="pre">info()</span></code> never mutates the frame and never touches non-participating columns: every
+feature that exists on the frame is listed exactly once in the inventory, in its current
+column order, regardless of concrete scalar dtype.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
+<p>Rendering options shared with the rest of the display subsystem
+(<code class="docutils literal notranslate"><span class="pre">DataFrame::show</span></code>, <code class="docutils literal notranslate"><span class="pre">to_string</span></code>, <code class="docutils literal notranslate"><span class="pre">describe</span></code>, <code class="docutils literal notranslate"><span class="pre">corr</span></code>, …). The fields that matter most for
+<code class="docutils literal notranslate"><span class="pre">info()</span></code> specifically:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">terminal_width</span></code> / <code class="docutils literal notranslate"><span class="pre">terminal_height</span></code>: override the detected terminal size. Leave at
+<code class="docutils literal notranslate"><span class="pre">0</span></code> (the default) to auto-detect from the controlling terminal, or from <code class="docutils literal notranslate"><span class="pre">$COLUMNS</span></code> /
+<code class="docutils literal notranslate"><span class="pre">$LINES</span></code> when output is not a TTY (for example, when it is redirected to a file, as
+happens whenever these docs’ examples were captured).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_shape_footer</span></code>: unused by <code class="docutils literal notranslate"><span class="pre">info()</span></code> itself — the summary block already reports
+<code class="docutils literal notranslate"><span class="pre">Cases</span></code> and <code class="docutils literal notranslate"><span class="pre">Features</span></code> explicitly, so no separate <code class="docutils literal notranslate"><span class="pre">[N</span> <span class="pre">cs</span> <span class="pre">x</span> <span class="pre">M</span> <span class="pre">feat]</span></code> footer is appended.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span></code> (<code class="docutils literal notranslate"><span class="pre">DisplayMode::Auto</span></code> / <code class="docutils literal notranslate"><span class="pre">Compact</span></code> / <code class="docutils literal notranslate"><span class="pre">Wide</span></code>): influences how many feature rows are
+shown before the inventory table truncates with <code class="docutils literal notranslate"><span class="pre">...</span></code> on very wide frames (see Notes).</p></li>
+</ul>
+<p>You will rarely need to construct a non-default <code class="docutils literal notranslate"><span class="pre">DisplayOptions</span></code> just for <code class="docutils literal notranslate"><span class="pre">info()</span></code> — the
+defaults auto-detect a sensible terminal width and print everything for typical frames.</p>
+<p><strong>os</strong> (<code class="docutils literal notranslate"><span class="pre">std::ostream&amp;</span></code>)</p>
+<p>Destination stream for the second overload. Pass <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> explicitly, a
+<code class="docutils literal notranslate"><span class="pre">std::ostringstream</span></code> to capture the report as a string (via <code class="docutils literal notranslate"><span class="pre">info_string()</span></code> is usually
+more convenient for that use case, see Notes), or a file stream to append the report to
+a log.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">void</span></code>
+<code class="docutils literal notranslate"><span class="pre">info()</span></code> performs the side effect of printing and returns nothing. Use
+<a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::info_string()</span></code></span></a> when you need the report as a
+<code class="docutils literal notranslate"><span class="pre">std::string</span></code> instead of writing it somewhere.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Inspect a frame with mixed dtypes and missing values right after building it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">orders</span><span class="p">.</span><span class="n">info</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================
+Field          | Value                  
+----------------------------------------
+Class          | pluss::table::DataFrame
+Cases          | 6                      
+Features       | 6                      
+Case Range     | 0 -&gt; 5                 
+Null Case Rows | 2                      
+PTypes         | Note(2), Series(4)     
+Memory         | 316.00 B               
+----------------------------------------
+=======================================
+#  | Feature     Non-Null Cases  PType 
+---------------------------------------
+0  | order_id    6               Series
+1  | city        6               Note  
+2  | product     6               Note  
+3  | units       6               Series
+4  | unit_price  5               Series
+5  | discount    5               Series
+---------------------------------------
+</pre></div>
+</div>
+<p>Two rows have a missing value somewhere (<code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">Case</span> <span class="pre">Rows</span> <span class="pre">|</span> <span class="pre">2</span></code>): row 5 is missing
+<code class="docutils literal notranslate"><span class="pre">unit_price</span></code>, and row 2 is missing <code class="docutils literal notranslate"><span class="pre">discount</span></code> — you can already tell that before
+inspecting a single value directly, because the feature inventory shows <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> and
+<code class="docutils literal notranslate"><span class="pre">discount</span></code> each sitting at <code class="docutils literal notranslate"><span class="pre">5</span></code> non-null cases against <code class="docutils literal notranslate"><span class="pre">6</span></code> total.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">PTypes</span></code> reports <strong>logical</strong> thread kinds, not numeric precision — <code class="docutils literal notranslate"><span class="pre">order_id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">units</span></code>, <code class="docutils literal notranslate"><span class="pre">unit_price</span></code>, and <code class="docutils literal notranslate"><span class="pre">discount</span></code> are all <code class="docutils literal notranslate"><span class="pre">Series</span></code>, whether they hold <code class="docutils literal notranslate"><span class="pre">int64</span></code> or
+<code class="docutils literal notranslate"><span class="pre">double</span></code> underneath. If you need the concrete scalar dtype per feature (<code class="docutils literal notranslate"><span class="pre">int64</span></code>,
+<code class="docutils literal notranslate"><span class="pre">float64</span></code>, and so on), use <a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code></span></a> instead; <code class="docutils literal notranslate"><span class="pre">info()</span></code> intentionally keeps
+the <code class="docutils literal notranslate"><span class="pre">PType</span></code> column coarse so it stays readable on a frame with dozens of features.</p>
+<p>Example 2. Write the same report to a stream instead of the terminal.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">ostringstream</span><span class="w"> </span><span class="n">log</span><span class="p">;</span>
+<span class="n">orders</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="n">log</span><span class="p">);</span>
+<span class="c1">// log.str() now holds the exact text shown above, ready to append to a run log</span>
+<span class="c1">// or attach to a test failure message.</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="what-the-report-deliberately-leaves-out">
+<h2>What The Report Deliberately Leaves Out<a class="headerlink" href="#what-the-report-deliberately-leaves-out" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">info()</span></code> gives you row count, column count, a per-column non-null count and payload type, and a
+rough memory estimate — a structural summary, not a value-level one. Two design choices
+worth knowing up front:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">PType</span></code> column reports the <strong>logical</strong> Pluss thread kind — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — rather than a concrete scalar dtype, because a single
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> column can already carry any numeric scalar type underneath. Pair <code class="docutils literal notranslate"><span class="pre">info()</span></code>
+with <a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dtypes()</span></code></span></a> when you need the concrete per-column scalar type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case</span> <span class="pre">Range</span></code> reports the frame’s case axis span, but the case axis is not always a
+plain integer range — it can be a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> label thread, in
+which case <code class="docutils literal notranslate"><span class="pre">Case</span> <span class="pre">Range</span></code> shows the first and last case <em>values</em> rather than positions.</p></li>
+</ul>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>On a frame with many features, the inventory table truncates the middle rows with a
+single <code class="docutils literal notranslate"><span class="pre">...</span></code> row once the number of features exceeds the terminal’s row budget,
+keeping a handful of rows from the top and bottom of the feature list visible. This
+mirrors the row-truncation behavior of the plain frame renderer used by
+<a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> / <a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_string()</span></code></span></a>; it is a display concern only and
+never changes what <code class="docutils literal notranslate"><span class="pre">dtypes()</span></code>, <code class="docutils literal notranslate"><span class="pre">nfeatures()</span></code>, or any other accessor reports.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Memory</span></code> is an estimate: numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> columns count <code class="docutils literal notranslate"><span class="pre">itemsize</span> <span class="pre">*</span> <span class="pre">cases</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+columns sum the byte length of every string cell, and one extra byte per case is added
+for any column that carries a validity (null) mask. It is meant for a quick sense of
+scale, not for precise capacity planning.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">Case</span> <span class="pre">Rows</span></code> counts rows where <strong>at least one</strong> feature is null, computed as
+<code class="docutils literal notranslate"><span class="pre">frame.isnull().any(Axis::Case).sum()</span></code>. It will not tell you <em>which</em> feature is null in
+a given row on its own — cross-reference the feature inventory’s non-null counts, or
+call <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a> directly for a full missing-value mask.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="info_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::info_string</span></code></span></a>: the same report returned as a <code class="docutils literal notranslate"><span class="pre">std::string</span></code>
+instead of printed.</p></li>
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: value-level statistics for numeric features
+instead of structural metadata.</p></li>
+<li><p><a class="reference internal" href="dtypes.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::dtypes</span></code></span></a>: the concrete per-feature scalar dtype.</p></li>
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::isnull</span></code></span></a>: the full boolean missing-value mask behind <code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">Case</span> <span class="pre">Rows</span></code>.</p></li>
+<li><p><a class="reference internal" href="shape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::shape</span></code></span></a>: just the <code class="docutils literal notranslate"><span class="pre">(cases,</span> <span class="pre">features)</span></code> pair without the rest of
+the report.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="height.html">
+    <span class="label">Previous</span>
+    <span class="title">height</span>
+  </a>
+  <a class="next-link" href="info_string.html">
+    <span class="label">Next</span>
+    <span class="title">info_string</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="height.html" title="previous chapter">DataFrame::height</a></li>
+      <li>Next: <a href="info_string.html" title="next chapter">DataFrame::info_string</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/info.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

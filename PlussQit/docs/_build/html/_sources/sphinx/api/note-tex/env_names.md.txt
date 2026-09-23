@@ -19,7 +19,7 @@ distinct: `align` and `align*` are different tokens.
 The method reports openers, not validated pairs. A name is returned even when a
 matching `\end{name}` is absent, because the method's contract is lexical
 inventory rather than structural validation. Use `envs()` when only complete
-begin/end regions should be returned, and `extract_environment(name)` when the
+begin/end regions should be returned, and `env(name)` when the
 caller already knows the one environment kind it needs.
 
 Names are emitted in source order and duplicates are preserved. Results from
@@ -112,10 +112,10 @@ environment names Int64: rejected
 ## See Also
 
 - [`envs`](envs.md): return complete environment regions.
-- `extract_environment`: select complete regions of one named kind.
+- [`env`](env.md): select complete regions of one named kind.
 - `commands`: inventory all TeX control words, not only environment openers.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="display_math.html"><span class="label">Previous</span><span class="title">display_math</span></a>
+  <a class="prev-link" href="env.html"><span class="label">Previous</span><span class="title">env</span></a>
   <a class="next-link" href="envs.html"><span class="label">Next</span><span class="title">envs</span></a>
 </div>

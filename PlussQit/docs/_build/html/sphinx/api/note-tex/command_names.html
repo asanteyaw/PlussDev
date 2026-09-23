@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -62,7 +62,7 @@ features from mixed prose and layout source.</p>
 and duplicates remain duplicated. It does not determine whether a command is
 defined, distinguish built-ins from user macros, expand declarations, or
 discard comments. Apply <code class="docutils literal notranslate"><span class="pre">strip_comments()</span></code> first when commented source must
-not contribute names; use <code class="docutils literal notranslate"><span class="pre">macros_used()</span></code> when a deduplicated macro-oriented
+not contribute names; use <code class="docutils literal notranslate"><span class="pre">macro_use()</span></code> when a deduplicated macro-oriented
 inventory is the intended result.</p>
 <p>The return is a closed <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>. Flat Text <code class="docutils literal notranslate"><span class="pre">tokens()</span></code> holds the names and
 Int64 <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> maps every flattened source cell to a half-open token range.
@@ -143,8 +143,8 @@ matched names and offsets after one linear scan of the source bytes.</p>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">commands</span></code>: extract complete command lexemes rather than names alone.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macros_defined</span></code>: extract names introduced by local declarations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macros_used</span></code>: build a deduplicated macro-use inventory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macro_defs</span></code>: extract names introduced by local declarations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macro_use</span></code>: build a deduplicated macro-use inventory.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="collapse_macros.html"><span class="label">Previous</span><span class="title">collapse_macros</span></a>

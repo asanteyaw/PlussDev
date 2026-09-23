@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::select &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::set" href="set.html" />
+    <link rel="prev" title="DataFrame::se" href="se.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4e4abff373e9 -->
+<section id="dataframe-select">
+<h1>DataFrame::select<a class="headerlink" href="#dataframe-select" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>A static factory that builds a new frame by choosing, case by case, which candidate
+frame’s row to use — the row-wise analogue of a chained if/else-if/else across several
+whole <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>s at once. For every case (row), <code class="docutils literal notranslate"><span class="pre">select()</span></code> walks <code class="docutils literal notranslate"><span class="pre">conditions</span></code> <strong>in
+order</strong> and uses the row from the first candidate <code class="docutils literal notranslate"><span class="pre">choices[i]</span></code> whose <code class="docutils literal notranslate"><span class="pre">conditions[i]</span></code>
+is <code class="docutils literal notranslate"><span class="pre">true</span></code> for that case; if none of the conditions are <code class="docutils literal notranslate"><span class="pre">true</span></code> for a case, that case’s
+row comes from <code class="docutils literal notranslate"><span class="pre">default_value</span></code> instead. The same set of conditions is applied
+identically across every feature, so a single call reshuffles an entire frame’s worth
+of columns in one pass rather than one feature at a time.</p>
+<p>This is not an instance method — there is no frame to call it “on”. You supply
+<code class="docutils literal notranslate"><span class="pre">conditions</span></code>, <code class="docutils literal notranslate"><span class="pre">choices</span></code>, and <code class="docutils literal notranslate"><span class="pre">default_value</span></code> up front, and <code class="docutils literal notranslate"><span class="pre">select()</span></code> assembles the
+result from scratch. Because of this, <code class="docutils literal notranslate"><span class="pre">select()</span></code> was previously missing from this
+reference entirely; the header parser that catalogs <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s methods didn’t
+recognize this static, <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>-based factory as a documentable method the way it
+recognizes ordinary <code class="docutils literal notranslate"><span class="pre">const</span></code> member functions. That gap is fixed here, but it’s worth
+flagging as a real coverage hole in the automated tooling, not just a documentation
+oversight.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Priority is positional: the first true condition wins
+If more than one condition is <code class="docutils literal notranslate"><span class="pre">true</span></code> for the same case, <code class="docutils literal notranslate"><span class="pre">conditions[0]</span></code>’s choice wins
+— <code class="docutils literal notranslate"><span class="pre">select()</span></code> does not use the <em>last</em> matching condition, and it does not merge or
+average competing choices. See Example 2 for a worked demonstration where deliberately
+overlapping conditions produce different results depending on which one is listed
+first.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>conditions</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView::Of&lt;Thread&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;Thread&gt;</span></code>)</p>
+<p>An ordered, non-empty list of boolean masks, one per candidate in <code class="docutils literal notranslate"><span class="pre">choices</span></code>. Each
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> must be a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-scalar-type thread with one value per case —
+the same requirement <code class="docutils literal notranslate"><span class="pre">land()</span></code>/<code class="docutils literal notranslate"><span class="pre">lor()</span></code>/<code class="docutils literal notranslate"><span class="pre">lxor()</span></code> place on their operands (see
+<a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a>). <code class="docutils literal notranslate"><span class="pre">conditions</span></code> and <code class="docutils literal notranslate"><span class="pre">choices</span></code> must have the same length; each
+position pairs one condition with the candidate frame it “unlocks.”</p>
+<p><strong>choices</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView::Of&lt;DataFrame&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;DataFrame&gt;</span></code>)</p>
+<p>One candidate frame per condition, evaluated in the same order as <code class="docutils literal notranslate"><span class="pre">conditions</span></code>. Every
+choice must <strong>exactly</strong> match <code class="docutils literal notranslate"><span class="pre">default_value</span></code>’s case count, feature count, feature
+names (in the same order), case labels, and structured case-axis metadata — <code class="docutils literal notranslate"><span class="pre">select()</span></code>
+does not align or reorder candidates for you first. Only the participating <em>cell
+values</em> are allowed to differ between candidates.</p>
+<p><strong>default_value</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code>)</p>
+<p>The frame supplying both the fallback row for any case where no condition is <code class="docutils literal notranslate"><span class="pre">true</span></code>,
+and the structural template (feature names, order, case labels, case-axis metadata)
+that every entry in <code class="docutils literal notranslate"><span class="pre">choices</span></code> is checked against.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with <code class="docutils literal notranslate"><span class="pre">default_value</span></code>’s structure (feature names and order, case
+labels, title, case-axis metadata) and, for every case, the cell values pulled
+from the first candidate in <code class="docutils literal notranslate"><span class="pre">choices</span></code> whose matching condition is <code class="docutils literal notranslate"><span class="pre">true</span></code> — or from
+<code class="docutils literal notranslate"><span class="pre">default_value</span></code> itself if no condition matched that case.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Build a three-tier billing frame from a usage metric: a <code class="docutils literal notranslate"><span class="pre">true</span></code>
+<code class="docutils literal notranslate"><span class="pre">conditions[0]</span></code> picks the premium rate, <code class="docutils literal notranslate"><span class="pre">conditions[1]</span></code> picks the standard rate, and
+cases matching neither fall through to the basic (default) rate.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;usage&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">250.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">500.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c5&quot;</span><span class="p">}));</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">customers</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-customers">
+<h3>Output (customers)<a class="headerlink" href="#output-customers" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | usage
+------------
+c1   | 10   
+c2   | 250  
+c3   | 80   
+c4   | 500  
+c5   | 30   
+------------
+[5 cs x 1 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tier_high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tier_mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">premium</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;rate&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;fee&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c5&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">standard</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;rate&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.08</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;fee&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c5&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">basic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;rate&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.12</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;fee&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c5&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">billing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">select</span><span class="p">({</span><span class="n">tier_high</span><span class="p">,</span><span class="w"> </span><span class="n">tier_mid</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">premium</span><span class="p">,</span><span class="w"> </span><span class="n">standard</span><span class="p">},</span><span class="w"> </span><span class="n">basic</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">billing</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-billing">
+<h3>Output (billing)<a class="headerlink" href="#output-billing" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | rate  fee 
+-----------------
+c1   | 0.12  5   
+c2   | 0.05  0   
+c3   | 0.08  2   
+c4   | 0.05  0   
+c5   | 0.12  5   
+-----------------
+[5 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">c2</span></code> and <code class="docutils literal notranslate"><span class="pre">c4</span></code> clear the <code class="docutils literal notranslate"><span class="pre">tier_high</span></code> threshold (<code class="docutils literal notranslate"><span class="pre">250</span></code> and <code class="docutils literal notranslate"><span class="pre">500</span></code> usage), so they pick up
+<code class="docutils literal notranslate"><span class="pre">premium</span></code>’s <code class="docutils literal notranslate"><span class="pre">rate</span></code>/<code class="docutils literal notranslate"><span class="pre">fee</span></code>. <code class="docutils literal notranslate"><span class="pre">c3</span></code> (<code class="docutils literal notranslate"><span class="pre">80</span></code> usage) misses <code class="docutils literal notranslate"><span class="pre">tier_high</span></code> but clears <code class="docutils literal notranslate"><span class="pre">tier_mid</span></code>,
+landing on <code class="docutils literal notranslate"><span class="pre">standard</span></code>. <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c5</span></code> (<code class="docutils literal notranslate"><span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">30</span></code> usage) miss both conditions and
+fall through to <code class="docutils literal notranslate"><span class="pre">basic</span></code>, the <code class="docutils literal notranslate"><span class="pre">default_value</span></code>. Note both features move together per
+case — <code class="docutils literal notranslate"><span class="pre">select()</span></code> doesn’t pick <code class="docutils literal notranslate"><span class="pre">rate</span></code> from one candidate and <code class="docutils literal notranslate"><span class="pre">fee</span></code> from another.</p>
+<p>Example 2. Overlapping conditions: when more than one condition is <code class="docutils literal notranslate"><span class="pre">true</span></code> for the same
+case, the <strong>first</strong> one listed wins — reordering the arguments changes the result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cond_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cond_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">choice_a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;tag&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">choice_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;tag&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">fallback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;tag&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;D&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">a_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">select</span><span class="p">({</span><span class="n">cond_a</span><span class="p">,</span><span class="w"> </span><span class="n">cond_b</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">choice_a</span><span class="p">,</span><span class="w"> </span><span class="n">choice_b</span><span class="p">},</span><span class="w"> </span><span class="n">fallback</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a_first</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-cond-a-listed-first">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">cond_a</span></code> listed first)<a class="headerlink" href="#output-cond-a-listed-first" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | tag 
+-----------
+c1   | A   
+c2   | A   
+-----------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">b_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">select</span><span class="p">({</span><span class="n">cond_b</span><span class="p">,</span><span class="w"> </span><span class="n">cond_a</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">choice_b</span><span class="p">,</span><span class="w"> </span><span class="n">choice_a</span><span class="p">},</span><span class="w"> </span><span class="n">fallback</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">b_first</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-cond-b-listed-first">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">cond_b</span></code> listed first)<a class="headerlink" href="#output-cond-b-listed-first" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | tag 
+-----------
+c1   | B   
+c2   | A   
+-----------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">c1</span></code> satisfies both <code class="docutils literal notranslate"><span class="pre">cond_a</span></code> and <code class="docutils literal notranslate"><span class="pre">cond_b</span></code> in both calls — the <em>only</em> thing that changed
+between the two calls is which condition/choice pair comes first in the list. When
+<code class="docutils literal notranslate"><span class="pre">cond_a</span></code> leads, <code class="docutils literal notranslate"><span class="pre">c1</span></code> gets <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code>; when <code class="docutils literal notranslate"><span class="pre">cond_b</span></code> leads, the same case gets <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> instead.
+<code class="docutils literal notranslate"><span class="pre">c2</span></code> only ever satisfies <code class="docutils literal notranslate"><span class="pre">cond_a</span></code>, so it lands on <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> regardless of ordering.</p>
+<p>Example 3. A winning candidate’s own missing values pass straight through — <code class="docutils literal notranslate"><span class="pre">select()</span></code>
+does not treat a chosen cell’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code> as a reason to fall back to a lower-priority
+candidate or the default.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cond</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+
+<span class="c1">// &quot;c1&quot;&#39;s label is explicitly missing: an empty-string placeholder paired with an</span>
+<span class="c1">// invalid entry in the companion validity mask, the same idiom used whenever a Note</span>
+<span class="c1">// needs an explicit NULL cell (see count.md).</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">label_valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;label&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">}),</span><span class="w"> </span><span class="n">label_valid</span><span class="p">)},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">fallback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;label&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;def0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;def1&quot;</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c2&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">select</span><span class="p">({</span><span class="n">cond</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">choice</span><span class="p">},</span><span class="w"> </span><span class="n">fallback</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | label
+------------
+c1   | NULL 
+c2   | def1 
+------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">c1</span></code> satisfies <code class="docutils literal notranslate"><span class="pre">cond</span></code>, so <code class="docutils literal notranslate"><span class="pre">choice</span></code>’s row wins for that case — but <code class="docutils literal notranslate"><span class="pre">choice</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;c1&quot;</span></code>
+value is itself missing, so the result is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, not a silent fallback to
+<code class="docutils literal notranslate"><span class="pre">fallback</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;def0&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">c2</span></code> never satisfies <code class="docutils literal notranslate"><span class="pre">cond</span></code>, so it takes <code class="docutils literal notranslate"><span class="pre">fallback</span></code>’s <code class="docutils literal notranslate"><span class="pre">&quot;def1&quot;</span></code>
+as expected.</p>
+<p>Example 4. The result is an ordinary <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — keep working with it exactly like
+any other frame.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rounded_billing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">billing</span><span class="p">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rounded_billing</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | rate  fee 
+-----------------
+c1   | 0.1   5   
+c2   | 0.1   0   
+c3   | 0.1   2   
+c4   | 0.1   0   
+c5   | 0.1   5   
+-----------------
+[5 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">select()</span></code>’s output from Example 1 chains straight into <a class="reference internal" href="round.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">round()</span></code></span></a> — or
+<a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a>, <a class="reference internal" href="save_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_csv()</span></code></span></a>, or anything else that takes a
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — with no special handling required.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Unlike the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-level <code class="docutils literal notranslate"><span class="pre">Thread::select()</span></code> this delegates to internally, the
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-level <code class="docutils literal notranslate"><span class="pre">select()</span></code> does <strong>not</strong> support scalar-like (single-row)
+<code class="docutils literal notranslate"><span class="pre">choices</span></code> or <code class="docutils literal notranslate"><span class="pre">default_value</span></code> — every choice’s <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> must exactly match
+<code class="docutils literal notranslate"><span class="pre">default_value.ncases()</span></code>. Broadcasting a single-row candidate across every case is a
+<code class="docutils literal notranslate"><span class="pre">Thread::select()</span></code>-only capability.</p></li>
+<li><p>Every <code class="docutils literal notranslate"><span class="pre">choices</span></code> entry is checked against <code class="docutils literal notranslate"><span class="pre">default_value</span></code> for feature names (in
+order), case count, case labels, and case-axis metadata, and throws if any of them
+disagree — quoting the exact checks: <em>“all choices must match default feature
+order”</em>, <em>“all choices must match default case labels”</em>, and <em>“all choices must
+match default structured case metadata”</em>. Only cell values may differ between
+candidates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conditions</span></code> and <code class="docutils literal notranslate"><span class="pre">choices</span></code> must have the same length, and at least one condition is
+required — an empty <code class="docutils literal notranslate"><span class="pre">conditions</span></code> list throws (<em>“at least one condition is
+required”</em>).</p></li>
+<li><p>Each condition <code class="docutils literal notranslate"><span class="pre">Thread</span></code> must be a <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-typed <code class="docutils literal notranslate"><span class="pre">Series</span></code> — the same constraint
+documented on <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a>. A numeric 0/1 column is rejected, not treated as
+truthy.</p></li>
+<li><p>The same condition list drives every feature identically — there is no per-feature
+condition list the way <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload has an <code class="docutils literal notranslate"><span class="pre">axis</span></code> choice.</p></li>
+</ul>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>A generator/coverage gap, not just a documentation gap
+<code class="docutils literal notranslate"><span class="pre">select()</span></code> had no generated page at all prior to this entry — every other
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> method, even undocumented ones, at least had an auto-generated stub. If
+you add other static, <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>-based factory methods to <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> in the future,
+verify <code class="docutils literal notranslate"><span class="pre">generate_api_reference.py</span></code> actually discovers them before assuming a missing
+page means the method doesn’t exist.</p>
+</div>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::land</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-only constraint <code class="docutils literal notranslate"><span class="pre">conditions</span></code> shares with the
+logical method family.</p></li>
+<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::where</span></code></span></a>: a per-cell conditional fill against a single
+condition, rather than a row-wise pick across several whole candidate frames.</p></li>
+<li><p><a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::assign</span></code></span></a>: attach the result of a <code class="docutils literal notranslate"><span class="pre">select()</span></code> call as a new
+column on an existing frame.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="se.html">
+    <span class="label">Previous</span>
+    <span class="title">se</span>
+  </a>
+  <a class="next-link" href="set.html">
+    <span class="label">Next</span>
+    <span class="title">set</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="se.html" title="previous chapter">DataFrame::se</a></li>
+      <li>Next: <a href="set.html" title="next chapter">DataFrame::set</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/select.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

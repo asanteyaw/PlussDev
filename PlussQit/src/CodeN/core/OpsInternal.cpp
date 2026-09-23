@@ -10,6 +10,7 @@
 #include <random>
 #include <numeric>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <string>
 #include <sstream>
@@ -100,7 +101,6 @@ static bool coden_count_fastpath_enabled() {
   return env_bool_flag("PLUSS_CODEN_COUNT_FASTPATH", true);
 }
 
-static ::std::string regex_escape_text(::std::string_view s);
 static ::std::string strip_math_delims(::std::string_view m);
 static ::std::string normalize_tex_removed(::std::string_view s);
 static ::std::string tex_remove_labels_text(::std::string_view s);
@@ -116,6 +116,10 @@ static ::std::string tex_remove_big_delims_text(::std::string_view s);
 static ::std::string tex_remove_spacing_cmds_text(::std::string_view s);
 static ::std::string tex_expand_macros_text(::std::string_view s, ::std::int64_t max_passes);
 static ::std::string tex_remove_math_delimiters_text(::std::string_view s);
+static bool tex_parse_braced_group(::std::string_view s,
+                                   ::std::size_t open_pos,
+                                   ::std::size_t* next_pos,
+                                   ::std::string* body);
 
 static ::std::string replace_first_text(::std::string_view s, ::std::string_view from, ::std::string_view to) {
   if (from.empty()) return ::std::string(s);
@@ -730,6 +734,177 @@ static bool tex_group_end(::std::string_view s,
                           ::std::size_t open_pos,
                           char open,
                           char close,
+                          ::std::size_t* next_pos);
+
+static ::std::size_t tex_skip_space(::std::string_view s, ::std::size_t pos) {
+  while (pos < s.size() &&
+         ::std::isspace(static_cast<unsigned char>(s[pos])) != 0) {
+    ++pos;
+  }
+  return pos;
+}
+
+static bool tex_skip_optional_group(::std::string_view s,
+                                    ::std::size_t* pos) {
+  *pos = tex_skip_space(s, *pos);
+  if (*pos >= s.size() || s[*pos] != '[') return true;
+  ::std::size_t next = 0;
+  if (!tex_group_end(s, *pos, '[', ']', &next)) return false;
+  *pos = tex_skip_space(s, next);
+  return true;
+}
+
+template <class Accept>
+static void extract_tex_command_bodies_to(::std::string_view s,
+                                          Accept&& accept,
+                                          bool allow_optional,
+                                          ::std::vector<::std::string>& out) {
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      i += (s[i] == '\\' && i + 1 < s.size()) ? 2 : 1;
+      continue;
+    }
+
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (!accept(name)) {
+      i = token_end;
+      continue;
+    }
+
+    ::std::size_t body_begin = tex_skip_space(s, token_end);
+    if (allow_optional && !tex_skip_optional_group(s, &body_begin)) {
+      i = token_end;
+      continue;
+    }
+    ::std::size_t next = body_begin;
+    ::std::string body;
+    if (tex_parse_braced_group(s, body_begin, &next, &body)) {
+      out.push_back(::std::move(body));
+      i = next;
+    } else {
+      i = token_end;
+    }
+  }
+}
+
+static void extract_tex_packages_to(::std::string_view s,
+                                    ::std::vector<::std::string>& out) {
+  ::std::vector<::std::string> groups;
+  extract_tex_command_bodies_to(
+      s,
+      [](::std::string_view name) {
+        return name == "usepackage" || name == "RequirePackage" ||
+               name == "RequirePackageWithOptions";
+      },
+      true, groups);
+
+  for (const auto& group : groups) {
+    for (::std::size_t begin = 0; begin <= group.size();) {
+      const auto comma = group.find(',', begin);
+      const auto part = ::pluss::coden::native::cpu::strip_ascii(
+          ::std::string_view(group).substr(
+              begin, comma == ::std::string::npos ? ::std::string::npos
+                                                   : comma - begin));
+      if (!part.empty()) out.push_back(part);
+      if (comma == ::std::string::npos) break;
+      begin = comma + 1;
+    }
+  }
+}
+
+static bool tex_macro_name_at(::std::string_view s,
+                              ::std::size_t pos,
+                              ::std::size_t* next,
+                              ::std::string* name) {
+  pos = tex_skip_space(s, pos);
+  if (pos < s.size() && s[pos] == '{') {
+    ::std::string body;
+    ::std::size_t after = 0;
+    if (!tex_parse_braced_group(s, pos, &after, &body)) return false;
+    const auto trimmed = ::pluss::coden::native::cpu::strip_ascii(body);
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t token_end = 0;
+    if (!tex_control_word_at(trimmed, 0, &name_begin, &name_end, &token_end) ||
+        token_end != trimmed.size()) {
+      return false;
+    }
+    name->assign(trimmed);
+    *next = after;
+    return true;
+  }
+
+  ::std::size_t name_begin = 0;
+  ::std::size_t name_end = 0;
+  ::std::size_t token_end = 0;
+  if (!tex_control_word_at(s, pos, &name_begin, &name_end, &token_end)) {
+    return false;
+  }
+  name->assign(s.substr(pos, token_end - pos));
+  *next = token_end;
+  return true;
+}
+
+static void extract_tex_macro_defs_to(::std::string_view s,
+                                      ::std::vector<::std::string>& out) {
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0;
+    ::std::size_t name_end = 0;
+    ::std::size_t command_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &command_end)) {
+      i += (s[i] == '\\' && i + 1 < s.size()) ? 2 : 1;
+      continue;
+    }
+
+    const auto command = s.substr(name_begin, name_end - name_begin);
+    const bool new_family = command == "newcommand" ||
+        command == "renewcommand" || command == "providecommand";
+    if (!new_family && command != "def") {
+      i = command_end;
+      continue;
+    }
+
+    ::std::size_t cursor = command_end;
+    ::std::string macro;
+    if (!tex_macro_name_at(s, cursor, &cursor, &macro)) {
+      i = command_end;
+      continue;
+    }
+
+    if (new_family) {
+      cursor = tex_skip_space(s, cursor);
+      while (cursor < s.size() && s[cursor] == '[') {
+        if (!tex_skip_optional_group(s, &cursor)) {
+          cursor = ::std::string_view::npos;
+          break;
+        }
+      }
+    } else {
+      while (cursor < s.size() && s[cursor] != '{') {
+        if (s[cursor] == '\\' && cursor + 1 < s.size()) ++cursor;
+        ++cursor;
+      }
+    }
+
+    ::std::size_t declaration_end = 0;
+    ::std::string body;
+    if (cursor != ::std::string_view::npos &&
+        tex_parse_braced_group(s, cursor, &declaration_end, &body)) {
+      out.push_back(::std::move(macro));
+      i = declaration_end;
+    } else {
+      i = command_end;
+    }
+  }
+}
+
+static bool tex_group_end(::std::string_view s,
+                          ::std::size_t open_pos,
+                          char open,
+                          char close,
                           ::std::size_t* next_pos) {
   if (open_pos >= s.size() || s[open_pos] != open) return false;
   ::std::int64_t depth = 0;
@@ -1014,14 +1189,160 @@ static void extract_tex_environment_blocks_to(::std::string_view s,
                                               ::std::string_view env,
                                               ::std::vector<::std::string>& out,
                                               ::std::int64_t limit = -1) {
-  const ::std::string esc = regex_escape_text(env);
-  const ::std::regex re("\\\\begin\\{" + esc + "\\}[\\s\\S]*?\\\\end\\{" + esc + "\\}");
-  regex_collect_to(s, re, out, 0, limit);
+  const ::std::string begin = "\\begin{" + ::std::string(env) + "}";
+  const ::std::string end = "\\end{" + ::std::string(env) + "}";
+  auto escaped = [s](::std::size_t pos) {
+    ::std::size_t slashes = 0;
+    while (pos > slashes && s[pos - slashes - 1] == '\\') ++slashes;
+    return (slashes & 1U) != 0U;
+  };
+  for (::std::size_t search = 0; search < s.size();) {
+    const ::std::size_t first = s.find(begin, search);
+    if (first == ::std::string_view::npos) return;
+    if (escaped(first)) {
+      search = first + begin.size();
+      continue;
+    }
+    ::std::size_t cursor = first + begin.size();
+    ::std::int64_t depth = 1;
+    while (cursor < s.size()) {
+      const ::std::size_t next_begin = s.find(begin, cursor);
+      const ::std::size_t next_end = s.find(end, cursor);
+      if (next_end == ::std::string_view::npos) return;
+      if (next_begin != ::std::string_view::npos && next_begin < next_end) {
+        cursor = next_begin + begin.size();
+        if (!escaped(next_begin)) ++depth;
+        continue;
+      }
+      cursor = next_end + end.size();
+      if (escaped(next_end)) continue;
+      if (--depth == 0) {
+        out.emplace_back(s.substr(first, cursor - first));
+        if (limit >= 0 && static_cast<::std::int64_t>(out.size()) >= limit) return;
+        search = cursor;
+        break;
+      }
+    }
+    if (depth != 0) return;
+  }
 }
 
-static void extract_tex_math_blocks_to(::std::string_view s, ::std::vector<::std::string>& out, ::std::int64_t limit = -1) {
-  static const ::std::regex re(R"(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$[^$\n]+\$)");
-  regex_collect_to(s, re, out, 0, limit);
+static void extract_tex_environment_variants_to(
+    ::std::string_view s,
+    ::std::span<const ::std::string_view> envs,
+    ::std::vector<::std::string>& out) {
+  auto escaped = [s](::std::size_t pos) {
+    ::std::size_t slashes = 0;
+    while (pos > slashes && s[pos - slashes - 1] == '\\') ++slashes;
+    return (slashes & 1U) != 0U;
+  };
+
+  for (::std::size_t search = 0; search < s.size();) {
+    ::std::size_t first = ::std::string_view::npos;
+    ::std::string_view selected;
+    for (const auto env : envs) {
+      const ::std::string opener = "\\begin{" + ::std::string(env) + "}";
+      ::std::size_t candidate = s.find(opener, search);
+      while (candidate != ::std::string_view::npos && escaped(candidate)) {
+        candidate = s.find(opener, candidate + opener.size());
+      }
+      if (candidate < first) {
+        first = candidate;
+        selected = env;
+      }
+    }
+    if (first == ::std::string_view::npos) return;
+
+    const ::std::string begin = "\\begin{" + ::std::string(selected) + "}";
+    const ::std::string end = "\\end{" + ::std::string(selected) + "}";
+    ::std::size_t cursor = first + begin.size();
+    ::std::int64_t depth = 1;
+    while (cursor < s.size()) {
+      ::std::size_t next_begin = s.find(begin, cursor);
+      while (next_begin != ::std::string_view::npos && escaped(next_begin)) {
+        next_begin = s.find(begin, next_begin + begin.size());
+      }
+      ::std::size_t next_end = s.find(end, cursor);
+      while (next_end != ::std::string_view::npos && escaped(next_end)) {
+        next_end = s.find(end, next_end + end.size());
+      }
+      if (next_end == ::std::string_view::npos) break;
+      if (next_begin != ::std::string_view::npos && next_begin < next_end) {
+        ++depth;
+        cursor = next_begin + begin.size();
+        continue;
+      }
+      cursor = next_end + end.size();
+      if (--depth == 0) {
+        out.emplace_back(s.substr(first, cursor - first));
+        search = cursor;
+        break;
+      }
+    }
+    if (depth != 0) search = first + begin.size();
+  }
+}
+
+enum class TexMathScope { All, Inline, Display };
+
+static void extract_tex_math_blocks_to(::std::string_view s,
+                                       ::std::vector<::std::string>& out,
+                                       ::std::int64_t limit = -1,
+                                       TexMathScope scope = TexMathScope::All) {
+  if (limit == 0) return;
+  auto escaped = [s](::std::size_t pos) {
+    ::std::size_t slashes = 0;
+    while (pos > slashes && s[pos - slashes - 1] == '\\') ++slashes;
+    return (slashes & 1U) != 0U;
+  };
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::string_view close;
+    ::std::size_t open_size = 0;
+    bool single_dollar = false;
+    bool is_inline = false;
+    if (s.substr(i, 2) == "$$" && !escaped(i)) {
+      close = "$$";
+      open_size = 2;
+    } else if ((s.substr(i, 2) == "\\[" || s.substr(i, 2) == "\\(") &&
+               !escaped(i)) {
+      close = s[i + 1] == '[' ? "\\]" : "\\)";
+      open_size = 2;
+      is_inline = s[i + 1] == '(';
+    } else if (s[i] == '$' && !escaped(i)) {
+      close = "$";
+      open_size = 1;
+      single_dollar = true;
+      is_inline = true;
+    } else {
+      ++i;
+      continue;
+    }
+    ::std::size_t cursor = i + open_size;
+    bool found = false;
+    while (cursor < s.size()) {
+      const ::std::size_t candidate = s.find(close, cursor);
+      if (candidate == ::std::string_view::npos ||
+          (single_dollar && s.substr(cursor, candidate - cursor).find('\n') !=
+                                ::std::string_view::npos)) {
+        break;
+      }
+      if (!escaped(candidate)) {
+        const ::std::size_t after = candidate + close.size();
+        const bool accepted = scope == TexMathScope::All ||
+            (scope == TexMathScope::Inline && is_inline) ||
+            (scope == TexMathScope::Display && !is_inline);
+        if (accepted) {
+          out.emplace_back(s.substr(i, after - i));
+          if (limit >= 0 && static_cast<::std::int64_t>(out.size()) >= limit) return;
+        }
+        i = after;
+        found = true;
+        break;
+      }
+      cursor = candidate + close.size();
+    }
+    if (!found) i += open_size;
+  }
 }
 
 static void token_feature_extract_to(::std::string_view s,
@@ -1387,17 +1708,55 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_macros_used") {
-    static const ::std::regex re(R"(\\([A-Za-z@]+[*]?))");
-    regex_collect_to(s, re, out, 0, iarg >= 0 ? iarg : -1);
+    for (::std::size_t i = 0; i < s.size();) {
+      ::std::size_t name_begin = 0;
+      ::std::size_t name_end = 0;
+      ::std::size_t token_end = 0;
+      if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+        i += (s[i] == '\\' && i + 1 < s.size()) ? 2 : 1;
+        continue;
+      }
+      out.emplace_back(s.substr(i, token_end - i));
+      i = token_end;
+    }
     keep_unique_in_place(out);
     return;
   }
   if (op == "tex_extract_command_args") {
-    if (sarg.empty()) return;
-    ::std::string cmd = regex_escape_text(sarg);
-    while (!cmd.empty() && cmd.front() == '\\') cmd.erase(cmd.begin());
-    const ::std::regex re("\\\\" + cmd + R"(\s*(?:\[[^\]]*\])?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    while (!sarg.empty() && sarg.front() == '\\') sarg.remove_prefix(1);
+    const ::std::string needle = "\\" + ::std::string(sarg);
+    for (::std::size_t search = 0; search < s.size();) {
+      const ::std::size_t found = s.find(needle, search);
+      if (found == ::std::string_view::npos) break;
+      ::std::size_t p = found + needle.size();
+      const bool word_name = !sarg.empty() &&
+          (::std::isalpha(static_cast<unsigned char>(sarg.back())) != 0 || sarg.back() == '@');
+      if ((found > 0 && s[found - 1] == '\\') ||
+          (word_name && p < s.size() &&
+           (::std::isalpha(static_cast<unsigned char>(s[p])) != 0 || s[p] == '@'))) {
+        search = p;
+        continue;
+      }
+      while (p < s.size() && ::std::isspace(static_cast<unsigned char>(s[p])) != 0) ++p;
+      if (p < s.size() && s[p] == '[') {
+        ::std::int64_t depth = 1;
+        for (++p; p < s.size() && depth > 0; ++p) {
+          if (s[p] == '\\' && p + 1 < s.size()) { ++p; continue; }
+          if (s[p] == '[') ++depth;
+          if (s[p] == ']') --depth;
+        }
+        if (depth != 0) { search = found + needle.size(); continue; }
+        while (p < s.size() && ::std::isspace(static_cast<unsigned char>(s[p])) != 0) ++p;
+      }
+      ::std::size_t next = p;
+      ::std::string body;
+      if (tex_parse_braced_group(s, p, &next, &body)) {
+        out.push_back(::std::move(body));
+        search = next;
+      } else {
+        search = found + needle.size();
+      }
+    }
     return;
   }
   if (op == "tex_environments" || op == "tex_environment_names") {
@@ -1417,27 +1776,32 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_math_blocks") {
-    extract_tex_math_blocks_to(s, out, iarg >= 0 ? iarg : -1);
+    extract_tex_math_blocks_to(s, out, iarg);
     return;
   }
   if (op == "tex_inline_math") {
-    static const ::std::regex re(R"(\\\([\s\S]*?\\\)|\$[^$\n]+\$)");
-    regex_collect_to(s, re, out);
+    extract_tex_math_blocks_to(s, out, -1, TexMathScope::Inline);
     return;
   }
   if (op == "tex_display_math") {
-    static const ::std::regex re(R"(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\])");
-    regex_collect_to(s, re, out);
+    extract_tex_math_blocks_to(s, out, -1, TexMathScope::Display);
     return;
   }
   if (op == "tex_labels") {
-    static const ::std::regex re(R"(\\label\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s, [](::std::string_view name) { return name == "label"; },
+        false, out);
     return;
   }
   if (op == "tex_refs") {
-    static const ::std::regex re(R"(\\(?:ref|eqref|autoref|pageref|nameref)\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s,
+        [](::std::string_view name) {
+          return name == "ref" || name == "eqref" || name == "autoref" ||
+                 name == "pageref" || name == "nameref" || name == "cref" ||
+                 name == "Cref" || name == "vref" || name == "Vref";
+        },
+        false, out);
     return;
   }
   if (op == "tex_citations") {
@@ -1447,18 +1811,21 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_packages") {
-    static const ::std::regex re(R"(\\(?:usepackage|RequirePackage)\s*(?:\[[^\]]*\])?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_packages_to(s, out);
     return;
   }
   if (op == "tex_includes") {
-    static const ::std::regex re(R"(\\(?:input|include|includegraphics)\s*(?:\[[^\]]*\])?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s,
+        [](::std::string_view name) {
+          return name == "input" || name == "include" ||
+                 name == "includegraphics";
+        },
+        true, out);
     return;
   }
   if (op == "tex_macros_defined") {
-    static const ::std::regex re(R"(\\(?:newcommand|renewcommand|providecommand)\s*\{\\([^{}]+)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_macro_defs_to(s, out);
     return;
   }
   if (op == "tex_bibliography_keys") {
@@ -1482,23 +1849,35 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_sections") {
-    static const ::std::regex re(R"(\\section\*?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s, [](::std::string_view name) { return name == "section"; },
+        true, out);
     return;
   }
   if (op == "tex_subsections") {
-    static const ::std::regex re(R"(\\subsection\*?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s, [](::std::string_view name) { return name == "subsection"; },
+        true, out);
     return;
   }
   if (op == "tex_subsubsections") {
-    static const ::std::regex re(R"(\\subsubsection\*?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s, [](::std::string_view name) { return name == "subsubsection"; },
+        true, out);
     return;
   }
   if (op == "tex_headings") {
-    static const ::std::regex re(R"(\\(?:part|chapter|section|subsection|subsubsection|paragraph)\*?\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1, iarg > 0 ? iarg : -1);
+    extract_tex_command_bodies_to(
+        s,
+        [iarg](::std::string_view name) {
+          ::std::int64_t depth = 0;
+          if (name == "part" || name == "chapter" || name == "section") depth = 1;
+          else if (name == "subsection") depth = 2;
+          else if (name == "subsubsection") depth = 3;
+          else if (name == "paragraph") depth = 4;
+          return depth > 0 && depth <= iarg;
+        },
+        true, out);
     return;
   }
   if (op == "tex_align_blocks") {
@@ -1508,13 +1887,15 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_figures") {
-    extract_tex_environment_blocks_to(s, "figure", out);
-    extract_tex_environment_blocks_to(s, "figure*", out);
+    static constexpr ::std::array<::std::string_view, 2> kFigures{
+        "figure", "figure*"};
+    extract_tex_environment_variants_to(s, kFigures, out);
     return;
   }
   if (op == "tex_tables") {
-    extract_tex_environment_blocks_to(s, "table", out);
-    extract_tex_environment_blocks_to(s, "table*", out);
+    static constexpr ::std::array<::std::string_view, 2> kTables{
+        "table", "table*"};
+    extract_tex_environment_variants_to(s, kTables, out);
     return;
   }
   if (op == "tex_theorems") {
@@ -1548,8 +1929,9 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_footnotes") {
-    static const ::std::regex re(R"(\\footnote\s*\{([^{}]*)\})");
-    regex_collect_to(s, re, out, 1);
+    extract_tex_command_bodies_to(
+        s, [](::std::string_view name) { return name == "footnote"; },
+        true, out);
     return;
   }
   if (op == "tex_todos") {
@@ -1567,8 +1949,9 @@ static void token_feature_extract_to(::std::string_view s,
     return;
   }
   if (op == "tex_tabular_blocks") {
-    extract_tex_environment_blocks_to(s, "tabular", out);
-    extract_tex_environment_blocks_to(s, "tabular*", out);
+    static constexpr ::std::array<::std::string_view, 2> kTabular{
+        "tabular", "tabular*"};
+    extract_tex_environment_variants_to(s, kTabular, out);
     return;
   }
   if (op == "tex_extract_symbols" || op == "tex_extract_operators" ||
@@ -2639,7 +3022,7 @@ static ::std::string tex_strip_comments_text(::std::string_view s) {
       ::std::size_t bs = 0;
       for (::std::size_t j = i; j > 0 && s[j - 1] == '\\'; --j) ++bs;
       if ((bs % 2) == 0) {
-        while (i < s.size() && s[i] != '\n') ++i;
+        while (i < s.size() && s[i] != '\n' && s[i] != '\r') ++i;
         continue;
       }
     }
@@ -2650,21 +3033,71 @@ static ::std::string tex_strip_comments_text(::std::string_view s) {
 }
 
 static ::std::string tex_strip_preamble_text(::std::string_view s) {
-  constexpr ::std::string_view kBegin = "\\begin{document}";
-  constexpr ::std::string_view kEnd = "\\end{document}";
-  ::std::size_t start = 0;
-  if (const auto p = s.find(kBegin); p != ::std::string_view::npos) start = p + kBegin.size();
-  ::std::size_t end = s.size();
-  if (const auto q = s.find(kEnd, start); q != ::std::string_view::npos) end = q;
-  return ::pluss::coden::native::cpu::strip_ascii(s.substr(start, end - start));
+  auto document_tag_end = [s](::std::size_t pos,
+                              ::std::string_view command,
+                              ::std::size_t* end) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, pos, &name_begin, &name_end, &token_end) ||
+        token_end != name_end ||
+        s.substr(name_begin, name_end - name_begin) != command)
+      return false;
+    const auto group = tex_skip_space(s, token_end);
+    ::std::size_t group_end = 0;
+    if (group >= s.size() || s[group] != '{' ||
+        !tex_group_end(s, group, '{', '}', &group_end) ||
+        ::pluss::coden::native::cpu::strip_ascii(
+            s.substr(group + 1, group_end - group - 2)) != "document")
+      return false;
+    *end = group_end;
+    return true;
+  };
+
+  ::std::size_t body_begin = ::std::string_view::npos;
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t end = 0;
+    if (document_tag_end(i, "begin", &end)) {
+      body_begin = end;
+      break;
+    }
+    i += s[i] == '\\' && i + 1 < s.size() ? 2 : 1;
+  }
+  if (body_begin == ::std::string_view::npos) return ::std::string(s);
+
+  for (::std::size_t i = body_begin; i < s.size();) {
+    ::std::size_t end = 0;
+    if (document_tag_end(i, "end", &end)) {
+      return ::pluss::coden::native::cpu::strip_ascii(
+          s.substr(body_begin, i - body_begin));
+    }
+    i += s[i] == '\\' && i + 1 < s.size() ? 2 : 1;
+  }
+  return ::std::string(s);
 }
 
 static ::std::string tex_remove_commands_text(::std::string_view s) {
-  static const ::std::regex kCmdWithArgs(R"(\\[A-Za-z@]+[*]?(?:\s*\[[^\]]*\])?(?:\s*\{[^{}]*\})?)");
-  static const ::std::regex kEscapedChar(R"(\\.)");
-  ::std::string out = ::std::regex_replace(::std::string(s), kCmdWithArgs, " ");
-  out = ::std::regex_replace(out, kEscapedChar, " ");
-  return out;
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    ::std::size_t cursor = token_end;
+    for (;;) {
+      const auto group = tex_skip_space(s, cursor);
+      if (group >= s.size() || (s[group] != '[' && s[group] != '{')) break;
+      ::std::size_t next = 0;
+      if (!tex_group_end(s, group, s[group], s[group] == '[' ? ']' : '}', &next))
+        break;
+      cursor = next;
+    }
+    out.push_back(' ');
+    i = cursor;
+  }
+  return normalize_tex_removed(out);
 }
 
 static ::std::string tex_to_text_text(::std::string_view s, ::std::int64_t mode) {
@@ -2679,15 +3112,8 @@ static ::std::string tex_to_text_text(::std::string_view s, ::std::int64_t mode)
   out = ::pluss::coden::native::cpu::replace_bytes(out, "}", " ");
   out = ::pluss::coden::native::cpu::collapse_whitespace_ascii(out);
   out = ::pluss::coden::native::cpu::strip_ascii(out);
-  // mode >= 1 also case-folds the recovered text, matching the sanitize
-  // convention used elsewhere in this file (see tex_sanitize_text).
+  // mode >= 1 also case-folds the recovered text for normalized keys.
   if (mode >= 1) out = ::pluss::coden::native::cpu::lower_ascii(out);
-  return out;
-}
-
-static ::std::string tex_sanitize_text(::std::string_view s, ::std::int64_t level) {
-  ::std::string out = tex_to_text_text(s, level);
-  if (level > 0) out = ::pluss::coden::native::cpu::lower_ascii(out);
   return out;
 }
 
@@ -3003,33 +3429,59 @@ static ::std::string tex_render_apply_scripts(::std::string_view s) {
 
 template <::std::size_t N>
 static ::std::string tex_replace_named_commands(
-    ::std::string text,
+    ::std::string_view text,
     const ::std::array<::std::pair<::std::string_view, ::std::string_view>, N>& map) {
-  for (const auto& [cmd, repl] : map) {
-    const ::std::regex re("\\\\" + regex_escape_text(cmd) + "(?![A-Za-z@])");
-    text = ::std::regex_replace(text, re, ::std::string(repl));
+  ::std::string out;
+  out.reserve(text.size());
+  for (::std::size_t i = 0; i < text.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(text, i, &name_begin, &name_end, &token_end) ||
+        token_end != name_end) {
+      const auto take = text[i] == '\\' && i + 1 < text.size() ? 2U : 1U;
+      out.append(text.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = text.substr(name_begin, name_end - name_begin);
+    const auto found = ::std::find_if(
+        map.begin(), map.end(),
+        [name](const auto& item) { return item.first == name; });
+    if (found == map.end()) out.append(text.substr(i, token_end - i));
+    else out.append(found->second);
+    i = token_end;
   }
-  return text;
+  return out;
+}
+
+static ::std::string tex_drop_control_words(::std::string_view text) {
+  ::std::string out;
+  out.reserve(text.size());
+  for (::std::size_t i = 0; i < text.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (tex_control_word_at(text, i, &name_begin, &name_end, &token_end)) {
+      out.push_back(' ');
+      i = token_end;
+      continue;
+    }
+    const auto take = text[i] == '\\' && i + 1 < text.size() ? 2U : 1U;
+    out.append(text.substr(i, take));
+    i += take;
+  }
+  return out;
 }
 
 static ::std::string tex_render_text(::std::string_view s, ::std::int64_t mode) {
   ::std::string out = tex_strip_comments_text(s);
   out = tex_strip_preamble_text(out);
   out = tex_expand_macros_text(out, mode > 0 ? mode : 1);
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\left", "");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\right", "");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\,", " ");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\;", " ");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\:", " ");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\!", "");
+  out = tex_remove_left_right_text(out);
+  out = tex_remove_spacing_cmds_text(out);
 
   static const ::std::regex kTextCmd(
       R"(\\(?:text|mathrm|mathbf|mathit|mathsf|operatorname|textbf|textit|emph)\s*\{([^{}]*)\})");
   static const ::std::regex kFrac(R"(\\(?:d|t)?frac\s*\{\s*([^{}]+?)\s*\}\s*\{\s*([^{}]+?)\s*\})");
   static const ::std::regex kSqrtN(R"(\\sqrt\s*\[\s*([^\]]+?)\s*\]\s*\{\s*([^{}]+?)\s*\})");
   static const ::std::regex kSqrt(R"(\\sqrt\s*\{\s*([^{}]+?)\s*\})");
-  static const ::std::regex kUnknownCmd(R"(\\[A-Za-z@]+[*]?)");
-
   out = ::std::regex_replace(out, kTextCmd, "$1");
   out = ::std::regex_replace(out, kFrac, "($1)/($2)");
   out = ::std::regex_replace(out, kSqrtN, "root($2,$1)");
@@ -3051,7 +3503,7 @@ static ::std::string tex_render_text(::std::string_view s, ::std::int64_t mode) 
   out = tex_render_apply_scripts(out);
   out = tex_remove_math_delimiters_text(out);
   out = ::pluss::coden::native::cpu::replace_bytes(out, "\\\\", "\n");
-  out = ::std::regex_replace(out, kUnknownCmd, " ");
+  out = tex_drop_control_words(out);
   out = ::pluss::coden::native::cpu::replace_bytes(out, "{", "");
   out = ::pluss::coden::native::cpu::replace_bytes(out, "}", "");
   out = tex_unescape_text(out);
@@ -3061,8 +3513,30 @@ static ::std::string tex_render_text(::std::string_view s, ::std::int64_t mode) 
 }
 
 static ::std::string tex_remove_math_delimiters_text(::std::string_view s) {
-  static const ::std::regex kMathDelims(R"(\\\(|\\\)|\\\[|\\\]|\$\$|\$)");
-  return ::std::regex_replace(::std::string(s), kMathDelims, "");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    if (s[i] == '\\' && i + 1 < s.size()) {
+      if (s[i + 1] == '\\' || s[i + 1] == '$') {
+        out.append(s.substr(i, 2));
+        i += 2;
+        continue;
+      }
+      if (s[i + 1] == '(' || s[i + 1] == ')' ||
+          s[i + 1] == '[' || s[i + 1] == ']') {
+        i += 2;
+        continue;
+      }
+      out.push_back(s[i++]);
+      continue;
+    }
+    if (s[i] == '$') {
+      i += i + 1 < s.size() && s[i + 1] == '$' ? 2 : 1;
+      continue;
+    }
+    out.push_back(s[i++]);
+  }
+  return out;
 }
 
 static ::std::string tex_add_math_delimiters_text(::std::string_view s) {
@@ -3083,18 +3557,61 @@ static ::std::string tex_add_math_delimiters_text(::std::string_view s) {
   return "$" + t + "$";
 }
 
+static bool tex_name_in(::std::string_view name,
+                        ::std::initializer_list<::std::string_view> names) {
+  return ::std::find(names.begin(), names.end(), name) != names.end();
+}
+
 static ::std::string tex_remove_formatting_text(::std::string_view s) {
-  static const ::std::regex kFmtCmd(
-      R"(\\(textbf|textit|emph|underline|texttt|mathrm|mathbf|mathit|mathsf)\s*\{([^{}]*)\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), kFmtCmd, "$2");
-  out = normalize_tex_removed(out);
-  return out;
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (!tex_name_in(name, {"textbf", "textit", "emph", "underline",
+                            "texttt", "mathrm", "mathbf", "mathit",
+                            "mathsf"})) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    const auto body = tex_skip_space(s, token_end);
+    ::std::size_t next = 0;
+    if (body >= s.size() || s[body] != '{' ||
+        !tex_group_end(s, body, '{', '}', &next)) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out += tex_remove_formatting_text(
+        s.substr(body + 1, next - body - 2));
+    i = next;
+  }
+  return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_font_commands_text(::std::string_view s) {
-  static const ::std::regex kFontDecl(R"(\\(rmfamily|sffamily|ttfamily|bfseries|itshape|scshape)\b)");
-  ::std::string out = tex_remove_formatting_text(s);
-  out = ::std::regex_replace(out, kFontDecl, " ");
+  const auto unwrapped = tex_remove_formatting_text(s);
+  ::std::string out;
+  out.reserve(unwrapped.size());
+  for (::std::size_t i = 0; i < unwrapped.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (tex_control_word_at(unwrapped, i, &name_begin, &name_end, &token_end) &&
+        tex_name_in(unwrapped.substr(name_begin, name_end - name_begin),
+                    {"rmfamily", "sffamily", "ttfamily", "bfseries",
+                     "itshape", "scshape"})) {
+      out.push_back(' ');
+      i = token_end;
+      continue;
+    }
+    const auto take = unwrapped[i] == '\\' && i + 1 < unwrapped.size() ? 2U : 1U;
+    out.append(unwrapped.substr(i, take));
+    i += take;
+  }
   return normalize_tex_removed(out);
 }
 
@@ -3160,7 +3677,9 @@ static ::std::string tex_strip_macro_decls_text(::std::string_view s, ::std::str
 
     if (command == "newcommand" || command == "renewcommand" ||
         command == "providecommand") {
-      ::std::size_t p = skip_space(command_end);
+      ::std::size_t p = command_end;
+      if (p < s.size() && s[p] == '*') ++p;
+      p = skip_space(p);
       ::std::size_t after_name = 0;
       ::std::string name_group;
       if (tex_parse_braced_group(s, p, &after_name, &name_group)) {
@@ -3398,6 +3917,7 @@ static ::std::string tex_set_macro_text(::std::string_view s, ::std::string_view
   const ::std::string n = tex_canon_macro_name(name);
   if (n.empty()) return ::std::string(s);
   ::std::string out = tex_strip_macro_decls_text(s, n);
+  out = ::pluss::coden::native::cpu::lstrip_ascii(out);
   return "\\newcommand{\\" + n + "}{" + ::std::string(body) + "}\n" + out;
 }
 
@@ -3436,23 +3956,100 @@ static ::std::string tex_wrap_display_math_text(::std::string_view s, ::std::str
 }
 
 static ::std::string tex_simplify_fractions_text(::std::string_view s) {
-  static const ::std::regex kFrac(R"(\\(?:d|t)?frac\s*\{\s*([^{}]+?)\s*\}\s*\{\s*([^{}]+?)\s*\})");
-  ::std::string out = tex_canonicalize_macros_text(s);
-  out = ::std::regex_replace(out, kFrac, "\\frac{$1}{$2}");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        token_end != name_end ||
+        !tex_name_in(s.substr(name_begin, name_end - name_begin),
+                     {"frac", "dfrac", "tfrac", "cfrac"})) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+
+    const auto num_open = tex_skip_space(s, token_end);
+    ::std::size_t num_end = 0;
+    if (num_open >= s.size() || s[num_open] != '{' ||
+        !tex_group_end(s, num_open, '{', '}', &num_end)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    const auto den_open = tex_skip_space(s, num_end);
+    ::std::size_t den_end = 0;
+    if (den_open >= s.size() || s[den_open] != '{' ||
+        !tex_group_end(s, den_open, '{', '}', &den_end)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+
+    const auto numerator = ::pluss::coden::native::cpu::strip_ascii(
+        s.substr(num_open + 1, num_end - num_open - 2));
+    const auto denominator = ::pluss::coden::native::cpu::strip_ascii(
+        s.substr(den_open + 1, den_end - den_open - 2));
+    out += "\\frac{";
+    out += tex_simplify_fractions_text(numerator);
+    out += "}{";
+    out += tex_simplify_fractions_text(denominator);
+    out.push_back('}');
+    i = den_end;
+  }
   return out;
 }
 
 static ::std::string tex_simplify_roots_text(::std::string_view s) {
-  static const ::std::regex kRootN(R"(\\sqrt\s*\[\s*([^\]]+?)\s*\]\s*\{\s*([^{}]+?)\s*\})");
-  static const ::std::regex kRoot(R"(\\sqrt\s*\{\s*([^{}]+?)\s*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), kRootN, "\\sqrt[$1]{$2}");
-  out = ::std::regex_replace(out, kRoot, "\\sqrt{$1}");
-  return out;
-}
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        token_end != name_end ||
+        s.substr(name_begin, name_end - name_begin) != "sqrt") {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
 
-static ::std::string tex_simplify_spacing_text(::std::string_view s) {
-  ::std::string out = tex_remove_spacing_cmds_text(s);
-  return normalize_tex_removed(out);
+    auto cursor = tex_skip_space(s, token_end);
+    ::std::string degree;
+    if (cursor < s.size() && s[cursor] == '[') {
+      ::std::size_t degree_end = 0;
+      if (!tex_group_end(s, cursor, '[', ']', &degree_end)) {
+        out.append(s.substr(i, token_end - i));
+        i = token_end;
+        continue;
+      }
+      degree = ::pluss::coden::native::cpu::strip_ascii(
+          s.substr(cursor + 1, degree_end - cursor - 2));
+      cursor = tex_skip_space(s, degree_end);
+    }
+
+    ::std::size_t radicand_end = 0;
+    if (cursor >= s.size() || s[cursor] != '{' ||
+        !tex_group_end(s, cursor, '{', '}', &radicand_end)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    const auto radicand = ::pluss::coden::native::cpu::strip_ascii(
+        s.substr(cursor + 1, radicand_end - cursor - 2));
+    out += "\\sqrt";
+    if (!degree.empty()) {
+      out.push_back('[');
+      out += tex_simplify_roots_text(degree);
+      out.push_back(']');
+    }
+    out.push_back('{');
+    out += tex_simplify_roots_text(radicand);
+    out.push_back('}');
+    i = radicand_end;
+  }
+  return out;
 }
 
 static ::std::string tex_convert_frac_to_slash_text(::std::string_view s) {
@@ -3706,20 +4303,103 @@ static ::std::string tex_expand_inputs_text(::std::string_view s) {
 }
 
 static ::std::string tex_resolve_graphics_text(::std::string_view s) {
-  static const ::std::regex kG(R"(\\includegraphics\s*(?:\[[^\]]*\])?\s*\{([^{}]+)\})");
-  return ::std::regex_replace(::std::string(s), kG, "[graphic:$1]");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        s.substr(name_begin, name_end - name_begin) != "includegraphics") {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+
+    auto cursor = tex_skip_space(s, token_end);
+    if (cursor < s.size() && s[cursor] == '[') {
+      ::std::size_t next = 0;
+      if (!tex_group_end(s, cursor, '[', ']', &next)) {
+        out.append(s.substr(i, token_end - i));
+        i = token_end;
+        continue;
+      }
+      cursor = tex_skip_space(s, next);
+    }
+    ::std::size_t next = 0;
+    ::std::string path;
+    if (!tex_parse_braced_group(s, cursor, &next, &path)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    out += "[graphic:";
+    out += path;
+    out.push_back(']');
+    i = next;
+  }
+  return out;
 }
 
 static ::std::string tex_remove_accents_text(::std::string_view s) {
-  static const ::std::regex kAccBrace(R"(\\['"`^~=.uvHckbdtr]\s*\{([A-Za-z])\})");
-  static const ::std::regex kAccPlain(R"(\\['"`^~=.uvHckbdtr]\s*([A-Za-z]))");
-  ::std::string out = ::std::regex_replace(::std::string(s), kAccBrace, "$1");
-  out = ::std::regex_replace(out, kAccPlain, "$1");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    if (s[i] != '\\' || i + 1 >= s.size()) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    if (s[i + 1] == '\\') {
+      out.append(s.substr(i, 2));
+      i += 2;
+      continue;
+    }
+
+    ::std::size_t command_end = i + 2;
+    bool accent = ::std::string_view("'\"`^~=.").find(s[i + 1]) !=
+                  ::std::string_view::npos;
+    if (!accent) {
+      ::std::size_t name_begin = 0;
+      ::std::size_t name_end = 0;
+      ::std::size_t token_end = 0;
+      if (tex_control_word_at(s, i, &name_begin, &name_end, &token_end) &&
+          token_end == name_end) {
+        const auto name = s.substr(name_begin, name_end - name_begin);
+        accent = name == "v" || name == "u" || name == "H" ||
+                 name == "c" || name == "k" || name == "b" ||
+                 name == "d" || name == "r" || name == "t";
+        command_end = token_end;
+      }
+    }
+
+    if (!accent) {
+      out.push_back(s[i++]);
+      continue;
+    }
+
+    const auto operand = tex_skip_space(s, command_end);
+    ::std::size_t next = operand;
+    ::std::string body;
+    if (tex_parse_braced_group(s, operand, &next, &body)) {
+      out.append(body);
+      i = next;
+      continue;
+    }
+    if (operand < s.size()) {
+      ::std::uint32_t cp = 0;
+      ::std::size_t cp_len = 0;
+      decode_utf8_cp(s, operand, cp, cp_len);
+      out.append(s.substr(operand, cp_len));
+      i = operand + cp_len;
+      continue;
+    }
+
+    out.append(s.substr(i, command_end - i));
+    i = command_end;
+  }
   return ::pluss::coden::native::cpu::strip_accents_utf8(out);
 }
 
 static ::std::string tex_to_markdown_text(::std::string_view s, ::std::int64_t mode) {
-  (void)mode;
   ::std::string out(s);
   static const ::std::regex kSec(R"(\\section\*?\s*\{([^{}]*)\})");
   static const ::std::regex kSub(R"(\\subsection\*?\s*\{([^{}]*)\})");
@@ -3748,11 +4428,14 @@ static ::std::string tex_to_markdown_text(::std::string_view s, ::std::int64_t m
   out = tex_remove_font_commands_text(out);
   out = tex_normalize_newlines_text(out);
   out = tex_dedup_blank_lines_text(out);
-  return ::pluss::coden::native::cpu::strip_ascii(out);
+  out = ::pluss::coden::native::cpu::strip_ascii(out);
+  // mode >= 1 also case-folds the recovered text, the same contract as
+  // tex_to_text_text's own mode.
+  if (mode >= 1) out = ::pluss::coden::native::cpu::lower_ascii(out);
+  return out;
 }
 
-static ::std::string tex_to_html_text(::std::string_view s, ::std::int64_t mode) {
-  (void)mode;
+static ::std::string tex_to_html_text(::std::string_view s) {
   ::std::string out(s);
   static const ::std::regex kSec(R"(\\section\*?\s*\{([^{}]*)\})");
   static const ::std::regex kSub(R"(\\subsection\*?\s*\{([^{}]*)\})");
@@ -3770,6 +4453,8 @@ static ::std::string tex_to_html_text(::std::string_view s, ::std::int64_t mode)
   out = ::std::regex_replace(out, kBr, "<br/>");
   out = ::std::regex_replace(out, kItem, "<li>");
 
+  out = tex_remove_color_text(out);
+  out = tex_remove_hyperref_text(out);
   out = tex_remove_labels_text(out);
   out = tex_remove_refs_text(out);
   out = tex_remove_citations_text(out);
@@ -3789,69 +4474,309 @@ static ::std::string normalize_tex_removed(::std::string_view s) {
       ::pluss::coden::native::cpu::collapse_whitespace_ascii(s));
 }
 
-static ::std::string regex_escape_text(::std::string_view s) {
+static ::std::string tex_remove_environment_text(::std::string_view s, ::std::string_view name) {
+  const ::std::string begin = "\\begin{" + ::std::string(name) + "}";
+  const ::std::string end = "\\end{" + ::std::string(name) + "}";
+  auto escaped = [s](::std::size_t pos) {
+    ::std::size_t slashes = 0;
+    while (pos > slashes && s[pos - slashes - 1] == '\\') ++slashes;
+    return (slashes & 1U) != 0U;
+  };
+
   ::std::string out;
-  out.reserve(s.size() * 2);
-  for (const char c : s) {
-    if (::std::isalnum(static_cast<unsigned char>(c)) || c == '_') out.push_back(c);
-    else {
-      out.push_back('\\');
-      out.push_back(c);
+  out.reserve(s.size());
+  ::std::size_t copied = 0;
+  for (::std::size_t search = 0; search < s.size();) {
+    auto first = s.find(begin, search);
+    while (first != ::std::string_view::npos && escaped(first))
+      first = s.find(begin, first + begin.size());
+    if (first == ::std::string_view::npos) break;
+
+    ::std::size_t cursor = first + begin.size();
+    ::std::int64_t depth = 1;
+    while (cursor < s.size() && depth > 0) {
+      auto next_begin = s.find(begin, cursor);
+      while (next_begin != ::std::string_view::npos && escaped(next_begin))
+        next_begin = s.find(begin, next_begin + begin.size());
+      auto next_end = s.find(end, cursor);
+      while (next_end != ::std::string_view::npos && escaped(next_end))
+        next_end = s.find(end, next_end + end.size());
+      if (next_end == ::std::string_view::npos) break;
+      if (next_begin != ::std::string_view::npos && next_begin < next_end) {
+        ++depth;
+        cursor = next_begin + begin.size();
+      } else {
+        --depth;
+        cursor = next_end + end.size();
+      }
     }
+    if (depth != 0) break;
+    out.append(s.substr(copied, first - copied));
+    out.push_back(' ');
+    copied = cursor;
+    search = cursor;
   }
-  return out;
+  out.append(s.substr(copied));
+  return normalize_tex_removed(out);
 }
 
-static ::std::string tex_remove_environment_text(::std::string_view s, ::std::string_view name) {
-  const ::std::string esc = regex_escape_text(name);
-  const ::std::regex re("\\\\begin\\{" + esc + "\\}[\\s\\S]*?\\\\end\\{" + esc + "\\}");
-  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+struct TexEnvironmentToken {
+  bool begin = false;
+  ::std::string_view name;
+  ::std::size_t end = 0;
+};
+
+static bool tex_environment_token_at(::std::string_view s, ::std::size_t pos,
+                                     TexEnvironmentToken* token) {
+  ::std::size_t name_begin = 0, name_end = 0, command_end = 0;
+  if (!tex_control_word_at(s, pos, &name_begin, &name_end, &command_end))
+    return false;
+  const auto command = s.substr(name_begin, name_end - name_begin);
+  if (command != "begin" && command != "end") return false;
+
+  const auto group = tex_skip_space(s, command_end);
+  ::std::size_t group_end = 0;
+  if (group >= s.size() || s[group] != '{' ||
+      !tex_group_end(s, group, '{', '}', &group_end))
+    return false;
+  const auto name = s.substr(group + 1, group_end - group - 2);
+  if (name.empty()) return false;
+  for (::std::size_t i = 0; i < name.size(); ++i) {
+    const auto c = static_cast<unsigned char>(name[i]);
+    if (::std::isalpha(c) == 0 && name[i] != '@' &&
+        !(name[i] == '*' && i + 1 == name.size()))
+      return false;
+  }
+  *token = TexEnvironmentToken{command == "begin", name, group_end};
+  return true;
 }
 
 static ::std::string tex_remove_environments_text(::std::string_view s) {
-  static const ::std::regex re(R"(\\begin\{([A-Za-z*@]+)\}[\s\S]*?\\end\{\1\})");
-  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    TexEnvironmentToken first;
+    if (!tex_environment_token_at(s, i, &first) || !first.begin) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+
+    ::std::vector<::std::string_view> stack{first.name};
+    ::std::size_t cursor = first.end;
+    while (cursor < s.size() && !stack.empty()) {
+      const auto slash = s.find('\\', cursor);
+      if (slash == ::std::string_view::npos) break;
+      TexEnvironmentToken next;
+      if (!tex_environment_token_at(s, slash, &next)) {
+        cursor = slash + 1;
+        continue;
+      }
+      if (next.begin) {
+        stack.push_back(next.name);
+      } else if (next.name == stack.back()) {
+        stack.pop_back();
+      }
+      cursor = next.end;
+    }
+    if (!stack.empty()) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out.push_back(' ');
+    i = cursor;
+  }
+  return normalize_tex_removed(out);
 }
 
 static ::std::string tex_strip_metadata_text(::std::string_view s) {
-  static const ::std::regex meta_cmd(R"(\\(title|author|date|thanks)\s*\{[^{}]*\})");
-  static const ::std::regex maketitle_cmd(R"(\\maketitle\b)");
-  ::std::string out = ::std::regex_replace(::std::string(s), meta_cmd, " ");
-  out = ::std::regex_replace(out, maketitle_cmd, " ");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        token_end != name_end) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (name == "maketitle") {
+      out.push_back(' ');
+      i = token_end;
+      continue;
+    }
+    if (!tex_name_in(name, {"title", "author", "date", "thanks"})) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    const auto body = tex_skip_space(s, token_end);
+    ::std::size_t body_end = 0;
+    if (body >= s.size() || s[body] != '{' ||
+        !tex_group_end(s, body, '{', '}', &body_end)) {
+      out.append(s.substr(i, token_end - i));
+      i = token_end;
+      continue;
+    }
+    out.push_back(' ');
+    i = body_end;
+  }
+  return normalize_tex_removed(out);
+}
+
+static ::std::string tex_remove_complete_calls(
+    ::std::string_view s,
+    ::std::initializer_list<::std::string_view> names,
+    bool allow_optional) {
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        !tex_name_in(s.substr(name_begin, name_end - name_begin), names)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+
+    auto cursor = tex_skip_space(s, token_end);
+    if (allow_optional) {
+      while (cursor < s.size() && s[cursor] == '[') {
+        ::std::size_t next = 0;
+        if (!tex_group_end(s, cursor, '[', ']', &next)) break;
+        cursor = tex_skip_space(s, next);
+      }
+    }
+    ::std::size_t next = 0;
+    if (cursor >= s.size() || s[cursor] != '{' ||
+        !tex_group_end(s, cursor, '{', '}', &next)) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out.push_back(' ');
+    i = next;
+  }
   return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_labels_text(::std::string_view s) {
-  static const ::std::regex re(R"(\\label\s*\{[^{}]*\})");
-  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+  return tex_remove_complete_calls(s, {"label"}, false);
 }
 
 static ::std::string tex_remove_refs_text(::std::string_view s) {
-  static const ::std::regex re(R"(\\(ref|eqref|autoref|pageref|nameref)\s*\{[^{}]*\})");
-  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+  return tex_remove_complete_calls(
+      s, {"ref", "eqref", "autoref", "pageref", "nameref", "cref",
+          "Cref", "vref", "Vref"}, false);
 }
 
 static ::std::string tex_remove_citations_text(::std::string_view s) {
-  static const ::std::regex re(R"(\\cite[a-zA-Z*]*\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
-  return normalize_tex_removed(::std::regex_replace(::std::string(s), re, " "));
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        !starts_with_sv(s.substr(name_begin, name_end - name_begin), "cite")) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    ::std::size_t cursor = token_end;
+    while (true) {
+      const auto group = tex_skip_space(s, cursor);
+      if (group >= s.size() || s[group] != '[') break;
+      ::std::size_t next = 0;
+      if (!tex_group_end(s, group, '[', ']', &next)) break;
+      cursor = next;
+    }
+    const auto body = tex_skip_space(s, cursor);
+    ::std::size_t next = 0;
+    if (body < s.size() && s[body] == '{' &&
+        tex_group_end(s, body, '{', '}', &next)) {
+      out.push_back(' ');
+      i = next;
+    } else {
+      out.push_back(s[i++]);
+    }
+  }
+  return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_graphics_text(::std::string_view s) {
-  static const ::std::regex cmd(R"(\\includegraphics\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), cmd, " ");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end) ||
+        s.substr(name_begin, name_end - name_begin) != "includegraphics") {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    auto cursor = tex_skip_space(s, token_end);
+    if (cursor < s.size() && s[cursor] == '[') {
+      ::std::size_t next = 0;
+      if (!tex_group_end(s, cursor, '[', ']', &next)) {
+        out.push_back(s[i++]);
+        continue;
+      }
+      cursor = tex_skip_space(s, next);
+    }
+    ::std::size_t next = 0;
+    if (cursor >= s.size() || s[cursor] != '{' ||
+        !tex_group_end(s, cursor, '{', '}', &next)) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out.push_back(' ');
+    i = next;
+  }
   out = tex_remove_environment_text(out, "figure");
   out = tex_remove_environment_text(out, "figure*");
   return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_tables_text(::std::string_view s) {
-  ::std::string out(s);
-  out = tex_remove_environment_text(out, "table");
-  out = tex_remove_environment_text(out, "table*");
-  out = tex_remove_environment_text(out, "tabular");
-  out = tex_remove_environment_text(out, "tabular*");
-  out = tex_remove_environment_text(out, "longtable");
-  out = tex_remove_environment_text(out, "array");
+  static constexpr ::std::array<::std::string_view, 6> kTables{
+      "array", "longtable", "table", "table*", "tabular", "tabular*"};
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    TexEnvironmentToken first;
+    if (!tex_environment_token_at(s, i, &first) || !first.begin ||
+        ::std::find(kTables.begin(), kTables.end(), first.name) == kTables.end()) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+
+    ::std::vector<::std::string_view> stack{first.name};
+    ::std::size_t cursor = first.end;
+    while (cursor < s.size() && !stack.empty()) {
+      const auto slash = s.find('\\', cursor);
+      if (slash == ::std::string_view::npos) break;
+      TexEnvironmentToken next;
+      if (!tex_environment_token_at(s, slash, &next)) {
+        cursor = slash + 1;
+        continue;
+      }
+      if (next.begin) stack.push_back(next.name);
+      else if (next.name == stack.back()) stack.pop_back();
+      cursor = next.end;
+    }
+    if (!stack.empty()) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out.push_back(' ');
+    i = cursor;
+  }
   return normalize_tex_removed(out);
 }
 
@@ -3865,27 +4790,94 @@ static ::std::string tex_remove_figures_text(::std::string_view s) {
 }
 
 static ::std::string tex_remove_packages_text(::std::string_view s) {
-  static const ::std::regex usepkg(R"(\\(usepackage|RequirePackage)\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
-  static const ::std::regex docclass(R"(\\documentclass\s*(?:\[[^\]]*\])?\s*\{[^{}]*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), usepkg, " ");
-  out = ::std::regex_replace(out, docclass, " ");
-  return normalize_tex_removed(out);
+  return tex_remove_complete_calls(
+      s, {"usepackage", "RequirePackage", "documentclass"}, true);
 }
 
 static ::std::string tex_remove_bibliography_text(::std::string_view s) {
-  static const ::std::regex bibcmd(R"(\\(bibliography|addbibresource|printbibliography)\s*(?:\[[^\]]*\])?\s*(?:\{[^{}]*\})?)");
-  ::std::string out = ::std::regex_replace(::std::string(s), bibcmd, " ");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    const bool requires_body = name == "bibliography" || name == "addbibresource";
+    if (!requires_body && name != "printbibliography") {
+      out.push_back(s[i++]);
+      continue;
+    }
+    ::std::size_t cursor = token_end;
+    while (true) {
+      const auto group = tex_skip_space(s, cursor);
+      if (group >= s.size() || s[group] != '[') break;
+      ::std::size_t next = 0;
+      if (!tex_group_end(s, group, '[', ']', &next)) break;
+      cursor = next;
+    }
+    const auto body = tex_skip_space(s, cursor);
+    ::std::size_t next = 0;
+    if (body < s.size() && s[body] == '{' &&
+        tex_group_end(s, body, '{', '}', &next)) {
+      cursor = next;
+    } else if (requires_body) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out.push_back(' ');
+    i = cursor;
+  }
   out = tex_remove_environment_text(out, "thebibliography");
   return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_hyperref_text(::std::string_view s) {
-  static const ::std::regex href(R"(\\href\s*\{[^{}]*\}\s*\{([^{}]*)\})");
-  static const ::std::regex hyperref(R"(\\hyperref\s*\[[^\]]*\]\s*\{([^{}]*)\})");
-  static const ::std::regex url(R"(\\url\s*\{[^{}]*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), href, "$1");
-  out = ::std::regex_replace(out, hyperref, "$1");
-  out = ::std::regex_replace(out, url, " ");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (name != "href" && name != "hyperref" && name != "url") {
+      out.push_back(s[i++]);
+      continue;
+    }
+
+    auto cursor = tex_skip_space(s, token_end);
+    const char first_open = name == "hyperref" ? '[' : '{';
+    const char first_close = name == "hyperref" ? ']' : '}';
+    ::std::size_t first_end = 0;
+    if (cursor >= s.size() || s[cursor] != first_open ||
+        !tex_group_end(s, cursor, first_open, first_close, &first_end)) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    if (name == "url") {
+      out.push_back(' ');
+      i = first_end;
+      continue;
+    }
+
+    const auto body = tex_skip_space(s, first_end);
+    ::std::size_t body_end = 0;
+    if (body >= s.size() || s[body] != '{' ||
+        !tex_group_end(s, body, '{', '}', &body_end)) {
+      out.push_back(s[i++]);
+      continue;
+    }
+    out += tex_remove_hyperref_text(
+        s.substr(body + 1, body_end - body - 2));
+    i = body_end;
+  }
   return normalize_tex_removed(out);
 }
 
@@ -3894,12 +4886,52 @@ static ::std::string tex_remove_urls_text(::std::string_view s) {
 }
 
 static ::std::string tex_remove_color_text(::std::string_view s) {
-  static const ::std::regex textcolor(R"(\\textcolor\s*\{[^{}]*\}\s*\{([^{}]*)\})");
-  static const ::std::regex colorbox(R"(\\(colorbox|fcolorbox)\s*\{[^{}]*\}(?:\s*\{[^{}]*\})?\s*\{([^{}]*)\})");
-  static const ::std::regex colorcmd(R"(\\(color|pagecolor)\s*\{[^{}]*\})");
-  ::std::string out = ::std::regex_replace(::std::string(s), textcolor, "$1");
-  out = ::std::regex_replace(out, colorbox, "$2");
-  out = ::std::regex_replace(out, colorcmd, " ");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    int required = 0;
+    int keep = -1;
+    if (name == "textcolor" || name == "colorbox") { required = 2; keep = 1; }
+    else if (name == "fcolorbox") { required = 3; keep = 2; }
+    else if (name == "color" || name == "pagecolor") { required = 1; }
+    else { out.push_back(s[i++]); continue; }
+
+    ::std::size_t cursor = token_end;
+    const auto optional = tex_skip_space(s, cursor);
+    if (optional < s.size() && s[optional] == '[') {
+      ::std::size_t next = 0;
+      if (!tex_group_end(s, optional, '[', ']', &next)) {
+        out.push_back(s[i++]);
+        continue;
+      }
+      cursor = next;
+    }
+    ::std::vector<::std::string> bodies;
+    bool complete = true;
+    for (int group_index = 0; group_index < required; ++group_index) {
+      const auto group = tex_skip_space(s, cursor);
+      ::std::size_t next = 0;
+      ::std::string body;
+      if (!tex_parse_braced_group(s, group, &next, &body)) {
+        complete = false;
+        break;
+      }
+      bodies.push_back(::std::move(body));
+      cursor = next;
+    }
+    if (!complete) { out.push_back(s[i++]); continue; }
+    if (keep >= 0) out.append(bodies[static_cast<::std::size_t>(keep)]);
+    else out.push_back(' ');
+    i = cursor;
+  }
   return normalize_tex_removed(out);
 }
 
@@ -3916,11 +4948,11 @@ static ::std::string strip_math_delims(::std::string_view m) {
 }
 
 static ::std::string tex_strip_text_text(::std::string_view s) {
-  static const ::std::regex math_re(R"(\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])");
-  ::std::string owned(s);
+  ::std::vector<::std::string> blocks;
+  extract_tex_math_blocks_to(s, blocks);
   ::std::string out;
-  for (::std::sregex_iterator it(owned.begin(), owned.end(), math_re), end; it != end; ++it) {
-    ::std::string m = strip_math_delims((*it).str());
+  for (const auto& block : blocks) {
+    ::std::string m = strip_math_delims(block);
     m = ::pluss::coden::native::cpu::strip_ascii(m);
     if (m.empty()) continue;
     if (!out.empty()) out.push_back(' ');
@@ -3930,43 +4962,131 @@ static ::std::string tex_strip_text_text(::std::string_view s) {
 }
 
 static ::std::string tex_remove_left_right_text(::std::string_view s) {
-  ::std::string out = ::pluss::coden::native::cpu::replace_bytes(s, "\\left", "");
-  out = ::pluss::coden::native::cpu::replace_bytes(out, "\\right", "");
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto name = s.substr(name_begin, name_end - name_begin);
+      if (name == "left" || name == "right") {
+        i = token_end;
+        continue;
+      }
+    }
+    const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+    out.append(s.substr(i, take));
+    i += take;
+  }
   return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_big_delims_text(::std::string_view s) {
   static constexpr ::std::array<::std::string_view, 12> kBigCmds{
-      "\\bigl", "\\bigr", "\\Bigl", "\\Bigr",
-      "\\biggl", "\\biggr", "\\Biggl", "\\Biggr",
-      "\\big", "\\Big", "\\bigg", "\\Bigg"};
-  ::std::string out(s);
-  for (const auto cmd : kBigCmds) out = ::pluss::coden::native::cpu::replace_bytes(out, cmd, "");
+      "bigl", "bigr", "Bigl", "Bigr", "biggl", "biggr",
+      "Biggl", "Biggr", "big", "Big", "bigg", "Bigg"};
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto name = s.substr(name_begin, name_end - name_begin);
+      if (::std::find(kBigCmds.begin(), kBigCmds.end(), name) != kBigCmds.end()) {
+        i = token_end;
+        continue;
+      }
+    }
+    const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+    out.append(s.substr(i, take));
+    i += take;
+  }
   return normalize_tex_removed(out);
 }
 
 static ::std::string tex_remove_spacing_cmds_text(::std::string_view s) {
-  static constexpr ::std::array<::std::string_view, 12> kSpaceCmds{
-      "\\,", "\\;", "\\:", "\\!", "\\quad", "\\qquad",
-      "\\enspace", "\\thinspace", "\\medspace", "\\thickspace", "\\ ", "\\/"};
-  static const ::std::regex kHVSpace(R"(\\[hv]space\*?\s*\{[^{}]*\})");
-  static const ::std::regex kVskip(R"(\\vskip\s*[^\\\s]+)");
+  static constexpr ::std::array<::std::string_view, 6> kWords{
+      "enspace", "medspace", "quad", "qquad", "thickspace", "thinspace"};
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    if (s[i] == '\\' && i + 1 < s.size() && s[i + 1] != '\\' &&
+        ::std::string_view(",;:! /").find(s[i + 1]) != ::std::string_view::npos) {
+      out.push_back(' ');
+      i += 2;
+      continue;
+    }
 
-  ::std::string out(s);
-  for (const auto cmd : kSpaceCmds) out = ::pluss::coden::native::cpu::replace_bytes(out, cmd, " ");
-  out = ::std::regex_replace(out, kHVSpace, " ");
-  out = ::std::regex_replace(out, kVskip, " ");
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const auto name = s.substr(name_begin, name_end - name_begin);
+    if (token_end == name_end &&
+        ::std::find(kWords.begin(), kWords.end(), name) != kWords.end()) {
+      out.push_back(' ');
+      i = token_end;
+      continue;
+    }
+    if (name == "hspace" || name == "vspace") {
+      auto cursor = tex_skip_space(s, token_end);
+      ::std::size_t next = 0;
+      if (cursor < s.size() && s[cursor] == '{' &&
+          tex_group_end(s, cursor, '{', '}', &next)) {
+        out.push_back(' ');
+        i = next;
+        continue;
+      }
+    }
+    if (name == "vskip" && token_end == name_end) {
+      auto cursor = tex_skip_space(s, token_end);
+      const auto value_begin = cursor;
+      while (cursor < s.size() &&
+             ::std::isspace(static_cast<unsigned char>(s[cursor])) == 0 &&
+             s[cursor] != '\\') {
+        ++cursor;
+      }
+      if (cursor > value_begin) {
+        out.push_back(' ');
+        i = cursor;
+        continue;
+      }
+    }
+    out.append(s.substr(i, token_end - i));
+    i = token_end;
+  }
   return normalize_tex_removed(out);
 }
 
 static ::std::string tex_replace_command_text(::std::string_view s,
                                               ::std::string_view cmd,
                                               ::std::string_view repl) {
-  if (cmd.empty()) return ::std::string(s);
   while (!cmd.empty() && cmd.front() == '\\') cmd.remove_prefix(1);
   if (cmd.empty()) return ::std::string(s);
-  const ::std::regex re("\\\\" + regex_escape_text(cmd) + "(?![A-Za-z@])");
-  return ::std::regex_replace(::std::string(s), re, ::std::string(repl));
+  const bool want_star = cmd.back() == '*';
+  if (want_star) cmd.remove_suffix(1);
+
+  ::std::string out;
+  out.reserve(s.size());
+  for (::std::size_t i = 0; i < s.size();) {
+    ::std::size_t name_begin = 0, name_end = 0, token_end = 0;
+    if (!tex_control_word_at(s, i, &name_begin, &name_end, &token_end)) {
+      const auto take = s[i] == '\\' && i + 1 < s.size() ? 2U : 1U;
+      out.append(s.substr(i, take));
+      i += take;
+      continue;
+    }
+    const bool has_star = token_end != name_end;
+    if (s.substr(name_begin, name_end - name_begin) == cmd &&
+        has_star == want_star) {
+      out.append(repl);
+    } else {
+      out.append(s.substr(i, token_end - i));
+    }
+    i = token_end;
+  }
+  return out;
 }
 
 static ::std::array<::std::int64_t,3> strides3(const ::std::array<::std::int64_t,3>& sizes, ::std::int64_t dim) {
@@ -4745,9 +5865,6 @@ Note tex_simplify_fractions(const Note& x) {
 Note tex_simplify_roots(const Note& x) {
   return transform_note_text(x, "Note::tex_simplify_roots", [](auto s) { return tex_simplify_roots_text(s); });
 }
-Note tex_simplify_spacing(const Note& x) {
-  return transform_note_text(x, "Note::tex_simplify_spacing", [](auto s) { return tex_simplify_spacing_text(s); });
-}
 Note tex_convert_frac_to_slash(const Note& x) {
   return transform_note_text(
       x, "Note::tex().frac_slash", [](auto s) { return tex_convert_frac_to_slash_text(s); });
@@ -4761,35 +5878,35 @@ Note tex_convert_pm_to_plusminus(const Note& x) {
       x, "Note::tex().pm_signs", [](auto s) { return tex_convert_pm_to_plusminus_text(s); });
 }
 Note tex_standardize_vectors(const Note& x) {
-  return transform_note_text(x, "Note::tex_standardize_vectors", [](auto s) { return tex_standardize_vectors_text(s); });
+  return transform_note_text(x, "Note::tex().vector_norm", [](auto s) { return tex_standardize_vectors_text(s); });
 }
 Note tex_standardize_matrices(const Note& x) {
-  return transform_note_text(x, "Note::tex_standardize_matrices", [](auto s) { return tex_standardize_matrices_text(s); });
+  return transform_note_text(x, "Note::tex().matrix_norm", [](auto s) { return tex_standardize_matrices_text(s); });
 }
 Note tex_standardize_integrals(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_standardize_integrals", [](auto s) { return tex_standardize_integrals_text(s); });
+      x, "Note::tex().int_norm", [](auto s) { return tex_standardize_integrals_text(s); });
 }
 Note tex_standardize_summations(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_standardize_summations", [](auto s) { return tex_standardize_summations_text(s); });
+      x, "Note::tex().sum_norm", [](auto s) { return tex_standardize_summations_text(s); });
 }
 Note tex_standardize_limits(const Note& x) {
-  return transform_note_text(x, "Note::tex_standardize_limits", [](auto s) { return tex_standardize_limits_text(s); });
+  return transform_note_text(x, "Note::tex().limit_norm", [](auto s) { return tex_standardize_limits_text(s); });
 }
 Note tex_standardize_subscripts(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_standardize_subscripts", [](auto s) { return tex_standardize_subscripts_text(s); });
+      x, "Note::tex().sub_norm", [](auto s) { return tex_standardize_subscripts_text(s); });
 }
 Note tex_standardize_superscripts(const Note& x) {
   return transform_note_text(
-      x, "Note::tex_standardize_superscripts", [](auto s) { return tex_standardize_superscripts_text(s); });
+      x, "Note::tex().sup_norm", [](auto s) { return tex_standardize_superscripts_text(s); });
 }
 Note tex_standardize_primes(const Note& x) {
-  return transform_note_text(x, "Note::tex_standardize_primes", [](auto s) { return tex_standardize_primes_text(s); });
+  return transform_note_text(x, "Note::tex().prime_norm", [](auto s) { return tex_standardize_primes_text(s); });
 }
 Note tex_standardize_dots(const Note& x) {
-  return transform_note_text(x, "Note::tex_standardize_dots", [](auto s) { return tex_standardize_dots_text(s); });
+  return transform_note_text(x, "Note::tex().dots_norm", [](auto s) { return tex_standardize_dots_text(s); });
 }
 Note tex_remove_accents(const Note& x) {
   return transform_note_text(x, "Note::tex_remove_accents", [](auto s) { return tex_remove_accents_text(s); });
@@ -4806,9 +5923,6 @@ Note text_to_tex(const Note& x, ::std::int64_t mode) {
 Note tex_render(const Note& x, ::std::int64_t mode) {
   return transform_note_text(x, "Note::tex_render", [mode](auto s) { return tex_render_text(s, mode); });
 }
-Note tex_sanitize(const Note& x, ::std::int64_t level) {
-  return transform_note_text(x, "Note::tex_sanitize", [level](auto s) { return tex_sanitize_text(s, level); });
-}
 Note tex_normalize_newlines(const Note& x) {
   return transform_note_text(x, "Note::tex_normalize_newlines", [](auto s) { return tex_normalize_newlines_text(s); });
 }
@@ -4816,7 +5930,9 @@ Note tex_dedup_blank_lines(const Note& x) {
   return transform_note_text(x, "Note::tex_dedup_blank_lines", [](auto s) { return tex_dedup_blank_lines_text(s); });
 }
 Note tex_fix_linebreaks(const Note& x) {
-  return transform_note_text(x, "Note::tex_fix_linebreaks", [](auto s) { return tex_fix_linebreaks_text(s); });
+  return transform_note_text(
+      x, "Note::tex().fix_linebreaks",
+      [](auto s) { return tex_fix_linebreaks_text(s); });
 }
 Note tex_escape(const Note& x) {
   return transform_note_text(x, "Note::tex_escape", [](auto s) { return tex_escape_text(s); });
@@ -4856,9 +5972,10 @@ Note tex_to_markdown(const Note& x, ::std::int64_t mode) {
       [mode](auto s) { return tex_to_markdown_text(s, mode); });
 }
 Note tex_to_html(const Note& x, ::std::int64_t mode) {
+  (void)mode;
   return transform_note_text(
       x, "Note::tex_to_html",
-      [mode](auto s) { return tex_to_html_text(s, mode); });
+      [](auto s) { return tex_to_html_text(s); });
 }
 
 Note strip(const Note& x, ::std::string_view chars) {

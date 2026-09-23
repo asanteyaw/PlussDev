@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>StreamTimeSeriesAccessor::ewm &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="StreamTimeSeriesAccessor::expanding" href="expanding.html" />
+    <link rel="prev" title="StreamTimeSeriesAccessor::diff" href="diff.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3e630a4944b2 -->
+<section id="streamtimeseriesaccessor-ewm">
+<h1>StreamTimeSeriesAccessor::ewm<a class="headerlink" href="#streamtimeseriesaccessor-ewm" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../stream_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to StreamTimeSeriesAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="w"> </span><span class="n">StreamTimeSeriesAccessor</span><span class="o">::</span><span class="n">ewm</span><span class="p">(</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">alpha</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">adjusted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">bias_corrected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">ignore_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes an <strong>exponentially-weighted moving statistic</strong>: each position’s
+output weighs every position seen so far, with more recent positions
+weighted more heavily by a factor of <code class="docutils literal notranslate"><span class="pre">alpha</span></code> (<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">alpha</span> <span class="pre">&lt;=</span> <span class="pre">1</span></code>). Only <code class="docutils literal notranslate"><span class="pre">Mean</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Var</span></code>, and <code class="docutils literal notranslate"><span class="pre">Std</span></code> are supported.</p>
+<p><code class="docutils literal notranslate"><span class="pre">adjusted</span></code> selects between two well-known EWM conventions: <code class="docutils literal notranslate"><span class="pre">true</span></code> (default)
+normalizes by the sum of decay weights seen so far and supports missing
+entries directly; <code class="docutils literal notranslate"><span class="pre">false</span></code> uses the classic recursive form and <strong>requires the
+source stream to carry no validity mask at all</strong>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
+Same precondition as every method on this accessor — see
+<a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>’s own important callout for the exact throw
+message pattern.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>alpha</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>)
+The smoothing factor, in <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1]</span></code>.</p>
+<p><strong>statistic</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::WindowStatistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
+<code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, or <code class="docutils literal notranslate"><span class="pre">Std</span></code>.</p>
+<p><strong>adjusted</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+<code class="docutils literal notranslate"><span class="pre">true</span></code>: normalized form, supports missing entries. <code class="docutils literal notranslate"><span class="pre">false</span></code>: classic
+recursive form, requires a non-nullable source stream.</p>
+<p><strong>bias_corrected</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)
+For <code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code> only: whether to apply a bias correction.</p>
+<p><strong>min_count</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+The smallest number of real observations seen so far still considered
+valid.</p>
+<p><strong>ignore_nulls</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)
+Only relevant with <code class="docutils literal notranslate"><span class="pre">adjusted</span> <span class="pre">=</span> <span class="pre">true</span></code>: whether a gap consumes a decay
+step (<code class="docutils literal notranslate"><span class="pre">false</span></code>) or is skipped entirely for decay purposes (<code class="docutils literal notranslate"><span class="pre">true</span></code>).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Stream</span></code>
+A new stream, same length as the bound source, holding the
+exponentially-weighted statistic at each position.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. An exponentially-weighted mean, <code class="docutils literal notranslate"><span class="pre">adjusted</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ewm</span><span class="p">(</span><span class="mf">0.5</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[float64]  records=3
+label=no  mask=yes  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | 10                                                                                                       
+1            | 16.6666666667                                                                                            
+2            | 24.2857142857                                                                                            
+========================================================================================================================
+</pre></div>
+</div>
+<p>Example 2 (edge case). The same data with <code class="docutils literal notranslate"><span class="pre">adjusted</span> <span class="pre">=</span> <span class="pre">false</span></code> — the classic
+recursive formula gives a different (and simpler) result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">ewm</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[float64]  records=3
+label=no  mask=yes  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | 10                                                                                                       
+1            | 15                                                                                                       
+2            | 22.5                                                                                                     
+========================================================================================================================
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">y0</span> <span class="pre">=</span> <span class="pre">x0</span> <span class="pre">=</span> <span class="pre">10</span></code>; <code class="docutils literal notranslate"><span class="pre">y1</span> <span class="pre">=</span> <span class="pre">0.5*20</span> <span class="pre">+</span> <span class="pre">0.5*10</span> <span class="pre">=</span> <span class="pre">15</span></code>; <code class="docutils literal notranslate"><span class="pre">y2</span> <span class="pre">=</span> <span class="pre">0.5*30</span> <span class="pre">+</span> <span class="pre">0.5*15</span> <span class="pre">=</span> <span class="pre">22.5</span></code> —
+each step blends the new value with the <em>previous smoothed output</em>, rather
+than re-normalizing against every raw value seen so far the way
+<code class="docutils literal notranslate"><span class="pre">adjusted</span> <span class="pre">=</span> <span class="pre">true</span></code> does.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Only <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, and <code class="docutils literal notranslate"><span class="pre">Std</span></code> are supported.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> must be in <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1]</span></code>, or it throws.</p></li>
+<li><p>A position whose own value is missing is <em>not</em> <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the output — it
+carries forward the smoothed estimate from prior real observations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">adjusted</span> <span class="pre">=</span> <span class="pre">false</span></code> requires the source stream to carry no validity mask at
+all — pass <code class="docutils literal notranslate"><span class="pre">adjusted</span> <span class="pre">=</span> <span class="pre">true</span></code> (the default) if the source might carry a
+mask.</p></li>
+<li><p>See the important callout above.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::expanding</span></code></span></a>: an alternative
+“everything seen so far” statistic that weights every observation equally
+instead of decaying older ones.</p></li>
+<li><p><a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::rolling</span></code></span></a>: a fixed-width
+alternative, rather than a decaying weight over the whole stream.</p></li>
+<li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>
+<li><p><a class="reference internal" href="../thread-ts/ewm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::ewm</span></code></span></a>: the underlying
+single-thread engine, with additional edge-case examples
+(<code class="docutils literal notranslate"><span class="pre">ignore_nulls</span></code>, <code class="docutils literal notranslate"><span class="pre">adjusted=false</span></code> throw).</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="diff.html">
+    <span class="label">Previous</span>
+    <span class="title">diff</span>
+  </a>
+  <a class="next-link" href="expanding.html">
+    <span class="label">Next</span>
+    <span class="title">expanding</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../stream_api_reference.html">Stream API Reference</a><ul>
+  <li><a href="../../stream_ts_accessor_api_reference.html">StreamTimeSeriesAccessor API Reference</a><ul>
+      <li>Previous: <a href="diff.html" title="previous chapter">StreamTimeSeriesAccessor::diff</a></li>
+      <li>Next: <a href="expanding.html" title="next chapter">StreamTimeSeriesAccessor::expanding</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/stream-ts/ewm.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

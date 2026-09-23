@@ -11,7 +11,7 @@ int main() {
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
   const Series x = pluss::series::rand({2, 6, 8}, cfg, 41ULL);
 
-  const pluss::MultiheadWeights weights{
+  const pluss::nn::MultiheadWeights weights{
       .q_weight = pluss::series::rand({8, 8}, cfg, 43ULL),
       .k_weight = pluss::series::rand({8, 8}, cfg, 47ULL),
       .v_weight = pluss::series::rand({8, 8}, cfg, 53ULL),
@@ -21,11 +21,11 @@ int main() {
       .v_bias = pluss::series::zeros({8}, cfg),
       .out_bias = pluss::series::zeros({8}, cfg),
   };
-  const pluss::MultiheadOptions options{
+  const pluss::nn::MultiheadOptions options{
       .num_heads = 2,
       .batch_first = true,
       .average_weights = true,
-      .attention = pluss::AttentionOptions{
+      .attention = pluss::nn::AttentionOptions{
           .dropout = 0.0,
           .training = true,
           .causal = false,
@@ -34,9 +34,9 @@ int main() {
       },
   };
 
-  const auto [out, attn_w] = pluss::multihead_attention(x, x, x, weights, options);
-  const Series causal_mask = pluss::square_subsequent_mask(6, x);
-  const auto [out_causal, attn_causal] = pluss::multihead_attention(x, x, x, weights, options, causal_mask);
+  const auto [out, attn_w] = pluss::nn::multihead_attention(x, x, x, weights, options);
+  const Series causal_mask = pluss::nn::square_subsequent_mask(6, x);
+  const auto [out_causal, attn_causal] = pluss::nn::multihead_attention(x, x, x, weights, options, causal_mask);
   std::cout << "functional_attention_out_mean=" << out.mean().item<double>() << "\n";
   std::cout << "functional_attention_weights_mean=" << attn_w.mean().item<double>() << "\n";
   std::cout << "functional_attention_causal_out_mean=" << out_causal.mean().item<double>() << "\n";

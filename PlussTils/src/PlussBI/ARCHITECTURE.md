@@ -11,8 +11,9 @@ system that lets users:
   `pluss::bundle::Nexus` workbench
 - describe dashboards in C++
 - bind visuals and controls to shared state
-- render natively in PlussView first
-- export a browser-ready artifact later without rewriting the dashboard
+- render as a real, shareable browser dashboard by default
+- fall back to a native PlussView window for offline/embedded hosts without
+  rewriting the dashboard
 
 The system should centralize common behavior aggressively so future growth does
 not become maintenance debt.
@@ -42,10 +43,22 @@ questions.
    structs for maintainability and builder-style convenience on top for user
    code.
 
-4. Runtime priority is native-first.
-   The first-class runtime is PlussView. Browser export matters, but it is a
-   second host for the same dashboard definition, not a co-equal design center
-   from day one.
+4. Runtime priority is browser-first.
+   The first-class runtime is a real OS browser tab: `Studio::show()` writes
+   the same self-contained dashboard HTML/SVG artifact `export_html()`
+   produces and opens it with the system default browser
+   (`pluss::bi_tools::open_html_in_browser`, `include/BI_tools/`). This
+   revises the original native-first framing: a dashboard that only opens in
+   a blocking, unshare-able native window cannot rival a real BI tool, and
+   PlussBI already generates browser-native HTML/SVG for every render, so
+   there is no separate "browser export" artifact to build later — the
+   default runtime and the export artifact are the same document. PlussView
+   (native `WebKit`/`WebView2`/GTK-WebKit hosting, or the in-house
+   software-rendered fallback) remains available as a second host for
+   offline, embedded, or sandboxed environments where launching a system
+   browser process is undesirable or unavailable — request it explicitly via
+   `HtmlWindowOptions::backend_preference` (`NativeWebView`, `PlussWebView`,
+   or `PlussWebViewOnly`); it is not being removed.
 
 5. BI should normalize inputs to one central table contract.
    Low-level Flash may still admit `Thread`, `DataFrame`, `Atlas`, and other
@@ -116,7 +129,13 @@ questions.
 The following still need deliberate discussion before implementation grows
 around them:
 
-- how much browser export should be present in the first usable release
+- ~~how much browser export should be present in the first usable release~~
+  — resolved: browser hosting is the default runtime (decision #4); the
+  remaining open question is how much *live, in-browser* interactivity
+  (real filter re-querying without a C++ round trip, an embedded HTTP/JSON
+  API) belongs in this phase versus a later one — the current browser tab
+  is a fully rendered, real dashboard, but its filter controls still
+  require calling back into C++ and reopening the tab to update.
 - whether a SQL front-end over `Nexus` should be implemented immediately after
   the fluent planner matures, or deferred until the planner and dashboard
   runtime are hardened
@@ -522,9 +541,33 @@ So the BI stack should prefer:
 
 ## Rendering Layers
 
-### Native Host
+### Browser Host (primary)
 
-First host should be PlussView.
+First host is a real OS browser tab, implemented in `include/BI_tools/` +
+`src/PlussBI/runtime/BrowserExport.cpp`: `Studio::show()` renders the
+studio, builds the same dashboard HTML/SVG document `export_html()` writes
+to disk, and hands that document straight to the system default browser
+(`open` on macOS, `xdg-open` on Linux, `ShellExecute` on Windows) — no
+window toolkit, no browser-engine framework linkage, no modal event loop.
+
+Needed pieces, in rough build order:
+
+- ✅ static dashboard HTML/SVG generation (`detail::dashboard_html_`)
+- ✅ cross-platform "open a real browser tab" launcher (`BI_tools`)
+- an embedded HTTP + JSON query API so a filter control re-queries the live
+  `Studio`/`Session` instead of requiring a new C++-side `show()` call
+- client-side JS that calls that API and swaps in the redrawn SVG in place,
+  replacing today's inert `plussBiSyncSelect`/`plussBiSyncRange` chip-label
+  stubs
+
+### Native Host (fallback)
+
+PlussView (native `WebKit`/`WebView2`/GTK-WebKit, or the in-house
+software-rendered fallback) hosts the identical dashboard document for
+offline, embedded, or sandboxed environments where launching a system
+browser process is undesirable or unavailable. It is requested explicitly
+via `HtmlWindowOptions::backend_preference` and otherwise stays out of the
+default path.
 
 Needed pieces:
 
@@ -533,17 +576,8 @@ Needed pieces:
 - event bridge from frontend controls to C++ session state
 - render refresh hook for individual visuals and full board refreshes
 
-### Browser Export
-
-Later host should emit browser-ready assets from the same studio definition.
-
-This should reuse:
-
-- the same serialized layout
-- the same serialized session defaults
-- the same query and binding specs
-
-It should not require rewriting the dashboard in HTML or JavaScript by hand.
+Both hosts render the exact same generated document — there is one
+dashboard artifact, not a native definition and a separate browser export.
 
 ## Caching and Performance
 
@@ -706,13 +740,21 @@ Suggested file grouping:
   - `ViewFactory.*`
 - `src/PlussBI/runtime/`
   - `NativeHost.*`
-  - `BrowserExport.*`
+  - `BrowserExport.*` — ✅ implemented: cross-platform browser launcher, built
+    by `src/PlussBI/CMakeLists.txt` as the real `PlussBI` static library
+    target (previously this whole directory was an unwired stub)
 - `src/PlussBI/frontend/`
   - static host assets only
 - `src/PlussBI/backend/`
-  - transport / session plumbing only
+  - transport / session plumbing only (the HTTP + JSON query API from
+    "Rendering Layers" above belongs here once built)
 
 Public headers should eventually mirror that shape under `include/pluss/bi/`.
+`BrowserExport`'s public header lives under `include/BI_tools/` instead,
+per `explore.h`'s original split: `include/pluss/bi/` is the core dashboard
+object model (`Studio`/`Board`/`View`/...), `include/BI_tools/` is
+supporting infrastructure the core model calls into but that isn't itself a
+dashboard authoring type.
 
 ## Non-Goals For The First Pass
 

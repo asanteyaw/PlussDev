@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Thread::rfloordiv &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Thread::rmod" href="rmod.html" />
+    <link rel="prev" title="Thread::replace" href="replace.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b70feadc038e -->
+<section id="thread-rfloordiv">
+<h1>Thread::rfloordiv<a class="headerlink" href="#thread-rfloordiv" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">rfloordiv</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">rfloordiv</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>The reflected form of <a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv()</span></code></span></a> — computes
+<code class="docutils literal notranslate"><span class="pre">floor(other</span> <span class="pre">/</span> <span class="pre">(*this))</span></code> instead of <code class="docutils literal notranslate"><span class="pre">floor((*this)</span> <span class="pre">/</span> <span class="pre">other)</span></code>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>Same shape as <a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv()</span></code></span></a>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new thread holding <code class="docutils literal notranslate"><span class="pre">floor(other</span> <span class="pre">/</span> <span class="pre">(*this))</span></code>, elementwise.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Floor-divide a scalar by every value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">17.0</span><span class="p">,</span><span class="w"> </span><span class="mf">26.0</span><span class="p">,</span><span class="w"> </span><span class="mf">33.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">rfloordiv</span><span class="p">(</span><span class="mf">100.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  5
+1  3
+2  3
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">floor(100</span> <span class="pre">/</span> <span class="pre">17)</span> <span class="pre">=</span> <span class="pre">floor(5.88)</span> <span class="pre">=</span> <span class="pre">5</span></code>; <code class="docutils literal notranslate"><span class="pre">floor(100</span> <span class="pre">/</span> <span class="pre">26)</span> <span class="pre">=</span> <span class="pre">floor(3.84)</span> <span class="pre">=</span> <span class="pre">3</span></code>;
+<code class="docutils literal notranslate"><span class="pre">floor(100</span> <span class="pre">/</span> <span class="pre">33)</span> <span class="pre">=</span> <span class="pre">floor(3.03)</span> <span class="pre">=</span> <span class="pre">3</span></code> — how many whole <code class="docutils literal notranslate"><span class="pre">amounts</span></code>-worth fit into a
+budget of <code class="docutils literal notranslate"><span class="pre">100</span></code>, the opposite framing from <a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">amounts.floordiv(...)</span></code></span></a>.</p>
+<p>Example 2. Reflected against another thread.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">multiples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">rfloordiv</span><span class="p">(</span><span class="n">multiples</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2
+1  3
+2  2
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">amounts.rfloordiv(multiples)</span></code> computes exactly what <code class="docutils literal notranslate"><span class="pre">multiples.floordiv(amounts)</span></code>
+would: <code class="docutils literal notranslate"><span class="pre">floor(50</span> <span class="pre">/</span> <span class="pre">17)</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">floor(80</span> <span class="pre">/</span> <span class="pre">26)</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">floor(90</span> <span class="pre">/</span> <span class="pre">33)</span> <span class="pre">=</span> <span class="pre">2</span></code>.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">amounts.rfloordiv(x)</span></code> always equals <code class="docutils literal notranslate"><span class="pre">floor(x</span> <span class="pre">/</span> <span class="pre">amounts)</span></code> — the mirror image of
+<a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv()</span></code></span></a>.</p></li>
+<li><p>See <a class="reference internal" href="rmod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rmod()</span></code></span></a> for the complementary reflected remainder.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::floordiv</span></code></span></a>: the forward form.</p></li>
+<li><p><a class="reference internal" href="rmod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::rmod</span></code></span></a>: the complementary reflected remainder operator.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="replace.html">
+    <span class="label">Previous</span>
+    <span class="title">replace</span>
+  </a>
+  <a class="next-link" href="rmod.html">
+    <span class="label">Next</span>
+    <span class="title">rmod</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+      <li>Previous: <a href="replace.html" title="previous chapter">Thread::replace</a></li>
+      <li>Next: <a href="rmod.html" title="next chapter">Thread::rmod</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread/rfloordiv.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

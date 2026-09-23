@@ -64,7 +64,7 @@ bool run_cudnn_conv_route_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  const pluss::Series y = pluss::conv(x, w, b, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, 2);
+  const pluss::Series y = pluss::nn::conv(x, w, b, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, 2);
   if (!has_shape(y, {2, 6, 8, 8})) {
     if (err) *err << "conv output shape mismatch\n";
     return false;

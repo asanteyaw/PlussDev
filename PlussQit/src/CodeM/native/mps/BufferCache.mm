@@ -2,6 +2,7 @@
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/native/mps/MPSAllocatorMM.h"
+#include "CodeM/native/mps/MPSRuntime.h"
 
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
@@ -59,6 +60,17 @@ void wait_pending_(CacheEntry& e) {
 
 void release_entry_buffer_(CacheEntry& e) {
   if (e.buffer != nil) {
+    // e.pending only covers this entry's own last WRITE -- it says nothing
+    // about later ops that read this same buffer as an input afterward
+    // (ensure_device_buffer_for_read hands out the buffer without recording
+    // who reads it). Those reads are still real in-flight GPU work, and
+    // this buffer is about to go back into the shared pool for a totally
+    // unrelated allocation, which will memcpy new data into it from the
+    // CPU. Draining the whole queue here -- cheap, since a single MTLCommand
+    // Queue completes buffers in commit order, so waiting on the latest one
+    // proves everything earlier (including those reads) has also finished --
+    // is what actually closes that race, not just waiting on e.pending.
+    wait_for_all_submitted_work();
     release_pooled_buffer_mm(e.buffer);
     e.buffer = nil;
     e.nbytes = 0;

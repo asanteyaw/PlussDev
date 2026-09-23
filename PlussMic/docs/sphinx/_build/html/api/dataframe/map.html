@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::map &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::mask" href="mask.html" />
+    <link rel="prev" title="DataFrame::lxor" href="lxor.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 103f757200d9 -->
+<section id="dataframe-map">
+<h1>DataFrame::map<a class="headerlink" href="#dataframe-map" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">map</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to every cell of every feature currently on the frame, one scalar value
+at a time, and returns a new frame with those features replaced. <code class="docutils literal notranslate"><span class="pre">fn</span></code> receives one
+cell as a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> and must return one <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> back — it is skipped
+entirely for missing cells (a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> without <code class="docutils literal notranslate"><span class="pre">fn</span></code> ever being
+called), and every non-null cell in one feature’s column must map to the <strong>same</strong>
+output kind (you cannot have <code class="docutils literal notranslate"><span class="pre">fn</span></code> return a numeric value for one row and text for
+another row of the same feature).</p>
+<p><code class="docutils literal notranslate"><span class="pre">map()</span></code> carries no feature selector of its own: it always applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to <em>every</em>
+feature on the current frame, which only makes sense if <code class="docutils literal notranslate"><span class="pre">fn</span></code> can handle every
+feature’s kind present. Narrow to the feature(s) that need this particular <code class="docutils literal notranslate"><span class="pre">fn</span></code> first
+with <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">students.features({&quot;score&quot;}).map(fn)</span></code> — when
+different features need different treatment, and recombine with
+<a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> afterward if the untouched features need to survive alongside
+the mapped result.</p>
+<p>Unlike <a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a>, which operates on a whole feature <code class="docutils literal notranslate"><span class="pre">Thread</span></code> at
+once (so it can do things like a running total), <code class="docutils literal notranslate"><span class="pre">map()</span></code> only ever sees one value at
+a time — it is the right tool for a pure, independent per-cell computation.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;ThreadValue(const</span> <span class="pre">ThreadValue&amp;)&gt;&amp;</span></code>)</p>
+<p>The per-cell callback. Extract the incoming scalar with <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code> / <code class="docutils literal notranslate"><span class="pre">.to_int()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">.to_str()</span></code> (matching the feature’s kind), compute a new value, and wrap it back into
+a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> over a length-1 <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (for example
+<code class="docutils literal notranslate"><span class="pre">ThreadValue(Thread(pluss::make_series({result})))</span></code>). The output kind does not have to
+match the input kind — mapping <code class="docutils literal notranslate"><span class="pre">Note</span></code> cells to their string length (an <code class="docutils literal notranslate"><span class="pre">Int64</span></code>
+result) is a valid, kind-changing use of <code class="docutils literal notranslate"><span class="pre">map()</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame, same shape as the (possibly <code class="docutils literal notranslate"><span class="pre">features()</span></code>-narrowed) source, with every
+feature replaced by <code class="docutils literal notranslate"><span class="pre">fn</span></code>’s output. Missing cells stay missing.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Square every value in one numeric feature.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">students</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">students</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | score  city  
+--------------------
+0    | 80     Accra 
+1    | 90     Tema  
+2    | 70     Kumasi
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">score_squared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;score&quot;</span><span class="p">}).</span><span class="n">map</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">})));</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score_squared</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">squared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="n">score_squared</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">squared</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-narrowed-mapped-only-result">
+<h3>Output (narrowed, mapped-only result)<a class="headerlink" href="#output-narrowed-mapped-only-result" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========
+     | score
+--------
+0    | 6400
+1    | 8100
+2    | 4900
+--------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-merged-back-into-the-full-frame">
+<h3>Output (merged back into the full frame)<a class="headerlink" href="#output-merged-back-into-the-full-frame" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | score  city  
+--------------------
+0    | 6400   Accra 
+1    | 8100   Tema  
+2    | 4900   Kumasi
+--------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Only <code class="docutils literal notranslate"><span class="pre">score</span></code> changed (<code class="docutils literal notranslate"><span class="pre">80</span> <span class="pre">-&gt;</span> <span class="pre">6400</span></code>, <code class="docutils literal notranslate"><span class="pre">90</span> <span class="pre">-&gt;</span> <span class="pre">8100</span></code>, <code class="docutils literal notranslate"><span class="pre">70</span> <span class="pre">-&gt;</span> <span class="pre">4900</span></code>); <code class="docutils literal notranslate"><span class="pre">city</span></code> was never
+part of the narrowed frame <code class="docutils literal notranslate"><span class="pre">map()</span></code> ran against, so <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> leaves it
+untouched.</p>
+<p>Example 2. A kind-changing map: replace text with its length, then splice the
+kind-changed result back in with <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> — not <code class="docutils literal notranslate"><span class="pre">update()</span></code>, since <code class="docutils literal notranslate"><span class="pre">update()</span></code>
+only refreshes values within a feature’s existing kind and cannot swap <code class="docutils literal notranslate"><span class="pre">Note</span></code> for
+<code class="docutils literal notranslate"><span class="pre">Int64</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">city_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">map</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">to_str</span><span class="p">();</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())})));</span>
+<span class="w">    </span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">with_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">;</span>
+<span class="n">with_length</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">city_length</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_length</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | score  city
+------------------
+0    | 80     5   
+1    | 90     4   
+2    | 70     6   
+------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">city</span></code> is now an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> of string lengths (<code class="docutils literal notranslate"><span class="pre">&quot;Accra&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">5</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Tema&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">4</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;Kumasi&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">6</span></code>) rather than the original <code class="docutils literal notranslate"><span class="pre">Note</span></code> text — <code class="docutils literal notranslate"><span class="pre">map()</span></code> does not require the
+output kind to match the input kind, as long as every row of that one feature agrees
+on the output kind. <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set(name)</span></code></span></a> overwrites a feature outright regardless of
+its previous kind, unlike <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a>, which only refreshes values within
+a matching kind.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> is never invoked for a missing cell; the cell stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the output
+without needing special-case handling inside <code class="docutils literal notranslate"><span class="pre">fn</span></code> itself.</p></li>
+<li><p>Every non-null result within one feature must share the same <code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code>; mixing
+kinds within a single feature’s output throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::map:</span> <span class="pre">output</span> <span class="pre">kinds</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">consistent&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">map()</span></code> has no feature selector of its own and applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to literally every
+feature on the current frame, including features of different kinds — narrow with
+<a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first unless <code class="docutils literal notranslate"><span class="pre">fn</span></code> is written to handle every kind
+present (typically by branching on <code class="docutils literal notranslate"><span class="pre">v.kind()</span></code> inside the lambda).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">map()</span></code> itself is non-mutating; it always returns a new frame scoped to whatever
+features it was called on. Recombine a narrowed result with
+<a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> when the output kind matches the original, or with
+<a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a> when <code class="docutils literal notranslate"><span class="pre">fn</span></code> changed the feature’s kind (Example 2).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::transform</span></code></span></a>: apply a function to a whole feature
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> at once, for computations that need to see more than one cell (running
+totals, shifts, and so on).</p></li>
+<li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cast</span></code></span></a>: change a feature’s dtype or payload kind directly,
+when the target kind is fixed rather than computed per-cell.</p></li>
+<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::fold</span></code></span></a> / <a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::flow</span></code></span></a>: the whole-frame
+callback hooks, for computations that need more than one feature at a time.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature(s) <code class="docutils literal notranslate"><span class="pre">fn</span></code>
+should apply to.</p></li>
+<li><p><a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::update</span></code></span></a>, <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::set</span></code></span></a>: recombine a narrowed
+<code class="docutils literal notranslate"><span class="pre">map()</span></code> result back into the full frame.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lxor.html">
+    <span class="label">Previous</span>
+    <span class="title">lxor</span>
+  </a>
+  <a class="next-link" href="mask.html">
+    <span class="label">Next</span>
+    <span class="title">mask</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="lxor.html" title="previous chapter">DataFrame::lxor</a></li>
+      <li>Next: <a href="mask.html" title="next chapter">DataFrame::mask</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/map.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -192,6 +192,17 @@ std::int64_t numel_from_sizes_(pluss::msharp::RangeView::Int sizes) {
 
 Series as_f64_(const Series& x, const char* op) {
   PLUSS_CHECK(x.defined(), std::string("subsp::stats::distr::") + op + ": expected defined Series");
+  // MPS has no Float64 support at all (not a bridge-and-continue case like
+  // CUDA/CPU), and nothing downstream of as_f64_ in this file restores the
+  // original platform, so an MPS-resident x must bridge to CPU here rather
+  // than cast dtype in place -- the previous x.to(ScalarType::Float64) threw
+  // outright whenever x was already on MPS. The distribution math (and the
+  // caller's return value) then simply runs on CPU for MPS inputs; this is a
+  // scoped fix for the crash, not a claim that pdf/logpdf/cdf/logcdf compute
+  // natively on MPS.
+  if (x.platform() == Platform::MPS) {
+    return x.to(pluss::pCPU, ScalarType::Float64);
+  }
   return x.to(ScalarType::Float64);
 }
 

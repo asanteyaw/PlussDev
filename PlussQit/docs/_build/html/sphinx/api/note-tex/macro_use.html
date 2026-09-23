@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NoteTexAccessor::macro_use &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="NoteTexAccessor::math_blocks" href="math_blocks.html" />
+    <link rel="prev" title="NoteTexAccessor::macro_subs" href="macro_subs.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="notetexaccessor-macro-use">
+<h1>NoteTexAccessor::macro_use<a class="headerlink" href="#notetexaccessor-macro-use" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_tex_accessor_api_reference.html"><span class="doc std std-doc">Back to Note TeX Accessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TokenBatch</span><span class="w"> </span><span class="n">NoteTexAccessor</span><span class="o">::</span><span class="n">macro_use</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="build-a-per-cell-control-word-vocabulary">
+<h2>Build A Per-Cell Control-Word Vocabulary<a class="headerlink" href="#build-a-per-cell-control-word-vocabulary" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macro_use()</span></code> extracts the distinct TeX control words encountered in each
+Text cell. Tokens retain their leading backslash. A following star is retained
+too, so <code class="docutils literal notranslate"><span class="pre">\section*</span></code> and <code class="docutils literal notranslate"><span class="pre">\section</span></code> remain distinguishable authored forms. The
+first occurrence determines order, and later occurrences of the same complete
+lexeme in that cell are suppressed.</p>
+<p>Deduplication is deliberately per cell, not global. If <code class="docutils literal notranslate"><span class="pre">\beta</span></code> appears in two
+cells, each cell owns a <code class="docutils literal notranslate"><span class="pre">\beta</span></code> token. That contract lets callers compare lane
+vocabularies without reconstructing ownership. Use
+<a class="reference internal" href="command_names.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">command_names</span></code></span></a> when every occurrence is needed and the
+leading backslash/star are not wanted.</p>
+<p>This is a lexical vocabulary, not a macro-call graph. Built-in commands,
+user-defined commands, declaration words, and command names inside arguments
+are all control words and may be reported. The extractor does not establish
+whether a command is defined, reachable, or executed. Control symbols such as
+<code class="docutils literal notranslate"><span class="pre">\%</span></code> are not control words and are omitted. A doubled backslash is skipped as
+an escaped pair rather than misread as a command start.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tokens()</span></code> is a flat Text Note and <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> is an Int64 Note. Cell <code class="docutils literal notranslate"><span class="pre">i</span></code> owns
+<code class="docutils literal notranslate"><span class="pre">[offsets[i],</span> <span class="pre">offsets[i</span> <span class="pre">+</span> <span class="pre">1])</span></code>; receiver shape is represented by row-major lane
+order and these boundaries. Undefined input returns undefined tokens with the
+canonical offsets <code class="docutils literal notranslate"><span class="pre">[0]</span></code>, while defined non-Text input is rejected.</p>
+<p>The scanner is linear in source bytes. It maintains a per-cell hash set for
+first-seen deduplication and copies each retained lexeme once. Consequently,
+memory is proportional to the number and total bytes of distinct control words
+in each cell, not the number of occurrences.</p>
+</section>
+<section id="example-1-first-seen-deduplication-and-starred-forms">
+<h2>Example 1: First-Seen Deduplication And Starred Forms<a class="headerlink" href="#example-1-first-seen-deduplication-and-starred-forms" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span>
+<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\alpha \beta \alpha \\gamma \section* \section</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\beta \delta \beta</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">source</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">macro_use</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">tokens</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[6], dim=1, numel=6, encoding=utf8)
+[&quot;\\alpha&quot;, &quot;\\beta&quot;, &quot;\\section*&quot;, &quot;\\section&quot;, &quot;\\beta&quot;, &quot;\\delta&quot;]
+</pre></div>
+</div>
+<p>The repeated <code class="docutils literal notranslate"><span class="pre">\alpha</span></code> is removed from the first cell, but <code class="docutils literal notranslate"><span class="pre">\section*</span></code> does not
+collapse into <code class="docutils literal notranslate"><span class="pre">\section</span></code>. The escaped <code class="docutils literal notranslate"><span class="pre">\\gamma</span></code> is absent. <code class="docutils literal notranslate"><span class="pre">\beta</span></code> appears
+again because the second cell has its own vocabulary.</p>
+</section>
+</section>
+<section id="example-2-inspect-the-per-cell-ranges">
+<h2>Example 2: Inspect The Per-Cell Ranges<a class="headerlink" href="#example-2-inspect-the-per-cell-ranges" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;offsets=[&quot;</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">offsets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">offsets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">offsets</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>offsets=[0, 4, 6]
+</pre></div>
+</div>
+<p>The first lane owns four distinct lexemes; the second owns two.</p>
+</section>
+</section>
+<section id="example-3-undefined-and-invalid-input">
+<h2>Example 3: Undefined And Invalid Input<a class="headerlink" href="#example-3-undefined-and-invalid-input" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">absent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">::</span><span class="n">undefined</span><span class="p">().</span><span class="n">tex</span><span class="p">().</span><span class="n">macro_use</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">absent</span><span class="p">.</span><span class="n">tokens</span><span class="p">().</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; offsets=[&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">absent</span><span class="p">.</span><span class="n">offsets</span><span class="p">().</span><span class="n">integers</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">})</span>
+<span class="w">      </span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">macro_use</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;macro use Int64: rejected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false offsets=[0]
+macro use Int64: rejected
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="macro_defs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macro_defs</span></code></span></a>: inventory complete local declarations.</p></li>
+<li><p><a class="reference internal" href="command_names.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">command_names</span></code></span></a>: retain every bare control-word occurrence.</p></li>
+<li><p><a class="reference internal" href="commands.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">commands</span></code></span></a>: extract command lexemes or complete balanced calls.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="macro_subs.html"><span class="label">Previous</span><span class="title">macro_subs</span></a>
+  <a class="next-link" href="math_blocks.html"><span class="label">Next</span><span class="title">math_blocks</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
+  <li><a href="../../note_tex_accessor_api_reference.html">Note TeX Accessor API Reference</a><ul>
+      <li>Previous: <a href="macro_subs.html" title="previous chapter">NoteTexAccessor::macro_subs</a></li>
+      <li>Next: <a href="math_blocks.html" title="next chapter">NoteTexAccessor::math_blocks</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note-tex/macro_use.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

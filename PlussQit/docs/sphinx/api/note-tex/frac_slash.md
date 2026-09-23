@@ -133,6 +133,6 @@ fractions Int64: rejected
 - `to_text`: remove broader TeX structure for readable prose.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="escape.html"><span class="label">Previous</span><span class="title">escape</span></a>
-  <a class="next-link" href="input_tags.html"><span class="label">Next</span><span class="title">input_tags</span></a>
+  <a class="prev-link" href="footnotes.html"><span class="label">Previous</span><span class="title">footnotes</span></a>
+  <a class="next-link" href="graphics_tags.html"><span class="label">Next</span><span class="title">graphics_tags</span></a>
 </div>

@@ -103,7 +103,7 @@ captions Int64: rejected
 ## See Also
 
 - `figures` and `tables`: extract complete floating environments.
-- `extract_command_args("caption")`: select arguments through the generic command interface.
+- [`args("caption")`](args.md): select arguments through the generic command interface.
 - [`TokenBatch`](../../tokenbatch_api_reference.md): slice ragged results by source lane.
 
 <div class="pluss-inline-prev-next">

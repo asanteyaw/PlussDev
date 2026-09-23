@@ -121,9 +121,9 @@ roots Int64: rejected
 
 - `simplify_roots`: normalize root spelling while keeping TeX root syntax.
 - `frac_slash`: rewrite fraction constructs as explicit division.
-- `extract_functions`: extract mathematical function-like forms.
+- [`math_funcs`](math_funcs.md): extract recognized mathematical function commands.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pm_signs.html"><span class="label">Previous</span><span class="title">pm_signs</span></a>
-  <a class="next-link" href="standardize_vectors.html"><span class="label">Next</span><span class="title">standardize_vectors</span></a>
+  <a class="prev-link" href="simplify_roots.html"><span class="label">Previous</span><span class="title">simplify_roots</span></a>
+  <a class="next-link" href="strip_bib.html"><span class="label">Next</span><span class="title">strip_bib</span></a>
 </div>

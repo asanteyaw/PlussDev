@@ -128,8 +128,8 @@ lossless round trip.
     <span class="label">Previous</span>
     <span class="title">envs</span>
   </a>
-  <a class="next-link" href="frac_slash.html">
+  <a class="next-link" href="figures.html">
     <span class="label">Next</span>
-    <span class="title">frac_slash</span>
+    <span class="title">figures</span>
   </a>
 </div>

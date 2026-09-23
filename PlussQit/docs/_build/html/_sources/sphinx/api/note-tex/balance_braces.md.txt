@@ -94,10 +94,10 @@ braces Int64: rejected
 ## See Also
 
 - [`balance_math_delims`](balance_math_delims.md): repair math delimiter counts.
-- `remove_commands`: remove command syntax instead of attempting repair.
-- `sanitize`: apply a broader TeX cleanup policy.
+- `strip_cmds`: remove command syntax instead of attempting repair.
+- [`to_text`](to_text.md): project TeX source into normalized readable prose.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="align_blocks.html"><span class="label">Previous</span><span class="title">align_blocks</span></a>
+  <a class="prev-link" href="args.html"><span class="label">Previous</span><span class="title">args</span></a>
   <a class="next-link" href="balance_math_delims.html"><span class="label">Next</span><span class="title">balance_math_delims</span></a>
 </div>

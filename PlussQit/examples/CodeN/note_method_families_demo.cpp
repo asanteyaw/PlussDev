@@ -38,15 +38,15 @@ int main() {
       "\\end{document}\n");
   std::cout << "tex_to_text:   " << tex.tex().to_text().at(0) << "\n";
   std::cout << "tex_removers:  "
-            << tex.tex().remove_labels().tex().remove_refs().tex().remove_citations().tex().remove_urls().at(0)
+            << tex.tex().strip_labels().tex().strip_refs().tex().strip_cites().tex().strip_links().at(0)
             << "\n";
 
   pluss::Note tex2 = pluss::make_note("\\left( x \\right) + \\Bigl[ y \\Bigr] + \\alpha + \\beta");
   std::cout << "tex_delims:    "
-            << tex2.tex().remove_left_right().tex().remove_big_delims().tex().remove_spacing_cmds().at(0)
+            << tex2.tex().strip_lr().tex().strip_size().tex().strip_space().at(0)
             << "\n";
   std::cout << "tex_replace:   "
-            << tex2.tex().replace_command("alpha", "A").tex().replace_command("beta", "B").at(0)
+            << tex2.tex().cmd_sub("alpha", "A").tex().cmd_sub("beta", "B").at(0)
             << "\n";
 
   pluss::Note pii = pluss::make_note("Email bob@example.com at 9:30am on 2025-01-03, pay $12.50 to @alice #ops");
@@ -75,7 +75,7 @@ int main() {
   std::cout << "\n";
 
   pluss::Note tex_alias = pluss::make_note("\\begin{theorem}A\\end{theorem} \\caption{Cap}");
-  auto th = tex_alias.tex().extract_environment("theorem");
+  auto th = tex_alias.tex().env("theorem");
   std::cout << "tex_theorems:  ";
   for (std::int64_t i = 0; i < th.tokens().numel(); ++i) std::cout << th.tokens().at(i) << " ";
   std::cout << "\n";

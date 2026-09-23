@@ -53,7 +53,14 @@ struct DenseMatrix {
   matrix.original_platform = batch.x.platform();
   matrix.original_dtype = batch.x.scalar_type();
 
-  const Series x64 = batch.x.to(ScalarType::Float64);
+  // to_vec<double>() needs host-resident data regardless of where batch.x
+  // lives, so the platform move must happen together with the dtype cast --
+  // batch.x.to(ScalarType::Float64) alone would try to cast in place on
+  // whatever platform batch.x is already on, which throws on MPS (Float64
+  // is unsupported there). from_dense() below already moves the result back
+  // to matrix.original_platform/original_dtype, so accepting any input
+  // platform here is the intended contract, not new behavior.
+  const Series x64 = batch.x.to(pluss::pCPU, ScalarType::Float64);
   matrix.values = x64.to_vec<double>();
   if (static_cast<std::int64_t>(matrix.values.size()) != matrix.sample_count * matrix.feature_count) {
     return StatusOr<DenseMatrix>(

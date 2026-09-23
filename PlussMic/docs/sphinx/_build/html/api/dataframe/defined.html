@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::defined &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::describe" href="describe.html" />
+    <link rel="prev" title="DataFrame::cumsum" href="cumsum.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3685d9f2e68b -->
+<section id="dataframe-defined">
+<h1>DataFrame::defined<a class="headerlink" href="#dataframe-defined" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reports whether the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> handle currently owns a usable backing object at all
+— not whether any cell inside it is missing. A default-constructed <code class="docutils literal notranslate"><span class="pre">DataFrame()</span></code> (no
+columns argument) is the ordinary way to end up with an undefined frame; almost every
+other constructor and factory method produces a defined one.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>defined() is about object existence, not missing data
+<code class="docutils literal notranslate"><span class="pre">defined()</span></code> answers “does this frame exist and can it be used?”, not “does this frame
+contain nulls?”. For missing-data questions, use <a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>,
+<a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">notnull()</span></code></span></a>, or <a class="reference internal" href="dropnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dropnull()</span></code></span></a> instead — a frame full of
+nulls in every cell is still <code class="docutils literal notranslate"><span class="pre">defined()</span> <span class="pre">==</span> <span class="pre">true</span></code>.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
+<code class="docutils literal notranslate"><span class="pre">true</span></code> if the frame owns a usable backing object and is safe to use in ordinary
+operations; <code class="docutils literal notranslate"><span class="pre">false</span></code> for a default-constructed, not-yet-initialized handle.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. An ordinarily constructed frame is defined.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">grades</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">88.0</span><span class="p">,</span><span class="w"> </span><span class="mf">79.0</span><span class="p">,</span><span class="w"> </span><span class="mf">91.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grades</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p>Example 2. A default-constructed frame is not.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">empty_handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">empty_handle</span><span class="p">.</span><span class="n">defined</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_empty</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">empty_handle</span></code> was constructed with no columns argument at all — it has no backing
+object yet, unlike a frame constructed with an empty column list, which would be
+defined but hold zero features.</p>
+<p>Example 3. Calling an ordinary method on an undefined frame throws, exactly as
+the warning above states.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">empty_handle</span><span class="p">.</span><span class="n">ncases</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame: undefined handle
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ncases()</span></code> (like nearly every other <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> method) needs a real backing
+object to read from; calling it on <code class="docutils literal notranslate"><span class="pre">empty_handle</span></code> — which <code class="docutils literal notranslate"><span class="pre">defined()</span></code> already
+reported as <code class="docutils literal notranslate"><span class="pre">false</span></code> in Example 2 — rejects immediately rather than returning a
+meaningless <code class="docutils literal notranslate"><span class="pre">0</span></code> or crashing. Checking <code class="docutils literal notranslate"><span class="pre">defined()</span></code> first, as this page
+recommends, lets calling code sidestep this throw entirely.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">defined()</span></code> is <code class="docutils literal notranslate"><span class="pre">noexcept</span></code> and cheap — it’s a pointer check, not a data scan.</p></li>
+<li><p>Most factory methods (<code class="docutils literal notranslate"><span class="pre">load_csv()</span></code>, arithmetic results, <code class="docutils literal notranslate"><span class="pre">copy()</span></code>, and so on) always
+return a defined frame; the main way to encounter an undefined one is the default
+constructor, or a moved-from handle.</p></li>
+<li><p>Calling most other methods on an undefined frame throws — <code class="docutils literal notranslate"><span class="pre">defined()</span></code> exists to let
+you check first, particularly around optional construction branches or defensive API
+boundaries.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::isnull</span></code></span></a> / <a class="reference internal" href="notnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::notnull</span></code></span></a>: per-cell
+missing-data checks, unrelated to object existence.</p></li>
+<li><p><a class="reference internal" href="copy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::copy</span></code></span></a>: always produces a defined frame, sharing storage with
+the source until either side is mutated.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="cumsum.html">
+    <span class="label">Previous</span>
+    <span class="title">cumsum</span>
+  </a>
+  <a class="next-link" href="describe.html">
+    <span class="label">Next</span>
+    <span class="title">describe</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="cumsum.html" title="previous chapter">DataFrame::cumsum</a></li>
+      <li>Next: <a href="describe.html" title="next chapter">DataFrame::describe</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/defined.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

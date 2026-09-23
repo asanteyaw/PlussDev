@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Nexus::pull &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Nexus::query" href="query.html" />
+    <link rel="prev" title="Nexus::profile" href="profile.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="nexus-pull">
+<h1>Nexus::pull<a class="headerlink" href="#nexus-pull" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_api_reference.html"><span class="doc std std-doc">Back to Nexus API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusPull</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">PullSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PullSpec</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Assembles a wide feature table, one row per <code class="docutils literal notranslate"><span class="pre">root</span></code> row, from fields spread across the
+whole relationship graph — a “give me these specific columns, from wherever they live”
+alternative to <a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">materialize()</span></code></span></a>, which instead returns the full joined
+frame with every column from every hop. <code class="docutils literal notranslate"><span class="pre">pull()</span></code> never changes <code class="docutils literal notranslate"><span class="pre">root</span></code>’s own row count or
+row grain; every requested field, however many hops away, comes back as exactly one value
+per <code class="docutils literal notranslate"><span class="pre">root</span></code> row.</p>
+<p>There are now three public ways to describe the requested fields:</p>
+<ul class="simple">
+<li><p>the fluent builder returned by <code class="docutils literal notranslate"><span class="pre">pull(root)</span></code> (<code class="docutils literal notranslate"><span class="pre">.take(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.agg(...).sum(...).end()</span></code>, <code class="docutils literal notranslate"><span class="pre">.collect()</span></code>)</p></li>
+<li><p>the original compact string grammar (<code class="docutils literal notranslate"><span class="pre">&quot;orders.amount.sum&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;regions.zone&quot;</span></code>)</p></li>
+<li><p>the preferred typed <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> helpers (<code class="docutils literal notranslate"><span class="pre">take(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">count(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">sum(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(...)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">median(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">min(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">max(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">std(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">var(...)</span></code>)</p></li>
+</ul>
+<p>The execution rules are the same either way. The fluent builder is now the preferred
+teaching surface because it removes the repetitive fully qualified helper calls from
+real feature-engineering code while still delegating to the same underlying typed pull
+engine. The lower-level typed form remains useful when you want to inject a prebuilt
+<code class="docutils literal notranslate"><span class="pre">PullSpec</span></code>, especially for windowed reducers.</p>
+<p>Each entry in <code class="docutils literal notranslate"><span class="pre">fields</span></code> is a small expression, parsed according to its own grammar:</p>
+<ul class="simple">
+<li><p><strong>A bare name</strong> (<code class="docutils literal notranslate"><span class="pre">&quot;amount&quot;</span></code>) — a feature on <code class="docutils literal notranslate"><span class="pre">root</span></code> itself.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">table.feature</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">&quot;customers.name&quot;</span></code>) — a feature on a related table, reached by
+walking the shortest relationship path from <code class="docutils literal notranslate"><span class="pre">root</span></code> to <code class="docutils literal notranslate"><span class="pre">table</span></code> (via the same search
+<a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path()</span></code></span></a> uses). The path must be <strong>root-preserving</strong>: every hop along the way
+must be <code class="docutils literal notranslate"><span class="pre">ManyToOne</span></code> or <code class="docutils literal notranslate"><span class="pre">OneToOne</span></code> from <code class="docutils literal notranslate"><span class="pre">root</span></code>’s side, so each <code class="docutils literal notranslate"><span class="pre">root</span></code> row maps to at most
+one row on <code class="docutils literal notranslate"><span class="pre">table</span></code>. A path that would require expanding <code class="docutils literal notranslate"><span class="pre">root</span></code> into several rows (a
+<code class="docutils literal notranslate"><span class="pre">OneToMany</span></code> or <code class="docutils literal notranslate"><span class="pre">ManyToMany</span></code> hop) throws — see Example 5.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">table.feature.aggregate</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">&quot;orders.amount.sum&quot;</span></code>) — an aggregate of a related table’s
+feature, computed by grouping that table’s rows by <code class="docutils literal notranslate"><span class="pre">root</span></code>’s declared primary key.
+<code class="docutils literal notranslate"><span class="pre">aggregate</span></code> is one of <code class="docutils literal notranslate"><span class="pre">count</span></code>, <code class="docutils literal notranslate"><span class="pre">ndistinct</span></code>, <code class="docutils literal notranslate"><span class="pre">sum</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>,
+<code class="docutils literal notranslate"><span class="pre">var</span></code> (case-insensitive).
+Unlike plain fields, aggregate fields work across <strong>any</strong> cardinality, including
+<code class="docutils literal notranslate"><span class="pre">OneToMany</span></code> — that’s the whole point of aggregating. <code class="docutils literal notranslate"><span class="pre">table</span></code> must not be <code class="docutils literal notranslate"><span class="pre">root</span></code> itself
+(aggregating a root feature against itself doesn’t mean anything — see Example 8).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">`quoted.name`</span></code></strong> — backtick-quote any path segment that itself contains a literal
+<code class="docutils literal notranslate"><span class="pre">.</span></code>, so it isn’t mistaken for a path separator — see Example 9.</p></li>
+</ul>
+<p>Every output column is aliased automatically: a plain root feature keeps its own name; a
+plain related-table feature becomes <code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;</span></code> (each piece sanitized to
+alphanumerics-and-underscores); an aggregate becomes <code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;_&lt;aggregate&gt;</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Aggregate fields require a complete, unique declared primary key on root
+Every aggregate field needs to group by <em>something</em> — that something is <code class="docutils literal notranslate"><span class="pre">root</span></code>’s declared
+<a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TableMeta::primary_key</span></code></span></a>. If <code class="docutils literal notranslate"><span class="pre">root</span></code> has no declared metadata, or a
+<code class="docutils literal notranslate"><span class="pre">primary_key</span></code> that doesn’t fully and uniquely identify its rows, requesting <strong>any</strong>
+aggregate field throws before touching the aggregation itself — see Example 10. Plain
+(non-aggregate) fields have no such requirement.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Windowed aggregates: <agg>_<N><unit>[_root]
+Appending a duration to an aggregate token turns it into a <strong>windowed</strong> aggregate:
+<code class="docutils literal notranslate"><span class="pre">&quot;orders.amount.sum_7d&quot;</span></code> sums <code class="docutils literal notranslate"><span class="pre">amount</span></code> only over orders within a trailing time window,
+instead of every matching row unconditionally. The duration is a positive integer followed
+by a unit — <code class="docutils literal notranslate"><span class="pre">s</span></code>/<code class="docutils literal notranslate"><span class="pre">sec</span></code>/<code class="docutils literal notranslate"><span class="pre">secs</span></code>/<code class="docutils literal notranslate"><span class="pre">second</span></code>/<code class="docutils literal notranslate"><span class="pre">seconds</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code>/<code class="docutils literal notranslate"><span class="pre">min</span></code>/<code class="docutils literal notranslate"><span class="pre">mins</span></code>/<code class="docutils literal notranslate"><span class="pre">minute</span></code>/<code class="docutils literal notranslate"><span class="pre">minutes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">h</span></code>/<code class="docutils literal notranslate"><span class="pre">hr</span></code>/<code class="docutils literal notranslate"><span class="pre">hrs</span></code>/<code class="docutils literal notranslate"><span class="pre">hour</span></code>/<code class="docutils literal notranslate"><span class="pre">hours</span></code>, <code class="docutils literal notranslate"><span class="pre">d</span></code>/<code class="docutils literal notranslate"><span class="pre">day</span></code>/<code class="docutils literal notranslate"><span class="pre">days</span></code>, or <code class="docutils literal notranslate"><span class="pre">w</span></code>/<code class="docutils literal notranslate"><span class="pre">wk</span></code>/<code class="docutils literal notranslate"><span class="pre">wks</span></code>/<code class="docutils literal notranslate"><span class="pre">week</span></code>/<code class="docutils literal notranslate"><span class="pre">weeks</span></code>. A
+windowed aggregate requires the related table (<code class="docutils literal notranslate"><span class="pre">orders</span></code>, above) to have a declared
+<a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">time_field</span></code></span></a>.</p>
+<p>The window’s <strong>end point</strong> — where the trailing window is measured <em>from</em> — depends on the
+anchor, chosen by an optional <code class="docutils literal notranslate"><span class="pre">_root</span></code> suffix:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">_&lt;N&gt;&lt;unit&gt;</span></code></strong> (no <code class="docutils literal notranslate"><span class="pre">_root</span></code>; the default, “Latest” anchor): the window ends at each
+<code class="docutils literal notranslate"><span class="pre">root</span></code> row’s own <strong>most recent matching related-table row</strong>, per the related table’s
+<code class="docutils literal notranslate"><span class="pre">time_field</span></code>. Concretely, <code class="docutils literal notranslate"><span class="pre">&quot;orders.amount.sum_7d&quot;</span></code> sums each customer’s orders that fall
+within 7 days <em>before their own latest order</em> — a trailing window anchored to each
+customer’s own activity, not a fixed calendar date.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">_&lt;N&gt;&lt;unit&gt;_root</span></code></strong>: the window ends at <code class="docutils literal notranslate"><span class="pre">root</span></code>’s <strong>own</strong> declared <code class="docutils literal notranslate"><span class="pre">time_field</span></code> instead
+— which also means <code class="docutils literal notranslate"><span class="pre">root</span></code> itself must have a declared <code class="docutils literal notranslate"><span class="pre">time_field</span></code> for this form, not
+just the related table. See Example 7 for how this changes the result compared to the
+default “Latest” anchor.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">ndistinct</span></code> windows are not supported and throw <code class="docutils literal notranslate"><span class="pre">&quot;ndistinct</span> <span class="pre">windows</span> <span class="pre">are</span> <span class="pre">not</span> <span class="pre">supported</span> <span class="pre">yet&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, and <code class="docutils literal notranslate"><span class="pre">var</span></code> are supported for ordinary grouped pulls, but not for
+windowed pulls yet.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>root</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The table whose row grain is preserved. Must already exist in the workspace.</p>
+<p><strong>fields</strong> (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>)
+One or more field expressions, parsed as described above. Each parsed field’s output
+alias must be unique — two expressions that would collide on the same alias throw. At
+least one field is required.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per <code class="docutils literal notranslate"><span class="pre">root</span></code> row, one column per requested field (aliased as described above),
+titled <code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">+</span> <span class="pre">&quot;_pull&quot;</span></code>.</p>
+</section>
+<section id="fluent-builder-surface">
+<h2>Fluent Builder Surface<a class="headerlink" href="#fluent-builder-surface" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pull(root)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusPull</span></code> builder. The most important public methods on that
+builder are:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">NexusPull</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{});</span>
+<span class="n">NexusPull</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">take</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sources</span><span class="p">);</span>
+<span class="n">NexusPull</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">take</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">sum</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">min</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">max</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">std</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">var</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">);</span>
+<span class="n">NexusPullAgg</span><span class="w"> </span><span class="nf">agg</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">);</span>
+<span class="n">NexusPull</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">PullSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="p">);</span>
+<span class="n">NexusPull</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">PullSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">);</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="nf">collect</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The important detail is that <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> is the canonical builder edge, while
+brace-list, vector, array, and similar name ranges are adapted through the same
+<code class="docutils literal notranslate"><span class="pre">StackArray</span></code>-backed helper pattern the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> API already uses.</p>
+<ul class="simple">
+<li><p>Root-field listings such as <code class="docutils literal notranslate"><span class="pre">.take({&quot;customer_id&quot;,</span> <span class="pre">&quot;region_id&quot;})</span></code> stay ergonomic,
+but now funnel through the same owned <code class="docutils literal notranslate"><span class="pre">StackArray&lt;std::string_view&gt;</span></code> adaptation used
+elsewhere in Pluss.</p></li>
+<li><p>Scoped related-table lifts such as <code class="docutils literal notranslate"><span class="pre">.take(&quot;regions&quot;,</span> <span class="pre">{{&quot;zone&quot;,</span> <span class="pre">&quot;zone&quot;}})</span></code> accept a
+range of <code class="docutils literal notranslate"><span class="pre">(source,</span> <span class="pre">alias)</span></code> pairs and then expose it to the builder as a
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p></li>
+<li><p>The same batched-pair idea now extends to grouped reducers, so
+<code class="docutils literal notranslate"><span class="pre">.agg(&quot;events&quot;).sum({{&quot;spend&quot;,</span> <span class="pre">&quot;total_spend&quot;},</span> <span class="pre">{&quot;fee&quot;,</span> <span class="pre">&quot;total_fee&quot;}})</span></code> is valid and
+avoids one method call per feature when several columns share the same reduction.</p></li>
+<li><p>If you prefer standard associative containers, <code class="docutils literal notranslate"><span class="pre">std::map</span></code> and <code class="docutils literal notranslate"><span class="pre">std::unordered_map</span></code>
+adapt through the same pair-based builder surface for <code class="docutils literal notranslate"><span class="pre">.meta(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.take(...)</span></code>, and
+scoped reducer batches.</p></li>
+<li><p>In other words, user-facing code stays short; the adapter types standardize the
+overload surface and prevent the ambiguity that the earlier raw <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>
+overload set introduced.</p></li>
+</ul>
+</section>
+<section id="fluent-builder-example">
+<h2>Fluent Builder Example<a class="headerlink" href="#fluent-builder-example" title="Link to this heading">¶</a></h2>
+<p>The fluent pull builder is the preferred spelling when you are building a real root-grain
+feature table.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">regions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">,</span><span class="w"> </span><span class="mf">104.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;occurred_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2026-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-01-20T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-01-05T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-01-25T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-02-10T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;spend&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">customer_meta</span><span class="p">;</span>
+<span class="n">customer_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">event_meta</span><span class="p">;</span>
+<span class="n">event_meta</span><span class="p">.</span><span class="n">time_field</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;occurred_at&quot;</span><span class="p">;</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">customer_region</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_region&quot;</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;regions&quot;</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region_id&quot;</span><span class="p">}};</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">ManyToOne</span><span class="p">;</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">customer_events</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_events&quot;</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;events&quot;</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">OneToMany</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">regions</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;events&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">events</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">meta</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customer_meta</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;events&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">event_meta</span><span class="p">},</span>
+<span class="p">})</span>
+<span class="w">  </span><span class="p">.</span><span class="n">links</span><span class="p">({</span><span class="n">customer_region</span><span class="p">,</span><span class="w"> </span><span class="n">customer_events</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">pulled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;customer_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;zone&quot;</span><span class="p">}})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;event_count&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;total_spend&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">median</span><span class="p">(</span><span class="s">&quot;spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;median_spend&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">({</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;recent_spend&quot;</span><span class="p">).</span><span class="n">windowed</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">)})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer_id zone event_count total_spend median_spend recent_spend
+</pre></div>
+</div>
+<p>Notice the alias behavior:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.take(&quot;regions&quot;,</span> <span class="pre">{{&quot;zone&quot;,</span> <span class="pre">&quot;zone&quot;}})</span></code> scopes several related-table lifts under one table token</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.agg(&quot;events&quot;)</span> <span class="pre">...</span> <span class="pre">.end()</span></code> scopes several grouped reducers under one child table token</p></li>
+<li><p>aggregate helpers usually want an explicit alias (<code class="docutils literal notranslate"><span class="pre">&quot;event_count&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;total_spend&quot;</span></code>)</p></li>
+<li><p>windows are declared structurally with <code class="docutils literal notranslate"><span class="pre">.windowed(...)</span></code> or <code class="docutils literal notranslate"><span class="pre">.root_windowed(...)</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="example-batched-maps-instead-of-repeated-chains">
+<h2>Example: Batched Maps Instead Of Repeated Chains<a class="headerlink" href="#example-batched-maps-instead-of-repeated-chains" title="Link to this heading">¶</a></h2>
+<p>If several fields share the same operation, a small associative container usually reads
+better than one call per field.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">regions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;spend&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;occurred_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2026-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-01-20T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2026-01-25T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">customer_meta</span><span class="p">;</span>
+<span class="n">customer_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">event_meta</span><span class="p">;</span>
+<span class="n">event_meta</span><span class="p">.</span><span class="n">time_field</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;occurred_at&quot;</span><span class="p">;</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">customer_region</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_region&quot;</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;regions&quot;</span><span class="p">;</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region_id&quot;</span><span class="p">}};</span>
+<span class="n">customer_region</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">ManyToOne</span><span class="p">;</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">customer_events</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_events&quot;</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;events&quot;</span><span class="p">;</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
+<span class="n">customer_events</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">OneToMany</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">TableMeta</span><span class="o">&gt;</span><span class="w"> </span><span class="n">meta_batch</span><span class="p">;</span>
+<span class="n">meta_batch</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customer_meta</span><span class="p">);</span>
+<span class="n">meta_batch</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">event_meta</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">regions</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;events&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">events</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">meta</span><span class="p">(</span><span class="n">meta_batch</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="n">links</span><span class="p">({</span><span class="n">customer_region</span><span class="p">,</span><span class="w"> </span><span class="n">customer_events</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">pulled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;zone&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="s">&quot;events&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;event_count&quot;</span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span><span class="s">&quot;occurred_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dated_event_count&quot;</span><span class="p">},</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="n">sum</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unordered_map</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span>
+<span class="w">            </span><span class="p">{</span><span class="s">&quot;spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;total_spend&quot;</span><span class="p">},</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer_id zone event_count dated_event_count total_spend
+</pre></div>
+</div>
+<p>This is still the same <code class="docutils literal notranslate"><span class="pre">NexusPull</span></code> builder. The only difference is that repeated
+same-shape calls are collapsed into one bulk declaration.</p>
+</section>
+</section>
+<section id="example-range-friendly-root-lists">
+<h2>Example: Range-Friendly Root Lists<a class="headerlink" href="#example-range-friendly-root-lists" title="Link to this heading">¶</a></h2>
+<p>The builder accepts root-field collections from ordinary C++ ranges, not only brace
+lists.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">regions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">rel</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_region&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;regions&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;region_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region_id&quot;</span><span class="p">}};</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">ManyToOne</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">root_fields</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region_id&quot;</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">regions</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">links</span><span class="p">({</span><span class="n">rel</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">pulled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="n">root_fields</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;zone&quot;</span><span class="p">}})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer_id region_id zone
+</pre></div>
+</div>
+<p>The same call also works with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.take({&quot;customer_id&quot;,</span> <span class="pre">&quot;region_id&quot;})</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.take(std::array&lt;std::string_view,</span> <span class="pre">2&gt;{&quot;customer_id&quot;,</span> <span class="pre">&quot;region_id&quot;})</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.take(pluss::StackArray&lt;std::string_view&gt;{&quot;customer_id&quot;,</span> <span class="pre">&quot;region_id&quot;})</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A bare field from <code class="docutils literal notranslate"><span class="pre">root</span></code> itself.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">,</span><span class="w"> </span><span class="mf">104.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">customers_meta</span><span class="p">;</span>
+<span class="n">customers_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers_meta</span><span class="p">);</span>
+
+<span class="n">Relationship</span><span class="w"> </span><span class="n">rel</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders_to_customers&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
+<span class="n">rel</span><span class="p">.</span><span class="n">cardinality</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RelationshipCardinality</span><span class="o">::</span><span class="n">ManyToOne</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">linked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">p1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p1</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Ada
+1  Ben
+2  Cy
+Name: name, ptype: Note
+</pre></div>
+</div>
+<p>Example 2. A plain field pulled from <code class="docutils literal notranslate"><span class="pre">root</span></code> (<code class="docutils literal notranslate"><span class="pre">orders</span></code>, the “many” side) across to a
+related table (<code class="docutils literal notranslate"><span class="pre">customers</span></code>, the “one” side) — root-preserving, since each order matches
+exactly one customer.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">p2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers.name&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p2</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;customers_name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Ada
+1  Ben
+2  Ben
+3  Ada
+Name: customers_name, ptype: Note
+</pre></div>
+</div>
+<p>Example 3. An aggregate: how many orders each customer has.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">p3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders.order_id.count&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p3</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;orders_order_id_count&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2
+1  2
+2  0
+Name: orders_order_id_count, ptype: Series
+</pre></div>
+</div>
+<p>Cy (customer <code class="docutils literal notranslate"><span class="pre">3</span></code>, with zero orders) correctly gets <code class="docutils literal notranslate"><span class="pre">0</span></code>, not a missing value.</p>
+<p>Example 4. An aggregate that has nothing to aggregate returns a missing value, not <code class="docutils literal notranslate"><span class="pre">0</span></code> —
+contrast <code class="docutils literal notranslate"><span class="pre">count</span></code>’s Example 3.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">p4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders.amount.sum&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p4</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;orders_amount_sum&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  80
+1  95
+2  NULL
+Name: orders_amount_sum, ptype: Series
+</pre></div>
+</div>
+<p>Example 5. Pulling a plain (non-aggregate) field the <em>other</em> direction — from <code class="docutils literal notranslate"><span class="pre">customers</span></code>
+(the “one” side) out to <code class="docutils literal notranslate"><span class="pre">orders</span></code> (the “many” side) — is not root-preserving, and throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;orders.amount&quot;</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::pull: requested field &#39;orders.amount&#39; requires expanding relationship &#39;orders_to_customers&#39; from &#39;customers&#39; to &#39;orders&#39;. pull preserves root grain and cannot traverse one-to-many or many-to-many paths
+</pre></div>
+</div>
+<p>This is exactly the situation <code class="docutils literal notranslate"><span class="pre">orders.amount.sum</span></code> (Example 4) is for — aggregate the
+many-side rows down to one value per <code class="docutils literal notranslate"><span class="pre">root</span></code> row, instead of trying to expand <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p>
+<p>Example 6. Windowed aggregates: a customer’s two orders 10 days apart, summed within a
+trailing 7-day window anchored at their own latest order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">customers2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;ordered_at&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-11T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers2</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders2</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">customers2_meta</span><span class="p">;</span>
+<span class="n">customers2_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tagged2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz2</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers2_meta</span><span class="p">);</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">orders2_meta</span><span class="p">;</span>
+<span class="n">orders2_meta</span><span class="p">.</span><span class="n">time_field</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;ordered_at&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">tagged3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged2</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders2_meta</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">linked2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged3</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">plain_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked2</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders.amount.sum&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">plain_sum</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;orders_amount_sum&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">windowed_sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked2</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders.amount.sum_7d&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">windowed_sum</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;orders_amount_sum_7d&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  80
+1  75
+Name: orders_amount_sum, ptype: Series
+0  30
+1  75
+Name: orders_amount_sum_7d, ptype: Series
+</pre></div>
+</div>
+<p>The plain sum counts both of Ada’s orders (<code class="docutils literal notranslate"><span class="pre">50</span> <span class="pre">+</span> <span class="pre">30</span> <span class="pre">=</span> <span class="pre">80</span></code>). The windowed sum only counts
+orders within 7 days <em>before Ada’s own latest order</em> (<code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">11</span></code>) — her <code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">1</span></code> order
+(<code class="docutils literal notranslate"><span class="pre">50</span></code>) is 10 days earlier, outside that window, so only the <code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">11</span></code> order’s own <code class="docutils literal notranslate"><span class="pre">30</span></code>
+survives. Ben has one order either way, so his result is unchanged.</p>
+<p>Example 7. The <code class="docutils literal notranslate"><span class="pre">_root</span></code> anchor changes the window’s end point from “each customer’s own
+latest order” to “the root table’s own declared time — here, <code class="docutils literal notranslate"><span class="pre">signup_at</span></code>.”</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">customers3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;signup_at&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">        </span><span class="s">&quot;2024-01-08T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers3</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders2</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="n">TableMeta</span><span class="w"> </span><span class="n">customers3_meta</span><span class="p">;</span>
+<span class="n">customers3_meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+<span class="n">customers3_meta</span><span class="p">.</span><span class="n">time_field</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;signup_at&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">step1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz3</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers3_meta</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">step2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">step1</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders2_meta</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">linked3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">step2</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">root_anchored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked3</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders.amount.sum_7d_root&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">root_anchored</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;orders_amount_sum_7d_root&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  50
+1  75
+Name: orders_amount_sum_7d_root, ptype: Series
+</pre></div>
+</div>
+<p>Ada signed up <code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">8</span></code>. A 7-day trailing window ending there (<code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">8</span></code>) includes her
+<code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">1</span></code> order (<code class="docutils literal notranslate"><span class="pre">50</span></code>) but excludes her <code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">11</span></code> order (which happens <em>after</em> signup) —
+the opposite selection from Example 6’s “Latest” anchor, which excluded <code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">1</span></code> and kept
+<code class="docutils literal notranslate"><span class="pre">Jan</span> <span class="pre">11</span></code>.</p>
+<p>Example 8. An aggregate field targeting <code class="docutils literal notranslate"><span class="pre">root</span></code> itself throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customers.name.count&quot;</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h3>Output<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::pull: aggregate field &#39;customers.name.count&#39; must target a related table, not the root table
+</pre></div>
+</div>
+<p>Example 9. Backtick-quoting a feature name that itself contains a literal <code class="docutils literal notranslate"><span class="pre">.</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">customers4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;display.name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada A.&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben B.&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">orders4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers4</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders4</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">linked4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz4</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">p9</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked4</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers.`display.name`&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p9</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;customers_display_name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>Output<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Ada A.
+1  Ben B.
+Name: customers_display_name, ptype: Note
+</pre></div>
+</div>
+<p>Without the backticks, <code class="docutils literal notranslate"><span class="pre">customers.display.name</span></code> would parse as three path segments
+(<code class="docutils literal notranslate"><span class="pre">customers</span></code>, then <code class="docutils literal notranslate"><span class="pre">display</span></code>, then <code class="docutils literal notranslate"><span class="pre">name</span></code>) instead of one table plus one literally-dotted
+feature name.</p>
+<p>Example 10. Requesting any aggregate field when <code class="docutils literal notranslate"><span class="pre">root</span></code> has no usable declared primary key
+throws — checked before any aggregation runs.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers.name.count&quot;</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h3>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::pull: no metadata declared for table &#39;orders&#39;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">orders</span></code> (used as <code class="docutils literal notranslate"><span class="pre">root</span></code> here) never had <code class="docutils literal notranslate"><span class="pre">TableMeta</span></code> declared at all in this session, so
+the aggregate field’s primary-key requirement fails immediately.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Never changes <code class="docutils literal notranslate"><span class="pre">root</span></code>’s row count — plain fields must be root-preserving (throws
+otherwise); aggregate fields collapse any cardinality down to one value per <code class="docutils literal notranslate"><span class="pre">root</span></code> row.</p></li>
+<li><p>Output column aliases are generated automatically: bare name for a root feature,
+<code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;</span></code> for a plain related field, <code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;_&lt;aggregate&gt;</span></code> for an
+aggregate. Two requested fields that would alias to the same name throw.</p></li>
+<li><p>Aggregate fields require <code class="docutils literal notranslate"><span class="pre">root</span></code> to have a complete, unique declared <code class="docutils literal notranslate"><span class="pre">primary_key</span></code> — see
+the important callout above.</p></li>
+<li><p>Windowed aggregates require the related table’s declared <code class="docutils literal notranslate"><span class="pre">time_field</span></code>; the <code class="docutils literal notranslate"><span class="pre">_root</span></code>
+anchor additionally requires <code class="docutils literal notranslate"><span class="pre">root</span></code>’s own declared <code class="docutils literal notranslate"><span class="pre">time_field</span></code>. <code class="docutils literal notranslate"><span class="pre">ndistinct</span></code> windows are
+unsupported.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">ndistinct</span></code> aggregates fill unmatched <code class="docutils literal notranslate"><span class="pre">root</span></code> rows with <code class="docutils literal notranslate"><span class="pre">0</span></code>; every other
+aggregate leaves them missing (<code class="docutils literal notranslate"><span class="pre">NULL</span></code>) — see Examples 3 and 4.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::materialize</span></code></span></a>: the full-frame alternative, returning every
+column from every hop instead of hand-picked fields.</p></li>
+<li><p><a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::path</span></code></span></a>: the same root-preservation check applies to the routes this
+method walks for plain fields.</p></li>
+<li><p><a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::table_meta</span></code></span></a>: declare <code class="docutils literal notranslate"><span class="pre">primary_key</span></code> and <code class="docutils literal notranslate"><span class="pre">time_field</span></code>, both
+required by different parts of this method.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="profile.html">
+    <span class="label">Previous</span>
+    <span class="title">profile</span>
+  </a>
+  <a class="next-link" href="relationship.html">
+    <span class="label">Next</span>
+    <span class="title">relationship</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+  <li><a href="../../nexus_api_reference.html">Nexus API Reference</a><ul>
+      <li>Previous: <a href="profile.html" title="previous chapter">Nexus::profile</a></li>
+      <li>Next: <a href="query.html" title="next chapter">Nexus::query</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/nexus/pull.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

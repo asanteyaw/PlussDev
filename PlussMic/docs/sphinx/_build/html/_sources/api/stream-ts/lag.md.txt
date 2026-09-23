@@ -1,0 +1,111 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9f42a248c1a2 -->
+
+# StreamTimeSeriesAccessor::lag
+
+[Back to StreamTimeSeriesAccessor API Reference](../../stream_ts_accessor_api_reference)
+
+## Signature
+
+```cpp
+Stream StreamTimeSeriesAccessor::lag(std::int64_t periods = 1) const
+```
+
+## What It Does
+
+Shifts the bound stream `periods` positions forward:
+`out[i] = x[i - periods]` where that index is in bounds, `NULL` otherwise. A
+negative `periods` delegates to [`lead()`](lead.md) with the sign flipped.
+
+```{important} StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
+Same precondition as every method on this accessor — see
+[`Stream::ts`](../stream/ts.md)'s own important callout for the exact throw
+message pattern.
+```
+
+## Parameters
+
+**periods** (`std::int64_t`, default `1`)
+    The number of positions to shift forward. Negative values behave as
+    [`lead(-periods)`](lead.md) instead.
+
+## Returns
+
+`Stream`
+    A new stream, same length as the bound source, shifted by `periods`
+    positions.
+
+## Examples
+
+Example 1. Lag a numeric stream by one position.
+
+```cpp
+auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 15.0, 30.0}));
+auto out = stream.ts().lag(1);
+std::cout << out;
+```
+
+### Output
+
+```text
+========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[float64]  records=4
+label=no  mask=no  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | nan                                                                                                      
+1            | 10                                                                                                       
+2            | 20                                                                                                       
+3            | 15                                                                                                       
+========================================================================================================================
+```
+
+Each position now shows the previous position's value; position `0` has no
+predecessor, so it's `nan`.
+
+```{important} No top-level Stream::shift(periods) — this accessor is the only path
+Unlike [`Thread::shift(periods)`](../thread/shift.md), which exists as a
+direct top-level method, `Stream` has no positional-shift method of its
+own outside this accessor — `Stream::shift(periods, freq)` is a completely
+different, unrelated method on [`StreamTimelineAccessor`](../stream-timeline/shift.md)
+(a calendar-duration shift, requiring a `Timeline`/`TimeIndex`-kind stream).
+`ts().lag()`/`ts().lead()` are the only way to reposition a `Stream`'s values
+by row count.
+```
+
+## Notes
+
+- `lag(periods)` with a negative `periods` is exactly `lead(-periods)`.
+- Vacated positions become `NULL`, values shifted past the far edge are
+  dropped, not wrapped around — the same semantics as
+  [`Thread::shift(periods)`](../thread/shift.md), the table-layer primitive
+  this method's underlying engine shares.
+- A pre-existing missing entry in the source stream is honored, not just the
+  `NULL`s the shift itself introduces.
+- See the important callout above.
+
+## See Also
+
+- [`StreamTimeSeriesAccessor::lead`](lead.md): the mirror-image shift.
+- [`StreamTimeSeriesAccessor::lag_block`](lag_block.md): computing several
+  lags of the same stream at once, each as its own `DataFrame` column.
+- [`StreamTimelineAccessor::shift`](../stream-timeline/shift.md): an
+  unrelated, calendar-duration shift — see the important callout above.
+- [`Thread::shift`](../thread/shift.md): the table-layer positional-shift
+  primitive, which (unlike `Stream`) is reachable directly, not only through
+  `ts()`.
+- [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
+- [`CatalogTimeSeriesAccessor::lag`](../catalog-ts/lag.md): the whole-catalog
+  equivalent.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="grouped.html">
+    <span class="label">Previous</span>
+    <span class="title">grouped</span>
+  </a>
+  <a class="next-link" href="lag_block.html">
+    <span class="label">Next</span>
+    <span class="title">lag_block</span>
+  </a>
+</div>

@@ -101,7 +101,24 @@ concept HasLongTexNames =
     requires(const T& value) { value.tex().environments(false); } ||
     requires(const T& value) { value.tex().expand_inputs(); } ||
     requires(const T& value) { value.tex().expand_macros(); } ||
-    requires(const T& value) { value.tex().inline_macros(); };
+    requires(const T& value) { value.tex().inline_macros(); } ||
+    requires(const T& value) { value.tex().standardize_dots(); } ||
+    requires(const T& value) { value.tex().standardize_integrals(); } ||
+    requires(const T& value) { value.tex().standardize_limits(); } ||
+    requires(const T& value) { value.tex().standardize_matrices(); } ||
+    requires(const T& value) { value.tex().standardize_primes(); } ||
+    requires(const T& value) { value.tex().standardize_subscripts(); } ||
+    requires(const T& value) { value.tex().standardize_summations(); } ||
+    requires(const T& value) { value.tex().standardize_superscripts(); } ||
+    requires(const T& value) { value.tex().standardize_vectors(); } ||
+    requires(const T& value) { value.tex().extract_command_args("x"); } ||
+    requires(const T& value) { value.tex().extract_environment("x"); } ||
+    requires(const T& value) { value.tex().extract_functions(); } ||
+    requires(const T& value) { value.tex().extract_greek(); } ||
+    requires(const T& value) { value.tex().extract_identifiers(); } ||
+    requires(const T& value) { value.tex().extract_numbers(); } ||
+    requires(const T& value) { value.tex().extract_operators(); } ||
+    requires(const T& value) { value.tex().extract_symbols(); };
 
 } // namespace
 

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TimeSeriesAccessor::lead &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="TimeSeriesAccessor::log_returns" href="log_returns.html" />
+    <link rel="prev" title="TimeSeriesAccessor::le" href="le.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="timeseriesaccessor-lead">
+<h1>TimeSeriesAccessor::lead<a class="headerlink" href="#timeseriesaccessor-lead" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to TimeSeriesAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimeSeriesAccessor</span><span class="o">::</span><span class="n">lead</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">periods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Shifts the bound thread <code class="docutils literal notranslate"><span class="pre">periods</span></code> positions backward: <code class="docutils literal notranslate"><span class="pre">out[i]</span> <span class="pre">=</span> <span class="pre">x[i</span> <span class="pre">+</span> <span class="pre">periods]</span></code> where
+that index is in bounds, <code class="docutils literal notranslate"><span class="pre">NULL</span></code> otherwise. A negative <code class="docutils literal notranslate"><span class="pre">periods</span></code> delegates to
+<a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a> with the sign flipped — <code class="docutils literal notranslate"><span class="pre">lead(-periods)</span></code> and <code class="docutils literal notranslate"><span class="pre">lag(periods)</span></code> are the
+same operation. Restricted to a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread; anything else throws.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>periods</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+The number of positions to shift backward. Negative values behave as
+<a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag(-periods)</span></code></span></a> instead.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new thread, same length as the bound source, led by <code class="docutils literal notranslate"><span class="pre">periods</span></code> positions.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Lead a numeric thread by one position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">load</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lead</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  15
+2  30
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Each position now shows the next position’s value: position <code class="docutils literal notranslate"><span class="pre">0</span></code> shows position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">20</span></code>, position <code class="docutils literal notranslate"><span class="pre">1</span></code> shows position <code class="docutils literal notranslate"><span class="pre">2</span></code>’s <code class="docutils literal notranslate"><span class="pre">15</span></code>, and so on. Position <code class="docutils literal notranslate"><span class="pre">3</span></code> has no
+successor, so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — the <code class="docutils literal notranslate"><span class="pre">NULL</span></code> lands at the opposite end from
+<a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a>.</p>
+<p>Example 2. A pre-existing missing entry in the source thread is honored, not just
+the <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s the shift itself introduces.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})</span>
+<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_gap</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lead</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  30
+2  40
+3  NULL
+
+ptype: Series
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> (which would otherwise show position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s value) comes back <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+because position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s <code class="docutils literal notranslate"><span class="pre">20.0</span></code> is masked-missing — the real number underneath the
+mask never surfaces. Positions <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> correctly pick up <code class="docutils literal notranslate"><span class="pre">30.0</span></code> and <code class="docutils literal notranslate"><span class="pre">40.0</span></code>
+from the real, valid positions <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p>
+<p>Example 3. A non-numeric thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lead</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TimeSeriesAccessor::lead: source must be Series
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lead(periods)</span></code> with a negative <code class="docutils literal notranslate"><span class="pre">periods</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">lag(-periods)</span></code> — the two
+methods share one implementation, differing only in shift direction.</p></li>
+<li><p>A pre-existing missing entry in the source thread is honored, not just the
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>s the shift itself introduces — see Example 2.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; a <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> thread
+throws <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::lead:</span> <span class="pre">source</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Series&quot;</span></code>; a non-numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+throws <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::lead:</span> <span class="pre">source</span> <span class="pre">Series</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">numeric&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::lag</span></code></span></a>: the mirror-image shift.</p></li>
+<li><p><a class="reference internal" href="../thread/shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::shift</span></code></span></a>: the equivalent top-level operation (a negative
+<code class="docutils literal notranslate"><span class="pre">shift</span></code> argument corresponds to a lead) outside the <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="le.html">
+    <span class="label">Previous</span>
+    <span class="title">le</span>
+  </a>
+  <a class="next-link" href="log_returns.html">
+    <span class="label">Next</span>
+    <span class="title">log_returns</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+  <li><a href="../../thread_ts_accessor_api_reference.html">TimeSeriesAccessor API Reference</a><ul>
+      <li>Previous: <a href="le.html" title="previous chapter">TimeSeriesAccessor::le</a></li>
+      <li>Next: <a href="log_returns.html" title="next chapter">TimeSeriesAccessor::log_returns</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread-ts/lead.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

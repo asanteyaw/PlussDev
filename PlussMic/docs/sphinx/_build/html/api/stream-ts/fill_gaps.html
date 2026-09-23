@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>StreamTimeSeriesAccessor::fill_gaps &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="StreamTimeSeriesAccessor::grouped" href="grouped.html" />
+    <link rel="prev" title="StreamTimeSeriesAccessor::expanding" href="expanding.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 330c5e554e05 -->
+<section id="streamtimeseriesaccessor-fill-gaps">
+<h1>StreamTimeSeriesAccessor::fill_gaps<a class="headerlink" href="#streamtimeseriesaccessor-fill-gaps" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../stream_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to StreamTimeSeriesAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="w"> </span><span class="n">StreamTimeSeriesAccessor</span><span class="o">::</span><span class="n">fill_gaps</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">GapFillMode</span><span class="w"> </span><span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">GapFillMode</span><span class="o">::</span><span class="n">Forward</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">constant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Fills missing entries in the bound stream using one of four strategies:
+<code class="docutils literal notranslate"><span class="pre">Forward</span></code> (the default, nearest <strong>prior</strong> real value), <code class="docutils literal notranslate"><span class="pre">Backward</span></code> (nearest
+<strong>following</strong> real value), <code class="docutils literal notranslate"><span class="pre">Zero</span></code> (every missing position becomes <code class="docutils literal notranslate"><span class="pre">0</span></code>), or
+<code class="docutils literal notranslate"><span class="pre">Constant</span></code> (every missing position becomes <code class="docutils literal notranslate"><span class="pre">constant</span></code>, required for this
+mode). A gap with no real value on the required side is left missing.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
+Same precondition as every method on this accessor — see
+<a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>’s own important callout for the exact throw
+message pattern.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>mode</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::subsp::stats::ts::GapFillMode</span></code>, default <code class="docutils literal notranslate"><span class="pre">Forward</span></code>)
+Which fill strategy to use.</p>
+<p><strong>constant</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;double&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+The fill value for <code class="docutils literal notranslate"><span class="pre">Constant</span></code>. Required (throws if absent) when <code class="docutils literal notranslate"><span class="pre">mode</span></code>
+is <code class="docutils literal notranslate"><span class="pre">Constant</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Stream</span></code>
+A new stream, same length as the bound source, with gaps filled per
+<code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">Forward</span></code> (the default) — each gap takes the nearest prior value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">::</span><span class="n">from_thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">with_gap</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">fill_gaps</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
+kindle::Stream  kind=Series  dtype=Series[float64]  records=4
+label=no  mask=no  meta=0
+------------------------------------------------------------------------------------------------------------------------
+label        | value                                                                                                    
+------------------------------------------------------------------------------------------------------------------------
+0            | 10                                                                                                       
+1            | 10                                                                                                       
+2            | 30                                                                                                       
+3            | 40                                                                                                       
+========================================================================================================================
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">1</span></code> (masked-missing) takes position <code class="docutils literal notranslate"><span class="pre">0</span></code>’s <code class="docutils literal notranslate"><span class="pre">10</span></code> — the nearest prior
+real value. Positions <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> were never missing, so they’re untouched.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>A gap with nothing to fill from on the required side (a leading gap under
+<code class="docutils literal notranslate"><span class="pre">Forward</span></code>, a trailing gap under <code class="docutils literal notranslate"><span class="pre">Backward</span></code>) is left <code class="docutils literal notranslate"><span class="pre">NULL</span></code> rather than
+inventing a value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GapFillMode::Constant</span></code> throws
+<code class="docutils literal notranslate"><span class="pre">&quot;subsp::stats::ts::fill_gaps:</span> <span class="pre">constant</span> <span class="pre">mode</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">value&quot;</span></code> if
+<code class="docutils literal notranslate"><span class="pre">constant</span></code> is absent.</p></li>
+<li><p>See the important callout above.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../stream/ffill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ffill</span></code></span></a>, <a class="reference internal" href="../stream/bfill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::bfill</span></code></span></a>:
+the equivalent top-level operations outside the <code class="docutils literal notranslate"><span class="pre">ts()</span></code> accessor.</p></li>
+<li><p><a class="reference internal" href="align_to.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::align_to</span></code></span></a>: aligning onto a
+different time axis, optionally filling any newly-introduced gaps the
+same way.</p></li>
+<li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>
+<li><p><a class="reference internal" href="../thread-ts/fill_gaps.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::fill_gaps</span></code></span></a>: the
+underlying single-thread engine, with additional edge-case examples.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="expanding.html">
+    <span class="label">Previous</span>
+    <span class="title">expanding</span>
+  </a>
+  <a class="next-link" href="grouped.html">
+    <span class="label">Next</span>
+    <span class="title">grouped</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../stream_api_reference.html">Stream API Reference</a><ul>
+  <li><a href="../../stream_ts_accessor_api_reference.html">StreamTimeSeriesAccessor API Reference</a><ul>
+      <li>Previous: <a href="expanding.html" title="previous chapter">StreamTimeSeriesAccessor::expanding</a></li>
+      <li>Next: <a href="grouped.html" title="next chapter">StreamTimeSeriesAccessor::grouped</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/stream-ts/fill_gaps.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

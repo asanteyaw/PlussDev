@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -62,7 +62,7 @@ receiver cell to its half-open token range. This representation handles a
 different number of environments per cell without nested host containers.</p>
 <p><code class="docutils literal notranslate"><span class="pre">envs()</span></code> performs extraction only. It does not render content, remove the
 regions from the receiver, or validate commands inside a body. Use
-<code class="docutils literal notranslate"><span class="pre">remove_environment(name)</span></code> for removal and <code class="docutils literal notranslate"><span class="pre">extract_environment(name)</span></code> when a
+<code class="docutils literal notranslate"><span class="pre">strip_env(name)</span></code> for removal and <code class="docutils literal notranslate"><span class="pre">env(name)</span></code> when a
 known environment kind should be selected directly. Undefined input returns an
 undefined token Note with offsets <code class="docutils literal notranslate"><span class="pre">[0]</span></code>; non-text input is rejected.</p>
 </section>
@@ -145,8 +145,8 @@ environments Int64: rejected
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="env_names.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">env_names</span></code></span></a>: inventory openers without requiring closers.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_environment</span></code>: extract only one requested environment kind.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">remove_environment</span></code>: remove one requested environment kind.</p></li>
+<li><p><a class="reference internal" href="env.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">env</span></code></span></a>: extract only one requested environment kind.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strip_env</span></code>: remove one requested environment kind.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="env_names.html"><span class="label">Previous</span><span class="title">env_names</span></a>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::case_study &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::cast" href="cast.html" />
+    <link rel="prev" title="DataFrame::bucketize" href="bucketize.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e63617ce8e28 -->
+<section id="dataframe-case-study">
+<h1>DataFrame::case_study<a class="headerlink" href="#dataframe-case-study" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">case_study</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Case</span><span class="o">&amp;</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">case_study</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Case</span><span class="o">&amp;</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Feat</span><span class="o">&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">case_study</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">CasePick</span><span class="o">&amp;</span><span class="w"> </span><span class="n">pick</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>The general-purpose row-and-feature selection method: pick rows by position, by case
+label, or by boolean mask, optionally combined with a feature projection, all in one
+call that always returns a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — even when the selection resolves to a single
+row, a single column, or a single cell. <code class="docutils literal notranslate"><span class="pre">Case</span></code> and <code class="docutils literal notranslate"><span class="pre">Feat</span></code> are small selector structs
+built via their own static factory methods (<code class="docutils literal notranslate"><span class="pre">Case::at(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::name(...)</span></code>, and so
+on, documented below) rather than by setting their fields directly — the fields are an
+implementation detail of how the selector is dispatched internally.</p>
+<p>The third overload, taking a <code class="docutils literal notranslate"><span class="pre">CasePick</span></code>, is for a different situation: a frame that
+already has one or more <strong>named</strong> case-label levels, set up via
+<a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></span></a>. It looks up rows by matching those named levels’
+values rather than by position or by the plain default case label.</p>
+<p><code class="docutils literal notranslate"><span class="pre">case_study()</span></code> is the selection surface to learn well because it is the point where
+PlussMic’s row semantics and feature semantics meet. Many narrower methods are really
+special cases of it:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>: positional rows only</p></li>
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a>: positional rows in an explicit list</p></li>
+<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a>: boolean-mask rows only</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a>: feature projection only</p></li>
+<li><p><a class="reference internal" href="zoom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zoom()</span></code></span></a>: rectangular positional row+feature block</p></li>
+</ul>
+<p>If you can read a <code class="docutils literal notranslate"><span class="pre">Case</span></code> selector and a <code class="docutils literal notranslate"><span class="pre">Feat</span></code> selector fluently, you can usually
+predict exactly what <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> will do.</p>
+</section>
+<section id="how-to-think-about-it">
+<h2>How To Think About It<a class="headerlink" href="#how-to-think-about-it" title="Link to this heading">¶</a></h2>
+<p>There are three independent ideas on this surface:</p>
+<ol class="arabic simple">
+<li><p><strong>How rows are selected</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>by position: <code class="docutils literal notranslate"><span class="pre">Case::at</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::take</span></code></p></li>
+<li><p>by the current case label payload: <code class="docutils literal notranslate"><span class="pre">Case::label</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::labels</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::span</span></code></p></li>
+<li><p>by a boolean mask: <code class="docutils literal notranslate"><span class="pre">Case::where</span></code></p></li>
+<li><p>by named case-label levels: <code class="docutils literal notranslate"><span class="pre">CasePick</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="2">
+<li><p><strong>How features are selected</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>all features: omit the second argument or pass <code class="docutils literal notranslate"><span class="pre">Feat::all()</span></code></p></li>
+<li><p>by one feature: <code class="docutils literal notranslate"><span class="pre">Feat::name</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::at</span></code></p></li>
+<li><p>by many features: <code class="docutils literal notranslate"><span class="pre">Feat::names</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::take</span></code></p></li>
+<li><p>by a contiguous positional/name window: <code class="docutils literal notranslate"><span class="pre">Feat::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::span</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="3">
+<li><p><strong>What shape comes back</strong></p></li>
+</ol>
+<ul class="simple">
+<li><p>always a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></li>
+<li><p>row order follows the row selector</p></li>
+<li><p>feature order follows the feature selector</p></li>
+<li><p>duplicate labels match all rows carrying that label</p></li>
+<li><p>case labels are preserved on surviving rows unless you are using <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> with
+<code class="docutils literal notranslate"><span class="pre">drop</span> <span class="pre">=</span> <span class="pre">true</span></code></p></li>
+</ul>
+<p>That final point matters. <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> does not collapse to a scalar or a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+just because you selected one row or one feature. It stays on the frame surface so you
+can keep chaining frame operations naturally.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>rows</strong> (<code class="docutils literal notranslate"><span class="pre">DataFrame::Case</span></code>) — built with one of:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::at(row)</span></code>: one row by position. Negative positions count from the end
+(<code class="docutils literal notranslate"><span class="pre">Case::at(-1)</span></code> is the last row).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::slice(start,</span> <span class="pre">stop)</span></code>: a half-open positional slice <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">stop)</span></code>, the same
+convention <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a> uses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::take({r1,</span> <span class="pre">r2,</span> <span class="pre">...})</span></code>: an explicit, arbitrarily ordered (and possibly
+repeating) list of positions — the same generality <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a> offers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::label(value)</span></code>: every row whose current case label equals <code class="docutils literal notranslate"><span class="pre">value</span></code>. If the same
+label appears on more than one row, <strong>all</strong> of them are returned, not just the
+first.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::labels({v1,</span> <span class="pre">v2,</span> <span class="pre">...})</span></code>: several labels, in the order you list them — the
+output order follows your list, not the frame’s original row order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::span(start,</span> <span class="pre">stop)</span></code>: an <strong>inclusive</strong> case-label window, from the first row
+matching <code class="docutils literal notranslate"><span class="pre">start</span></code> through the last row matching <code class="docutils literal notranslate"><span class="pre">stop</span></code>. This is a positional
+distinction worth noting: it is inclusive on both ends, unlike <code class="docutils literal notranslate"><span class="pre">Case::slice(start,</span> <span class="pre">stop)</span></code>, which is exclusive on <code class="docutils literal notranslate"><span class="pre">stop</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::where(bool_thread)</span></code>: every row where a boolean <code class="docutils literal notranslate"><span class="pre">Thread</span></code>/<code class="docutils literal notranslate"><span class="pre">Series</span></code> (one entry
+per case) is <code class="docutils literal notranslate"><span class="pre">true</span></code> — the same selection <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a> performs.</p></li>
+</ul>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">DataFrame::Feat</span></code>, optional) — built with one of:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::all()</span></code>: every feature, in source order (the default when this parameter is
+omitted entirely).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::name(value)</span></code> / <code class="docutils literal notranslate"><span class="pre">Feat::at(position)</span></code>: one feature, by name or by position.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::names({n1,</span> <span class="pre">n2,</span> <span class="pre">...})</span></code> / <code class="docutils literal notranslate"><span class="pre">Feat::take({p1,</span> <span class="pre">p2,</span> <span class="pre">...})</span></code>: several features, by
+name or by position, in the order you list them.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::slice(start,</span> <span class="pre">stop)</span></code>: a half-open positional feature slice.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::span(start,</span> <span class="pre">stop)</span></code>: an <strong>inclusive</strong> feature-name window, from <code class="docutils literal notranslate"><span class="pre">start</span></code>’s
+position through <code class="docutils literal notranslate"><span class="pre">stop</span></code>’s position (in the frame’s own feature order, not
+alphabetical) — inclusive on both ends, mirroring <code class="docutils literal notranslate"><span class="pre">Case::span()</span></code>’s convention.</p></li>
+</ul>
+<p><strong>pick</strong> (<code class="docutils literal notranslate"><span class="pre">CasePick</span></code>) — a struct with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">label</span></code> / <code class="docutils literal notranslate"><span class="pre">value</span></code>: match rows where the named case-label level <code class="docutils literal notranslate"><span class="pre">label</span></code> equals
+<code class="docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">names</span></code> / <code class="docutils literal notranslate"><span class="pre">values</span></code>: the same idea across several named levels at once — every row
+must match all of the given level/value pairs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code>: a full positional key, one value per level in the frame’s own case-level
+order, when you’d rather not name each level explicitly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drop</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>): when <code class="docutils literal notranslate"><span class="pre">true</span></code>, removes the matched level(s) from the
+result’s case-label structure after selection, instead of keeping them (now
+redundant, since they’re constant across the matched rows) on every result row.</p></li>
+</ul>
+<p>Exactly one of <code class="docutils literal notranslate"><span class="pre">label</span></code>/<code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">names</span></code>/<code class="docutils literal notranslate"><span class="pre">values</span></code>, or <code class="docutils literal notranslate"><span class="pre">key</span></code> should be set per call.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame containing the matched rows (and, with the two-argument overload,
+only the selected features), in the order the selector produced them.</p>
+</section>
+<section id="when-to-use-it">
+<h2>When To Use It<a class="headerlink" href="#when-to-use-it" title="Link to this heading">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> when the row selection and the feature selection belong together as
+one operation.</p>
+<p>Typical cases:</p>
+<ul class="simple">
+<li><p>inspect a handful of suspicious rows together with only the columns that matter</p></li>
+<li><p>carve out a labeled diagnostic subframe after a join, fill, or aggregation</p></li>
+<li><p>look rows up by business keys promoted into the case axis via <code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code></p></li>
+<li><p>keep the same result as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> even when the selection is very small</p></li>
+</ul>
+<p>Use a narrower method when only one axis matters:</p>
+<ul class="simple">
+<li><p>row-only positional work: <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a></p></li>
+<li><p>row-only boolean work: <a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">filter()</span></code></span></a></p></li>
+<li><p>feature-only work: <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a></p></li>
+<li><p>rectangular positional block work: <a class="reference internal" href="zoom.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zoom()</span></code></span></a></p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Select a single row by position, including counting from the end.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="o">::</span><span class="n">at</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="o">::</span><span class="n">at</span><span class="p">(</span><span class="mi">-1</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================================================
+     | order_id  city  product  units  unit_price  discount
+-----------------------------------------------------------
+2    | 103       Tema  Laptop   1      1150        NULL    
+-----------------------------------------------------------
+[1 cs x 6 feat]
+=============================================================
+     | order_id  city    product  units  unit_price  discount
+-------------------------------------------------------------
+5    | 106       Kumasi  Monitor  2      NULL        0.12    
+-------------------------------------------------------------
+[1 cs x 6 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Case::at(-1)</span></code> reaches the last row (case <code class="docutils literal notranslate"><span class="pre">5</span></code>) without needing to know <code class="docutils literal notranslate"><span class="pre">ncases()</span></code>
+first.</p>
+<p>Example 2. Select a positional slice, then an explicit reordered list combined with a
+feature projection.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">Feat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">middle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">middle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">picked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">take</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}),</span><span class="w"> </span><span class="n">Feat</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">picked</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===============================================================
+     | order_id  city   product     units  unit_price  discount
+---------------------------------------------------------------
+1    | 102       Accra  Headphones  5      45.5        0.05    
+2    | 103       Tema   Laptop      1      1150        NULL    
+3    | 104       Tema   Monitor     3      320         0.08    
+---------------------------------------------------------------
+[3 cs x 6 feat]
+=========================
+     | city    product   
+-------------------------
+0    | Accra   Laptop    
+2    | Tema    Laptop    
+4    | Kumasi  Headphones
+-------------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">picked</span></code> keeps only <code class="docutils literal notranslate"><span class="pre">city</span></code> and <code class="docutils literal notranslate"><span class="pre">product</span></code>, and its rows follow <code class="docutils literal notranslate"><span class="pre">Case::take({0,</span> <span class="pre">2,</span> <span class="pre">4})</span></code>’s exact order — which happens to already be ascending here.</p>
+<p>Example 3. Select by case label — including a duplicate label matching more than one
+row, and a custom output order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">with_cases</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A100&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">b200_rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">label</span><span class="p">(</span><span class="s">&quot;B200&quot;</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">b200_rows</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">reordered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">labels</span><span class="p">({</span><span class="s">&quot;D400&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A100&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">reordered</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============================
+     | city    region  units
+----------------------------
+B200 | Tema    south   7    
+B200 | Kumasi  middle  12   
+----------------------------
+[2 cs x 3 feat]
+============================
+     | city    region  units
+----------------------------
+D400 | Tamale  north   5    
+A100 | Accra   south   10   
+----------------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Case::label(&quot;B200&quot;)</span></code> matches <strong>both</strong> rows carrying that label — labels are not
+required to be unique, and duplicates are never silently collapsed.
+<code class="docutils literal notranslate"><span class="pre">Case::labels({&quot;D400&quot;,</span> <span class="pre">&quot;A100&quot;})</span></code> returns exactly those two rows in the order
+requested, not in the frame’s original top-to-bottom order.</p>
+<p>Example 4. Select an inclusive case-label range, combined with an inclusive
+feature-name range.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="s">&quot;B200&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D400&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">Feat</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">window</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | city    region
+---------------------
+B200 | Tema    south 
+B200 | Kumasi  middle
+D400 | Tamale  north 
+---------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>The row range runs from the <strong>first</strong> row matching <code class="docutils literal notranslate"><span class="pre">&quot;B200&quot;</span></code> through the <strong>last</strong> row
+matching <code class="docutils literal notranslate"><span class="pre">&quot;D400&quot;</span></code>, inclusive — three rows, not two, since <code class="docutils literal notranslate"><span class="pre">&quot;B200&quot;</span></code> itself matches
+twice. The feature range keeps <code class="docutils literal notranslate"><span class="pre">city</span></code> through <code class="docutils literal notranslate"><span class="pre">region</span></code> (positions <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> in the
+frame’s own feature order), excluding <code class="docutils literal notranslate"><span class="pre">units</span></code>.</p>
+<p>Example 5. Select with a boolean mask, exactly like <code class="docutils literal notranslate"><span class="pre">filter()</span></code>, and project features
+in the same call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">expensive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span>
+<span class="w">    </span><span class="n">Case</span><span class="o">::</span><span class="n">where</span><span class="p">(</span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;unit_price&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">100.0</span><span class="p">),</span>
+<span class="w">    </span><span class="n">Feat</span><span class="o">::</span><span class="n">names</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;unit_price&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">expensive</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================================
+     | city   product  unit_price
+---------------------------------
+0    | Accra  Laptop   1200      
+2    | Tema   Laptop   1150      
+3    | Tema   Monitor  320       
+---------------------------------
+[3 cs x 3 feat]
+</pre></div>
+</div>
+<p>Example 6. Use <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> to look up rows by a named case-label level, after
+<code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code> has promoted a feature into the case axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">regional</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;cost&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">16.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">west</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">regional</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">west</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">east</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">regional</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{.</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;East&quot;</span><span class="p">}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">east</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | sales  cost
+------------------
+West | 10     4   
+West | 20     8   
+------------------
+[2 cs x 2 feat]
+==================
+     | sales  cost
+------------------
+East | 30     12  
+East | 40     16  
+------------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">west</span></code> uses the named form (<code class="docutils literal notranslate"><span class="pre">.label</span></code> / <code class="docutils literal notranslate"><span class="pre">.value</span></code>); <code class="docutils literal notranslate"><span class="pre">east</span></code> uses the equivalent <code class="docutils literal notranslate"><span class="pre">.key</span></code>
+form, which specifies a value for every case-label level in order instead of naming
+each level — here there is only one level (<code class="docutils literal notranslate"><span class="pre">region</span></code>), so <code class="docutils literal notranslate"><span class="pre">.key</span> <span class="pre">=</span> <span class="pre">{&quot;East&quot;}</span></code> is a
+single-element list. Both forms leave <code class="docutils literal notranslate"><span class="pre">region</span></code> in the result’s case labels (shown as
+the row index) because <code class="docutils literal notranslate"><span class="pre">drop</span></code> was left at its default <code class="docutils literal notranslate"><span class="pre">false</span></code>; pass <code class="docutils literal notranslate"><span class="pre">drop</span> <span class="pre">=</span> <span class="pre">true</span></code> when
+a level’s value is now constant across every matched row and no longer worth carrying.</p>
+<p>Example 7. Reorder features positionally while keeping a contiguous row block.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="n">Feat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="n">Feat</span><span class="o">::</span><span class="n">take</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================================
+     | units  city   unit_price
+------------------------------------
+0    | 2      Accra  1200
+1    | 5      Accra  45.5
+------------------------------------
+[2 cs x 3 feat]
+</pre></div>
+</div>
+<p>This is a useful reminder that the feature selector controls output order directly.
+<code class="docutils literal notranslate"><span class="pre">Feat::take({3,</span> <span class="pre">1,</span> <span class="pre">4})</span></code> does not sort itself back into source order.</p>
+</section>
+</section>
+<section id="important-quirks">
+<h2>Important Quirks<a class="headerlink" href="#important-quirks" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Positional slices and label spans do <strong>not</strong> mean the same thing.
+<code class="docutils literal notranslate"><span class="pre">Case::slice(1,</span> <span class="pre">4)</span></code> is half-open and positional. <code class="docutils literal notranslate"><span class="pre">Case::span(&quot;A100&quot;,</span> <span class="pre">&quot;D400&quot;)</span></code> is
+inclusive and label-based.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::label(&quot;B200&quot;)</span></code> can return several rows. Case labels are lookup keys here, not
+uniqueness guarantees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::labels({...})</span></code> follows your requested label order, not the frame’s original
+order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::where(mask)</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">filter(mask)</span></code> first, then applies the feature
+selector on the filtered frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Feat::span(&quot;a&quot;,</span> <span class="pre">&quot;d&quot;)</span></code> walks the frame’s <strong>current feature order</strong>, not
+alphabetical order.</p></li>
+</ul>
+</section>
+<section id="failure-modes">
+<h2>Failure Modes<a class="headerlink" href="#failure-modes" title="Link to this heading">¶</a></h2>
+<p>These are worth knowing up front because <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> is intentionally strict:</p>
+<ul class="simple">
+<li><p>unknown case label -&gt; validation error</p></li>
+<li><p>unknown feature name -&gt; validation error</p></li>
+<li><p>out-of-bounds scalar/list position after negative-index normalization -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick.key</span></code> length different from the number of case-label levels -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick</span></code> with no matches -&gt; validation error</p></li>
+<li><p>mixing <code class="docutils literal notranslate"><span class="pre">CasePick.key</span></code> with named level selectors in the same <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> -&gt; validation error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CasePick.names</span></code> and <code class="docutils literal notranslate"><span class="pre">CasePick.values</span></code> of different lengths -&gt; validation error</p></li>
+</ul>
+<p>One subtle exception: a reversed label span such as <code class="docutils literal notranslate"><span class="pre">Case::span(&quot;D400&quot;,</span> <span class="pre">&quot;A100&quot;)</span></code>
+does <strong>not</strong> raise. It returns an empty frame because the stop position lands before
+the start position.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Case</span></code> and <code class="docutils literal notranslate"><span class="pre">Feat</span></code> should be built via their static factory methods (<code class="docutils literal notranslate"><span class="pre">Case::at</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Case::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::take</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::label</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::labels</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::span</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Case::where</span></code>; <code class="docutils literal notranslate"><span class="pre">Feat::all</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::name</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::at</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::names</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::take</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Feat::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::span</span></code>) rather than by setting their fields directly — those
+fields are an implementation detail of how the selector is dispatched internally.</p></li>
+<li><p>Positional slices (<code class="docutils literal notranslate"><span class="pre">Case::slice</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::slice</span></code>) are half-open, exclusive on <code class="docutils literal notranslate"><span class="pre">stop</span></code>
+— the same convention as <code class="docutils literal notranslate"><span class="pre">slice()</span></code>. Label-based ranges (<code class="docutils literal notranslate"><span class="pre">Case::span</span></code>, <code class="docutils literal notranslate"><span class="pre">Feat::span</span></code>)
+are inclusive on both ends — a different convention, worth remembering when
+switching between the two.</p></li>
+<li><p>An out-of-range single position (<code class="docutils literal notranslate"><span class="pre">Case::at(row)</span></code> after negative normalization) is a
+validation error, matching <code class="docutils literal notranslate"><span class="pre">take()</span></code>’s behavior, not <code class="docutils literal notranslate"><span class="pre">slice()</span></code>’s silent clamping.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> overload only works on a frame with a named case axis from
+<code class="docutils literal notranslate"><span class="pre">label().set(...)</span></code>; on a frame using the plain default case label, use
+<code class="docutils literal notranslate"><span class="pre">Case::label(...)</span></code> / <code class="docutils literal notranslate"><span class="pre">Case::labels(...)</span></code> / <code class="docutils literal notranslate"><span class="pre">Case::span(...)</span></code> instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">names</span></code> / <code class="docutils literal notranslate"><span class="pre">values</span></code> on <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> generalizes <code class="docutils literal notranslate"><span class="pre">label</span></code> / <code class="docutils literal notranslate"><span class="pre">value</span></code> to matching several
+named levels simultaneously — every listed level must match its paired value for a
+row to be included.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Case::span(...)</span></code> uses the first occurrence of the start label and the last
+occurrence of the stop label. That is why duplicate labels can expand the result
+more than first-time users expect.</p></li>
+<li><p>The selector structs are deliberately small vocabulary objects, not a second query
+language. If your selection logic is already a boolean expression over feature
+values, build the mask and pass it through <code class="docutils literal notranslate"><span class="pre">Case::where(...)</span></code> instead of trying to
+encode it indirectly through labels or positions.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::take</span></code></span></a>: the simpler positional-only primitive <code class="docutils literal notranslate"><span class="pre">Case::at</span></code> /
+<code class="docutils literal notranslate"><span class="pre">Case::take</span></code> selection is built on.</p></li>
+<li><p><a class="reference internal" href="filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::filter</span></code></span></a>: boolean-mask row selection without the feature
+projection <code class="docutils literal notranslate"><span class="pre">case_study()</span></code> also offers.</p></li>
+<li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: a lighter-weight path when you only need
+feature projection and no row selection at all.</p></li>
+<li><p><a class="reference internal" href="label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label</span></code></span></a>: the accessor used to inspect or set the case-label
+axis that <code class="docutils literal notranslate"><span class="pre">Case::label</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::labels</span></code>, <code class="docutils literal notranslate"><span class="pre">Case::span</span></code>, and <code class="docutils literal notranslate"><span class="pre">CasePick</span></code> all read from.</p></li>
+<li><p><a class="reference internal" href="observe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::observe</span></code></span></a>: a display-oriented row window, for quick
+previewing rather than a result meant for further computation.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="bucketize.html">
+    <span class="label">Previous</span>
+    <span class="title">bucketize</span>
+  </a>
+  <a class="next-link" href="cast.html">
+    <span class="label">Next</span>
+    <span class="title">cast</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="bucketize.html" title="previous chapter">DataFrame::bucketize</a></li>
+      <li>Next: <a href="cast.html" title="next chapter">DataFrame::cast</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/case_study.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -55,17 +55,65 @@
 </section>
 <section id="what-it-builds">
 <h2>What It Builds<a class="headerlink" href="#what-it-builds" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">zeros_like()</span></code> keeps the geometry of an existing tensor and safely fills the
-entire result with zero.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zeros_like()</span></code> allocates a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> whose construction policy is derived
+from an existing <code class="docutils literal notranslate"><span class="pre">Series</span></code>, then writes zero to every logical element. It is a
+structural factory, not a conversion and not a view: the result owns separate
+storage, so changing it cannot change <code class="docutils literal notranslate"><span class="pre">like</span></code>.</p>
 <p>This is often the more practical sibling of <a class="reference internal" href="empty_like.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">empty_like()</span></code></span></a>
-because you get:</p>
+because initialization is part of the contract rather than a responsibility
+left to the caller.</p>
+<p>With no override, the factory carries forward every supported property needed
+to make the result usable beside <code class="docutils literal notranslate"><span class="pre">like</span></code>:</p>
 <ul class="simple">
 <li><p>same shape as <code class="docutils literal notranslate"><span class="pre">like</span></code></p></li>
-<li><p>predictable initialization</p></li>
-<li><p>optional dtype override when you want a different storage policy</p></li>
+<li><p>same dtype</p></li>
+<li><p>same platform, including MPS or CUDA</p></li>
+<li><p>same dense stride order; a transposed source therefore produces a
+transposed-layout result rather than silently becoming row-major</p></li>
 </ul>
-<p>The public surface also keeps the British-spelling alias <code class="docutils literal notranslate"><span class="pre">zeroes_like()</span></code>, but
-<code class="docutils literal notranslate"><span class="pre">zeros_like()</span></code> is the canonical spelling used throughout the docs.</p>
+<p>For a sliced or overlapping source, exact strides may contain gaps or aliases
+that do not belong in a fresh allocation. In that case <code class="docutils literal notranslate"><span class="pre">zeros_like()</span></code> compacts
+the result into dense, non-overlapping storage while retaining the source’s
+dimension order. This follows the same <code class="docutils literal notranslate"><span class="pre">Preserve</span></code> policy used by the local
+authoritative tensor implementation.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Explicit override</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Shape</p></td>
+<td><p>inherited from <code class="docutils literal notranslate"><span class="pre">like</span></code></p></td>
+<td><p>not supported; use <code class="docutils literal notranslate"><span class="pre">zeros()</span></code> for a new shape</p></td>
+</tr>
+<tr class="row-odd"><td><p>Dtype</p></td>
+<td><p>inherited from <code class="docutils literal notranslate"><span class="pre">like</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ScalarType</span></code>, <code class="docutils literal notranslate"><span class="pre">Config::with_dtype()</span></code>, or <code class="docutils literal notranslate"><span class="pre">cfg::dtype()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Platform</p></td>
+<td><p>inherited from <code class="docutils literal notranslate"><span class="pre">like</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Config::with_platform()</span></code> or <code class="docutils literal notranslate"><span class="pre">cfg::platform()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Stride order</p></td>
+<td><p>preserved and densified when necessary</p></td>
+<td><p>no public memory-format override</p></td>
+</tr>
+<tr class="row-even"><td><p>Gradient tracking</p></td>
+<td><p>disabled on the new leaf</p></td>
+<td><p>not a factory option</p></td>
+</tr>
+<tr class="row-odd"><td><p>Values</p></td>
+<td><p>all zero in the chosen dtype</p></td>
+<td><p>not configurable; use <code class="docutils literal notranslate"><span class="pre">full_like()</span></code> for another value</p></td>
+</tr>
+</tbody>
+</table>
+<p>The override is explicit even when it names an ordinary factory default. For
+example, <code class="docutils literal notranslate"><span class="pre">with_dtype(Float32)</span></code> must convert an <code class="docutils literal notranslate"><span class="pre">Int16</span></code> reference to <code class="docutils literal notranslate"><span class="pre">Float32</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">with_platform(pCPU)</span></code> must move a result derived from an MPS reference to
+CPU. Neither <code class="docutils literal notranslate"><span class="pre">Float32</span></code> nor CPU is treated as an “option was omitted” sentinel.</p>
 </section>
 <section id="verified-examples">
 <h2>Verified Examples<a class="headerlink" href="#verified-examples" title="Link to this heading">¶</a></h2>
@@ -129,8 +177,15 @@ data=[[false, false, false],
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">zeros_like()</span></code> is the safe geometry-preserving allocation surface.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">zeroes_like()</span></code> is a compatibility alias, not a different algorithm.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zeros_like()</span></code> never shares storage with <code class="docutils literal notranslate"><span class="pre">like</span></code>.</p></li>
+<li><p>Dtype and platform overrides are independent: changing one still inherits
+the other.</p></li>
+<li><p>A tracked source does not make the new <code class="docutils literal notranslate"><span class="pre">Series</span></code> tracked. This matches the
+fresh-leaf behavior of the authoritative implementation rather than treating
+allocation as a differentiable operation.</p></li>
+<li><p>Pinning is not inherited. The source implementation’s tensor options do not
+carry source pinning, and Pluss does not currently expose pinned storage as a
+working <code class="docutils literal notranslate"><span class="pre">Series</span></code> allocation mode.</p></li>
 </ul>
 </section>
 <section id="see-also">

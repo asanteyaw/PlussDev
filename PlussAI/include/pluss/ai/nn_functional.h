@@ -2,11 +2,12 @@
 
 // Lightweight functional neural surface (no module stack, no NodeJ umbrella).
 //
-// Exposes top-level functional operators such as:
-// - pluss::fusion
-// - pluss::conv / conv1d / conv2d
-// - pluss::rnn / gru / lstm
-// - pluss::scaled_attention / multihead_attention
+// Exposes functional operators under pluss::ai::nn (reachable publicly as
+// pluss::nn::*, or fully qualified as pluss::ai::nn::*), such as:
+// - pluss::nn::fusion
+// - pluss::nn::conv / conv1d / conv2d
+// - pluss::nn::rnn / gru / lstm
+// - pluss::nn::scaled_attention / multihead_attention
 //
 // This header is intentionally narrower than <pluss/ai.h>.
 

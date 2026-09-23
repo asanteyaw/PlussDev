@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Thread::bounded &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Thread::bucketize" href="bucketize.html" />
+    <link rel="prev" title="Thread::bottom" href="bottom.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8ee29534d666 -->
+<section id="thread-bounded">
+<h1>Thread::bounded<a class="headerlink" href="#thread-bounded" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">bounded</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">WindowBoundsFn</span><span class="o">&amp;</span><span class="w"> </span><span class="n">bounds</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">WindowOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes a window statistic over the thread using <strong>custom, per-row window
+boundaries</strong> you supply — the general-purpose escape hatch behind
+<a class="reference internal" href="weigh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weigh()</span></code></span></a> and the fixed-width rolling window methods on
+<a class="reference internal" href="ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ts()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code> (<code class="docutils literal notranslate"><span class="pre">rolling()</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">timed()</span></code>, <code class="docutils literal notranslate"><span class="pre">grouped()</span></code> are all thin wrappers that compute their <code class="docutils literal notranslate"><span class="pre">starts</span></code>/<code class="docutils literal notranslate"><span class="pre">ends</span></code>
+internally and delegate to the same machinery this method exposes directly).
+Reach for <code class="docutils literal notranslate"><span class="pre">bounded()</span></code> when a fixed rolling width isn’t expressive enough and
+each output row needs its own, independently-computed window.</p>
+<p><code class="docutils literal notranslate"><span class="pre">bounds</span></code> is called once, given the thread’s <code class="docutils literal notranslate"><span class="pre">size()</span></code> and the active
+<code class="docutils literal notranslate"><span class="pre">WindowOptions</span></code>, and must return a <code class="docutils literal notranslate"><span class="pre">{starts,</span> <span class="pre">ends}</span></code> pair of equal-length
+vectors — one <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code> half-open interval per output row. Restricted to
+numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; every other kind or dtype throws.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>bounds</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">WindowBoundsFn&amp;</span></code>)
+A callback <code class="docutils literal notranslate"><span class="pre">(size,</span> <span class="pre">options)</span> <span class="pre">-&gt;</span> <span class="pre">{starts,</span> <span class="pre">ends}</span></code> producing one half-open
+<code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code> window per output row. Must not be empty (a default
+<code class="docutils literal notranslate"><span class="pre">std::function</span></code>), or it throws.</p>
+<p><strong>statistic</strong> (<code class="docutils literal notranslate"><span class="pre">WindowStatistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
+Which statistic to compute inside each row’s window: <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Minimum</span></code>, <code class="docutils literal notranslate"><span class="pre">Maximum</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, or <code class="docutils literal notranslate"><span class="pre">Std</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">WindowOptions</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the smallest number of observed values inside a
+window still considered valid. <code class="docutils literal notranslate"><span class="pre">ddof</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the divisor
+adjustment for <code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code>. <code class="docutils literal notranslate"><span class="pre">centered</span></code>/<code class="docutils literal notranslate"><span class="pre">closure</span></code> are accepted but have no
+effect here — your <code class="docutils literal notranslate"><span class="pre">bounds</span></code> callback already fully determines each
+window’s shape.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new thread the same length as the source, holding the requested
+statistic evaluated over each row’s custom window.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. An expanding mean — every row’s window runs from the very start
+through that row.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">bounded</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">WindowOptions</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">starts</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ends</span><span class="p">;</span>
+<span class="w">      </span><span class="n">ends</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">));</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ends</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">row</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">starts</span><span class="p">),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">ends</span><span class="p">)};</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  15
+2  20
+3  25
+4  30
+
+ptype: Series
+</pre></div>
+</div>
+<p>Each row’s mean is over every value seen so far — <code class="docutils literal notranslate"><span class="pre">15</span></code> is <code class="docutils literal notranslate"><span class="pre">mean(10,</span> <span class="pre">20)</span></code>, <code class="docutils literal notranslate"><span class="pre">20</span></code>
+is <code class="docutils literal notranslate"><span class="pre">mean(10,</span> <span class="pre">20,</span> <span class="pre">30)</span></code>, and so on.</p>
+<p>Example 2. A trailing two-row window, requiring at least two observed values
+per window.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">bounded</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">WindowOptions</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">starts</span><span class="p">;</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ends</span><span class="p">;</span>
+<span class="w">      </span><span class="n">starts</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">));</span>
+<span class="w">      </span><span class="n">ends</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">size</span><span class="p">));</span>
+<span class="w">      </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">size</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">starts</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="w">        </span><span class="n">ends</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">row</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">starts</span><span class="p">),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">ends</span><span class="p">)};</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span>
+<span class="w">    </span><span class="n">WindowOptions</span><span class="p">{.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  15
+2  25
+3  35
+4  45
+
+ptype: Series
+</pre></div>
+</div>
+<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code>’s window is just <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1)</span></code> — only one observed value, below
+<code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">2</span></code> — so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. Every later row has a genuine two-value
+window: <code class="docutils literal notranslate"><span class="pre">15</span> <span class="pre">=</span> <span class="pre">mean(10,</span> <span class="pre">20)</span></code>, <code class="docutils literal notranslate"><span class="pre">25</span> <span class="pre">=</span> <span class="pre">mean(20,</span> <span class="pre">30)</span></code>, and so on.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bounds</span></code> must return <code class="docutils literal notranslate"><span class="pre">starts</span></code>/<code class="docutils literal notranslate"><span class="pre">ends</span></code> vectors the same length as the source
+thread; each row’s window is <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end)</span></code>, half-open.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">centered</span></code> and <code class="docutils literal notranslate"><span class="pre">closure</span></code> in <code class="docutils literal notranslate"><span class="pre">options</span></code> have no effect here, since your
+<code class="docutils literal notranslate"><span class="pre">bounds</span></code> callback already fully controls each window’s shape — they only
+matter for the fixed-width wrappers built on top of this method.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">bounds</span></code> callback throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::bounded:</span> <span class="pre">bounds</span> <span class="pre">callback</span> <span class="pre">is</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="weigh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::weigh</span></code></span></a>: a fixed trailing window with an explicit
+per-position weight, rather than arbitrary custom bounds.</p></li>
+<li><p><a class="reference internal" href="ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ts</span></code></span></a>: the time-series accessor whose fixed-width rolling
+methods (<code class="docutils literal notranslate"><span class="pre">rolling()</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding()</span></code>, <code class="docutils literal notranslate"><span class="pre">timed()</span></code>, <code class="docutils literal notranslate"><span class="pre">grouped()</span></code>) are built on
+top of this method.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="bottom.html">
+    <span class="label">Previous</span>
+    <span class="title">bottom</span>
+  </a>
+  <a class="next-link" href="bucketize.html">
+    <span class="label">Next</span>
+    <span class="title">bucketize</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+      <li>Previous: <a href="bottom.html" title="previous chapter">Thread::bottom</a></li>
+      <li>Next: <a href="bucketize.html" title="next chapter">Thread::bucketize</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread/bounded.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

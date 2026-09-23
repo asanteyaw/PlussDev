@@ -91,10 +91,10 @@ citations Int64: rejected
 ## See Also
 
 - [`bibliography_keys`](bibliography_keys.md): split key lists and include `\bibitem` identifiers.
-- `remove_citations`: remove citation constructs from source.
+- `strip_cites`: remove citation constructs from source.
 - `refs`: extract non-bibliographic cross-reference targets.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="captions.html"><span class="label">Previous</span><span class="title">captions</span></a>
-  <a class="next-link" href="collapse_macros.html"><span class="label">Next</span><span class="title">collapse_macros</span></a>
+  <a class="next-link" href="cmd_sub.html"><span class="label">Next</span><span class="title">cmd_sub</span></a>
 </div>

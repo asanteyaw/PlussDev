@@ -24,7 +24,7 @@ the selected operation performs the work. This keeps `Note` itself a
 one-pointer intrusive handle while allowing fluent pipelines:
 
 ```cpp
-const auto cleaned = source.tex().strip_comments().tex().remove_labels();
+const auto cleaned = source.tex().strip_comments().tex().strip_labels();
 const auto plain = cleaned.tex().to_text();
 ```
 

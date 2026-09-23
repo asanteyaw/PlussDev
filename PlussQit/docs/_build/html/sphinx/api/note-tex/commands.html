@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="NoteTexAccessor::dedup_blank_lines" href="dedup_blank_lines.html" />
+    <link rel="next" title="NoteTexAccessor::deaccent" href="deaccent.html" />
     <link rel="prev" title="NoteTexAccessor::command_names" href="command_names.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -70,7 +70,7 @@ valid result. Comments also remain visible to this scanner. Run
 <code class="docutils literal notranslate"><span class="pre">\$</span></code> is an escaped symbol; neither is reported. This prevents text following a
 linebreak from being misread as part of a command. Use <code class="docutils literal notranslate"><span class="pre">command_names()</span></code> when
 only names without the leading backslash are required, and
-<code class="docutils literal notranslate"><span class="pre">extract_command_args(name)</span></code> when the payload of one known command is the
+<code class="docutils literal notranslate"><span class="pre">args(name)</span></code> when the payload of one known command is the
 actual result.</p>
 <p>The result is a closed <code class="docutils literal notranslate"><span class="pre">TokenBatch</span></code>: <code class="docutils literal notranslate"><span class="pre">tokens()</span></code> is a flat Text Note in source
 order, while <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> is an Int64 Note with one cumulative boundary per
@@ -184,12 +184,12 @@ token. The incomplete <code class="docutils literal notranslate"><span class="pr
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">command_names</span></code>: return names without the leading backslash.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_command_args</span></code>: extract the required argument of one named command.</p></li>
+<li><p><a class="reference internal" href="args.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">args</span></code></span></a>: extract the required argument of one named command.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">strip_comments</span></code>: remove comments before lexical extraction.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="command_names.html"><span class="label">Previous</span><span class="title">command_names</span></a>
-  <a class="next-link" href="dedup_blank_lines.html"><span class="label">Next</span><span class="title">dedup_blank_lines</span></a>
+  <a class="next-link" href="deaccent.html"><span class="label">Next</span><span class="title">deaccent</span></a>
 </div>
 </section>
 </section>
@@ -289,7 +289,7 @@ token. The incomplete <code class="docutils literal notranslate"><span class="pr
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
   <li><a href="../../note_tex_accessor_api_reference.html">Note TeX Accessor API Reference</a><ul>
       <li>Previous: <a href="command_names.html" title="previous chapter">NoteTexAccessor::command_names</a></li>
-      <li>Next: <a href="dedup_blank_lines.html" title="next chapter">NoteTexAccessor::dedup_blank_lines</a></li>
+      <li>Next: <a href="deaccent.html" title="next chapter">NoteTexAccessor::deaccent</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

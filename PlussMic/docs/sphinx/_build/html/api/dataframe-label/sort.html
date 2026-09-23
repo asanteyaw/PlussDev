@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameLabelAccessor::sort &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameLabelAccessor::swap" href="swap.html" />
+    <link rel="prev" title="DataFrameLabelAccessor::slice" href="slice.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fe6b9c7e905c -->
+<section id="dataframelabelaccessor-sort">
+<h1>DataFrameLabelAccessor::sort<a class="headerlink" href="#dataframelabelaccessor-sort" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_label_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameLabelAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">nulls_last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SortLabelOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reorders every row by case label. On a structured, multi-level case axis, the
+simple overload sorts <strong>lexicographically by the stored case-label levels in
+their existing order</strong>: first level primary, second level tie-breaker, third
+level next tie-breaker, and so on. <code class="docutils literal notranslate"><span class="pre">sort(options)</span></code> with <code class="docutils literal notranslate"><span class="pre">options.names</span></code> given
+does the same kind of lexicographic comparison, but using the named levels in
+the order you provide rather than the frame’s current case-axis order.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>ascending</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Sort ascending if <code class="docutils literal notranslate"><span class="pre">true</span></code>, descending if <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p><strong>nulls_last</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Where null case labels sort relative to real values.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame::SortLabelOptions&amp;</span></code>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">names</span></code> (level names to sort by, in priority order — leave empty to fall back
+to the flat comparison), plus <code class="docutils literal notranslate"><span class="pre">ascending</span></code>/<code class="docutils literal notranslate"><span class="pre">nulls_last</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with the same rows, reordered by case label.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Sort a single-level structured frame ascending and descending.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labeled</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ascending</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+      | region  sales
+---------------------
+east  | east    100  
+west  | west    200  
+east  | east    150  
+north | north   90   
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-ascending">
+<h3>Output (ascending)<a class="headerlink" href="#output-ascending" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+      | region  sales
+---------------------
+east  | east    100  
+east  | east    150  
+north | north   90   
+west  | west    200  
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">descending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">sort</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">descending</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-descending">
+<h3>Output (descending)<a class="headerlink" href="#output-descending" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+      | region  sales
+---------------------
+west  | west    200  
+north | north   90   
+east  | east    100  
+east  | east    150  
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>Ties (the two <code class="docutils literal notranslate"><span class="pre">&quot;east&quot;</span></code> rows) keep their original relative order either way —
+the sort is stable.</p>
+<p>Example 2. Sort a 2-level structured frame by one named level ahead of the
+other, instead of the case axis’s existing level order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;LA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Boston&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SF&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;NYC&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grouped</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">flat_sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">sort</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">flat_sorted</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">city_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grouped</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">sort</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SortLabelOptions</span><span class="p">{.</span><span class="n">names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">city_first</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-grouped">
+<h3>Output (grouped)<a class="headerlink" href="#output-grouped" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+            | sales
+-------------------
+west/LA     | 30   
+east/Boston | 10   
+west/SF     | 40   
+east/NYC    | 20   
+-------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-flat-sorted-existing-level-order-region-then-city">
+<h3>Output (flat_sorted — existing level order: region, then city)<a class="headerlink" href="#output-flat-sorted-existing-level-order-region-then-city" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+            | sales
+-------------------
+east/Boston | 10   
+east/NYC    | 20   
+west/LA     | 30   
+west/SF     | 40   
+-------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-city-first-per-level-order-city-ahead-of-region">
+<h3>Output (city_first — per-level order, city ahead of region)<a class="headerlink" href="#output-city-first-per-level-order-city-ahead-of-region" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+            | sales
+-------------------
+east/Boston | 10   
+west/LA     | 30   
+east/NYC    | 20   
+west/SF     | 40   
+-------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>The case axis stores <code class="docutils literal notranslate"><span class="pre">region</span></code> first and <code class="docutils literal notranslate"><span class="pre">city</span></code> second, so the plain <code class="docutils literal notranslate"><span class="pre">sort()</span></code>
+above sorts by <code class="docutils literal notranslate"><span class="pre">region</span></code> first (<code class="docutils literal notranslate"><span class="pre">east</span></code> before <code class="docutils literal notranslate"><span class="pre">west</span></code>) and <code class="docutils literal notranslate"><span class="pre">city</span></code> only breaks
+ties within it.
+<code class="docutils literal notranslate"><span class="pre">sort(SortLabelOptions{.names</span> <span class="pre">=</span> <span class="pre">{&quot;city&quot;,</span> <span class="pre">&quot;region&quot;}})</span></code> instead sorts by <code class="docutils literal notranslate"><span class="pre">city</span></code>
+first regardless of the case axis’s existing level order — <code class="docutils literal notranslate"><span class="pre">&quot;Boston&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;LA&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;NYC&quot;</span> <span class="pre">&lt;</span> <span class="pre">&quot;SF&quot;</span></code> puts <code class="docutils literal notranslate"><span class="pre">west/LA</span></code> right after <code class="docutils literal notranslate"><span class="pre">east/Boston</span></code>, ahead of
+<code class="docutils literal notranslate"><span class="pre">east/NYC</span></code>, which the default region-first label sort would never produce.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The simple overload already uses the full multi-level case axis lexicographically;
+it is not limited to a naïve string compare of the rendered joined label.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">sort(SortLabelOptions{.names</span> <span class="pre">=</span> <span class="pre">{...}})</span></code> when you need a different level
+priority from the frame’s existing case-axis order.</p></li>
+<li><p>Sorting is stable: rows with equal case labels retain their original
+relative order.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="monotonic.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::monotonic</span></code></span></a>: check sortedness without
+reordering.</p></li>
+<li><p><a class="reference internal" href="depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameLabelAccessor::depth</span></code></span></a>: how many leading levels are
+already jointly sorted.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="slice.html">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
+  <a class="next-link" href="swap.html">
+    <span class="label">Next</span>
+    <span class="title">swap</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_label_accessor_api_reference.html">DataFrameLabelAccessor API Reference</a><ul>
+      <li>Previous: <a href="slice.html" title="previous chapter">DataFrameLabelAccessor::slice</a></li>
+      <li>Next: <a href="swap.html" title="next chapter">DataFrameLabelAccessor::swap</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-label/sort.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

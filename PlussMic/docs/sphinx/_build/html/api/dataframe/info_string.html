@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::info_string &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::insert" href="insert.html" />
+    <link rel="prev" title="DataFrame::info" href="info.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c0fb031f78a6 -->
+<section id="dataframe-info-string">
+<h1>DataFrame::info_string<a class="headerlink" href="#dataframe-info-string" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">info_string</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">display</span><span class="o">::</span><span class="n">DisplayOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Exactly <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a>’s two-part health-check report — the summary block plus
+the feature inventory — returned as a <code class="docutils literal notranslate"><span class="pre">std::string</span></code> instead of printed to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>.
+Both functions compute the identical content via the same underlying renderer; the
+only difference is where the text ends up.</p>
+<p>Reach for <code class="docutils literal notranslate"><span class="pre">info_string()</span></code> when the report itself is the thing you need to work with
+programmatically: embedding it in a log message, attaching it to a test failure,
+writing it into a file alongside other diagnostics, or comparing it against an
+expected string in a test.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">display::DisplayOptions&amp;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)</p>
+<p>The same rendering options <code class="docutils literal notranslate"><span class="pre">info()</span></code> accepts — see <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a>’s Parameters for
+the full breakdown (<code class="docutils literal notranslate"><span class="pre">terminal_width</span></code>, <code class="docutils literal notranslate"><span class="pre">terminal_height</span></code>, <code class="docutils literal notranslate"><span class="pre">mode</span></code>, and so on).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">std::string</span></code>
+The rendered report, identical in content to what <code class="docutils literal notranslate"><span class="pre">info()</span></code> prints. <code class="docutils literal notranslate"><span class="pre">info_string()</span></code>
+itself does <strong>not</strong> append a trailing newline; <code class="docutils literal notranslate"><span class="pre">info()</span></code> adds exactly one <code class="docutils literal notranslate"><span class="pre">'\n'</span></code>
+after the same text when it prints. <code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">df.info_string()</span> <span class="pre">&lt;&lt;</span> <span class="pre">'\n';</span></code>
+reproduces <code class="docutils literal notranslate"><span class="pre">info()</span></code>’s exact terminal output.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Capture the report as a string instead of printing it directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;product&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Laptop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Headphones&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Monitor&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">info_string</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================
+Field          | Value                  
+----------------------------------------
+Class          | pluss::table::DataFrame
+Cases          | 6                      
+Features       | 6                      
+Case Range     | 0 -&gt; 5                 
+Null Case Rows | 2                      
+PTypes         | Note(2), Series(4)     
+Memory         | 316.00 B               
+----------------------------------------
+=======================================
+#  | Feature     Non-Null Cases  PType 
+---------------------------------------
+0  | order_id    6               Series
+1  | city        6               Note  
+2  | product     6               Note  
+3  | units       6               Series
+4  | unit_price  5               Series
+5  | discount    5               Series
+---------------------------------------
+</pre></div>
+</div>
+<p>This is byte-for-byte the same report <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a> prints for the identical
+<code class="docutils literal notranslate"><span class="pre">orders</span></code> frame — only the mechanism (returning a string versus writing to <code class="docutils literal notranslate"><span class="pre">stdout</span></code>)
+differs.</p>
+<p>Example 2. Append the report into a larger diagnostic message.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">diagnostic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Frame check failed for &#39;orders&#39;:</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">info_string</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Because <code class="docutils literal notranslate"><span class="pre">info_string()</span></code> returns a plain <code class="docutils literal notranslate"><span class="pre">std::string</span></code>, it composes naturally with
+ordinary string concatenation — useful for building a single diagnostic message that
+combines the report with your own context, rather than printing the report and your
+own message as two separate <code class="docutils literal notranslate"><span class="pre">std::cout</span></code> calls.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">info_string()</span></code> and <code class="docutils literal notranslate"><span class="pre">info()</span></code> are backed by the exact same renderer
+(<code class="docutils literal notranslate"><span class="pre">display::render_info</span></code>); there is no drift between what one prints and what the
+other returns.</p></li>
+<li><p>The only textual difference from <code class="docutils literal notranslate"><span class="pre">info()</span></code>’s printed output is the trailing newline:
+<code class="docutils literal notranslate"><span class="pre">info()</span></code> always appends one after the report, <code class="docutils literal notranslate"><span class="pre">info_string()</span></code> never does.</p></li>
+<li><p>See <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a>’s own Notes for the meaning of <code class="docutils literal notranslate"><span class="pre">Null</span> <span class="pre">Case</span> <span class="pre">Rows</span></code>, the <code class="docutils literal notranslate"><span class="pre">Memory</span></code>
+estimate, and how the inventory table truncates on very wide frames — all of that
+applies identically here.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::info</span></code></span></a>: the printed form of this exact report, and the full
+explanation of what each field means.</p></li>
+<li><p><a class="reference internal" href="to_string.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::to_string</span></code></span></a>: the plain frame renderer’s string form, for
+the actual row/column contents rather than this structural summary.</p></li>
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: value-level statistics, complementary to this
+method’s structural summary.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="info.html">
+    <span class="label">Previous</span>
+    <span class="title">info</span>
+  </a>
+  <a class="next-link" href="insert.html">
+    <span class="label">Next</span>
+    <span class="title">insert</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="info.html" title="previous chapter">DataFrame::info</a></li>
+      <li>Next: <a href="insert.html" title="next chapter">DataFrame::insert</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/info_string.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -156,7 +156,7 @@ pluss::Series lymph::selection::Plan::scores(...) const;
   docs or examples.
 - Public-facing namespaces are:
   - `pluss::ai::classic`
-  - `pluss::ai::nets`
+  - `pluss::ai::nn`
   - `pluss::ai::nlp`
   - `pluss::ai::lymph`
 - In Lymph docs, prefer `lymph::*` names when the type is part of the Lymph

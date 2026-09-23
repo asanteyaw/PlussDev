@@ -1,0 +1,73 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 16cb0bc0a5d8 -->
+
+# RegistryFieldAxisAccessor::timeindex
+
+[Back to RegistryFieldAxisAccessor API Reference](../../registry_fieldaxis_accessor_api_reference)
+
+## Signature
+
+```cpp
+Registry RegistryFieldAxisAccessor::timeindex() const
+```
+
+## What It Does
+
+A named shorthand for [`kind(SlotKind::TimeIndex)`](kind.md) — returns a new
+registry containing only the fields whose `Slot::kind()` is
+`SlotKind::TimeIndex` (every value in the field is a `pluss::TimeIndex`
+scalar).
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Registry`
+    A new registry containing only the `TimeIndex`-kind fields.
+
+## Examples
+
+Example 1. Select the `TimeIndex` field out of a mixed-kind registry.
+
+```cpp
+auto rg = pluss::scribble::Registry({
+    {"id", pluss::scribble::Slot({pluss::make_series(1), pluss::make_series(2)})},
+    {"idx", pluss::scribble::Slot({pluss::make_timeindex("2024-01-01"), pluss::make_timeindex("2024-01-02")})},
+});
+
+auto out = rg.fieldaxis().timeindex();
+for (const auto& key : out.fields()) std::cout << key << " ";
+```
+
+### Output
+
+```text
+idx
+```
+
+## Notes
+
+- Equivalent to `kind(SlotKind::TimeIndex)` — see [`kind()`](kind.md) for the
+  general form.
+
+## See Also
+
+- [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
+  wraps.
+- [`RegistryFieldAxisAccessor::timeline`](timeline.md): the related shorthand
+  for `Timeline`-kind fields, a different datetime representation.
+- [`RegistryFieldAxisAccessor::series`](series.md) / [`note`](note.md): the
+  shorthands for the other scalar kinds.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="suffix.html">
+    <span class="label">Previous</span>
+    <span class="title">suffix</span>
+  </a>
+  <a class="next-link" href="timeline.html">
+    <span class="label">Next</span>
+    <span class="title">timeline</span>
+  </a>
+</div>

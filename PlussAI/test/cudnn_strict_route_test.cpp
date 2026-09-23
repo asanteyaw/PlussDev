@@ -71,7 +71,7 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
     if (err) *err << "CUDA/cuDNN unavailable on this host\n";
     return true;
   }
-  if (!pluss::cudnn_conv_ready() || !pluss::cudnn_attention_ready()) {
+  if (!pluss::nn::cudnn_conv_ready() || !pluss::nn::cudnn_attention_ready()) {
     if (err) *err << "cuDNN strict route unavailable on this host\n";
     return true;
   }
@@ -82,8 +82,8 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
   const auto x = pluss::series::rand({2, 4, 9, 9}, cfg, 9101ULL);
   const auto w = pluss::series::rand({8, 2, 3, 3}, cfg, 9103ULL);
   const auto b = pluss::series::rand({8}, cfg, 9107ULL);
-  const auto y_cpu = pluss::conv(x, w, b, {1, 1}, {1, 1}, {1, 1}, 2);
-  const auto y_gpu = pluss::conv(
+  const auto y_cpu = pluss::nn::conv(x, w, b, {1, 1}, {1, 1}, {1, 1}, 2);
+  const auto y_gpu = pluss::nn::conv(
       x.to(pluss::pCUDA),
       w.to(pluss::pCUDA),
       b.to(pluss::pCUDA),
@@ -101,9 +101,9 @@ bool run_cudnn_strict_route_checks(std::ostream* err = nullptr) {
   const auto q = pluss::series::rand({2, 2, 6, 8}, cfg, 9111ULL);
   const auto k = pluss::series::rand({2, 2, 6, 8}, cfg, 9113ULL);
   const auto v = pluss::series::rand({2, 2, 6, 8}, cfg, 9117ULL);
-  const auto mask = pluss::square_subsequent_mask(6, q);
-  const auto [out_cpu, w_cpu] = pluss::scaled_attention(q, k, v, mask);
-  const auto [out_gpu, w_gpu] = pluss::scaled_attention(
+  const auto mask = pluss::nn::square_subsequent_mask(6, q);
+  const auto [out_cpu, w_cpu] = pluss::nn::scaled_attention(q, k, v, mask);
+  const auto [out_gpu, w_gpu] = pluss::nn::scaled_attention(
       q.to(pluss::pCUDA),
       k.to(pluss::pCUDA),
       v.to(pluss::pCUDA),

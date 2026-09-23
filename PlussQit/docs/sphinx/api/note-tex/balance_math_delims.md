@@ -94,7 +94,7 @@ math Int64: rejected
 
 - [`add_math_delimiters`](add_math_delimiters.md): wrap plain expressions in one outer pair.
 - [`balance_braces`](balance_braces.md): repair unescaped curly-brace structure.
-- `remove_math_delimiters`: remove delimiter syntax rather than completing it.
+- [`strip_delims`](strip_delims.md): remove delimiter syntax rather than completing it.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="balance_braces.html"><span class="label">Previous</span><span class="title">balance_braces</span></a>

@@ -100,9 +100,9 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
   log.line("log_file=" + log.path().string());
   log.line(std::string("cuda_ready=") + (pluss::cuda::is_ready() ? "true" : "false"));
   log.line(std::string("cudnn_ready=") + (pluss::cuda::cudnn_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_conv_ready=") + (pluss::cudnn_conv_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_conv_enabled=") + (pluss::cudnn_conv_enabled() ? "true" : "false"));
-  log.line(std::string("cudnn_conv_strict=") + (pluss::cudnn_conv_strict() ? "true" : "false"));
+  log.line(std::string("cudnn_conv_ready=") + (pluss::nn::cudnn_conv_ready() ? "true" : "false"));
+  log.line(std::string("cudnn_conv_enabled=") + (pluss::nn::cudnn_conv_enabled() ? "true" : "false"));
+  log.line(std::string("cudnn_conv_strict=") + (pluss::nn::cudnn_conv_strict() ? "true" : "false"));
   log.line("env.PLUSS_CUDA_NATIVE_CUDNN_CONV=" + env_or("PLUSS_CUDA_NATIVE_CUDNN_CONV"));
   log.line("env.PLUSS_CUDA_NATIVE_CUDNN_CONV_STRICT=" + env_or("PLUSS_CUDA_NATIVE_CUDNN_CONV_STRICT"));
   log.line("env.PLUSS_CUDA_ALLOW_CPU_BRIDGE=" + env_or("PLUSS_CUDA_ALLOW_CPU_BRIDGE"));
@@ -112,7 +112,7 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
   log.line(std::string("cuda.device_name=") + pluss::cuda::primary_device_name());
   log.line(std::string("cudnn_error=") + pluss::cuda::cudnn_error());
 
-  if (!pluss::cuda::is_ready() || !pluss::cuda::cudnn_ready() || !pluss::cudnn_conv_ready()) {
+  if (!pluss::cuda::is_ready() || !pluss::cuda::cudnn_ready() || !pluss::nn::cudnn_conv_ready()) {
     log.line("SKIP: CUDA/cuDNN/route not ready on this host. Test marked pass-by-skip.");
     return true;
   }
@@ -166,8 +166,8 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       const pluss::Series w_cpu = pluss::series::rand(tc.w_shape, cfg_cpu, tc.seed + 1ULL);
       const pluss::Series b_cpu = pluss::series::rand(tc.b_shape, cfg_cpu, tc.seed + 2ULL);
 
-      const pluss::Series y_cpu = pluss::conv(x_cpu, w_cpu, b_cpu, tc.stride, tc.padding, tc.dilation, tc.groups);
-      const pluss::Series y_gpu = pluss::conv(
+      const pluss::Series y_cpu = pluss::nn::conv(x_cpu, w_cpu, b_cpu, tc.stride, tc.padding, tc.dilation, tc.groups);
+      const pluss::Series y_gpu = pluss::nn::conv(
           x_cpu.to(pluss::pCUDA),
           w_cpu.to(pluss::pCUDA),
           b_cpu.to(pluss::pCUDA),
@@ -199,7 +199,7 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       x_cpu_g.clear_sensitivity();
       w_cpu_g.clear_sensitivity();
       b_cpu_g.clear_sensitivity();
-      pluss::conv(x_cpu_g, w_cpu_g, b_cpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
+      pluss::nn::conv(x_cpu_g, w_cpu_g, b_cpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
       const std::vector<float> gx_ref = x_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
       const std::vector<float> gw_ref = w_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
       const std::vector<float> gb_ref = b_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
@@ -213,7 +213,7 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       x_gpu_g.clear_sensitivity();
       w_gpu_g.clear_sensitivity();
       b_gpu_g.clear_sensitivity();
-      pluss::conv(x_gpu_g, w_gpu_g, b_gpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
+      pluss::nn::conv(x_gpu_g, w_gpu_g, b_gpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
       const std::vector<float> gx_val = x_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
       const std::vector<float> gw_val = w_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
       const std::vector<float> gb_val = b_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();

@@ -371,6 +371,17 @@ int show_overview() {
   return overview.show(options, true) ? 0 : 1;
 }
 
+int show_overview_in_browser() {
+  const auto nexus = make_credit_nexus();
+  auto overview = make_overview_studio(nexus);
+
+  // The default Studio::show() overload -- no explicit
+  // HtmlWindowOptions/backend_preference -- now opens a real OS browser tab
+  // instead of a native window. This is the primary runtime path.
+  std::cout << "opening dashboard in the default browser\n";
+  return overview.show("PlussBI Credit Overview", 1480, 980, true) ? 0 : 1;
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -382,7 +393,10 @@ int main(int argc, char** argv) {
   if (mode == "show") {
     return show_overview();
   }
+  if (mode == "browser") {
+    return show_overview_in_browser();
+  }
 
-  std::cerr << "usage: plussmic_bi_demo_suite [suite|show]\n";
+  std::cerr << "usage: plussmic_bi_demo_suite [suite|show|browser]\n";
   return 1;
 }

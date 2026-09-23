@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>CatalogPlot3DAccessor::scatter &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="CatalogPlot3DAccessor::surface" href="surface.html" />
+    <link rel="prev" title="CatalogPlot3DAccessor::line" href="line.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6219edf31282 -->
+<section id="catalogplot3daccessor-scatter">
+<h1>CatalogPlot3DAccessor::scatter<a class="headerlink" href="#catalogplot3daccessor-scatter" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../catalog_plot3d_accessor_api_reference.html"><span class="doc std std-doc">Back to CatalogPlot3DAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">CatalogPlot3DAccessor</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">z_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">size_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">color_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span>
+<span class="w">                                </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Scatter3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">CatalogPlot3DAccessor</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">x_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">z_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">size_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">color_key</span><span class="p">,</span>
+<span class="w">                                </span><span class="k">const</span><span class="w"> </span><span class="n">CatalogScatter3DPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws one 3D point per aligned <code class="docutils literal notranslate"><span class="pre">(x_key,</span> <span class="pre">y_key,</span> <span class="pre">z_key)</span></code> row, optionally scaling each point’s
+marker size by <code class="docutils literal notranslate"><span class="pre">size_key</span></code> and/or its color by <code class="docutils literal notranslate"><span class="pre">color_key</span></code> — both <strong>continuous</strong> numeric
+mappings, unlike <a class="reference internal" href="../catalog-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::scatter</span></code></span></a>’s categorical
+<code class="docutils literal notranslate"><span class="pre">hue_key</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Every requested key is reconciled together as one group, not pairwise
+<code class="docutils literal notranslate"><span class="pre">Catalog::plot3d()</span></code> methods enforce only per-key type homogeneity, not length homogeneity
+across keys — two keys can have entirely different lengths. Every key actually requested
+here (<code class="docutils literal notranslate"><span class="pre">x_key</span></code>, <code class="docutils literal notranslate"><span class="pre">y_key</span></code>, <code class="docutils literal notranslate"><span class="pre">z_key</span></code>, and whichever of <code class="docutils literal notranslate"><span class="pre">size_key</span></code>/<code class="docutils literal notranslate"><span class="pre">color_key</span></code> are set) is
+reconciled together in a single pass (<code class="docutils literal notranslate"><span class="pre">catalog_align_numeric_streams</span></code>), governed by two
+independent settings: <code class="docutils literal notranslate"><span class="pre">align</span></code> (<code class="docutils literal notranslate"><span class="pre">XYAlignMode</span></code>: <code class="docutils literal notranslate"><span class="pre">Strict</span></code>/<code class="docutils literal notranslate"><span class="pre">Inner</span></code>/<code class="docutils literal notranslate"><span class="pre">PadScalar</span></code> — how a length
+mismatch across the group is handled) and <code class="docutils literal notranslate"><span class="pre">align_by</span></code> (<code class="docutils literal notranslate"><span class="pre">XYAlignBy</span></code>: <code class="docutils literal notranslate"><span class="pre">Auto</span></code>/<code class="docutils literal notranslate"><span class="pre">Label</span></code>/<code class="docutils literal notranslate"><span class="pre">Pos</span></code> —
+whether reconciliation is positional or by each stream’s own attached label). This is the
+N-key generalization of <a class="reference internal" href="../catalog-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::scatter</span></code></span></a>’s
+two-key pairwise alignment, using the same <code class="docutils literal notranslate"><span class="pre">XYAlignMode</span></code>/<code class="docutils literal notranslate"><span class="pre">XYAlignBy</span></code> types
+<a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a>
+uses for its own <code class="docutils literal notranslate"><span class="pre">x_key</span></code>/y-key reconciliation. See Example 4.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>x_key</strong>, <strong>y_key</strong>, <strong>z_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, required)
+The three keys forming each point’s 3D position.</p>
+<p><strong>size_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Optional numeric key controlling each point’s marker size. When omitted,
+<code class="docutils literal notranslate"><span class="pre">options.default_marker_size</span></code> is used uniformly for every point.</p>
+<p><strong>color_key</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Optional numeric key controlling each point’s color, as a continuous color-mapped value
+— <strong>not</strong> a categorical grouping the way <code class="docutils literal notranslate"><span class="pre">hue_key</span></code> is on the 2D <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::Scatter3DPlotOptions</span></code> or <code class="docutils literal notranslate"><span class="pre">CatalogScatter3DPlotOptions</span></code>)
+```cpp
+struct Plot3DSceneOptions {
+std::optional<ScenePreset3D> preset{std::nullopt};
+std::optional<ThemePreset3D> theme{std::nullopt};
+std::optional<CameraPreset3D> camera_preset{std::nullopt};
+std::optional<Camera3DOptions> camera{std::nullopt};
+std::optional<Lighting3DOptions> lighting{std::nullopt};
+std::optional<a class="reference external" href="pluss::pl::GridStyle">pluss::pl::GridStyle</a> grid_style{std::nullopt};
+};</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>struct Plot3DTraceOptions {
+  std::optional&lt;TracePreset3D&gt; preset{std::nullopt};
+  std::optional&lt;pluss::pl::ShadeMode&gt; shade{std::nullopt};
+  std::optional&lt;pluss::pl::LightingMode&gt; lighting{std::nullopt};
+  std::optional&lt;pluss::pl::MaterialProfile&gt; material{std::nullopt};
+  std::optional&lt;float&gt; line_width{std::nullopt};
+  std::optional&lt;bool&gt; transparent{std::nullopt};
+};
+
+enum class XYAlignMode : std::uint8_t { Strict, Inner, PadScalar };
+enum class XYAlignBy : std::uint8_t { Auto, Label, Pos };
+
+struct XYAlignOptions {
+  XYAlignMode mode{XYAlignMode::Strict};
+  XYAlignBy align_by{XYAlignBy::Auto};
+  double pad_scalar{0.0};
+};
+
+struct Scatter3DPlotOptions {
+  Plot3DSceneOptions scene{};
+  Plot3DTraceOptions trace{};
+  double default_marker_size{12.0};
+  XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
+};
+
+struct CatalogScatter3DPlotOptions {
+  pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
+  pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
+  double pad_scalar{0.0};
+  pluss::table::Scatter3DPlotOptions scatter{};
+};
+```
+Passing a bare `Scatter3DPlotOptions` (the first overload, also the one with all
+defaulted arguments) is equivalent to passing a `CatalogScatter3DPlotOptions` built from
+that value&#39;s own `align` field (`catalog_options.align = options.align.mode`, etc.) and
+that `scatter` value. Note `Scatter3DPlotOptions::align` defaults to `Inner` here — a
+looser default than [`LinePlotOptions::align`](../catalog-plot/line.md)&#39;s
+`Strict` default, since a 3D scatter&#39;s whole point is plotting keys that aren&#39;t expected
+to share a row count. Unlike `CatalogPairAlignOptions` (used by the 2D pairwise methods),
+there is no `PairwiseInner`/`GlobalInner` axis here — every requested key is always
+reconciled together as one group, so `align`/`align_by`/`pad_scalar` are the only knobs.
+</pre></div>
+</div>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one 3D pane holding a single point-cloud trace.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Three keys, no size or color mapping.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">measurements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">,</span><span class="w"> </span><span class="mf">54.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;pressure&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1005.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1008.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1010.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1009.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1012.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1011.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;wind&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">6.2</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;co2&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">410.0</span><span class="p">,</span><span class="w"> </span><span class="mf">415.0</span><span class="p">,</span><span class="w"> </span><span class="mf">412.0</span><span class="p">,</span><span class="w"> </span><span class="mf">418.0</span><span class="p">,</span><span class="w"> </span><span class="mf">420.0</span><span class="p">,</span><span class="w"> </span><span class="mf">417.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">measurements</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pressure&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Every point uses <code class="docutils literal notranslate"><span class="pre">options.default_marker_size</span></code> (<code class="docutils literal notranslate"><span class="pre">12.0</span></code>) uniformly, with no color mapping.</p>
+<p><img alt="Output of Example 1" src="../../_images/scatter-11.svg" /></p>
+<p>Example 2. Adding <code class="docutils literal notranslate"><span class="pre">size_key</span></code>: marker size now scales with <code class="docutils literal notranslate"><span class="pre">wind</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">measurements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">,</span><span class="w"> </span><span class="mf">54.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;pressure&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1005.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1008.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1010.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1009.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1012.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1011.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;wind&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">6.2</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">measurements</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pressure&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;wind&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 2" src="../../_images/scatter-21.svg" /></p>
+<p>Example 3. Adding both <code class="docutils literal notranslate"><span class="pre">size_key</span></code> and <code class="docutils literal notranslate"><span class="pre">color_key</span></code>: marker size scales with <code class="docutils literal notranslate"><span class="pre">wind</span></code>, color
+scales continuously with <code class="docutils literal notranslate"><span class="pre">co2</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">measurements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.5</span><span class="p">,</span><span class="w"> </span><span class="mf">23.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">,</span><span class="w"> </span><span class="mf">62.0</span><span class="p">,</span><span class="w"> </span><span class="mf">58.0</span><span class="p">,</span><span class="w"> </span><span class="mf">54.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;pressure&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1005.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1008.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1010.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1009.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1012.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1011.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;wind&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">6.2</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;co2&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">410.0</span><span class="p">,</span><span class="w"> </span><span class="mf">415.0</span><span class="p">,</span><span class="w"> </span><span class="mf">412.0</span><span class="p">,</span><span class="w"> </span><span class="mf">418.0</span><span class="p">,</span><span class="w"> </span><span class="mf">420.0</span><span class="p">,</span><span class="w"> </span><span class="mf">417.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">measurements</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;temp_c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pressure&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;wind&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;co2&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 3" src="../../_images/scatter-31.svg" /></p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">CatalogScatter3DPlotOptions</span></code> with <code class="docutils literal notranslate"><span class="pre">align_by</span> <span class="pre">=</span> <span class="pre">Label</span></code>, over three streams of
+different lengths that each carry their own label — every key is aligned together to their
+common labels in one pass.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">x_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;e&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">y_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;e&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">z_stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">300.0</span><span class="p">}))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;e&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;x_metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x_stream</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y_metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y_stream</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z_metric&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">z_stream</span><span class="p">,</span>
+<span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">CatalogScatter3DPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">align_by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">XYAlignBy</span><span class="o">::</span><span class="n">Label</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;x_metric&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y_metric&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z_metric&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">x_metric</span></code>/<code class="docutils literal notranslate"><span class="pre">y_metric</span></code>/<code class="docutils literal notranslate"><span class="pre">z_metric</span></code> have 5/4/3 values respectively; only the 3 labels common to
+<strong>all three</strong> (<code class="docutils literal notranslate"><span class="pre">&quot;c&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code>) survive — every point in the resulting cloud has a valid
+value from all three keys.</p>
+<p><img alt="Output of Example 4" src="../../_images/scatter-41.svg" /></p>
+<p>Example 5. An unknown key throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">measurements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;temp_c&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;humidity&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">65.0</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;pressure&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1005.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1008.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1010.0</span><span class="p">})),</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">measurements</span><span class="p">.</span><span class="n">plot3d</span><span class="p">().</span><span class="n">scatter</span><span class="p">(</span><span class="s">&quot;nope&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;humidity&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pressure&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Catalog::plot3d().scatter: unknown x key &#39;nope&#39;
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">size_key</span></code>/<code class="docutils literal notranslate"><span class="pre">color_key</span></code> are both continuous numeric mappings — there is no categorical hue
+grouping on <code class="docutils literal notranslate"><span class="pre">plot3d()</span></code> the way <code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::scatter</span></code>’s <code class="docutils literal notranslate"><span class="pre">hue_key</span></code> has.</p></li>
+<li><p>Every requested key (2–5 of them, depending on how many optional keys are set) is aligned
+together as one group — see the important callout above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align_by</span> <span class="pre">=</span> <span class="pre">Label</span></code> requires <strong>every</strong> requested key to carry its own label
+(<code class="docutils literal notranslate"><span class="pre">Stream::with_label()</span></code>); <code class="docutils literal notranslate"><span class="pre">Pos</span></code>/<code class="docutils literal notranslate"><span class="pre">Auto</span></code>-with-a-missing-label falls back to positional
+reconciliation, governed by <code class="docutils literal notranslate"><span class="pre">align</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align</span></code> (<code class="docutils literal notranslate"><span class="pre">XYAlignMode</span></code>) defaults to <code class="docutils literal notranslate"><span class="pre">Inner</span></code> here (truncate to the shortest/common overlap)
+— a looser default than <code class="docutils literal notranslate"><span class="pre">line()</span></code>/<code class="docutils literal notranslate"><span class="pre">step()</span></code>/<code class="docutils literal notranslate"><span class="pre">area()</span></code>/<code class="docutils literal notranslate"><span class="pre">bar()</span></code>’s <code class="docutils literal notranslate"><span class="pre">Strict</span></code> default, since a 3D
+scatter’s whole point is plotting keys that aren’t expected to share a row count.
+<code class="docutils literal notranslate"><span class="pre">PadScalar</span></code> pads any missing position/label with <code class="docutils literal notranslate"><span class="pre">pad_scalar</span></code> (default <code class="docutils literal notranslate"><span class="pre">0.0</span></code>) instead of
+dropping it.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see
+<a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a>’s important callout for how to view
+or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../catalog-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::scatter</span></code></span></a>: the 2D counterpart, with a
+categorical <code class="docutils literal notranslate"><span class="pre">hue_key</span></code> instead of a continuous <code class="docutils literal notranslate"><span class="pre">color_key</span></code>.</p></li>
+<li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlot3DAccessor::line</span></code></span></a>: the same three-key idea, connected as a path
+instead of independent points.</p></li>
+<li><p><a class="reference internal" href="../catalog/plot3d.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::plot3d</span></code></span></a>: how to enter this accessor in the first place.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="line.html">
+    <span class="label">Previous</span>
+    <span class="title">line</span>
+  </a>
+  <a class="next-link" href="surface.html">
+    <span class="label">Next</span>
+    <span class="title">surface</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
+  <li><a href="../../catalog_api_reference.html">Catalog API Reference</a><ul>
+  <li><a href="../../catalog_plot3d_accessor_api_reference.html">CatalogPlot3DAccessor API Reference</a><ul>
+      <li>Previous: <a href="line.html" title="previous chapter">CatalogPlot3DAccessor::line</a></li>
+      <li>Next: <a href="surface.html" title="next chapter">CatalogPlot3DAccessor::surface</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/catalog-plot3d/scatter.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

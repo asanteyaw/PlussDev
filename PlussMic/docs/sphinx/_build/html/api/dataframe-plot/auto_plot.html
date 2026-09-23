@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFramePlotAccessor::auto_plot &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFramePlotAccessor::bar" href="bar.html" />
+    <link rel="prev" title="DataFramePlotAccessor::area_stacked" href="area_stacked.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3f9665753399 -->
+<section id="dataframeplotaccessor-auto-plot">
+<h1>DataFramePlotAccessor::auto_plot<a class="headerlink" href="#dataframeplotaccessor-auto-plot" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">auto_plot</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">auto_plot</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">AutoPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Picks a chart type automatically for the requested (or inferred) numeric features and
+delegates to the corresponding method on this same accessor — <code class="docutils literal notranslate"><span class="pre">auto_plot()</span></code> never draws
+anything itself; every branch ends by calling straight into <code class="docutils literal notranslate"><span class="pre">bar()</span></code>, <code class="docutils literal notranslate"><span class="pre">line()</span></code>, <code class="docutils literal notranslate"><span class="pre">scatter()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bar_stacked()</span></code>, <code class="docutils literal notranslate"><span class="pre">area_stacked()</span></code>, <code class="docutils literal notranslate"><span class="pre">scatter_matrix()</span></code>, or <code class="docutils literal notranslate"><span class="pre">corr_heatmap()</span></code>. The routing is a
+fully deterministic decision tree based on how many numeric features resolve, whether the
+frame’s row labels are categorical/temporal, how many rows the frame has, whether a
+hue-capable feature exists, and whether every selected column is non-negative. It exists for
+quick, exploratory looks at a frame without having to pick a chart type by hand — for
+anything beyond “show me something reasonable,” reach for the specific method directly
+instead.</p>
+<p>The two-argument overload’s <code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code> is currently an empty struct (reserved for
+future use) — it has no effect on routing or rendering today; both overloads behave
+identically.</p>
+<p>Feature resolution follows the same rule as <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>: empty (default) <code class="docutils literal notranslate"><span class="pre">features</span></code>
+infers every numeric feature in the frame, and an explicitly-passed non-numeric name throws
+— see <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>’s important callout for the exact rule and throw text.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The decision tree, in order
+Given the resolved feature names (<code class="docutils literal notranslate"><span class="pre">names</span></code>) and whether <code class="docutils literal notranslate"><span class="pre">features</span></code> was passed non-empty
+(<code class="docutils literal notranslate"><span class="pre">explicit_features</span></code>), the first matching rule below wins:</p>
+<ol class="arabic simple">
+<li><p><strong>Exactly one numeric feature.</strong> If the frame’s row-label thread is Note-, Timeline-, or
+TimeIndex-kind (“labeled”) <strong>and</strong> the frame has 16 or fewer rows, routes to
+<code class="docutils literal notranslate"><span class="pre">bar(names.front())</span></code>. Otherwise routes to <code class="docutils literal notranslate"><span class="pre">line(names.front())</span></code>.</p></li>
+<li><p><strong>Exactly two numeric features, and <code class="docutils literal notranslate"><span class="pre">features</span></code> was left empty/default.</strong> If the frame
+has <em>any</em> Note/Timeline/TimeIndex-kind feature (checked across the whole frame, not just
+the two selected numeric ones), routes to <code class="docutils literal notranslate"><span class="pre">scatter(names[0],</span> <span class="pre">names[1],</span> <span class="pre">hue)</span></code> using the
+<em>first</em> such feature (in the frame’s own column order) as the hue. This rule is skipped
+entirely — even with the same two resolved features — when <code class="docutils literal notranslate"><span class="pre">features</span></code> was passed
+explicitly rather than left empty.</p></li>
+<li><p><strong>Two or three numeric features, labeled row axis, and every selected column
+non-negative</strong> (non-finite cells treated as <code class="docutils literal notranslate"><span class="pre">0</span></code> for this check only). If the frame has 12
+or fewer rows, routes to <code class="docutils literal notranslate"><span class="pre">bar_stacked()</span></code> over the selected features; otherwise routes to
+<code class="docutils literal notranslate"><span class="pre">area_stacked()</span></code>.</p></li>
+<li><p><strong>Two, three, or four numeric features, and the frame “prefers an index plot”</strong> — true
+when the row-label thread is labeled-kind, <em>or</em> the frame has more than 24 rows (either
+condition alone is enough). Routes to <code class="docutils literal notranslate"><span class="pre">line()</span></code> with all selected features as <code class="docutils literal notranslate"><span class="pre">y_features</span></code>.</p></li>
+<li><p><strong>Five or fewer numeric features, and 256 or fewer rows.</strong> Routes to a scatter-matrix
+view equivalent to <code class="docutils literal notranslate"><span class="pre">scatter_matrix(names)</span></code> with default options (<code class="docutils literal notranslate"><span class="pre">Full</span></code> triangle).</p></li>
+<li><p><strong>Everything else</strong> (more than five features, or too many rows for step 5 to apply).
+Routes to a correlation-heatmap view equivalent to <code class="docutils literal notranslate"><span class="pre">corr_heatmap(names)</span></code> with default
+options.</p></li>
+</ol>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">RangeView&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+Numeric features to consider. Empty (the default) infers every numeric feature in the
+frame — see <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>’s important callout for the exact rule. Whether this
+argument was left empty or passed explicitly also affects routing directly (rule 2
+above only fires for the default/empty case).</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">AutoPlotOptions</span> <span class="pre">{};</span>&#160;&#160;&#160;&#160; </code>
+Currently empty; reserved for future routing controls.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+Whatever the routed-to method returns — the figure shape (pane count, trace kind, axis
+labels) depends entirely on which rule fired.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. One numeric feature, labeled (Note-kind) row axis, few rows: routes to <code class="docutils literal notranslate"><span class="pre">bar()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">monthly</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">monthly</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Row labels are Note-kind and there are only 4 rows (<code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">16</span></code>), so this is equivalent to
+<code class="docutils literal notranslate"><span class="pre">monthly.plot().bar(&quot;revenue&quot;)</span></code>.</p>
+<p><img alt="Output of Example 1" src="../../_images/auto_plot-11.svg" /></p>
+<p>Example 2. One numeric feature, default (numeric) row axis: routes to <code class="docutils literal notranslate"><span class="pre">line()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">trend</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;temperature&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">18.0</span><span class="p">,</span><span class="w"> </span><span class="mf">19.5</span><span class="p">,</span><span class="w"> </span><span class="mf">21.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.5</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">trend</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>No row labels were provided, so <code class="docutils literal notranslate"><span class="pre">trend</span></code>’s row axis defaults to a plain numeric case index
+(not labeled-kind) — this is equivalent to <code class="docutils literal notranslate"><span class="pre">trend.plot().line(&quot;temperature&quot;)</span></code>.</p>
+<p><img alt="Output of Example 2" src="../../_images/auto_plot-21.svg" /></p>
+<p>Example 3. Two numeric features (default/empty <code class="docutils literal notranslate"><span class="pre">features</span></code>), with a hue-capable feature
+elsewhere in the frame: routes to <code class="docutils literal notranslate"><span class="pre">scatter()</span></code> with that feature as hue.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">flowers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sepal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.1</span><span class="p">,</span><span class="w"> </span><span class="mf">6.7</span><span class="p">,</span><span class="w"> </span><span class="mf">5.8</span><span class="p">,</span><span class="w"> </span><span class="mf">6.3</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;petal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.4</span><span class="p">,</span><span class="w"> </span><span class="mf">5.2</span><span class="p">,</span><span class="w"> </span><span class="mf">5.1</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;species&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;setosa&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;virginica&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;virginica&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;virginica&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;flowers_auto.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">species</span></code> is the only Note/Timeline/TimeIndex-kind feature in the frame, and <code class="docutils literal notranslate"><span class="pre">features</span></code> was
+left at its default empty value, so this is equivalent to
+<code class="docutils literal notranslate"><span class="pre">flowers.plot().scatter(&quot;sepal_length&quot;,</span> <span class="pre">&quot;petal_length&quot;,</span> <span class="pre">&quot;species&quot;)</span></code>.</p>
+<p><img alt="Output of Example 3" src="../../_images/auto_plot-3.svg" /></p>
+<p>Example 4. The same two numeric features, but requested explicitly: the hue-scatter rule is
+skipped even though <code class="docutils literal notranslate"><span class="pre">species</span></code> still exists.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">flowers</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">({</span><span class="s">&quot;sepal_length&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;petal_length&quot;</span><span class="p">});</span>
+</pre></div>
+</div>
+<p>Because <code class="docutils literal notranslate"><span class="pre">features</span></code> was passed non-empty this time, rule 2 never fires — routing falls
+through to rule 3 (labeled row axis check) or beyond, exactly as if <code class="docutils literal notranslate"><span class="pre">species</span></code> didn’t exist
+for hue-selection purposes. (<code class="docutils literal notranslate"><span class="pre">flowers</span></code> has no explicit row labels here, so its row axis is
+the default numeric index, and this particular example actually falls all the way through
+to rule 5’s scatter-matrix fallback.)</p>
+<p><img alt="Output of Example 4" src="../../_images/auto_plot-4.svg" /></p>
+<p>Example 5. Two non-negative features, labeled row axis, few rows: routes to <code class="docutils literal notranslate"><span class="pre">bar_stacked()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">budget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;engineering&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">22.0</span><span class="p">,</span><span class="w"> </span><span class="mf">25.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">budget</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Both features are all-nonnegative, the row axis is labeled, and there are only 3 rows
+(<code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">12</span></code>) — equivalent to <code class="docutils literal notranslate"><span class="pre">budget.plot().bar_stacked({&quot;engineering&quot;,</span> <span class="pre">&quot;sales&quot;})</span></code>.</p>
+<p><img alt="Output of Example 5" src="../../_images/auto_plot-5.svg" /></p>
+<p>Example 6. The same shape but with more than 12 rows: routes to <code class="docutils literal notranslate"><span class="pre">area_stacked()</span></code> instead.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">eng</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">),</span><span class="w"> </span><span class="n">sales</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">wide_budget</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;engineering&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">eng</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">       </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">sales</span><span class="p">))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q&quot;</span><span class="p">))));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wide_budget</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Still all-nonnegative and labeled, but now 20 rows (<code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">12</span></code>) — equivalent to
+<code class="docutils literal notranslate"><span class="pre">wide_budget.plot().area_stacked({&quot;engineering&quot;,</span> <span class="pre">&quot;sales&quot;})</span></code>.</p>
+<p><img alt="Output of Example 6" src="../../_images/auto_plot-6.svg" /></p>
+<p>Example 7. Three numeric features, no labeled axis, more than 24 rows: routes to a
+multi-feature <code class="docutils literal notranslate"><span class="pre">line()</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">a</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
+<span class="w">  </span><span class="n">b</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.5</span><span class="p">);</span>
+<span class="w">  </span><span class="n">c</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">-0.5</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">a</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">b</span><span class="p">))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">c</span><span class="p">))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>No row labels (default numeric index) but 30 rows (<code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">24</span></code>) makes <code class="docutils literal notranslate"><span class="pre">prefer_index_plot()</span></code> true
+regardless; 3 features fits within rule 4’s <code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">4</span></code> cap — equivalent to
+<code class="docutils literal notranslate"><span class="pre">series.plot().line({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;c&quot;})</span></code>.</p>
+<p><img alt="Output of Example 7" src="../../_images/auto_plot-7.svg" /></p>
+<p>Example 8. Five numeric features, few rows, no other rule matching first: routes to a
+scatter-matrix.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m4&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m5&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">14.0</span><span class="p">,</span><span class="w"> </span><span class="mf">11.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>5 features (at rule 5’s <code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">5</span></code> boundary) and 5 rows (well within <code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">256</span></code>) — equivalent to
+<code class="docutils literal notranslate"><span class="pre">metrics.plot().scatter_matrix({&quot;m1&quot;,</span> <span class="pre">&quot;m2&quot;,</span> <span class="pre">&quot;m3&quot;,</span> <span class="pre">&quot;m4&quot;,</span> <span class="pre">&quot;m5&quot;})</span></code>. (<code class="docutils literal notranslate"><span class="pre">m4</span></code> contains negative
+values, which would have disqualified rules 3 and 4 anyway even at a smaller feature count.)</p>
+<p><img alt="Output of Example 8" src="../../_images/auto_plot-8.svg" /></p>
+<p>Example 9. More than five numeric features: routes to a correlation heatmap.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">wide_metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m1&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m4&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m5&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;m6&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wide_metrics</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;wide_metrics_auto.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>6 features exceeds rule 5’s <code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">5</span></code> cap, so routing falls all the way to the final rule —
+equivalent to <code class="docutils literal notranslate"><span class="pre">wide_metrics.plot().corr_heatmap({&quot;m1&quot;,</span> <span class="pre">...,</span> <span class="pre">&quot;m6&quot;})</span></code>.</p>
+<p><img alt="Output of Example 9" src="../../_images/auto_plot-9.svg" /></p>
+<p>Example 10. A non-numeric feature name in an explicit request throws, same as
+<a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;East&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">auto_plot</span><span class="p">({</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::plot().auto_plot: feature &#39;region&#39; is not a numeric Series
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every branch delegates to another method on this same accessor — <code class="docutils literal notranslate"><span class="pre">auto_plot()</span></code> performs
+no rendering of its own.</p></li>
+<li><p>Rule 2 (hue scatter) only fires when <code class="docutils literal notranslate"><span class="pre">features</span></code> is left at its empty default; an explicit
+two-feature request skips straight past it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AutoPlotOptions</span></code> is currently empty and has no effect.</p></li>
+<li><p>Empty (default) <code class="docutils literal notranslate"><span class="pre">features</span></code> infers every numeric feature — see <a class="reference internal" href="box.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">box()</span></code></span></a>’s
+important callout for the exact rule.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="brief.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::brief</span></code></span></a>: a fixed textual summary instead of an
+automatically chosen chart type.</p></li>
+<li><p>Every method named in the decision tree above (<code class="docutils literal notranslate"><span class="pre">bar</span></code>, <code class="docutils literal notranslate"><span class="pre">line</span></code>, <code class="docutils literal notranslate"><span class="pre">scatter</span></code>, <code class="docutils literal notranslate"><span class="pre">bar_stacked</span></code>,
+<code class="docutils literal notranslate"><span class="pre">area_stacked</span></code>, <code class="docutils literal notranslate"><span class="pre">scatter_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">corr_heatmap</span></code>): the actual chart-drawing methods
+<code class="docutils literal notranslate"><span class="pre">auto_plot()</span></code> delegates to.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="area_stacked.html">
+    <span class="label">Previous</span>
+    <span class="title">area_stacked</span>
+  </a>
+  <a class="next-link" href="bar.html">
+    <span class="label">Next</span>
+    <span class="title">bar</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="area_stacked.html" title="previous chapter">DataFramePlotAccessor::area_stacked</a></li>
+      <li>Next: <a href="bar.html" title="next chapter">DataFramePlotAccessor::bar</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-plot/auto_plot.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

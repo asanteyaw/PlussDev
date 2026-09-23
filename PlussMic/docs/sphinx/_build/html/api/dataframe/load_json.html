@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::load_json &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::load_parquet" href="load_parquet.html" />
+    <link rel="prev" title="DataFrame::load_excel" href="load_excel.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d94571dd355b -->
+<section id="dataframe-load-json">
+<h1>DataFrame::load_json<a class="headerlink" href="#dataframe-load-json" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">load_json</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filepath</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">static</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">load_json</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filepath</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">Config</span><span class="o">&amp;</span><span class="w"> </span><span class="n">config</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">static</span><span class="w"> </span><span class="n">DataFrame</span><span class="w"> </span><span class="n">load_json</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">filepath</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">loader</span><span class="o">::</span><span class="n">ConfigEntry</span><span class="o">&gt;</span><span class="w"> </span><span class="n">config_entries</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s static constructor for JSON files. The parser auto-detects one of two
+layouts based on the JSON root’s shape:</p>
+<ul class="simple">
+<li><p><strong>Records</strong> (a JSON array of objects, one object per row) — the more common shape,
+and the one <a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></span></a> writes by default.</p></li>
+<li><p><strong>Split</strong> (a single JSON object with a <code class="docutils literal notranslate"><span class="pre">&quot;columns&quot;</span></code> array and a parallel <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code>
+array of row arrays) — a more compact alternative layout, also produced by
+<a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">save_json()</span></code></span></a> when asked for <code class="docutils literal notranslate"><span class="pre">orient</span> <span class="pre">=</span> <span class="pre">&quot;split&quot;</span></code>.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Values are re-inferred the same way load_csv() infers them
+Even though JSON natively distinguishes numbers, strings, and booleans, <code class="docutils literal notranslate"><span class="pre">load_json()</span></code>
+converts every cell to its string form internally and re-runs it through the exact
+same numeric/text type-inference engine <a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv()</span></code></span></a> uses — it does
+not trust JSON’s own value tags directly. In practice this rarely matters (a JSON
+number reads back as a <code class="docutils literal notranslate"><span class="pre">Series</span></code>, a JSON string as a <code class="docutils literal notranslate"><span class="pre">Note</span></code>), but it means the same
+edge cases that affect <code class="docutils literal notranslate"><span class="pre">load_csv()</span></code>’s inference (a column that’s “mostly numbers plus
+one stray string” falling back to <code class="docutils literal notranslate"><span class="pre">Note</span></code>) apply here too, even though the source file
+had unambiguous per-value JSON types.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>filepath</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>Path to the JSON file to read.</p>
+<p><strong>config</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::loader::Config&amp;</span></code>) / <strong>config_entries</strong>
+(<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;pluss::loader::ConfigEntry&gt;</span></code>)</p>
+<p>A reusable or inline settings scribble, recognizing the same general-purpose keys
+(<code class="docutils literal notranslate"><span class="pre">ncases</span></code>, <code class="docutils literal notranslate"><span class="pre">usefeats</span></code>, <code class="docutils literal notranslate"><span class="pre">case</span></code>, and so on) as <a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Config</span></code>
+overload — the layout (records vs. split) is detected automatically from the file
+itself and is not a setting you choose.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new, fully typed frame, with the same numeric/text type inference behavior as
+<a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv()</span></code></span></a>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Load a records-style JSON file (an array of row objects).</p>
+<p>Given <code class="docutils literal notranslate"><span class="pre">orders.json</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;city&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;city&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;city&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_json</span><span class="p">(</span><span class="s">&quot;orders.json&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | id    city    units
+--------------------------
+0    | 101   Accra   2    
+1    | 102   Tema    1    
+2    | 103   Kumasi  4    
+--------------------------
+[3 cs x 3 feat]
+</pre></div>
+</div>
+<p>Example 2. Load a split-style JSON file (columns and row-data kept separately).</p>
+<p>Given <code class="docutils literal notranslate"><span class="pre">orders_split.json</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;columns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;units&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;data&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span>
+<span class="w">    </span><span class="p">[</span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">]</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">orders_split</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_json</span><span class="p">(</span><span class="s">&quot;orders_split.json&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders_split</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | id    city    units
+--------------------------
+0    | 101   Accra   2    
+1    | 102   Tema    1    
+2    | 103   Kumasi  4    
+--------------------------
+[3 cs x 3 feat]
+</pre></div>
+</div>
+<p>Both files produce the identical frame — <code class="docutils literal notranslate"><span class="pre">load_json()</span></code> detects which of the two
+layouts it’s looking at from the JSON root’s shape (an array means records; an object
+with <code class="docutils literal notranslate"><span class="pre">&quot;columns&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> means split) rather than requiring you to specify which one
+the file uses.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Type inference happens the same way it does for <a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">load_csv()</span></code></span></a> — from
+each column’s string-converted values, not from JSON’s own type tags. See the
+caution above.</p></li>
+<li><p>A JSON root that is neither an array of objects nor a <code class="docutils literal notranslate"><span class="pre">{&quot;columns&quot;,</span> <span class="pre">&quot;data&quot;}</span></code> object
+fails to parse.</p></li>
+<li><p>Empty/<code class="docutils literal notranslate"><span class="pre">null</span></code> JSON values become missing cells, matching <code class="docutils literal notranslate"><span class="pre">load_csv()</span></code>’s empty-cell
+behavior.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="save_json.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::save_json</span></code></span></a>: the write-side counterpart, including the
+<code class="docutils literal notranslate"><span class="pre">orient</span></code> setting that controls which of these two layouts (plus a third,
+column-oriented layout) gets written.</p></li>
+<li><p><a class="reference internal" href="load_csv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::load_csv</span></code></span></a>: the fuller explanation of the shared
+type-inference engine.</p></li>
+<li><p><a class="reference internal" href="load.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::load</span></code></span></a>: the format-switched entry point that can dispatch to
+<code class="docutils literal notranslate"><span class="pre">load_json()</span></code> via <code class="docutils literal notranslate"><span class="pre">source_type</span> <span class="pre">=</span> <span class="pre">&quot;json&quot;</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="load_excel.html">
+    <span class="label">Previous</span>
+    <span class="title">load_excel</span>
+  </a>
+  <a class="next-link" href="load_parquet.html">
+    <span class="label">Next</span>
+    <span class="title">load_parquet</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="load_excel.html" title="previous chapter">DataFrame::load_excel</a></li>
+      <li>Next: <a href="load_parquet.html" title="next chapter">DataFrame::load_parquet</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/load_json.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

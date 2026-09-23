@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ThreadPlotAccessor::line &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ThreadPlotAccessor::pie" href="pie.html" />
+    <link rel="prev" title="ThreadPlotAccessor::lag" href="lag.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2ed1afb4aef7 -->
+<section id="threadplotaccessor-line">
+<h1>ThreadPlotAccessor::line<a class="headerlink" href="#threadplotaccessor-line" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_plot_api_reference.html"><span class="doc std std-doc">Back to ThreadPlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">ThreadPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">ThreadPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+<span class="n">ThreadPlotAccessor</span><span class="o">::</span><span class="n">line</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">LinePlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws a single line trace of the bound thread’s own values, against either a plain case
+index (no <code class="docutils literal notranslate"><span class="pre">x</span></code> given) or an explicit companion <code class="docutils literal notranslate"><span class="pre">Thread</span></code> used as the x-axis. This is the
+single-series specialization of
+<a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>: internally, <code class="docutils literal notranslate"><span class="pre">line()</span></code>
+wraps the bound thread (and, if given, <code class="docutils literal notranslate"><span class="pre">x</span></code>) into a one- or two-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and calls
+straight into that method — every field of <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code> behaves identically to its 2D
+counterpart, and this page’s callouts on naming and row-label handling apply to every other
+method on this accessor too, not just <code class="docutils literal notranslate"><span class="pre">line()</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>How a wrapped Thread becomes a named column and inherits row labels
+Every method on this accessor that takes one or more <code class="docutils literal notranslate"><span class="pre">Thread</span></code> arguments builds a small
+internal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> before delegating. Each thread becomes one column, named after that
+thread’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one (set via <code class="docutils literal notranslate"><span class="pre">name(...)</span></code>, checked via <code class="docutils literal notranslate"><span class="pre">named()</span></code>); otherwise a
+generic fallback name is used — <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> for the bound thread itself, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> for a
+companion x-axis thread (other methods on this accessor use <code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;label&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;group&quot;</span></code> for their own second-thread arguments, documented on their own pages). Row
+(case) labels for the resulting frame come from whichever thread involved actually has
+them: the bound value thread is checked first, then the companion thread — the first one
+found wins, and if neither has row labels the frame falls back to a plain numeric case
+index, exactly like a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> built without explicit row labels.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>, optional)
+A companion thread used as the x-axis. Must be the same size as the bound thread — a
+mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>. Omitted means the
+x-axis falls back to the resulting frame’s own row labels (or a plain case index — see
+the important callout above), exactly like
+<a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a> with no <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>
+and no <code class="docutils literal notranslate"><span class="pre">default_x_feature</span></code> set.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>)
+The identical struct documented on
+<a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>
+(<code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">line_width</span></code>, <code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>) — see that page for each field’s
+meaning. <code class="docutils literal notranslate"><span class="pre">align</span></code> is doubly inert at this layer: <code class="docutils literal notranslate"><span class="pre">x</span></code>’s own size check above
+(<code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>) throws unconditionally on a mismatch, before
+any <code class="docutils literal notranslate"><span class="pre">align</span></code>-aware reconciliation could ever run.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing a single, unlabeled (no-legend) line trace of the
+bound thread’s values.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. No companion thread: the x-axis falls back to a plain case index.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}));</span>
+<span class="n">revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;revenue&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">revenue</span></code> has no row labels of its own, so the wrapped one-column frame falls back to a
+plain <code class="docutils literal notranslate"><span class="pre">0..3</span></code> case index; the y-axis is labeled <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code>, taken from the thread’s own
+<code class="docutils literal notranslate"><span class="pre">name()</span></code>.</p>
+<p><img alt="Output of Example 1" src="../../_images/line-15.svg" /></p>
+<p>Example 2. An explicit companion thread as the x-axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">}));</span>
+<span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">month</span><span class="p">.</span><span class="n">name</span><span class="p">(</span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">month</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The wrapped frame now has two columns, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code> (each named from its own
+thread’s <code class="docutils literal notranslate"><span class="pre">name()</span></code>), and the line is drawn against <code class="docutils literal notranslate"><span class="pre">month</span></code>’s four categorical
+positions instead of a numeric case index.</p>
+<p><img alt="Output of Example 2" src="../../_images/line-23.svg" /></p>
+<p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity and the y-axis fit.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">LinePlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.85</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">y_limit_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">LimitMethod</span><span class="o">::</span><span class="n">Tight</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 3" src="../../_images/line-34.svg" /></p>
+<p>Example 4. Row labels are inherited from whichever operand actually has them — here, from
+<code class="docutils literal notranslate"><span class="pre">month</span></code> since the bound <code class="docutils literal notranslate"><span class="pre">revenue</span></code> thread itself has none.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))</span>
+<span class="w">                            </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">();</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">labeled_revenue</span></code> carries its own row labels (<code class="docutils literal notranslate"><span class="pre">&quot;Q1&quot;</span></code>..<code class="docutils literal notranslate"><span class="pre">&quot;Q4&quot;</span></code>), so the wrapped frame’s case
+axis uses those directly, even with no companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread supplied.</p>
+<p><img alt="Output of Example 4" src="../../_images/line-44.svg" /></p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Wraps the bound thread (and any companion thread) into a small internal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> and
+delegates to <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a> — see the
+important callout above for exactly how naming and row-label inheritance work.</p></li>
+<li><p>A companion <code class="docutils literal notranslate"><span class="pre">x</span></code> thread must match the bound thread’s size, or the call throws.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code> behaves identically to its 2D counterpart.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>, never printed as text — see
+<a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>’s important callout for
+how to view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>: the method this
+delegates to, and the canonical explanation of <code class="docutils literal notranslate"><span class="pre">Studio</span></code>’s view/save mechanics.</p></li>
+<li><p><a class="reference internal" href="step.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::step</span></code></span></a> / <a class="reference internal" href="area.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">area</span></code></span></a>: the same shape, drawn as a
+step function or a filled area instead of a straight line.</p></li>
+<li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::scatter</span></code></span></a>: unconnected points against a required
+companion thread, instead of a connected line against an optional one.</p></li>
+<li><p><a class="reference internal" href="../thread/plot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::plot</span></code></span></a>: how to enter this accessor in the first place.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lag.html">
+    <span class="label">Previous</span>
+    <span class="title">lag</span>
+  </a>
+  <a class="next-link" href="pie.html">
+    <span class="label">Next</span>
+    <span class="title">pie</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+  <li><a href="../../thread_plot_api_reference.html">ThreadPlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="lag.html" title="previous chapter">ThreadPlotAccessor::lag</a></li>
+      <li>Next: <a href="pie.html" title="next chapter">ThreadPlotAccessor::pie</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread-plot/line.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

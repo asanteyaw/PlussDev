@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NoteTexAccessor::text_only &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="NoteTexAccessor::to_html" href="to_html.html" />
+    <link rel="prev" title="NoteTexAccessor::tabular_blocks" href="tabular_blocks.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="notetexaccessor-text-only">
+<h1>NoteTexAccessor::text_only<a class="headerlink" href="#notetexaccessor-text-only" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../note_tex_accessor_api_reference.html"><span class="doc std std-doc">Back to Note TeX Accessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">NoteTexAccessor</span><span class="o">::</span><span class="n">text_only</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="project-each-cell-onto-its-prose-dropping-math">
+<h2>Project Each Cell Onto Its Prose, Dropping Math<a class="headerlink" href="#project-each-cell-onto-its-prose-dropping-math" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">text_only()</span></code> removes every complete math region from a Text cell —
+recognizing <code class="docutils literal notranslate"><span class="pre">$...$</span></code>, <code class="docutils literal notranslate"><span class="pre">$$...$$</span></code>, <code class="docutils literal notranslate"><span class="pre">\(...\)</span></code>, and <code class="docutils literal notranslate"><span class="pre">\[...\]</span></code> the same way
+<a class="reference internal" href="math_only.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">math_only</span></code></span></a> does — and keeps everything else, collapsing
+the resulting whitespace gaps to one ASCII space and trimming the cell. It
+is the exact prose-preserving mirror of <code class="docutils literal notranslate"><span class="pre">math_only</span></code>, which keeps the
+formulae and drops the prose; the two together partition a cell’s visible
+content into its two halves.</p>
+<p>This method is a shape-preserving projection, not a ragged extractor. One
+input cell always produces one output cell. A cell that is entirely math
+becomes the empty string, which preserves its location in a matrix or
+higher-rank Note. An unmatched opener — a <code class="docutils literal notranslate"><span class="pre">$</span></code> with no closing <code class="docutils literal notranslate"><span class="pre">$</span></code> before
+the cell ends — is not treated as a region boundary, so the unmatched
+dollar and the text after it are kept as ordinary prose.</p>
+<p>Delimiter recognition is shared with the math extractors: an escaped dollar
+(<code class="docutils literal notranslate"><span class="pre">\$</span></code>) is literal prose, not an opener; <code class="docutils literal notranslate"><span class="pre">$$</span></code> is recognized before a plain
+<code class="docutils literal notranslate"><span class="pre">$</span></code>; and a single-dollar region cannot cross a physical newline. Content
+outside any math region — including any TeX commands there — is retained
+exactly, byte for byte aside from whitespace collapsing; <code class="docutils literal notranslate"><span class="pre">text_only()</span></code> does
+not itself strip commands or comments.</p>
+<p>The receiver is not mutated. A new Text Note with the same rank and shape is
+allocated, including for scalar and empty-shaped inputs. Undefined input
+stays undefined, and every defined non-Text dtype is rejected before
+transformation.</p>
+</section>
+<section id="example-1-all-four-delimiter-forms-and-an-unmatched-opener">
+<h2>Example 1: All Four Delimiter Forms And An Unmatched Opener<a class="headerlink" href="#example-1-all-four-delimiter-forms-and-an-unmatched-opener" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span>
+<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">Before $x^2$ after</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">A \(y+1\) B \[z\] C</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">price \$5 and $unfinished</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">source</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">text_only</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[4], dim=1, numel=4, encoding=utf8)
+[&quot;Before after&quot;, &quot;A B C&quot;, &quot;price \\ unfinished&quot;, &quot;&quot;]
+</pre></div>
+</div>
+<p>The first two cells lose their math and keep the surrounding prose, with
+the gap it left collapsed to one space. In the third cell, <code class="docutils literal notranslate"><span class="pre">\$5</span></code> is literal
+prose (<code class="docutils literal notranslate"><span class="pre">\</span></code> survives — see the note below), and the unmatched <code class="docutils literal notranslate"><span class="pre">$unfinished</span></code>
+is never closed, so it is never treated as math and its text is kept as-is.
+The empty cell stays empty.</p>
+<p><code class="docutils literal notranslate"><span class="pre">\$</span></code> unescapes to a bare <code class="docutils literal notranslate"><span class="pre">\</span></code> here because <code class="docutils literal notranslate"><span class="pre">text_only()</span></code> copies retained
+prose byte for byte without re-escaping; only the <code class="docutils literal notranslate"><span class="pre">$</span></code> that made the pair a
+literal dollar sign is consumed by the delimiter scanner, leaving the
+backslash behind exactly as read.</p>
+</section>
+</section>
+<section id="example-2-idempotent-on-already-prose-only-input">
+<h2>Example 2: Idempotent On Already-Prose-Only Input<a class="headerlink" href="#example-2-idempotent-on-already-prose-only-input" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">prose_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">source</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">text_only</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">prose_only</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">text_only</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">prose_only</span><span class="p">).</span><span class="n">all</span><span class="p">().</span><span class="n">bool_item</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
+</pre></div>
+</div>
+<p>Once every math region is gone, a second call has nothing left to remove.</p>
+</section>
+</section>
+<section id="example-3-a-2-d-grid-shape-preserved">
+<h2>Example 3: A 2-D Grid, Shape Preserved<a class="headerlink" href="#example-3-a-2-d-grid-shape-preserved" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span><span class="s">&quot;left $x$&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;$y$ right&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;plain&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;$$z$$&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">text_only</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  [&quot;left&quot;, &quot;right&quot;], 
+  [&quot;plain&quot;, &quot;&quot;]
+]
+</pre></div>
+</div>
+<p>The fully-math last cell reduces to the empty string in place, keeping the
+grid’s shape intact.</p>
+</section>
+</section>
+<section id="example-4-undefined-and-non-text-input">
+<h2>Example 4: Undefined And Non-Text Input<a class="headerlink" href="#example-4-undefined-and-non-text-input" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">::</span><span class="n">undefined</span><span class="p">().</span><span class="n">tex</span><span class="p">().</span><span class="n">text_only</span><span class="p">().</span><span class="n">defined</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">note</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}).</span><span class="n">tex</span><span class="p">().</span><span class="n">text_only</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Error</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;text only Int64: rejected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+text only Int64: rejected
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="math_only.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">math_only</span></code></span></a>: the exact prose-dropping mirror of this
+method.</p></li>
+<li><p><a class="reference internal" href="math_blocks.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">math_blocks</span></code></span></a>: keep every math region as a separate
+ragged token instead of discarding it.</p></li>
+<li><p><a class="reference internal" href="to_text.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_text</span></code></span></a>: a broader prose extraction that also strips
+commands and comments, not just math regions.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tabular_blocks.html"><span class="label">Previous</span><span class="title">tabular_blocks</span></a>
+  <a class="next-link" href="to_html.html"><span class="label">Next</span><span class="title">to_html</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
+  <li><a href="../../note_tex_accessor_api_reference.html">Note TeX Accessor API Reference</a><ul>
+      <li>Previous: <a href="tabular_blocks.html" title="previous chapter">NoteTexAccessor::tabular_blocks</a></li>
+      <li>Next: <a href="to_html.html" title="next chapter">NoteTexAccessor::to_html</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/note-tex/text_only.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

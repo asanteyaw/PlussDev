@@ -177,9 +177,9 @@ bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {
   log.line("log_file=" + log.path().string());
   log.line(std::string("cuda_ready=") + (pluss::cuda::is_ready() ? "true" : "false"));
   log.line(std::string("cudnn_ready=") + (pluss::cuda::cudnn_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_rnn_ready=") + (pluss::cudnn_rnn_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_rnn_enabled=") + (pluss::cudnn_rnn_enabled() ? "true" : "false"));
-  log.line(std::string("cudnn_rnn_strict=") + (pluss::cudnn_rnn_strict() ? "true" : "false"));
+  log.line(std::string("cudnn_rnn_ready=") + (pluss::nn::cudnn_rnn_ready() ? "true" : "false"));
+  log.line(std::string("cudnn_rnn_enabled=") + (pluss::nn::cudnn_rnn_enabled() ? "true" : "false"));
+  log.line(std::string("cudnn_rnn_strict=") + (pluss::nn::cudnn_rnn_strict() ? "true" : "false"));
   log.line("env.PLUSS_CUDA_NATIVE_CUDNN_RNN=" + env_or("PLUSS_CUDA_NATIVE_CUDNN_RNN"));
   log.line("env.PLUSS_CUDA_NATIVE_CUDNN_RNN_STRICT=" + env_or("PLUSS_CUDA_NATIVE_CUDNN_RNN_STRICT"));
   log.line("cuda.device_count=" + std::to_string(pluss::cuda::device_count()));
@@ -188,7 +188,7 @@ bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {
   log.line(std::string("cuda.device_name=") + pluss::cuda::primary_device_name());
   log.line(std::string("cudnn_error=") + pluss::cuda::cudnn_error());
 
-  if (!pluss::cuda::is_ready() || !pluss::cuda::cudnn_ready() || !pluss::cudnn_rnn_ready()) {
+  if (!pluss::cuda::is_ready() || !pluss::cuda::cudnn_ready() || !pluss::nn::cudnn_rnn_ready()) {
     log.line("SKIP: CUDA/cuDNN/RNN route not ready on this host. Test marked pass-by-skip.");
     return true;
   }
@@ -522,8 +522,8 @@ bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {
       }
 
       if (tc.kind == Kind::RNN) {
-        const auto [y_cpu, h_cpu] = pluss::rnn(x_cpu, h0_cpu, w_cpu, run_cfg);
-        const auto [y_gpu, h_gpu] = pluss::rnn(x_gpu, h0_gpu, w_gpu, run_cfg);
+        const auto [y_cpu, h_cpu] = pluss::nn::rnn(x_cpu, h0_cpu, w_cpu, run_cfg);
+        const auto [y_gpu, h_gpu] = pluss::nn::rnn(x_gpu, h0_gpu, w_gpu, run_cfg);
         if (!expect_func_output(y_cpu) || !expect_func_output(y_gpu) || h_cpu.sizes()[0] != stacked) {
           log.line("ERROR shape mismatch in CPU RNN reference case " + tc.name);
           if (err) *err << "shape mismatch in RNN reference " << tc.name << '\n';
@@ -547,8 +547,8 @@ bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {
           return false;
         }
       } else if (tc.kind == Kind::GRU) {
-        const auto [y_cpu, h_cpu] = pluss::gru(x_cpu, h0_cpu, w_cpu, run_cfg);
-        const auto [y_gpu, h_gpu] = pluss::gru(x_gpu, h0_gpu, w_gpu, run_cfg);
+        const auto [y_cpu, h_cpu] = pluss::nn::gru(x_cpu, h0_cpu, w_cpu, run_cfg);
+        const auto [y_gpu, h_gpu] = pluss::nn::gru(x_gpu, h0_gpu, w_gpu, run_cfg);
         if (!expect_func_output(y_cpu) || !expect_func_output(y_gpu) || h_cpu.sizes()[0] != stacked) {
           log.line("ERROR shape mismatch in CPU GRU reference case " + tc.name);
           if (err) *err << "shape mismatch in GRU reference " << tc.name << '\n';
@@ -572,8 +572,8 @@ bool run_rigorous_cudnn_rnn_parity(std::ostream* err = nullptr) {
           return false;
         }
       } else {
-        const auto [y_cpu, state_cpu] = pluss::lstm(x_cpu, h0_cpu, c0_cpu, w_cpu, run_cfg);
-        const auto [y_gpu, state_gpu] = pluss::lstm(x_gpu, h0_gpu, c0_gpu, w_gpu, run_cfg);
+        const auto [y_cpu, state_cpu] = pluss::nn::lstm(x_cpu, h0_cpu, c0_cpu, w_cpu, run_cfg);
+        const auto [y_gpu, state_gpu] = pluss::nn::lstm(x_gpu, h0_gpu, c0_gpu, w_gpu, run_cfg);
         if (!expect_func_output(y_cpu) || !expect_func_output(y_gpu) ||
             std::get<0>(state_cpu).sizes()[0] != stacked || std::get<1>(state_cpu).sizes()[0] != stacked) {
           log.line("ERROR shape mismatch in CPU LSTM reference case " + tc.name);

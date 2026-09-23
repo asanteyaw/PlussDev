@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::median &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::min" href="min.html" />
+    <link rel="prev" title="DataFrame::mean" href="mean.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8bd49cba3900 -->
+<section id="dataframe-median">
+<h1>DataFrame::median<a class="headerlink" href="#dataframe-median" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">median</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skipnull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reduces every numeric feature to its median, returning one <code class="docutils literal notranslate"><span class="pre">Thread</span></code> whose entries line
+up with the frame’s numeric feature names — the same shape <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> and
+<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a> return. Non-numeric features are skipped entirely rather than coerced
+into a statistic that wouldn’t mean anything.</p>
+<p>Unlike <code class="docutils literal notranslate"><span class="pre">mean()</span></code>, the median is not pulled toward an unusually large or small value in the
+data — it is the middle observation once the feature’s values are sorted (or the average
+of the two middle observations, for a feature with an even number of observed values).
+That makes it a useful cross-check against <code class="docutils literal notranslate"><span class="pre">mean()</span></code> on a feature you suspect has extreme
+values on one side, such as <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> in the example below.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>, default <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code>)</p>
+<p>Reduction direction. <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> (the default) reduces down each feature’s cases,
+producing one median per feature. <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> reduces across each row’s features
+instead, producing one value per case.</p>
+<p><strong>skipnull</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Controls how a missing value affects that feature’s result:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default): missing values are excluded before sorting, so the median is
+computed only from the observed values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: a single missing value in a feature poisons that feature’s result, which comes
+back <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p></li>
+</ul>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+One entry per participating numeric feature, labeled by feature name, holding that
+feature’s median.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Compute the median of every numeric feature, skipping missing values (the
+default).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="mi">103</span><span class="p">,</span><span class="w"> </span><span class="mi">104</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">,</span><span class="w"> </span><span class="mi">106</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">320.0</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">()}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;discount&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">middles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">median</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">middles</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  103.5
+     units  2.5
+unit_price  320
+  discount  0.08
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">unit_price</span></code>’s median (<code class="docutils literal notranslate"><span class="pre">320</span></code>) sits much closer to the bulk of its values (<code class="docutils literal notranslate"><span class="pre">45.5</span></code>, <code class="docutils literal notranslate"><span class="pre">42.0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">320.0</span></code>) than its mean of <code class="docutils literal notranslate"><span class="pre">551.5</span></code> (see <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>’s Example 1) does — the two
+large values <code class="docutils literal notranslate"><span class="pre">1200.0</span></code> and <code class="docutils literal notranslate"><span class="pre">1150.0</span></code> pull the mean upward but only shift the median by one
+sorted position. <code class="docutils literal notranslate"><span class="pre">units</span></code> has an even count of observed values (<code class="docutils literal notranslate"><span class="pre">6</span></code>), so its median
+(<code class="docutils literal notranslate"><span class="pre">2.5</span></code>) is the average of the two middle sorted values (<code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code>), not one of the
+original observations.</p>
+<p>Example 2. Disable null-skipping to see a missing value propagate.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">middles_strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">median</span><span class="p">(</span><span class="n">Axis</span><span class="o">::</span><span class="n">Case</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">middles_strict</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  order_id  103.5
+     units  2.5
+unit_price  NULL
+  discount  NULL
+ptype: Series
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">skipnull</span> <span class="pre">=</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">unit_price</span></code> and <code class="docutils literal notranslate"><span class="pre">discount</span></code> — the two features with a missing
+value — come back <code class="docutils literal notranslate"><span class="pre">NULL</span></code> entirely rather than a median computed from a reduced set of
+observations. <code class="docutils literal notranslate"><span class="pre">order_id</span></code> and <code class="docutils literal notranslate"><span class="pre">units</span></code>, with no missing values, are unaffected either way.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">median()</span></code>’s result is labeled by feature name and prints like a small labeled
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>, not like a row sliced from the source frame.</p></li>
+<li><p>Non-numeric features never appear in the result; they are neither sorted as an error
+nor silently coerced.</p></li>
+<li><p>For a feature with an even number of observed values, the median is the arithmetic
+average of the two central sorted values — it will not necessarily equal any actual
+observation in the data, the same way <code class="docutils literal notranslate"><span class="pre">units</span></code>’ median of <code class="docutils literal notranslate"><span class="pre">2.5</span></code> does not appear in its
+source values <code class="docutils literal notranslate"><span class="pre">{2,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">2}</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">median()</span></code> is a special case of <a class="reference internal" href="percentiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">percentiles()</span></code></span></a> at the <code class="docutils literal notranslate"><span class="pre">0.5</span></code> point;
+reach for <code class="docutils literal notranslate"><span class="pre">percentiles()</span></code> directly when you also need the <code class="docutils literal notranslate"><span class="pre">25%</span></code>/<code class="docutils literal notranslate"><span class="pre">75%</span></code> quartiles in the
+same call.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean</span></code></span></a>: the corresponding average, more sensitive to extreme
+values than the median.</p></li>
+<li><p><a class="reference internal" href="percentiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::percentiles</span></code></span></a>: the median generalized to any quantile, not
+just the midpoint.</p></li>
+<li><p><a class="reference internal" href="describe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::describe</span></code></span></a>: reports the median as its <code class="docutils literal notranslate"><span class="pre">50%</span></code> row alongside
+several other statistics in one call.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="mean.html">
+    <span class="label">Previous</span>
+    <span class="title">mean</span>
+  </a>
+  <a class="next-link" href="min.html">
+    <span class="label">Next</span>
+    <span class="title">min</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="mean.html" title="previous chapter">DataFrame::mean</a></li>
+      <li>Next: <a href="min.html" title="next chapter">DataFrame::min</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/median.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

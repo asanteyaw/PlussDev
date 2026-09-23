@@ -16,6 +16,34 @@ struct RuntimeContext {
   bool ready{false};
   id<MTLDevice> device{nil};
   id<MTLCommandQueue> queue{nil};
+  // CommitAdaptive's async dispatch (skip waitUntilCompleted whenever a
+  // command buffer's work_items exceeds adaptive_wait_work_items) used to
+  // race against the buffer pool: a Series destroyed right after a later op
+  // read it as an input only waited for ITS OWN producing command buffer
+  // before its MPS buffer went back to the pool -- not for any LATER
+  // command buffer that read it -- so the pool could hand that buffer to a
+  // new, unrelated allocation while the earlier op's kernel was still
+  // reading it on the GPU. Buffers are MTLResourceStorageModeShared (plain
+  // host-visible memory), so that new allocation's CPU-side memcpy into the
+  // "free" buffer raced the still-executing GPU kernel writing the same
+  // physical memory -- invisible to Metal's own hazard tracking, since that
+  // only orders GPU command execution, never raw CPU pointer access.
+  // Confirmed live and reproducibly: a broadcast add computed a+a*b instead
+  // of a+b for operands above the 4096-element threshold, and a longer
+  // chained NGARCH-style recursion diverged from its CPU result entirely
+  // once per-timestep tensors crossed the same threshold.
+  //
+  // Fixed at the root in BufferCache.mm's release_entry_buffer_(): before
+  // any buffer goes back into the pool for reuse, wait_for_all_submitted_
+  // work() (MPSRuntime.mm) drains every command buffer submitted so far on
+  // the shared queue. A single MTLCommandQueue completes command buffers in
+  // commit order, so waiting on the single most-recently-submitted one
+  // proves everything earlier -- including any op that read this buffer as
+  // an input -- has also finished; no per-buffer read bookkeeping needed.
+  // Verified against both reproductions above with PLUSS_MPS_SYNC_MODE=
+  // adaptive forced (i.e. with this default's safety net entirely absent)
+  // and the full regression suite, zero failures. CommitAdaptive is safe to
+  // default to again.
   SyncMode mode{SyncMode::CommitAdaptive};
   std::int64_t adaptive_wait_work_items{4096};
   std::string error{};
@@ -35,6 +63,7 @@ bool ieq_(const char* a, const char* b) noexcept {
 
 SyncMode parse_sync_mode_env_() noexcept {
   const char* raw = std::getenv("PLUSS_MPS_SYNC_MODE");
+  // Default is CommitAdaptive -- see RuntimeContext::mode's comment.
   if (raw == nullptr || *raw == '\0') return SyncMode::CommitAdaptive;
   if (ieq_(raw, "commit")) return SyncMode::Commit;
   if (ieq_(raw, "wait") || ieq_(raw, "commit_and_wait")) return SyncMode::CommitAndWait;
@@ -75,6 +104,26 @@ RuntimeContext& runtime_ctx_() {
   return ctx;
 }
 
+std::mutex& latest_submitted_mu_() {
+  static std::mutex mu;
+  return mu;
+}
+
+// Strong reference under ARC: assigning here keeps the command buffer alive
+// as long as it's the latest one, independent of whether the caller that
+// submitted it still holds a reference. Guarded entirely by
+// latest_submitted_mu_(); accessed only through set_latest_submitted_/
+// get_latest_submitted_ below.
+static id<MTLCommandBuffer> g_latest_submitted = nil;
+
+void set_latest_submitted_(id<MTLCommandBuffer> cb) {
+  g_latest_submitted = cb;
+}
+
+id<MTLCommandBuffer> get_latest_submitted_() {
+  return g_latest_submitted;
+}
+
 } // namespace
 
 bool runtime_available() noexcept {
@@ -107,6 +156,11 @@ void submit_command_buffer(void* command_buffer_handle, std::int64_t work_items_
   }
   [cb commit];
 
+  {
+    std::scoped_lock lock(latest_submitted_mu_());
+    set_latest_submitted_(cb);
+  }
+
   const auto& ctx = runtime_ctx_();
   bool should_wait = false;
   switch (ctx.mode) {
@@ -125,6 +179,17 @@ void submit_command_buffer(void* command_buffer_handle, std::int64_t work_items_
       break;
   }
   if (should_wait) {
+    [cb waitUntilCompleted];
+  }
+}
+
+void wait_for_all_submitted_work() noexcept {
+  id<MTLCommandBuffer> cb = nil;
+  {
+    std::scoped_lock lock(latest_submitted_mu_());
+    cb = get_latest_submitted_();
+  }
+  if (cb != nil) {
     [cb waitUntilCompleted];
   }
 }

@@ -121,21 +121,21 @@ bool run_cudnn_rnn_route_checks(std::ostream* err = nullptr) {
     return false;
   }
 
-  const auto [rnn_out, rnn_hn] = pluss::rnn(x, h0, rnn_w, run_cfg);
-  const auto [gru_out, gru_hn] = pluss::gru(x, h0, gru_w, run_cfg);
-  const auto [lstm_out, lstm_state] = pluss::lstm(x, h0, c0, lstm_w, run_cfg);
-  const auto [lstm_proj_out, lstm_proj_state] = pluss::lstm(x, h0_proj, c0_proj, lstm_proj_w, proj_cfg);
+  const auto [rnn_out, rnn_hn] = pluss::nn::rnn(x, h0, rnn_w, run_cfg);
+  const auto [gru_out, gru_hn] = pluss::nn::gru(x, h0, gru_w, run_cfg);
+  const auto [lstm_out, lstm_state] = pluss::nn::lstm(x, h0, c0, lstm_w, run_cfg);
+  const auto [lstm_proj_out, lstm_proj_state] = pluss::nn::lstm(x, h0_proj, c0_proj, lstm_proj_w, proj_cfg);
   auto gru_bf_cfg = run_cfg;
   gru_bf_cfg.batch_first = true;
   gru_bf_cfg.bidirectional = false;
   const auto gru_bf_w = make_weights(3, 4, 2, 2, false, cfg, 51ULL);
-  const auto [gru_bf_out, gru_bf_hn] = pluss::gru(x.transpose(0, 1), pluss::series::zeros({2, 3, 2}, cfg), gru_bf_w, gru_bf_cfg);
+  const auto [gru_bf_out, gru_bf_hn] = pluss::nn::gru(x.transpose(0, 1), pluss::series::zeros({2, 3, 2}, cfg), gru_bf_w, gru_bf_cfg);
   auto gru_no_bias_cfg = run_cfg;
   gru_no_bias_cfg.batch_first = false;
   gru_no_bias_cfg.use_bias = false;
   gru_no_bias_cfg.pre_compute_input = false;
   const auto gru_no_bias_w = make_weights(3, 4, 2, 2, true, cfg, 61ULL, 0, false);
-  const auto [gru_no_bias_out, gru_no_bias_hn] = pluss::gru(x, h0, gru_no_bias_w, gru_no_bias_cfg);
+  const auto [gru_no_bias_out, gru_no_bias_hn] = pluss::nn::gru(x, h0, gru_no_bias_w, gru_no_bias_cfg);
 
   if (!has_shape(rnn_out, {5, 3, 4}) || !has_shape(rnn_hn, {4, 3, 2})) {
     if (err) *err << "rnn fallback output shape mismatch\n";

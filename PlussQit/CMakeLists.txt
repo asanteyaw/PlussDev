@@ -636,6 +636,20 @@ if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_EXAMPLES)
   add_executable(plussqit_codem_custom_autodiff_mps_training_demo examples/CodeM/custom_autodiff_mps_training_demo.cpp)
   target_link_libraries(plussqit_codem_custom_autodiff_mps_training_demo PRIVATE PlussQit::CodeM)
 
+  add_executable(plussqit_codem_cuda_add_threshold_demo examples/CodeM/cuda_add_threshold_demo.cpp)
+  target_link_libraries(plussqit_codem_cuda_add_threshold_demo PRIVATE PlussQit::CodeM)
+
+  add_executable(plussqit_codem_cuda_ngarch_batched_demo examples/CodeM/cuda_ngarch_batched_demo.cpp)
+  target_link_libraries(plussqit_codem_cuda_ngarch_batched_demo PRIVATE PlussQit::CodeM)
+
+  if (PLUSS_ENABLE_TORCH)
+    add_executable(plussqit_codem_cuda_torch_cpu_vs_gpu_bench_demo examples/CodeM/cuda_torch_cpu_vs_gpu_bench_demo.cpp)
+    target_link_libraries(plussqit_codem_cuda_torch_cpu_vs_gpu_bench_demo PRIVATE PlussQit::CodeM ${TORCH_LIBRARIES})
+    if (TORCH_CXX_FLAGS)
+      target_compile_options(plussqit_codem_cuda_torch_cpu_vs_gpu_bench_demo PRIVATE ${TORCH_CXX_FLAGS})
+    endif()
+  endif()
+
 endif()
 
 # Close optional CodeM block before defining CodeN.

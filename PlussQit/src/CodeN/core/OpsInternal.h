@@ -266,7 +266,6 @@ Note tex_wrap_inline_math(const Note& x, ::std::string_view delim);
 Note tex_wrap_display_math(const Note& x, ::std::string_view delim);
 Note tex_simplify_fractions(const Note& x);
 Note tex_simplify_roots(const Note& x);
-Note tex_simplify_spacing(const Note& x);
 Note tex_convert_frac_to_slash(const Note& x);
 Note tex_convert_sqrt_to_pow(const Note& x);
 Note tex_convert_pm_to_plusminus(const Note& x);
@@ -284,7 +283,6 @@ Note tex_replace_command(const Note& x, ::std::string_view cmd, ::std::string_vi
 Note tex_to_text(const Note& x, ::std::int64_t mode = 0);
 Note text_to_tex(const Note& x, ::std::int64_t mode = 0);
 Note tex_render(const Note& x, ::std::int64_t mode = 0);
-Note tex_sanitize(const Note& x, ::std::int64_t level = 0);
 Note tex_normalize_newlines(const Note& x);
 Note tex_dedup_blank_lines(const Note& x);
 Note tex_fix_linebreaks(const Note& x);

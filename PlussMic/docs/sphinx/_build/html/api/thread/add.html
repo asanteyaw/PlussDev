@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Thread::add &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Thread::align" href="align.html" />
+    <link rel="prev" title="Thread::abs" href="abs.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 53b236672f13 -->
+<section id="thread-add">
+<h1>Thread::add<a class="headerlink" href="#thread-add" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">add</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">add</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Elementwise addition. The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload adds the same scalar to every value; the
+<code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload adds two threads together <strong>positionally</strong> — element <code class="docutils literal notranslate"><span class="pre">i</span></code> of the
+result is <code class="docutils literal notranslate"><span class="pre">(*this)[i]</span> <span class="pre">+</span> <span class="pre">other[i]</span></code> — and requires both threads to have the same
+length. There is no case-label alignment the way <a class="reference internal" href="../dataframe/add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></span></a>’s
+<code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> overload has; a length mismatch throws rather than padding with
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">add()</span></code> normally requires a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>-backed thread, with one special case:
+two <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) threads support <code class="docutils literal notranslate"><span class="pre">add()</span></code> too, and it means <strong>string
+concatenation</strong>, not addition — <code class="docutils literal notranslate"><span class="pre">&quot;north-&quot;.add(&quot;store&quot;)</span></code> behaves like <code class="docutils literal notranslate"><span class="pre">&quot;north-&quot;</span> <span class="pre">+</span> <span class="pre">&quot;store&quot;</span></code>, not a type error.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>add() is the canonical arithmetic-family reference
+The rest of Thread’s arithmetic methods (<code class="docutils literal notranslate"><span class="pre">sub</span></code>, <code class="docutils literal notranslate"><span class="pre">mul</span></code>, <code class="docutils literal notranslate"><span class="pre">div</span></code>, <code class="docutils literal notranslate"><span class="pre">truediv</span></code>, <code class="docutils literal notranslate"><span class="pre">floordiv</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mod</span></code>, <code class="docutils literal notranslate"><span class="pre">pow</span></code>, and their reflected <code class="docutils literal notranslate"><span class="pre">r</span></code>-prefixed forms) all share this exact overload
+shape, positional-matching rule, and length-mismatch behavior. Their own pages focus
+on what’s different about each operator; this page covers the shared mechanics once.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p>The value(s) to add. For the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload, must be the same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>
+(or a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, for concatenation).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the elementwise sum (or, for two
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> threads, the elementwise concatenation).</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Add a scalar to every value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">prices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="mf">5.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  15
+1  25
+2  35
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 2. Add two threads positionally.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">boost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_pair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">boost</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_pair</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  12
+1  24
+2  35
+
+ptype: Series
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">0</span></code> adds <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">+</span> <span class="pre">2</span></code>, position <code class="docutils literal notranslate"><span class="pre">1</span></code> adds <code class="docutils literal notranslate"><span class="pre">20</span> <span class="pre">+</span> <span class="pre">4</span></code>, position <code class="docutils literal notranslate"><span class="pre">2</span></code> adds <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">+</span> <span class="pre">5</span></code> —
+purely positional, with no reference to any case labels either thread might carry.</p>
+<p>Example 3. Two <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) threads concatenate instead of erroring.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east-&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">base_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;store&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;hub&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;depot&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_concat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prefix</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">base_name</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_concat</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  north-store
+1  south-hub
+2  east-depot
+
+ptype: Note
+</pre></div>
+</div>
+<p>This is the one payload combination <code class="docutils literal notranslate"><span class="pre">add()</span></code> accepts beyond plain numbers — string
+concatenation, order-sensitive (<code class="docutils literal notranslate"><span class="pre">prefix.add(base_name)</span></code> puts <code class="docutils literal notranslate"><span class="pre">prefix</span></code>’s value first
+at each position). See <a class="reference internal" href="radd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">radd()</span></code></span></a> for how the reflected form reverses this
+order.</p>
+<p>Example 4. A length mismatch throws rather than aligning or padding.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">too_short</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prices</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">too_short</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::add(Thread): positional operation requires identical lengths
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload’s error message is prefixed with the exact call site
+(<code class="docutils literal notranslate"><span class="pre">Thread::add(Thread)</span></code>, <code class="docutils literal notranslate"><span class="pre">Thread::sub(Thread)</span></code>, and so on) — every method in this
+family reports its own name, not a shared generic message.</p></li>
+<li><p>Mixing incompatible payload kinds (for example, adding a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread to
+a <code class="docutils literal notranslate"><span class="pre">Note</span></code> thread) throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::add(Thread):</span> <span class="pre">unsupported</span> <span class="pre">payload</span> <span class="pre">combination</span> <span class="pre">for</span> <span class="pre">operator</span> <span class="pre">'+'</span> <span class="pre">(Series</span> <span class="pre">vs</span> <span class="pre">Note)&quot;</span></code> — <code class="docutils literal notranslate"><span class="pre">add()</span></code> only accepts two numeric threads or two
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> threads, never a mix.</p></li>
+<li><p>If the calling thread carries display/case labels (set via <code class="docutils literal notranslate"><span class="pre">label().set()</span></code>), the
+result carries those same labels forward; <code class="docutils literal notranslate"><span class="pre">other</span></code>’s labels (if any) are never
+used.</p></li>
+<li><p><a class="reference internal" href="radd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">radd()</span></code></span></a> is the reflected form — identical to <code class="docutils literal notranslate"><span class="pre">add()</span></code> for numbers
+(addition is commutative), but the operand order flips for <code class="docutils literal notranslate"><span class="pre">Note</span></code> concatenation.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="radd.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::radd</span></code></span></a>: the reflected form.</p></li>
+<li><p><a class="reference internal" href="sub.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sub</span></code></span></a>, <a class="reference internal" href="mul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::mul</span></code></span></a>, <a class="reference internal" href="div.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::div</span></code></span></a>: the rest
+of the arithmetic family, sharing this same overload shape.</p></li>
+<li><p><a class="reference internal" href="../dataframe/add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::add</span></code></span></a>: the multi-feature counterpart, which adds
+an <code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code>-based case-label-alignment overload that <code class="docutils literal notranslate"><span class="pre">Thread::add()</span></code> has no
+equivalent of.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="abs.html">
+    <span class="label">Previous</span>
+    <span class="title">abs</span>
+  </a>
+  <a class="next-link" href="align.html">
+    <span class="label">Next</span>
+    <span class="title">align</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+      <li>Previous: <a href="abs.html" title="previous chapter">Thread::abs</a></li>
+      <li>Next: <a href="align.html" title="next chapter">Thread::align</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread/add.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

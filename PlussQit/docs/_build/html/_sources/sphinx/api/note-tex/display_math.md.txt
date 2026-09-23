@@ -106,5 +106,5 @@ display math Int64: rejected
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dedup_blank_lines.html"><span class="label">Previous</span><span class="title">dedup_blank_lines</span></a>
-  <a class="next-link" href="env_names.html"><span class="label">Next</span><span class="title">env_names</span></a>
+  <a class="next-link" href="dots_norm.html"><span class="label">Next</span><span class="title">dots_norm</span></a>
 </div>

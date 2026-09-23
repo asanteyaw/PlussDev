@@ -121,7 +121,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
   const Series x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {2, 2}, cfg);
   const Series w = pluss::make_series(std::vector<double>{1.0, 0.0, 0.0, 1.0, 1.0, -1.0}, {3, 2}, cfg);
   const Series b = pluss::make_series(std::vector<double>{0.1, -0.2, 0.3}, {3}, cfg);
-  if (!approx_vec(vec_f64(pluss::fusion(x, w, b)), std::vector<double>{1.1, 1.8, -0.7, 3.1, 3.8, -0.7})) {
+  if (!approx_vec(vec_f64(pluss::nn::fusion(x, w, b)), std::vector<double>{1.1, 1.8, -0.7, 3.1, 3.8, -0.7})) {
     if (err) *err << "fusion output mismatch\n";
     return false;
   }
@@ -314,7 +314,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     auto bad_cfg = run_cfg;
     bad_cfg.split_bias = false;
     bad_cfg.use_bias = true;
-    (void)pluss::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_split_params}, bad_cfg);
+    (void)pluss::nn::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_split_params}, bad_cfg);
   } catch (...) {
     bad_gru_layout_threw = true;
   }
@@ -323,7 +323,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     return false;
   }
   const auto [gru_func_out, gru_func_hn] =
-      pluss::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_split_params}, run_cfg);
+      pluss::nn::gru(seq, h0, std::vector<pluss::ai::rnn::NetWeight>{gru_split_params}, run_cfg);
 
   pluss::nn::RNN rnn_module(pluss::nn::RNNOptions{
       .input_size = 2,
@@ -399,7 +399,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
   const Series lstm_h0 = pluss::series::zeros({1, 2, 1}, cfg);
   const Series lstm_c0 = pluss::series::zeros({1, 2, 1}, cfg);
   const auto [lstm_func_out, lstm_state] =
-      pluss::lstm(seq, lstm_h0, lstm_c0, std::vector<pluss::ai::rnn::NetWeight>{lstm_params},
+      pluss::nn::lstm(seq, lstm_h0, lstm_c0, std::vector<pluss::ai::rnn::NetWeight>{lstm_params},
                   pluss::ai::rnn::NetConfig{
                       .training = true,
                       .batch_first = true,
@@ -467,7 +467,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     bd_bwd.bias_ih = pluss::make_series(std::vector<double>{0.1, 0.0, -0.05, 0.05, 0.0, -0.1, 0.05, 0.05}, {4 * bd_hidden}, cfg);
     bd_bwd.bias_hh = pluss::make_series(std::vector<double>{-0.05, 0.1, 0.0, 0.0, 0.1, 0.05, -0.05, -0.1}, {4 * bd_hidden}, cfg);
 
-    const auto [bd_out, bd_state] = pluss::lstm(
+    const auto [bd_out, bd_state] = pluss::nn::lstm(
         bd_x, Series(), Series(), std::vector<pluss::ai::rnn::NetWeight>{bd_fwd, bd_bwd},
         pluss::ai::rnn::NetConfig{
             .training = false,
@@ -510,7 +510,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
                                                 {1, 1, 2, 2},
                                                 cfg);
   const Series conv_bias = pluss::make_series(std::vector<double>{0.5}, {1}, cfg);
-  const Series conv_out = pluss::conv(conv_input, conv_weight, conv_bias, 1, 0, 1, 1);
+  const Series conv_out = pluss::nn::conv(conv_input, conv_weight, conv_bias, 1, 0, 1, 1);
   if (!approx_vec(vec_f64(conv_out), std::vector<double>{-3.5, -3.5, -3.5, -3.5})) {
     if (err) *err << "functional conv mismatch\n";
     return false;

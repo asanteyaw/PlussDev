@@ -26,4 +26,6 @@ void submit_command_buffer(void*, std::int64_t) noexcept {}
 
 void wait_command_buffer(void*) noexcept {}
 
+void wait_for_all_submitted_work() noexcept {}
+
 } // namespace pluss::codem::native::mps

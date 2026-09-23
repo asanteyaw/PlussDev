@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Bundle Model Guide &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=76d8b11c"></script>
+    <script src="_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scribble Model Guide" href="scribble.html" />
+    <link rel="prev" title="Kindle Model Guide" href="kindle.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="bundle-model-guide">
+<h1>Bundle Model Guide<a class="headerlink" href="#bundle-model-guide" title="Link to this heading">¶</a></h1>
+<section id="when-to-use-bundle-types">
+<h2>When To Use Bundle Types<a class="headerlink" href="#when-to-use-bundle-types" title="Link to this heading">¶</a></h2>
+<p>The bundle model is the multi-table workbench layer:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code>: named collection of related <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> tables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>: fluent join-graph builder returned by <code class="docutils literal notranslate"><span class="pre">Nexus::from(...)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>: workspace SQL accessor returned by <code class="docutils literal notranslate"><span class="pre">Nexus::query()</span></code></p></li>
+</ul>
+<p>Use it when the job is bigger than one table: several frames must be coordinated,
+relationships should be declared once and reused, and join plans or audits should
+belong to the workspace itself rather than be rebuilt ad hoc each time.</p>
+</section>
+<section id="nexus">
+<h2>Nexus<a class="headerlink" href="#nexus" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
+<span class="p">}).</span><span class="n">add_relationship</span><span class="p">({</span>
+<span class="w">    </span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customer_orders&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">joined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="what-nexus-adds-beyond-dataframe">
+<h2>What Nexus Adds Beyond DataFrame<a class="headerlink" href="#what-nexus-adds-beyond-dataframe" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>keyed table storage with <code class="docutils literal notranslate"><span class="pre">frame(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">select(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">inject(...)</span></code></p></li>
+<li><p>declared relationship metadata with <code class="docutils literal notranslate"><span class="pre">add_relationship(...)</span></code></p></li>
+<li><p>root-grain feature assembly with <code class="docutils literal notranslate"><span class="pre">pull(...)</span></code></p></li>
+<li><p>audit surfaces such as <code class="docutils literal notranslate"><span class="pre">audit()</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_keys(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_relationship(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">detect_orphans(...)</span></code></p></li>
+<li><p>graph navigation with <code class="docutils literal notranslate"><span class="pre">path(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">plan(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">materialize(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">from(...).via(...)</span></code></p></li>
+<li><p>persistence with <code class="docutils literal notranslate"><span class="pre">save(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">load(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">store(...)</span></code></p></li>
+</ul>
+<p>See the <a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc">Nexus API Reference</span></a> and
+<a class="reference internal" href="nexus_traverse_api_reference.html"><span class="std std-doc">NexusTraverse API Reference</span></a> and
+<a class="reference internal" href="nexus_query_api_reference.html"><span class="std std-doc">NexusQuery API Reference</span></a> for the full public surface.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Bundle Model Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#when-to-use-bundle-types">When To Use Bundle Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nexus">Nexus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-nexus-adds-beyond-dataframe">What Nexus Adds Beyond DataFrame</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="kindle.html" title="previous chapter">Kindle Model Guide</a></li>
+      <li>Next: <a href="scribble.html" title="next chapter">Scribble Model Guide</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/bundle.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

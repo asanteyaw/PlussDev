@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameNoteAccessor::titlecase &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameNoteAccessor::upper" href="upper.html" />
+    <link rel="prev" title="DataFrameNoteAccessor::strip" href="strip.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e42330833a14 -->
+<section id="dataframenoteaccessor-titlecase">
+<h1>DataFrameNoteAccessor::titlecase<a class="headerlink" href="#dataframenoteaccessor-titlecase" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">titlecase</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Capitalizes the first letter of every “word” in every selected text
+feature’s cells and lowercases the rest — the classic display-formatting
+transform for names, addresses, or titles typed in all-lowercase or
+inconsistent casing.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Word-boundary detection resets on <em>any</em> non-alphanumeric character
+<code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> decides where a new “word” starts the same way Python’s
+<code class="docutils literal notranslate"><span class="pre">str.title()</span></code> does: a word boundary is any position right after a
+non-alphanumeric character (space, hyphen, apostrophe, digit-to-letter
+transitions, punctuation — anything that isn’t a letter or digit), not just
+whitespace. This means an apostrophe inside a contraction resets the
+boundary too, so <code class="docutils literal notranslate"><span class="pre">&quot;don't&quot;</span></code> titlecases to <code class="docutils literal notranslate"><span class="pre">&quot;Don'T&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;Don't&quot;</span></code> — see
+Example 2. This is a well-known quirk of this style of word-boundary
+detection, not a bug specific to this implementation, but it’s worth knowing
+before running <code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> over free-text data that contains contractions,
+hyphenated words, or embedded digits.</p>
+</div>
+<p>Like every method on this accessor, <code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> applies to <strong>every feature
+the accessor was built with</strong> in one call — see <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a> for
+the shared mechanic and how null cells pass through unaffected.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with every selected feature’s text title-cased.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. The common case: clean, space-separated words title-case exactly
+as expected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">places</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;accra central market&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east legon&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north kaneshie&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">places</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">places</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">titlecase</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================
+     | name                
+---------------------------
+0    | accra central market
+1    | east legon          
+2    | north kaneshie      
+---------------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========================
+     | name                
+---------------------------
+0    | Accra Central Market
+1    | East Legon          
+2    | North Kaneshie      
+---------------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>Every space-separated word gets its first letter capitalized and the rest
+lowercased — exactly the display transform most people expect from
+“titlecase.”</p>
+<p>Example 2. The word-boundary quirk in action: apostrophes and hyphens reset
+the “start of a word” detector, capitalizing letters most people wouldn’t
+expect.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">phrases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;phrase&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">        </span><span class="p">{</span><span class="s">&quot;don&#39;t stop&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;rock &#39;n&#39; roll&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;co-op bank&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">phrases</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">phrases</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">titlecase</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output (before)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | phrase       
+--------------------
+0    | don&#39;t stop   
+1    | rock &#39;n&#39; roll
+2    | co-op bank   
+--------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (after)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================
+     | phrase       
+--------------------
+0    | Don&#39;T Stop   
+1    | Rock &#39;N&#39; Roll
+2    | Co-Op Bank   
+--------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;don't&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;Don'T&quot;</span></code>: the apostrophe is a non-alphanumeric character,
+so the letter right after it (<code class="docutils literal notranslate"><span class="pre">t</span></code>) is treated as the start of a new “word”
+and capitalized, exactly like <code class="docutils literal notranslate"><span class="pre">&quot;stop&quot;</span></code>’s leading <code class="docutils literal notranslate"><span class="pre">s</span></code>. The same thing happens
+to the <code class="docutils literal notranslate"><span class="pre">n</span></code> between the two apostrophes in <code class="docutils literal notranslate"><span class="pre">&quot;rock</span> <span class="pre">'n'</span> <span class="pre">roll&quot;</span></code>, and to the <code class="docutils literal notranslate"><span class="pre">o</span></code>
+right after the hyphen in <code class="docutils literal notranslate"><span class="pre">&quot;co-op&quot;</span></code>. There is no built-in way to make
+<code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> treat apostrophes or hyphens as internal-to-a-word; if that
+matters for a given column, post-process the result with
+<a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace()</span></code></span></a> for the specific patterns you need to fix, or avoid
+<code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> on columns known to contain contractions.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Applies to every feature the accessor was built with, in one call — see
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>’s Notes for the mechanics shared by every method on
+this accessor.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>Word-boundary detection resets on <em>any</em> non-alphanumeric character, not
+just whitespace — see the warning above and Example 2.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lower.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::lower</span></code></span></a> / <a class="reference internal" href="upper.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::upper</span></code></span></a>:
+whole-cell case transforms, unaffected by word boundaries.</p></li>
+<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::replace</span></code></span></a>: a way to patch up specific
+known quirks in a <code class="docutils literal notranslate"><span class="pre">titlecase()</span></code> result.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="strip.html">
+    <span class="label">Previous</span>
+    <span class="title">strip</span>
+  </a>
+  <a class="next-link" href="upper.html">
+    <span class="label">Next</span>
+    <span class="title">upper</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_note_accessor_api_reference.html">DataFrameNoteAccessor API Reference</a><ul>
+      <li>Previous: <a href="strip.html" title="previous chapter">DataFrameNoteAccessor::strip</a></li>
+      <li>Next: <a href="upper.html" title="next chapter">DataFrameNoteAccessor::upper</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-note/titlecase.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

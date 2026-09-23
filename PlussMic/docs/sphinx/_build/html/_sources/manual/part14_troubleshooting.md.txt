@@ -1,0 +1,194 @@
+# Part XIV: Troubleshooting and Production Notes
+
+This part covers common failure modes and how to diagnose them.
+
+## Loader cannot open a file
+
+Check:
+
+- the path is absolute or relative to the process working directory;
+- the file exists;
+- the process has read permissions;
+- URL support is enabled if loading `http://` or `https://`;
+- optional dependencies are present for Excel or Parquet.
+
+Prefer logging the resolved path before loading:
+
+```cpp
+std::filesystem::path path = "data/input.csv";
+std::cout << "loading " << std::filesystem::absolute(path) << '\n';
+auto df = pluss::table::DataFrame::load_csv(path.string());
+```
+
+## Separator inferred incorrectly
+
+Set the separator explicitly:
+
+```cpp
+pluss::loader::ReadCsvOptions options;
+options.sep = ';';
+auto df = pluss::table::DataFrame::load_csv("bank-full.csv", options);
+```
+
+## Header parsed incorrectly
+
+Use header options:
+
+```cpp
+pluss::loader::ReadCsvOptions options;
+options.header = true;
+options.header_row = 1;
+options.names = {"a", "b", "c"};
+```
+
+For Excel, use:
+
+```cpp
+pluss::loader::ReadExcelOptions options;
+options.header_row = 2;
+options.header_rows = 2;
+options.header_joiner = "_";
+```
+
+## Wrong column types
+
+First inspect:
+
+```cpp
+df.info();
+df.describe();
+```
+
+Then cast:
+
+```cpp
+auto typed = df.astype({{"amount", pluss::codem::ScalarType::Float64}});
+auto text = typed.cast({
+    pluss::table::DataFrame::CastSpec{
+        "category", pluss::table::ThreadCastTarget::Note, {}},
+});
+auto dates = typed.cast({
+    pluss::table::DataFrame::CastSpec{
+        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+});
+```
+
+## Verified output does not match what you expected
+
+The manual examples are compiled and run against the current SDK. If an output
+looks surprising, do not assume the manual should normalize it. Check the
+source path, add a focused regression test, and fix source-level defects before
+teaching the behavior as correct.
+
+For missing values, the expected `fillnull` contract is:
+
+- existing non-null values remain unchanged;
+- null values in selected features are replaced;
+- the validity mask is cleared when all null values in the filled thread are
+  resolved.
+
+When writing production code around missing values, keep a small regression
+test for the exact operation and version you depend on.
+
+## Missing values break math
+
+Audit, then fill or drop:
+
+```cpp
+df.isna().head(20);
+auto clean = df.fillnull(0.0, {"amount"});
+auto complete = clean.dropnull();
+```
+
+## Query returns no rows
+
+Debug in smaller pieces:
+
+```cpp
+df.query("age >= 45").head();
+df.query("job != 'unknown'").head();
+df.query("age >= 45 and job != 'unknown'").head();
+```
+
+Check feature names exactly:
+
+```cpp
+for (const auto& name : df.features()) {
+  std::cout << "[" << name << "]\n";
+}
+```
+
+## Group-by output is unexpected
+
+Check:
+
+- grouping features have the expected type;
+- null group keys are handled by `dropnull_keys`;
+- the selected value feature is numeric for numeric operations;
+- `GroupOp::Count` vs `GroupOp::Ndistinct` semantics match your intent.
+
+```cpp
+df.tally("group", 20, false, true);
+df.group({.dropnull = false, .sort = true})
+  .by({"group"})
+  .agg({{"n", "value", DataFrame::GroupOp::Count}});
+```
+
+## Plot is empty or too dense
+
+Check:
+
+- selected features contain finite values;
+- x/y features have the same length;
+- missing values are handled;
+- high-cardinality groups are aggregated first;
+- max point options are set for dense plot families.
+
+```cpp
+auto plot_df = df
+    .features({"date", "close"})
+    .dropnull();
+
+plot_df.info();
+plot_df.plot();
+```
+
+## Excel or Parquet API fails at runtime
+
+These formats depend on optional build dependencies. Rebuild the SDK with the
+needed dependency available, then rebuild the consumer project.
+
+## Popup display does not open
+
+PlussMic falls back to terminal display when popup display support is not
+available. Use terminal output as the reliable path in headless environments:
+
+```cpp
+df.show(std::cout);
+```
+
+## Large CSV is slow
+
+Try:
+
+```cpp
+pluss::loader::ReadCsvOptions options;
+options.engine = pluss::loader::CsvEngine::Parallel;
+options.parallel_threads = 8;
+options.usefeats = {"only", "needed", "columns"};
+options.ncases = 100000; // while developing
+options.profile = true;
+```
+
+Also avoid loading columns you will drop immediately.
+
+## Production checklist
+
+- Use typed option structs for non-trivial I/O.
+- Validate schema with `info()` after loading.
+- Keep feature names stable and documented.
+- Decide case-axis semantics early.
+- Prefer non-mutating transforms in reusable code.
+- Save cleaned and intermediate outputs in deterministic locations.
+- Keep plotting outputs separate from data outputs.
+- Use API reference pages for exact overloads.

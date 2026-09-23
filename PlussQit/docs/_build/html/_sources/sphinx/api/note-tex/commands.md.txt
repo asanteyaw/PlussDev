@@ -36,7 +36,7 @@ Control symbols are not control words. In particular, `\\` is a linebreak and
 `\$` is an escaped symbol; neither is reported. This prevents text following a
 linebreak from being misread as part of a command. Use `command_names()` when
 only names without the leading backslash are required, and
-`extract_command_args(name)` when the payload of one known command is the
+`args(name)` when the payload of one known command is the
 actual result.
 
 The result is a closed `TokenBatch`: `tokens()` is a flat Text Note in source
@@ -152,10 +152,10 @@ commands Int64: rejected
 ## See Also
 
 - `command_names`: return names without the leading backslash.
-- `extract_command_args`: extract the required argument of one named command.
+- [`args`](args.md): extract the required argument of one named command.
 - `strip_comments`: remove comments before lexical extraction.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="command_names.html"><span class="label">Previous</span><span class="title">command_names</span></a>
-  <a class="next-link" href="dedup_blank_lines.html"><span class="label">Next</span><span class="title">dedup_blank_lines</span></a>
+  <a class="next-link" href="deaccent.html"><span class="label">Next</span><span class="title">deaccent</span></a>
 </div>

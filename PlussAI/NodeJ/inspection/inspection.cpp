@@ -4,6 +4,7 @@
 #include "pluss/tils/aux/transmit.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -26,6 +27,24 @@ namespace {
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
   return x ^ (x >> 31);
+}
+
+// Matches the compose_seed pattern already used by split.cpp/tune.cpp/
+// balance.cpp/prep.cpp/family_classifier.cpp/family_regressor.cpp for
+// RandomState::deterministic == false: draw real entropy from the clock and
+// std::random_device rather than deterministically hashing the given seed
+// (which would make every non-deterministic call reproduce the same draw).
+[[nodiscard]] std::uint64_t compose_seed(const RandomState& random) {
+  if (random.deterministic) return random.seed;
+
+  const auto now_ticks = static_cast<std::uint64_t>(
+      std::chrono::high_resolution_clock::now().time_since_epoch().count());
+  std::uint64_t seed = splitmix64(now_ticks);
+  if (random.seed != 0) seed ^= splitmix64(random.seed);
+
+  std::random_device rd;
+  seed ^= splitmix64((static_cast<std::uint64_t>(rd()) << 32) ^ static_cast<std::uint64_t>(rd()));
+  return seed;
 }
 
 struct DenseRows {
@@ -196,7 +215,7 @@ StatusOr<PermuteImpactReport> permutation_impact(const ModelSpec& spec,
   if (!baseline_or.ok()) return StatusOr<PermuteImpactReport>(baseline_or.status());
   const double baseline = baseline_or.move_value();
   const bool prefers_max = metric_prefers_max(metric);
-  const std::uint64_t seed = random.deterministic ? random.seed : splitmix64(random.seed ^ 0x8f9f0bdeULL);
+  const std::uint64_t seed = compose_seed(random);
 
   const std::int64_t features = dense_eval.features;
   std::vector<std::int64_t> feature_indices(static_cast<std::size_t>(features));
@@ -297,6 +316,12 @@ StatusOr<DependenceCurve> dependence_curve(const ModelSpec& spec,
       const FeatureBatch fb = rows_to_batch(probe, dense.samples, dense.features, eval.x.platform());
       StatusOr<Series> scores_or = model->infer_scores(fb);
       if (!scores_or.ok()) return StatusOr<DependenceCurve>(scores_or.status());
+      if (scores_or.value().numel() != dense.samples) {
+        return StatusOr<DependenceCurve>(Status::invalid_argument(
+            "dependence_curve requires a classifier that produces exactly one score per row "
+            "(binary classification); this ModelSpec's infer_scores produced multiple columns "
+            "per row, which has no single well-defined mean prediction."));
+      }
       const Series probs = scores_or.value().sigmoid().to(pluss::pCPU, ScalarType::Float64).reshape({dense.samples});
       means[static_cast<std::size_t>(gi)] = probs.mean().item<double>();
     }
@@ -392,6 +417,12 @@ StatusOr<DependenceSurface> dependence_surface(const ModelSpec& spec,
         const FeatureBatch fb = rows_to_batch(probe, dense.samples, dense.features, eval.x.platform());
         StatusOr<Series> scores_or = model->infer_scores(fb);
         if (!scores_or.ok()) return StatusOr<DependenceSurface>(scores_or.status());
+        if (scores_or.value().numel() != dense.samples) {
+          return StatusOr<DependenceSurface>(Status::invalid_argument(
+              "dependence_surface requires a classifier that produces exactly one score per row "
+              "(binary classification); this ModelSpec's infer_scores produced multiple columns "
+              "per row, which has no single well-defined mean prediction."));
+        }
         means[static_cast<std::size_t>(ia * grid_points_b + ib)] =
             scores_or.value().sigmoid().to(pluss::pCPU, ScalarType::Float64).mean().item<double>();
       }

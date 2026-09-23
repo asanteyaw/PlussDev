@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::cummax &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::cummin" href="cummin.html" />
+    <link rel="prev" title="DataFrame::csmin" href="csmin.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 34ef56b0fc49 -->
+<section id="dataframe-cummax">
+<h1>DataFrame::cummax<a class="headerlink" href="#dataframe-cummax" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">cummax</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">skip_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">cummax</span><span class="p">(</span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">skip_nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Replaces every numeric feature with its running (cumulative) maximum, case by case:
+the value at case <code class="docutils literal notranslate"><span class="pre">i</span></code> becomes the largest value seen in that feature from the first
+case through case <code class="docutils literal notranslate"><span class="pre">i</span></code>, not a single reduced summary value.</p>
+<p><code class="docutils literal notranslate"><span class="pre">cummax()</span></code>, <a class="reference internal" href="cummin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cummin()</span></code></span></a>, <a class="reference internal" href="cumprod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumprod()</span></code></span></a>, and
+<a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum()</span></code></span></a> are all thin wrappers over the same underlying running-statistic
+machinery, so they all share identical <code class="docutils literal notranslate"><span class="pre">axis</span></code> and <code class="docutils literal notranslate"><span class="pre">skip_nulls</span></code> semantics — only the
+running operation itself (max, min, product, or sum) differs.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>, default <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code>)</p>
+<p>Direction to accumulate along. <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> (the default) runs down each feature’s
+cases in order. Passing <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> accumulates across a row’s features left to
+right instead.</p>
+<p><strong>skip_nulls</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Controls what happens to the running maximum once a null is encountered:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> (the default): a null produces a null <em>only at that case</em>. The running
+maximum is preserved underneath it and accumulation resumes normally from the next
+observed value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code>: the first null poisons every case after it. Once a null is hit, that case
+and every subsequent case in the cumulative output become null too.</p></li>
+</ul>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame, same shape as the source, with every numeric feature replaced by its
+running maximum. Non-numeric features are left unchanged.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default behavior: a null is a gap, not a break.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Dede&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="n">quiet_NaN</span><span class="p">(),</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | student  score
+---------------------
+0    | Ada      10   
+1    | Bola     20   
+2    | Chen     NULL 
+3    | Dede     5    
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">running_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">cummax</span><span class="p">();</span><span class="w">  </span><span class="c1">// skip_nulls = true (default)</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">running_max</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | student  score
+---------------------
+0    | Ada      10   
+1    | Bola     20   
+2    | Chen     NULL 
+3    | Dede     20   
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>Case <code class="docutils literal notranslate"><span class="pre">2</span></code> (<code class="docutils literal notranslate"><span class="pre">Chen</span></code>) is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> because that case’s own value was missing — but case <code class="docutils literal notranslate"><span class="pre">3</span></code>
+(<code class="docutils literal notranslate"><span class="pre">Dede</span></code>) is <code class="docutils literal notranslate"><span class="pre">20</span></code>, not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>: the running maximum silently carried <code class="docutils literal notranslate"><span class="pre">20</span></code> forward under
+the null and compared it against <code class="docutils literal notranslate"><span class="pre">5</span></code>, keeping <code class="docutils literal notranslate"><span class="pre">20</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code>: the null poisons everything after it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">running_max_strict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">cummax</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">running_max_strict</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | student  score
+---------------------
+0    | Ada      10   
+1    | Bola     20   
+2    | Chen     NULL 
+3    | Dede     NULL 
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">skip_nulls</span> <span class="pre">=</span> <span class="pre">false</span></code>, case <code class="docutils literal notranslate"><span class="pre">3</span></code> is also <code class="docutils literal notranslate"><span class="pre">NULL</span></code> even though <code class="docutils literal notranslate"><span class="pre">Dede</span></code>’s own <code class="docutils literal notranslate"><span class="pre">score</span></code> was
+a perfectly good <code class="docutils literal notranslate"><span class="pre">5</span></code> — the missing value at case <code class="docutils literal notranslate"><span class="pre">2</span></code> invalidated every running maximum
+downstream of it.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cummax()</span></code> <strong>replaces</strong> each numeric feature’s values with the running maximum; it
+does not add a new column alongside the original.</p></li>
+<li><p>Non-numeric features pass through completely unchanged.</p></li>
+<li><p>For the running sum, product, or minimum instead, see <a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum()</span></code></span></a>,
+<a class="reference internal" href="cumprod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumprod()</span></code></span></a>, and <a class="reference internal" href="cummin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cummin()</span></code></span></a> — all four share the
+<code class="docutils literal notranslate"><span class="pre">skip_nulls</span></code> semantics described here.</p></li>
+<li><p>To find <em>which case</em> holds each feature’s maximum instead of a running value, see
+<a class="reference internal" href="csmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csmax()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::max</span></code></span></a>: a single reduced maximum per feature, instead of a
+running value per case.</p></li>
+<li><p><a class="reference internal" href="cummin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cummin</span></code></span></a>, <a class="reference internal" href="cumprod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cumprod</span></code></span></a>,
+<a class="reference internal" href="cumsum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cumsum</span></code></span></a>: the other cumulative reductions.</p></li>
+<li><p><a class="reference internal" href="csmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::csmax</span></code></span></a>: the case label where each feature’s maximum occurs.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="csmin.html">
+    <span class="label">Previous</span>
+    <span class="title">csmin</span>
+  </a>
+  <a class="next-link" href="cummin.html">
+    <span class="label">Next</span>
+    <span class="title">cummin</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="csmin.html" title="previous chapter">DataFrame::csmin</a></li>
+      <li>Next: <a href="cummin.html" title="next chapter">DataFrame::cummin</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/cummax.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

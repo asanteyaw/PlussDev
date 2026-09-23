@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameTimelineAccessor::localize &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameTimelineAccessor::minute" href="minute.html" />
+    <link rel="prev" title="DataFrameTimelineAccessor::leap" href="leap.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3e01009d3a85 -->
+<section id="dataframetimelineaccessor-localize">
+<h1>DataFrameTimelineAccessor::localize<a class="headerlink" href="#dataframetimelineaccessor-localize" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTimelineAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameTimelineAccessor</span><span class="o">::</span><span class="n">localize</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">TimelineLocalizeOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Reinterprets every selected <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature’s <em>current</em> clock
+reading as a naive local wall-clock time in <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>, and converts it to
+the true UTC instant that local reading corresponds to — same feature name,
+still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, same row order. <strong>This changes the
+underlying instant</strong> (unlike <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>, which only relabels display).
+The row is then displayed under <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>, so its wall-clock text looks
+unchanged even though the instant it now represents has shifted.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">TimelineLocalizeOptions&amp;</span></code>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">tz</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code>; must be one of the four supported names — see
+<a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a>’s Notes — and cannot be empty), <code class="docutils literal notranslate"><span class="pre">fold</span></code> (<code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>; during the
+one-hour daylight-saving <em>fall-back</em> overlap, <code class="docutils literal notranslate"><span class="pre">fold</span> <span class="pre">=</span> <span class="pre">0</span></code> resolves to the
+daylight offset and <code class="docutils literal notranslate"><span class="pre">fold</span> <span class="pre">=</span> <span class="pre">1</span></code> resolves to the standard offset), and
+<code class="docutils literal notranslate"><span class="pre">nonexistent</span></code> (only the literal <code class="docutils literal notranslate"><span class="pre">&quot;shift_forward&quot;</span></code> is recognized as a real
+handling mode; any other value — including the default <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code> — throws
+when a row’s local reading falls in the daylight-saving <em>spring-forward</em> gap,
+a wall-clock reading that never actually occurred).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with each selected time feature’s underlying instant
+recomputed as if its prior reading were local time in <code class="docutils literal notranslate"><span class="pre">options.tz</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Localize naive-looking readings to <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="w">          </span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="s">&quot;2024-07-15T09:15:30Z&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="p">}))}});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">events</span><span class="p">;</span>
+
+<span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">before_epoch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">after_epoch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">before_epoch</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_epoch</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-01-31 09:15:30
+1    | 2024-07-15 09:15:30
+--------------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-after-localize">
+<h3>Output (after localize)<a class="headerlink" href="#output-after-localize" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-01-31 09:15:30
+1    | 2024-07-15 09:15:30
+--------------------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-epoch-seconds-before">
+<h3>Output (epoch seconds, before)<a class="headerlink" href="#output-epoch-seconds-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 1706692530
+1    | 1721034930
+-----------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-epoch-seconds-after-localize">
+<h3>Output (epoch seconds, after localize)<a class="headerlink" href="#output-epoch-seconds-after-localize" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 1706710530
+1    | 1721049330
+-----------------
+[2 cs x 1 feat]
+</pre></div>
+</div>
+<p>The displayed wall-clock text is identical before and after — both still read
+<code class="docutils literal notranslate"><span class="pre">09:15:30</span></code> — because the result is displayed under the new
+<code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code> label, which reintroduces the same offset that was just
+subtracted. The <code class="docutils literal notranslate"><span class="pre">epoch(Seconds)</span></code> values prove the underlying instant actually
+moved: <code class="docutils literal notranslate"><span class="pre">18,000</span></code> seconds later in January (<code class="docutils literal notranslate"><span class="pre">5</span></code> hours, Eastern Standard Time)
+and <code class="docutils literal notranslate"><span class="pre">14,400</span></code> seconds later in July (<code class="docutils literal notranslate"><span class="pre">4</span></code> hours, Eastern Daylight Time).</p>
+<p>Example 2. Use <code class="docutils literal notranslate"><span class="pre">fold</span></code> to disambiguate a wall-clock reading that occurs twice
+during New York’s fall-back transition.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">reading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-11-03T01:30:00Z&quot;</span><span class="p">}))}});</span>
+
+<span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">fold0</span><span class="p">;</span>
+<span class="n">fold0</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+<span class="n">fold0</span><span class="p">.</span><span class="n">fold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_fold0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reading</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">fold0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_fold0</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+
+<span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">fold1</span><span class="p">;</span>
+<span class="n">fold1</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+<span class="n">fold1</span><span class="p">.</span><span class="n">fold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_fold1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reading</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">fold1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_fold1</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="output-fold-0-epoch-seconds">
+<h3>Output (fold = 0, epoch seconds)<a class="headerlink" href="#output-fold-0-epoch-seconds" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 1730611800
+-----------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-fold-1-epoch-seconds">
+<h3>Output (fold = 1, epoch seconds)<a class="headerlink" href="#output-fold-1-epoch-seconds" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 1730615400
+-----------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">01:30</span></code> local occurs twice on <code class="docutils literal notranslate"><span class="pre">2024-11-03</span></code> — once while still on Eastern
+Daylight Time (<code class="docutils literal notranslate"><span class="pre">-4:00</span></code>), once after falling back to Eastern Standard Time
+(<code class="docutils literal notranslate"><span class="pre">-5:00</span></code>). <code class="docutils literal notranslate"><span class="pre">fold</span> <span class="pre">=</span> <span class="pre">0</span></code> picks the earlier occurrence (the daylight-time one);
+<code class="docutils literal notranslate"><span class="pre">fold</span> <span class="pre">=</span> <span class="pre">1</span></code> picks the later occurrence, exactly <code class="docutils literal notranslate"><span class="pre">3,600</span></code> seconds after. Both
+share the same displayed wall-clock text (<code class="docutils literal notranslate"><span class="pre">01:30:00</span></code>) but represent different
+instants.</p>
+<p>Example 3. Use <code class="docutils literal notranslate"><span class="pre">nonexistent</span> <span class="pre">=</span> <span class="pre">&quot;shift_forward&quot;</span></code> to handle a wall-clock reading
+that falls in New York’s spring-forward gap (<code class="docutils literal notranslate"><span class="pre">02:00</span></code>-<code class="docutils literal notranslate"><span class="pre">03:00</span></code> local on
+transition day, which never actually occurs).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">reading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-03-10T02:30:00Z&quot;</span><span class="p">}))}});</span>
+
+<span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">nonexistent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;shift_forward&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reading</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-03-10 03:00:00
+--------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">02:30</span></code> local never happened on <code class="docutils literal notranslate"><span class="pre">2024-03-10</span></code> — clocks jumped straight from
+<code class="docutils literal notranslate"><span class="pre">02:00</span></code> to <code class="docutils literal notranslate"><span class="pre">03:00</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;shift_forward&quot;</span></code> resolves the reading to the first
+instant <em>after</em> the gap closes, <code class="docutils literal notranslate"><span class="pre">03:00:00</span></code>, rather than throwing.</p>
+<p>Example 4. Leave <code class="docutils literal notranslate"><span class="pre">nonexistent</span></code> at its default <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code> for the same
+spring-forward-gap reading, to see it throw instead.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">reading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-03-10T02:30:00Z&quot;</span><span class="p">}))}});</span>
+
+<span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;America/New_York&quot;</span><span class="p">;</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reading</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tz_localize: nonexistent local time (DST spring-forward gap)
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">&quot;shift_forward&quot;</span></code>, a reading that falls in the gap has no valid
+instant to resolve to, so the call throws rather than silently guessing.</p>
+<p>Example 5. Localize to a different supported zone, <code class="docutils literal notranslate"><span class="pre">&quot;Europe/London&quot;</span></code>, outside
+any DST transition window.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">reading</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;ts&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-06-01T10:00:00Z&quot;</span><span class="p">}))}});</span>
+
+<span class="n">TimelineLocalizeOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">tz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Europe/London&quot;</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reading</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">localize</span><span class="p">(</span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">before_epoch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reading</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">after_epoch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">before_epoch</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">after_epoch</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-localized-display">
+<h3>Output (localized display)<a class="headerlink" href="#output-localized-display" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==========================
+     | ts                 
+--------------------------
+0    | 2024-06-01 10:00:00
+--------------------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (epoch seconds, before)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 1717236000
+-----------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-epoch-seconds-after">
+<h3>Output (epoch seconds, after)<a class="headerlink" href="#output-epoch-seconds-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | ts        
+-----------------
+0    | 1717232400
+-----------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">10:00:00</span></code> local in <code class="docutils literal notranslate"><span class="pre">Europe/London</span></code> on June 1st is British Summer Time
+(<code class="docutils literal notranslate"><span class="pre">+1:00</span></code>), so the underlying instant moves <code class="docutils literal notranslate"><span class="pre">3,600</span></code> seconds <em>earlier</em> — the
+opposite direction from the <code class="docutils literal notranslate"><span class="pre">America/New_York</span></code> examples above, since London’s
+offset is positive rather than negative.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">localize()</span></code> changes the underlying instant; <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> never
+does.</strong> Reach for <code class="docutils literal notranslate"><span class="pre">localize()</span></code> only when the current ticks are naive local
+readings that have never been anchored to a real instant; reach for <code class="docutils literal notranslate"><span class="pre">tz()</span></code>
+when the ticks are already correct and you just want a different display
+timezone.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.tz</span></code> only accepts the same four names as <code class="docutils literal notranslate"><span class="pre">tz()</span></code> — anything else
+throws — and cannot be empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fold</span></code> only matters for the one hour of wall-clock time that repeats during
+a fall-back transition; outside that window it has no effect.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nonexistent</span></code> only recognizes <code class="docutils literal notranslate"><span class="pre">&quot;shift_forward&quot;</span></code> as an actual handling
+strategy; every other value (default <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code> included) throws for a
+spring-forward-gap reading, regardless of what the string itself says.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code> requires <strong>every</strong> feature on the calling frame to already
+be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind — narrow with
+<a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first if needed.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> regardless of <code class="docutils literal notranslate"><span class="pre">options</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTimelineAccessor::tz</span></code></span></a>: relabels display timezone without
+changing the instant — the operation most people actually want.</p></li>
+<li><p><a class="reference internal" href="utc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTimelineAccessor::utc</span></code></span></a>: shorthand for <code class="docutils literal notranslate"><span class="pre">tz(&quot;UTC&quot;)</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="leap.html">
+    <span class="label">Previous</span>
+    <span class="title">leap</span>
+  </a>
+  <a class="next-link" href="minute.html">
+    <span class="label">Next</span>
+    <span class="title">minute</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_timeline_accessor_api_reference.html">DataFrameTimelineAccessor API Reference</a><ul>
+      <li>Previous: <a href="leap.html" title="previous chapter">DataFrameTimelineAccessor::leap</a></li>
+      <li>Next: <a href="minute.html" title="next chapter">DataFrameTimelineAccessor::minute</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-timeline/localize.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

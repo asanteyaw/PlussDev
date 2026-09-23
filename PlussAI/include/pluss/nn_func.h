@@ -1,7 +1,11 @@
 #pragma once
 
 // Lightweight functional DL surface (no module stack).
-// Use <pluss/nn.h> for full module APIs under pluss::nn.
+// Lives under pluss::ai::nn, alongside the module classes -- reachable
+// publicly as pluss::nn::* (see <pluss/nn.h>) or fully qualified as
+// pluss::ai::nn::*. Never re-exported into the bare pluss:: root
+// namespace, which is reserved for things that are truly global across the
+// whole codebase.
 
 #include "pluss/core.h"
 #include "pluss/ai/fusion.h"
@@ -9,7 +13,7 @@
 #include "pluss/ai/rnn.h"
 #include "pluss/ai/attention.h"
 
-namespace pluss {
+namespace pluss::ai::nn {
 
 using ::pluss::ai::dropout;
 using ::pluss::ai::cublas_fusion_ready;
@@ -44,8 +48,8 @@ using ::pluss::ai::MultiheadOptions;
 using ::pluss::ai::MultiheadWeights;
 
 // Type shim for concise functional RNN configuration:
-//   pluss::rnn::NetWeight, pluss::rnn::NetConfig
-// while keeping callable pluss::rnn(...) in the same surface.
+//   pluss::nn::rnn::NetWeight, pluss::nn::rnn::NetConfig
+// while keeping callable pluss::nn::rnn(...) in the same surface.
 struct rnn {
   using NetWeight = ::pluss::ai::rnn::NetWeight;
   using NetConfig = ::pluss::ai::rnn::NetConfig;
@@ -55,4 +59,4 @@ inline Series fusion(const Series& input, const Series& weight, const Series& bi
   return ::pluss::ai::ff(input, weight, bias);
 }
 
-} // namespace pluss
+} // namespace pluss::ai::nn

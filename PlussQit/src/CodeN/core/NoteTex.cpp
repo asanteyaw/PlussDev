@@ -7,6 +7,7 @@
 #include "CodeN/core/TokenBatch.h"
 
 #include <string>
+#include <cctype>
 
 namespace pluss::coden {
 
@@ -104,43 +105,79 @@ Note NoteTexAccessor::macro_subs(::std::int64_t max_passes) const {
   return _compat::invoke<Note>("tex_expand_macros", owner(), {max_passes});
 }
 
-TokenBatch NoteTexAccessor::extract_command_args(::std::string_view cmd) const {
+namespace {
+
+bool valid_tex_name(::std::string_view name) {
+  while (!name.empty() && name.front() == '\\') name.remove_prefix(1);
+  if (name.empty()) return false;
+  for (::std::size_t i = 0; i < name.size(); ++i) {
+    const unsigned char c = static_cast<unsigned char>(name[i]);
+    if (::std::isalpha(c) != 0 || name[i] == '@') continue;
+    if (name[i] == '*' && i + 1 == name.size()) continue;
+    return false;
+  }
+  return true;
+}
+
+bool valid_macro_name(::std::string_view name) {
+  if (!name.empty() && name.front() == '\\') name.remove_prefix(1);
+  if (name.empty()) return false;
+  for (const unsigned char c : name) {
+    if (::std::isalpha(c) == 0 && c != '@') return false;
+  }
+  return true;
+}
+
+bool valid_macro_body(::std::string_view body) {
+  ::std::int64_t depth = 0;
+  for (::std::size_t i = 0; i < body.size(); ++i) {
+    if (body[i] == '\\' && i + 1 < body.size()) {
+      ++i;
+      continue;
+    }
+    if (body[i] == '#') return false;
+    if (body[i] == '{') ++depth;
+    if (body[i] == '}' && --depth < 0) return false;
+  }
+  return depth == 0;
+}
+
+} // namespace
+
+TokenBatch NoteTexAccessor::args(::std::string_view cmd) const {
+  PLUSS_CHECK(valid_tex_name(cmd),
+              "Note.tex().args: cmd must be a TeX control-word name");
   return _compat::invoke<TokenBatch>("tex_extract_command_args", owner(), {cmd});
 }
 
-// Generic environment extractor. Unlike the deleted per-name convenience
-// methods it replaces (`extract_env_equation()`, `extract_env_array()`,
-// ...), it always returns the full closed `TokenBatch` (tokens plus row
-// offsets) rather than a bare `Note` of flat tokens -- calling directly
-// into the same token-feature extraction the old named methods used,
-// bypassing the legacy `tex_extract_environment` dispatch op (which
-// discarded the offsets and returned only `batch.tokens()`).
-TokenBatch NoteTexAccessor::extract_environment(::std::string_view name) const {
+TokenBatch NoteTexAccessor::env(::std::string_view name) const {
+  PLUSS_CHECK(valid_tex_name(name) && name.front() != '\\',
+              "Note.tex().env: name must be a TeX environment name");
   const ::std::string op = ::std::string("tex_extract_env_") + ::std::string(name);
   return ops_internal::token_feature(owner(), op);
 }
 
-TokenBatch NoteTexAccessor::extract_functions() const {
+TokenBatch NoteTexAccessor::math_funcs() const {
   return _compat::invoke<TokenBatch>("tex_extract_functions", owner());
 }
 
-TokenBatch NoteTexAccessor::extract_greek() const {
+TokenBatch NoteTexAccessor::greek() const {
   return _compat::invoke<TokenBatch>("tex_extract_greek", owner());
 }
 
-TokenBatch NoteTexAccessor::extract_identifiers() const {
+TokenBatch NoteTexAccessor::ids() const {
   return _compat::invoke<TokenBatch>("tex_extract_identifiers", owner());
 }
 
-TokenBatch NoteTexAccessor::extract_numbers() const {
+TokenBatch NoteTexAccessor::nums() const {
   return _compat::invoke<TokenBatch>("tex_extract_numbers", owner());
 }
 
-TokenBatch NoteTexAccessor::extract_operators() const {
+TokenBatch NoteTexAccessor::ops() const {
   return _compat::invoke<TokenBatch>("tex_extract_operators", owner());
 }
 
-TokenBatch NoteTexAccessor::extract_symbols() const {
+TokenBatch NoteTexAccessor::symbols() const {
   return _compat::invoke<TokenBatch>("tex_extract_symbols", owner());
 }
 
@@ -157,6 +194,8 @@ TokenBatch NoteTexAccessor::footnotes() const {
 }
 
 TokenBatch NoteTexAccessor::headings(::std::int64_t max_depth) const {
+  PLUSS_CHECK(max_depth >= 1 && max_depth <= 4,
+              "Note.tex().headings: max_depth must be in [1, 4]");
   return _compat::invoke<TokenBatch>("tex_headings", owner(), {max_depth});
 }
 
@@ -172,15 +211,17 @@ TokenBatch NoteTexAccessor::labels() const {
   return _compat::invoke<TokenBatch>("tex_labels", owner());
 }
 
-TokenBatch NoteTexAccessor::macros_defined() const {
+TokenBatch NoteTexAccessor::macro_defs() const {
   return _compat::invoke<TokenBatch>("tex_macros_defined", owner());
 }
 
-TokenBatch NoteTexAccessor::macros_used() const {
+TokenBatch NoteTexAccessor::macro_use() const {
   return _compat::invoke<TokenBatch>("tex_macros_used", owner());
 }
 
 TokenBatch NoteTexAccessor::math_blocks(::std::int64_t max_count) const {
+  PLUSS_CHECK(max_count >= -1,
+              "Note.tex().math_blocks: max_count must be -1 or nonnegative");
   return _compat::invoke<TokenBatch>("tex_math_blocks", owner(), {max_count});
 }
 
@@ -188,7 +229,7 @@ Note NoteTexAccessor::math_only() const {
   return _compat::invoke<Note>("tex_math_only", owner());
 }
 
-Note NoteTexAccessor::normalize_newlines() const {
+Note NoteTexAccessor::line_norm() const {
   return _compat::invoke<Note>("tex_normalize_newlines", owner());
 }
 
@@ -200,122 +241,120 @@ TokenBatch NoteTexAccessor::refs() const {
   return _compat::invoke<TokenBatch>("tex_refs", owner());
 }
 
-Note NoteTexAccessor::remove_accents() const {
+Note NoteTexAccessor::deaccent() const {
   return _compat::invoke<Note>("tex_remove_accents", owner());
 }
 
-Note NoteTexAccessor::remove_bibliography() const {
+Note NoteTexAccessor::strip_bib() const {
   return _compat::invoke<Note>("tex_remove_bibliography", owner());
 }
 
-Note NoteTexAccessor::remove_big_delims() const {
+Note NoteTexAccessor::strip_size() const {
   return _compat::invoke<Note>("tex_remove_big_delims", owner());
 }
 
-Note NoteTexAccessor::remove_citations() const {
+Note NoteTexAccessor::strip_cites() const {
   return _compat::invoke<Note>("tex_remove_citations", owner());
 }
 
-Note NoteTexAccessor::remove_color() const {
+Note NoteTexAccessor::strip_color() const {
   return _compat::invoke<Note>("tex_remove_color", owner());
 }
 
-Note NoteTexAccessor::remove_commands() const {
+Note NoteTexAccessor::strip_cmds() const {
   return _compat::invoke<Note>("tex_remove_commands", owner());
 }
 
-Note NoteTexAccessor::remove_environment(::std::string_view name) const {
+Note NoteTexAccessor::strip_env(::std::string_view name) const {
+  PLUSS_CHECK(valid_tex_name(name) && name.front() != '\\',
+              "Note.tex().strip_env: name must be a TeX environment name");
   return _compat::invoke<Note>("tex_remove_environment", owner(), {name});
 }
 
-Note NoteTexAccessor::remove_environments() const {
+Note NoteTexAccessor::strip_envs() const {
   return _compat::invoke<Note>("tex_remove_environments", owner());
 }
 
-Note NoteTexAccessor::remove_figures() const {
+Note NoteTexAccessor::strip_figs() const {
   return _compat::invoke<Note>("tex_remove_figures", owner());
 }
 
-Note NoteTexAccessor::remove_font_commands() const {
+Note NoteTexAccessor::strip_fonts() const {
   return _compat::invoke<Note>("tex_remove_font_commands", owner());
 }
 
-Note NoteTexAccessor::remove_formatting() const {
+Note NoteTexAccessor::strip_fmt() const {
   return _compat::invoke<Note>("tex_remove_formatting", owner());
 }
 
-Note NoteTexAccessor::remove_graphics() const {
+Note NoteTexAccessor::strip_graphics() const {
   return _compat::invoke<Note>("tex_remove_graphics", owner());
 }
 
-Note NoteTexAccessor::remove_hyperref() const {
+Note NoteTexAccessor::strip_links() const {
   return _compat::invoke<Note>("tex_remove_hyperref", owner());
 }
 
-Note NoteTexAccessor::remove_labels() const {
+Note NoteTexAccessor::strip_labels() const {
   return _compat::invoke<Note>("tex_remove_labels", owner());
 }
 
-Note NoteTexAccessor::remove_left_right() const {
+Note NoteTexAccessor::strip_lr() const {
   return _compat::invoke<Note>("tex_remove_left_right", owner());
 }
 
-Note NoteTexAccessor::remove_macro(::std::string_view name) const {
+Note NoteTexAccessor::strip_macro(::std::string_view name) const {
+  PLUSS_CHECK(valid_tex_name(name),
+              "Note.tex().strip_macro: name must be a TeX control-word name");
   return _compat::invoke<Note>("tex_remove_macro", owner(), {name});
 }
 
-Note NoteTexAccessor::remove_math_delimiters() const {
+Note NoteTexAccessor::strip_delims() const {
   return _compat::invoke<Note>("tex_remove_math_delimiters", owner());
 }
 
-Note NoteTexAccessor::remove_packages() const {
+Note NoteTexAccessor::strip_pkgs() const {
   return _compat::invoke<Note>("tex_remove_packages", owner());
 }
 
-Note NoteTexAccessor::remove_refs() const {
+Note NoteTexAccessor::strip_refs() const {
   return _compat::invoke<Note>("tex_remove_refs", owner());
 }
 
-Note NoteTexAccessor::remove_spacing_cmds() const {
-  return _compat::invoke<Note>("tex_remove_spacing_cmds", owner());
-}
-
-Note NoteTexAccessor::remove_tables() const {
-  return _compat::invoke<Note>("tex_remove_tables", owner());
-}
-
-Note NoteTexAccessor::remove_urls() const {
-  return _compat::invoke<Note>("tex_remove_urls", owner());
-}
-
-// Direct ops_internal call, matching Note::render_latex's own pre-existing
-// implementation -- this op never went through the _compat::invoke string
-// registry, so there is no "tex_render" dispatch entry to reuse.
-Note NoteTexAccessor::render(::std::int64_t mode) const {
-  return ops_internal::tex_render(owner(), mode);
-}
-
-Note NoteTexAccessor::replace_command(::std::string_view cmd, ::std::string_view repl) const {
+Note NoteTexAccessor::cmd_sub(::std::string_view cmd, ::std::string_view repl) const {
+  PLUSS_CHECK(valid_tex_name(cmd),
+              "Note.tex().cmd_sub: cmd must be a TeX control-word name");
   return _compat::invoke<Note>("tex_replace_command", owner(), {cmd, repl});
 }
 
-Note NoteTexAccessor::resolve_graphics() const {
+Note NoteTexAccessor::graphics_tags() const {
   return _compat::invoke<Note>("tex_resolve_graphics", owner());
 }
 
-Note NoteTexAccessor::sanitize() const {
-  return _compat::invoke<Note>("tex_sanitize", owner());
-}
-
-Note NoteTexAccessor::sanitize(::std::int64_t level) const {
-  return _compat::invoke<Note>("tex_sanitize", owner(), {level});
+// Rendering has no compatibility-dispatch entry.
+Note NoteTexAccessor::render(::std::int64_t max_passes) const {
+  PLUSS_CHECK(max_passes > 0,
+              "Note.tex().render: max_passes must be positive");
+  return ops_internal::tex_render(owner(), max_passes);
 }
 
 TokenBatch NoteTexAccessor::sections() const {
   return _compat::invoke<TokenBatch>("tex_sections", owner());
 }
 
+Note NoteTexAccessor::strip_space() const {
+  return _compat::invoke<Note>("tex_remove_spacing_cmds", owner());
+}
+
+Note NoteTexAccessor::strip_tables() const {
+  return _compat::invoke<Note>("tex_remove_tables", owner());
+}
+
 Note NoteTexAccessor::set_macro(::std::string_view name, ::std::string_view body) const {
+  PLUSS_CHECK(valid_macro_name(name),
+              "Note.tex().set_macro: name must be a TeX control-word name");
+  PLUSS_CHECK(valid_macro_body(body),
+              "Note.tex().set_macro: body must be zero-argument TeX with balanced braces");
   return _compat::invoke<Note>("tex_set_macro", owner(), {name, body});
 }
 
@@ -327,43 +366,39 @@ Note NoteTexAccessor::simplify_roots() const {
   return _compat::invoke<Note>("tex_simplify_roots", owner());
 }
 
-Note NoteTexAccessor::simplify_spacing() const {
-  return _compat::invoke<Note>("tex_simplify_spacing", owner());
-}
-
-Note NoteTexAccessor::standardize_dots() const {
+Note NoteTexAccessor::dots_norm() const {
   return _compat::invoke<Note>("tex_standardize_dots", owner());
 }
 
-Note NoteTexAccessor::standardize_integrals() const {
+Note NoteTexAccessor::int_norm() const {
   return _compat::invoke<Note>("tex_standardize_integrals", owner());
 }
 
-Note NoteTexAccessor::standardize_limits() const {
+Note NoteTexAccessor::limit_norm() const {
   return _compat::invoke<Note>("tex_standardize_limits", owner());
 }
 
-Note NoteTexAccessor::standardize_matrices() const {
+Note NoteTexAccessor::matrix_norm() const {
   return _compat::invoke<Note>("tex_standardize_matrices", owner());
 }
 
-Note NoteTexAccessor::standardize_primes() const {
+Note NoteTexAccessor::prime_norm() const {
   return _compat::invoke<Note>("tex_standardize_primes", owner());
 }
 
-Note NoteTexAccessor::standardize_subscripts() const {
+Note NoteTexAccessor::sub_norm() const {
   return _compat::invoke<Note>("tex_standardize_subscripts", owner());
 }
 
-Note NoteTexAccessor::standardize_summations() const {
+Note NoteTexAccessor::sum_norm() const {
   return _compat::invoke<Note>("tex_standardize_summations", owner());
 }
 
-Note NoteTexAccessor::standardize_superscripts() const {
+Note NoteTexAccessor::sup_norm() const {
   return _compat::invoke<Note>("tex_standardize_superscripts", owner());
 }
 
-Note NoteTexAccessor::standardize_vectors() const {
+Note NoteTexAccessor::vector_norm() const {
   return _compat::invoke<Note>("tex_standardize_vectors", owner());
 }
 
@@ -403,14 +438,13 @@ Note NoteTexAccessor::to_html() const {
   return _compat::invoke<Note>("tex_to_html", owner());
 }
 
-Note NoteTexAccessor::to_html(::std::int64_t mode) const {
-  return _compat::invoke<Note>("tex_to_html", owner(), {mode});
-}
-
 // Direct ops_internal call, matching Note::text_to_latex's own pre-existing
 // implementation -- this op never went through the _compat::invoke string
 // registry, so there is no "tex_to_latex" dispatch entry to reuse.
 Note NoteTexAccessor::to_latex(::std::int64_t mode) const {
+  if (mode < 0 || mode > 2) {
+    throw Error("Note::tex().to_latex: mode must be 0, 1, or 2");
+  }
   return ops_internal::text_to_tex(owner(), mode);
 }
 

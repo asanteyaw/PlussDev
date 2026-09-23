@@ -45,7 +45,6 @@ signatures left to the per-method reference pages.
 - `Chord tex_inline_macros() const`
 - `Chord tex_simplify_fractions() const`
 - `Chord tex_simplify_roots() const`
-- `Chord tex_simplify_spacing() const`
 - `Chord tex_remove_formatting() const`
 - `Chord tex_remove_accents() const`
 - `Chord tex_remove_font_commands() const`

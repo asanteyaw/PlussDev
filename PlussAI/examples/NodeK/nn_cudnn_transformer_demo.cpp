@@ -10,8 +10,8 @@ int main() {
 
   std::cout << "cuda_ready=" << (pluss::cuda::is_ready() ? 1 : 0) << "\n";
   std::cout << "cudnn_ready=" << (pluss::cuda::cudnn_ready() ? 1 : 0) << "\n";
-  std::cout << "cudnn_attention_ready=" << (pluss::cudnn_attention_ready() ? 1 : 0) << "\n";
-  std::cout << "cudnn_transformer_ready=" << (pluss::cudnn_transformer_ready() ? 1 : 0) << "\n";
+  std::cout << "cudnn_attention_ready=" << (pluss::nn::cudnn_attention_ready() ? 1 : 0) << "\n";
+  std::cout << "cudnn_transformer_ready=" << (pluss::nn::cudnn_transformer_ready() ? 1 : 0) << "\n";
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
   const Series src = pluss::series::rand({2, 10, 16}, cfg, 701ULL);

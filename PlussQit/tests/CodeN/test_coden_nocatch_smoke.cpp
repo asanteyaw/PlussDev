@@ -643,7 +643,7 @@ void test_high_yield_nlp_and_printing() {
       "\\textbf{Bold} and \\emph{emph}.\\n"
       "Math: $x+y$ and \\(z\\).\\n\\n\\n"
       "{\\bfseries font} line.");
-  const std::string tex_norm = std::string(tex.tex().normalize_newlines().at(0));
+  const std::string tex_norm = std::string(tex.tex().line_norm().at(0));
   expect_true(tex_norm.find('\r') == std::string::npos, "tex_normalize_newlines removes CR");
 
   const std::string tex_dedup = std::string(tex.tex().dedup_blank_lines().at(0));
@@ -653,7 +653,7 @@ void test_high_yield_nlp_and_printing() {
   expect_true(escaped.find("\\_") != std::string::npos, "tex_escape escapes underscore");
   expect_true(std::string(pluss::make_note(escaped).tex().unescape().at(0)) == "a_b#%", "tex_unescape reverses escapes");
 
-  const std::string no_delims = std::string(tex.tex().remove_math_delimiters().at(0));
+  const std::string no_delims = std::string(tex.tex().strip_delims().at(0));
   expect_true(no_delims.find("$") == std::string::npos, "tex_remove_math_delimiters strips dollar delimiters");
   expect_true(std::string(pluss::make_note("x+y").tex().add_math_delimiters().at(0)) == "$x+y$",
               "tex_add_math_delimiters wraps plain expression");
@@ -663,7 +663,7 @@ void test_high_yield_nlp_and_printing() {
   const std::string text_only = std::string(tex.tex().text_only().at(0));
   expect_true(text_only.find("Math:") != std::string::npos, "tex_text_only keeps prose payload");
 
-  const std::string no_fmt = std::string(tex.tex().remove_formatting().at(0));
+  const std::string no_fmt = std::string(tex.tex().strip_fmt().at(0));
   expect_true(no_fmt.find("Bold") != std::string::npos, "tex_remove_formatting keeps formatted content");
   expect_true(no_fmt.find("\\textbf") == std::string::npos, "tex_remove_formatting drops formatting commands");
 
@@ -702,37 +702,37 @@ void test_tex_canonicalize_and_macros() {
   const std::string pm = std::string(t.tex().pm_signs().at(0));
   expect_true(pm.find("+/-") != std::string::npos, "pm_signs converts \\pm");
 
-  const std::string vec = std::string(t.tex().standardize_vectors().at(0));
+  const std::string vec = std::string(t.tex().vector_norm().at(0));
   expect_true(vec.find("\\vec{v}") != std::string::npos, "tex_standardize_vectors normalizes vector markup");
 
-  const std::string mat = std::string(t.tex().standardize_matrices().at(0));
+  const std::string mat = std::string(t.tex().matrix_norm().at(0));
   expect_true(mat.find("\\begin{matrix}") != std::string::npos, "tex_standardize_matrices normalizes matrix env");
 
-  const std::string sums = std::string(t.tex().standardize_summations().at(0));
+  const std::string sums = std::string(t.tex().sum_norm().at(0));
   expect_true(sums.find("\\sumlimits") == std::string::npos, "tex_standardize_summations removes sumlimits");
 
-  const std::string lims = std::string(t.tex().standardize_limits().at(0));
+  const std::string lims = std::string(t.tex().limit_norm().at(0));
   expect_true(lims.find("\\limits") == std::string::npos, "tex_standardize_limits strips \\limits");
 
-  const std::string subs = std::string(t.tex().standardize_subscripts().at(0));
+  const std::string subs = std::string(t.tex().sub_norm().at(0));
   expect_true(subs.find("x_{i}") != std::string::npos, "tex_standardize_subscripts braces subscripts");
 
-  const std::string sups = std::string(t.tex().standardize_superscripts().at(0));
+  const std::string sups = std::string(t.tex().sup_norm().at(0));
   expect_true(sups.find("x^{2}") != std::string::npos, "tex_standardize_superscripts braces superscripts");
 
-  const std::string primes = std::string(t.tex().standardize_primes().at(0));
+  const std::string primes = std::string(t.tex().prime_norm().at(0));
   expect_true(primes.find("\\prime") != std::string::npos, "tex_standardize_primes expands primes");
 
-  const std::string dots = std::string(t.tex().standardize_dots().at(0));
+  const std::string dots = std::string(t.tex().dots_norm().at(0));
   expect_true(dots.find("\\dots") != std::string::npos, "tex_standardize_dots normalizes dots");
 
-  const std::string acc = std::string(t.tex().remove_accents().at(0));
+  const std::string acc = std::string(t.tex().deaccent().at(0));
   expect_true(acc.find("e") != std::string::npos, "tex_remove_accents strips accent macros");
 
   const std::string setm = std::string(t.tex().set_macro("Foo", "Bar").at(0));
   expect_true(setm.find("\\newcommand{\\Foo}{Bar}") != std::string::npos, "tex_set_macro inserts macro decl");
 
-  const std::string remm = std::string(t.tex().remove_macro("RR").at(0));
+  const std::string remm = std::string(t.tex().strip_macro("RR").at(0));
   expect_true(remm.find("\\newcommand") == std::string::npos, "tex_remove_macro removes macro decl");
 
   const std::string wrapped = std::string(pluss::make_note("x+y").tex().wrap_inline_math("$").at(0));
@@ -750,7 +750,7 @@ void test_tex_canonicalize_and_macros() {
   const std::string inc = std::string(pluss::make_note("\\input{sec1}").tex().input_tags().at(0));
   expect_true(inc.find("[include:sec1]") != std::string::npos, "input_tags rewrites inputs");
 
-  const std::string gfx = std::string(pluss::make_note("\\includegraphics{fig}").tex().resolve_graphics().at(0));
+  const std::string gfx = std::string(pluss::make_note("\\includegraphics{fig}").tex().graphics_tags().at(0));
   expect_true(gfx.find("[graphic:fig]") != std::string::npos, "tex_resolve_graphics rewrites graphics");
 }
 

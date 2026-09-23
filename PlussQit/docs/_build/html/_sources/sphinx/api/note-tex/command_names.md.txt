@@ -27,7 +27,7 @@ The method reports lexical occurrences, not a set. Names retain source order
 and duplicates remain duplicated. It does not determine whether a command is
 defined, distinguish built-ins from user macros, expand declarations, or
 discard comments. Apply `strip_comments()` first when commented source must
-not contribute names; use `macros_used()` when a deduplicated macro-oriented
+not contribute names; use `macro_use()` when a deduplicated macro-oriented
 inventory is the intended result.
 
 The return is a closed `TokenBatch`. Flat Text `tokens()` holds the names and
@@ -109,8 +109,8 @@ command names Int64: rejected
 ## See Also
 
 - `commands`: extract complete command lexemes rather than names alone.
-- `macros_defined`: extract names introduced by local declarations.
-- `macros_used`: build a deduplicated macro-use inventory.
+- `macro_defs`: extract names introduced by local declarations.
+- `macro_use`: build a deduplicated macro-use inventory.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="collapse_macros.html"><span class="label">Previous</span><span class="title">collapse_macros</span></a>

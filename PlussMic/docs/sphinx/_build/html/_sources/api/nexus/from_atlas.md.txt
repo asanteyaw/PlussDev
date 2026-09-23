@@ -1,0 +1,119 @@
+<!-- pluss-hand-authored -->
+
+# Nexus::from_atlas
+
+[Back to Nexus API Reference](../../nexus_api_reference)
+
+## Signatures
+
+```cpp
+static Nexus::from_atlas(const Atlas& atlas) -> Nexus
+
+static Nexus::from_atlas(const Atlas& atlas, const Thread& labels) -> Nexus
+```
+
+## What It Does
+
+Builds a `Nexus` from an [`Atlas`](../../atlas_api_reference) — a same-shaped stack of
+frames — using each frame's position as a separate workspace table. Both overloads are
+**static** (called as `Nexus::from_atlas(...)`, not on an existing instance).
+
+The one-argument overload uses `atlas`'s own axis-0 labels as table keys, if the atlas has
+them (`atlas.axis0_labels().has_value()`); otherwise it falls back to auto-generated
+`table_0`, `table_1`, ... keys, same as [`inject()`](inject.md)'s unnamed form. The
+two-argument overload always uses the given `labels` explicitly, converting each label to
+a string key the same way [`neighbors()`](neighbors.md) and friends stringify things
+internally — text labels are used as-is; numeric labels are stringified; a labels thread
+that produces the same key string twice throws.
+
+## Parameters
+
+**atlas** (`const Atlas&`)
+    The source stack of same-shaped frames.
+
+**labels** (`const Thread&`, two-argument overload)
+    Explicit table keys, one per atlas frame. Must be defined, must have exactly
+    `atlas.depth()` elements, and must not produce a duplicate key string — see the
+    important callout above.
+
+## Returns
+
+`Nexus`
+    A workspace with one table per atlas frame, in atlas order.
+
+## Examples
+
+Example 1. Building from an `Atlas` with explicit labels.
+
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto orders_q1 = DataFrame({
+    {"order_id", Thread(pluss::make_series({101.0, 102.0}))},
+    {"amount",   Thread(pluss::make_series({50.0, 75.0}))},
+});
+auto orders_q2 = DataFrame({
+    {"order_id", Thread(pluss::make_series({201.0, 202.0}))},
+    {"amount",   Thread(pluss::make_series({40.0, 60.0}))},
+});
+
+auto atlas = Atlas({orders_q1, orders_q2}, Thread(pluss::make_note({"Q1", "Q2"})));
+
+auto rebuilt = Nexus::from_atlas(atlas);
+std::cout << rebuilt.ntables() << " ";
+for (const auto& k : rebuilt.keys()) {
+  std::cout << k << " ";
+}
+```
+
+### Output
+
+```text
+2 Q1 Q2
+```
+
+The atlas already carries axis-0 labels (`"Q1"`, `"Q2"`), so the one-argument overload
+uses them directly as table keys.
+
+Example 2. The two-argument overload, supplying labels explicitly regardless of what the
+atlas itself carries.
+
+```cpp
+auto with_labels = Nexus::from_atlas(atlas, Thread(pluss::make_note({"Q1", "Q2"})));
+for (const auto& k : with_labels.keys()) {
+  std::cout << k << " ";
+}
+```
+
+### Output
+
+```text
+Q1 Q2
+```
+
+## Notes
+
+- Both overloads are static — call as `Nexus::from_atlas(...)`.
+- The one-argument overload's fallback to `table_0`/`table_1`/... only applies when the
+  atlas has no axis-0 labels of its own.
+- [`inject(const Atlas&)`](inject.md) appends an atlas's frames into an *existing*
+  workspace, using this same labeling logic; `from_atlas()` builds a brand-new one.
+
+## See Also
+
+- [`Nexus::to_atlas`](to_atlas.md): the inverse — collapse selected workspace tables back
+  into an `Atlas`.
+- [`Nexus::inject`](inject.md): append an `Atlas`'s frames into an existing workspace
+  instead of building a new one.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="from.html">
+    <span class="label">Previous</span>
+    <span class="title">from</span>
+  </a>
+  <a class="next-link" href="get.html">
+    <span class="label">Next</span>
+    <span class="title">get</span>
+  </a>
+</div>

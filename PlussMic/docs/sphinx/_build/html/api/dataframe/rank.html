@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::rank &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::rdiv" href="rdiv.html" />
+    <link rel="prev" title="DataFrame::rand" href="rand.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6492ca4d5725 -->
+<section id="dataframe-rank">
+<h1>DataFrame::rank<a class="headerlink" href="#dataframe-rank" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">rank</span><span class="p">(</span><span class="n">RankTieRule</span><span class="w"> </span><span class="n">ties</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RankTieRule</span><span class="o">::</span><span class="n">Average</span><span class="p">,</span>
+<span class="w">                 </span><span class="n">RankNullRule</span><span class="w"> </span><span class="n">nulls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RankNullRule</span><span class="o">::</span><span class="n">Keep</span><span class="p">,</span>
+<span class="w">                 </span><span class="kt">bool</span><span class="w"> </span><span class="n">ascending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">                 </span><span class="kt">bool</span><span class="w"> </span><span class="n">percentage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Replaces every numeric feature’s values with their rank among that feature’s other
+values — the smallest value gets rank <code class="docutils literal notranslate"><span class="pre">1</span></code> (with <code class="docutils literal notranslate"><span class="pre">ascending</span> <span class="pre">=</span> <span class="pre">true</span></code>, the default), the
+next-smallest gets rank <code class="docutils literal notranslate"><span class="pre">2</span></code>, and so on. The result is the same shape as the source frame;
+ranks replace values in place, feature by feature, rather than being reduced to a single
+summary.</p>
+<p>Two things need a policy decision that plain sorting doesn’t: what happens when two
+values are <strong>tied</strong>, and what happens to a <strong>null</strong>. <code class="docutils literal notranslate"><span class="pre">rank()</span></code> exposes both as explicit
+parameters instead of picking a silent default you’d have to discover by testing.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>ties</strong> (<code class="docutils literal notranslate"><span class="pre">RankTieRule</span></code>, default <code class="docutils literal notranslate"><span class="pre">Average</span></code>)</p>
+<p>How to resolve rank ties (equal values):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Average</span></code>: tied values all receive the mean of the ranks they would have occupied
+(two values tied for ranks <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> both get <code class="docutils literal notranslate"><span class="pre">2.5</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Lowest</span></code>: tied values all receive the lowest of the ranks they would have occupied.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Highest</span></code>: tied values all receive the highest of the ranks they would have occupied.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">First</span></code>: ties are broken by original row order — whichever tied value appears first in
+the frame gets the lower rank.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Dense</span></code>: like <code class="docutils literal notranslate"><span class="pre">Lowest</span></code>, but without leaving a gap in the rank sequence afterward (the
+next distinct value always gets <code class="docutils literal notranslate"><span class="pre">previous_rank</span> <span class="pre">+</span> <span class="pre">1</span></code>, not <code class="docutils literal notranslate"><span class="pre">previous_rank</span> <span class="pre">+</span> <span class="pre">count_of_ties</span></code>).</p></li>
+</ul>
+<p><strong>nulls</strong> (<code class="docutils literal notranslate"><span class="pre">RankNullRule</span></code>, default <code class="docutils literal notranslate"><span class="pre">Keep</span></code>)</p>
+<p>How to rank missing values: <code class="docutils literal notranslate"><span class="pre">Keep</span></code> leaves a null’s rank as null (it is excluded from
+ranking entirely); <code class="docutils literal notranslate"><span class="pre">Top</span></code> ranks nulls as if they were the smallest values; <code class="docutils literal notranslate"><span class="pre">Bottom</span></code> ranks
+them as if they were the largest.</p>
+<p><strong>ascending</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p><code class="docutils literal notranslate"><span class="pre">true</span></code> ranks smallest-to-largest (smallest gets rank <code class="docutils literal notranslate"><span class="pre">1</span></code>); <code class="docutils literal notranslate"><span class="pre">false</span></code> reverses the order
+(largest gets rank <code class="docutils literal notranslate"><span class="pre">1</span></code>).</p>
+<p><strong>percentage</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">true</span></code>, each rank is divided by the number of ranked observations, giving a
+percentile-style rank in <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1]</span></code> instead of a raw integer-like rank.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame, same shape as the source, with every numeric feature’s values replaced
+by their rank under the requested policy. Non-numeric features are left unchanged.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default tie policy: tied values share the average of their ranks.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;student&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Dede&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scores</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | student  score
+---------------------
+0    | Ada      80   
+1    | Bola     95   
+2    | Chen     80   
+3    | Dede     60   
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ranked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">rank</span><span class="p">();</span><span class="w">  </span><span class="c1">// ties = Average, ascending = true (defaults)</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ranked</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-after">
+<h3>Output (after)<a class="headerlink" href="#output-after" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | student  score
+---------------------
+0    | Ada      2.5  
+1    | Bola     4    
+2    | Chen     2.5  
+3    | Dede     1    
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>Sorted ascending, the four scores occupy ranks <code class="docutils literal notranslate"><span class="pre">1</span></code> (<code class="docutils literal notranslate"><span class="pre">60</span></code>), <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> (the tied <code class="docutils literal notranslate"><span class="pre">80</span></code>s),
+and <code class="docutils literal notranslate"><span class="pre">4</span></code> (<code class="docutils literal notranslate"><span class="pre">95</span></code>). <code class="docutils literal notranslate"><span class="pre">Ada</span></code> and <code class="docutils literal notranslate"><span class="pre">Chen</span></code> — both at <code class="docutils literal notranslate"><span class="pre">80</span></code> — split the difference and each land on
+<code class="docutils literal notranslate"><span class="pre">2.5</span></code> rather than one arbitrarily beating the other.</p>
+<p>Example 2. Break the same tie by row order instead of averaging.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ranked_first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">rank</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">RankTieRule</span><span class="o">::</span><span class="n">First</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">ranked_first</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | student  score
+---------------------
+0    | Ada      2    
+1    | Bola     4    
+2    | Chen     3    
+3    | Dede     1    
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">RankTieRule::First</span></code>, <code class="docutils literal notranslate"><span class="pre">Ada</span></code>’s <code class="docutils literal notranslate"><span class="pre">80</span></code> (case <code class="docutils literal notranslate"><span class="pre">0</span></code>) beats <code class="docutils literal notranslate"><span class="pre">Chen</span></code>’s <code class="docutils literal notranslate"><span class="pre">80</span></code> (case <code class="docutils literal notranslate"><span class="pre">2</span></code>) purely
+because it appears earlier in the frame — <code class="docutils literal notranslate"><span class="pre">Ada</span></code> gets <code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">Chen</span></code> gets <code class="docutils literal notranslate"><span class="pre">3</span></code>, with no tie
+left unresolved. This is the policy to reach for when downstream logic needs a strict,
+unambiguous ordering (assigning unique positions in a leaderboard, for instance) rather
+than a statistically fair split.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rank()</span></code> <strong>replaces</strong> each numeric feature’s values with ranks; it does not add a new
+column alongside the original. Keep the original values with <a class="reference internal" href="assign.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">assign()</span></code></span></a>
+first if you need both.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RankNullRule::Keep</span></code> (the default) means a row with a null in the ranked feature simply
+has no rank there — it does not consume a rank position, so the remaining values still
+rank as if that row didn’t exist for this feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">percentage</span> <span class="pre">=</span> <span class="pre">true</span></code> is useful when you want a <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>-scaled competitive standing
+(percentile rank) rather than a raw position number, without a separate division step.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="arrange.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::arrange</span></code></span></a>: reorder rows by value, rather than
+annotating each row with its rank in place.</p></li>
+<li><p><a class="reference internal" href="percentiles.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::percentiles</span></code></span></a>: a related but distinct question — the
+value at a given percentile, rather than a value’s own rank.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rand.html">
+    <span class="label">Previous</span>
+    <span class="title">rand</span>
+  </a>
+  <a class="next-link" href="rdiv.html">
+    <span class="label">Next</span>
+    <span class="title">rdiv</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="rand.html" title="previous chapter">DataFrame::rand</a></li>
+      <li>Next: <a href="rdiv.html" title="next chapter">DataFrame::rdiv</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/rank.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFramePlotAccessor::act &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFramePlotAccessor::andrews_curves" href="andrews_curves.html" />
+    <link rel="prev" title="DataFramePlotAccessor API Reference" href="../../dataframe_plot_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 708f2a0c72c2 -->
+<section id="dataframeplotaccessor-act">
+<h1>DataFramePlotAccessor::act<a class="headerlink" href="#dataframeplotaccessor-act" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">act</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">ActPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Draws an autocorrelation plot for one numeric feature: for each lag <code class="docutils literal notranslate"><span class="pre">k</span></code> from <code class="docutils literal notranslate"><span class="pre">1</span></code> up to
+<code class="docutils literal notranslate"><span class="pre">max_lag</span></code>, computes the Pearson correlation between the series and itself shifted by <code class="docutils literal notranslate"><span class="pre">k</span></code>
+positions, and draws one vertical spike per lag at that correlation value. This is a
+standard diagnostic for spotting periodicity or serial dependence in a sequence — a spike
+that stays well outside the confidence band at a given lag suggests the series at that lag
+is not just noise.</p>
+<p><code class="docutils literal notranslate"><span class="pre">act()</span></code> is one of three closely related single-feature diagnostic plots on this accessor,
+alongside <a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag()</span></code></span></a> (a single lag’s scatter, rather than every lag’s correlation)
+and <a class="reference internal" href="bootstrap.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bootstrap()</span></code></span></a> (a resampling-based diagnostic, unrelated to lags). All
+three share the same feature-resolution rule: the named feature must resolve to exactly one
+numeric (<code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind) feature, validated via the accessor’s
+<code class="docutils literal notranslate"><span class="pre">numeric_feature_names(frame_,</span> <span class="pre">{feature},</span> <span class="pre">where)</span></code> call — passing a non-numeric feature name
+throws <code class="docutils literal notranslate"><span class="pre">&quot;&lt;where&gt;:</span> <span class="pre">feature</span> <span class="pre">'&lt;name&gt;'</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">a</span> <span class="pre">numeric</span> <span class="pre">Series&quot;</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>include_zero_lag is always false here — lag 0 (always 1.0) is never shown
+Internally, <code class="docutils literal notranslate"><span class="pre">act()</span></code> delegates to the same autocorrelation machinery used elsewhere in
+<code class="docutils literal notranslate"><span class="pre">PlussPl</span></code>’s <code class="docutils literal notranslate"><span class="pre">flash</span></code> layer, but always with <code class="docutils literal notranslate"><span class="pre">include_zero_lag</span> <span class="pre">=</span> <span class="pre">false</span></code>. The lag-0
+autocorrelation of any series with itself is trivially <code class="docutils literal notranslate"><span class="pre">1.0</span></code> and isn’t informative, so
+<code class="docutils literal notranslate"><span class="pre">act()</span></code>’s spikes always start at lag <code class="docutils literal notranslate"><span class="pre">1</span></code>, never lag <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At least three data points are required
+The underlying autocorrelation computation needs at least three points to be meaningful; a
+feature with fewer than three rows throws <code class="docutils literal notranslate"><span class="pre">&quot;flash::acfplot</span> <span class="pre">requires</span> <span class="pre">at</span> <span class="pre">least</span> <span class="pre">three</span> <span class="pre">points&quot;</span></code>
+even though <code class="docutils literal notranslate"><span class="pre">ActPlotOptions</span></code> itself has no explicit minimum-row-count field.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The single numeric feature to autocorrelate against its own lagged copies. Must resolve
+to a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind feature — see the shared-diagnostics note above.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">ActPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">ActPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">std::int64_t</span> <span class="pre">max_lag{40};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">bool</span> <span class="pre">show_confidence_band{true};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">confidence_level{0.95};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">float</span> <span class="pre">trace_width{1.2F};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">max_lag</span></code> is clamped internally to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">1]</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the feature’s row count, so
+requesting a <code class="docutils literal notranslate"><span class="pre">max_lag</span></code> larger than the data supports doesn’t throw — it’s silently
+capped. <code class="docutils literal notranslate"><span class="pre">show_confidence_band</span></code> draws two horizontal reference lines at
+<code class="docutils literal notranslate"><span class="pre">±z</span> <span class="pre">/</span> <span class="pre">sqrt(n)</span></code>, where <code class="docutils literal notranslate"><span class="pre">z</span></code> is the z-score for <code class="docutils literal notranslate"><span class="pre">confidence_level</span></code> (using the same lookup
+table as <a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bar()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">ci_enabled</span></code> whiskers: <code class="docutils literal notranslate"><span class="pre">0.99</span> <span class="pre">→</span> <span class="pre">2.575829</span></code>, <code class="docutils literal notranslate"><span class="pre">0.98</span> <span class="pre">→</span>&#160;&#160;&#160;&#160; <span class="pre">2.326348</span></code>, <code class="docutils literal notranslate"><span class="pre">0.95</span> <span class="pre">→</span> <span class="pre">1.959964</span></code>, <code class="docutils literal notranslate"><span class="pre">0.90</span> <span class="pre">→</span> <span class="pre">1.644854</span></code>, anything else <code class="docutils literal notranslate"><span class="pre">→</span> <span class="pre">1.281552</span></code>). A spike
+that crosses outside this band at a given lag is a rough visual cue that the
+autocorrelation at that lag is unlikely to be pure noise. <code class="docutils literal notranslate"><span class="pre">trace_width</span></code> controls the
+stroke width of each spike.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing one autocorrelation spike per lag (<code class="docutils literal notranslate"><span class="pre">1..max_lag</span></code>), a
+zero reference line, and (when enabled) two confidence-band reference lines.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default options: a periodic-looking sequence, autocorrelated out to lag 40 (or
+fewer, if the data is shorter).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">wave</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">60</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">wave</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">sin</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">3</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;signal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">wave</span><span class="p">))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;signal&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">wave</span></code> has 60 rows, <code class="docutils literal notranslate"><span class="pre">max_lag</span> <span class="pre">=</span> <span class="pre">40</span></code> (the default) fits within the <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">59]</span></code> clamp range
+unchanged; expect strong spikes near lags that are multiples of the wave’s period.</p>
+<p><img alt="Output of Example 1" src="../../_images/act-1.svg" /></p>
+<p>Example 2. A shorter feature: <code class="docutils literal notranslate"><span class="pre">max_lag</span></code> is silently clamped rather than throwing.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;reading&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.5</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.5</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.5</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;reading&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">reading</span></code> has 7 rows, so <code class="docutils literal notranslate"><span class="pre">max_lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">6</span></code> (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">1</span></code>) even though the requested
+default is <code class="docutils literal notranslate"><span class="pre">40</span></code>; spikes are drawn only for lags <code class="docutils literal notranslate"><span class="pre">1..6</span></code>.</p>
+<p><img alt="Output of Example 2" src="../../_images/act-2.svg" /></p>
+<p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">ActPlotOptions</span></code>, narrowing <code class="docutils literal notranslate"><span class="pre">max_lag</span></code>, using a stricter
+<code class="docutils literal notranslate"><span class="pre">confidence_level</span></code>, and thickening the spikes.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ActPlotOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">max_lag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">confidence_level</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.99</span><span class="p">;</span>
+<span class="n">options</span><span class="p">.</span><span class="n">trace_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0F</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;signal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The confidence band widens (using <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">2.575829</span></code> for <code class="docutils literal notranslate"><span class="pre">0.99</span></code> instead of the default <code class="docutils literal notranslate"><span class="pre">0.95</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">1.959964</span></code>), making it harder for a spike to appear “significant.”</p>
+<p><img alt="Output of Example 3" src="../../_images/act-3.svg" /></p>
+<p>Example 4. Disabling the confidence band entirely.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ActPlotOptions</span><span class="w"> </span><span class="n">bare_options</span><span class="p">;</span>
+<span class="n">bare_options</span><span class="p">.</span><span class="n">show_confidence_band</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;signal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">bare_options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Only the raw spikes and the zero reference line are drawn — no <code class="docutils literal notranslate"><span class="pre">±CI</span></code> lines.</p>
+<p><img alt="Output of Example 4" src="../../_images/act-4.svg" /></p>
+<p>Example 5. A non-numeric feature throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;signal&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.5</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;label&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">act</span><span class="p">(</span><span class="s">&quot;label&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::plot().act: feature &#39;label&#39; is not a numeric Series
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code> must resolve to exactly one numeric feature — see the shared-diagnostics note
+above.</p></li>
+<li><p>Lag <code class="docutils literal notranslate"><span class="pre">0</span></code> is never shown; spikes start at lag <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_lag</span></code> is clamped to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">1]</span></code>, never throwing for an over-large request.</p></li>
+<li><p>A feature with fewer than three rows throws before any spike is drawn.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="lag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::lag</span></code></span></a>: a single lag’s scatter plot, rather than every
+lag’s correlation coefficient.</p></li>
+<li><p><a class="reference internal" href="bootstrap.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::bootstrap</span></code></span></a>: another single-feature diagnostic,
+based on resampling rather than lags.</p></li>
+<li><p><a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::bar</span></code></span></a>: shares the same z-score-for-confidence lookup
+table for its <code class="docutils literal notranslate"><span class="pre">ci_enabled</span></code> whiskers.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="andrews_curves.html">
+    <span class="label">Next</span>
+    <span class="title">andrews_curves</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="../../dataframe_plot_api_reference.html" title="previous chapter">DataFramePlotAccessor API Reference</a></li>
+      <li>Next: <a href="andrews_curves.html" title="next chapter">DataFramePlotAccessor::andrews_curves</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-plot/act.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -20,14 +20,14 @@ bool same_shape(const pluss::Series& x, std::initializer_list<std::int64_t> expe
 }
 
 bool run_cudnn_attention_route_checks(std::ostream* err = nullptr) {
-  if (pluss::cudnn_attention_ready() && !pluss::cuda::cudnn_ready()) {
+  if (pluss::nn::cudnn_attention_ready() && !pluss::cuda::cudnn_ready()) {
     if (err) *err << "cudnn_attention_ready implies cuda::cudnn_ready\n";
     return false;
   }
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
   const pluss::Series x = pluss::series::rand({2, 5, 8}, cfg, 401ULL);
-  const auto [out_cpu, w_cpu] = pluss::scaled_attention(x, x, x);
+  const auto [out_cpu, w_cpu] = pluss::nn::scaled_attention(x, x, x);
   if (!same_shape(out_cpu, {2, 5, 8}) || !same_shape(w_cpu, {2, 5, 5})) {
     if (err) *err << "scaled_attention CPU fallback shape mismatch\n";
     return false;
@@ -35,7 +35,7 @@ bool run_cudnn_attention_route_checks(std::ostream* err = nullptr) {
 
   if (pluss::cuda::is_ready() && pluss::cuda::cpu_bridge_enabled()) {
     const pluss::Series x_cuda = x.to(pluss::pCUDA);
-    const auto [out_cuda, w_cuda] = pluss::scaled_attention(x_cuda, x_cuda, x_cuda);
+    const auto [out_cuda, w_cuda] = pluss::nn::scaled_attention(x_cuda, x_cuda, x_cuda);
     if (!same_shape(out_cuda, {2, 5, 8}) || !same_shape(w_cuda, {2, 5, 5})) {
       if (err) *err << "scaled_attention CUDA route shape mismatch\n";
       return false;

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameNoteAccessor::lstrip &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameNoteAccessor::matches" href="matches.html" />
+    <link rel="prev" title="DataFrameNoteAccessor::lower" href="lower.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 921625b2fbef -->
+<section id="dataframenoteaccessor-lstrip">
+<h1>DataFrameNoteAccessor::lstrip<a class="headerlink" href="#dataframenoteaccessor-lstrip" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_note_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameNoteAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">lstrip</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameNoteAccessor</span><span class="o">::</span><span class="n">lstrip</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">chars</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>The left-only half of <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>: trims characters from the
+<em>start</em> of every selected text feature’s cells, leaving the trailing end
+completely untouched. Same two policies as <code class="docutils literal notranslate"><span class="pre">strip()</span></code>:</p>
+<ul class="simple">
+<li><p><strong>No-argument overload</strong>: trims the classic ASCII whitespace set (space,
+tab, newline, carriage return, form feed, vertical tab) from the left edge
+only.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">chars</span></code> overload</strong>: trims by character-set membership from the left edge
+only — every leading character that’s a member of <code class="docutils literal notranslate"><span class="pre">chars</span></code> is peeled off,
+one at a time, until a character outside the set is reached. See
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>’s page for the full explanation of why this is
+set-membership, not literal substring matching.</p></li>
+</ul>
+<p>Everything else about how the accessor applies an operation — to every
+selected feature in one call, leaving null cells null, and reachable either
+through <a class="reference internal" href="../dataframe/nt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::nt()</span></code></span></a> or by constructing
+<code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor</span></code> directly against a mixed frame — is identical to
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>; see that page for the full explanation and worked
+examples of both.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>chars</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">chars</span></code>-overload only)</p>
+<p>The set of characters to strip from each cell’s left edge only.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with every selected feature’s text left-trimmed; the trailing
+end of every cell is preserved byte-for-byte.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Default overload: trim leading whitespace only, leaving trailing
+whitespace in place.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">catalog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sku&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;SKU-1001  &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-1002&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-1003   &quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-1004&quot;</span><span class="p">}),</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p4&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">catalog</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">lstrip</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | sku        
+------------------
+p1   | SKU-1001   
+p2   | SKU-1002   
+p3   | SKU-1003   
+p4   | NULL       
+------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>None of <code class="docutils literal notranslate"><span class="pre">catalog</span></code>’s values had <em>leading</em> whitespace to begin with — the
+trailing spaces on <code class="docutils literal notranslate"><span class="pre">p1</span></code> and <code class="docutils literal notranslate"><span class="pre">p3</span></code> are visibly still present in the rendered
+column width, unlike <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code>’s Example 1</span></a>, which would have
+removed them. <code class="docutils literal notranslate"><span class="pre">p4</span></code> stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, exactly as it does for every accessor
+method.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">chars</span></code> overload: strip a character set from the left edge only,
+using the same bracket data <a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code>’s Example 2</span></a> uses, to make
+the one-sided difference obvious.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;code&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;[[[SKU-1001]]]&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;((SKU-1002))&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SKU-1003&quot;</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">nt</span><span class="p">().</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&quot;[(&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | code       
+------------------
+0    | SKU-1001]]]
+1    | SKU-1002)) 
+2    | SKU-1003   
+------------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>Compare this directly to <code class="docutils literal notranslate"><span class="pre">strip(&quot;[]()&quot;)</span></code>’s result of <code class="docutils literal notranslate"><span class="pre">&quot;SKU-1001&quot;</span></code> for the same
+row: <code class="docutils literal notranslate"><span class="pre">lstrip(&quot;[(&quot;)</span></code> only ever removes characters from the left, so the
+trailing <code class="docutils literal notranslate"><span class="pre">]]]</span></code> and <code class="docutils literal notranslate"><span class="pre">))</span></code> survive completely intact — only the leading <code class="docutils literal notranslate"><span class="pre">[[[</span></code>
+and <code class="docutils literal notranslate"><span class="pre">((</span></code> are gone.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Applies to every feature the accessor was built with, in one call — see
+<a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strip()</span></code></span></a>’s Notes for the full explanation shared by every
+method on this accessor.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p>For the mirror-image right-edge trim, see <a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rstrip()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::strip</span></code></span></a>: both edges at once, and the
+canonical explanation of the accessor’s shared mechanics.</p></li>
+<li><p><a class="reference internal" href="rstrip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::rstrip</span></code></span></a>: the right-only equivalent.</p></li>
+<li><p><a class="reference internal" href="pad.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameNoteAccessor::pad</span></code></span></a>: the inverse — add characters on a
+chosen side instead of removing them.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lower.html">
+    <span class="label">Previous</span>
+    <span class="title">lower</span>
+  </a>
+  <a class="next-link" href="matches.html">
+    <span class="label">Next</span>
+    <span class="title">matches</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_note_accessor_api_reference.html">DataFrameNoteAccessor API Reference</a><ul>
+      <li>Previous: <a href="lower.html" title="previous chapter">DataFrameNoteAccessor::lower</a></li>
+      <li>Next: <a href="matches.html" title="next chapter">DataFrameNoteAccessor::matches</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-note/lstrip.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

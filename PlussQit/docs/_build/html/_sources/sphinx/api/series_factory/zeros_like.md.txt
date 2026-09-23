@@ -19,18 +19,43 @@ pluss::series::zeros_like(const Series& like,
 
 ## What It Builds
 
-`zeros_like()` keeps the geometry of an existing tensor and safely fills the
-entire result with zero.
+`zeros_like()` allocates a new `Series` whose construction policy is derived
+from an existing `Series`, then writes zero to every logical element. It is a
+structural factory, not a conversion and not a view: the result owns separate
+storage, so changing it cannot change `like`.
 
 This is often the more practical sibling of [`empty_like()`](empty_like.md)
-because you get:
+because initialization is part of the contract rather than a responsibility
+left to the caller.
+
+With no override, the factory carries forward every supported property needed
+to make the result usable beside `like`:
 
 - same shape as `like`
-- predictable initialization
-- optional dtype override when you want a different storage policy
+- same dtype
+- same platform, including MPS or CUDA
+- same dense stride order; a transposed source therefore produces a
+  transposed-layout result rather than silently becoming row-major
 
-The public surface also keeps the British-spelling alias `zeroes_like()`, but
-`zeros_like()` is the canonical spelling used throughout the docs.
+For a sliced or overlapping source, exact strides may contain gaps or aliases
+that do not belong in a fresh allocation. In that case `zeros_like()` compacts
+the result into dense, non-overlapping storage while retaining the source's
+dimension order. This follows the same `Preserve` policy used by the local
+authoritative tensor implementation.
+
+| Property | Default | Explicit override |
+| --- | --- | --- |
+| Shape | inherited from `like` | not supported; use `zeros()` for a new shape |
+| Dtype | inherited from `like` | `ScalarType`, `Config::with_dtype()`, or `cfg::dtype()` |
+| Platform | inherited from `like` | `Config::with_platform()` or `cfg::platform()` |
+| Stride order | preserved and densified when necessary | no public memory-format override |
+| Gradient tracking | disabled on the new leaf | not a factory option |
+| Values | all zero in the chosen dtype | not configurable; use `full_like()` for another value |
+
+The override is explicit even when it names an ordinary factory default. For
+example, `with_dtype(Float32)` must convert an `Int16` reference to `Float32`,
+and `with_platform(pCPU)` must move a result derived from an MPS reference to
+CPU. Neither `Float32` nor CPU is treated as an “option was omitted” sentinel.
 
 ## Verified Examples
 
@@ -100,8 +125,15 @@ data=[[false, false, false],
 
 ## Notes
 
-- `zeros_like()` is the safe geometry-preserving allocation surface.
-- `zeroes_like()` is a compatibility alias, not a different algorithm.
+- `zeros_like()` never shares storage with `like`.
+- Dtype and platform overrides are independent: changing one still inherits
+  the other.
+- A tracked source does not make the new `Series` tracked. This matches the
+  fresh-leaf behavior of the authoritative implementation rather than treating
+  allocation as a differentiable operation.
+- Pinning is not inherited. The source implementation's tensor options do not
+  carry source pinning, and Pluss does not currently expose pinned storage as a
+  working `Series` allocation mode.
 
 ## See Also
 

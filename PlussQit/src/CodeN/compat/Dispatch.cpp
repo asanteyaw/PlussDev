@@ -551,7 +551,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_resolve_graphics" && args.empty()) return ops_internal::tex_resolve_graphics(self);
   if (op == "tex_simplify_fractions" && args.empty()) return ops_internal::tex_simplify_fractions(self);
   if (op == "tex_simplify_roots" && args.empty()) return ops_internal::tex_simplify_roots(self);
-  if (op == "tex_simplify_spacing" && args.empty()) return ops_internal::tex_simplify_spacing(self);
   if (op == "tex_convert_frac_to_slash" && args.empty()) return ops_internal::tex_convert_frac_to_slash(self);
   if (op == "tex_convert_sqrt_to_pow" && args.empty()) return ops_internal::tex_convert_sqrt_to_pow(self);
   if (op == "tex_convert_pm_to_plusminus" && args.empty()) return ops_internal::tex_convert_pm_to_plusminus(self);
@@ -580,7 +579,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_to_text" && args.empty()) return ops_internal::tex_to_text(self, 0);
   if (op == "tex_to_markdown" && args.empty()) return ops_internal::tex_to_markdown(self, 0);
   if (op == "tex_to_html" && args.empty()) return ops_internal::tex_to_html(self, 0);
-  if (op == "tex_sanitize" && args.empty()) return ops_internal::tex_sanitize(self, 0);
   if (op == "strip" && args.size() == 1) return ops_internal::strip(self, as_str(args[0]));
   if (op == "lstrip" && args.size() == 1) return ops_internal::lstrip(self, as_str(args[0]));
   if (op == "rstrip" && args.size() == 1) return ops_internal::rstrip(self, as_str(args[0]));
@@ -646,8 +644,6 @@ static const ::pluss::coden::Note& as_note(const CodenValue& a) {
   if (op == "tex_replace_command" && args.size() == 2) return ops_internal::tex_replace_command(self, as_str(args[0]), as_str(args[1]));
   if (op == "tex_to_text" && args.size() == 1) return ops_internal::tex_to_text(self, as_i64(args[0]));
   if (op == "tex_to_markdown" && args.size() == 1) return ops_internal::tex_to_markdown(self, as_i64(args[0]));
-  if (op == "tex_to_html" && args.size() == 1) return ops_internal::tex_to_html(self, as_i64(args[0]));
-  if (op == "tex_sanitize" && args.size() == 1) return ops_internal::tex_sanitize(self, as_i64(args[0]));
 
   if (op == "reshape" && args.size() == 1) return ops_internal::reshape(self, as_intlist(args[0]));
   if (op == "unsqueeze" && args.size() == 1) return ops_internal::unsqueeze(self, as_i64(args[0]));

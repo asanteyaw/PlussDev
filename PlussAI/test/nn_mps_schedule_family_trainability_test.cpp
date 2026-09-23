@@ -150,7 +150,7 @@ std::pair<Series, Series> make_conv_data() {
   const Series x = pluss::make_series(xbuf, {batch, 1, length}, f32_cpu());
   const Series kernel = pluss::make_series(std::vector<float>{0.2f, -0.1f, 0.35f}, {1, 1, 3}, f32_cpu());
   const Series bias = pluss::make_series(std::vector<float>{0.03f}, {1}, f32_cpu());
-  return {x, pluss::conv1d(x, kernel, bias, 1, 1, 1, 1)};
+  return {x, pluss::nn::conv1d(x, kernel, bias, 1, 1, 1, 1)};
 }
 
 std::pair<Series, Series> make_conv2d_data() {
@@ -176,7 +176,7 @@ std::pair<Series, Series> make_conv2d_data() {
                                            {1, 1, 3, 3},
                                            f32_cpu());
   const Series bias = pluss::make_series(std::vector<float>{0.04f}, {1}, f32_cpu());
-  return {x, pluss::conv(x, kernel, bias, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1})};
+  return {x, pluss::nn::conv(x, kernel, bias, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1})};
 }
 
 std::pair<Series, Series> make_grouped_conv1d_data() {
@@ -199,7 +199,7 @@ std::pair<Series, Series> make_grouped_conv1d_data() {
   }
   const Series kernel = pluss::make_series(wbuf, {4, 2, 3}, f32_cpu());
   const Series bias = pluss::make_series(std::vector<float>{0.01f, -0.02f, 0.03f, -0.01f}, {4}, f32_cpu());
-  return {x, pluss::conv1d(x, kernel, bias, 1, 1, 1, 2)};
+  return {x, pluss::nn::conv1d(x, kernel, bias, 1, 1, 1, 2)};
 }
 
 std::pair<Series, Series> make_depthwise_conv2d_data() {
@@ -229,7 +229,7 @@ std::pair<Series, Series> make_depthwise_conv2d_data() {
   const Series bias = pluss::make_series(std::vector<float>{0.02f, -0.01f, 0.015f}, {channels}, f32_cpu());
   return {
       x,
-      pluss::conv(x, kernel, bias, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, channels)};
+      pluss::nn::conv(x, kernel, bias, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, std::array<std::int64_t, 2>{1, 1}, channels)};
 }
 
 std::pair<Series, Series> make_causal_conv1d_data() {
@@ -245,7 +245,7 @@ std::pair<Series, Series> make_causal_conv1d_data() {
   const Series x = pluss::make_series(xbuf, {batch, 1, length}, f32_cpu());
   const Series kernel = pluss::make_series(std::vector<float>{0.15f, -0.05f, 0.25f}, {1, 1, 3}, f32_cpu());
   const Series bias = pluss::make_series(std::vector<float>{0.02f}, {1}, f32_cpu());
-  return {x, pluss::conv1d(x, kernel, bias, pluss::causal_padding1d(3, 2), 1, 2, 1)};
+  return {x, pluss::nn::conv1d(x, kernel, bias, pluss::nn::causal_padding1d(3, 2), 1, 2, 1)};
 }
 
 std::pair<Series, Series> make_conv3d_data() {
@@ -279,7 +279,7 @@ std::pair<Series, Series> make_conv3d_data() {
   const Series bias = pluss::make_series(std::vector<float>{0.01f, -0.015f}, {2}, f32_cpu());
   return {
       x,
-      pluss::conv3d(
+      pluss::nn::conv3d(
           x,
           kernel,
           bias,
@@ -592,7 +592,7 @@ struct MaskedTransformerAutoencoderImpl final : pluss::nn::Module {
   Series forward(const Series& input) const {
     const std::int64_t batch = input.sizes()[0];
     const std::int64_t seq = input.sizes()[1];
-    const Series seq_mask = pluss::square_subsequent_mask(seq, input);
+    const Series seq_mask = pluss::nn::square_subsequent_mask(seq, input);
     const Series pad_mask = pluss::series::zeros({batch, seq}, Config{}.with_dtype(ScalarType::Bool).with_platform(input.platform()));
     return transformer->forward(
         input,
@@ -791,7 +791,7 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
                                    .kernel_size = 3,
                                    .stride = 1,
                                    .padding = 0,
-                                   .padding_lr = pluss::causal_padding1d(3, 2),
+                                   .padding_lr = pluss::nn::causal_padding1d(3, 2),
                                    .dilation = 2,
                                    .groups = 1,
                                    .bias = true,

@@ -111,10 +111,10 @@ input tags Int64: rejected
 ## See Also
 
 - `includes`: extract include targets with per-cell offsets.
-- `resolve_graphics`: turn graphics directives into visible graphic tags.
+- `graphics_tags`: turn graphics directives into visible graphic tags.
 - `to_text`: perform a broader lossy TeX-to-text reduction.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="frac_slash.html"><span class="label">Previous</span><span class="title">frac_slash</span></a>
-  <a class="next-link" href="macro_subs.html"><span class="label">Next</span><span class="title">macro_subs</span></a>
+  <a class="prev-link" href="includes.html"><span class="label">Previous</span><span class="title">includes</span></a>
+  <a class="next-link" href="inline_math.html"><span class="label">Next</span><span class="title">inline_math</span></a>
 </div>

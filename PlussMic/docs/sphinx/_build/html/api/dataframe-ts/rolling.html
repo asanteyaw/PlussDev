@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameTsAccessor::rolling &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameTsAccessor::rolling_block" href="rolling_block.html" />
+    <link rel="prev" title="DataFrameTsAccessor::returns" href="returns.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3e8d46371453 -->
+<section id="dataframetsaccessor-rolling">
+<h1>DataFrameTsAccessor::rolling<a class="headerlink" href="#dataframetsaccessor-rolling" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameTsAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameTsAccessor</span><span class="o">::</span><span class="n">rolling</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">WindowOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameTsAccessor</span><span class="o">::</span><span class="n">rolling</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">duration</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="n">WindowClosure</span><span class="w"> </span><span class="n">closure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WindowClosure</span><span class="o">::</span><span class="n">Right</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrameTsAccessor</span><span class="o">::</span><span class="n">rolling</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">WindowSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keep_input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes a <strong>trailing rolling window statistic</strong> over every bound feature, in one
+of three shapes:</p>
+<ul class="simple">
+<li><p><strong>Fixed row count</strong> (<code class="docutils literal notranslate"><span class="pre">rolling(window,</span> <span class="pre">statistic,</span> <span class="pre">options)</span></code>): each row’s window is
+the <code class="docutils literal notranslate"><span class="pre">window</span></code> rows ending at (and including) that row. The very first <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">-</span> <span class="pre">1</span></code>
+rows use whatever’s available rather than waiting for a full window — row <code class="docutils literal notranslate"><span class="pre">0</span></code>’s
+window is just itself, row <code class="docutils literal notranslate"><span class="pre">1</span></code>’s is rows <code class="docutils literal notranslate"><span class="pre">0..1</span></code>, and so on, until row
+<code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">-</span> <span class="pre">1</span></code> and beyond see a full window. A row’s output is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> only if the
+number of non-null values it can see falls below <code class="docutils literal notranslate"><span class="pre">options.min_count</span></code>.</p></li>
+<li><p><strong>Calendar duration</strong> (<code class="docutils literal notranslate"><span class="pre">rolling(duration,</span> <span class="pre">statistic,</span> <span class="pre">options,</span> <span class="pre">closure)</span></code>): the same
+trailing-window idea, but each row’s window spans a fixed span of time (like
+<code class="docutils literal notranslate"><span class="pre">&quot;2D&quot;</span></code>) looked up against the accessor’s time axis, rather than a fixed row count.
+This overload requires the frame’s case labels (or an explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code>)
+to already be a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p></li>
+<li><p><strong>Structured specs</strong> (<code class="docutils literal notranslate"><span class="pre">rolling(specs,</span> <span class="pre">keep_input)</span></code>): delegates to a private
+<code class="docutils literal notranslate"><span class="pre">DataFrame::window(specs,</span> <span class="pre">keep_input)</span></code> helper (<code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor</span></code> is declared
+a <code class="docutils literal notranslate"><span class="pre">friend</span></code> of <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, so it can call it even though it isn’t part of
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s own public interface) — each <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code> names one feature, one
+fixed-size window, and one of <code class="docutils literal notranslate"><span class="pre">RollingSum</span></code>/<code class="docutils literal notranslate"><span class="pre">RollingMean</span></code>/<code class="docutils literal notranslate"><span class="pre">RollingMin</span></code>/<code class="docutils literal notranslate"><span class="pre">RollingMax</span></code>,
+producing one output column per spec (auto-named <code class="docutils literal notranslate"><span class="pre">&quot;{feature}_{op}_{window}&quot;</span></code>
+when <code class="docutils literal notranslate"><span class="pre">spec.output</span></code> is empty).</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>window</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, fixed-window overload)</p>
+<p>The trailing window size, in rows. Must be positive.</p>
+<p><strong>statistic</strong> (<code class="docutils literal notranslate"><span class="pre">WindowStatistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)</p>
+<p>The statistic computed over each window: <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Minimum</span></code>, <code class="docutils literal notranslate"><span class="pre">Maximum</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Std</span></code>, <code class="docutils literal notranslate"><span class="pre">Sem</span></code>, <code class="docutils literal notranslate"><span class="pre">Skew</span></code>, or <code class="docutils literal notranslate"><span class="pre">Kurtosis</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">WindowOptions&amp;</span></code>, fixed-window overload)</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">min_count</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>): minimum non-null observations
+required for a row’s output to be non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">ddof</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>): delta degrees of freedom for <code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">centered</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>): whether the window is centered on the
+row instead of trailing it.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">closure</span></code></strong> (<code class="docutils literal notranslate"><span class="pre">WindowClosure</span></code>, default <code class="docutils literal notranslate"><span class="pre">Right</span></code>): which end(s) of the window are
+inclusive.</p></li>
+</ul>
+<p><strong>duration</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, calendar-duration overload)</p>
+<p>A duration string (for example <code class="docutils literal notranslate"><span class="pre">&quot;2D&quot;</span></code>) defining each row’s time-based window width.</p>
+<p><strong>closure</strong> (<code class="docutils literal notranslate"><span class="pre">WindowClosure</span></code>, calendar-duration overload, default <code class="docutils literal notranslate"><span class="pre">Right</span></code>)</p>
+<p>Which end of the time window is inclusive.</p>
+<p><strong>specs</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::RangeView&lt;DataFrame::WindowSpec&gt;</span></code>, structured overload)</p>
+<p>A list of <code class="docutils literal notranslate"><span class="pre">{output,</span> <span class="pre">feature,</span> <span class="pre">op,</span> <span class="pre">window,</span> <span class="pre">min_periods}</span></code> records, each describing one
+fixed-size rolling column to compute.</p>
+<p><strong>keep_input</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, structured overload, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<p>Whether the original features are kept alongside the newly computed columns
+(<code class="docutils literal notranslate"><span class="pre">true</span></code>) or dropped in favor of just the computed columns (<code class="docutils literal notranslate"><span class="pre">false</span></code>).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with each targeted feature replaced (fixed-window and
+calendar-duration overloads) or a frame combining originals and/or computed
+columns (structured overload).</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A fixed-size trailing rolling mean, including its partial windows.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;sensor_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;load&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;load&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===========
+     | load
+-----------
+0    | 10  
+1    | 15  
+2    | 17.5
+3    | 22.5
+-----------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>With the default <code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">1</span></code>, row <code class="docutils literal notranslate"><span class="pre">0</span></code> doesn’t wait for a full 2-row window —
+its output is just itself (<code class="docutils literal notranslate"><span class="pre">10</span></code>). Row <code class="docutils literal notranslate"><span class="pre">1</span></code> sees a full window (<code class="docutils literal notranslate"><span class="pre">10,</span> <span class="pre">20</span></code>, mean
+<code class="docutils literal notranslate"><span class="pre">15</span></code>); row <code class="docutils literal notranslate"><span class="pre">2</span></code> sees <code class="docutils literal notranslate"><span class="pre">(20,</span> <span class="pre">15)</span></code> → <code class="docutils literal notranslate"><span class="pre">17.5</span></code>; row <code class="docutils literal notranslate"><span class="pre">3</span></code> sees <code class="docutils literal notranslate"><span class="pre">(15,</span> <span class="pre">30)</span></code> → <code class="docutils literal notranslate"><span class="pre">22.5</span></code>. This
+differs from libraries whose rolling default requires a full window before
+producing a value — here, that behavior only kicks in if you raise
+<code class="docutils literal notranslate"><span class="pre">options.min_count</span></code> to <code class="docutils literal notranslate"><span class="pre">window</span></code>.</p>
+<p>Example 2. The same window with <code class="docutils literal notranslate"><span class="pre">WindowStatistic::Std</span></code>, where <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> bites at
+row <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rolled_std</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;load&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Std</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rolled_std</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | load       
+------------------
+0    | NULL       
+1    | 7.071067812
+2    | 3.535533906
+3    | 10.60660172
+------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code>’s window has only 1 observation, and the default <code class="docutils literal notranslate"><span class="pre">ddof</span> <span class="pre">=</span> <span class="pre">1</span></code> requires more
+than <code class="docutils literal notranslate"><span class="pre">1</span></code> observation for a defined variance/std, so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code> even though
+<code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">1</span></code> alone would have allowed it. Row <code class="docutils literal notranslate"><span class="pre">1</span></code> computes the sample standard
+deviation of <code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">20)</span></code>; row <code class="docutils literal notranslate"><span class="pre">2</span></code> of <code class="docutils literal notranslate"><span class="pre">(20,</span> <span class="pre">15)</span></code>; row <code class="docutils literal notranslate"><span class="pre">3</span></code> of <code class="docutils literal notranslate"><span class="pre">(15,</span> <span class="pre">30)</span></code>.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">options.centered</span> <span class="pre">=</span> <span class="pre">true</span></code> — the window straddles each row instead of
+trailing it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">centered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;load&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span>
+<span class="w">    </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="n">WindowOptions</span><span class="p">{.</span><span class="n">centered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">centered</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>==================
+     | load       
+------------------
+0    | 15         
+1    | 15         
+2    | 21.66666667
+3    | 22.5       
+------------------
+[4 cs x 1 feat]
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">=</span> <span class="pre">3</span></code> and <code class="docutils literal notranslate"><span class="pre">centered</span> <span class="pre">=</span> <span class="pre">true</span></code>, row <code class="docutils literal notranslate"><span class="pre">0</span></code>’s window is rows <code class="docutils literal notranslate"><span class="pre">0..1</span></code>
+(<code class="docutils literal notranslate"><span class="pre">10,</span> <span class="pre">20</span></code> → <code class="docutils literal notranslate"><span class="pre">15</span></code>, clipped at the series start); row <code class="docutils literal notranslate"><span class="pre">1</span></code> is rows <code class="docutils literal notranslate"><span class="pre">0..2</span></code>
+(<code class="docutils literal notranslate"><span class="pre">10,</span> <span class="pre">20,</span> <span class="pre">15</span></code> → <code class="docutils literal notranslate"><span class="pre">15</span></code>); row <code class="docutils literal notranslate"><span class="pre">2</span></code> is rows <code class="docutils literal notranslate"><span class="pre">1..3</span></code> (<code class="docutils literal notranslate"><span class="pre">20,</span> <span class="pre">15,</span> <span class="pre">30</span></code> →
+<code class="docutils literal notranslate"><span class="pre">21.667</span></code>); row <code class="docutils literal notranslate"><span class="pre">3</span></code> is rows <code class="docutils literal notranslate"><span class="pre">2..3</span></code> (<code class="docutils literal notranslate"><span class="pre">15,</span> <span class="pre">30</span></code> → <code class="docutils literal notranslate"><span class="pre">22.5</span></code>, clipped at the end) — each
+window is centered on its row rather than trailing it, so both edges of the
+series see a truncated window instead of just the leading one.</p>
+<p>Example 4. Pass a non-positive <code class="docutils literal notranslate"><span class="pre">window</span></code>, to see it throw.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;load&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">rolling</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::moving: window must be &gt; 0
+</pre></div>
+</div>
+<p>A window of <code class="docutils literal notranslate"><span class="pre">0</span></code> (or negative) has no meaningful trailing span, so it’s
+rejected outright.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The fixed-window overload’s default options (<code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">centered</span> <span class="pre">=</span> <span class="pre">false</span></code>,
+<code class="docutils literal notranslate"><span class="pre">closure</span> <span class="pre">=</span> <span class="pre">Right</span></code>) mean the first <code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">-</span> <span class="pre">1</span></code> rows use a growing partial window
+rather than becoming <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — set <code class="docutils literal notranslate"><span class="pre">min_count</span> <span class="pre">=</span> <span class="pre">window</span></code> to require a full window
+everywhere instead.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Var</span></code>/<code class="docutils literal notranslate"><span class="pre">Std</span></code> additionally require the window’s observation count to exceed <code class="docutils literal notranslate"><span class="pre">ddof</span></code>
+(default <code class="docutils literal notranslate"><span class="pre">1</span></code>), independent of <code class="docutils literal notranslate"><span class="pre">min_count</span></code>.</p></li>
+<li><p>The calendar-duration overload needs a genuine time axis — either the frame’s own
+case labels are <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or an explicit <code class="docutils literal notranslate"><span class="pre">TsOptions.axis</span></code> supplies
+one — and is not covered by a worked example here since it depends on frequency
+and calendar conventions outside this reference’s current verified scope.</p></li>
+<li><p>The structured <code class="docutils literal notranslate"><span class="pre">specs</span></code> overload only supports <code class="docutils literal notranslate"><span class="pre">Sum</span></code>/<code class="docutils literal notranslate"><span class="pre">Mean</span></code>/<code class="docutils literal notranslate"><span class="pre">Min</span></code>/<code class="docutils literal notranslate"><span class="pre">Max</span></code> (via
+<code class="docutils literal notranslate"><span class="pre">ThreadWindowOp</span></code>), not the full <code class="docutils literal notranslate"><span class="pre">WindowStatistic</span></code> set the other two overloads
+support.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::grouped</span></code></span></a>: the same fixed-window statistic,
+computed independently per group instead of over the whole feature.</p></li>
+<li><p><a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::expanding</span></code></span></a>: the same engine with the window
+growing from the start of the series instead of a fixed size.</p></li>
+<li><p><a class="reference internal" href="rolling_block.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::rolling_block</span></code></span></a>: computing several
+window sizes and statistics of the same feature at once, each as its own output
+column.</p></li>
+<li><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTsAccessor::window</span></code></span></a>: shares this same structured-specs
+overload under a different public name.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="returns.html">
+    <span class="label">Previous</span>
+    <span class="title">returns</span>
+  </a>
+  <a class="next-link" href="rolling_block.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_block</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_ts_accessor_api_reference.html">DataFrameTsAccessor API Reference</a><ul>
+      <li>Previous: <a href="returns.html" title="previous chapter">DataFrameTsAccessor::returns</a></li>
+      <li>Next: <a href="rolling_block.html" title="next chapter">DataFrameTsAccessor::rolling_block</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-ts/rolling.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

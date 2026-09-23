@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TimeSeriesAccessor::grouped &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="TimeSeriesAccessor::gt" href="gt.html" />
+    <link rel="prev" title="TimeSeriesAccessor::ge" href="ge.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="timeseriesaccessor-grouped">
+<h1>TimeSeriesAccessor::grouped<a class="headerlink" href="#timeseriesaccessor-grouped" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_ts_accessor_api_reference.html"><span class="doc std std-doc">Back to TimeSeriesAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimeSeriesAccessor</span><span class="o">::</span><span class="n">grouped</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">groups</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="w"> </span><span class="n">statistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WindowStatistic</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">WindowOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes the same fixed-row-count rolling window <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>
+does, but <strong>restarted independently within each group</strong> — positions are
+partitioned by <code class="docutils literal notranslate"><span class="pre">groups</span></code> (compared by value, any thread kind), and within each
+group the rolling window only ever sees that group’s own positions, in their
+original relative order, never crossing a group boundary.</p>
+<p>Every position whose <code class="docutils literal notranslate"><span class="pre">groups</span></code> entry is <strong>missing</strong> is treated as belonging to
+one single, shared “ungrouped” bucket — not its own separate group, and not
+excluded from the result. That bucket’s positions are windowed together, in
+their original relative order, even though they may be far apart (and separated
+by other groups’ positions) in the source thread. See Example 2.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>groups</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)
+The grouping key, one entry per position, same length as the bound thread.
+Any thread kind; compared by value.</p>
+<p><strong>window</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+The trailing window size, in positions, applied independently within each
+group.</p>
+<p><strong>statistic</strong> (<code class="docutils literal notranslate"><span class="pre">WindowStatistic</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
+The statistic computed over each window — same set <code class="docutils literal notranslate"><span class="pre">rolling()</span></code> supports.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">WindowOptions&amp;</span></code>)
+Same meaning as <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>’s fixed-window overload
+(<code class="docutils literal notranslate"><span class="pre">min_count</span></code>, <code class="docutils literal notranslate"><span class="pre">ddof</span></code>, <code class="docutils literal notranslate"><span class="pre">centered</span></code>, <code class="docutils literal notranslate"><span class="pre">closure</span></code>).</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+A new thread, same length as the bound source, holding the per-group
+rolling statistic at each position.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Two groups, each windowed independently — the window restarts at
+each group’s own first position, not the thread’s.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">60.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">grouped</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  15
+2  30
+3  35
+4  35
+5  50
+
+ptype: Series
+</pre></div>
+</div>
+<p>Group <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> is positions <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">4</span></code> (values <code class="docutils literal notranslate"><span class="pre">10,</span> <span class="pre">20,</span> <span class="pre">50</span></code>, in that relative
+order): its own rolling mean(2) is <code class="docutils literal notranslate"><span class="pre">10</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(10,</span> <span class="pre">20)</span> <span class="pre">=</span> <span class="pre">15</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mean(20,</span> <span class="pre">50)</span> <span class="pre">=</span> <span class="pre">35</span></code> — landing back at positions <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, and <code class="docutils literal notranslate"><span class="pre">4</span></code> respectively.
+Group <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> is positions <code class="docutils literal notranslate"><span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">5</span></code> (values <code class="docutils literal notranslate"><span class="pre">30,</span> <span class="pre">40,</span> <span class="pre">60</span></code>): its rolling mean(2) is
+<code class="docutils literal notranslate"><span class="pre">30</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(30,</span> <span class="pre">40)</span> <span class="pre">=</span> <span class="pre">35</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(40,</span> <span class="pre">60)</span> <span class="pre">=</span> <span class="pre">50</span></code> — landing at positions <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">5</span></code>. Position <code class="docutils literal notranslate"><span class="pre">4</span></code>’s window never sees position <code class="docutils literal notranslate"><span class="pre">2</span></code> or <code class="docutils literal notranslate"><span class="pre">3</span></code>’s values, even
+though they sit between position <code class="docutils literal notranslate"><span class="pre">1</span></code> and position <code class="docutils literal notranslate"><span class="pre">4</span></code> in the source thread —
+they belong to a different group.</p>
+<p>Example 2. Positions with a missing group key share one common “ungrouped”
+bucket, windowed together in their original relative order even when other
+groups’ positions sit between them.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">groups2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">})</span>
+<span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values2</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">grouped</span><span class="p">(</span><span class="n">groups2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  20
+2  30
+3  30
+
+ptype: Series
+</pre></div>
+</div>
+<p>Positions <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">3</span></code> both have a missing group key (their underlying text,
+<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code>, is irrelevant — a missing key is a missing key). They fall into the
+same shared bucket, windowed as if adjacent: <code class="docutils literal notranslate"><span class="pre">mean(20,</span> <span class="pre">40)</span> <span class="pre">=</span> <span class="pre">30</span></code> lands at
+position <code class="docutils literal notranslate"><span class="pre">3</span></code>, using position <code class="docutils literal notranslate"><span class="pre">1</span></code>’s value even though position <code class="docutils literal notranslate"><span class="pre">2</span></code> (a real,
+different group) sits between them in the source thread.</p>
+<p>Example 3. Mismatched <code class="docutils literal notranslate"><span class="pre">groups</span></code> length throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">short_groups</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">grouped</span><span class="p">(</span><span class="n">short_groups</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::grouped: group length mismatch
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Groups are compared by value (via each group’s own display/string form), not
+identity — any thread kind works as <code class="docutils literal notranslate"><span class="pre">groups</span></code>.</p></li>
+<li><p>Every position with a missing <code class="docutils literal notranslate"><span class="pre">groups</span></code> entry shares one common bucket,
+windowed together in original relative order — it is not excluded from the
+result, and it is not treated as its own separate group per distinct missing
+cause. See Example 2.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">groups</span></code> must be the same length as the bound thread, or it throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::grouped:</span> <span class="pre">group</span> <span class="pre">length</span> <span class="pre">mismatch&quot;</span></code>.</p></li>
+<li><p>A pre-existing missing entry in the <em>values</em> thread (as opposed to <code class="docutils literal notranslate"><span class="pre">groups</span></code>)
+is skipped within any window that contains it, the same as
+<a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads for the values thread; anything else
+throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::grouped:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Thread&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::rolling</span></code></span></a>: the same fixed-window engine,
+applied to the whole thread instead of independently per group.</p></li>
+<li><p><a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::expanding</span></code></span></a>: a growing (not fixed-width)
+window, applied to the whole thread.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ge.html">
+    <span class="label">Previous</span>
+    <span class="title">ge</span>
+  </a>
+  <a class="next-link" href="gt.html">
+    <span class="label">Next</span>
+    <span class="title">gt</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+  <li><a href="../../thread_ts_accessor_api_reference.html">TimeSeriesAccessor API Reference</a><ul>
+      <li>Previous: <a href="ge.html" title="previous chapter">TimeSeriesAccessor::ge</a></li>
+      <li>Next: <a href="gt.html" title="next chapter">TimeSeriesAccessor::gt</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread-ts/grouped.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

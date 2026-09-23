@@ -59,24 +59,24 @@ bool run_dropout_parity_checks(std::ostream* err = nullptr) {
   const pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
   const pluss::Series x = pluss::make_series(std::vector<float>{-1.0f, 0.5f, 2.0f, 4.0f}, {2, 2}, cfg);
 
-  const pluss::Series dropped_all = pluss::dropout(x, 1.0, true, 7);
+  const pluss::Series dropped_all = pluss::nn::dropout(x, 1.0, true, 7);
   if (dropped_all.platform() != x.platform() || dropped_all.scalar_type() != x.scalar_type() || !all_zero(dropped_all)) {
     if (err) *err << "dropout p=1 should return same-platform zeros\n";
     return false;
   }
 
-  const pluss::Series eval = pluss::dropout(x, 1.0, false, 7);
+  const pluss::Series eval = pluss::nn::dropout(x, 1.0, false, 7);
   if (!all_close(vec_f32(eval), vec_f32(x), 0.0f)) {
     if (err) *err << "dropout eval path should return input values even when p=1\n";
     return false;
   }
 
-  const auto [attn_out, attn_w] = pluss::scaled_attention(
+  const auto [attn_out, attn_w] = pluss::nn::scaled_attention(
       x,
       x,
       x,
       pluss::Series(),
-      pluss::AttentionOptions{.dropout = 1.0, .training = true, .causal = false, .scale = 0.0, .seed = 11});
+      pluss::nn::AttentionOptions{.dropout = 1.0, .training = true, .causal = false, .scale = 0.0, .seed = 11});
   if (!all_zero(attn_out) || !all_zero(attn_w)) {
     if (err) *err << "scaled_attention dropout p=1 should zero weights and output\n";
     return false;
@@ -85,7 +85,7 @@ bool run_dropout_parity_checks(std::ostream* err = nullptr) {
   if (pluss::mps::is_ready()) {
     const ScopedEnvVar no_fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
     const pluss::Series xm = x.to(pluss::pMPS);
-    const pluss::Series zm = pluss::dropout(xm, 1.0, true, 13);
+    const pluss::Series zm = pluss::nn::dropout(xm, 1.0, true, 13);
     if (zm.platform() != pluss::pMPS || zm.scalar_type() != xm.scalar_type() || !all_zero(zm)) {
       if (err) *err << "MPS dropout p=1 should stay on MPS and zero values\n";
       return false;

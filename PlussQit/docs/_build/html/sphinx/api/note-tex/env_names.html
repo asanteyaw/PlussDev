@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="NoteTexAccessor::envs" href="envs.html" />
-    <link rel="prev" title="NoteTexAccessor::display_math" href="display_math.html" />
+    <link rel="prev" title="NoteTexAccessor::env" href="env.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -55,7 +55,7 @@ distinct: <code class="docutils literal notranslate"><span class="pre">align</sp
 <p>The method reports openers, not validated pairs. A name is returned even when a
 matching <code class="docutils literal notranslate"><span class="pre">\end{name}</span></code> is absent, because the method’s contract is lexical
 inventory rather than structural validation. Use <code class="docutils literal notranslate"><span class="pre">envs()</span></code> when only complete
-begin/end regions should be returned, and <code class="docutils literal notranslate"><span class="pre">extract_environment(name)</span></code> when the
+begin/end regions should be returned, and <code class="docutils literal notranslate"><span class="pre">env(name)</span></code> when the
 caller already knows the one environment kind it needs.</p>
 <p>Names are emitted in source order and duplicates are preserved. Results from
 all cells are flattened into <code class="docutils literal notranslate"><span class="pre">tokens()</span></code>, while <code class="docutils literal notranslate"><span class="pre">offsets()</span></code> provides one
@@ -145,11 +145,11 @@ environment names Int64: rejected
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="envs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">envs</span></code></span></a>: return complete environment regions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">extract_environment</span></code>: select complete regions of one named kind.</p></li>
+<li><p><a class="reference internal" href="env.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">env</span></code></span></a>: select complete regions of one named kind.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">commands</span></code>: inventory all TeX control words, not only environment openers.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="display_math.html"><span class="label">Previous</span><span class="title">display_math</span></a>
+  <a class="prev-link" href="env.html"><span class="label">Previous</span><span class="title">env</span></a>
   <a class="next-link" href="envs.html"><span class="label">Next</span><span class="title">envs</span></a>
 </div>
 </section>
@@ -249,7 +249,7 @@ environment names Int64: rejected
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
   <li><a href="../../note_tex_accessor_api_reference.html">Note TeX Accessor API Reference</a><ul>
-      <li>Previous: <a href="display_math.html" title="previous chapter">NoteTexAccessor::display_math</a></li>
+      <li>Previous: <a href="env.html" title="previous chapter">NoteTexAccessor::env</a></li>
       <li>Next: <a href="envs.html" title="next chapter">NoteTexAccessor::envs</a></li>
   </ul></li>
   </ul></li>

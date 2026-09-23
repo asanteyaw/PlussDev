@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrame::div &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrame::drop" href="drop.html" />
+    <link rel="prev" title="DataFrame::describe" href="describe.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 754bd4a44854 -->
+<section id="dataframe-div">
+<h1>DataFrame::div<a class="headerlink" href="#dataframe-div" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">div</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Feature</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>The named-method form of elementwise division. <code class="docutils literal notranslate"><span class="pre">div()</span></code> shares the exact same overload
+shape and alignment rules as <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> and the rest of the arithmetic family —
+see <code class="docutils literal notranslate"><span class="pre">add()</span></code>’s “What It Does” for the full explanation of the scalar/frame/Thread
+operand shapes and the <code class="docutils literal notranslate"><span class="pre">axis</span></code>/<code class="docutils literal notranslate"><span class="pre">options</span></code> parameters.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>div() and truediv() are the same operation
+<code class="docutils literal notranslate"><span class="pre">div()</span></code> and <a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truediv()</span></code></span></a> both perform ordinary floating-point division —
+verified against the underlying numeric kernel, they compute identical results for
+every input, including integer-typed features. Neither one truncates or floors the
+result the way <a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv()</span></code></span></a> does. Both names are provided so code
+reading like <code class="docutils literal notranslate"><span class="pre">df.div(2)</span></code> and code reading like <code class="docutils literal notranslate"><span class="pre">df.truediv(2)</span></code> (for readers coming
+from a background where “true division” is a meaningful distinction from floor
+division) are both available — pick whichever reads better at the call site, since
+there is no behavioral reason to prefer one over the other.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong></p>
+<p>The right-hand operand, dividing the current frame: <code class="docutils literal notranslate"><span class="pre">double</span></code> (broadcast scalar),
+<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code> (aligned frame-to-frame), or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code> (broadcast per
+<code class="docutils literal notranslate"><span class="pre">axis</span></code>).</p>
+<p><strong>axis</strong> (<code class="docutils literal notranslate"><span class="pre">Axis</span></code>, default <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code>, Thread overloads only)</p>
+<p>Same meaning as <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">axis</span></code>: <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> (default) supplies one
+value per feature; <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> supplies one value per case.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code>, optional)</p>
+<p>Same meaning as <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">options</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame, same shape as the source, with every numeric feature divided by
+<code class="docutils literal notranslate"><span class="pre">other</span></code>. Non-numeric features are left unchanged.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Divide every numeric feature by a scalar.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">counts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;total&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">})},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">counts</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | total
+------------
+a    | 3.5  
+b    | 4.5  
+c    | 5    
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">truediv()</span></code> on the same data produces the identical result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out_truediv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">counts</span><span class="p">.</span><span class="n">truediv</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_truediv</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>============
+     | total
+------------
+a    | 3.5  
+b    | 4.5  
+c    | 5    
+------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p>Example 3. Divide one frame by another elementwise, using the default
+positional alignment.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">50.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+     | amount
+-------------
+a    | 25    
+b    | 40    
+c    | 25    
+-------------
+[3 cs x 1 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">right</span></code>’s case labels (<code class="docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">z</span></code>) are never consulted under the default
+<code class="docutils literal notranslate"><span class="pre">AlignOptions{}</span></code> (<code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code>): the two frames only need the same shape, and
+cells are paired by physical position — <code class="docutils literal notranslate"><span class="pre">left</span></code>’s row <code class="docutils literal notranslate"><span class="pre">0</span></code> (<code class="docutils literal notranslate"><span class="pre">100</span></code>) divides by
+<code class="docutils literal notranslate"><span class="pre">right</span></code>’s row <code class="docutils literal notranslate"><span class="pre">0</span></code> (<code class="docutils literal notranslate"><span class="pre">4</span></code>) regardless of either side’s labels — so the result
+keeps <code class="docutils literal notranslate"><span class="pre">left</span></code>’s own case labels (<code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c</span></code>).</p>
+<p>Example 4. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload with <code class="docutils literal notranslate"><span class="pre">axis</span></code> passed explicitly as
+<code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> — one divisor per feature, broadcast down every case in that
+column.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">25.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q&quot;</span><span class="p">})));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">divisors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">div</span><span class="p">(</span><span class="n">divisors</span><span class="p">,</span><span class="w"> </span><span class="n">Axis</span><span class="o">::</span><span class="n">Feature</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=================
+     | x     y   
+-----------------
+p    | 25    10  
+q    | 50    5   
+-----------------
+[2 cs x 2 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">divisors</span></code>’s two values pair up with <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> respectively: every case’s
+<code class="docutils literal notranslate"><span class="pre">x</span></code> is divided by <code class="docutils literal notranslate"><span class="pre">4</span></code> (<code class="docutils literal notranslate"><span class="pre">100/4=25</span></code>, <code class="docutils literal notranslate"><span class="pre">200/4=50</span></code>), and every case’s <code class="docutils literal notranslate"><span class="pre">y</span></code> is
+divided by <code class="docutils literal notranslate"><span class="pre">5</span></code> (<code class="docutils literal notranslate"><span class="pre">50/5=10</span></code>, <code class="docutils literal notranslate"><span class="pre">25/5=5</span></code>) — <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> is already the default
+for this overload, so passing it here changes nothing except making the
+broadcast direction explicit at the call site.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Non-numeric features are always left unchanged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">div()</span></code> and <code class="docutils literal notranslate"><span class="pre">truediv()</span></code> are verified to be identical operations — see the note
+above.</p></li>
+<li><p>For integer-style division that rounds down to the nearest whole number instead, use
+<a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv()</span></code></span></a>.</p></li>
+<li><p>Shares its full overload shape, alignment semantics, and <code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> behavior with
+<a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>, <a class="reference internal" href="sub.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sub()</span></code></span></a>, <a class="reference internal" href="mul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mul()</span></code></span></a>, <a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">floordiv()</span></code></span></a>,
+<a class="reference internal" href="mod.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mod()</span></code></span></a>, and <a class="reference internal" href="pow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pow()</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::add</span></code></span></a>: the full explanation of the shared operand shapes and
+<code class="docutils literal notranslate"><span class="pre">axis</span></code>/<code class="docutils literal notranslate"><span class="pre">options</span></code> parameters this family uses.</p></li>
+<li><p><a class="reference internal" href="truediv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::truediv</span></code></span></a>: the verified-identical alternate name for this
+same operation.</p></li>
+<li><p><a class="reference internal" href="floordiv.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::floordiv</span></code></span></a>: the distinct floor-division operation.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="describe.html">
+    <span class="label">Previous</span>
+    <span class="title">describe</span>
+  </a>
+  <a class="next-link" href="drop.html">
+    <span class="label">Next</span>
+    <span class="title">drop</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+      <li>Previous: <a href="describe.html" title="previous chapter">DataFrame::describe</a></li>
+      <li>Next: <a href="drop.html" title="next chapter">DataFrame::drop</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe/div.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

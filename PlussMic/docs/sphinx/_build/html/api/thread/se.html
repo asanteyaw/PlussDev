@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Thread::se &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Thread::select" href="select.html" />
+    <link rel="prev" title="Thread::scribbelize" href="scribbelize.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4bc6a156c47e -->
+<section id="thread-se">
+<h1>Thread::se<a class="headerlink" href="#thread-se" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">se</span><span class="p">(</span><span class="n">ErrorTarget</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ErrorTarget</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">ThreadValue</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Returns the standard error of the mean — <code class="docutils literal notranslate"><span class="pre">sqrt(variance</span> <span class="pre">/</span> <span class="pre">count)</span></code>, using the
+same <code class="docutils literal notranslate"><span class="pre">ddof</span></code>-adjusted variance <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var(options)</span></code></span></a> computes. <code class="docutils literal notranslate"><span class="pre">target</span></code>
+exists to select <em>what</em> the standard error is computed for, but only
+<code class="docutils literal notranslate"><span class="pre">ErrorTarget::Mean</span></code> is currently implemented; passing <code class="docutils literal notranslate"><span class="pre">ErrorTarget::Median</span></code>
+throws rather than silently computing something else. Like the
+<code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code> overload of <code class="docutils literal notranslate"><span class="pre">var()</span></code>, this method returns a result marked
+<em>invalid</em> (rather than throwing) when the observed count is below
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code> — see <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code>’s note</span></a> on why you should check
+the scalar validity mask rather than trust the printed number in that case.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">ErrorTarget</span></code>, default <code class="docutils literal notranslate"><span class="pre">Mean</span></code>)
+Which statistic’s standard error to compute. Only <code class="docutils literal notranslate"><span class="pre">Mean</span></code> is currently
+implemented; <code class="docutils literal notranslate"><span class="pre">Median</span></code> throws.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">StatisticOptions</span></code>, default <code class="docutils literal notranslate"><span class="pre">{}</span></code>)
+<code class="docutils literal notranslate"><span class="pre">ddof</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the same divisor adjustment <code class="docutils literal notranslate"><span class="pre">var()</span></code>/<code class="docutils literal notranslate"><span class="pre">std()</span></code> use.
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code> (default <code class="docutils literal notranslate"><span class="pre">1</span></code>): the smallest observed count still considered
+valid; below it, the result is marked invalid rather than thrown.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code>
+A scalar <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) holding the standard error of
+the mean.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Standard error of the mean, default options.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">se</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1.29099
+</pre></div>
+</div>
+<p>This is <code class="docutils literal notranslate"><span class="pre">sqrt(var()</span> <span class="pre">/</span> <span class="pre">count)</span></code> — <code class="docutils literal notranslate"><span class="pre">sqrt(6.66667</span> <span class="pre">/</span> <span class="pre">4)</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">ErrorTarget::Median</span></code> throws — it isn’t implemented.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">se</span><span class="p">(</span><span class="n">ErrorTarget</span><span class="o">::</span><span class="n">Median</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::se: only ErrorTarget::Mean is implemented in this pass
+</pre></div>
+</div>
+<p>Example 3. Below <code class="docutils literal notranslate"><span class="pre">min_count</span></code>, the result is marked invalid rather than
+thrown.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">se</span><span class="p">(</span><span class="n">ErrorTarget</span><span class="o">::</span><span class="n">Mean</span><span class="p">,</span><span class="w"> </span><span class="n">StatisticOptions</span><span class="p">{.</span><span class="n">ddof</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">.</span><span class="kr">thread</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Only <code class="docutils literal notranslate"><span class="pre">ErrorTarget::Mean</span></code> is implemented; <code class="docutils literal notranslate"><span class="pre">ErrorTarget::Median</span></code> throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::se:</span> <span class="pre">only</span> <span class="pre">ErrorTarget::Mean</span> <span class="pre">is</span> <span class="pre">implemented</span> <span class="pre">in</span> <span class="pre">this</span> <span class="pre">pass&quot;</span></code>.</p></li>
+<li><p>Below <code class="docutils literal notranslate"><span class="pre">min_count</span></code>, the result is marked invalid rather than thrown — see the
+important caveat on <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::sum</span></code>’s page</span></a> about checking
+the scalar validity mask rather than trusting the printed number.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::se:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Thread&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::var</span></code></span></a> / <a class="reference internal" href="std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::std</span></code></span></a>: the variance and standard
+deviation this method’s standard error is derived from.</p></li>
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::mean</span></code></span></a>: the statistic whose standard error this method
+reports.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="scan.html">
+    <span class="label">Previous</span>
+    <span class="title">scan</span>
+  </a>
+  <a class="next-link" href="select.html">
+    <span class="label">Next</span>
+    <span class="title">select</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
+      <li>Previous: <a href="scribbelize.html" title="previous chapter">Thread::scribbelize</a></li>
+      <li>Next: <a href="select.html" title="next chapter">Thread::select</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/thread/se.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

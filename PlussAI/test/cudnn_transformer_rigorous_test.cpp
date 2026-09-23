@@ -92,10 +92,10 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
   log.line("log_file=" + log.path().string());
   log.line(std::string("cuda_ready=") + (pluss::cuda::is_ready() ? "true" : "false"));
   log.line(std::string("cudnn_ready=") + (pluss::cuda::cudnn_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_attention_ready=") + (pluss::cudnn_attention_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_transformer_ready=") + (pluss::cudnn_transformer_ready() ? "true" : "false"));
-  log.line(std::string("cudnn_attention_enabled=") + (pluss::cudnn_attention_enabled() ? "true" : "false"));
-  log.line(std::string("cudnn_attention_strict=") + (pluss::cudnn_attention_strict() ? "true" : "false"));
+  log.line(std::string("cudnn_attention_ready=") + (pluss::nn::cudnn_attention_ready() ? "true" : "false"));
+  log.line(std::string("cudnn_transformer_ready=") + (pluss::nn::cudnn_transformer_ready() ? "true" : "false"));
+  log.line(std::string("cudnn_attention_enabled=") + (pluss::nn::cudnn_attention_enabled() ? "true" : "false"));
+  log.line(std::string("cudnn_attention_strict=") + (pluss::nn::cudnn_attention_strict() ? "true" : "false"));
   log.line("env.PLUSS_CUDNN_ATTENTION=" + env_or("PLUSS_CUDNN_ATTENTION"));
   log.line("env.PLUSS_CUDNN_ATTENTION_STRICT=" + env_or("PLUSS_CUDNN_ATTENTION_STRICT"));
   log.line("cuda.device_count=" + std::to_string(pluss::cuda::device_count()));
@@ -104,7 +104,7 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
   log.line(std::string("cuda.device_name=") + pluss::cuda::primary_device_name());
   log.line(std::string("cudnn_error=") + pluss::cuda::cudnn_error());
 
-  if (!pluss::cuda::is_ready() || !pluss::cuda::cudnn_ready() || !pluss::cudnn_attention_ready()) {
+  if (!pluss::cuda::is_ready() || !pluss::cuda::cudnn_ready() || !pluss::nn::cudnn_attention_ready()) {
     log.line("SKIP: CUDA/cuDNN/attention route not ready on this host. Test marked pass-by-skip.");
     return true;
   }
@@ -116,9 +116,9 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     const pluss::Series q = pluss::series::rand({2, 3, 7, 16}, cfg_cpu, 1101ULL);
     const pluss::Series k = pluss::series::rand({2, 3, 7, 16}, cfg_cpu, 1103ULL);
     const pluss::Series v = pluss::series::rand({2, 3, 7, 16}, cfg_cpu, 1107ULL);
-    const pluss::Series mask = pluss::square_subsequent_mask(7, q);
-    const auto [out_cpu, w_cpu] = pluss::scaled_attention(q, k, v, mask);
-    const auto [out_gpu, w_gpu] = pluss::scaled_attention(
+    const pluss::Series mask = pluss::nn::square_subsequent_mask(7, q);
+    const auto [out_cpu, w_cpu] = pluss::nn::scaled_attention(q, k, v, mask);
+    const auto [out_gpu, w_gpu] = pluss::nn::scaled_attention(
         q.to(pluss::pCUDA),
         k.to(pluss::pCUDA),
         v.to(pluss::pCUDA),
@@ -146,7 +146,7 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     q_cpu_g.clear_sensitivity();
     k_cpu_g.clear_sensitivity();
     v_cpu_g.clear_sensitivity();
-    std::get<0>(pluss::scaled_attention(q_cpu_g, k_cpu_g, v_cpu_g, mask)).sum().reverse();
+    std::get<0>(pluss::nn::scaled_attention(q_cpu_g, k_cpu_g, v_cpu_g, mask)).sum().reverse();
     const auto gq_cpu = as_f32_vec(q_cpu_g.sensitivity());
     const auto gk_cpu = as_f32_vec(k_cpu_g.sensitivity());
     const auto gv_cpu = as_f32_vec(v_cpu_g.sensitivity());
@@ -160,7 +160,7 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     q_gpu_g.clear_sensitivity();
     k_gpu_g.clear_sensitivity();
     v_gpu_g.clear_sensitivity();
-    std::get<0>(pluss::scaled_attention(q_gpu_g, k_gpu_g, v_gpu_g, mask.to(pluss::pCUDA))).sum().reverse();
+    std::get<0>(pluss::nn::scaled_attention(q_gpu_g, k_gpu_g, v_gpu_g, mask.to(pluss::pCUDA))).sum().reverse();
     const auto gq_gpu = as_f32_vec(q_gpu_g.sensitivity());
     const auto gk_gpu = as_f32_vec(k_gpu_g.sensitivity());
     const auto gv_gpu = as_f32_vec(v_gpu_g.sensitivity());

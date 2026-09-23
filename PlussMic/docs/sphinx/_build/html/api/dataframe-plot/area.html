@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFramePlotAccessor::area &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFramePlotAccessor::area_stacked" href="area_stacked.html" />
+    <link rel="prev" title="DataFramePlotAccessor::andrews_curves" href="andrews_curves.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ba20fb9e79d1 -->
+<section id="dataframeplotaccessor-area">
+<h1>DataFramePlotAccessor::area<a class="headerlink" href="#dataframeplotaccessor-area" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_plot_api_reference.html"><span class="doc std std-doc">Back to DataFramePlotAccessor API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">area</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">area</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">y_feature</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">                             </span><span class="k">const</span><span class="w"> </span><span class="n">AreaPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">area</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_features</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">area</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_features</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">                             </span><span class="k">const</span><span class="w"> </span><span class="n">AreaPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">area</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_features</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+
+<span class="n">DataFramePlotAccessor</span><span class="o">::</span><span class="n">area</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_features</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x_feature</span><span class="p">,</span>
+<span class="w">                             </span><span class="k">const</span><span class="w"> </span><span class="n">AreaPlotOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">pl</span><span class="o">::</span><span class="n">Studio</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Same shape as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> — one trace per y-feature over a shared x-axis, same
+three overload families, same x-axis-resolution rules — but each trace is filled down to
+the baseline instead of drawn as a bare line, and multiple y-features are drawn as
+<strong>independently overlapping</strong> filled regions on the same axes (not stacked; for a stacked
+composition view, see <a class="reference internal" href="area_stacked.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">area_stacked()</span></code></span></a>).</p>
+<p>See <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a> for the full explanation of the shared mechanics — this page only
+covers what’s specific to <code class="docutils literal notranslate"><span class="pre">area()</span></code>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>y_feature</strong> / <strong>y_features</strong>
+Same as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>: one or more numeric features, each drawn as its own filled
+area trace, overlapping rather than stacked. At least one is required — an empty list
+throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::plot().area:</span> <span class="pre">at</span> <span class="pre">least</span> <span class="pre">one</span> <span class="pre">y</span> <span class="pre">feature</span> <span class="pre">is</span> <span class="pre">required&quot;</span></code>.</p>
+<p><strong>x_feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;std::string_view&gt;</span></code>, default <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
+Same three-step resolution as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">AreaPlotOptions</span></code>)
+<code class="docutils literal notranslate"><span class="pre">cpp</span>&#160;&#160;&#160;&#160; <span class="pre">struct</span> <span class="pre">AreaPlotOptions</span> <span class="pre">{</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">alpha{0.88};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">double</span> <span class="pre">line_width{1.3};</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">XYAlignOptions</span> <span class="pre">align{};</span>&#160;&#160;&#160;&#160; <span class="pre">};</span>&#160;&#160;&#160;&#160; </code>
+<code class="docutils literal notranslate"><span class="pre">alpha</span></code> defaults noticeably lower than <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">1.0</span></code> — filled regions
+default to slightly translucent so overlapping areas from multiple y-features stay
+visually distinguishable instead of one fully opaque area hiding another. <code class="docutils literal notranslate"><span class="pre">align</span></code> is
+present but inert here — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s note on the field.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code>
+A figure with one pane containing one filled area trace per requested y-feature.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A single feature, explicit x-axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Jan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Feb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Mar&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Apr&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;cost&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">60.0</span><span class="p">,</span><span class="w"> </span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">55.0</span><span class="p">,</span><span class="w"> </span><span class="mf">95.0</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 1" src="../../_images/area-11.svg" /></p>
+<p>Example 2. Two y-features drawn as overlapping (not stacked) filled areas — where they
+overlap, the default <code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">=</span> <span class="pre">0.88</span></code> keeps both visible rather than one fully occluding the
+other.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 2" src="../../_images/area-21.svg" /></p>
+<p>Example 3. The same multi-feature call via a reusable <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">y_names</span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="p">(</span><span class="n">y_names</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">save_pdf</span><span class="p">(</span><span class="s">&quot;sales_area.pdf&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 3" src="../../_images/area-31.svg" /></p>
+<p>Example 4. No <code class="docutils literal notranslate"><span class="pre">x_feature</span></code>: falls back to the frame’s own row labels, titled <code class="docutils literal notranslate"><span class="pre">&quot;case&quot;</span></code> — see
+<a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s Example 3 for the full explanation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 4" src="../../_images/area-4.svg" /></p>
+<p>Example 5. An explicit <code class="docutils literal notranslate"><span class="pre">AreaPlotOptions</span></code>, raising opacity toward fully opaque and
+thickening the outline.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AreaPlotOptions</span><span class="w"> </span><span class="n">area_options</span><span class="p">;</span>
+<span class="n">area_options</span><span class="p">.</span><span class="n">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="n">area_options</span><span class="p">.</span><span class="n">line_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">(</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">area_options</span><span class="p">);</span>
+<span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 5" src="../../_images/area-5.svg" /></p>
+<p>Example 6. Multiple y-features with an explicit options object.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">area</span><span class="p">({</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cost&quot;</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">area_options</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><img alt="Output of Example 6" src="../../_images/area-6.svg" /></p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Shares every mechanic described on <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s page except the filled trace
+shape and the <code class="docutils literal notranslate"><span class="pre">AreaPlotOptions</span></code> struct’s lower default <code class="docutils literal notranslate"><span class="pre">alpha</span></code>.</p></li>
+<li><p>Multiple y-features overlap rather than stack — see <a class="reference internal" href="area_stacked.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">area_stacked()</span></code></span></a>
+for the composition (accumulating) variant.</p></li>
+<li><p>At least one y-feature is required.</p></li>
+<li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callout for how to
+view or save the result.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="area_stacked.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::area_stacked</span></code></span></a>: the accumulating,
+composition-focused sibling of this method.</p></li>
+<li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>: the unfilled counterpart, and the canonical
+explanation of this accessor’s shared mechanics.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="andrews_curves.html">
+    <span class="label">Previous</span>
+    <span class="title">andrews_curves</span>
+  </a>
+  <a class="next-link" href="area_stacked.html">
+    <span class="label">Next</span>
+    <span class="title">area_stacked</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_plotting.html">PlussMic <code class="docutils literal notranslate"><span class="pre">Plotting</span></code></a><ul>
+  <li><a href="../../dataframe_plot_api_reference.html">DataFramePlotAccessor API Reference</a><ul>
+      <li>Previous: <a href="andrews_curves.html" title="previous chapter">DataFramePlotAccessor::andrews_curves</a></li>
+      <li>Next: <a href="area_stacked.html" title="next chapter">DataFramePlotAccessor::area_stacked</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-plot/area.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

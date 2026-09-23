@@ -41,13 +41,14 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
 
 int main() {
   using namespace pluss;
+  using namespace pluss::nn;
 
   std::cout << "cuDNN RNN route status\n";
   std::cout << "cuda_ready: " << (pluss::cuda::is_ready() ? "true" : "false") << '\n';
   std::cout << "cudnn_ready: " << (pluss::cuda::cudnn_ready() ? "true" : "false") << '\n';
-  std::cout << "cudnn_rnn_enabled: " << (pluss::cudnn_rnn_enabled() ? "true" : "false") << '\n';
-  std::cout << "cudnn_rnn_strict: " << (pluss::cudnn_rnn_strict() ? "true" : "false") << '\n';
-  std::cout << "cudnn_rnn_route_ready: " << (pluss::cudnn_rnn_ready() ? "true" : "false") << "\n\n";
+  std::cout << "cudnn_rnn_enabled: " << (pluss::nn::cudnn_rnn_enabled() ? "true" : "false") << '\n';
+  std::cout << "cudnn_rnn_strict: " << (pluss::nn::cudnn_rnn_strict() ? "true" : "false") << '\n';
+  std::cout << "cudnn_rnn_route_ready: " << (pluss::nn::cudnn_rnn_ready() ? "true" : "false") << "\n\n";
 
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
   const Series x = series::rand({8, 4, 3}, cfg, 1101ULL);

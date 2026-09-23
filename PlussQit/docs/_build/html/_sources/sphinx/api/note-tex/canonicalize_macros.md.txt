@@ -106,7 +106,7 @@ canonical Int64: rejected
 
 - [`collapse_macros`](collapse_macros.md): remove declarations and canonicalize the remaining source.
 - [`macro_subs`](macro_subs.md): substitute locally declared macro bodies at use sites.
-- `replace_command`: rewrite one caller-selected command.
+- `cmd_sub`: rewrite one caller-selected command.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bibliography_keys.html"><span class="label">Previous</span><span class="title">bibliography_keys</span></a>

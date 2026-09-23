@@ -26,7 +26,7 @@ interpret TeX environments; it is intentionally narrower than
 
 LF (`\n`), CRLF (`\r\n`), and CR (`\r`) are all recognized. Deduplication
 preserves the original line-ending bytes of the two retained boundaries; it
-does not silently convert CRLF to LF. Use `normalize_newlines()` when a uniform
+does not silently convert CRLF to LF. Use `line_norm()` when a uniform
 LF representation is required, and choose the order deliberately: normalize
 then deduplicate for canonical LF output, or deduplicate alone to retain the
 source convention.
@@ -105,7 +105,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 ```cpp
 const auto canonical =
     pluss::make_note("one\r\n \r\n\t\r\ntwo")
-        .tex().normalize_newlines().tex().dedup_blank_lines();
+        .tex().line_norm().tex().dedup_blank_lines();
 std::cout << canonical << '\n';
 ```
 
@@ -139,12 +139,12 @@ blank lines Int64: rejected
 
 ## See Also
 
-- `normalize_newlines`: convert CRLF and CR endings to LF.
+- `line_norm`: convert CRLF and CR endings to LF.
 - `fix_linebreaks`: perform broader line-ending and trailing-space cleanup.
 - [`Note::collapse_whitespace`](../note/collapse_whitespace.md): collapse all
   ASCII whitespace rather than preserving document lines.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="commands.html"><span class="label">Previous</span><span class="title">commands</span></a>
+  <a class="prev-link" href="deaccent.html"><span class="label">Previous</span><span class="title">deaccent</span></a>
   <a class="next-link" href="display_math.html"><span class="label">Next</span><span class="title">display_math</span></a>
 </div>

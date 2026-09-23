@@ -90,11 +90,11 @@ align Int64: rejected
 
 ## See Also
 
-- `extract_environment("align")`: extract one explicitly named environment.
+- [`env("align")`](env.md): extract one explicitly named environment.
 - `display_math`: extract display-math delimiters rather than environments.
 - [`TokenBatch`](../../tokenbatch_api_reference.md): offsets, ownership, and empty rows.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="add_math_delimiters.html"><span class="label">Previous</span><span class="title">add_math_delimiters</span></a>
-  <a class="next-link" href="balance_braces.html"><span class="label">Next</span><span class="title">balance_braces</span></a>
+  <a class="next-link" href="args.html"><span class="label">Next</span><span class="title">args</span></a>
 </div>

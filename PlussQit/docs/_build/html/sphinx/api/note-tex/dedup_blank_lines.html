@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=cf848246"></script>
+    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="NoteTexAccessor::display_math" href="display_math.html" />
-    <link rel="prev" title="NoteTexAccessor::commands" href="commands.html" />
+    <link rel="prev" title="NoteTexAccessor::deaccent" href="deaccent.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -61,7 +61,7 @@ interpret TeX environments; it is intentionally narrower than
 <code class="docutils literal notranslate"><span class="pre">fix_linebreaks()</span></code>.</p>
 <p>LF (<code class="docutils literal notranslate"><span class="pre">\n</span></code>), CRLF (<code class="docutils literal notranslate"><span class="pre">\r\n</span></code>), and CR (<code class="docutils literal notranslate"><span class="pre">\r</span></code>) are all recognized. Deduplication
 preserves the original line-ending bytes of the two retained boundaries; it
-does not silently convert CRLF to LF. Use <code class="docutils literal notranslate"><span class="pre">normalize_newlines()</span></code> when a uniform
+does not silently convert CRLF to LF. Use <code class="docutils literal notranslate"><span class="pre">line_norm()</span></code> when a uniform
 LF representation is required, and choose the order deliberately: normalize
 then deduplicate for canonical LF output, or deduplicate alone to retain the
 source convention.</p>
@@ -138,7 +138,7 @@ its working cost is linear without per-line container allocation.</p>
 <h2>Example 5: Compose With Newline Normalization<a class="headerlink" href="#example-5-compose-with-newline-normalization" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="o">=</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span><span class="s">&quot;one</span><span class="se">\r\n</span><span class="s"> </span><span class="se">\r\n\t\r\n</span><span class="s">two&quot;</span><span class="p">)</span>
-<span class="w">        </span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">normalize_newlines</span><span class="p">().</span><span class="n">tex</span><span class="p">().</span><span class="n">dedup_blank_lines</span><span class="p">();</span>
+<span class="w">        </span><span class="p">.</span><span class="n">tex</span><span class="p">().</span><span class="n">line_norm</span><span class="p">().</span><span class="n">tex</span><span class="p">().</span><span class="n">dedup_blank_lines</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -174,13 +174,13 @@ blank lines Int64: rejected
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">normalize_newlines</span></code>: convert CRLF and CR endings to LF.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">line_norm</span></code>: convert CRLF and CR endings to LF.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fix_linebreaks</span></code>: perform broader line-ending and trailing-space cleanup.</p></li>
 <li><p><a class="reference internal" href="../note/collapse_whitespace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::collapse_whitespace</span></code></span></a>: collapse all
 ASCII whitespace rather than preserving document lines.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="commands.html"><span class="label">Previous</span><span class="title">commands</span></a>
+  <a class="prev-link" href="deaccent.html"><span class="label">Previous</span><span class="title">deaccent</span></a>
   <a class="next-link" href="display_math.html"><span class="label">Next</span><span class="title">display_math</span></a>
 </div>
 </section>
@@ -280,7 +280,7 @@ ASCII whitespace rather than preserving document lines.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
   <li><a href="../../note_tex_accessor_api_reference.html">Note TeX Accessor API Reference</a><ul>
-      <li>Previous: <a href="commands.html" title="previous chapter">NoteTexAccessor::commands</a></li>
+      <li>Previous: <a href="deaccent.html" title="previous chapter">NoteTexAccessor::deaccent</a></li>
       <li>Next: <a href="display_math.html" title="next chapter">NoteTexAccessor::display_math</a></li>
   </ul></li>
   </ul></li>

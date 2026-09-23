@@ -1,0 +1,1192 @@
+# apiref_manifest_nn.toml -- the `pluss::ai::nn` public framework.
+# `nn` is the public name for the neural-network engine, matching the
+# internal namespace exactly -- unlike `nodej`/`nodeb`/`nodek`, `nn` was
+# already clean and human-presentable (same convention as `torch::nn`), so
+# there is no separate public alias to translate through; the substrate
+# source-directory name `NodeK` must still never appear in rendered pages.
+# Drive the toolchain at this file with
+#   python3 apiref.py <cmd> --manifest apiref_manifest_nn.toml
+# `apiref.py nav` still bundles every apiref_manifest*.toml into one sidebar.
+#
+# Organized by category (module/activation/normalization/embedding/fusion/
+# cnn/rnn/attention/losses/functional/grad/optim/data), not by family, since
+# that is the pattern every neural-network reference actually uses -- nn is
+# not family-based like classic. Two things worth flagging up front:
+#   - the functional-layer free functions (nn/functional) live under
+#     pluss::ai::nn, exactly like every other symbol here -- they used to be
+#     re-exported into the bare `pluss::` root namespace (a real namespace
+#     leak) but were moved as part of this same effort. Root now keeps only
+#     things truly global across the whole codebase. Also reachable via the
+#     top-level alias pluss::nn::* (`namespace pluss { namespace nn =
+#     ::pluss::ai::nn; }`), which is how most existing code in this repo
+#     already spells it -- the manifest itself standardizes on the fully
+#     qualified pluss::ai::nn throughout, same as every other category here.
+#   - nn/data documents `pluss::loader` (an alias of `pluss::tils`), which
+#     physically lives in PlussTils, not PlussAI -- included because it is
+#     the DataLoader stack purpose-built to pair with nn training.
+# Do not use any external framework's name anywhere in these pages. `Fusion`
+# is documented as the fully connected layer, never as "Linear".
+
+[framework.nn]
+title = "nn"
+summary = "PlussAI neural-network module framework."
+include = "<pluss/ai/nn.h>"
+header = "PlussAI"
+# `header` must be a single directory apiref.py can rglob("*.h") under; nn's
+# real symbols span PlussAI/NodeK, PlussAI/include/pluss (both covered by
+# pointing at PlussAI itself) and PlussTils/include/pluss/tils (nn/data's
+# pluss::loader, NOT covered -- no single directory spans both top-level
+# libraries). The nn/data family's class-name-presence lint check is a
+# known, permanent, accepted gap for exactly this reason.
+
+# ===========================================================================
+#  FAMILIES
+# ===========================================================================
+
+[[family]]
+path = "nn/module"
+page = "api/nn/module.md"
+title = "module"
+maxdepth = 2
+children = ["module/Introduction", "module/Module", "module/Schedule"]
+
+[[family]]
+path = "nn/activation"
+page = "api/nn/activation.md"
+title = "activation"
+maxdepth = 2
+children = ["activation/Introduction", "activation/ReLU", "activation/Sigmoid", "activation/Tanh", "activation/Softplus", "activation/LeakyReLU", "activation/Elu", "activation/Identity", "activation/SiLU", "activation/GELU", "activation/Hardshrink", "activation/Softmax", "activation/LogSoftmax", "activation/PReLU"]
+
+[[family]]
+path = "nn/normalization"
+page = "api/nn/normalization.md"
+title = "normalization"
+maxdepth = 2
+children = ["normalization/Introduction", "normalization/LayerNorm"]
+
+[[family]]
+path = "nn/embedding"
+page = "api/nn/embedding.md"
+title = "embedding"
+maxdepth = 2
+children = ["embedding/Introduction", "embedding/Embedding"]
+
+[[family]]
+path = "nn/fusion"
+page = "api/nn/fusion.md"
+title = "fusion"
+maxdepth = 2
+children = ["fusion/Introduction", "fusion/Fusion"]
+
+[[family]]
+path = "nn/cnn"
+page = "api/nn/cnn.md"
+title = "cnn"
+maxdepth = 2
+children = ["cnn/Introduction", "cnn/Conv1d", "cnn/Conv", "cnn/Conv3d"]
+
+[[family]]
+path = "nn/rnn"
+page = "api/nn/rnn.md"
+title = "rnn"
+maxdepth = 2
+children = ["rnn/Introduction", "rnn/RNN", "rnn/GRU", "rnn/LSTM", "rnn/PackedSequence", "rnn/pack_padded_sequence", "rnn/pad_packed_sequence"]
+
+[[family]]
+path = "nn/attention"
+page = "api/nn/attention.md"
+title = "attention"
+maxdepth = 2
+children = ["attention/Introduction", "attention/MultiheadAttention", "attention/TransformerEncoderLayer", "attention/TransformerEncoder", "attention/TransformerDecoderLayer", "attention/TransformerDecoder", "attention/Transformer"]
+
+[[family]]
+path = "nn/losses"
+page = "api/nn/losses.md"
+title = "losses"
+maxdepth = 2
+children = ["losses/Introduction", "losses/MSE", "losses/RelativeMSE", "losses/Huber", "losses/L1", "losses/SmoothL1", "losses/BCEWithLogits", "losses/NLL", "losses/CrossEntropy"]
+
+[[family]]
+path = "nn/functional"
+page = "api/nn/functional.md"
+title = "functional"
+maxdepth = 2
+children = ["functional/Introduction", "functional/fusion", "functional/dropout", "functional/elu", "functional/conv", "functional/conv1d", "functional/rnn", "functional/gru", "functional/lstm", "functional/scaled_attention", "functional/multihead_attention", "functional/causal_attention_mask", "functional/square_subsequent_mask", "functional/causal_padding1d", "functional/AttentionOptions", "functional/MultiheadOptions", "functional/MultiheadWeights", "functional/NetWeight", "functional/NetConfig"]
+
+[[family]]
+path = "nn/grad"
+page = "api/nn/grad.md"
+title = "grad"
+maxdepth = 2
+children = ["grad/Introduction", "grad/GradMode", "grad/AutoGradMode", "grad/NoGradGuard"]
+
+[[family]]
+path = "nn/optim"
+page = "api/nn/optim.md"
+title = "optim"
+maxdepth = 2
+children = ["optim/Introduction", "optim/Optimizer", "optim/GradientClipOptions", "optim/ExecutionOptions", "optim/StepDiagnosticsOptions", "optim/StepLaneTelemetry", "optim/SGD", "optim/Adagrad", "optim/Adam", "optim/AdamW", "optim/NAdam", "optim/RMSprop", "optim/Minimax"]
+
+[[family]]
+path = "nn/data"
+page = "api/nn/data.md"
+title = "data"
+maxdepth = 2
+children = ["data/Introduction", "data/Dataset", "data/SeriesDataset", "data/DataBatch", "data/DataLoader", "data/DataLoaderOptions", "data/DataSplit", "data/DataSplitOptions", "data/split_fields", "data/split_loaders", "data/TemporalSplitOptions", "data/temporal_split_indices", "data/temporal_split_fields", "data/temporal_split_loaders"]
+
+# ===========================================================================
+#  SYMBOLS
+# ===========================================================================
+
+# --- module ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::Module"
+kind = "class"
+family = "nn/module"
+page = "api/nn/module/Module.md"
+summary = "The base class every layer, container, and composed network derives from -- parameter/buffer/child-module registration, train/eval mode, platform/dtype moves, snapshot/restore."
+methods = ["train", "eval", "to", "parameters", "named_parameters", "buffers", "named_buffers", "modules", "named_modules", "snapshot", "restore"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Schedule"
+kind = "class"
+family = "nn/module"
+page = "api/nn/module/Schedule.md"
+summary = "A named, ordered composition of modules and callables run in sequence -- the container every multi-layer network is built from."
+methods = ["then", "then_as", "insert", "insert_as", "extend", "erase", "forward", "run", "size", "empty", "reserve", "contains", "index_of", "name_at", "input_type_at", "output_type_at", "module_at", "stage_info", "stage_manifest", "clear"]
+
+# --- activation --------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::ReLU"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/ReLU.md"
+summary = "Rectified linear unit, applied elementwise."
+
+[[symbol]]
+qualname = "pluss::ai::nn::Sigmoid"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Sigmoid.md"
+summary = "Logistic sigmoid, applied elementwise."
+
+[[symbol]]
+qualname = "pluss::ai::nn::Tanh"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Tanh.md"
+summary = "Hyperbolic tangent, applied elementwise."
+
+[[symbol]]
+qualname = "pluss::ai::nn::Softplus"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Softplus.md"
+summary = "Smooth ReLU approximation with a numerically stable large-input threshold."
+
+[[symbol]]
+qualname = "pluss::ai::nn::SoftplusOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/SoftplusOptions.md"
+owner = "pluss::ai::nn::Softplus"
+summary = "The beta sharpness and the linear-fallback threshold."
+fields = ["beta", "threshold"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::LeakyReLU"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/LeakyReLU.md"
+summary = "ReLU with a small non-zero slope for negative inputs."
+
+[[symbol]]
+qualname = "pluss::ai::nn::LeakyReLUOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/LeakyReLUOptions.md"
+owner = "pluss::ai::nn::LeakyReLU"
+summary = "The negative-side slope."
+fields = ["negative_slope"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Elu"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Elu.md"
+summary = "Exponential linear unit: identity for positive inputs, a saturating exponential curve below zero."
+
+[[symbol]]
+qualname = "pluss::ai::nn::EluOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/EluOptions.md"
+owner = "pluss::ai::nn::Elu"
+summary = "The negative-side saturation scale."
+fields = ["alpha"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Identity"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Identity.md"
+summary = "A pass-through module -- returns its input unchanged; useful as a Schedule placeholder stage."
+
+[[symbol]]
+qualname = "pluss::ai::nn::SiLU"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/SiLU.md"
+summary = "Sigmoid Linear Unit (Swish): x * sigmoid(x), applied elementwise."
+
+[[symbol]]
+qualname = "pluss::ai::nn::GELU"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/GELU.md"
+summary = "Gaussian Error Linear Unit, exact or tanh-approximated; the standard transformer feedforward activation."
+
+[[symbol]]
+qualname = "pluss::ai::nn::GELUOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/GELUOptions.md"
+owner = "pluss::ai::nn::GELU"
+summary = "Exact erf-based formula vs. the faster tanh approximation."
+fields = ["approximate"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Hardshrink"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Hardshrink.md"
+summary = "Zeroes any input within [-lambd, lambd], passes the rest through unchanged."
+
+[[symbol]]
+qualname = "pluss::ai::nn::HardshrinkOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/HardshrinkOptions.md"
+owner = "pluss::ai::nn::Hardshrink"
+summary = "The zeroing threshold around 0."
+fields = ["lambd"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Softmax"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/Softmax.md"
+summary = "Normalizes a chosen dimension into a probability distribution: exp(x) / sum(exp(x))."
+
+[[symbol]]
+qualname = "pluss::ai::nn::SoftmaxOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/SoftmaxOptions.md"
+owner = "pluss::ai::nn::Softmax"
+summary = "Which dimension to normalize over."
+fields = ["dim"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::LogSoftmax"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/LogSoftmax.md"
+summary = "log(softmax(x)) over a chosen dimension, computed directly for numerical stability."
+
+[[symbol]]
+qualname = "pluss::ai::nn::LogSoftmaxOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/LogSoftmaxOptions.md"
+owner = "pluss::ai::nn::LogSoftmax"
+summary = "Which dimension to normalize over."
+fields = ["dim"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::PReLU"
+kind = "class"
+family = "nn/activation"
+page = "api/nn/activation/PReLU.md"
+summary = "Parametric ReLU: the negative-side slope is a learned parameter, not a fixed constant."
+
+[[symbol]]
+qualname = "pluss::ai::nn::PReLUOptions"
+kind = "options"
+family = "nn/activation"
+page = "api/nn/activation/PReLUOptions.md"
+owner = "pluss::ai::nn::PReLU"
+summary = "How many learned slopes, their initial value, and the parameter's config."
+fields = ["num_parameters", "init", "cfg"]
+
+# --- normalization -------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::LayerNorm"
+kind = "class"
+family = "nn/normalization"
+page = "api/nn/normalization/LayerNorm.md"
+summary = "Normalizes each row over its last dimension to zero mean / unit variance, then applies a learned scale and shift."
+
+[[symbol]]
+qualname = "pluss::ai::nn::LayerNormOptions"
+kind = "options"
+family = "nn/normalization"
+page = "api/nn/normalization/LayerNormOptions.md"
+owner = "pluss::ai::nn::LayerNorm"
+summary = "The normalized width and the variance-floor epsilon."
+fields = ["normalized_size", "eps", "cfg"]
+
+# --- embedding -----------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::Embedding"
+kind = "class"
+family = "nn/embedding"
+page = "api/nn/embedding/Embedding.md"
+summary = "A learned lookup table: one row per category code, gathered by index."
+
+[[symbol]]
+qualname = "pluss::ai::nn::EmbeddingOptions"
+kind = "options"
+family = "nn/embedding"
+page = "api/nn/embedding/EmbeddingOptions.md"
+owner = "pluss::ai::nn::Embedding"
+summary = "The category cardinality and the embedding width."
+fields = ["cardinality", "hidden_size", "cfg", "seed"]
+
+# --- fusion (fully connected layer) --------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::Fusion"
+kind = "class"
+family = "nn/fusion"
+page = "api/nn/fusion/Fusion.md"
+summary = "The fully connected layer: a learned affine map y = xW^T + b."
+
+[[symbol]]
+qualname = "pluss::ai::nn::FusionOptions"
+kind = "options"
+family = "nn/fusion"
+page = "api/nn/fusion/FusionOptions.md"
+owner = "pluss::ai::nn::Fusion"
+summary = "Input/output width, whether to learn a bias, and the weight config/seed."
+fields = ["in_features", "out_features", "bias", "cfg", "seed"]
+
+# --- cnn -------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::Conv1d"
+kind = "class"
+family = "nn/cnn"
+page = "api/nn/cnn/Conv1d.md"
+summary = "A 1-D convolution over a single spatial/time dimension."
+
+[[symbol]]
+qualname = "pluss::ai::nn::Conv1dOptions"
+kind = "options"
+family = "nn/cnn"
+page = "api/nn/cnn/Conv1dOptions.md"
+owner = "pluss::ai::nn::Conv1d"
+summary = "Channel counts, kernel/stride/padding/dilation, groups, and bias."
+fields = ["in_channels", "out_channels", "kernel_size", "stride", "padding", "padding_lr", "dilation", "groups", "bias", "cfg", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Conv"
+kind = "class"
+family = "nn/cnn"
+page = "api/nn/cnn/Conv.md"
+summary = "A 2-D convolution over two spatial dimensions; aliased Conv2d."
+
+[[symbol]]
+qualname = "pluss::ai::nn::ConvOptions"
+kind = "options"
+family = "nn/cnn"
+page = "api/nn/cnn/ConvOptions.md"
+owner = "pluss::ai::nn::Conv"
+summary = "Channel counts, kernel/stride/padding/dilation as 2-element arrays, groups, and bias; aliased Conv2dOptions."
+fields = ["in_channels", "out_channels", "kernel_size", "stride", "padding", "dilation", "groups", "bias", "cfg", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Conv3d"
+kind = "class"
+family = "nn/cnn"
+page = "api/nn/cnn/Conv3d.md"
+summary = "A 3-D convolution over three spatial dimensions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::Conv3dOptions"
+kind = "options"
+family = "nn/cnn"
+page = "api/nn/cnn/Conv3dOptions.md"
+owner = "pluss::ai::nn::Conv3d"
+summary = "Channel counts, kernel/stride/padding/dilation as 3-element arrays, groups, and bias."
+fields = ["in_channels", "out_channels", "kernel_size", "stride", "padding", "dilation", "groups", "bias", "cfg", "seed"]
+
+# --- rnn ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::RNN"
+kind = "class"
+family = "nn/rnn"
+page = "api/nn/rnn/RNN.md"
+summary = "A multi-layer Elman RNN with tanh or relu nonlinearity, optionally bidirectional."
+methods = ["forward", "params", "options"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::RNNOptions"
+kind = "options"
+family = "nn/rnn"
+page = "api/nn/rnn/RNNOptions.md"
+owner = "pluss::ai::nn::RNN"
+summary = "Layer/hidden sizes, nonlinearity, bias, batch-first layout, inter-layer dropout, bidirectionality."
+fields = ["input_size", "hidden_size", "num_layers", "nonlinearity", "bias", "batch_first", "dropout", "bidirectional", "split_bias", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::GRU"
+kind = "class"
+family = "nn/rnn"
+page = "api/nn/rnn/GRU.md"
+summary = "A multi-layer gated recurrent unit network, optionally bidirectional."
+methods = ["forward", "params", "options"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::GRUOptions"
+kind = "options"
+family = "nn/rnn"
+page = "api/nn/rnn/GRUOptions.md"
+owner = "pluss::ai::nn::GRU"
+summary = "Layer/hidden sizes, bias, batch-first layout, inter-layer dropout, bidirectionality."
+fields = ["input_size", "hidden_size", "num_layers", "bias", "batch_first", "dropout", "bidirectional", "split_bias", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::LSTM"
+kind = "class"
+family = "nn/rnn"
+page = "api/nn/rnn/LSTM.md"
+summary = "A multi-layer long short-term memory network, with optional projection and bidirectionality."
+methods = ["forward", "params", "options"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::LSTMOptions"
+kind = "options"
+family = "nn/rnn"
+page = "api/nn/rnn/LSTMOptions.md"
+owner = "pluss::ai::nn::LSTM"
+summary = "Layer/hidden sizes, bias, batch-first layout, inter-layer dropout, bidirectionality, and the recurrent projection size."
+fields = ["input_size", "hidden_size", "num_layers", "bias", "batch_first", "dropout", "bidirectional", "split_bias", "proj_size", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::PackedSequence"
+kind = "class"
+family = "nn/rnn"
+page = "api/nn/rnn/PackedSequence.md"
+summary = "A variable-length-batch packed representation consumed directly by RNN/GRU/LSTM forward."
+
+[[symbol]]
+qualname = "pluss::ai::nn::pack_padded_sequence"
+kind = "function"
+family = "nn/rnn"
+page = "api/nn/rnn/pack_padded_sequence.md"
+summary = "Pack a padded batch plus per-sequence lengths into a PackedSequence."
+
+[[symbol]]
+qualname = "pluss::ai::nn::pad_packed_sequence"
+kind = "function"
+family = "nn/rnn"
+page = "api/nn/rnn/pad_packed_sequence.md"
+summary = "Unpack a PackedSequence back into a padded batch plus lengths."
+
+# --- attention -----------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::MultiheadAttention"
+kind = "class"
+family = "nn/attention"
+page = "api/nn/attention/MultiheadAttention.md"
+summary = "Learned multi-head scaled dot-product attention over query/key/value inputs."
+
+[[symbol]]
+qualname = "pluss::ai::nn::MultiheadAttentionOptions"
+kind = "options"
+family = "nn/attention"
+page = "api/nn/attention/MultiheadAttentionOptions.md"
+owner = "pluss::ai::nn::MultiheadAttention"
+summary = "Embedding width, head count, dropout, bias, batch-first layout, weight averaging, and an optional explicit scale."
+fields = ["embed_dim", "num_heads", "dropout", "bias", "batch_first", "average_weights", "scale", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerEncoderLayer"
+kind = "class"
+family = "nn/attention"
+page = "api/nn/attention/TransformerEncoderLayer.md"
+summary = "One self-attention + feedforward encoder block, pre- or post-norm."
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerEncoderLayerOptions"
+kind = "options"
+family = "nn/attention"
+page = "api/nn/attention/TransformerEncoderLayerOptions.md"
+owner = "pluss::ai::nn::TransformerEncoderLayer"
+summary = "Model width, head count, feedforward width, dropout, activation, norm placement and epsilon, bias."
+fields = ["d_model", "nhead", "dim_feedforward", "dropout", "activation", "layer_norm_eps", "batch_first", "norm_first", "bias", "average_attn_weights", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerEncoder"
+kind = "class"
+family = "nn/attention"
+page = "api/nn/attention/TransformerEncoder.md"
+summary = "A stack of TransformerEncoderLayer blocks with an optional final norm."
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerEncoderOptions"
+kind = "options"
+family = "nn/attention"
+page = "api/nn/attention/TransformerEncoderOptions.md"
+owner = "pluss::ai::nn::TransformerEncoder"
+summary = "Per-layer options plus the layer count and whether to apply a final norm."
+fields = ["d_model", "nhead", "num_layers", "dim_feedforward", "dropout", "activation", "layer_norm_eps", "batch_first", "norm_first", "bias", "final_norm", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerDecoderLayer"
+kind = "class"
+family = "nn/attention"
+page = "api/nn/attention/TransformerDecoderLayer.md"
+summary = "One self-attention + cross-attention + feedforward decoder block, pre- or post-norm."
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerDecoderLayerOptions"
+kind = "options"
+family = "nn/attention"
+page = "api/nn/attention/TransformerDecoderLayerOptions.md"
+owner = "pluss::ai::nn::TransformerDecoderLayer"
+summary = "Model width, head count, feedforward width, dropout, activation, norm placement and epsilon, bias."
+fields = ["d_model", "nhead", "dim_feedforward", "dropout", "activation", "layer_norm_eps", "batch_first", "norm_first", "bias", "average_attn_weights", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerDecoder"
+kind = "class"
+family = "nn/attention"
+page = "api/nn/attention/TransformerDecoder.md"
+summary = "A stack of TransformerDecoderLayer blocks with an optional final norm."
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerDecoderOptions"
+kind = "options"
+family = "nn/attention"
+page = "api/nn/attention/TransformerDecoderOptions.md"
+owner = "pluss::ai::nn::TransformerDecoder"
+summary = "Per-layer options plus the layer count and whether to apply a final norm."
+fields = ["d_model", "nhead", "num_layers", "dim_feedforward", "dropout", "activation", "layer_norm_eps", "batch_first", "norm_first", "bias", "final_norm", "cfg", "seed", "training"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::Transformer"
+kind = "class"
+family = "nn/attention"
+page = "api/nn/attention/Transformer.md"
+summary = "The full encoder-decoder transformer, composed from TransformerEncoder and TransformerDecoder."
+
+[[symbol]]
+qualname = "pluss::ai::nn::TransformerOptions"
+kind = "options"
+family = "nn/attention"
+page = "api/nn/attention/TransformerOptions.md"
+owner = "pluss::ai::nn::Transformer"
+summary = "Model width, head count, independent encoder/decoder layer counts, feedforward width, dropout, activation, norm placement."
+fields = ["d_model", "nhead", "num_encoder_layers", "num_decoder_layers", "dim_feedforward", "dropout", "activation", "layer_norm_eps", "batch_first", "norm_first", "bias", "cfg", "seed", "training"]
+
+# --- losses (stateless loss functions, not modules) -----------------
+[[symbol]]
+qualname = "pluss::ai::nn::losses::MSE"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/MSE.md"
+summary = "Mean squared error between prediction and target."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::MSEOptions"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/MSEOptions.md"
+owner = "pluss::ai::nn::losses::MSE"
+summary = "The reduction mode."
+fields = ["reduction"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::RelativeMSE"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/RelativeMSE.md"
+summary = "Squared error scaled by a caller-supplied divisor, for scale-invariant regression targets."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::RelativeMSEOptions"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/RelativeMSEOptions.md"
+owner = "pluss::ai::nn::losses::RelativeMSE"
+summary = "Reduction mode, the divisor floor, and whether the divisor is taken by absolute value."
+fields = ["reduction", "epsilon", "use_absolute_divisor"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::Huber"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/Huber.md"
+summary = "Quadratic near zero error, linear beyond a delta threshold -- robust to outliers."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::HuberOptions"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/HuberOptions.md"
+owner = "pluss::ai::nn::losses::Huber"
+summary = "The quadratic/linear transition delta and the reduction mode."
+fields = ["delta", "reduction"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::L1"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/L1.md"
+summary = "Mean absolute error between prediction and target."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::L1Options"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/L1Options.md"
+owner = "pluss::ai::nn::losses::L1"
+summary = "The reduction mode."
+fields = ["reduction"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::SmoothL1"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/SmoothL1.md"
+summary = "Quadratic near zero error, linear beyond a beta threshold; reduces to L1 at beta = 0."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::SmoothL1Options"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/SmoothL1Options.md"
+owner = "pluss::ai::nn::losses::SmoothL1"
+summary = "The quadratic/linear transition beta and the reduction mode."
+fields = ["beta", "reduction"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::BCEWithLogits"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/BCEWithLogits.md"
+summary = "Binary cross-entropy computed directly from logits, with an optional positive-class weight and per-element weight."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::BCEWithLogitsOptions"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/BCEWithLogitsOptions.md"
+owner = "pluss::ai::nn::losses::BCEWithLogits"
+summary = "Reduction mode, per-element weight, and the positive-class weight."
+fields = ["reduction", "weight", "positive_class_weight"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::NLL"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/NLL.md"
+summary = "Negative log-likelihood from log-probabilities and class-index targets."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::NLLOptions"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/NLLOptions.md"
+owner = "pluss::ai::nn::losses::NLL"
+summary = "Reduction mode, class dimension, per-class weight, and an ignorable target index."
+fields = ["reduction", "class_dim", "class_weight", "use_ignore_index", "ignore_index"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::CrossEntropy"
+kind = "function"
+family = "nn/losses"
+page = "api/nn/losses/CrossEntropy.md"
+summary = "Softmax cross-entropy from logits, accepting either class-index or soft-probability targets, with label smoothing."
+
+[[symbol]]
+qualname = "pluss::ai::nn::losses::CrossEntropyOptions"
+kind = "options"
+family = "nn/losses"
+page = "api/nn/losses/CrossEntropyOptions.md"
+owner = "pluss::ai::nn::losses::CrossEntropy"
+summary = "Reduction mode, class dimension, label smoothing, per-class weight, and an ignorable target index."
+fields = ["reduction", "class_dim", "label_smoothing", "class_weight", "use_ignore_index", "ignore_index"]
+
+# --- functional (pluss::ai::nn; also reachable via the short pluss::nn alias) --
+[[symbol]]
+qualname = "pluss::ai::nn::fusion"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/fusion.md"
+summary = "The stateless fully connected op: y = xW^T + b. What Fusion's forward calls internally."
+
+[[symbol]]
+qualname = "pluss::ai::nn::dropout"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/dropout.md"
+summary = "Stateless elementwise dropout, active only when training is true."
+
+[[symbol]]
+qualname = "pluss::ai::nn::elu"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/elu.md"
+summary = "Stateless ELU; what Elu's forward calls internally. Declared directly in pluss::ai::nn, unlike the rest of this family (re-exported via nn_func.h)."
+
+[[symbol]]
+qualname = "pluss::ai::nn::conv"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/conv.md"
+summary = "Stateless N-D convolution; conv2d/conv3d are the fixed-rank forms Conv/Conv3d call internally."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::nn::conv1d"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/conv1d.md"
+summary = "Stateless 1-D convolution; what Conv1d's forward calls internally."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::nn::rnn"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/rnn.md"
+summary = "Stateless Elman-RNN forward over explicit per-layer weights, given a NetConfig; what RNN's forward calls internally. Also the namespace-like scope for the rnn::NetWeight / rnn::NetConfig types."
+
+[[symbol]]
+qualname = "pluss::ai::nn::gru"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/gru.md"
+summary = "Stateless GRU forward over explicit per-layer weights; what GRU's forward calls internally."
+
+[[symbol]]
+qualname = "pluss::ai::nn::lstm"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/lstm.md"
+summary = "Stateless LSTM forward over explicit per-layer weights; what LSTM's forward calls internally."
+
+[[symbol]]
+qualname = "pluss::ai::nn::scaled_attention"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/scaled_attention.md"
+summary = "Stateless scaled dot-product attention over query/key/value Series, returning output and attention weights."
+
+[[symbol]]
+qualname = "pluss::ai::nn::multihead_attention"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/multihead_attention.md"
+summary = "Stateless multi-head attention over explicit projection weights; what MultiheadAttention's forward calls internally."
+
+[[symbol]]
+qualname = "pluss::ai::nn::causal_attention_mask"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/causal_attention_mask.md"
+summary = "Builds a target x source additive mask that blocks attending to future positions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::square_subsequent_mask"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/square_subsequent_mask.md"
+summary = "Builds a square causal_attention_mask for self-attention over one sequence."
+
+[[symbol]]
+qualname = "pluss::ai::nn::causal_padding1d"
+kind = "function"
+family = "nn/functional"
+page = "api/nn/functional/causal_padding1d.md"
+summary = "Computes the left-only padding width that makes a 1-D convolution causal."
+
+[[symbol]]
+qualname = "pluss::ai::nn::AttentionOptions"
+kind = "options"
+family = "nn/functional"
+page = "api/nn/functional/AttentionOptions.md"
+owner = "pluss::ai::nn::scaled_attention"
+summary = "Dropout, training mode, causal masking, an optional explicit scale, and the dropout seed."
+fields = ["dropout", "training", "causal", "scale", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::MultiheadOptions"
+kind = "options"
+family = "nn/functional"
+page = "api/nn/functional/MultiheadOptions.md"
+owner = "pluss::ai::nn::multihead_attention"
+summary = "Head count, batch-first layout, attention-weight averaging, and the wrapped AttentionOptions."
+fields = ["num_heads", "batch_first", "average_weights", "attention"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::MultiheadWeights"
+kind = "class"
+family = "nn/functional"
+page = "api/nn/functional/MultiheadWeights.md"
+summary = "The explicit query/key/value/output projection weights and biases multihead_attention takes directly."
+
+[[symbol]]
+qualname = "pluss::ai::nn::rnn::NetWeight"
+kind = "class"
+family = "nn/functional"
+page = "api/nn/functional/NetWeight.md"
+summary = "One recurrent layer's explicit weights: input-hidden, hidden-hidden, biases, and an optional recurrent projection."
+
+[[symbol]]
+qualname = "pluss::ai::nn::rnn::NetConfig"
+kind = "class"
+family = "nn/functional"
+page = "api/nn/functional/NetConfig.md"
+summary = "The full configuration pluss::ai::nn::rnn / gru / lstm read: layout, layers, dropout, bidirectionality, projection size."
+
+# --- grad --------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::GradMode"
+kind = "class"
+family = "nn/grad"
+page = "api/nn/grad/GradMode.md"
+summary = "The global switch that decides whether new operations are recorded for reverse-mode differentiation."
+methods = ["is_enabled", "set_enabled"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::AutoGradMode"
+kind = "class"
+family = "nn/grad"
+page = "api/nn/grad/AutoGradMode.md"
+summary = "An RAII guard that sets GradMode to a fixed value and restores the previous value on scope exit."
+
+[[symbol]]
+qualname = "pluss::ai::nn::NoGradGuard"
+kind = "class"
+family = "nn/grad"
+page = "api/nn/grad/NoGradGuard.md"
+summary = "An RAII guard that disables grad recording for its scope; the common case built on AutoGradMode."
+
+# --- optim ---------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nn::optim::Optimizer"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/Optimizer.md"
+summary = "The base class every optimizer derives from -- owns the parameter list and drives step() from either explicit gradients or each parameter's own recorded sensitivity."
+methods = ["step", "parameters", "size", "clear", "last_step_lane_telemetry"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::GradientClipOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/GradientClipOptions.md"
+owner = "pluss::ai::nn::optim::Optimizer"
+summary = "Shared by every optimizer: clip-by-value or clip-by-norm gradient clipping, and its threshold/epsilon."
+fields = ["mode", "threshold", "epsilon"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::ExecutionOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/ExecutionOptions.md"
+owner = "pluss::ai::nn::optim::Optimizer"
+summary = "Shared by every optimizer: which update lane to run (loop/foreach/batched/fused), strictness, and capturable mode."
+fields = ["lane", "strict", "capturable"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::StepDiagnosticsOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/StepDiagnosticsOptions.md"
+owner = "pluss::ai::nn::optim::Optimizer"
+summary = "Opt-in fail-fast checks for step(): missing sensitivity coverage, non-finite gradients, parameters, or loss."
+fields = ["fail_if_no_sensitivity", "minimum_tracked_coverage", "fail_if_non_finite_sensitivity", "fail_if_non_finite_parameter", "fail_if_non_finite_loss"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::StepLaneTelemetry"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/StepLaneTelemetry.md"
+summary = "Per-parameter-group report of which update lane was requested vs. actually resolved, and why."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::SGD"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/SGD.md"
+summary = "Stochastic gradient descent, with momentum, dampening, weight decay, and Nesterov."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::SGDOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/SGDOptions.md"
+owner = "pluss::ai::nn::optim::SGD"
+summary = "Learning rate, momentum, dampening, weight decay, Nesterov, maximize, and the shared clip/execution options."
+fields = ["learning_rate", "momentum", "dampening", "weight_decay", "nesterov", "maximize", "clip", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::SGDGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/SGDGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own SGDOptions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::Adagrad"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/Adagrad.md"
+summary = "Adaptive gradient descent with a per-parameter accumulated-squared-gradient scale."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdagradOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/AdagradOptions.md"
+owner = "pluss::ai::nn::optim::Adagrad"
+summary = "Learning rate, learning-rate decay, weight decay, epsilon, accumulator init, maximize, clip/execution."
+fields = ["learning_rate", "lr_decay", "weight_decay", "epsilon", "initial_accumulator_value", "maximize", "clip", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdagradGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/AdagradGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own AdagradOptions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::Adam"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/Adam.md"
+summary = "Adaptive moment estimation, with optional AMSGrad."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdamOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/AdamOptions.md"
+owner = "pluss::ai::nn::optim::Adam"
+summary = "Learning rate, beta1/beta2, epsilon, weight decay, AMSGrad, maximize, clip/execution."
+fields = ["learning_rate", "beta1", "beta2", "epsilon", "weight_decay", "amsgrad", "maximize", "clip", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdamGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/AdamGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own AdamOptions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdamW"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/AdamW.md"
+summary = "Adam with decoupled weight decay applied directly to the parameter, not folded into the gradient."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdamWOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/AdamWOptions.md"
+owner = "pluss::ai::nn::optim::AdamW"
+summary = "Learning rate, beta1/beta2, epsilon, decoupled weight decay, AMSGrad, maximize, clip/execution."
+fields = ["learning_rate", "beta1", "beta2", "epsilon", "weight_decay", "amsgrad", "maximize", "clip", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::AdamWGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/AdamWGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own AdamWOptions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::NAdam"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/NAdam.md"
+summary = "Adam with Nesterov momentum folded into the first-moment update."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::NAdamOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/NAdamOptions.md"
+owner = "pluss::ai::nn::optim::NAdam"
+summary = "Learning rate, beta1/beta2, epsilon, weight decay, momentum decay, decoupled weight decay, maximize, clip/execution."
+fields = ["learning_rate", "beta1", "beta2", "epsilon", "weight_decay", "momentum_decay", "decoupled_weight_decay", "maximize", "clip", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::NAdamGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/NAdamGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own NAdamOptions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::RMSprop"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/RMSprop.md"
+summary = "Root-mean-square gradient scaling, with optional momentum and centering."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::RMSpropOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/RMSpropOptions.md"
+owner = "pluss::ai::nn::optim::RMSprop"
+summary = "Learning rate, smoothing alpha, epsilon, momentum, weight decay, centering, maximize, clip/execution."
+fields = ["learning_rate", "alpha", "epsilon", "momentum", "weight_decay", "centered", "maximize", "clip", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::RMSpropGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/RMSpropGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own RMSpropOptions."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::Minimax"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/Minimax.md"
+summary = "A constrained primal-dual optimizer: an Adam/AdamW/SGD/RMSprop primal step plus an augmented-Lagrangian dual update for equality/inequality residuals."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::MinimaxOptions"
+kind = "options"
+family = "nn/optim"
+page = "api/nn/optim/MinimaxOptions.md"
+owner = "pluss::ai::nn::optim::Minimax"
+summary = "The wrapped primal-optimizer options plus dual learning rate, penalty weights, bound projection, constraint-autodiff toggle, NaN recovery, and penalty/dual schedules."
+fields = ["primal_method", "learning_rate", "beta1", "beta2", "epsilon", "weight_decay", "amsgrad", "maximize", "clip", "momentum", "rmsprop_alpha", "dual_learning_rate", "equality_penalty", "inequality_penalty", "project_bounds", "enable_constraint_autodiff", "nan_recovery_attempts", "nan_recovery_shrink", "dual_schedule", "penalty_schedule", "dual_exponential_decay", "penalty_exponential_growth", "violation_target", "schedule_min_scale", "schedule_max_scale"]
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::MinimaxConstraints"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/MinimaxConstraints.md"
+summary = "The equality/inequality residual callables (plain or Trace-differentiable) and optional per-parameter bounds Minimax enforces."
+
+[[symbol]]
+qualname = "pluss::ai::nn::optim::MinimaxGroup"
+kind = "class"
+family = "nn/optim"
+page = "api/nn/optim/MinimaxGroup.md"
+summary = "One per-parameter-group entry: its own parameter list plus its own MinimaxOptions."
+
+# --- data (pluss::loader / pluss::tils, lives in PlussTils) ----------
+[[symbol]]
+qualname = "pluss::loader::Dataset"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/Dataset.md"
+summary = "The map-style dataset interface: size() plus get(index); materialize_fields() opts a dataset into vectorized DataLoader batching."
+methods = ["size", "get", "materialize_fields", "batch_dim"]
+
+[[symbol]]
+qualname = "pluss::loader::SeriesDataset"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/SeriesDataset.md"
+summary = "A Dataset backed directly by whole-Series fields sharing one sample dimension -- the common case, no per-sample loop."
+methods = ["size", "get", "fields", "materialize_fields", "batch_dim"]
+
+[[symbol]]
+qualname = "pluss::loader::DataBatch"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/DataBatch.md"
+summary = "One batch's aligned Series fields; x()/y() name the first two by convention."
+methods = ["at", "x", "y", "has_y", "size", "empty"]
+
+[[symbol]]
+qualname = "pluss::loader::DataLoader"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/DataLoader.md"
+summary = "Batches a Dataset (or raw field Series) via gather, with shuffling, drop-last, reshuffle-per-epoch, and a collate hook; iterable and index-addressable."
+methods = ["next", "batch_at", "begin", "end", "reset", "set_epoch", "set_options", "batch_count", "sample_count", "batch_size", "epoch"]
+
+[[symbol]]
+qualname = "pluss::loader::DataLoaderOptions"
+kind = "options"
+family = "nn/data"
+page = "api/nn/data/DataLoaderOptions.md"
+owner = "pluss::loader::DataLoader"
+summary = "Batch size, shuffle, drop-last, seed, batch dimension, reshuffle-per-epoch, target platform/dtype, and an optional collate function."
+fields = ["batch_size", "shuffle", "drop_last", "seed", "batch_dim", "reshuffle_each_epoch", "target_platform", "target_dtype", "collate_fn"]
+
+[[symbol]]
+qualname = "pluss::loader::DataSplit"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/DataSplit.md"
+summary = "The train/val/test field Series returned by split_fields."
+
+[[symbol]]
+qualname = "pluss::loader::DataSplitOptions"
+kind = "options"
+family = "nn/data"
+page = "api/nn/data/DataSplitOptions.md"
+owner = "pluss::loader::split_fields"
+summary = "Train/val ratios (test is the remainder), shuffle, seed, and batch dimension."
+fields = ["train_ratio", "val_ratio", "shuffle", "seed", "batch_dim"]
+
+[[symbol]]
+qualname = "pluss::loader::split_fields"
+kind = "function"
+family = "nn/data"
+page = "api/nn/data/split_fields.md"
+summary = "A one-shot random train/val/test split of aligned field Series (or a Dataset); split_loaders wraps each part in a DataLoader."
+overloads = 4
+
+[[symbol]]
+qualname = "pluss::loader::split_loaders"
+kind = "function"
+family = "nn/data"
+page = "api/nn/data/split_loaders.md"
+summary = "split_fields plus a DataLoader per part, each with its own DataLoaderOptions."
+overloads = 4
+
+[[symbol]]
+qualname = "pluss::loader::TemporalSplitOptions"
+kind = "options"
+family = "nn/data"
+page = "api/nn/data/TemporalSplitOptions.md"
+owner = "pluss::loader::temporal_split_indices"
+summary = "Fold count, explicit test size, max train size cap, the train/test gap, and batch dimension for forward-chaining time-series cross-validation."
+fields = ["folds", "test_size", "max_train_size", "gap", "batch_dim"]
+
+[[symbol]]
+qualname = "pluss::loader::temporal_split_indices"
+kind = "function"
+family = "nn/data"
+page = "api/nn/data/temporal_split_indices.md"
+summary = "Forward-chaining (walk-forward) train/test index folds over a sample count -- never trains on future data."
+
+[[symbol]]
+qualname = "pluss::loader::temporal_split_fields"
+kind = "function"
+family = "nn/data"
+page = "api/nn/data/temporal_split_fields.md"
+summary = "temporal_split_indices applied directly to aligned field Series (or a Dataset), returning per-fold train/test Series."
+overloads = 4
+
+[[symbol]]
+qualname = "pluss::loader::temporal_split_loaders"
+kind = "function"
+family = "nn/data"
+page = "api/nn/data/temporal_split_loaders.md"
+summary = "temporal_split_fields plus a DataLoader per fold's train/test part."
+overloads = 4

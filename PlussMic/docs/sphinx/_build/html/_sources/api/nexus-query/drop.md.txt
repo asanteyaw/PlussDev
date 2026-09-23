@@ -1,0 +1,100 @@
+<!-- pluss-hand-authored -->
+
+# NexusTraverse::drop
+
+[Back to NexusTraverse API Reference](../../nexus_traverse_api_reference)
+
+## Signature
+
+```cpp
+NexusTraverse::drop(std::initializer_list<std::string_view> features) const -> NexusTraverse
+```
+
+## What It Does
+
+Removes the named columns from what [`.collect()`](collect.md) returns, keeping everything
+else — the complement of [`.pick()`](pick.md). Applied after every join step, same as
+`.pick()`. Calling `.drop()` again replaces the previous drop list rather than combining
+with it.
+
+## Parameters
+
+**features** (`std::initializer_list<std::string_view>`)
+    The feature names to remove from the final result. Same validation as
+    [`.pick()`](pick.md): each name must be non-empty and unique within the request.
+    Existence is checked when [`.collect()`](collect.md) runs.
+
+## Returns
+
+`NexusTraverse`
+    A new query with the drop list set (or replaced). The original query is unchanged.
+
+## Examples
+
+Example 1. Drop the redundant join key after joining.
+
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+});
+auto orders = DataFrame({
+    {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 2.0}))},
+    {"amount",      Thread(pluss::make_series({50.0, 75.0, 20.0}))},
+});
+
+auto biz = Nexus({
+    {"customers", customers},
+    {"orders", orders},
+});
+
+Relationship rel;
+rel.name = "orders_to_customers";
+rel.left_table = "orders";
+rel.right_table = "customers";
+rel.keys = {{"customer_id", "customer_id"}};
+
+auto linked = biz.add_relationship(rel);
+
+auto result = linked.from("orders").join("customers").drop({"customer_id"}).collect();
+
+for (const auto& f : result.features()) {
+  std::cout << f << " ";
+}
+```
+
+### Output
+
+```text
+order_id amount name
+```
+
+`customer_id` (the join key, now redundant once the frames are joined) is gone;
+`order_id`, `amount`, and `name` all survive, in the joined frame's own original order.
+
+## Notes
+
+- Applies to the final joined result, after [`.pick()`](pick.md) if both are set — see
+  that page's Notes for the exact application order.
+- A second `.drop()` call replaces the earlier list rather than combining with it.
+
+## See Also
+
+- [`NexusTraverse::pick`](pick.md): the complementary "keep only these" operation.
+- [`NexusTraverse::collect`](collect.md): where `.pick()`/`.drop()` are actually applied.
+- [`Nexus::drop`](../nexus/drop.md): the table-level (not column-level) analog.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pick.html">
+    <span class="label">Previous</span>
+    <span class="title">pick</span>
+  </a>
+  <a class="next-link" href="name.html">
+    <span class="label">Next</span>
+    <span class="title">name</span>
+  </a>
+</div>
