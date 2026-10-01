@@ -14,6 +14,8 @@ template <typename Container>
 ScheduleImpl& /* only on the underlying Impl, reached via -> */ extend(const Container& layers);
 ```
 
+## What It Does
+
 Appends multiple stages in one call. The two overloads are not symmetric in
 how they are reached: `Schedule` itself only re-declares
 `extend(const Schedule&)` (returning `Schedule&`, for chaining) --
@@ -21,7 +23,10 @@ the template `extend(const Container&)` overload exists only on the
 underlying implementation type and needs `->` (`net->extend(container)`),
 not `.` (`net.extend(container)`), the same `.`/`->` boundary the
 [`module` Introduction](../Introduction.md) explains for every layer type's
-own accessors.
+own accessors. Reach for `extend` instead of repeated `append` calls when
+stages already live in a container or another `Schedule`, and when the
+looser (never-throws) name-collision handling described below is
+acceptable.
 
 ## Parameters
 
@@ -29,12 +34,12 @@ own accessors.
 : Every stage in `other` is deep-copied (`StageBase::clone()`) and appended
   to `*this`, in order. `other` is left unmodified. A name already used in
   `*this` is silently replaced with a fresh auto-generated name (the same
-  counter [`then`](then.md) uses) rather than rejected -- `extend` never
-  throws over a name collision the way `then`/`insert` do.
+  counter [`append`](append.md) uses) rather than rejected -- `extend` never
+  throws over a name collision the way `append`/`insert` do.
 
 `const Container& layers`
 : Any range of stage-like values (a `std::vector<Fusion>`, for instance).
-  Equivalent to calling [`then(layer)`](then.md) once per element, in
+  Equivalent to calling [`append(layer)`](append.md) once per element, in
   order -- every element is auto-named, and the usual per-element type
   checks against the growing chain still apply.
 
@@ -46,7 +51,7 @@ for the container overload.
 ## Errors
 
 - Container overload: any element's declared type fails the usual
-  [`then`](then.md) chain check -- throws, having already appended every
+  [`append`](append.md) chain check -- throws, having already appended every
   prior element.
 - `Schedule`-argument overload: a stage type that does not fit the growing
   chain -- throws (`clone()` itself requires each stage's layer type to be
@@ -72,11 +77,11 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule block;
-  block.then("conv", nn::Fusion(4, 4));
-  block.then("act", nn::ReLU());
+  block.append("conv", nn::Fusion(4, 4));
+  block.append("act", nn::ReLU());
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
+  net.append("in", nn::Fusion(3, 4));
   net.extend(block);  // clones block's stages onto the end of net
 
   for (std::size_t i = 0; i < net->size(); ++i) {
@@ -113,10 +118,10 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule block;
-  block.then("shared_name", nn::Fusion(4, 4));
+  block.append("shared_name", nn::Fusion(4, 4));
 
   nn::Schedule net;
-  net.then("shared_name", nn::Fusion(3, 4));  // net already has this name
+  net.append("shared_name", nn::Fusion(3, 4));  // net already has this name
   net.extend(block);  // collision -- extend auto-renames instead of failing
 
   std::cout << "stage 0: '" << net->name_at(0) << "'\n";
@@ -154,8 +159,8 @@ int main() {
   layers.emplace_back(4, 4);
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net->extend(layers);  // template overload -- only on ScheduleImpl, calls then(layer) per element
+  net.append("in", nn::Fusion(3, 4));
+  net->extend(layers);  // template overload -- only on ScheduleImpl, calls append(layer) per element
 
   for (std::size_t i = 0; i < net->size(); ++i) {
     std::cout << "stage " << i << ": '" << net->name_at(i) << "'\n";
@@ -175,7 +180,7 @@ stage 2: '1'
 
 ## See Also
 
-- [`then`](then.md) -- what `extend` calls once per element, for the
+- [`append`](append.md) -- what `extend` calls once per element, for the
   container overload.
 - [`clear`](clear.md) -- the opposite of accumulating stages: removes all
   of them.

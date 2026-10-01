@@ -78,16 +78,11 @@ Stream payload is not Timeli
 
 ## See Also
 
-- [`Stream::as_series`](as_series.md) / [`Stream::as_note`](as_note.md) /
-  [`Stream::as_timeindex`](as_timeindex.md): the equivalent escape hatch for the other
+- [`Stream::as_series`](as_series.md) / [`Stream::as_note`](as_note.md): the equivalent escape hatch for the other
   three payload kinds.
 - [`Stream::kind`](kind.md): check the payload kind before calling this method.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="as_timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">as_timeindex</span>
-  </a>
   <a class="next-link" href="astype.html">
     <span class="label">Next</span>
     <span class="title">astype</span>

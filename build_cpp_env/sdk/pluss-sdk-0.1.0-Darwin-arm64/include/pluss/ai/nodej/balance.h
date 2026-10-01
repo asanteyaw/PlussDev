@@ -5,31 +5,31 @@
 namespace pluss::ai::nodej {
 
 struct ClassMix {
-  Series labels = Series::undefined();
-  Series counts = Series::undefined();
-  Series proportions = Series::undefined();
-  Series inverse_frequency = Series::undefined();
+  Series labels = pluss::series::undefined();
+  Series counts = pluss::series::undefined();
+  Series proportions = pluss::series::undefined();
+  Series inverse_frequency = pluss::series::undefined();
   std::int64_t sample_count = 0;
   std::int64_t class_count = 0;
   double imbalance_ratio = 1.0;
 };
 
 struct WeightPlan {
-  Series weights = Series::undefined();
-  Series class_weights = Series::undefined();
-  Series sample_weights = Series::undefined();
+  Series weights = pluss::series::undefined();
+  Series class_weights = pluss::series::undefined();
+  Series sample_weights = pluss::series::undefined();
   ClassMix mix{};
   double mean_weight = 1.0;
 };
 
 struct BalancePlan {
-  Series indices = Series::undefined();
-  Series target_counts = Series::undefined();
-  Series synthetic_base_indices = Series::undefined();
-  Series synthetic_neighbor_indices = Series::undefined();
-  Series synthetic_steps = Series::undefined();
-  Series synthetic_labels = Series::undefined();
-  Series removed_indices = Series::undefined();
+  Series indices = pluss::series::undefined();
+  Series target_counts = pluss::series::undefined();
+  Series synthetic_base_indices = pluss::series::undefined();
+  Series synthetic_neighbor_indices = pluss::series::undefined();
+  Series synthetic_steps = pluss::series::undefined();
+  Series synthetic_labels = pluss::series::undefined();
+  Series removed_indices = pluss::series::undefined();
   ClassMix before{};
   ClassMix after{};
   bool uses_replacement = false;

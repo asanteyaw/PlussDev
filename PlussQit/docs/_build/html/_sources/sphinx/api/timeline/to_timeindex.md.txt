@@ -1,3 +1,5 @@
+:orphan:
+
 # Timeline::to_timeindex
 
 [Back to Timeline API Reference](../../timeline_api_reference)
@@ -11,7 +13,8 @@ TimeIndex Timeline::to_timeindex(bool require_sorted = true) const
 ## Promote A Timeline Into An Ordered Index
 
 `to_timeindex()` promotes a one-dimensional `Timeline` from general temporal
-storage into a [`TimeIndex`](../../timeindex_api_reference): an object intended
+storage into a [`TimeIndex`](../../timeindex_api_reference): a temporary
+compatibility object intended
 for ordered lookup, boundary searches, and time-based indexing. Promotion does
 not parse, sort, deduplicate, or change any instant. It validates that the
 existing values satisfy the stronger index contract and then returns a
@@ -47,7 +50,8 @@ has been established.
 | Precision | Exact signed 64-bit epoch nanoseconds are retained |
 
 Nondecreasing order permits duplicates because ordering and uniqueness answer
-different questions. Call [`TimeIndex::is_unique`](../timeindex/is_unique.md)
+different questions. Call
+[`TimelineIndexAccessor::is_unique`](../timeline-index/is_unique.md)
 when uniqueness is also required by the application.
 
 ## Example: Sorted Duplicates Are Valid
@@ -196,7 +200,7 @@ value. Neither path mutates the receiver.
 
 - [`Timeline::sort`](sort.md): establish nondecreasing order before promotion.
 - [`Timeline::unique`](unique.md): remove repeated instants when uniqueness is required.
-- [`TimeIndex`](../../timeindex_api_reference): ordered lookup and index operations.
+- [Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference.md): canonical ordered lookup and index operations.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_note_iso.html"><span class="label">Previous</span><span class="title">to_note_iso</span></a>

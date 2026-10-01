@@ -8,6 +8,7 @@
 
 ```cpp
 Series::exp() const -> Series
+Series& Series::exp_()
 ```
 
 ## What It Does
@@ -44,6 +45,29 @@ None.
 So the output itself is the local derivative. That makes `exp()` a very useful
 method for seeing how a forward transform and its reverse-mode sensitivity can
 line up exactly.
+
+## In-Place Form
+
+`exp_()` is the in-place sibling of [`exp()`](exp.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.exp_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1, 2.7182818]
+same object: true
+```
 
 ## Examples
 

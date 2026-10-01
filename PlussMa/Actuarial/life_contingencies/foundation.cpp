@@ -257,7 +257,7 @@ Series compose_select_ultimate_qx(const Series& select_qx,
   PLUSS_CHECK(q_ultimate.numel() > 0,
               "compose_select_ultimate_qx: ultimate_qx must be non-empty when projection exceeds select horizon");
 
-  Series tail_part = Series::undefined();
+  Series tail_part = pluss::series::undefined();
   if (q_ultimate.numel() == 1) {
     const double tail_q = q_ultimate.select(/*dim=*/0, /*index=*/0).item<double>();
     tail_part = Series::ones(std::vector<std::int64_t>{tail_need}, ScalarType::Float64).to(q_ultimate.platform()).mul(

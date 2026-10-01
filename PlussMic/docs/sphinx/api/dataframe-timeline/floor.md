@@ -13,9 +13,9 @@ DataFrameTimelineAccessor::floor(std::string_view unit) const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with each row rounded
+Replaces every selected `Timeline` feature with each row rounded
 *down* to the nearest `unit` boundary, in local wall time — same feature
-name, still `Timeline`/`TimeIndex`-kind, same row order.
+name, still `Timeline`-kind, same row order.
 
 ## Parameters
 
@@ -275,7 +275,7 @@ guessing at a coarser boundary.
   — there's no `"W"` (week) or calendar-month unit here; see
   [`period()`](period.md) for month/year truncation instead.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` (displays as `"NULL"`) regardless of `unit`.
 

@@ -14,9 +14,9 @@ Catalog CatalogTimelineAccessor::leap() const
 ## What It Does
 
 Flags whether each bound key's timestamp's calendar year is a leap year,
-replacing each `Timeline`- or `TimeIndex`-kind key with a `Bool` `Series` key.
+replacing each `Timeline`-kind key with a `Bool` `Series` key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -96,7 +96,7 @@ ts                       | Series       | Series[bool]     | 2       | [true, fa
 ## Notes
 
 - See the important callouts above — reflects the row's year, not its exact
-  date, and requires every bound key to be `Timeline`/`TimeIndex`-kind.
+  date, and requires every bound key to be `Timeline`-kind.
 - Reads local calendar fields relative to whatever timezone the key's `Timeline`
   currently carries (`"UTC"` unless changed via [`tz()`](tz.md)/
   [`localize()`](localize.md)).

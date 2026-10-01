@@ -13,8 +13,8 @@ DataFrameTimelineAccessor::utc() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature's display timezone
-with `"UTC"` — same feature name, still `Timeline`/`TimeIndex`-kind, same row
+Replaces every selected `Timeline` feature's display timezone
+with `"UTC"` — same feature name, still `Timeline`-kind, same row
 order. Exactly equivalent to [`tz("UTC")`](tz.md); like `tz()`, the
 underlying instant never changes, only the timezone used to display it and
 compute local calendar fields.
@@ -83,7 +83,7 @@ printed wall-clock text) changes back.
   chaining `.tz(name).utc()` always round-trips back to the original
   displayed values.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT`.
 

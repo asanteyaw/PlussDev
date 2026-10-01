@@ -56,14 +56,3 @@ never rounds — `90` minutes is exactly `1.5` hours, not `1` or `2`.
 
 - [`total().minutes()`](total_minutes.md): the finer unit this divides.
 - [`total().days()`](total_days.md): the next unit up.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="total_minutes.html">
-    <span class="label">Previous</span>
-    <span class="title">total_minutes</span>
-  </a>
-  <a class="next-link" href="total_days.html">
-    <span class="label">Next</span>
-    <span class="title">total_days</span>
-  </a>
-</div>

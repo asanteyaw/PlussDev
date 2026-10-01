@@ -8,6 +8,7 @@
 
 ```cpp
 Series::sqrt() const -> Series
+Series& Series::sqrt_()
 ```
 
 ## What It Does
@@ -43,6 +44,29 @@ For positive inputs, `sqrt()` has a decreasing derivative:
 - the backward multiplier is `1 / (2 * sqrt(x))`
 
 That means sensitivities are larger near zero and smaller for larger inputs.
+
+## In-Place Form
+
+`sqrt_()` is the in-place sibling of [`sqrt()`](sqrt.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, 4.0, 9.0});
+
+auto& ref = x.sqrt_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 3]
+same object: true
+```
 
 ## Examples
 
@@ -136,9 +160,9 @@ familiar functions still need explicit domain awareness in practical code.
   magnitudes before further transforms.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="split.html">
+  <a class="prev-link" href="sparse_resize.html">
     <span class="label">Previous</span>
-    <span class="title">split</span>
+    <span class="title">sparse_resize</span>
   </a>
   <a class="next-link" href="square.html">
     <span class="label">Next</span>

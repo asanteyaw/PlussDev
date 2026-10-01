@@ -20,6 +20,14 @@ classic::StatusOr<pluss::Series> classic::score_metrics(
     const std::vector<classic::MetricKind>& requested);
 ```
 
+## What It Does
+
+Derives hard predicted labels from `scores` (argmax for multiclass,
+thresholded at `0.5` for binary) internally, then computes whichever mix
+of hard-label and score-based metrics `requested` asks for -- one call
+covering both metric families, rather than requiring a separate function
+per family or a model to run inference through.
+
 ## Parameters
 
 `scores`

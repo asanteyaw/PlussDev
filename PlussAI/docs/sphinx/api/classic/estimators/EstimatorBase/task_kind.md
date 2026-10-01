@@ -13,6 +13,15 @@ construction — [`ClassifierBase`](../ClassifierBase.md) always answers
 classic::TaskKind classic::EstimatorBase::task_kind() const noexcept;
 ```
 
+## What It Does
+
+Reports which task this estimator was built to solve --
+`Classification` for anything deriving from `ClassifierBase`,
+`Regression` for anything deriving from `RegressorBase` -- as a plain
+compile-time fact rather than a computed property; the answer is fixed by
+which base class the concrete estimator derives from and never changes,
+trained or not.
+
 ## Parameters
 
 None.

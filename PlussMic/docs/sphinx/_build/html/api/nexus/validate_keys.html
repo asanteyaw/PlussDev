@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -45,6 +45,9 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">validate_keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
 
 <span class="n">Nexus</span><span class="o">::</span><span class="n">validate_keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">validate_keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">validate_keys</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
 </pre></div>
 </div>
 </section>
@@ -68,34 +71,47 @@ metadata (if any) is declared for the table.</p></li>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>table</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
 The table to check. Must already exist in the workspace.</p>
-<p><strong>keys</strong> (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>, two-argument overload)
+<p><strong>keys</strong> (a range of <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> — a brace literal, a named container
+such as <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>, or any
+other range whose elements convert to <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>; two-argument
+overload only)
 The candidate key features to check for completeness and uniqueness. Each name must be
 non-empty, unique within the request, and must name a real feature on <code class="docutils literal notranslate"><span class="pre">table</span></code>.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-<code class="docutils literal notranslate"><span class="pre">true</span></code> if every row has a non-missing value for every key feature <em>and</em> no two rows
-share the same key combination; <code class="docutils literal notranslate"><span class="pre">false</span></code> if either condition fails.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Using the declared <code class="docutils literal notranslate"><span class="pre">primary_key</span></code>, on a table with a duplicate key value.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<p>```{note} <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView</span></code> is never spelled out in these examples
+<code class="docutils literal notranslate"><span class="pre">RangeView::Of&lt;std::string_view&gt;</span></code> has implicit constructors from a brace
+list, a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code>, and other contiguous containers, so
+passing any of those at a call site works without ever naming <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>
+yourself. Example 3 below uses a brace literal (the dedicated
+<code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> overload exists specifically to keep that call
+unambiguous); Example 4 passes named containers instead, to exercise the
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>/templated overloads without naming either.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Returns
 
-<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy2&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
+`bool`
+    `true` if every row has a non-missing value for every key feature *and* no two rows
+    share the same key combination; `false` if either condition fails.
 
-<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">}});</span>
+## Examples
 
-<span class="n">TableMeta</span><span class="w"> </span><span class="n">meta</span><span class="p">;</span>
-<span class="n">meta</span><span class="p">.</span><span class="n">primary_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">set_table_meta</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">meta</span><span class="p">);</span>
+Example 1. Using the declared `primary_key`, on a table with a duplicate key value.
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tagged</span><span class="p">.</span><span class="n">validate_keys</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">);</span>
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
+
+auto customers = DataFrame({
+    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0, 3.0, 3.0}))},
+    {&quot;name&quot;,        Thread(pluss::make_note({&quot;Ada&quot;, &quot;Ben&quot;, &quot;Cy&quot;, &quot;Cy2&quot;}))},
+});
+
+auto biz = Nexus({{&quot;customers&quot;, customers}});
+
+TableMeta meta;
+meta.primary_key = {&quot;customer_id&quot;};
+auto tagged = biz.set_table_meta(&quot;customers&quot;, meta);
+
+std::cout &lt;&lt; std::boolalpha &lt;&lt; tagged.validate_keys(&quot;customers&quot;);
 </pre></div>
 </div>
 <section id="output">
@@ -139,6 +155,23 @@ true
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">orders.order_id</span></code> has no duplicates and no missing values, so it validates as a key even
 though <code class="docutils literal notranslate"><span class="pre">orders</span></code> never had <code class="docutils literal notranslate"><span class="pre">TableMeta</span></code> declared at all.</p>
+<p>Example 4. Continuing from Example 3: the same explicit-key check via named
+containers — a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code> (the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload) and
+a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> (the templated overload).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_owned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">};</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_orders</span><span class="p">.</span><span class="n">validate_keys</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">as_view</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">with_orders</span><span class="p">.</span><span class="n">validate_keys</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">as_owned</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true true
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">

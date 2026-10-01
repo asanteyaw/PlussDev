@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 21c1f3e063ef -->
+<!-- pluss-signature-hash: 8322e15a5eb7 -->
 
 # Stream::fillnull
 
@@ -12,7 +12,7 @@ Stream::fillnull(double value) const -> Stream
 Stream::fillnull(std::string_view value) const -> Stream
 Stream::fillnull(const char* value) const -> Stream
 Stream::fillnull(const pluss::Timeline& value) const -> Stream
-Stream::fillnull(const pluss::TimeIndex& value) const -> Stream
+Stream::fillnull(const pluss::Duration& value) const -> Stream
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ Stream::fillnull(const pluss::TimeIndex& value) const -> Stream
 Replaces every `NULL` cell in the stream with `value`, returning a new stream. `value`'s
 C++ type must match the stream's own payload kind exactly — `double` for `Series`,
 `std::string_view`/`const char*` for `Note`, `pluss::Timeline` for `Timeline`,
-`pluss::TimeIndex` for `TimeIndex`. Delegates straight to `Thread::fillnull()`.
+`pluss::Duration` for `Duration`. Delegates straight to `Thread::fillnull()`.
 
 ```{important} Kind mismatch throws here — unlike Catalog::fillnull()'s silent skip
 `Stream::fillnull()` operates on a single, already-typed stream, so a kind mismatch throws
@@ -34,7 +34,7 @@ point; here, on a single stream, a mismatch is a caller error worth surfacing.
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
-`const pluss::TimeIndex&`)
+`const pluss::Duration&`)
     The fill value. Its C++ type must match the stream's payload kind — see the important
     callout above.
 
@@ -94,30 +94,20 @@ label        | value
 ========================================================================================================================
 ```
 
-Example 3. Fill a `TimeIndex`-kind stream with a fixed timestamp.
+Example 3. Fill a `Duration`-kind stream with a fixed replacement, same delegation
+pattern as the `double`/`Note`/`Timeline` overloads above.
 
 ```cpp
-auto mask = pluss::make_series(std::vector<bool>{true, false});
 auto stream = pluss::kindle::Stream(
-    pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}), mask);
+    pluss::duration::nanos({1'000'000'000LL, pluss::Duration::kNaT, -2'000'000'000LL}));
 
-auto out = stream.fillnull(pluss::make_timeindex({"2024-01-01T00:00:00Z"}));
-std::cout << out;
+auto out = stream.fillnull(pluss::duration::nanos(9));
+assert(out.to_thread().as_duration().host() ==
+       std::vector<std::int64_t>({1'000'000'000LL, 9, -2'000'000'000LL}));
 ```
 
-### Output
-
-```text
-========================================================================================================================
-kindle::Stream  kind=TimeIndex  dtype=TimeIndex  records=2
-label=no  mask=no  meta=0
-------------------------------------------------------------------------------------------------------------------------
-label        | value                                                                                                    
-------------------------------------------------------------------------------------------------------------------------
-0            | 2024-01-01T09:10:00.000000000+00:00                                                                      
-1            | 2024-01-01T00:00:00.000000000+00:00                                                                      
-========================================================================================================================
-```
+Same mechanics as [`Thread::fillnull(Duration)`](../thread/fillnull.md) — it also clears
+intrinsic `NaT` lanes, not just validity-mask-flagged ones.
 
 Example 4. Calling the `string_view` overload on a `Series`-kind stream throws — a kind
 mismatch is a hard error here, not a silent no-op.

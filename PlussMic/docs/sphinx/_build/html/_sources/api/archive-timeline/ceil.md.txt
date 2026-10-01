@@ -14,15 +14,14 @@ Archive ArchiveTimelineAccessor::ceil(std::string_view unit) const
 ## What It Does
 
 Rounds each bound key's timestamp *up* to the nearest `unit` boundary,
-replacing each bound key's values in place (the key stays `Timeline`- or
-`TimeIndex`-kind, whichever it already was). Applied to **every catalog** in the stack, by delegating to that catalog's own
+replacing each bound key's values in place (the key stays `Timeline`-kind). Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::ceil`](../catalog-timeline/ceil.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 

@@ -9,6 +9,7 @@
 ```cpp
 Series::ne(const Series& rhs) const -> Series
 Series::ne(double rhs) const -> Series
+Series& Series::ne_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -62,6 +63,30 @@ The scalar overload applies one repeated comparison across every element.
 Like the rest of the comparison family, `ne()` is best treated as mask logic,
 not as a gradient-carrying numeric transform. Its output is boolean and is most
 useful as a condition for downstream selection or filtering.
+
+## In-Place Form
+
+`ne_()` is the in-place sibling of [`ne()`](ne.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `ne_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({1.0, 5.0, 3.0}, {3});
+
+x.ne_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, false]
+```
 
 ## Examples
 
@@ -160,6 +185,13 @@ broadcast: incompatible shapes
 Use `ne()` when you need the direct "different from" mask. It is the cleanest
 way to mark non-matching elements without building a numeric difference and
 interpreting that by hand.
+
+## Aliases
+
+**`not_equal()`** / **`not_equal_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `ne()` / `ne_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -57,7 +57,7 @@ changing the underlying instant — the same operation as
 (<code class="docutils literal notranslate"><span class="pre">fmt()</span></code>, <code class="docutils literal notranslate"><span class="pre">hour()</span></code>, another <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, anything) — see Example 1.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+<p>CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor::isnat</span></code></span></a>’s own important callout for the full
 explanation and the exact throw message.</p>
@@ -107,7 +107,7 @@ in effect on the very next <code class="docutils literal notranslate"><span clas
 <li><p>Only four timezone names are recognized: <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> (or empty string),
 <code class="docutils literal notranslate"><span class="pre">&quot;America/Edmonton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;Europe/London&quot;</span></code> — any other
 name throws.</p></li>
-<li><p>Internally, each bound key stores its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> values
+<li><p>Internally, each bound key stores its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> values
 independently; <code class="docutils literal notranslate"><span class="pre">tz()</span></code> relabels every row, and that relabeling round-trips
 correctly through the <code class="docutils literal notranslate"><span class="pre">kindle::Stream</span></code> boundary every further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call
 goes through. If every row does not already share the same display timezone

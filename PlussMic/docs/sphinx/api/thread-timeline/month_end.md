@@ -61,7 +61,7 @@ day in this leap year — both flag `true`.
   leap), but a February 28th in a non-leap year would also flag `true`.
 - Only checks the date portion — the time-of-day (if any) doesn't affect the
   result.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, not `false`.

@@ -75,6 +75,11 @@ orders -> [3 cs x 2 feat]
   [`schema()`](schema.md)/[`graph()`](graph.md) for those.
 - `std::cout << nexus` (via `operator<<`) and [`show()`](show.md) both produce exactly
   this same text.
+- `pluss::bundle::output_render(std::ostream& os, const Nexus& nexus)` is a third,
+  free-function spelling of the exact same one-line forward — `output_render(os, nexus)`,
+  `os << nexus`, and `nexus.show(os)` are all interchangeable. `output_render` exists to
+  satisfy generic/templated printing code that looks for an `output_render(stream, value)`
+  customization point rather than assuming `operator<<` is available.
 
 ## See Also
 

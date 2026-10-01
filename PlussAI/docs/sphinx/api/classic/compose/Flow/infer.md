@@ -22,6 +22,15 @@ intermediate transformed representation.
     const classic::InferOptions& options = {}) const;
 ```
 
+## What It Does
+
+Runs `batch` through [`map`](map.md)'s full stage pipeline, then hands the
+transformed result straight to the attached model's own
+[`EstimatorBase::infer`](../../estimators/EstimatorBase/infer.md) -- one
+call that carries raw features all the way to a final prediction, without
+the caller ever seeing or handling the intermediate transformed
+representation.
+
 ## Parameters
 
 `batch` — `FeatureBatch`

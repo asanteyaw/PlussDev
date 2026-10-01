@@ -3,6 +3,7 @@
 #include "pluss/bi/session.h"
 
 #include "BI_tools/browser_launch.h"
+#include "pluss/bi/dashboard_assets.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/pl.h"
 #include "pluss/tils/aux/scalar_cast.h"
@@ -29,6 +30,29 @@
 #include <vector>
 
 namespace pluss::bi {
+
+// Picks the dashboard's outer chrome. Not every dashboard wants a fixed
+// navbar and sidebar -- a small embedded report or a single-board view
+// often reads better as a plain scrolling document, which is what `None`
+// renders (boards simply stack top to bottom, matching PlussBI's original
+// single-column layout). `Sidebar` is the fixed top navbar + fixed left
+// board-tab sidebar chrome, matching how this repo's own Sphinx
+// API-reference site renders (static sidebar + static navbar, only the
+// content scrolls).
+enum class DashboardChrome : std::uint8_t {
+  None = 0,
+  Sidebar = 1,
+};
+
+// A running `Studio::start_serving()` server, stoppable from another
+// thread. Fully defined in `include/pluss/bi/serve.h` (it owns an
+// `httplib::Server`, so it can't be defined here without pulling httplib
+// into every `Studio` consumer) -- only forward-declared so `Studio`'s own
+// class body can name it as `start_serving()`'s return type. Any code that
+// actually constructs, stores, or calls into one must include
+// `pluss/bi/serve.h` directly, same as anything calling `start_serving()`
+// or `serve()` itself.
+class ServeHandle;
 
 struct TileRender {
   std::string key{};
@@ -78,7 +102,10 @@ namespace detail {
     std::string_view title,
     std::int64_t width,
     std::int64_t height,
-    std::string_view svg_payload = {});
+    std::string_view svg_payload = {},
+    bool live = false,
+    DashboardChrome chrome = DashboardChrome::Sidebar,
+    bool inline_assets = true);
 
 // Studio::show()'s runtime host selector. `BackendPreference::Auto` -- the
 // default -- now means "open a real OS browser tab" rather than "pick a
@@ -153,26 +180,10 @@ namespace detail {
   if (std::holds_alternative<pluss::Timeline>(value)) {
     return std::get<pluss::Timeline>(value);
   }
-  if (std::holds_alternative<pluss::TimeIndex>(value)) {
-    return std::get<pluss::TimeIndex>(value).timeline();
-  }
   if (std::holds_alternative<std::string>(value)) {
     return pluss::make_timeline(std::vector<std::string>{std::get<std::string>(value)});
   }
-  PLUSS_FAIL("pluss::bi: temporal filter expected Timeline, TimeIndex, or ISO string");
-}
-
-[[nodiscard]] inline pluss::TimeIndex scalar_timeindex_(const FilterScalar& value) {
-  if (std::holds_alternative<pluss::TimeIndex>(value)) {
-    return std::get<pluss::TimeIndex>(value);
-  }
-  if (std::holds_alternative<pluss::Timeline>(value)) {
-    return pluss::make_timeindex(std::get<pluss::Timeline>(value), false);
-  }
-  if (std::holds_alternative<std::string>(value)) {
-    return pluss::make_timeindex(std::vector<std::string>{std::get<std::string>(value)}, false);
-  }
-  PLUSS_FAIL("pluss::bi: temporal filter expected TimeIndex, Timeline, or ISO string");
+  PLUSS_FAIL("pluss::bi: temporal filter expected Timeline or ISO string");
 }
 
 [[nodiscard]] inline std::string scalar_temporal_iso_(const FilterScalar& value) {
@@ -185,13 +196,16 @@ namespace detail {
                 "pluss::bi: temporal scalar filters require a size-1 Timeline bound");
     return std::string(timeline.to_note_iso().at(0));
   }
-  if (std::holds_alternative<pluss::TimeIndex>(value)) {
-    const auto& index = std::get<pluss::TimeIndex>(value);
-    PLUSS_CHECK(index.size() == 1,
-                "pluss::bi: temporal scalar filters require a size-1 TimeIndex bound");
-    return std::string(index.to_note_iso().at(0));
-  }
-  PLUSS_FAIL("pluss::bi: temporal filter expected Timeline, TimeIndex, or ISO string");
+  PLUSS_FAIL("pluss::bi: temporal filter expected Timeline or ISO string");
+}
+
+[[nodiscard]] inline pluss::Duration scalar_duration_(const FilterScalar& value) {
+  PLUSS_CHECK(std::holds_alternative<pluss::Duration>(value),
+              "pluss::bi: Duration filter expected an explicit Duration bound");
+  const auto& duration = std::get<pluss::Duration>(value);
+  PLUSS_CHECK(duration.defined() && duration.numel() == 1,
+              "pluss::bi: Duration filter bounds must contain exactly one value");
+  return duration;
 }
 
 [[nodiscard]] inline pluss::table::Thread apply_scalar_filter_(
@@ -242,15 +256,15 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::ThreadKind::TimeIndex: {
-      const auto scalar = scalar_timeindex_(value);
+    case pluss::table::ThreadKind::Duration: {
+      const auto scalar = scalar_duration_(value);
       switch (op) {
-        case FilterOp::Eq: return column == scalar;
-        case FilterOp::Ne: return column != scalar;
-        case FilterOp::Gt: return column > scalar;
-        case FilterOp::Ge: return column >= scalar;
-        case FilterOp::Lt: return column < scalar;
-        case FilterOp::Le: return column <= scalar;
+        case FilterOp::Eq: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Eq);
+        case FilterOp::Ne: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Ne);
+        case FilterOp::Gt: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Gt);
+        case FilterOp::Ge: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Ge);
+        case FilterOp::Lt: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Lt);
+        case FilterOp::Le: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Le);
         default: break;
       }
       break;
@@ -271,10 +285,17 @@ namespace detail {
              (column <= std::get<double>(range.high));
     case pluss::table::ThreadKind::Timeline:
       return column.between(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
-    case pluss::table::ThreadKind::TimeIndex:
-      return column.between(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
     case pluss::table::ThreadKind::Note:
       PLUSS_FAIL("pluss::bi: between filter is not supported for text features");
+    case pluss::table::ThreadKind::Duration: {
+      auto low = scalar_duration_(range.low);
+      auto high = scalar_duration_(range.high);
+      if (low.host().front() > high.host().front()) {
+        std::swap(low, high);
+      }
+      return column.compare(low, pluss::table::ThreadBinaryCompareOp::Ge) &
+             column.compare(high, pluss::table::ThreadBinaryCompareOp::Le);
+    }
   }
   PLUSS_FAIL("pluss::bi: unsupported between filter payload");
 }
@@ -532,13 +553,6 @@ namespace detail {
     }
   } catch (...) {
   }
-  try {
-    const auto index = value.as_timeindex();
-    if (index.size() > 0) {
-      return std::string(index.to_note_iso().at(0));
-    }
-  } catch (...) {
-  }
   return "<value>";
 }
 
@@ -759,6 +773,10 @@ inline void mount_tile_into_native_(
   }
   if (std::holds_alternative<std::string>(value)) {
     return std::get<std::string>(value);
+  }
+  if (std::holds_alternative<pluss::Duration>(value)) {
+    const auto duration = scalar_duration_(value);
+    return "duration_ns:" + std::to_string(duration.host().front());
   }
   return scalar_temporal_iso_(value);
 }
@@ -1100,7 +1118,8 @@ public:
       std::string_view title = {},
       std::int64_t width = 1280,
       std::int64_t height = 820,
-      bool launch = true) const {
+      bool launch = true,
+      DashboardChrome chrome = DashboardChrome::Sidebar) const {
     const auto rendered = render();
     PLUSS_CHECK(rendered.native != nullptr,
                 "pluss::bi::Studio::show: native board studio was not created");
@@ -1119,13 +1138,17 @@ public:
         title.empty() ? key_ : title,
         width,
         height,
-        options.svg_payload);
+        options.svg_payload,
+        /*live=*/false,
+        chrome,
+        /*inline_assets=*/true);
     return detail::launch_html_(html, options);
   }
 
   bool show(
       const pluss::view::HtmlWindowOptions& options,
-      bool launch = true) const {
+      bool launch = true,
+      DashboardChrome chrome = DashboardChrome::Sidebar) const {
     const auto rendered = render();
     PLUSS_CHECK(rendered.native != nullptr,
                 "pluss::bi::Studio::show: native board studio was not created");
@@ -1151,9 +1174,46 @@ public:
         effective.title,
         effective.width,
         effective.height,
-        effective.svg_payload);
+        effective.svg_payload,
+        /*live=*/false,
+        chrome,
+        /*inline_assets=*/true);
     return detail::launch_html_(html, effective);
   }
+
+  // Starts an embedded HTTP server bound to 127.0.0.1 and serves this studio
+  // as a genuinely live dashboard: filter controls re-query and redraw via
+  // `POST /api/filter` instead of the static `export_html()`/`show()`
+  // snapshot. Returns a `ServeHandle` immediately (does NOT block) --
+  // `.stop()` it from any thread, or `.wait()` to block the calling thread
+  // until it's stopped, matching what `serve()` below does for you.
+  //
+  // `port == 0` asks the OS for any free port. When `open_browser` is true
+  // (the default), the dashboard's URL is opened in the system browser via
+  // the same `pluss::bi_tools::open_path_in_browser` Phase-1 launcher used
+  // by `show()`. The `Studio` itself must outlive the returned handle --
+  // every request the running server answers calls back into `*this`.
+  [[nodiscard]] ServeHandle start_serving(
+      std::string_view title = {},
+      std::int64_t width = 1280,
+      std::int64_t height = 820,
+      std::int64_t port = 0,
+      bool open_browser = true,
+      DashboardChrome chrome = DashboardChrome::Sidebar);
+
+  // Convenience wrapper around `start_serving()` for the common CLI case:
+  // starts the server, then blocks the calling thread until it stops
+  // (Ctrl+C kills the process; there is no in-process way to stop THIS
+  // call short of that, since it never gets to return a handle -- use
+  // `start_serving()` directly, e.g. from a test, when you need to stop a
+  // server programmatically).
+  void serve(
+      std::string_view title = {},
+      std::int64_t width = 1280,
+      std::int64_t height = 820,
+      std::int64_t port = 0,
+      bool open_browser = true,
+      DashboardChrome chrome = DashboardChrome::Sidebar);
 
   void save(std::string_view path) const;
   static Studio load(std::string_view path);
@@ -1164,7 +1224,8 @@ public:
       std::string_view path,
       std::string_view title = {},
       std::int64_t width = 1280,
-      std::int64_t height = 820) const;
+      std::int64_t height = 820,
+      DashboardChrome chrome = DashboardChrome::Sidebar) const;
   void export_svg(std::string_view path) const;
   void export_pdf(
       std::string_view path,
@@ -1857,7 +1918,7 @@ template <class Int>
   if (std::holds_alternative<double>(value)) return "double";
   if (std::holds_alternative<std::string>(value)) return "text";
   if (std::holds_alternative<pluss::Timeline>(value)) return "timeline";
-  if (std::holds_alternative<pluss::TimeIndex>(value)) return "timeindex";
+  if (std::holds_alternative<pluss::Duration>(value)) return "duration";
   PLUSS_FAIL("pluss::bi: unsupported filter scalar payload");
 }
 
@@ -1865,7 +1926,9 @@ template <class Int>
   if (std::holds_alternative<double>(value)) return format_double_(std::get<double>(value));
   if (std::holds_alternative<std::string>(value)) return std::get<std::string>(value);
   if (std::holds_alternative<pluss::Timeline>(value)) return scalar_temporal_iso_(value);
-  if (std::holds_alternative<pluss::TimeIndex>(value)) return scalar_temporal_iso_(value);
+  if (std::holds_alternative<pluss::Duration>(value)) {
+    return std::to_string(scalar_duration_(value).host().front());
+  }
   PLUSS_FAIL("pluss::bi: unsupported filter scalar payload");
 }
 
@@ -1883,7 +1946,11 @@ template <class Int>
     return FilterScalar(pluss::make_timeline(std::vector<std::string>{std::string(value)}));
   }
   if (type == "timeindex") {
-    return FilterScalar(pluss::make_timeindex(std::vector<std::string>{std::string(value)}, false));
+    return FilterScalar(pluss::make_timeline(std::vector<std::string>{std::string(value)}));
+  }
+  if (type == "duration") {
+    return FilterScalar(pluss::duration::nanos(
+        std::vector<std::int64_t>{parse_int_<std::int64_t>(value, where)}));
   }
   PLUSS_FAIL(std::string(where) + ": unsupported filter scalar type '" + std::string(type) + "'");
 }
@@ -2433,9 +2500,11 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
 [[nodiscard]] inline std::string render_board_html_(
     const pluss::bundle::Nexus& nexus,
     const Session& session,
-    const BoardRender& board) {
+    const BoardRender& board,
+    bool active) {
   std::ostringstream out;
-  out << "<section class=\"bi-board\">"
+  out << "<section class=\"bi-board\" data-board=\"" << escape_html_(board.key)
+      << "\"" << (active ? "" : " hidden") << ">"
       << "<div class=\"bi-board-head\">"
       << "<h2>" << escape_html_(board.title.empty() ? board.key : board.title) << "</h2>"
       << "<span class=\"bi-board-meta\">" << board.tiles.size() << " tiles</span>"
@@ -2456,87 +2525,165 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
   return out.str();
 }
 
+// The active-filter chip list. Shared by the initial page render and the
+// live `/api/filter` JSON response, which replaces `#bi-session-chips`'
+// contents in place after every filter change.
+[[nodiscard]] inline std::string render_session_chips_html_(const Session& session) {
+  std::ostringstream out;
+  if (session.filters().empty()) {
+    out << "<span class=\"bi-chip muted\">No active filters</span>";
+  } else {
+    for (const auto& [key, filter] : session.filters()) {
+      out << "<span class=\"bi-chip\">" << escape_html_(key) << ": "
+          << escape_html_(filter_payload_summary_(filter)) << "</span>";
+    }
+  }
+  return out.str();
+}
+
+// The sidebar's board-tab list. Rendered once per page load; tab switching
+// itself is purely client-side (every board's current-session content is
+// already present in the DOM, just `hidden`), so this does not need to be
+// regenerated by `/api/filter` responses.
+[[nodiscard]] inline std::string render_sidebar_tabs_html_(const StudioRender& rendered) {
+  std::ostringstream out;
+  bool first = true;
+  for (const auto& board : rendered.boards) {
+    const auto key = escape_html_(board.key);
+    const auto label = escape_html_(board.title.empty() ? board.key : board.title);
+    out << "<button type=\"button\" class=\"bi-tab" << (first ? " active" : "")
+        << "\" data-board-tab=\"" << key << "\" onclick=\"plussBiShowBoard('" << key
+        << "')\">" << label << "</button>";
+    first = false;
+  }
+  return out.str();
+}
+
+// All boards' rendered content, one `<section>` per board. When `show_all`
+// is true (chrome `None`), every board is left visible and simply stacks
+// in document flow -- there is no sidebar to reveal a hidden one from.
+// When false (chrome `Sidebar`), only the first board starts visible and
+// the rest are `hidden`, toggled client-side by the sidebar tabs. Shared
+// by the initial page render and the live `/api/filter` JSON response,
+// which replaces `#bi-content`'s contents in place.
+[[nodiscard]] inline std::string render_main_content_html_(
+    const StudioRender& rendered,
+    const pluss::bundle::Nexus& nexus,
+    bool show_all) {
+  std::ostringstream out;
+  bool first = true;
+  for (const auto& board : rendered.boards) {
+    out << render_board_html_(nexus, rendered.session, board, show_all || first);
+    first = false;
+  }
+  return out.str();
+}
+
+// Chrome `None`: a single centered scrolling column, no fixed navbar or
+// sidebar -- PlussBI's original single-document layout. All boards stack
+// top to bottom in normal document flow.
+[[nodiscard]] inline std::string render_dashboard_body_flat_(
+    const StudioRender& rendered,
+    const pluss::bundle::Nexus& nexus,
+    std::string_view page_title,
+    std::int64_t width,
+    std::int64_t height,
+    bool live) {
+  std::ostringstream out;
+  out << "<div class=\"bi-shell\" style=\"--dash-max-w:" << std::max<std::int64_t>(960, width)
+      << "px;--svg-min-h:" << std::max<std::int64_t>(420, height / 2) << "px;\">"
+      << "<header class=\"bi-banner\">"
+      << "<div class=\"bi-banner-brand\"><span class=\"bi-kicker\">PlussBI</span>"
+      << "<h1>" << escape_html_(page_title) << "</h1></div>"
+      << "<div class=\"bi-banner-aside\">"
+      << "<div class=\"bi-status\"><span class=\"bi-live-dot" << (live ? "" : " offline")
+      << "\"></span><span id=\"bi-live-status\">" << (live ? "Live" : "Static preview")
+      << "</span></div>"
+      << "<div id=\"bi-session-chips\" class=\"bi-chip-row\">"
+      << render_session_chips_html_(rendered.session) << "</div>"
+      << "</div>"
+      << "</header>"
+      << "<div id=\"bi-content\">"
+      << render_main_content_html_(rendered, nexus, /*show_all=*/true)
+      << "</div>"
+      << "</div>";
+  return out.str();
+}
+
+// Chrome `Sidebar`: a fixed, non-scrolling top navbar and a fixed,
+// non-scrolling left sidebar (one tab per board, plus active filters).
+// Only `.bi-content` scrolls.
+[[nodiscard]] inline std::string render_dashboard_body_sidebar_(
+    const StudioRender& rendered,
+    const pluss::bundle::Nexus& nexus,
+    std::string_view page_title,
+    std::int64_t height,
+    bool live) {
+  std::ostringstream out;
+  out << "<div class=\"bi-app\" style=\"--svg-min-h:" << std::max<std::int64_t>(420, height / 2)
+      << "px;\">"
+      << "<header class=\"bi-topbar\">"
+      << "<div class=\"bi-topbar-brand\"><span class=\"bi-kicker\">PlussBI</span>"
+      << "<h1>" << escape_html_(page_title) << "</h1></div>"
+      << "<div class=\"bi-status\"><span class=\"bi-live-dot" << (live ? "" : " offline")
+      << "\"></span><span id=\"bi-live-status\">" << (live ? "Live" : "Static preview")
+      << "</span></div>"
+      << "</header>"
+      << "<nav class=\"bi-sidebar\">"
+      << "<div class=\"bi-sidebar-title\">Boards</div>"
+      << "<div id=\"bi-sidebar-tabs\">" << render_sidebar_tabs_html_(rendered) << "</div>"
+      << "<div class=\"bi-sidebar-title bi-sidebar-filters-title\">Active Filters</div>"
+      << "<div id=\"bi-session-chips\" class=\"bi-chip-col\">"
+      << render_session_chips_html_(rendered.session) << "</div>"
+      << "</nav>"
+      << "<main class=\"bi-content\" id=\"bi-content\">"
+      << render_main_content_html_(rendered, nexus, /*show_all=*/false)
+      << "</main>"
+      << "</div>";
+  return out.str();
+}
+
+// Substitutes the single, exactly-one-occurrence `token` inside `text`
+// with `value`. Used for the dashboard shell template's four
+// `{{PLUSSBI_...}}` placeholders -- see frontend/html/dashboard_shell.html.
+inline void replace_token_(std::string& text, std::string_view token, std::string_view value) {
+  const auto pos = text.find(token);
+  PLUSS_CHECK(pos != std::string::npos,
+              "pluss::bi: dashboard shell template is missing token '" +
+                  std::string(token) + "'");
+  text.replace(pos, token.size(), value);
+}
+
 [[nodiscard]] inline std::string dashboard_html_(
     const StudioRender& rendered,
     const pluss::bundle::Nexus& nexus,
     std::string_view title,
     std::int64_t width,
     std::int64_t height,
-    std::string_view svg_payload) {
+    std::string_view svg_payload,
+    bool live,
+    DashboardChrome chrome,
+    bool inline_assets) {
   const auto page_title = title.empty() ? std::string("PlussBI Studio") : std::string(title);
-  std::ostringstream body;
-  body << "<div class=\"bi-shell\">"
-       << "<header class=\"bi-topbar\">"
-       << "<div><div class=\"bi-kicker\">PlussBI</div><h1>" << escape_html_(page_title) << "</h1></div>"
-       << "<div class=\"bi-session\">";
-  if (rendered.session.filters().empty()) {
-    body << "<span class=\"bi-chip muted\">No active session filters</span>";
-  } else {
-    for (const auto& [key, filter] : rendered.session.filters()) {
-      body << "<span class=\"bi-chip\">" << escape_html_(key) << ": "
-           << escape_html_(filter_payload_summary_(filter)) << "</span>";
-    }
-  }
-  body << "</div></header>";
-  for (const auto& board : rendered.boards) {
-    body << render_board_html_(nexus, rendered.session, board);
-  }
-  body << "</div>";
 
-  std::ostringstream html;
-  html << "<!doctype html>\n"
-       << "<html lang=\"en\">\n"
-       << "<head>\n"
-       << "  <meta charset=\"utf-8\" />\n"
-       << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n"
-       << "  <title>" << escape_html_(page_title) << "</title>\n"
-       << "  <style>\n"
-       << "    :root { color-scheme: light; --bg:#eef3f8; --card:#ffffff; --ink:#12212f; --muted:#627483; --line:#d8e2eb; --accent:#0b7e87; --chip:#e6f6f7; }\n"
-       << "    * { box-sizing:border-box; }\n"
-       << "    html, body { margin:0; padding:0; background:var(--bg); color:var(--ink); min-height:100%; }\n"
-       << "    body { font-family: 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif; }\n"
-       << "    .bi-shell { width:min(100%, " << std::max<std::int64_t>(960, width) << "px); margin:0 auto; padding:20px; }\n"
-       << "    .bi-topbar { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:18px; padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(135deg,#dff4f6 0%,#fffaf3 100%); box-shadow:0 18px 40px rgba(18,33,47,.08); }\n"
-       << "    .bi-kicker { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); font-weight:800; margin-bottom:6px; }\n"
-       << "    h1 { margin:0; font-size:30px; line-height:1.1; }\n"
-       << "    .bi-session { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }\n"
-       << "    .bi-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; background:var(--chip); border:1px solid #bfe8ea; color:#0e5760; font-size:12px; font-weight:700; }\n"
-       << "    .bi-chip.muted { background:#f4f7fa; border-color:var(--line); color:var(--muted); }\n"
-       << "    .bi-board { margin-bottom:18px; padding:16px; border:1px solid var(--line); border-radius:18px; background:var(--card); box-shadow:0 14px 34px rgba(24,38,53,.08); }\n"
-       << "    .bi-board-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }\n"
-       << "    .bi-board-head h2 { margin:0; font-size:22px; }\n"
-       << "    .bi-board-meta { color:var(--muted); font-size:13px; }\n"
-       << "    .bi-grid { display:grid; gap:14px; grid-auto-rows:minmax(140px, auto); }\n"
-       << "    .bi-tile { display:flex; flex-direction:column; gap:12px; padding:14px; border:1px solid #e3ebf2; border-radius:16px; background:linear-gradient(180deg,#fff 0%,#fbfdff 100%); overflow:hidden; }\n"
-       << "    .bi-tile-title { font-size:13px; font-weight:800; letter-spacing:.02em; color:#334757; }\n"
-       << "    .bi-kpi { display:flex; flex:1; flex-direction:column; justify-content:center; gap:8px; min-height:100%; }\n"
-       << "    .bi-kpi-label { color:var(--muted); font-size:13px; font-weight:700; }\n"
-       << "    .bi-kpi-value { font-size:38px; line-height:1; font-weight:800; letter-spacing:-.03em; }\n"
-       << "    .bi-kpi-meta { color:var(--muted); font-size:12px; }\n"
-       << "    .bi-control { display:flex; flex:1; flex-direction:column; gap:10px; }\n"
-       << "    .bi-control-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }\n"
-       << "    .bi-control-label { font-weight:800; }\n"
-       << "    .bi-control-feature { color:var(--muted); font-size:12px; margin-top:4px; }\n"
-       << "    .bi-field-label { display:block; margin-bottom:6px; font-size:12px; color:var(--muted); font-weight:700; }\n"
-       << "    .bi-select, .bi-input { width:100%; border:1px solid #c8d5df; border-radius:12px; background:#fff; padding:10px 12px; font:inherit; color:inherit; }\n"
-       << "    .bi-range-grid { display:grid; gap:10px; grid-template-columns:repeat(2, minmax(0,1fr)); }\n"
-       << "    .bi-help, .bi-empty { color:var(--muted); font-size:12px; line-height:1.45; }\n"
-       << "    .bi-svg-wrap { flex:1; min-height:100%; overflow:auto; }\n"
-       << "    .bi-svg-wrap svg { display:block; width:100%; height:auto; min-height:" << std::max<std::int64_t>(420, height / 2) << "px; }\n"
-       << "    .bi-table-shell { flex:1; min-height:0; }\n"
-       << "    .bi-table-frame { width:100%; min-height:100%; height:100%; border:0; border-radius:12px; background:#fff; }\n"
-       << "    @media (max-width: 980px) { .bi-shell { padding:14px; } .bi-topbar { flex-direction:column; } .bi-range-grid { grid-template-columns:1fr; } .bi-grid { grid-template-columns:1fr !important; } .bi-tile { grid-column:auto !important; grid-row:auto !important; min-height:180px !important; } }\n"
-       << "  </style>\n"
-       << "  <script>\n"
-       << "    function plussBiSyncSelect(key) { var select = document.getElementById('select-' + key); var chip = document.getElementById('chip-' + key); if (!select || !chip) return; chip.textContent = select.value || 'all'; }\n"
-       << "    function plussBiSyncRange(key) { var low = document.getElementById('low-' + key); var high = document.getElementById('high-' + key); var chip = document.getElementById('chip-' + key); if (!low || !high || !chip) return; chip.textContent = (low.value || 'min') + ' to ' + (high.value || 'max'); }\n"
-       << "  </script>\n"
-       << "</head>\n"
-       << "<body>\n"
-       << body.str()
-       << "</body>\n"
-       << "</html>\n";
-  return html.str();
+  const auto body = (chrome == DashboardChrome::None)
+      ? render_dashboard_body_flat_(rendered, nexus, page_title, width, height, live)
+      : render_dashboard_body_sidebar_(rendered, nexus, page_title, height, live);
+
+  const std::string style_tag = inline_assets
+      ? "<style>\n" + std::string(pluss::bi::assets::kDashboardCss) + "\n  </style>"
+      : "<link rel=\"stylesheet\" href=\"/assets/dashboard.css\" />";
+  const std::string script_tag = inline_assets
+      ? "<script>\n" + std::string(pluss::bi::assets::kDashboardJs) + "\n  </script>"
+      : "<script src=\"/assets/dashboard.js\"></script>";
+
+  std::string html(pluss::bi::assets::kDashboardShellHtml);
+  replace_token_(html, "{{PLUSSBI_TITLE}}", escape_html_(page_title));
+  replace_token_(html, "{{PLUSSBI_STYLE_TAG}}", style_tag);
+  replace_token_(html, "{{PLUSSBI_SCRIPT_TAG}}", script_tag);
+  replace_token_(html, "{{PLUSSBI_BODY}}", body);
+
+  return html;
 }
 
 [[nodiscard]] inline View make_view_kind_(std::string_view key, ViewKind kind) {
@@ -3206,7 +3353,8 @@ inline void Studio::export_html(
     std::string_view path,
     std::string_view title,
     std::int64_t width,
-    std::int64_t height) const {
+    std::int64_t height,
+    DashboardChrome chrome) const {
   PLUSS_CHECK(width > 0 && height > 0,
               "pluss::bi::Studio::export_html: width and height must be positive");
   const auto rendered = render();
@@ -3218,7 +3366,10 @@ inline void Studio::export_html(
       title.empty() ? key_ : title,
       width,
       height,
-      rendered.native->to_svg());
+      rendered.native->to_svg(),
+      /*live=*/false,
+      chrome,
+      /*inline_assets=*/true);
   detail::write_text_file_(detail::normalize_html_path_(path), html);
 }
 

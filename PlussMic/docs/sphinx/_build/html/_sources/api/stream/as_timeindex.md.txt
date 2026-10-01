@@ -46,7 +46,7 @@ Example 1. Access the raw `TimeIndex` payload; inspect it via `.size()` and `.ti
 since it has no `operator<<` of its own.
 
 ```cpp
-auto stream = pluss::kindle::Stream(pluss::make_timeindex(
+auto stream = pluss::kindle::Stream(pluss::timeindex::make(
     {"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));
 
 const auto& ti = stream.as_timeindex();

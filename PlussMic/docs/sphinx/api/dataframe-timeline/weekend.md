@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::weekend() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a boolean `Series`
+Replaces every selected `Timeline` feature with a boolean `Series`
 flagging whether the row falls on Saturday or Sunday — same feature name,
 same row order.
 
@@ -83,7 +83,7 @@ Only `"2024-07-06"` (a Saturday) is a weekend row.
   or exclude one of the two via this method; build a custom mask from
   [`weekday()`](weekday.md) if you need a different day set.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`, not `false`.

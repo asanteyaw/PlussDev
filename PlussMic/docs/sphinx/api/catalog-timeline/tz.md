@@ -21,7 +21,7 @@ changing the underlying instant — the same operation as
 The relabeling survives being read back through any further `.tl()` call
 (`fmt()`, `hour()`, another `tz()`, anything) — see Example 1.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -72,7 +72,7 @@ std::cout << fmted.keys("ts").as_note().at(0);
 - Only four timezone names are recognized: `"UTC"` (or empty string),
   `"America/Edmonton"`, `"America/New_York"`, and `"Europe/London"` — any other
   name throws.
-- Internally, each bound key stores its `Timeline`/`TimeIndex` values
+- Internally, each bound key stores its `Timeline` values
   independently; `tz()` relabels every row, and that relabeling round-trips
   correctly through the `kindle::Stream` boundary every further `.tl()` call
   goes through. If every row does not already share the same display timezone

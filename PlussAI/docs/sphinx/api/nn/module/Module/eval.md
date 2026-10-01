@@ -11,6 +11,15 @@
 void nn::Module::eval() noexcept;
 ```
 
+## What It Does
+
+A convenience spelling of [`train(false)`](train.md) -- switches this
+module and every module registered beneath it into evaluation mode, with
+the same recursive propagation. Reach for `eval()` at inference/evaluation
+time and `train()` to switch back, rather than writing `train(false)`
+directly; the two read more clearly at their respective call sites even
+though they mutate the exact same state.
+
 ## Parameters
 
 None.
@@ -41,8 +50,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("a", nn::Fusion(3, 4));
-  net.then("b", nn::Fusion(4, 2));
+  net.append("a", nn::Fusion(3, 4));
+  net.append("b", nn::Fusion(4, 2));
 
   net.train(false);
   net.eval();

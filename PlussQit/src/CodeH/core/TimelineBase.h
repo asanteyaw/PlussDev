@@ -23,6 +23,10 @@ namespace pluss::codeh {
 
 class Timeline;
 class TimeIndex;
+// Public name for Timeline's lightweight ordered-axis accessor. The concrete
+// engine keeps its internal historical name until the implementation files are
+// regenerated; it is not a core value type.
+using TimelineIndexAccessor = TimeIndex;
 
 enum class TimelineSpanUnit : std::uint8_t {
   Nanos = 0,
@@ -320,7 +324,11 @@ public:
 
   Timeline shift(int periods, std::string_view freq) const;
   Timeline period_start(std::string_view unit) const;
-  TimeIndex to_timeindex(bool require_sorted = true) const;
+
+  // Validate this Timeline as a rank-one temporal axis. The returned handle
+  // owns the validated state, so its index operations do not repeat the
+  // monotonicity scan.
+  TimelineIndexAccessor index(bool require_sorted = true) const;
 
   // High-priority interop tranche for dataframe-style datetime workflows.
   // Build Timeline from calendar component columns (Series) and convert back

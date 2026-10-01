@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -57,8 +57,8 @@ a contiguous feature range at the same time, returning the smaller block as a ne
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. If you think of a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> as a labeled matrix, <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is the
 direct “give me this rectangle” convenience.</p>
 <p>Semantically, <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is the positional shorthand for:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="n">case_start</span><span class="p">,</span><span class="w"> </span><span class="n">case_stop</span><span class="p">),</span>
-<span class="w">              </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="n">feature_start</span><span class="p">,</span><span class="w"> </span><span class="n">feature_stop</span><span class="p">))</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">slice</span><span class="p">(</span><span class="n">case_start</span><span class="p">,</span><span class="w"> </span><span class="n">case_stop</span><span class="p">)</span>
+<span class="w">  </span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="n">selected_feature_names</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>So it is intentionally positional and half-open on both axes. If you need label-based
@@ -82,7 +82,7 @@ Python-style normalization as <a class="reference internal" href="slice.html"><s
 <p><strong>feature_start</strong>, <strong>feature_stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)</p>
 <p>The contiguous feature block <code class="docutils literal notranslate"><span class="pre">[feature_start,</span> <span class="pre">feature_stop)</span></code>. Negative values are
 normalized relative to the end of the feature axis the same way
-<code class="docutils literal notranslate"><span class="pre">Feat::slice(...)</span></code> already does internally.</p>
+the case-study accessor’s positional slice does on the row axis.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -98,8 +98,8 @@ original case labels and feature order inside that block.</p>
 <li><p>you are visually inspecting a large frame and want to focus on one local region</p></li>
 <li><p>you are debugging generated data and need a compact “window” into the middle or tail
 of a table</p></li>
-<li><p>you want a matrix-like block extraction without spelling the longer
-<code class="docutils literal notranslate"><span class="pre">case_study(Case::slice(...),</span> <span class="pre">Feat::slice(...))</span></code> form each time</p></li>
+<li><p>you want a matrix-like block extraction without selecting cases and then resolving
+the corresponding feature names yourself</p></li>
 </ul>
 <p>If your selection is not rectangular, not positional, or not contiguous, then
 <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is the wrong tool. In that case, <code class="docutils literal notranslate"><span class="pre">case_study()</span></code>, <code class="docutils literal notranslate"><span class="pre">slice()</span></code>, <code class="docutils literal notranslate"><span class="pre">features()</span></code>, or
@@ -182,12 +182,11 @@ r1   | 2   6
 <p>Notice that the surviving labels remain <code class="docutils literal notranslate"><span class="pre">r0</span></code> and <code class="docutils literal notranslate"><span class="pre">r1</span></code>; they are not renumbered to
 new local positions. This matters when you are matching a zoomed block back to the
 source frame during debugging or reporting.</p>
-<p>Example 4. <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is equivalent to the explicit <code class="docutils literal notranslate"><span class="pre">case_study(...)</span></code> rectangle.</p>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">zoom()</span></code> is equivalent to an accessor slice followed by feature
+projection.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">via_zoom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">zoom</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">via_case_study</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span>
-<span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Case</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">),</span>
-<span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">Feat</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
-<span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">via_case_study</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_zoom</span><span class="p">;</span>
 </pre></div>

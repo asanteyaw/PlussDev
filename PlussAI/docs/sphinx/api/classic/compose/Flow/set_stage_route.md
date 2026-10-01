@@ -15,6 +15,14 @@ classic::Status classic::Flow::set_stage_route(
     std::int64_t stage_index, /* feature indices */ feature_route);
 ```
 
+## What It Does
+
+Rewrites the stage at `stage_index`'s `feature_route` to a new set of
+columns, in place, without removing and re-adding the stage. Because the
+route is part of what a fit actually depends on, this resets `trained()`
+-- unlike [`set_stage_key`](set_stage_key.md), whose renaming has no
+bearing on fitted state.
+
 ## Parameters
 
 `stage_index` — `std::int64_t`, 0-based

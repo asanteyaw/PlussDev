@@ -105,12 +105,12 @@ data=[15.0000]
 - [`TimeIndex::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="resample_count.html">
+  <a class="prev-link" href="resample_ohlc.html">
     <span class="label">Previous</span>
-    <span class="title">resample_count</span>
+    <span class="title">resample_ohlc</span>
   </a>
-  <a class="next-link" href="resample_mean.html">
+  <a class="next-link" href="rolling_agg.html">
     <span class="label">Next</span>
-    <span class="title">resample_mean</span>
+    <span class="title">rolling_agg</span>
   </a>
 </div>

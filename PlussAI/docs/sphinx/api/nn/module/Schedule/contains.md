@@ -13,11 +13,18 @@ Only reachable via `->` (`net->contains(name)`).
 bool nn::Schedule::Impl::contains(std::string_view name) const noexcept;
 ```
 
+## What It Does
+
+Checks whether a stage name is currently registered on this `Schedule`,
+without throwing on a miss -- the safe way to probe for a name before
+[`index_of`](index_of.md) (which throws if the name is not found) or before
+adding a stage under a name that must be unique.
+
 ## Parameters
 
 `std::string_view name`
 : The stage name to look for -- exact match against what
-  [`then`](then.md)/[`insert`](insert.md) registered it under, or the
+  [`append`](append.md)/[`insert`](insert.md) registered it under, or the
   auto-generated name if none was given.
 
 ## Returns
@@ -31,7 +38,7 @@ None.
 ## Practical Examples
 
 Three examples: a present and an absent name, the throwing counterpart
-([`index_of`](index_of.md)) for contrast, and confirming `then` rejects a
+([`index_of`](index_of.md)) for contrast, and confirming `append` rejects a
 name `contains` already reports as taken.
 
 ### Example 1
@@ -46,7 +53,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
+  net.append("in", nn::Fusion(3, 4));
 
   std::cout << "contains('in')=" << std::boolalpha << net->contains("in") << "\n";
   std::cout << "contains('out')=" << net->contains("out") << "\n";
@@ -78,8 +85,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   std::cout << "index_of('out')=" << net->index_of("out") << "\n";
 
@@ -103,9 +110,9 @@ caught: pluss::nn::Schedule::index_of: unknown stage name 'missing'
 
 ### Example 3
 
-`then`'s own uniqueness check (see its Errors section) is exactly
+`append`'s own uniqueness check (see its Errors section) is exactly
 `contains(name)` under the hood -- a name `contains` reports as taken is
-always rejected by `then`.
+always rejected by `append`.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -117,11 +124,11 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("a", nn::Fusion(3, 4));
+  net.append("a", nn::Fusion(3, 4));
   std::cout << "contains('a') before retry: " << std::boolalpha << net->contains("a") << "\n";
 
   try {
-    net.then("a", nn::Fusion(4, 2));
+    net.append("a", nn::Fusion(4, 2));
     std::cout << "(did not throw)\n";
   } catch (const std::exception& e) {
     std::cout << "caught: " << e.what() << "\n";

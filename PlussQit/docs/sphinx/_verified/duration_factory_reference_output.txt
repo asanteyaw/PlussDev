@@ -1,0 +1,249 @@
+
+== nanos_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:59:59.999999998
+
+== nanos_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 00:00:00.000000001, 0 days 00:00:00.000000002 ]
+
+== nanos_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.000000001 0 days 00:00:00.000000002 ]
+[ 0 days 00:00:00.000000003 0 days 00:00:00.000000004 ]
+
+== nanos_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.000000001 0 days 00:00:00.000000002 ]
+[ 0 days 00:00:00.000000003 0 days 00:00:00.000000004 ]
+
+== microseconds_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:59:59.999998000
+
+== microseconds_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 00:00:00.000001000, 0 days 00:00:00.000002000 ]
+
+== microseconds_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.000001000 0 days 00:00:00.000002000 ]
+[ 0 days 00:00:00.000003000 0 days 00:00:00.000004000 ]
+
+== microseconds_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.000001000 0 days 00:00:00.000002000 ]
+[ 0 days 00:00:00.000003000 0 days 00:00:00.000004000 ]
+
+== milliseconds_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:59:59.998000000
+
+== milliseconds_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 00:00:00.001000000, 0 days 00:00:00.002000000 ]
+
+== milliseconds_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.001000000 0 days 00:00:00.002000000 ]
+[ 0 days 00:00:00.003000000 0 days 00:00:00.004000000 ]
+
+== milliseconds_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.001000000 0 days 00:00:00.002000000 ]
+[ 0 days 00:00:00.003000000 0 days 00:00:00.004000000 ]
+
+== seconds_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:59:58.000000000
+
+== seconds_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 00:00:01.000000000, 0 days 00:00:02.000000000 ]
+
+== seconds_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:01.000000000 0 days 00:00:02.000000000 ]
+[ 0 days 00:00:03.000000000 0 days 00:00:04.000000000 ]
+
+== seconds_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:01.000000000 0 days 00:00:02.000000000 ]
+[ 0 days 00:00:03.000000000 0 days 00:00:04.000000000 ]
+
+== minutes_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:58:00.000000000
+
+== minutes_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 00:01:00.000000000, 0 days 00:02:00.000000000 ]
+
+== minutes_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:01:00.000000000 0 days 00:02:00.000000000 ]
+[ 0 days 00:03:00.000000000 0 days 00:04:00.000000000 ]
+
+== minutes_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:01:00.000000000 0 days 00:02:00.000000000 ]
+[ 0 days 00:03:00.000000000 0 days 00:04:00.000000000 ]
+
+== hours_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 22:00:00.000000000
+
+== hours_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 01:00:00.000000000, 0 days 02:00:00.000000000 ]
+
+== hours_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 01:00:00.000000000 0 days 02:00:00.000000000 ]
+[ 0 days 03:00:00.000000000 0 days 04:00:00.000000000 ]
+
+== hours_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 01:00:00.000000000 0 days 02:00:00.000000000 ]
+[ 0 days 03:00:00.000000000 0 days 04:00:00.000000000 ]
+
+== days_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-2 days 00:00:00.000000000
+
+== days_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 1 days 00:00:00.000000000, 2 days 00:00:00.000000000 ]
+
+== days_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 1 days 00:00:00.000000000 2 days 00:00:00.000000000 ]
+[ 3 days 00:00:00.000000000 4 days 00:00:00.000000000 ]
+
+== days_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 1 days 00:00:00.000000000 2 days 00:00:00.000000000 ]
+[ 3 days 00:00:00.000000000 4 days 00:00:00.000000000 ]
+
+== weeks_scalar ==
+Duration(shape=[], dim=0, numel=1)
+-14 days 00:00:00.000000000
+
+== weeks_vector ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 7 days 00:00:00.000000000, 14 days 00:00:00.000000000 ]
+
+== weeks_nested ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[  7 days 00:00:00.000000000 14 days 00:00:00.000000000 ]
+[ 21 days 00:00:00.000000000 28 days 00:00:00.000000000 ]
+
+== weeks_flat_shape ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[  7 days 00:00:00.000000000 14 days 00:00:00.000000000 ]
+[ 21 days 00:00:00.000000000 28 days 00:00:00.000000000 ]
+
+== nanos_exact_int64 ==
+[9007199254740993]
+
+== nanos_nat ==
+Duration(shape=[], dim=0, numel=1)
+NaT
+
+== unit_scale_overflow ==
+Duration::mul: nanosecond overflow
+
+== make_runtime_unit ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:01:00.000000000 0 days 00:02:00.000000000 ]
+[ 0 days 00:03:00.000000000 0 days 00:04:00.000000000 ]
+
+== make_duration_equivalent ==
+true
+
+== make_invalid_unit ==
+pluss::duration::make: unsupported unit
+
+== range_ascending ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:00.000000000, 0 days 00:00:02.000000000, 0 days 00:00:04.000000000 ]
+
+== range_descending ==
+Duration(shape=[3], dim=1, numel=3)
+[ 0 days 00:00:05.000000000, 0 days 00:00:03.000000000, 0 days 00:00:01.000000000 ]
+
+== range_wrong_direction ==
+Duration(shape=[0], dim=1, numel=0)[  ]
+
+== range_int64_boundary ==
+[9223372036854775806,9223372036854775807]
+
+== range_zero_step ==
+Duration::range step must be non-zero
+
+== zeros_scalar ==
+Duration(shape=[], dim=0, numel=1)
+0 days 00:00:00.000000000
+
+== zeros_matrix ==
+Duration(shape=[2, 3], dim=2, numel=6)
+[ 0 days 00:00:00.000000000 0 days 00:00:00.000000000 0 days 00:00:00.000000000 ]
+[ 0 days 00:00:00.000000000 0 days 00:00:00.000000000 0 days 00:00:00.000000000 ]
+
+== zeros_empty ==
+Duration(shape=[2, 0, 3], dim=3, numel=0)values[0, :, :]
+
+
+values[1, :, :]
+
+
+== zeros_like_matrix ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.000000000 0 days 00:00:00.000000000 ]
+[ 0 days 00:00:00.000000000 0 days 00:00:00.000000000 ]
+
+== full_negative ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ -1 days 23:59:57.000000000 -1 days 23:59:57.000000000 ]
+[ -1 days 23:59:57.000000000 -1 days 23:59:57.000000000 ]
+
+== full_nat ==
+Duration(shape=[3], dim=1, numel=3)
+[ NaT, NaT, NaT ]
+
+== full_empty ==
+Duration(shape=[2, 0], dim=2, numel=0)[  ]
+[  ]
+
+== full_non_scalar ==
+pluss::duration::full: fill_value must be a scalar Duration
+
+== full_like ==
+Duration(shape=[2, 2], dim=2, numel=4)
+[ 0 days 00:00:00.000000007 0 days 00:00:00.000000007 ]
+[ 0 days 00:00:00.000000007 0 days 00:00:00.000000007 ]
+
+== random_seed_42 ==
+[16,18,15,10,10,16]
+
+== random_repeatable ==
+true
+
+== random_reversed_bounds ==
+pluss::duration::random: expected hi > lo
+
+== random_nat_bound ==
+pluss::duration::random: NaT bounds are unsupported
+
+== shape_negative_extent ==
+pluss::duration::zeros: shape extents must be non-negative
+
+== shape_rank_four ==
+pluss::duration::zeros: supports ranks up to 3
+
+== print_string ==
+Duration(shape=[2], dim=1, numel=2)
+[ 0 days 00:00:00.000000000, -1 days 23:59:59.999999999 ]
+
+== print_overloads_equal ==
+true true

@@ -21,6 +21,14 @@ classic::Status classic::Flow::add_named_transform(
     classic::RouteRemainderPolicy remainder = classic::RouteRemainderPolicy::PassThrough);
 ```
 
+## What It Does
+
+Validates that `options` holds the `TransformOptions` alternative matching
+`kind`, then appends a new transform stage built from that pairing to the
+`Flow` -- the one call every typed `add_*` method on
+[`add_stage`](add_stage.md) reduces to internally, with the stage kind
+supplied as a runtime value instead of baked into the method name.
+
 ## Parameters
 
 `kind` — `TransformKind`

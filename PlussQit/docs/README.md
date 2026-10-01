@@ -1,32 +1,10 @@
-# PlussQit Documentation
+# PlussQit Documentation Sources
 
+End-user API documentation lives under `sphinx/api/` as handwritten,
+per-operation chapters. The root-level Markdown files retained here are
+internal authoring standards, engineering records, and migration notes; Sphinx
+excludes them from the published site.
 
-- Errors and stack traces: `Errors_StackTrace.md`
-
-- scatter_reduce policies: `ScatterReduce.md`
-
-- Type promotion: `TypePromotion.md`
-
-- Factories and Config: `Factories_Config.md`
-
-- Series methods philosophy: `Series_Methods.md`
-
-- Dependencies and offline builds: `Dependencies.md`
-
-- Reductions: `Reductions.md`
-
-- Complex numbers: `Complex.md`
-
-- Activations: `Activations.md`
-
-- Softmax family: `Softmax.md`
-
-- Reshaping & views: `ReshapeAndViews.md`
-- Norms: `Norms.md`
-- Stats: `Stats.md`
-- Scatter: `Scatter.md`
-- Indexing parity: `IndexingParity.md`
-- Elementwise extras: `ElementwiseExtras.md`
 - Parity roadmap: `ParityRoadmap.md`
 - Method surface codegen: `Codegen_MethodSurface.md`
 - Patch 54 method surface: `Patch54_MethodSurface.md`

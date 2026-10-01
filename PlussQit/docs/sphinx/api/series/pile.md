@@ -178,8 +178,8 @@ the stacked output that it originally occupied.
     <span class="label">Previous</span>
     <span class="title">permute</span>
   </a>
-  <a class="next-link" href="polygamma.html">
+  <a class="next-link" href="platform.html">
     <span class="label">Next</span>
-    <span class="title">polygamma</span>
+    <span class="title">platform</span>
   </a>
 </div>

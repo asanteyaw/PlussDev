@@ -26,7 +26,7 @@ can end up just as ragged.
 ```{important} Timeline is distinct from TimeIndex
 `Timeline`-kind (an absolute timestamp axis) and `TimeIndex`-kind (a positional/period
 index) are different payload kinds with separate filters here — see
-[`timeindex()`](timeindex.md) for the sibling method. A `TimeIndex`-kind key is
+for the sibling method. A `TimeIndex`-kind key is
 excluded from `timeline()`'s result, and vice versa.
 ```
 
@@ -79,8 +79,6 @@ dt                       | Timeline     | Timeline         | 2       | [2024-01-
 
 ## See Also
 
-- [`ArchiveKeyAxisAccessor::timeindex`](timeindex.md): the positional-index sibling
-  filter.
 - [`ArchiveKeyAxisAccessor::series`](series.md) / [`note()`](note.md): the other kind
   filters.
 - [`CatalogKeyAxisAccessor::timeline`](../catalog-keyaxis/timeline.md): the
@@ -91,8 +89,4 @@ dt                       | Timeline     | Timeline         | 2       | [2024-01-
   `TimeIndex`-kind) feature extraction, once you already know a key is timestamp-like.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

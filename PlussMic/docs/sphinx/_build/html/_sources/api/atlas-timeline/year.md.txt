@@ -13,7 +13,7 @@ AtlasTimelineAccessor::year() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with its
+Replaces every `Timeline` feature in **every frame of the stack** with its
 calendar year, as a numeric `Series` — the same transform
 [`DataFrame::tl().year()`](../dataframe-timeline/year.md) applies to a single frame,
 broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md). The
@@ -76,7 +76,7 @@ values across the depth axis, only within each frame.
 ## Notes
 
 - `Atlas::tl()` (like [`DataFrame::tl()`](../dataframe/tl.md)) requires **every**
-  feature on each stacked frame to already be `Timeline`/`TimeIndex`-kind; there is no
+  feature on each stacked frame to already be `Timeline`-kind; there is no
   public way to narrow to a subset of features first the way
   [`Atlas::features()`](../atlas/features.md) narrows for other operations. Build the
   atlas from frames that already contain only time features if this matters.

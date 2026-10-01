@@ -13,7 +13,7 @@ AtlasTimelineAccessor::weekend() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with a
+Replaces every `Timeline` feature in **every frame of the stack** with a
 boolean `Series` flagging whether the row falls on a Saturday or Sunday — the same
 transform [`DataFrame::tl().weekend()`](../dataframe-timeline/weekend.md) applies to a
 single frame, broadcast across the whole `Atlas` via
@@ -73,7 +73,7 @@ weekday.
 ## Notes
 
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row displays as `"NULL"` in the output, same as on a single frame — see
   [`AtlasTimelineAccessor::isnat`](isnat.md).

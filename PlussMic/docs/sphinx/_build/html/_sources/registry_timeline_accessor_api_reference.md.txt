@@ -23,7 +23,6 @@ api/registry-timeline/epoch
 api/registry-timeline/floor
 api/registry-timeline/fmt
 api/registry-timeline/hour
-api/registry-timeline/index
 api/registry-timeline/isnat
 api/registry-timeline/iso
 api/registry-timeline/leap

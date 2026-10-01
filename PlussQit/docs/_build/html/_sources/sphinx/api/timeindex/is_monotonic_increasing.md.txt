@@ -2,16 +2,17 @@
 
 [Back to TimeIndex API Reference](../../timeindex_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-TimeIndex::is_monotonic_increasing() const -> bool
-TimeIndex::is_monotonic_decreasing() const -> bool
+bool TimeIndex::is_monotonic_increasing() const
 ```
 
 ## What It Does
 
-Reports whether the index is monotonic in ascending or descending order.
+Reports whether every timestamp is greater than or equal to the timestamp
+before it. Repeated instants are permitted; monotonicity concerns direction,
+not uniqueness.
 
 This matters because time-aware lookup methods such as `searchsorted`, `asof`,
 and most resampling logic expect an ordered axis.
@@ -21,8 +22,8 @@ semantics become harder to reason about immediately.
 
 ## Returns
 
-`bool`
-    `true` when the index follows the requested monotonic direction.
+A native C++ `bool`. Empty and single-element indices return `true` because no
+adjacent pair violates increasing order.
 
 ## Examples
 
@@ -38,19 +39,16 @@ auto idx = pluss::timeindex::make({
 });
 std::cout << "idx.is_monotonic_increasing() = "
           << (idx.is_monotonic_increasing() ? "true" : "false") << "\n";
-std::cout << "idx.is_monotonic_decreasing() = "
-          << (idx.is_monotonic_decreasing() ? "true" : "false") << "\n";
 ```
 
 ### Output
 
 ```text
 idx.is_monotonic_increasing() = true
-idx.is_monotonic_decreasing() = false
 ```
 
-Example 2. A descending axis can still be checked when you intentionally build
-it without sorted enforcement.
+Example 2. A descending axis fails the increasing check when construction-time
+order enforcement is intentionally disabled.
 
 ```cpp
 auto descending = pluss::timeindex::make({
@@ -60,21 +58,21 @@ auto descending = pluss::timeindex::make({
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:00:00Z",
 }, false);
-std::cout << "descending.is_monotonic_decreasing() = "
-          << (descending.is_monotonic_decreasing() ? "true" : "false") << "\n";
+std::cout << "descending.is_monotonic_increasing() = "
+          << (descending.is_monotonic_increasing() ? "true" : "false") << "\n";
 ```
 
 ### Output
 
 ```text
-descending.is_monotonic_decreasing() = true
+descending.is_monotonic_increasing() = false
 ```
 
 ## Notes
 
 - Most production `TimeIndex` usage should stay monotonic increasing.
-- Descending checks are still useful when validating user-provided or external
-  axes.
+- Use [`is_monotonic_decreasing()`](is_monotonic_decreasing.md) when a
+  newest-first axis is intentional.
 - A non-monotonic index is not just a cosmetic issue. It changes the meaning of
   ordered lookup and can invalidate assumptions in time-aware code.
 
@@ -84,9 +82,9 @@ descending.is_monotonic_decreasing() = true
 - [`TimeIndex::asof`](asof.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="host.html">
+  <a class="prev-link" href="is_monotonic_decreasing.html">
     <span class="label">Previous</span>
-    <span class="title">host</span>
+    <span class="title">is_monotonic_decreasing</span>
   </a>
   <a class="next-link" href="is_unique.html">
     <span class="label">Next</span>

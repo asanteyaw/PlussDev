@@ -8,6 +8,7 @@
 
 ```cpp
 Series::sign() const -> Series
+Series& Series::sign_() const
 ```
 
 ## What It Does
@@ -38,6 +39,31 @@ None.
 `sign()` is best taught as a discrete directional summary rather than a smooth
 differentiable transform. Its main use is value inspection, rule building, and
 piecewise control logic.
+
+## In-Place Form
+
+`sign_()` is the in-place sibling of [`sign()`](sign.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `sign_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({-3.0, 0.0, 4.0});
+
+auto& ref = x.sign_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-1, 0, 1]
+same object: true
+```
 
 ## Examples
 

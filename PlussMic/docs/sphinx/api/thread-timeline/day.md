@@ -53,7 +53,7 @@ ptype: Series
 
 ## Notes
 
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`.

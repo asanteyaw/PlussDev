@@ -8,6 +8,7 @@
 
 ```cpp
 Nexus::apply(std::string_view key, const std::function<DataFrame(const DataFrame&)>& fn) const -> Nexus
+Nexus::apply_(std::string_view key, const std::function<DataFrame(const DataFrame&)>& fn) -> Nexus&
 ```
 
 ## What It Does
@@ -22,6 +23,13 @@ precise than [`apply_all()`](apply_all.md) or [`map_frames()`](map_frames.md).
 The method is non-mutating. It returns a new `Nexus` whose table keys are the
 same as the source workspace, with only the named table's `DataFrame` payload
 replaced by the callback result.
+
+`apply_()` (trailing underscore) is the in-place sibling: same validation,
+same callback contract, but it mutates the `Nexus` it's called on and
+returns a reference to that same object, rather than returning a new one.
+Prefer `apply()` in ordinary chained/functional-style code; reach for
+`apply_()` when you're deliberately building up one workspace value in a
+loop or a sequence of steps and want to avoid intermediate copies.
 
 ## Parameters
 
@@ -129,7 +137,27 @@ std::cout << out.frame("customers").nfeatures() << " "
 1 2
 ```
 
-Example 3. Continuing from Example 1, validation is strict: empty callbacks,
+Example 3. `apply_()` mutates the workspace in place instead of returning a
+new one.
+
+```cpp
+auto scratch = Nexus({{"customers", customers}, {"orders", orders}});
+
+std::cout << "before: " << scratch.frame("orders").ncases() << " rows\n";
+scratch.apply_("orders", [](const DataFrame& frame) {
+  return frame.head(1, false);
+});
+std::cout << "after: " << scratch.frame("orders").ncases() << " rows";
+```
+
+### Output
+
+```text
+before: 2 rows
+after: 1 rows
+```
+
+Example 4. Continuing from Example 1, validation is strict: empty callbacks,
 unknown keys, and undefined callback results all throw.
 
 ```cpp
@@ -180,6 +208,9 @@ Nexus::apply: callback returned undefined DataFrame
   afterward.
 - For the "same callback on every table" variant, use
   [`apply_all()`](apply_all.md) or [`map_frames()`](map_frames.md).
+- `apply_()` shares every validation rule and edge case shown above — it
+  differs only in mutating in place and returning `Nexus&` instead of a new
+  `Nexus`.
 
 ## See Also
 

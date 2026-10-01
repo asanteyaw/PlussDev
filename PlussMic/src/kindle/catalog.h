@@ -291,7 +291,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Catalog fillnull(const pluss::Timeline& value) const;
-  Catalog fillnull(const pluss::TimeIndex& value) const;
+  Catalog fillnull(const pluss::Duration& value) const;
   Catalog dropnull() const;
   Catalog ffill() const;
   Catalog bfill() const;
@@ -409,7 +409,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Catalog fillnull(const pluss::Timeline& value) const;
-  Catalog fillnull(const pluss::TimeIndex& value) const;
+  Catalog fillnull(const pluss::Duration& value) const;
   Catalog dropnull() const;
   Catalog ffill() const;
   Catalog bfill() const;
@@ -445,7 +445,7 @@ public:
   Catalog series() const;
   Catalog note() const;
   Catalog timeline() const;
-  Catalog timeindex() const;
+  Catalog duration() const;
   Catalog prefix(std::string_view prefix) const;
   Catalog suffix(std::string_view suffix) const;
 
@@ -462,7 +462,7 @@ public:
   Catalog series() const;
   Catalog note() const;
   Catalog timeline() const;
-  Catalog timeindex() const;
+  Catalog duration() const;
 
 private:
   CatalogKeyAccessor keysel_;
@@ -562,7 +562,6 @@ public:
   Catalog tz(std::string_view name) const;
   Catalog localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Catalog utc() const;
-  Catalog index(bool require_sorted = true) const;
 
 private:
   CatalogKeyAccessor keysel_;

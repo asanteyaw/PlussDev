@@ -13,7 +13,7 @@ AtlasTimelineAccessor::month_start() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with a
+Replaces every `Timeline` feature in **every frame of the stack** with a
 boolean `Series` flagging whether the row falls on the first day of its month — the same
 transform [`DataFrame::tl().month_start()`](../dataframe-timeline/month_start.md)
 applies to a single frame, broadcast across the whole `Atlas` via
@@ -75,7 +75,7 @@ Only `frame(1)`'s `"2023-03-01"` falls on the first of its month.
 - Only checks day-of-month `== 1` — the time-of-day portion (if any) doesn't affect the
   result.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row displays as `"NULL"` in the output, same as on a single frame — see
   [`AtlasTimelineAccessor::isnat`](isnat.md).

@@ -9,6 +9,7 @@
 ```cpp
 Series Series::igammac(const Series& other) const
 Series Series::igammac(double other) const
+Series& Series::igammac_(const Series& other) const
 ```
 
 ## What It Does
@@ -62,6 +63,30 @@ There is **no gradient with respect to `a`**. As with `igamma`, an objective
 that reaches its input only through the shape parameter — or through the
 `igammac(double)` overload, which holds `x` constant — is disconnected, and
 [`reverse()`](reverse.md) on it raises.
+
+## In-Place Form
+
+`igammac_()` is the in-place sibling of [`igammac()`](igammac.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `igammac_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0});
+auto y = pluss::make_series({1.0, 1.0});
+
+x.igammac_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.36787944, 0.73575888]
+```
 
 ## Examples
 

@@ -25,8 +25,8 @@ Config float_cfg() {
 }
 
 struct RegressionData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
 };
 
 RegressionData make_regression_data(std::int64_t rows, std::uint64_t seed) {

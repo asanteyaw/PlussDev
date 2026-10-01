@@ -9,6 +9,7 @@
 ```cpp
 Series Series::gcd(const Series& other) const
 Series& Series::gcd_(const Series& other)
+Series& Series::gcd_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -50,6 +51,30 @@ Raises if either operand is a floating-point or complex series.
 ## Gradient
 
 `gcd()` is a discrete integer operation and is **not differentiable**.
+
+## In-Place Form
+
+`gcd_()` is the in-place sibling of [`gcd()`](gcd.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `gcd_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series(std::vector<std::int64_t>{12, 18}, {2});
+auto y = pluss::make_series(std::vector<std::int64_t>{8, 24}, {2});
+
+x.gcd_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[4, 6]
+```
 
 ## Examples
 

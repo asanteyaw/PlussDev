@@ -23,7 +23,6 @@ api/catalog-timeline/epoch
 api/catalog-timeline/floor
 api/catalog-timeline/fmt
 api/catalog-timeline/hour
-api/catalog-timeline/index
 api/catalog-timeline/isnat
 api/catalog-timeline/iso
 api/catalog-timeline/leap

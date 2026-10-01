@@ -94,8 +94,8 @@ std::cout << pluss::timeindex::print(localized) << "\n";
     <span class="label">Previous</span>
     <span class="title">tz_convert</span>
   </a>
-  <a class="next-link" href="resample_bins.html">
+  <a class="next-link" href="union_.html">
     <span class="label">Next</span>
-    <span class="title">resample_bins</span>
+    <span class="title">union_</span>
   </a>
 </div>

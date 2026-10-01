@@ -76,7 +76,7 @@ auto life = pluss::make_series({2.0, 4.0, 8.0}, pluss::cfg::tracks_slope());
 std::cout << "before=" << (life.has_sensitivity() ? "true" : "false") << "\n";
 life.log().sum().reverse();
 std::cout << "after_reverse=" << (life.has_sensitivity() ? "true" : "false") << "\n";
-life.clear_sensitivity();
+life.clear();
 std::cout << "after_clear=" << (life.has_sensitivity() ? "true" : "false") << "\n";
 ```
 
@@ -199,7 +199,7 @@ not a derivative-value question.
 
 - [`Series::sensitivity`](sensitivity.md): read the stored value itself.
 - [`Series::tracks_slope`](tracks_slope.md): inspect tracking configuration.
-- [`Series::clear_sensitivity`](clear_sensitivity.md): clear stored
+- [`Series::clear`](clear.md): clear stored
   sensitivity.
 
 <div class="pluss-inline-prev-next">

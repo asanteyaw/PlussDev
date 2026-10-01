@@ -9,6 +9,7 @@
 ```cpp
 Series::add(const Series& rhs) const -> Series
 Series::add(const Series& rhs, double alpha) const -> Series
+Series& Series::add_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -44,6 +45,11 @@ it is accumulated into `self`.
 `add(scalar)`
 
 Public scalar convenience for the plain-add case.
+
+`add_(rhs)`
+
+The in-place sibling: accumulates `rhs` into `self` and mutates it directly,
+instead of producing a new `Series`. See "In-Place Form" below.
 
 ## Parameters
 
@@ -87,6 +93,41 @@ For differentiable dtypes, `add()` is one of the cleanest gradient surfaces:
 That makes `add()` a good method to show the difference between value flow and
 gradient scaling: `alpha` changes both the forward value and the backward
 multiplier for `rhs`.
+
+## In-Place Form
+
+`add_()` is the in-place sibling of `add()`: it accumulates `rhs` into `self`
+position by position and mutates `self` directly, returning a reference to
+the same object rather than a new `Series`. The public entry point takes only
+`rhs` — there is no in-place `alpha` overload; for a scaled in-place
+accumulation (`self += alpha * rhs`), scale the right-hand side first
+(`rhs.mul(alpha)`) and pass that to `add_()`.
+
+Despite being declared `const` at the call site — a quirk of how this
+method's wrapper is generated, not a promise that `self` is left unchanged —
+`add_()` genuinely mutates the series it's called on, including any other
+handle that shares the same storage.
+
+`add_()` works on a gradient-tracked `self` — leaf or not — the same as any
+other in-place op on this surface: the mutation is wired back into the
+autodiff graph rather than blocked, so `rhs` still receives a gradient.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({10.0, 20.0, 30.0}, {3});
+
+auto& ref = x.add_(y);
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[11, 22, 33]
+same object: true
+```
 
 ## Examples
 
@@ -225,6 +266,8 @@ broadcast: incompatible shapes
   route is a scalar-shaped `Series` on the `rhs` overload.
 - Dtype promotion can change the output dtype even when one side started as an
   integer series.
+- `add_()` mutates `self`; use `add()` when a fresh, independent result is
+  what you actually want.
 
 ## Summary
 
@@ -244,8 +287,8 @@ explicit `alpha` you supply.
     <span class="label">Previous</span>
     <span class="title">acosh</span>
   </a>
-  <a class="next-link" href="addcdiv.html">
+  <a class="next-link" href="addbmm.html">
     <span class="label">Next</span>
-    <span class="title">addcdiv</span>
+    <span class="title">addbmm</span>
   </a>
 </div>

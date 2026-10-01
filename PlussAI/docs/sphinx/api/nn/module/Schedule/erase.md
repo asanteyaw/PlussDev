@@ -6,13 +6,23 @@
 [Back to `pluss::ai::nn::Schedule`](../Schedule.md)
 
 Only reachable via `->` (`net->erase(index)`) -- `Schedule` does not
-re-declare it, unlike `then`/`insert`/`extend`/`run`.
+re-declare it, unlike `append`/`insert`/`extend`/`run`.
 
 ## Signature
 
 ```cpp
 void nn::Schedule::Impl::erase(std::size_t index);
 ```
+
+## What It Does
+
+Removes one stage from the chain by position and shifts every later stage
+left to close the gap, rebuilding the module-registration tree so
+`parameters()`/`buffers()`/`modules()` reflect the removal immediately. It
+does **not** check whether the two stages now sitting next to each other
+are still type-compatible -- see Example 2 for what that gap means in
+practice, and prefer rebuilding the `Schedule` from scratch when removing a
+stage would break the surrounding chain's types.
 
 ## Parameters
 
@@ -51,9 +61,9 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("mid", nn::Fusion(4, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("mid", nn::Fusion(4, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   std::cout << "before: size()=" << net->size() << ", parameters().size()=" << net.parameters().size() << "\n";
 
@@ -99,9 +109,9 @@ int main() {
   };
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(4, 4));
-  net.then_as<std::tuple<Series, Series>, Series>("take_output", TakeOutput{});
+  net.append("in", nn::Fusion(3, 4));
+  net.append_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(4, 4));
+  net.append_as<std::tuple<Series, Series>, Series>("take_output", TakeOutput{});
 
   // erase() does NOT re-validate the surrounding chain -- it only rebuilds
   // module records. Removing "rnn" leaves "in" (Series->Series) feeding
@@ -146,7 +156,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("only", nn::Fusion(3, 2));
+  net.append("only", nn::Fusion(3, 2));
 
   try {
     net->erase(5);  // out of range -- size() is 1
@@ -167,7 +177,7 @@ caught: pluss::nn::Schedule::erase index out of range
 
 ## See Also
 
-- [`then`](then.md) / [`insert`](insert.md) -- the operations `erase`
+- [`append`](append.md) / [`insert`](insert.md) -- the operations `erase`
   reverses.
 - [`clear`](clear.md) -- erases every stage at once.
 

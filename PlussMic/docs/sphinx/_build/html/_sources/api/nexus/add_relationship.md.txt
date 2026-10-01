@@ -199,6 +199,22 @@ std::cout << batch.nrelationships();
 2
 ```
 
+Example 6. `add_relationships_` mutates the current handle in place with the
+same batch semantics.
+
+```cpp
+auto mutable_biz = biz;
+mutable_biz.add_relationships_({rel, second});
+
+std::cout << biz.nrelationships() << " " << mutable_biz.nrelationships();
+```
+
+### Output
+
+```text
+0 2
+```
+
 ## Notes
 
 - `name` must be unique across the whole workspace; both tables named must already exist.
@@ -221,6 +237,10 @@ std::cout << batch.nrelationships();
   relationship actually holds against the current data.
 
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../nexus_api_reference.html">
+    <span class="label">Previous</span>
+    <span class="title">Nexus API Reference</span>
+  </a>
   <a class="next-link" href="apply.html">
     <span class="label">Next</span>
     <span class="title">apply</span>

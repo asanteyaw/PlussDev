@@ -276,13 +276,13 @@ Catalog Catalog::fillnull(const pluss::Timeline& value) const {
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     const auto& key = impl_ref_().keys_[i];
     const auto& stream = impl_ref_().streams_[i];
-    const bool selected = stream.kind() == StreamKind::Timeline || stream.kind() == StreamKind::TimeIndex;
+    const bool selected = stream.kind() == StreamKind::Timeline;
     out.emplace_back(key, selected ? stream.fillnull(value) : stream);
   }
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::fillnull(const pluss::TimeIndex& value) const {
+Catalog Catalog::fillnull(const pluss::Duration& value) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
 
   std::vector<std::pair<std::string, Stream>> out;
@@ -290,7 +290,7 @@ Catalog Catalog::fillnull(const pluss::TimeIndex& value) const {
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
     const auto& key = impl_ref_().keys_[i];
     const auto& stream = impl_ref_().streams_[i];
-    const bool selected = stream.kind() == StreamKind::TimeIndex;
+    const bool selected = stream.kind() == StreamKind::Duration;
     out.emplace_back(key, selected ? stream.fillnull(value) : stream);
   }
   return Catalog(std::move(out));

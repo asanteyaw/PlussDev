@@ -8,7 +8,6 @@
 
 ```cpp
 std::int64_t Series::stride(std::int64_t dim) const
-pluss::RangeView<std::int64_t> Series::strides() const
 ```
 
 ## What It Does
@@ -16,8 +15,8 @@ pluss::RangeView<std::int64_t> Series::strides() const
 Reports how many storage elements the address advances when the coordinate
 on one axis increases by one.
 
-`stride(dim)` answers that for a single axis; `strides()` returns the
-complete axis-by-axis sequence at once. Strides are measured in **elements**,
+`stride(dim)` answers that for a single axis; [`strides()`](strides.md) returns
+the complete axis-by-axis sequence at once. Strides are measured in **elements**,
 not bytes — multiply by [`dtype`](dtype.md)`().itemsize` to get a byte
 offset.
 
@@ -215,8 +214,8 @@ consecutive coordinates on an axis are:
     <span class="label">Previous</span>
     <span class="title">storage_version</span>
   </a>
-  <a class="next-link" href="sub.html">
+  <a class="next-link" href="strides.html">
     <span class="label">Next</span>
-    <span class="title">sub</span>
+    <span class="title">strides</span>
   </a>
 </div>

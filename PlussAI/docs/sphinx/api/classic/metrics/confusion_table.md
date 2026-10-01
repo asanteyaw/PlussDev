@@ -26,6 +26,15 @@ classic::StatusOr<classic::ConfusionTable> classic::confusion_table(
     const classic::ConfusionOptions& options = {});
 ```
 
+## What It Does
+
+Counts, for every `(truth class, predicted class)` pair, how many rows
+fall into that cell, and lays the counts out as a `[k, k]` matrix -- the
+raw tally every derived classification statistic in this family (accuracy,
+precision, recall, F1, ...) is computed from. The third overload runs
+inference from a classifier and batch internally first, so the raw
+predictions never need to be computed by hand.
+
 The second overload accepts anything convertible to a range of `double`
 (including a plain `{...}` brace-initializer list of class values) and
 forwards it as `ConfusionOptions::label_order` with the given `normalize`.

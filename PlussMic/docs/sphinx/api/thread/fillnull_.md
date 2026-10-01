@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b6f27cc624b1 -->
+<!-- pluss-signature-hash: 2ec68616118d -->
 
 # Thread::fillnull_
 
@@ -11,7 +11,7 @@
 Thread& Thread::fillnull_(double value)
 Thread& Thread::fillnull_(std::string_view value)
 Thread& Thread::fillnull_(const pluss::Timeline& value)
-Thread& Thread::fillnull_(const pluss::TimeIndex& value)
+Thread& Thread::fillnull_(const pluss::Duration& value)
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ mutation clones the storage first, so the other thread is unaffected. See Exampl
 
 ```{note} Only the double overload is genuinely in-place
 The `double` overload mutates the underlying `Series` storage directly through the
-copy-on-write path. The `std::string_view`, `Timeline`, and `TimeIndex` overloads are
+copy-on-write path. The `std::string_view`, `Timeline`, and `Duration` overloads are
 implemented as `*this = fillnull(value);` — they call the functional
 [`fillnull()`](fillnull.md) and reassign the result to `*this`. The end result and
 copy-on-write behavior are the same either way; only the internal mechanism differs.

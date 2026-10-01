@@ -14,15 +14,15 @@ Archive ArchiveTimelineAccessor::iso() const
 ## What It Does
 
 Renders each bound key's timestamp as a fixed ISO-8601-with-offset text
-representation, replacing each `Timeline`- or `TimeIndex`-kind key with a `Note`
+representation, replacing each `Timeline`-kind key with a `Note`
 (text) key. Equivalent to [`fmt("%Y-%m-%dT%H:%M:%S.%f%z")`](fmt.md). Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::iso`](../catalog-timeline/iso.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 

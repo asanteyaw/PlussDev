@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1a666b51e359 -->
+<!-- pluss-signature-hash: b96ab464616b -->
 <section id="slot-fillnull">
 <h1>Slot::fillnull<a class="headerlink" href="#slot-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../slot_api_reference.html"><span class="doc std std-doc">Back to Slot API Reference</span></a></p>
@@ -47,7 +47,7 @@
 <span class="n">Slot</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Slot</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Slot</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
-<span class="n">Slot</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Slot</span><span class="w"> </span><span class="n">Slot</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -55,8 +55,8 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns a new slot with every null (<code class="docutils literal notranslate"><span class="pre">std::monostate</span></code>) value replaced by
 <code class="docutils literal notranslate"><span class="pre">value</span></code> — one overload per fill-value kind: <code class="docutils literal notranslate"><span class="pre">double</span></code> for numeric slots,
-<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for text slots, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
-for datetime slots.</p>
+<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for text slots, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> for datetime
+slots, <code class="docutils literal notranslate"><span class="pre">Duration</span></code> for duration slots.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Every non-null value must already match the fill kind
@@ -70,7 +70,7 @@ that matches the slot’s actual <a class="reference internal" href="kind.html">
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span></code>)
+<p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Duration&amp;</span></code>)
 The replacement for null values, in the kind matching the overload
 selected.</p>
 </section>

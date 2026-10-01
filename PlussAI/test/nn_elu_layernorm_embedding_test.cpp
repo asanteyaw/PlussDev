@@ -129,7 +129,7 @@ bool run_copy_init_then_use_gradient_check(std::ostream* err = nullptr) {
   w.tracks_slope_(true); // mimic parameter_record(): mark leaf before filling values
   w.copy_(pluss::make_series( // mimic reset_parameters(): untracked one-time init
       std::vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5}, {5, 3}, cfg));
-  w.clear_sensitivity();
+  w.clear();
 
   const Series idx = pluss::make_series(std::vector<std::int64_t>{0, 2, 4}, {3},
                                         Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
@@ -184,7 +184,7 @@ bool run_embedding_checks(std::ostream* err = nullptr) {
   // Gradient must be sparse: only looked-up rows (0, 2, 4) get a nonzero
   // gradient; untouched rows (1, 3) must stay exactly zero.
   embedding->weight().tracks_slope_(true);
-  embedding->weight().clear_sensitivity();
+  embedding->weight().clear();
   const Series out = embedding->forward(index);
   out.sum().reverse();
   const auto grad = to_vec(embedding->weight().sensitivity());

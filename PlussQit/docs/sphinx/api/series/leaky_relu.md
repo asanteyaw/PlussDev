@@ -56,6 +56,26 @@ d/dx leaky_relu(x) = 1      if x >= 0
 The boundary at `x = 0` takes the `>= 0` branch, so its gradient is `1`. Unlike
 `relu()`, the negative-side gradient is `slope` rather than `0`.
 
+## In-Place Form
+
+`leaky_relu_(negative_slope)` is the in-place sibling of `leaky_relu(negative_slope)`:
+it computes the same result and writes it back into `self` directly — mutating
+it (and any other handle sharing the same storage) instead of allocating a
+new `Series` — then returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({-2.0, 0.0, 2.0});
+x.leaky_relu_(0.1);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.2, 0, 2]
+```
+
 ## Examples
 
 Example 1. A `0.1` slope on the negative half, identity on the positive half.

@@ -509,7 +509,8 @@ Series separate(const Series& s) {
       s.storage_offset() / std::max<std::int64_t>(1, s.itemsize()),
       sizes,
       strides,
-      s.scalar_type());
+      s.scalar_type(),
+      s.platform());
   set_tracks_slope(out, false);
   set_keep_sensitivity(out, false);
   clear_source_link(out);

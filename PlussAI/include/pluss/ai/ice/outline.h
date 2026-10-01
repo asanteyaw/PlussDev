@@ -19,6 +19,12 @@ public:
     register_module(*schedule_.get());
   }
 
+  // Un-hides Model::forward(const Batch&) -- overriding one overload of a
+  // base class's overload set hides the rest at this scope unless brought
+  // back in explicitly, which would otherwise make the inherited, virtual
+  // Batch overload uncallable through a concrete Outline (only reachable
+  // through a Model&/Model* reference).
+  using Model::forward;
   [[nodiscard]] Series forward(const Series& x) const override { return schedule_->forward(x); }
 
   [[nodiscard]] pluss::nn::Schedule& schedule() noexcept { return schedule_; }

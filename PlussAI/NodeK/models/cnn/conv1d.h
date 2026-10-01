@@ -41,7 +41,7 @@ inline Series zero_pad_(const Series& input, const Padding1d& padding) {
 
 inline Series conv1d(const Series& input,
                      const Series& weight,
-                     const Series& bias = Series(),
+                     const Series& bias = pluss::series::undefined(),
                      Padding1d padding = {0, 0},
                      std::int64_t stride = 1,
                      std::int64_t dilation = 1,

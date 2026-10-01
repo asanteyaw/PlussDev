@@ -5,23 +5,12 @@
 ## Signature
 
 ```cpp
-TimeIndex::floor(std::string_view unit) const -> TimeIndex
+TimeIndex TimeIndex::floor(std::string_view unit) const
 ```
 
 ## What It Does
 
 Rounds each timestamp down to the requested unit.
-
-Unit-specific wrappers also exist for discoverability:
-
-- `floor_ns()`
-- `floor_us()`
-- `floor_ms()`
-- `floor_s()`
-- `floor_min()`
-- `floor_h()`
-- `floor_D()`
-- `floor_W()`
 
 Use this when every timestamp should snap to the start of its containing bucket.
 
@@ -69,15 +58,14 @@ auto bucket_starts = base.floor("H");
 
 - [`TimeIndex::ceil`](ceil.md)
 - [`TimeIndex::round`](round.md)
-- [`TimeIndex::normalize`](normalize.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="difference.html">
     <span class="label">Previous</span>
     <span class="title">difference</span>
   </a>
-  <a class="next-link" href="ceil.html">
+  <a class="next-link" href="freq.html">
     <span class="label">Next</span>
-    <span class="title">ceil</span>
+    <span class="title">freq</span>
   </a>
 </div>

@@ -35,7 +35,7 @@ enum class SlotKind : std::uint8_t {
   Series,
   Note,
   Timeline,
-  TimeIndex,
+  Duration,
   Mixed
 };
 
@@ -47,7 +47,7 @@ public:
       pluss::Series,
       pluss::Note,
       pluss::Timeline,
-      pluss::TimeIndex>;
+      pluss::Duration>;
 
   Slot();
   explicit Slot(std::vector<Value> values);
@@ -90,7 +90,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Slot fillnull(const pluss::Timeline& value) const;
-  Slot fillnull(const pluss::TimeIndex& value) const;
+  Slot fillnull(const pluss::Duration& value) const;
   Slot dropnull() const;
   Slot distinct(pluss::kindle::DistinctOptions options = {}) const;
   Slot freq(pluss::kindle::FreqOptions options = {}) const;
@@ -135,7 +135,7 @@ public:
   Slot series() const;
   Slot note() const;
   Slot timeline() const;
-  Slot timeindex() const;
+  Slot duration() const;
 
 private:
   Slot base_{};
@@ -230,7 +230,6 @@ public:
   Slot tz(std::string_view name) const;
   Slot localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Slot utc() const;
-  Slot index(bool require_sorted = true) const;
 
 private:
   Slot base_{};

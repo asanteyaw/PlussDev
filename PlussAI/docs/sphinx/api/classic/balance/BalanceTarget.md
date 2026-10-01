@@ -43,7 +43,7 @@ minority count is `max(current_minority, ceil(ratio * majority))`, so a
 
 ### `counts`
 
-`pluss::Series counts = pluss::Series::undefined()`
+`pluss::Series counts = pluss::series::undefined()`
 
 Consulted only when `kind == Counts`. Must be defined, length equal to
 the number of distinct classes (in the same sorted-ascending order

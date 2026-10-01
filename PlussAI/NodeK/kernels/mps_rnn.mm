@@ -36,31 +36,31 @@ struct Context {
 };
 
 struct RnnBackwardResult {
-  Series grad_source{};
-  Series grad_recurrent{};
-  Series grad_input{};
-  Series grad_bias{};
-  Series grad_secondary_bias{};
-  Series grad_hx0{};
+  Series grad_source = pluss::series::undefined();
+  Series grad_recurrent = pluss::series::undefined();
+  Series grad_input = pluss::series::undefined();
+  Series grad_bias = pluss::series::undefined();
+  Series grad_secondary_bias = pluss::series::undefined();
+  Series grad_hx0 = pluss::series::undefined();
 };
 
 struct LstmBackwardResult {
-  Series grad_source{};
-  Series grad_recurrent{};
-  Series grad_bias{};
-  Series grad_hx0{};
-  Series grad_cx0{};
+  Series grad_source = pluss::series::undefined();
+  Series grad_recurrent = pluss::series::undefined();
+  Series grad_bias = pluss::series::undefined();
+  Series grad_hx0 = pluss::series::undefined();
+  Series grad_cx0 = pluss::series::undefined();
 };
 
 struct LstmLayerResult {
-  Series output{};
-  Series hidden{};
-  Series cell{};
+  Series output = pluss::series::undefined();
+  Series hidden = pluss::series::undefined();
+  Series cell = pluss::series::undefined();
 };
 
 struct RnnLayerResult {
-  Series output{};
-  Series hidden{};
+  Series output = pluss::series::undefined();
+  Series hidden = pluss::series::undefined();
 };
 
 bool ieq_(const char* a, const char* b) noexcept {
@@ -830,7 +830,7 @@ RnnLayerResult run_single_gate_rnn_layer_(const Series& input,
                                           const Series& hx0,
                                           const ::pluss::ai::rnn::NetWeight& p,
                                           const ::pluss::ai::rnn::NetConfig& cfg) {
-  Series bias = Series::undefined();
+  Series bias = pluss::series::undefined();
   if (cfg.use_bias) {
     bias = cfg.split_bias ? p.bias_ih.add(p.bias_hh).contiguous() : p.bias;
   }
@@ -949,8 +949,8 @@ RnnLayerResult run_gru_layer_(const Series& input,
                               const ::pluss::ai::rnn::NetWeight& p,
                               bool use_bias,
                               bool split_bias) {
-  Series bias = Series::undefined();
-  Series secondary_bias = Series::undefined();
+  Series bias = pluss::series::undefined();
+  Series secondary_bias = pluss::series::undefined();
   if (use_bias) {
     if (split_bias) {
       bias = p.bias_ih;
@@ -1102,7 +1102,7 @@ LstmLayerResult run_lstm_layer_(const Series& input,
                                 const ::pluss::ai::rnn::NetWeight& p,
                                 bool use_bias,
                                 bool split_bias) {
-  Series bias = Series::undefined();
+  Series bias = pluss::series::undefined();
   if (use_bias) {
     bias = split_bias ? p.bias_ih.add(p.bias_hh).contiguous() : p.bias;
   }

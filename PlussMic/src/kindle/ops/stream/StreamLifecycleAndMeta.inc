@@ -17,7 +17,7 @@ Stream::Stream(const pluss::Timeline& data,
                std::optional<pluss::table::Thread> cases)
     : impl_(pluss::msharp::make_intrusive<detail::StreamImpl>(Payload{data}, std::move(validity_mask), std::move(cases))) {}
 
-Stream::Stream(const pluss::TimeIndex& data,
+Stream::Stream(const pluss::Duration& data,
                std::optional<pluss::Series> validity_mask,
                std::optional<pluss::table::Thread> cases)
     : impl_(pluss::msharp::make_intrusive<detail::StreamImpl>(Payload{data}, std::move(validity_mask), std::move(cases))) {}
@@ -37,8 +37,8 @@ Stream Stream::from_thread(const pluss::table::Thread& thread, std::optional<plu
       return Stream(thread.as_note(), pluss::table::detail::validity_mask(thread), std::move(cases));
     case pluss::table::ThreadKind::Timeline:
       return Stream(thread.as_timeline(), pluss::table::detail::validity_mask(thread), std::move(cases));
-    case pluss::table::ThreadKind::TimeIndex:
-      return Stream(thread.as_timeindex(), pluss::table::detail::validity_mask(thread), std::move(cases));
+    case pluss::table::ThreadKind::Duration:
+      return Stream(thread.as_duration(), pluss::table::detail::validity_mask(thread), std::move(cases));
   }
   pluss::codem::throw_error("Stream::from_thread: unsupported thread kind");
 }
@@ -76,8 +76,8 @@ std::string Stream::ptype() const {
       return "Note";
     case StreamKind::Timeline:
       return "Timeline";
-    case StreamKind::TimeIndex:
-      return "TimeIndex";
+    case StreamKind::Duration:
+      return "Duration";
   }
   PLUSS_FAIL("Stream::ptype: unknown StreamKind");
 }
@@ -117,9 +117,11 @@ Stream Stream::fillnull(const pluss::Timeline& value) const {
   return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
 }
 
-Stream Stream::fillnull(const pluss::TimeIndex& value) const {
+Stream Stream::fillnull(const pluss::Duration& value) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.fillnull(value); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) {
+    return t.fillnull(value);
+  });
 }
 
 Stream Stream::abs() const {

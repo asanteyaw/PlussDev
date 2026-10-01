@@ -8,6 +8,7 @@
 
 ```cpp
 Series::sigmoid() const -> Series
+Series& Series::sigmoid_()
 ```
 
 ## What It Does
@@ -39,6 +40,29 @@ If `y = σ(x)`, then:
 
 So the derivative is largest around `x = 0` and shrinks toward the saturated
 ends.
+
+## In-Place Form
+
+`sigmoid_()` is the in-place sibling of [`sigmoid()`](sigmoid.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.sigmoid_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.5, 0.73105858]
+same object: true
+```
 
 ## Examples
 

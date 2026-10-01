@@ -55,6 +55,14 @@ form. Pass a `std::vector<LinearFamilyOptions>` (a `{...}` brace list
 converts to one implicitly at the call site, same as any `std::vector`
 argument).
 
+## What It Does
+
+Cross-validates every candidate in `candidates` against `x`/`y` and ranks
+them by `objective_metric`, exhaustively -- every candidate is always
+evaluated, with no early stopping or budgeted search. The result identifies
+which set of `LinearFamilyOptions` performs best on this data, without
+requiring a separate manual loop over candidates.
+
 ## Parameters
 
 Identical, argument for argument, to

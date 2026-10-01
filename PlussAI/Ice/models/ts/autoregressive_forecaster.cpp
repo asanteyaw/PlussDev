@@ -1,18 +1,35 @@
 #include "pluss/ai/ice/models/ts/autoregressive_forecaster.h"
 
 #include "pluss/ai/ice/callback.h"
+#include "pluss/ai/ice/io.h"
 #include "pluss/ai/ice/no_grad.h"
 #include "pluss/ai/ice/optim.h"
+#include "ts_artifact.h"
 
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <numeric>
 #include <random>
+#include <sstream>
 #include <unordered_map>
 
 namespace pluss::ai::ice::models {
 
 namespace {
+
+using io::detail::parse_kv_body;
+using io::detail::require_f64;
+using io::detail::require_i64;
+using io::detail::require_u64;
+using io::detail::write_num_line;
+using ts_artifact::read_categoricals;
+using ts_artifact::write_categoricals;
+
+constexpr std::string_view kMagic = "pluss_ice_autoregressive_forecaster";
+constexpr std::int64_t kSchema = 1;
+constexpr std::string_view kLoadContext =
+    "pluss::ai::ice::models::AutoregressiveForecaster::load";
 
 constexpr double kHalfLog2Pi = 0.91893853320467274178;
 
@@ -93,7 +110,7 @@ struct FeatureEncoder {
   }
 
   [[nodiscard]] Series encode(const Series& input) const {
-    if (raw_size <= 0) return Series::undefined();
+    if (raw_size <= 0) return pluss::series::undefined();
     PLUSS_CHECK(input.defined(),
                 "pluss::ai::ice::models::AutoregressiveForecaster: required feature tensor is undefined.");
     PLUSS_CHECK(input.dim() == 2 || input.dim() == 3,
@@ -349,8 +366,8 @@ struct AutoregressiveForecaster::Impl {
   [[nodiscard]] std::tuple<Series, std::tuple<Series, Series>> encode(
       const AutoregressiveForecasterOptions& options,
       const AutoregressiveBatch& batch) const {
-    Series h0{};
-    Series c0{};
+    Series h0 = pluss::series::undefined();
+    Series c0 = pluss::series::undefined();
     if (options.static_size > 0) {
       const Series static_encoded = static_encoder.encode(batch.static_inputs);
       h0 = project_state_(initial_hidden, static_encoded, options.rnn_layers, options.hidden_size);
@@ -359,7 +376,7 @@ struct AutoregressiveForecaster::Impl {
 
     if (options.encoder_length == 1) {
       return {
-          Series::undefined(),
+          pluss::series::undefined(),
           std::tuple<Series, Series>{h0, c0},
       };
     }
@@ -403,7 +420,7 @@ struct AutoregressiveForecaster::Impl {
     Series previous_target = last_encoder_target_(batch);
     Series decoder_features = decoder_encoder.encode(batch.decoder_inputs);
     for (std::int64_t step = 0; step < options.decoder_length; ++step) {
-      Series step_features{};
+      Series step_features = pluss::series::undefined();
       if (decoder_features.defined()) {
         step_features = decoder_features.narrow_copy(1, step, 1);
       }
@@ -454,6 +471,89 @@ AutoregressiveForecaster& AutoregressiveForecaster::to(Platform platform) {
   PLUSS_CALL_GUARD();
   impl_->move_to(platform);
   return *this;
+}
+
+void AutoregressiveForecaster::save(std::string_view filepath) const {
+  PLUSS_CALL_GUARD();
+  PLUSS_CHECK(impl_ != nullptr && impl_->trained,
+              "pluss::ai::ice::models::AutoregressiveForecaster::save: model has not been trained.");
+  PLUSS_CHECK(!filepath.empty(),
+              "pluss::ai::ice::models::AutoregressiveForecaster::save: output path cannot be empty.");
+  const auto weights_path = std::string(filepath) + ".weights";
+  io::save_parameters(weights_path, impl_->all_parameters());
+
+  std::ostringstream out{};
+  out << kMagic << '\n';
+  write_num_line(out, "schema", kSchema);
+  write_num_line(out, "static_size", options_.static_size);
+  write_num_line(out, "encoder_size", options_.encoder_size);
+  write_num_line(out, "decoder_size", options_.decoder_size);
+  write_num_line(out, "encoder_length", options_.encoder_length);
+  write_num_line(out, "decoder_length", options_.decoder_length);
+  write_num_line(out, "hidden_size", options_.hidden_size);
+  write_num_line(out, "rnn_layers", options_.rnn_layers);
+  write_num_line(out, "dropout", options_.dropout);
+  write_categoricals(out, "static_categoricals", options_.static_categoricals);
+  write_categoricals(out, "encoder_categoricals", options_.encoder_categoricals);
+  write_categoricals(out, "decoder_categoricals", options_.decoder_categoricals);
+  write_num_line(out, "cfg_dtype", static_cast<int>(options_.cfg.dtype));
+  write_num_line(out, "cfg_platform", static_cast<int>(options_.cfg.platform));
+  write_num_line(out, "seed", options_.seed);
+
+  std::ofstream file{std::string(filepath)};
+  PLUSS_CHECK(file.good(),
+              "pluss::ai::ice::models::AutoregressiveForecaster::save: failed to open '" +
+                  std::string(filepath) + "'.");
+  file << out.str();
+  PLUSS_CHECK(file.good(),
+              "pluss::ai::ice::models::AutoregressiveForecaster::save: failed while writing '" +
+                  std::string(filepath) + "'.");
+}
+
+AutoregressiveForecaster AutoregressiveForecaster::load(std::string_view filepath) {
+  PLUSS_CALL_GUARD();
+  PLUSS_CHECK(!filepath.empty(),
+              "pluss::ai::ice::models::AutoregressiveForecaster::load: input path cannot be empty.");
+  std::ifstream file{std::string(filepath)};
+  PLUSS_CHECK(file.good(),
+              "pluss::ai::ice::models::AutoregressiveForecaster::load: failed to open '" +
+                  std::string(filepath) + "'.");
+  std::string magic{};
+  PLUSS_CHECK(std::getline(file, magic) && magic == kMagic,
+              "pluss::ai::ice::models::AutoregressiveForecaster::load: invalid model artifact header.");
+  std::ostringstream body{};
+  body << file.rdbuf();
+  const auto kv = parse_kv_body(body.str(), kLoadContext);
+  PLUSS_CHECK(require_i64(kv, "schema", kLoadContext) == kSchema,
+              "pluss::ai::ice::models::AutoregressiveForecaster::load: unsupported schema.");
+
+  AutoregressiveForecasterOptions options{};
+  options.static_size = require_i64(kv, "static_size", kLoadContext);
+  options.encoder_size = require_i64(kv, "encoder_size", kLoadContext);
+  options.decoder_size = require_i64(kv, "decoder_size", kLoadContext);
+  options.encoder_length = require_i64(kv, "encoder_length", kLoadContext);
+  options.decoder_length = require_i64(kv, "decoder_length", kLoadContext);
+  options.hidden_size = require_i64(kv, "hidden_size", kLoadContext);
+  options.rnn_layers = require_i64(kv, "rnn_layers", kLoadContext);
+  options.dropout = require_f64(kv, "dropout", kLoadContext);
+  options.static_categoricals = read_categoricals(kv, "static_categoricals", kLoadContext);
+  options.encoder_categoricals = read_categoricals(kv, "encoder_categoricals", kLoadContext);
+  options.decoder_categoricals = read_categoricals(kv, "decoder_categoricals", kLoadContext);
+  options.cfg = Config{}
+                    .with_dtype(static_cast<ScalarType>(require_i64(kv, "cfg_dtype", kLoadContext)))
+                    .with_platform(static_cast<Platform>(require_i64(kv, "cfg_platform", kLoadContext)));
+  options.seed = require_u64(kv, "seed", kLoadContext);
+
+  AutoregressiveForecaster model(options);
+  const auto weights_path = std::string(filepath) + ".weights";
+  io::load_parameters(weights_path, model.impl_->all_parameters());
+  for (auto* parameter : model.impl_->all_parameters()) {
+    parameter->tracks_slope_(false);
+    parameter->clear();
+  }
+  model.impl_->trained = true;
+  model.impl_->set_training(false);
+  return model;
 }
 
 void AutoregressiveForecaster::learn(const AutoregressiveBatch& train,

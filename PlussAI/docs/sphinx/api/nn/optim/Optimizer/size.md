@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
+<!-- pluss-signature-hash: 97501351b6eb -->
 
 # `pluss::ai::nn::optim::Optimizer::size`
 
@@ -8,47 +8,63 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+std::size_t nn::optim::Optimizer::size() const noexcept;
 ```
+
+## What It Does
+
+Returns the number of parameters this optimizer was constructed with --
+`parameters().size()`, provided directly so a caller does not need to
+reach through `parameters()` just to ask "how many". This is the count
+[`step`](step.md)'s `gradients` overload validates its argument against:
+passing a gradient list of any other length throws.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`std::size_t`. Always `> 0` for a successfully constructed optimizer --
+every constructor throws on an empty parameter list, so there is no
+"empty optimizer" state to observe.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None. `size` is `noexcept` and has no preconditions.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: `size()` alongside `parameters().size()` to confirm they
+agree, `size()` reflecting a `Module`'s full registered parameter count
+rather than a single layer's own, and the edge case every constructor
+rejects -- an empty parameter list.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+`size()` and `parameters().size()` always agree -- `size()` exists purely
+for convenience.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
+  namespace nn = pluss::ai::nn;
+  using pluss::Config;
   using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::Series;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const Config f32 = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
+  Series a = pluss::make_series(1.0F, f32);
+  Series b = pluss::make_series(2.0F, f32);
+
+  nn::optim::SGD optimizer(std::vector<Series*>{&a, &b});
+
+  std::cout << "size() = " << optimizer.size() << "\n";
+  std::cout << "parameters().size() = " << optimizer.parameters().size() << "\n";
 
   return 0;
 }
@@ -57,27 +73,33 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+size() = 2
+parameters().size() = 2
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+A two-layer `Schedule`'s combined parameter count -- `size()` reflects
+every registered parameter across every child `Fusion`, not just the one
+the optimizer might have been pointed at.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
+  namespace nn = pluss::ai::nn;
   using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const pluss::Config f32 = pluss::Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
+  nn::Schedule net;
+  net.append("a", nn::Fusion(3, 4, true, f32));
+  net.append("b", nn::Fusion(4, 2, true, f32));
+
+  nn::optim::SGD optimizer(*net);
+  std::cout << "size() = " << optimizer.size() << " (2 layers x (weight + bias) each)\n";
 
   return 0;
 }
@@ -86,27 +108,31 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+size() = 4 (2 layers x (weight + bias) each)
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Every optimizer constructor throws on an empty parameter list -- `size()`
+is never observably `0` on a successfully constructed optimizer.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai.h>
 
 #include <iostream>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace nn = pluss::ai::nn;
+  using pluss::Series;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  try {
+    const std::vector<Series*> empty{};
+    nn::optim::SGD optimizer(empty);
+  } catch (const std::exception& e) {
+    std::cout << "caught: " << e.what() << "\n";
+  }
 
   return 0;
 }
@@ -115,12 +141,14 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+caught: pluss::ai::nn::optim::Optimizer: expected non-empty parameter list
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`parameters`](parameters.md) -- the list `size()` counts.
+- [`step`](step.md) -- the `gradients` overload requires exactly this many
+  entries.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

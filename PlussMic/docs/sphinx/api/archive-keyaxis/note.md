@@ -73,7 +73,7 @@ s                        | Note         | Note             | 1       | [x]
 ## See Also
 
 - [`ArchiveKeyAxisAccessor::series`](series.md) / [`timeline()`](timeline.md) /
-  [`timeindex()`](timeindex.md): the sibling kind filters.
+  : the sibling kind filters.
 - [`CatalogKeyAxisAccessor::note`](../catalog-keyaxis/note.md): the single-catalog
   delegate this method applies to every catalog independently.
 - [`Archive::keyaxis`](../archive/keyaxis.md): the entry point this accessor is reached

@@ -14,9 +14,9 @@ Catalog CatalogTimelineAccessor::hour() const
 ## What It Does
 
 Extracts the hour-of-day (`0`-`23`) of each bound key's timestamp, replacing each
-`Timeline`- or `TimeIndex`-kind key with an `Int32` `Series` key.
+`Timeline`-kind key with an `Int32` `Series` key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -82,8 +82,8 @@ ts                       | Series       | Series[int32]    | 2       | [9, 23]
     <span class="label">Previous</span>
     <span class="title">fmt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="isnat.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">isnat</span>
   </a>
 </div>

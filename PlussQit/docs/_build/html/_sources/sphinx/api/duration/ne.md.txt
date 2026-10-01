@@ -61,14 +61,3 @@ data=true
 - [`eq`](eq.md): the comparison this negates.
 - [`lt`](lt.md), [`le`](le.md), [`gt`](gt.md), [`ge`](ge.md): the ordering
   comparisons.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="eq.html">
-    <span class="label">Previous</span>
-    <span class="title">eq</span>
-  </a>
-  <a class="next-link" href="lt.html">
-    <span class="label">Next</span>
-    <span class="title">lt</span>
-  </a>
-</div>

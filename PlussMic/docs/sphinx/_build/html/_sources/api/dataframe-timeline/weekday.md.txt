@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::weekday() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its day-of-week,
+Replaces every selected `Timeline` feature with its day-of-week,
 as a numeric `Series` — same feature name, same row order. Encoding is
 `0 = Monday` through `6 = Sunday`.
 
@@ -83,7 +83,7 @@ a Thursday (`3`); `"2024-07-06"` is a Saturday (`5`).
 - The encoding is Monday `0` through Sunday `6` — **not** the C/Python
   `tm_wday`-style Sunday-first convention some other libraries use.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.

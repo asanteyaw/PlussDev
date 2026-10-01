@@ -71,8 +71,6 @@ d                        | Timeline     | Timeline         | 2       | [2024-01-
 
 ## See Also
 
-- [`ArchiveCastAccessor::timeindex`](timeindex.md): the positional-index sibling
-  target.
 - [`CatalogCastAccessor::timeline`](../catalog-cast/timeline.md): the single-catalog
   delegate this method applies to every catalog.
 - [`Archive::tl`](../archive/tl.md): the richer accessor for feature extraction once a
@@ -80,8 +78,4 @@ d                        | Timeline     | Timeline         | 2       | [2024-01-
 - [`Archive::cast`](../archive/cast.md): the entry point this accessor is reached from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

@@ -2,6 +2,11 @@
 # on every build -- never hand-edit, never commit)
 **/_local/
 
+# PlussBI dashboard CSS/JS/HTML embedded into a C++ header at CMake
+# configure time from PlussTils/src/PlussBI/frontend/ (see that
+# directory's CMakeLists.txt) -- never hand-edit, never commit.
+PlussTils/include/pluss/bi/dashboard_assets.h
+
 # Prerequisites
 *.d
 
@@ -67,6 +72,10 @@ compile_commands.json
 # Research / calibration artifacts
 # ===================================
 data/
+# Not a research/calibration dump -- the nn API reference's "data" family
+# doc source tree (pluss::loader). A bare `data/` above matches this
+# directory name at any depth, so it needs an explicit exception.
+!/PlussAI/docs/sphinx/api/nn/data/
 datasets/
 *.csv
 *.parquet

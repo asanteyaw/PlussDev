@@ -1,9 +1,22 @@
 #include "CodeH/core/Duration.h"
 
+#include "pluss/codeh/internal/timeline_factory_detail.h"
+
 #include <limits>
 #include <cstring>
 
 namespace pluss::codeh {
+
+namespace {
+
+std::int64_t checked_duration_nanos(__int128 value, const char* operation) {
+  CODEM_CHECK(value >= (std::numeric_limits<std::int64_t>::min)() + 1 &&
+                  value <= (std::numeric_limits<std::int64_t>::max)(),
+              std::string("Duration::") + operation + ": nanosecond overflow");
+  return static_cast<std::int64_t>(value);
+}
+
+} // namespace
 
 static void check_duration_core(const pluss::codem::Series& s) {
   CODEM_CHECK(s.defined(), "Duration: underlying Series is undefined");
@@ -37,7 +50,9 @@ Duration Duration::operator+(const Duration& other) const {
   it.for_each_index([&](std::int64_t /*lin*/, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     const auto av = a[ao];
     const auto bv = b[bo];
-    o[oo] = (av == kNaT || bv == kNaT) ? kNaT : (av + bv);
+    o[oo] = (av == kNaT || bv == kNaT)
+        ? kNaT
+        : checked_duration_nanos(static_cast<__int128>(av) + bv, "operator+");
   });
 
   return Duration(std::move(out));
@@ -58,7 +73,9 @@ Duration Duration::operator-(const Duration& other) const {
   it.for_each_index([&](std::int64_t /*lin*/, std::int64_t ao, std::int64_t bo, std::int64_t oo) {
     const auto av = a[ao];
     const auto bv = b[bo];
-    o[oo] = (av == kNaT || bv == kNaT) ? kNaT : (av - bv);
+    o[oo] = (av == kNaT || bv == kNaT)
+        ? kNaT
+        : checked_duration_nanos(static_cast<__int128>(av) - bv, "operator-");
   });
 
   return Duration(std::move(out));
@@ -91,11 +108,23 @@ Duration Duration::range(const Duration& start, const Duration& end, const Durat
   CODEM_CHECK(s != kNaT && e != kNaT && inc != kNaT, "Duration::range does not allow NaT args");
   CODEM_CHECK(inc != 0, "Duration::range step must be non-zero");
 
+  const bool advances = inc > 0 ? s <= e : s >= e;
+  __int128 count_wide = 0;
+  if (advances) {
+    const auto distance = inc > 0 ? static_cast<__int128>(e) - s
+                                  : static_cast<__int128>(s) - e;
+    const auto stride = inc > 0 ? static_cast<__int128>(inc)
+                                : -static_cast<__int128>(inc);
+    count_wide = distance / stride + 1;
+  }
+  CODEM_CHECK(count_wide <= (std::numeric_limits<std::int64_t>::max)(),
+              "Duration::range element count overflows int64");
+  const auto count = static_cast<std::int64_t>(count_wide);
   std::vector<std::int64_t> flat;
-  if (inc > 0) {
-    for (std::int64_t v = s; v <= e; v += inc) flat.push_back(v);
-  } else {
-    for (std::int64_t v = s; v >= e; v += inc) flat.push_back(v);
+  flat.reserve(static_cast<std::size_t>(count));
+  for (std::int64_t i = 0; i < count; ++i) {
+    flat.push_back(static_cast<std::int64_t>(
+        static_cast<__int128>(s) + static_cast<__int128>(i) * inc));
   }
 
   auto out = pluss::codem::Series::empty({(std::int64_t)flat.size()}, pluss::codem::ScalarType::Int64);
@@ -108,14 +137,11 @@ namespace ops_internal {
 Duration duration_from_nanos(std::span<const std::int64_t> nanos_flat,
                              std::span<const std::int64_t> sizes) {
   std::vector<std::int64_t> shape(sizes.begin(), sizes.end());
-  if (shape.empty()) {
-    CODEM_CHECK(nanos_flat.size() == 1, "duration_from_nanos: scalar expects 1 element");
-  } else {
-    std::int64_t prod = 1;
-    for (const auto s : shape) prod *= s;
-    CODEM_CHECK(prod == static_cast<std::int64_t>(nanos_flat.size()),
-                "duration_from_nanos: flat size mismatch");
-  }
+  const auto expected = pluss::codeh::factory_detail::checked_numel(
+      pluss::msharp::RangeView::Int(shape), "Duration construction");
+  CODEM_CHECK(expected == static_cast<std::int64_t>(nanos_flat.size()),
+              shape.empty() ? "duration_from_nanos: scalar expects 1 element"
+                            : "duration_from_nanos: flat size mismatch");
 
   auto out = pluss::codem::Series::empty(shape, pluss::codem::ScalarType::Int64);
   if (!nanos_flat.empty()) {

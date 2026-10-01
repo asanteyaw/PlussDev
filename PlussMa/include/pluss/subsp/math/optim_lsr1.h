@@ -73,7 +73,7 @@ struct Lsr1Options {
 struct Lsr1State {
   std::vector<Series> s_history{};   // each a flat 1-D Series, most-recent last
   std::vector<Series> y_history{};
-  Series prev_grad_flat{};
+  Series prev_grad_flat = pluss::series::undefined();
   double gamma{0.0};                 // 0 => uninitialized, seeded from options.initial_gamma on first use
   double radius{0.0};                // 0 => uninitialized, seeded from options.initial_radius on first use
   std::int64_t step{0};
@@ -108,9 +108,9 @@ struct Lsr1SolveOptions {
 };
 
 struct Lsr1Result {
-  Series params{};                   // flat solution vector
+  Series params = pluss::series::undefined();                   // flat solution vector
   Lsr1State state{};
-  Series objective{};
+  Series objective = pluss::series::undefined();
   std::int64_t iteration{0};
   std::int64_t function_evaluations{0};
   double objective_value{std::numeric_limits<double>::infinity()};
@@ -263,7 +263,7 @@ inline bool lsr1_lambda_hat_(const std::vector<double>& S, const std::vector<dou
   const auto dllt = lsr1_dllt_(sty, k);
 
   Series sts_series = ll::detail::matrix_from_row_major_(sts, k, k);
-  Series chol_upper;
+  Series chol_upper = pluss::series::undefined();
   try {
     chol_upper = ll::cholesky(sts_series, /*upper=*/true);
   } catch (const std::exception&) {
@@ -309,9 +309,9 @@ struct Lsr1Compact;
 inline std::vector<double> lsr1_apply_b_(const Lsr1Compact& compact, const std::vector<double>& v, std::int64_t n);
 
 struct Lsr1Compact {
-  Series Q{};                 // n x k, orthonormal columns (thin QR of Psi = Y - gamma*S)
-  Series R{};                 // k x k upper triangular (thin QR factor)
-  Series U{};                 // k x k eigenvectors of R*M*R^T (ascending eigenvalues)
+  Series Q = pluss::series::undefined();                 // n x k, orthonormal columns (thin QR of Psi = Y - gamma*S)
+  Series R = pluss::series::undefined();                 // k x k upper triangular (thin QR factor)
+  Series U = pluss::series::undefined();                 // k x k eigenvectors of R*M*R^T (ascending eigenvalues)
   std::vector<double> lambda_hat{};  // k eigenvalues of R*M*R^T, ascending
   double gamma{0.0};
   std::int64_t k{0};
@@ -354,7 +354,7 @@ inline Lsr1Compact lsr1_build_compact_(const std::vector<double>& S, const std::
   minv = lsr1_mat_axpy_(minv, -gamma, sts);  // M^{-1} = D+L+L^T - gamma*S^TS
 
   Series minv_series = ll::detail::matrix_from_row_major_(minv, k, k);
-  Series m_series;
+  Series m_series = pluss::series::undefined();
   try {
     m_series = ll::inverse(minv_series);
   } catch (const std::exception&) {
@@ -829,8 +829,8 @@ inline Lsr1Result l_sr1_trust_region_core_(
     // convergence argument (Theorem 1's proof only invokes descent-direction + smoothness).
     const double gtd = detail::lsr1_dot_(g, p_dir);
     double alpha = 1.0;
-    Series x_next;
-    Series grad_next;
+    Series x_next = pluss::series::undefined();
+    Series grad_next = pluss::series::undefined();
     double objective_next = 0.0;
     bool accepted = false;
     // Track the best (smallest-objective) finite trial seen, even if it doesn't satisfy Armijo's
@@ -838,8 +838,8 @@ inline Lsr1Result l_sr1_trust_region_core_(
     bool have_best = false;
     double best_alpha = 0.0;
     double best_objective = objective_value;
-    Series best_x;
-    Series best_grad;
+    Series best_x = pluss::series::undefined();
+    Series best_grad = pluss::series::undefined();
     for (std::int64_t ls = 0; ls < opts.max_line_search_iterations; ++ls) {
       Series trial = x.add(p_series.mul(alpha));
       auto [trial_value, trial_grad] = eval(trial);

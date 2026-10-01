@@ -9,6 +9,7 @@
 ```cpp
 Series Series::digamma() const
 Series& Series::digamma_()
+Series& Series::digamma_() const
 ```
 
 ## What It Does
@@ -74,6 +75,31 @@ a tracked `digamma()` always contributes a positive local slope.
 At zero and negative-integer poles, trigamma diverges to `+inf`. A reverse pass
 through such an input therefore produces an infinite local sensitivity even
 when the corresponding digamma value is `NaN` at a negative integer.
+
+## In-Place Form
+
+`digamma_()` is the in-place sibling of [`digamma()`](digamma.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `digamma_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 5.0});
+
+auto& ref = x.digamma_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.57721566, 0.42278434, 1.5061177]
+same object: true
+```
 
 ## Examples
 

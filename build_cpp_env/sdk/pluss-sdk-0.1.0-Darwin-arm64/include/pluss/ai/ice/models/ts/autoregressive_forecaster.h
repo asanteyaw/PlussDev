@@ -68,26 +68,26 @@ struct AutoregressiveForecasterOptions {
 };
 
 struct AutoregressiveBatch {
-  Series static_inputs = Series::undefined();
-  Series encoder_inputs = Series::undefined();
-  Series decoder_inputs = Series::undefined();
-  Series encoder_target = Series::undefined();
-  Series target = Series::undefined();
+  Series static_inputs = pluss::series::undefined();
+  Series encoder_inputs = pluss::series::undefined();
+  Series decoder_inputs = pluss::series::undefined();
+  Series encoder_target = pluss::series::undefined();
+  Series target = pluss::series::undefined();
 
   AutoregressiveBatch() = default;
   explicit AutoregressiveBatch(const data::Batch& batch)
       : static_inputs(batch.has(data::field_names::static_inputs)
                           ? batch.field(data::field_names::static_inputs)
-                          : Series::undefined()),
+                          : pluss::series::undefined()),
         encoder_inputs(batch.has(data::field_names::encoder_inputs)
                            ? batch.field(data::field_names::encoder_inputs)
-                           : Series::undefined()),
+                           : pluss::series::undefined()),
         decoder_inputs(batch.has(data::field_names::decoder_inputs)
                            ? batch.field(data::field_names::decoder_inputs)
-                           : Series::undefined()),
+                           : pluss::series::undefined()),
         encoder_target(batch.has(data::field_names::encoder_target)
                            ? batch.field(data::field_names::encoder_target)
-                           : Series::undefined()),
+                           : pluss::series::undefined()),
         target(batch.target()) {}
 
   explicit AutoregressiveBatch(const data::TimeSeriesBatch& batch)
@@ -121,8 +121,8 @@ struct AutoregressiveTrainOptions {
 };
 
 struct GaussianForecast {
-  Series mean = Series::undefined();   // [N, decoder_length]
-  Series scale = Series::undefined();  // [N, decoder_length]
+  Series mean = pluss::series::undefined();   // [N, decoder_length]
+  Series scale = pluss::series::undefined();  // [N, decoder_length]
 };
 
 class AutoregressiveForecaster final {

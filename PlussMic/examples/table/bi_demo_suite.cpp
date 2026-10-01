@@ -7,6 +7,8 @@
 #include "pluss/pluss.h"
 #include "pluss/tils.h"
 
+#include "pluss/bi/serve.h"
+
 namespace {
 
 using pluss::make_note;
@@ -382,6 +384,19 @@ int show_overview_in_browser() {
   return overview.show("PlussBI Credit Overview", 1480, 980, true) ? 0 : 1;
 }
 
+int serve_overview(std::int64_t port, pluss::bi::DashboardChrome chrome) {
+  const auto nexus = make_credit_nexus();
+  auto overview = make_overview_studio(nexus);
+
+  // Phase 2: a genuinely live dashboard. Filter controls in the browser
+  // POST to `/api/filter` and redraw from the server's response instead of
+  // requiring a new C++ process / static re-export. `chrome` picks between
+  // the fixed navbar+sidebar layout and a plain, flat, no-chrome document.
+  std::cout << "starting the live PlussBI server\n";
+  overview.serve("PlussBI Credit Overview", 1480, 980, port, true, chrome);
+  return 0;
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -396,7 +411,15 @@ int main(int argc, char** argv) {
   if (mode == "browser") {
     return show_overview_in_browser();
   }
+  if (mode == "serve") {
+    const std::int64_t port = argc > 2 ? std::stoll(argv[2]) : 0;
+    const std::string chrome_arg = argc > 3 ? argv[3] : "sidebar";
+    const auto chrome = chrome_arg == "none"
+        ? pluss::bi::DashboardChrome::None
+        : pluss::bi::DashboardChrome::Sidebar;
+    return serve_overview(port, chrome);
+  }
 
-  std::cerr << "usage: plussmic_bi_demo_suite [suite|show|browser]\n";
+  std::cerr << "usage: plussmic_bi_demo_suite [suite|show|browser|serve [port] [sidebar|none]]\n";
   return 1;
 }

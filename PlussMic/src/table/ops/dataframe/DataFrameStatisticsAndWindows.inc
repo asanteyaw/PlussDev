@@ -117,8 +117,7 @@ Thread pad_modes_(const Thread& source, std::int64_t size) {
         source.as_series().unite({values}, 0, true),
         source.notnull().as_series().unite({valid_padding}, 0, true));
   }
-  if (source.kind() == ThreadKind::Timeline ||
-      source.kind() == ThreadKind::TimeIndex) {
+  if (source.kind() == ThreadKind::Timeline || source.kind() == ThreadKind::Duration) {
     std::vector<std::int64_t> indices;
     indices.reserve(static_cast<std::size_t>(size));
     for (std::int64_t i = 0; i < source.size(); ++i) {
@@ -129,10 +128,9 @@ Thread pad_modes_(const Thread& source, std::int64_t size) {
     auto output_valid =
         source.notnull().as_series().unite(
             {valid_padding}, 0, true);
-    const auto platform =
-        output.kind() == ThreadKind::Timeline
-            ? output.as_timeline().epoch_nanos().platform()
-            : output.as_timeindex().timeline().epoch_nanos().platform();
+    const auto platform = output.kind() == ThreadKind::Timeline
+                              ? output.as_timeline().epoch_nanos().platform()
+                              : pluss::codem::Platform::CPU;
     if (output_valid.platform() != platform) {
       output_valid = output_valid.to(platform);
     }
@@ -167,7 +165,7 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
     auto values = source.as_series().to(statistics_compute_type_(source.as_series()));
     auto valid = source.notnull().as_series().to(values.platform());
     const auto invalid = valid.logical_not();
-    pluss::Series result;
+    pluss::Series result = pluss::series::undefined();
     switch (op) {
       case RunningOp_::Sum:
         result = values.where(invalid, 0.0).cumsum(0);
@@ -220,7 +218,7 @@ DataFrame running_statistic_matrix_(const detail::DataFrameImpl& src,
   }
   const auto invalid = valid.logical_not();
 
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
   switch (op) {
     case RunningOp_::Sum:
       result = values.where(invalid, 0.0).cumsum(axis);
@@ -302,7 +300,7 @@ Thread moving_statistic_(const Thread& source,
 
   auto rolling_count = prefix_difference(counts);
   auto out_valid = rolling_count.ge(static_cast<double>(options.min_count));
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
   if (op == MovingOp_::Sum || op == MovingOp_::Mean ||
       op == MovingOp_::Variance || op == MovingOp_::Deviation) {
     auto sums = prefix_difference(prepared);
@@ -415,7 +413,7 @@ Thread moving_moment_(const Thread& source,
       (window_values - means.reshape({n, 1}))
           .where(window_valid.logical_not(), 0.0);
   const auto squares = centered * centered;
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
   if (op == MovingMomentOp_::MeanError) {
     result =
         (squares.sum(1) /
@@ -572,7 +570,7 @@ DataFrame DataFrame::mode(bool drop_nulls) const {
          is_numeric_series_type(source.as_series())) ||
         source.kind() == ThreadKind::Note ||
         source.kind() == ThreadKind::Timeline ||
-        source.kind() == ThreadKind::TimeIndex) {
+        source.kind() == ThreadKind::Duration) {
       auto values = source.mode(drop_nulls);
       output_size = std::max(output_size, values.size());
       modes.emplace_back(src.names_[i], std::move(values));

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Shifts every row of the bound thread forward (or backward, if <code class="docutils literal notranslate"><span class="pre">periods</span></code> is
-negative) by <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">*</span> <span class="pre">freq</span></code> — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind.
+negative) by <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">*</span> <span class="pre">freq</span></code> — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind.
 Month/year shifts are calendar-aware: a day-of-month that doesn’t exist in the
 target month is clamped down to that month’s last valid day (never rolls over
 into the next month).</p>
@@ -68,7 +68,7 @@ moves backward.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread, same length as the bound thread,
+A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, same length as the bound thread,
 shifted by <code class="docutils literal notranslate"><span class="pre">periods</span> <span class="pre">*</span> <span class="pre">freq</span></code>.</p>
 </section>
 <section id="examples">
@@ -167,7 +167,7 @@ ptype: Timeline
 overflowing into a later month; fixed-unit shifts (<code class="docutils literal notranslate"><span class="pre">days</span></code> and finer) are
 exact elapsed-time arithmetic with no clamping concern.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code> cannot be empty, and an unrecognized string throws.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> regardless of <code class="docutils literal notranslate"><span class="pre">periods</span></code>/<code class="docutils literal notranslate"><span class="pre">freq</span></code>.</p></li>
 </ul>

@@ -11,6 +11,8 @@ Series::fmod(const Series& other) const -> Series
 Series::fmod(double other) const -> Series
 Series& Series::fmod_(const Series& other)
 Series& Series::fmod_(double other)
+Series& Series::fmod_(const Series& rhs) const
+Series& Series::fmod_(double rhs) const
 ```
 
 ## What It Does
@@ -59,6 +61,43 @@ d/db fmod(a, b) = -trunc(a / b)
 The backward passes the upstream sensitivity straight through to the dividend
 and routes `-trunc(a / b)` to the divisor. Gradient does not flow through the
 discrete step where `trunc(a / b)` changes.
+
+## In-Place Form
+
+`fmod_()` is the in-place sibling of [`fmod()`](fmod.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `fmod_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({10.0, 11.0, -7.0}, {3});
+auto y = pluss::make_series({3.0, 3.0, 3.0}, {3});
+
+x.fmod_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, -1]
+```
+
+```cpp
+auto x = pluss::make_series({10.0, 11.0, -7.0}, {3});
+x.fmod_(3.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, -1]
+```
 
 ## Examples
 

@@ -85,6 +85,36 @@ int main() {
   }
   std::cout << "\n";
 
+  heading("min_pair_rows");
+  const auto [row_values, row_indices] = lows.min_pair(1);
+  std::cout << "values=" << row_values << "\n";
+  std::cout << "indices=" << row_indices << "\n\n";
+
+  auto min_pair_ties = pluss::make_series({
+      {1.0, 1.0, 5.0},
+      {-4.0, -4.0, 2.0},
+  });
+  min_pair_ties.tracks_slope_(true);
+  const auto tied_min_pair = min_pair_ties.min_pair(-1, true);
+  tied_min_pair.first.sum().reverse();
+  heading("min_pair_keepdim_first_tie_and_gradient");
+  std::cout << "values=" << tied_min_pair.first << "\n";
+  std::cout << "indices=" << tied_min_pair.second << "\n";
+  std::cout << "dx=" << min_pair_ties.sensitivity() << "\n\n";
+
+  heading("min_pair_scalar");
+  const auto min_scalar_pair = pluss::make_series(42.0).min_pair(-1);
+  std::cout << "value=" << min_scalar_pair.first << "\n";
+  std::cout << "index=" << min_scalar_pair.second << "\n\n";
+
+  heading("min_pair_empty_axis_error");
+  try {
+    std::cout << pluss::series::zeros({2, 0}).min_pair(1).first << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
   auto highs = pluss::make_series({
       {1.0, 7.0, 3.0},
       {9.0, 7.0, 6.0},

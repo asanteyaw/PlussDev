@@ -9,6 +9,7 @@
 ```cpp
 Series::square() const -> Series
 Series& Series::square_()
+Series& Series::square_() const
 ```
 
 ## What It Does
@@ -41,6 +42,31 @@ None.
 
 ```
 d/dx square(x) = 2 * x
+```
+
+## In-Place Form
+
+`square_()` is the in-place sibling of [`square()`](square.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `square_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({2.0, -3.0});
+
+auto& ref = x.square_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[4, 9]
+same object: true
 ```
 
 ## Examples

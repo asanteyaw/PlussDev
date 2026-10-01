@@ -18,12 +18,12 @@
 namespace pluss::codeh::factory_detail {
 
 inline void check_rank(pluss::detail::ShapeSpec sizes, std::string_view where) {
-  CODEM_CHECK(sizes.rank() <= 3, std::string(where) + ": Timeline supports ranks up to 3");
+  CODEM_CHECK(sizes.rank() <= 3, std::string(where) + ": supports ranks up to 3");
 }
 
 inline std::int64_t checked_numel(pluss::msharp::RangeView::Int sizes,
                                   std::string_view where) {
-  CODEM_CHECK(sizes.size() <= 3, std::string(where) + ": Timeline supports ranks up to 3");
+  CODEM_CHECK(sizes.size() <= 3, std::string(where) + ": supports ranks up to 3");
   std::int64_t result = 1;
   for (const auto extent : sizes) {
     CODEM_CHECK(extent >= 0, std::string(where) + ": shape extents must be non-negative");

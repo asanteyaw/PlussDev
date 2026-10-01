@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b6f27cc624b1 -->
+<!-- pluss-signature-hash: 2ec68616118d -->
 <section id="thread-fillnull">
 <h1>Thread::fillnull_<a class="headerlink" href="#thread-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -46,7 +46,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
 <span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
 <span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
-<span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -61,7 +61,7 @@ mutation clones the storage first, so the other thread is unaffected. See Exampl
 <p class="admonition-title">Note</p>
 <p>Only the double overload is genuinely in-place
 The <code class="docutils literal notranslate"><span class="pre">double</span></code> overload mutates the underlying <code class="docutils literal notranslate"><span class="pre">Series</span></code> storage directly through the
-copy-on-write path. The <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> overloads are
+copy-on-write path. The <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and <code class="docutils literal notranslate"><span class="pre">Duration</span></code> overloads are
 implemented as <code class="docutils literal notranslate"><span class="pre">*this</span> <span class="pre">=</span> <span class="pre">fillnull(value);</span></code> — they call the functional
 <a class="reference internal" href="fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code></span></a> and reassign the result to <code class="docutils literal notranslate"><span class="pre">*this</span></code>. The end result and
 copy-on-write behavior are the same either way; only the internal mechanism differs.</p>

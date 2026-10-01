@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 650e6a37b70c -->
+<!-- pluss-signature-hash: 4709cc40a0b9 -->
 
 # DataFrame::replace
 
@@ -31,9 +31,9 @@ DataFrame::replace(const pluss::Timeline& from, const pluss::Timeline& to, pluss
 DataFrame::replace(const pluss::Timeline& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
 DataFrame::replace(pluss::null_t from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
 
-DataFrame::replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const pluss::TimeIndex& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, const pluss::TimeIndex& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame::replace(const pluss::Duration& from, const pluss::Duration& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame::replace(const pluss::Duration& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame::replace(pluss::null_t from, const pluss::Duration& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
 ```
 
 Every overload above except the two `const char*` overloads also has a template sibling
@@ -51,10 +51,10 @@ Finds a specific value (`from`) across compatible features and rewrites every ma
 cell to a replacement value (`to`), returning the updated frame. The long overload list
 looks intimidating, but it collapses into one rule: **the type of `from` decides which
 feature kind participates**. Pass a `double` and only numeric `Series` features are
-searched; pass a string and only `Note` features are searched; pass a `Timeline` /
-`TimeIndex` and only that temporal kind is searched. Features of any other kind are left
-completely alone, the same way [`fillnull()`](fillnull.md) and
-[`astype()`](astype.md) restrict themselves by dtype.
+searched; pass a string and only `Note` features are searched; pass a `Timeline` and
+only `Timeline` features are searched; pass a `Duration` and only `Duration` features
+are searched. Features of any other kind are left completely alone, the same way
+[`fillnull()`](fillnull.md) and [`astype()`](astype.md) restrict themselves by dtype.
 
 The other half of the rule concerns `pluss::series::null` (of type `pluss::null_t`), the
 project's null-sentinel constant: pass it as `to` to turn matched cells into missing
@@ -65,7 +65,7 @@ alternative to a broader [`fillnull(0.0)`](fillnull.md) call).
 ## Parameters
 
 **from** (`double` / `std::string_view` / `const char*` / `const pluss::Series&` /
-`const pluss::Note&` / `const pluss::Timeline&` / `const pluss::TimeIndex&` /
+`const pluss::Note&` / `const pluss::Timeline&` / `const pluss::Duration&` /
 `pluss::null_t`)
 
 The value to search for. Its type selects which feature kind participates in the search;

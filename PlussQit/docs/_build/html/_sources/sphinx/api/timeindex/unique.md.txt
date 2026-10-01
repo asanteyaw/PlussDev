@@ -52,9 +52,10 @@ std::cout << pluss::timeindex::print(vocab) << "\n";
 
 ## Notes
 
-- `unique()` removes repetition and returns a sorted canonical axis.
+- `unique()` removes repetition while retaining the first occurrence order.
+  Call `sort()` afterward when a canonical increasing axis is required.
 - If you only want to test for duplicates without materializing a new axis,
-  use `is_unique()` or `has_duplicates()`.
+  negate `is_unique()`.
 
 ## See Also
 
@@ -62,12 +63,12 @@ std::cout << pluss::timeindex::print(vocab) << "\n";
 - [`TimeIndex::sort`](sort.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort.html">
+  <a class="prev-link" href="union_.html">
     <span class="label">Previous</span>
-    <span class="title">sort</span>
+    <span class="title">union_</span>
   </a>
-  <a class="next-link" href="argsort.html">
+  <a class="next-link" href="../../timeindex_api_reference.html">
     <span class="label">Next</span>
-    <span class="title">argsort</span>
+    <span class="title">TimeIndex API Reference</span>
   </a>
 </div>

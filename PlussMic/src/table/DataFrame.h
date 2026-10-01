@@ -81,6 +81,73 @@ decltype(auto) with_stack_name_views(const LeftRange& left, const RightRange& ri
 namespace detail {
 class DataFrameImpl;
 struct GroupStateCache;
+
+struct CaseSelector {
+  enum class Kind : std::uint8_t {
+    PositionScalar = 0,
+    PositionSlice = 1,
+    PositionList = 2,
+    LabelScalar = 3,
+    LabelSlice = 4,
+    LabelList = 5,
+    Mask = 6,
+  };
+
+  Kind kind{Kind::PositionSlice};
+  std::int64_t first{0};
+  std::int64_t second{0};
+  std::vector<std::int64_t> positions{};
+  std::vector<std::string> label_values{};
+  Thread mask{};
+
+  static CaseSelector at(std::int64_t row);
+  static CaseSelector slice(std::int64_t start, std::int64_t stop);
+  static CaseSelector take(std::initializer_list<std::int64_t> rows);
+  static CaseSelector take(pluss::RangeView<std::int64_t> rows);
+  static CaseSelector label(std::string_view value);
+  static CaseSelector label(const char* value);
+  static CaseSelector label(std::int64_t value);
+  static CaseSelector label(double value);
+  static CaseSelector labels(std::initializer_list<std::string_view> values);
+  static CaseSelector labels(pluss::RangeView<std::string_view> values);
+  static CaseSelector labels(std::initializer_list<std::int64_t> values);
+  static CaseSelector labels(pluss::RangeView<std::int64_t> values);
+  static CaseSelector labels(const Thread& values);
+  static CaseSelector span(std::string_view start, std::string_view stop);
+  static CaseSelector span(std::int64_t start, std::int64_t stop);
+  static CaseSelector span(double start, double stop);
+  static CaseSelector span(const Thread& start, const Thread& stop);
+  static CaseSelector where(const Thread& values);
+};
+
+struct FeatureSelector {
+  enum class Kind : std::uint8_t {
+    All = 0,
+    PositionScalar = 1,
+    PositionSlice = 2,
+    PositionList = 3,
+    NameScalar = 4,
+    NameSlice = 5,
+    NameList = 6,
+  };
+
+  Kind kind{Kind::All};
+  std::int64_t first{0};
+  std::int64_t second{0};
+  std::vector<std::int64_t> positions{};
+  std::vector<std::string> name_values{};
+
+  static FeatureSelector all();
+  static FeatureSelector at(std::int64_t position);
+  static FeatureSelector slice(std::int64_t start, std::int64_t stop);
+  static FeatureSelector take(std::initializer_list<std::int64_t> positions);
+  static FeatureSelector take(pluss::RangeView<std::int64_t> positions);
+  static FeatureSelector name(std::string_view value);
+  static FeatureSelector name(const char* value);
+  static FeatureSelector names(std::initializer_list<std::string_view> values);
+  static FeatureSelector names(pluss::RangeView<std::string_view> values);
+  static FeatureSelector span(std::string_view start, std::string_view stop);
+};
 }
 class DataFrame;
 class DataFrameView;
@@ -90,6 +157,7 @@ class DataFrameNoteAccessor;
 class DataFrameTimelineAccessor;
 class DataFrameLabelAccessor;
 class DataFrameFeatureAxisAccessor;
+class DataFrameCaseStudyAccessor;
 class DataFrameCastAccessor;
 class DataFrameGroupBuilder;
 class DataFrameGrouped;
@@ -212,18 +280,18 @@ public:
       std::vector<pluss::Series>,
       std::vector<pluss::Note>,
       std::vector<pluss::Timeline>,
-      std::vector<pluss::TimeIndex>> {
+      std::vector<pluss::Duration>> {
     using Base = std::tuple<
         std::vector<pluss::Series>,
         std::vector<pluss::Note>,
         std::vector<pluss::Timeline>,
-        std::vector<pluss::TimeIndex>>;
+        std::vector<pluss::Duration>>;
     using Base::Base;
 
     std::span<const pluss::Series> series_span() const noexcept { return std::get<0>(*this); }
     std::span<const pluss::Note> note_span() const noexcept { return std::get<1>(*this); }
     std::span<const pluss::Timeline> timeline_span() const noexcept { return std::get<2>(*this); }
-    std::span<const pluss::TimeIndex> timeindex_span() const noexcept { return std::get<3>(*this); }
+    std::span<const pluss::Duration> duration_span() const noexcept { return std::get<3>(*this); }
 
     std::size_t size() const noexcept {
       return std::get<0>(*this).size() + std::get<1>(*this).size()
@@ -233,7 +301,7 @@ public:
     pluss::Series as_series() const;
     pluss::Note as_note() const;
     pluss::Timeline as_timeline() const;
-    pluss::TimeIndex as_timeindex() const;
+    pluss::Duration as_duration() const;
   };
 
   class DTypes {
@@ -267,7 +335,6 @@ public:
     LetSlot& operator=(const pluss::Series& value);
     LetSlot& operator=(const pluss::Note& value);
     LetSlot& operator=(const pluss::Timeline& value);
-    LetSlot& operator=(const pluss::TimeIndex& value);
     LetSlot& operator=(const DataFrame& frame);
 
   private:
@@ -572,74 +639,6 @@ public:
     }
   };
 
-  struct Case {
-    enum class Kind : std::uint8_t {
-      PositionScalar = 0,
-      PositionSlice = 1,
-      PositionList = 2,
-      LabelScalar = 3,
-      LabelSlice = 4,
-      LabelList = 5,
-      Mask = 6,
-    };
-
-    Kind kind{Kind::PositionSlice};
-    std::int64_t first{0};
-    std::int64_t second{0};
-    std::vector<std::int64_t> positions{};
-    std::vector<std::string> label_values{};
-    Thread mask{};
-
-    static Case at(std::int64_t row);
-    static Case slice(std::int64_t start, std::int64_t stop);
-    static Case take(std::initializer_list<std::int64_t> rows);
-    static Case take(pluss::RangeView<std::int64_t> rows);
-    static Case label(std::string_view value);
-    static Case label(const char* value);
-    static Case label(std::int64_t value);
-    static Case label(double value);
-    static Case labels(std::initializer_list<std::string_view> values);
-    static Case labels(pluss::RangeView<std::string_view> values);
-    static Case labels(std::initializer_list<std::int64_t> values);
-    static Case labels(pluss::RangeView<std::int64_t> values);
-    static Case labels(const Thread& values);
-    static Case span(std::string_view start, std::string_view stop);
-    static Case span(std::int64_t start, std::int64_t stop);
-    static Case span(double start, double stop);
-    static Case span(const Thread& start, const Thread& stop);
-    static Case where(const Thread& values);
-    static Case where(const pluss::Series& values);
-  };
-
-  struct Feat {
-    enum class Kind : std::uint8_t {
-      All = 0,
-      PositionScalar = 1,
-      PositionSlice = 2,
-      PositionList = 3,
-      NameScalar = 4,
-      NameSlice = 5,
-      NameList = 6,
-    };
-
-    Kind kind{Kind::All};
-    std::int64_t first{0};
-    std::int64_t second{0};
-    std::vector<std::int64_t> positions{};
-    std::vector<std::string> name_values{};
-
-    static Feat all();
-    static Feat at(std::int64_t position);
-    static Feat slice(std::int64_t start, std::int64_t stop);
-    static Feat take(std::initializer_list<std::int64_t> positions);
-    static Feat take(pluss::RangeView<std::int64_t> positions);
-    static Feat name(std::string_view value);
-    static Feat name(const char* value);
-    static Feat names(std::initializer_list<std::string_view> values);
-    static Feat names(pluss::RangeView<std::string_view> values);
-    static Feat span(std::string_view start, std::string_view stop);
-  };
-
   struct CastSpec {
     std::string feature;
     ThreadCastTarget target{ThreadCastTarget::Series};
@@ -845,9 +844,7 @@ public:
   DTypes dtypes() const;
   DataFrameLabelAccessor label() const;
   DataFrameFeatureAxisAccessor feataxis() const;
-  DataFrame case_study(const Case& rows) const;
-  DataFrame case_study(const CasePick& pick) const;
-  DataFrame case_study(const Case& rows, const Feat& features) const;
+  DataFrameCaseStudyAccessor case_study() const;
   std::optional<Thread> get(std::string_view feature_name) const;
 
   std::string title() const;
@@ -1469,10 +1466,11 @@ public:
   DataFrame fillnull(const pluss::Timeline& value, const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return fillnull(value, names); });
   }
-  DataFrame fillnull(const pluss::TimeIndex& value) const;
-  DataFrame fillnull(const pluss::TimeIndex& value, pluss::msharp::RangeView::Of<std::string_view> features) const;
+  DataFrame fillnull(const pluss::Duration& value) const;
+  DataFrame fillnull(const pluss::Duration& value,
+                     pluss::msharp::RangeView::Of<std::string_view> features) const;
   template <detail::StringViewNameRange NameRange>
-  DataFrame fillnull(const pluss::TimeIndex& value, const NameRange& features) const {
+  DataFrame fillnull(const pluss::Duration& value, const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return fillnull(value, names); });
   }
   DataFrame fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) const;
@@ -1595,25 +1593,28 @@ public:
   DataFrame replace(pluss::null_t from, const pluss::Timeline& to, const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
   }
-  DataFrame replace(const pluss::TimeIndex& from,
-                    const pluss::TimeIndex& to,
+  DataFrame replace(const pluss::Duration& from,
+                    const pluss::Duration& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   template <detail::StringViewNameRange NameRange>
-  DataFrame replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to, const NameRange& features) const {
+  DataFrame replace(const pluss::Duration& from, const pluss::Duration& to,
+                    const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
   }
-  DataFrame replace(const pluss::TimeIndex& from,
+  DataFrame replace(const pluss::Duration& from,
                     pluss::null_t to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   template <detail::StringViewNameRange NameRange>
-  DataFrame replace(const pluss::TimeIndex& from, pluss::null_t to, const NameRange& features) const {
+  DataFrame replace(const pluss::Duration& from, pluss::null_t to,
+                    const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
   }
   DataFrame replace(pluss::null_t from,
-                    const pluss::TimeIndex& to,
+                    const pluss::Duration& to,
                     pluss::msharp::RangeView::Of<std::string_view> features = {}) const;
   template <detail::StringViewNameRange NameRange>
-  DataFrame replace(pluss::null_t from, const pluss::TimeIndex& to, const NameRange& features) const {
+  DataFrame replace(pluss::null_t from, const pluss::Duration& to,
+                    const NameRange& features) const {
     return detail::with_stack_name_view(features, [&](auto names) { return replace(from, to, names); });
   }
   DataFrame& fillnull_(double value);
@@ -1622,7 +1623,7 @@ public:
     return fillnull_(std::string_view{value != nullptr ? value : ""});
   }
   DataFrame& fillnull_(const pluss::Timeline& value);
-  DataFrame& fillnull_(const pluss::TimeIndex& value);
+  DataFrame& fillnull_(const pluss::Duration& value);
   DataFrame& put_(std::string_view feature, const Thread& bool_mask, const Thread& value);
   DataFrame& put_(std::string_view feature,
                   const Thread& bool_mask,
@@ -1813,6 +1814,7 @@ public:
                std::initializer_list<pluss::loader::ConfigEntry> config_entries) const;
 
 private:
+  friend class DataFrameCaseStudyAccessor;
   friend class DataFrameFeatureAxisAccessor;
   friend class DataFrameLabelAccessor;
   friend class DataFrameSortBuilder;
@@ -1823,6 +1825,9 @@ private:
   bool has_feature(std::string_view name) const;
   ColumnRef feature_ref(std::string_view name) const;
   DataFrame project_names_(pluss::msharp::RangeView::Of<std::string_view> names) const;
+  DataFrame select_cases_(const detail::CaseSelector& rows,
+                          const detail::FeatureSelector& features) const;
+  DataFrame pick_cases_(const CasePick& pick) const;
   DataFrame select_like(std::string_view needle, bool case_sensitive = true) const;
   DataFrame match_features(std::string_view pattern) const;
   DataFrame series_features() const;
@@ -1992,12 +1997,63 @@ std::ostream& operator<<(std::ostream& os, const DataFrame& frame);
 std::ostream& operator<<(std::ostream& os, const DataFrame::DTypes& dtypes);
 void output_render(std::ostream& os, const DataFrame& frame);
 
+class DataFrameCaseStudyAccessor {
+public:
+  explicit DataFrameCaseStudyAccessor(const DataFrame& frame);
+
+  DataFrame at(std::int64_t row) const;
+  DataFrame slice(std::int64_t start, std::int64_t stop) const;
+  DataFrame take(std::initializer_list<std::int64_t> rows) const;
+  DataFrame take(pluss::RangeView<std::int64_t> rows) const;
+  DataFrame labels(std::string_view value) const;
+  DataFrame labels(std::int64_t value) const;
+  template <std::integral Integer>
+    requires(!std::same_as<std::remove_cv_t<Integer>, bool> &&
+             !std::same_as<std::remove_cv_t<Integer>, std::int64_t>)
+  DataFrame labels(Integer value) const {
+    return labels(static_cast<std::int64_t>(value));
+  }
+  DataFrame labels(double value) const;
+  DataFrame labels(std::initializer_list<std::string_view> values) const;
+  DataFrame labels(pluss::RangeView<std::string_view> values) const;
+  DataFrame labels(std::initializer_list<std::int64_t> values) const;
+  DataFrame labels(pluss::RangeView<std::int64_t> values) const;
+  DataFrame labels(const Thread& values) const;
+  DataFrame span(std::string_view start, std::string_view stop) const;
+  DataFrame span(std::int64_t start, std::int64_t stop) const;
+  template <std::integral Start, std::integral Stop>
+    requires(!std::same_as<std::remove_cv_t<Start>, bool> &&
+             !std::same_as<std::remove_cv_t<Stop>, bool> &&
+             (!std::same_as<std::remove_cv_t<Start>, std::int64_t> ||
+              !std::same_as<std::remove_cv_t<Stop>, std::int64_t>))
+  DataFrame span(Start start, Stop stop) const {
+    return span(static_cast<std::int64_t>(start), static_cast<std::int64_t>(stop));
+  }
+  template <typename Start, typename Stop>
+    requires(std::is_arithmetic_v<std::remove_cv_t<Start>> &&
+             std::is_arithmetic_v<std::remove_cv_t<Stop>> &&
+             (std::is_floating_point_v<std::remove_cv_t<Start>> ||
+              std::is_floating_point_v<std::remove_cv_t<Stop>>))
+  DataFrame span(Start start, Stop stop) const {
+    return span(static_cast<double>(start), static_cast<double>(stop));
+  }
+  DataFrame span(double start, double stop) const;
+  DataFrame span(const Thread& start, const Thread& stop) const;
+  DataFrame where(const Thread& values) const;
+  DataFrame where(const pluss::Series& values) const;
+  DataFrame pick(const DataFrame::CasePick& pick) const;
+
+private:
+  DataFrame frame_{};
+};
+
 class DataFrameLabelAccessor {
 public:
   explicit DataFrameLabelAccessor(const DataFrame& frame);
 
   Thread values() const;
   DataFrame set(const Thread& labels) const;
+  DataFrame set(const pluss::Note& labels) const;
   bool has() const;
   std::vector<std::string> names() const;
   Thread part(std::string_view name) const;
@@ -2094,7 +2150,6 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Thread fillnull(const pluss::Timeline& value) const;
-  Thread fillnull(const pluss::TimeIndex& value) const;
   Thread isnull() const;
   Thread notnull() const;
   DataFrame map(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
@@ -2119,6 +2174,7 @@ public:
   DataFrame series() const;
   DataFrame note() const;
   DataFrame timeline() const;
+  DataFrame duration() const;
   DataFrame prefix(std::string_view prefix) const;
   DataFrame suffix(std::string_view suffix) const;
 
@@ -2133,7 +2189,7 @@ public:
   DataFrame series() const;
   DataFrame note() const;
   DataFrame timeline() const;
-  DataFrame timeindex() const;
+  DataFrame duration() const;
 
 private:
   DataFrame cast_all_(ThreadCastTarget target) const;
@@ -2418,7 +2474,7 @@ private:
 
   std::vector<std::string> dims_{};
   std::vector<Thread> levels_{};
-  pluss::Series counts_{};
+  pluss::Series counts_ = pluss::series::undefined();
   DataFrame::ContingencyOptions options_{};
   std::vector<std::string> default_row_dims_hint_{};
   std::vector<std::string> default_column_dims_hint_{};
@@ -2556,7 +2612,6 @@ class DataFrameTimelineAccessor {
   DataFrame tz(std::string_view name) const;
   DataFrame localize(const TimelineLocalizeOptions& options = {}) const;
   DataFrame utc() const;
-  DataFrame index(bool require_sorted = true) const;
 
  private:
   DataFrame map_(const std::function<Thread(const Thread&)>& fn, std::string_view op) const;
@@ -2630,21 +2685,21 @@ class DataFrameTsAccessor {
                                 std::string_view freq,
                                 std::int64_t step = 1) const;
   DataFrameTsResampler resample(std::string_view time_feature,
-                                const pluss::TimeIndex::ResampleOptions& options) const;
+                                const pluss::Timeline::ResampleOptions& options) const;
   DataFrameTsResampler resample(std::string_view freq,
                                 std::int64_t step = 1) const;
-  DataFrameTsResampler resample(const pluss::TimeIndex::ResampleOptions& options) const;
+  DataFrameTsResampler resample(const pluss::Timeline::ResampleOptions& options) const;
   DataFrame resample(std::string_view time_feature,
                      std::string_view freq,
                      pluss::subsp::stats::ts::ResampleOp op,
                      std::int64_t step = 1) const;
   DataFrame resample(std::string_view time_feature,
-                     const pluss::TimeIndex::ResampleOptions& options,
+                     const pluss::Timeline::ResampleOptions& options,
                      pluss::subsp::stats::ts::ResampleOp op) const;
   DataFrame resample(std::string_view freq,
                      pluss::subsp::stats::ts::ResampleOp op,
                      std::int64_t step = 1) const;
-  DataFrame resample(const pluss::TimeIndex::ResampleOptions& options,
+  DataFrame resample(const pluss::Timeline::ResampleOptions& options,
                      pluss::subsp::stats::ts::ResampleOp op) const;
   DataFrame asfreq(std::string_view time_feature,
                    std::string_view freq,
@@ -2653,7 +2708,7 @@ class DataFrameTsAccessor {
                    std::optional<double> constant = std::nullopt,
                    pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
   DataFrame asfreq(std::string_view time_feature,
-                   const pluss::TimeIndex::ResampleOptions& options,
+                   const pluss::Timeline::ResampleOptions& options,
                    pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward,
                    std::optional<double> constant = std::nullopt,
                    pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
@@ -2662,7 +2717,7 @@ class DataFrameTsAccessor {
                    pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward,
                    std::optional<double> constant = std::nullopt,
                    pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
-  DataFrame asfreq(const pluss::TimeIndex::ResampleOptions& options,
+  DataFrame asfreq(const pluss::Timeline::ResampleOptions& options,
                    pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward,
                    std::optional<double> constant = std::nullopt,
                    pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const;
@@ -2703,6 +2758,13 @@ class DataFrameTsAccessor {
                           const TsRollingBlockOptions& options = {}) const;
 
  private:
+  static DataFrame binary_(const DataFrame& left,
+                           const DataFrame& right,
+                           const std::vector<std::string>& features,
+                           const Thread& explicit_left_axis,
+                           TsAlignMode mode,
+                           int op);
+
   DataFrame frame_{};
   std::vector<std::string> features_{};
   TsOptions options_{};
@@ -2741,7 +2803,7 @@ class DataFrameTsResampler {
   DataFrameTsResampler(DataFrame frame,
                        std::vector<std::string> features,
                        std::string time_feature,
-                       pluss::TimeIndex::ResampleOptions resample_options,
+                       pluss::Timeline::ResampleOptions resample_options,
                        TsOptions options = {});
 
   DataFrame mean() const;
@@ -2765,7 +2827,7 @@ class DataFrameTsResampler {
   std::string time_feature_{};
   std::string freq_{};
   std::int64_t step_{1};
-  pluss::TimeIndex::ResampleOptions options_{};
+  pluss::Timeline::ResampleOptions options_{};
   TsOptions ts_options_{};
 };
 

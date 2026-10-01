@@ -8,6 +8,9 @@
 
 ```cpp
 Nexus::to_atlas(std::initializer_list<std::string_view> keys, std::optional<Thread> labels = std::nullopt) const -> Atlas
+Nexus::to_atlas(pluss::msharp::RangeView::Of<std::string_view> keys, std::optional<Thread> labels = std::nullopt) const -> Atlas
+template <detail::StringViewNameRange NameRange>
+Nexus::to_atlas(const NameRange& keys, std::optional<Thread> labels = std::nullopt) const -> Atlas
 ```
 
 ## What It Does
@@ -20,10 +23,20 @@ not from `to_atlas()` itself).
 
 ## Parameters
 
-**keys** (`std::initializer_list<std::string_view>`)
-    The tables to collect, in the order they should appear in the resulting atlas. Same
+**keys** (a range of `std::string_view` — a brace literal, a named container
+such as `std::vector<std::string_view>`/`std::vector<std::string>`, or any
+other range whose elements convert to `std::string_view`)
+    The tables to collect, in iteration order. Same
     validation as [`select()`](select.md)'s key list: non-empty, unique, and each must
     already exist in the workspace.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+See [`Nexus::select`](select.md)'s own note on this — the same
+three-overload pattern (brace literal / named `RangeView`-convertible
+container / any other qualifying range) applies here identically, including
+the same "iteration order becomes output order" rule (an ordered container
+like `std::set` iterates sorted, not in insertion order).
+```
 
 **labels** (`std::optional<Thread>`, default `std::nullopt`)
     Axis-0 labels for the resulting atlas. Left at the default, `to_atlas()` uses the
@@ -66,6 +79,24 @@ std::cout << atlas.depth();
 
 ```text
 2
+```
+
+Example 2. The same request via named containers — a
+`std::vector<std::string_view>` (the `RangeView` overload) and a
+`std::vector<std::string>` (the templated overload).
+
+```cpp
+std::vector<std::string_view> as_view = {"orders_q1", "orders_q2"};
+std::vector<std::string> as_owned = {"orders_q1", "orders_q2"};
+
+std::cout << biz.to_atlas(as_view).depth() << " "
+          << biz.to_atlas(as_owned).depth();
+```
+
+### Output
+
+```text
+2 2
 ```
 
 ## Notes

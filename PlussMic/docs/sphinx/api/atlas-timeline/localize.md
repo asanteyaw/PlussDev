@@ -13,7 +13,7 @@ AtlasTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) con
 
 ## What It Does
 
-Reinterprets every `Timeline`/`TimeIndex` feature's *current* clock reading, in
+Reinterprets every `Timeline` feature's *current* clock reading, in
 **every frame of the stack**, as a naive local wall-clock time in `options.tz`, and
 converts it to the true UTC instant that local reading corresponds to — the same
 transform [`DataFrame::tl().localize()`](../dataframe-timeline/localize.md) applies to
@@ -115,7 +115,7 @@ actually moved: `18,000` seconds later for January (Eastern Standard Time, `-5:0
   different display timezone is all that's needed.
 - `options.tz` only accepts the same four names as `tz()`, and cannot be empty.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row stays `NaT` regardless of `options`.
 - Each frame is transformed independently — see

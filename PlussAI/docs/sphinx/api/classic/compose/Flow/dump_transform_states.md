@@ -17,6 +17,15 @@ stage half of persisting a `Flow`; [`dump_model_state`](dump_model_state.md) /
 classic::Flow::dump_transform_states() const;
 ```
 
+## What It Does
+
+Calls `dump_state()` on every transform stage, in stage order, and
+collects the results into one nested vector -- the fitted state of the
+entire preprocessing pipeline, ready to feed back into
+[`load_transform_states`](load_transform_states.md) later. This is the
+stage half of persisting a `Flow`; [`dump_model_state`](dump_model_state.md)
+covers the attached model separately.
+
 ## Parameters
 
 None.

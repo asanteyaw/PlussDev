@@ -42,9 +42,9 @@ struct LexiconMapperState {
 };
 
 struct SparseTripletMatrix {
-  Series row_indices = Series::undefined();
-  Series column_indices = Series::undefined();
-  Series values = Series::undefined();
+  Series row_indices = pluss::series::undefined();
+  Series column_indices = pluss::series::undefined();
+  Series values = pluss::series::undefined();
   std::int64_t rows = 0;
   std::int64_t cols = 0;
 };

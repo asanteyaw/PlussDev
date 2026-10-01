@@ -6,7 +6,7 @@ namespace pluss::subsp::stats::distr {
 
 namespace detail {
 inline pluss::msharp::RangeView::Double confint_series_to_view_(const pluss::Series& ci) {
-  thread_local pluss::Series cache = pluss::Series::undefined();
+  thread_local pluss::Series cache = pluss::series::undefined();
   cache = ci.to(pluss::pCPU, pluss::ScalarType::Float64).contiguous().reshape({ci.numel()});
   const auto* ptr = reinterpret_cast<const double*>(cache.raw_data());
   return pluss::msharp::RangeView::Double{
@@ -313,9 +313,9 @@ struct CODEM_API GhFit {
 };
 
 struct CODEM_API GaussianMixtureFit {
-  pluss::Series weights;
-  pluss::Series means;
-  pluss::Series stddevs;
+  pluss::Series weights = pluss::series::undefined();
+  pluss::Series means = pluss::series::undefined();
+  pluss::Series stddevs = pluss::series::undefined();
 
   GaussianMixture model() const;
   pluss::Series loglik(const pluss::Series& x) const;
@@ -335,8 +335,8 @@ struct CODEM_API GaussianMixtureFit {
 struct CODEM_API Normal {
   double mean = 0.0;
   double stddev = 1.0;
-  pluss::Series mean_series = pluss::Series::undefined();
-  pluss::Series stddev_series = pluss::Series::undefined();
+  pluss::Series mean_series = pluss::series::undefined();
+  pluss::Series stddev_series = pluss::series::undefined();
 
   Normal() = default;
   Normal(double mean_, double stddev_) : mean(mean_), stddev(stddev_) {}
@@ -361,7 +361,7 @@ struct CODEM_API Normal {
 
 struct CODEM_API Bernoulli {
   double p = 0.5;
-  pluss::Series p_series = pluss::Series::undefined();
+  pluss::Series p_series = pluss::series::undefined();
 
   Bernoulli() = default;
   explicit Bernoulli(double p_) : p(p_) {}
@@ -386,8 +386,8 @@ struct CODEM_API Bernoulli {
 struct CODEM_API Binomial {
   std::int64_t count = 1;
   double p = 0.5;
-  pluss::Series count_series = pluss::Series::undefined();
-  pluss::Series p_series = pluss::Series::undefined();
+  pluss::Series count_series = pluss::series::undefined();
+  pluss::Series p_series = pluss::series::undefined();
 
   Binomial() = default;
   Binomial(std::int64_t count_, double p_) : count(count_), p(p_) {}
@@ -412,7 +412,7 @@ struct CODEM_API Binomial {
 
 struct CODEM_API Poisson {
   double lambda = 1.0;
-  pluss::Series lambda_series = pluss::Series::undefined();
+  pluss::Series lambda_series = pluss::series::undefined();
 
   Poisson() = default;
   explicit Poisson(double lambda_) : lambda(lambda_) {}
@@ -436,7 +436,7 @@ struct CODEM_API Poisson {
 
 struct CODEM_API Geometric {
   double p = 0.5;
-  pluss::Series p_series = pluss::Series::undefined();
+  pluss::Series p_series = pluss::series::undefined();
 
   Geometric() = default;
   explicit Geometric(double p_) : p(p_) {}
@@ -461,8 +461,8 @@ struct CODEM_API Geometric {
 struct CODEM_API NegativeBinomial {
   double r = 1.0;
   double p = 0.5;
-  pluss::Series r_series = pluss::Series::undefined();
-  pluss::Series p_series = pluss::Series::undefined();
+  pluss::Series r_series = pluss::series::undefined();
+  pluss::Series p_series = pluss::series::undefined();
 
   NegativeBinomial() = default;
   NegativeBinomial(double r_, double p_) : r(r_), p(p_) {}
@@ -489,9 +489,9 @@ struct CODEM_API Gamma {
   double shape = 1.0;
   double scale = 1.0;
   double location = 0.0;
-  pluss::Series shape_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
-  pluss::Series location_series = pluss::Series::undefined();
+  pluss::Series shape_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
+  pluss::Series location_series = pluss::series::undefined();
 
   Gamma() = default;
   Gamma(double shape_, double scale_, double location_)
@@ -521,7 +521,7 @@ struct CODEM_API Gamma {
 
 struct CODEM_API ChiSquare {
   std::int64_t degrees_of_freedom = 1;
-  pluss::Series degrees_of_freedom_series = pluss::Series::undefined();
+  pluss::Series degrees_of_freedom_series = pluss::series::undefined();
 
   ChiSquare() = default;
   explicit ChiSquare(std::int64_t degrees_of_freedom_) : degrees_of_freedom(degrees_of_freedom_) {}
@@ -546,8 +546,8 @@ struct CODEM_API ChiSquare {
 struct CODEM_API InverseGaussian {
   double theta = 1.0;
   double chi = 1.0;
-  pluss::Series theta_series = pluss::Series::undefined();
-  pluss::Series chi_series = pluss::Series::undefined();
+  pluss::Series theta_series = pluss::series::undefined();
+  pluss::Series chi_series = pluss::series::undefined();
 
   InverseGaussian() = default;
   InverseGaussian(double theta_, double chi_) : theta(theta_), chi(chi_) {}
@@ -573,8 +573,8 @@ struct CODEM_API InverseGaussian {
 struct CODEM_API Lognormal {
   double mean_log = 0.0;
   double stddev_log = 1.0;
-  pluss::Series mean_log_series = pluss::Series::undefined();
-  pluss::Series stddev_log_series = pluss::Series::undefined();
+  pluss::Series mean_log_series = pluss::series::undefined();
+  pluss::Series stddev_log_series = pluss::series::undefined();
 
   Lognormal() = default;
   Lognormal(double mean_log_, double stddev_log_) : mean_log(mean_log_), stddev_log(stddev_log_) {}
@@ -600,8 +600,8 @@ struct CODEM_API Lognormal {
 struct CODEM_API Uniform {
   double low = 0.0;
   double high = 1.0;
-  pluss::Series low_series = pluss::Series::undefined();
-  pluss::Series high_series = pluss::Series::undefined();
+  pluss::Series low_series = pluss::series::undefined();
+  pluss::Series high_series = pluss::series::undefined();
 
   Uniform() = default;
   Uniform(double low_, double high_) : low(low_), high(high_) {}
@@ -626,7 +626,7 @@ struct CODEM_API Uniform {
 
 struct CODEM_API Exponential {
   double rate = 1.0;
-  pluss::Series rate_series = pluss::Series::undefined();
+  pluss::Series rate_series = pluss::series::undefined();
 
   Exponential() = default;
   explicit Exponential(double rate_) : rate(rate_) {}
@@ -651,8 +651,8 @@ struct CODEM_API Exponential {
 struct CODEM_API Laplace {
   double location = 0.0;
   double scale = 1.0;
-  pluss::Series location_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
+  pluss::Series location_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
 
   Laplace() = default;
   Laplace(double location_, double scale_) : location(location_), scale(scale_) {}
@@ -678,8 +678,8 @@ struct CODEM_API Laplace {
 struct CODEM_API Logistic {
   double location = 0.0;
   double scale = 1.0;
-  pluss::Series location_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
+  pluss::Series location_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
 
   Logistic() = default;
   Logistic(double location_, double scale_) : location(location_), scale(scale_) {}
@@ -703,7 +703,7 @@ struct CODEM_API Logistic {
 
 struct CODEM_API Rayleigh {
   double sigma = 1.0;
-  pluss::Series sigma_series = pluss::Series::undefined();
+  pluss::Series sigma_series = pluss::series::undefined();
 
   Rayleigh() = default;
   explicit Rayleigh(double sigma_) : sigma(sigma_) {}
@@ -750,9 +750,9 @@ struct CODEM_API StudentT {
   double degrees_of_freedom = 1.0;
   double location = 0.0;
   double scale = 1.0;
-  pluss::Series degrees_of_freedom_series = pluss::Series::undefined();
-  pluss::Series location_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
+  pluss::Series degrees_of_freedom_series = pluss::series::undefined();
+  pluss::Series location_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
 
   StudentT() = default;
   StudentT(double degrees_of_freedom_, double location_, double scale_)
@@ -801,8 +801,8 @@ struct CODEM_API FDistribution {
 struct CODEM_API Weibull {
   double shape = 1.0;
   double scale = 1.0;
-  pluss::Series shape_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
+  pluss::Series shape_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
 
   Weibull() = default;
   Weibull(double shape_, double scale_) : shape(shape_), scale(scale_) {}
@@ -829,10 +829,10 @@ struct CODEM_API Beta {
   double high = 1.0;
   double alpha = 1.0;
   double beta = 1.0;
-  pluss::Series low_series = pluss::Series::undefined();
-  pluss::Series high_series = pluss::Series::undefined();
-  pluss::Series alpha_series = pluss::Series::undefined();
-  pluss::Series beta_series = pluss::Series::undefined();
+  pluss::Series low_series = pluss::series::undefined();
+  pluss::Series high_series = pluss::series::undefined();
+  pluss::Series alpha_series = pluss::series::undefined();
+  pluss::Series beta_series = pluss::series::undefined();
 
   Beta() = default;
   Beta(double low_, double high_, double alpha_, double beta_)
@@ -886,10 +886,10 @@ struct CODEM_API Nig {
   double beta = 0.0;
   double location = 0.0;
   double scale = 1.0;
-  pluss::Series alpha_series = pluss::Series::undefined();
-  pluss::Series beta_series = pluss::Series::undefined();
-  pluss::Series location_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
+  pluss::Series alpha_series = pluss::series::undefined();
+  pluss::Series beta_series = pluss::series::undefined();
+  pluss::Series location_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
 
   Nig() = default;
   Nig(double alpha_, double beta_, double location_, double scale_)
@@ -925,11 +925,11 @@ struct CODEM_API Gh {
   double beta = 0.0;
   double location = 0.0;
   double scale = 1.0;
-  pluss::Series lambda_series = pluss::Series::undefined();
-  pluss::Series alpha_series = pluss::Series::undefined();
-  pluss::Series beta_series = pluss::Series::undefined();
-  pluss::Series location_series = pluss::Series::undefined();
-  pluss::Series scale_series = pluss::Series::undefined();
+  pluss::Series lambda_series = pluss::series::undefined();
+  pluss::Series alpha_series = pluss::series::undefined();
+  pluss::Series beta_series = pluss::series::undefined();
+  pluss::Series location_series = pluss::series::undefined();
+  pluss::Series scale_series = pluss::series::undefined();
 
   Gh() = default;
   Gh(double lambda_, double alpha_, double beta_, double location_, double scale_)
@@ -962,9 +962,9 @@ struct CODEM_API Gh {
 };
 
 struct CODEM_API GaussianMixture {
-  pluss::Series weights;
-  pluss::Series means;
-  pluss::Series stddevs;
+  pluss::Series weights = pluss::series::undefined();
+  pluss::Series means = pluss::series::undefined();
+  pluss::Series stddevs = pluss::series::undefined();
 
   pluss::Series sample(std::span<const std::int64_t> sizes,
                        pluss::Config cfg = {},

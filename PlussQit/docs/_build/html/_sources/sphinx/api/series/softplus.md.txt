@@ -9,6 +9,7 @@
 ```cpp
 Series::softplus() const -> Series
 Series::softplus(double beta, double threshold) const -> Series
+Series& Series::softplus_() const
 ```
 
 ## What It Does
@@ -58,6 +59,31 @@ d/dx softplus(x) = sigmoid(beta * x)
 With `beta = 1` that is exactly `sigmoid(x)` — `0.5` at the origin, tending to
 `1` on the right and `0` on the left. Unlike `relu()`, the gradient is never
 exactly `0`, so a `softplus()` unit stays trainable everywhere.
+
+## In-Place Form
+
+`softplus_()` is the in-place sibling of [`softplus()`](softplus.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `softplus_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.softplus_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.69314718, 1.3132617]
+same object: true
+```
 
 ## Examples
 

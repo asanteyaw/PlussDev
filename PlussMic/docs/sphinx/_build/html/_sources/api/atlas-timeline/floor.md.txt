@@ -13,7 +13,7 @@ AtlasTimelineAccessor::floor(std::string_view unit) const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with each
+Replaces every `Timeline` feature in **every frame of the stack** with each
 row rounded *down* to the nearest `unit` boundary, in local wall time — the same
 transform [`DataFrame::tl().floor()`](../dataframe-timeline/floor.md) applies to a
 single frame, broadcast across the whole `Atlas` via
@@ -79,7 +79,7 @@ the hour, so they're unchanged.
 - `unit` cannot be empty, and only accepts the fixed clock units listed above — an
   unrecognized unit throws `"Timeline: unsupported unit (expected S/min/H/D)"`.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row stays `NaT` (displays as `"NULL"`) regardless of `unit`.
 - Each frame is transformed independently — see

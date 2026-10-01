@@ -288,7 +288,7 @@ ChiGofResult chisq_gof(const Series& observed,
   PLUSS_CHECK(scalar_(obs.isfinite().all()) > 0.5, std::string(op) + ": observed must be finite");
   PLUSS_CHECK(scalar_(obs.ge(0.0).all()) > 0.5, std::string(op) + ": observed must be non-negative");
 
-  Series expv;
+  Series expv = pluss::series::undefined();
   if (expected.defined()) {
     expv = as_vector_(expected, op).to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(expv.numel() == k, std::string(op) + ": expected must have same length as observed");

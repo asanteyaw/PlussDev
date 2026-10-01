@@ -3,8 +3,10 @@
 #include <pluss/ai/ice.h>
 
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <random>
+#include <string>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -146,15 +148,71 @@ bool run_autoregressive_forecaster_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+bool run_autoregressive_forecaster_save_load_checks(std::ostream* err = nullptr) {
+  constexpr std::int64_t kEncoderLength = 6;
+  constexpr std::int64_t kDecoderLength = 3;
+
+  const auto train_data = make_synthetic(96, kEncoderLength, kDecoderLength, 21ULL);
+  const auto test_data = make_synthetic(24, kEncoderLength, kDecoderLength, 55ULL);
+
+  const auto dataset = data::TimeSeriesDataSet::from_series(train_data.batch);
+  auto options = models::AutoregressiveForecasterOptions::from_dataset(dataset);
+  options.hidden_size = 16;
+  options.rnn_layers = 1;
+  options.dropout = 0.0;
+  options.seed = 7;
+  options.cfg = float_cfg();
+
+  models::AutoregressiveForecaster model(options);
+  models::AutoregressiveTrainOptions train_options{};
+  train_options.execution.max_epochs = 40;
+  train_options.batch_size = 32;
+  train_options.learning_rate = 8e-3;
+  train_options.validation.split_ratio = 0.0;
+  train_options.loop_regularization.early_stopping = false;
+  train_options.seed = 3;
+  model.learn(dataset.batch(), train_options);
+
+  const char* path = "ice_autoregressive_forecaster_save_load_test.artifact";
+  model.save(path);
+  const auto before = model.predict(test_data.batch);
+
+  models::AutoregressiveForecaster loaded = models::AutoregressiveForecaster::load(path);
+  std::remove(path);
+  std::remove((std::string(path) + ".weights").c_str());
+
+  if (!loaded.ready()) {
+    if (err) *err << "AutoregressiveForecaster::load should report ready()\n";
+    return false;
+  }
+
+  const auto after = loaded.predict(test_data.batch);
+  const double mean_diff = before.mean.sub(after.mean).abs().amax().item<double>();
+  const double scale_diff = before.scale.sub(after.scale).abs().amax().item<double>();
+  if (mean_diff > 1e-9 || scale_diff > 1e-9) {
+    if (err) *err << "AutoregressiveForecaster::load should reproduce identical predictions; "
+                  << "mean_diff=" << mean_diff << " scale_diff=" << scale_diff << "\n";
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("ice autoregressive forecaster learns a DeepAR-style task", "[ai][ice][ts]") {
   REQUIRE(run_autoregressive_forecaster_checks(&std::cerr));
 }
+
+TEST_CASE("ice autoregressive forecaster save/load round-trips to identical predictions",
+         "[ai][ice][ts]") {
+  REQUIRE(run_autoregressive_forecaster_save_load_checks(&std::cerr));
+}
 #else
 int main() {
   if (!run_autoregressive_forecaster_checks(&std::cerr)) return 1;
+  if (!run_autoregressive_forecaster_save_load_checks(&std::cerr)) return 1;
   std::cout << "ice_autoregressive_forecaster_test passed\n";
   return 0;
 }

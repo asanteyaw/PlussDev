@@ -57,7 +57,7 @@ Only `"2023-03-01"` falls on the first of its month.
 
 - Only checks day-of-month `== 1` — the time-of-day portion (if any) doesn't
   affect the result.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, not `false`.

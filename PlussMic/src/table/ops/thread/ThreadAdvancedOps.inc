@@ -55,7 +55,7 @@ Thread running_thread_(const Thread& source,
   auto values = input.to(dtype);
   auto valid = thread_valid_(source);
   const auto invalid = valid.logical_not();
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
   switch (operation) {
     case 0:
       result = values.where(invalid, 0.0).cumsum(0);
@@ -161,7 +161,7 @@ Thread indexed_numeric_window_(
       count_prefix.index_select(0, start_index);
   auto output_valid =
       counts.ge(static_cast<double>(options.min_count));
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
 
   if (statistic == WindowStatistic::Sum) {
     result = sums;
@@ -294,7 +294,7 @@ Thread moving_moment_thread_(
     const auto s2 = window_sum(p2);
     const auto mean = s1 / counts;
     const auto m2 = s2 / counts - mean * mean;
-    pluss::Series result;
+    pluss::Series result = pluss::series::undefined();
     if (operation == 0) {
       const auto variance =
           (s2 - s1 * s1 / counts) /
@@ -344,7 +344,7 @@ Thread moving_moment_thread_(
       (window_values - means.reshape({n, 1}))
           .where(window_valid.logical_not(), 0.0);
   const auto squares = centered * centered;
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
   if (operation == 0) {
     result =
         (squares.sum(1) /
@@ -710,7 +710,7 @@ Thread Thread::mode(bool drop_nulls) const {
   PLUSS_CHECK(
       kind() == ThreadKind::Series || kind() == ThreadKind::Note ||
           kind() == ThreadKind::Timeline ||
-          kind() == ThreadKind::TimeIndex,
+          kind() == ThreadKind::Duration,
       "Thread::mode: unsupported payload");
   const auto validity = notnull().as_series().to_vec<bool>();
   std::int64_t null_count = 0;
@@ -756,11 +756,10 @@ Thread Thread::mode(bool drop_nulls) const {
   }
 
   if (kind() == ThreadKind::Timeline ||
-      kind() == ThreadKind::TimeIndex) {
-    const auto ticks =
-        kind() == ThreadKind::Timeline
-            ? as_timeline().ticks()
-            : as_timeindex().timeline().ticks();
+      kind() == ThreadKind::Duration) {
+    const auto ticks = kind() == ThreadKind::Timeline
+                           ? as_timeline().ticks()
+                           : as_duration().host();
     std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>>
         counts;
     std::int64_t first_null = -1;
@@ -1221,7 +1220,7 @@ Thread exponential_variance_thread_(
       Thread(centered, detail::validity_mask(source));
   const auto mean = exponential_mean_thread_(centered_thread,
       alpha, adjusted, 1, ignore_nulls).as_series();
-  pluss::Series second;
+  pluss::Series second = pluss::series::undefined();
   auto correction =
       pluss::Series::ones({source.size()}, dtype, platform);
   if (adjusted && alpha < 1.0) {
@@ -1351,7 +1350,7 @@ Thread Thread::weigh(
   const auto weighted_sum =
       (padded_values * active_weights).sum(1);
   const auto count = padded_valid.to(dtype).sum(1);
-  pluss::Series result;
+  pluss::Series result = pluss::series::undefined();
   if (statistic == WindowStatistic::Sum) {
     result = weighted_sum;
   } else if (statistic == WindowStatistic::Mean) {
@@ -1388,8 +1387,6 @@ Thread Thread::timed(
   std::vector<std::int64_t> ticks;
   if (axis.kind() == ThreadKind::Timeline) {
     ticks = axis.as_timeline().ticks();
-  } else if (axis.kind() == ThreadKind::TimeIndex) {
-    ticks = axis.as_timeindex().timeline().ticks();
   } else if (axis.kind() == ThreadKind::Series &&
              axis.as_series().scalar_type() ==
                  pluss::codem::ScalarType::Int64) {
@@ -1397,7 +1394,7 @@ Thread Thread::timed(
         pluss::codem::Platform::CPU).to_vec<std::int64_t>();
   } else {
     PLUSS_FAIL(
-        "Thread::timed: axis must be Timeline, TimeIndex, or Int64 "
+        "Thread::timed: axis must be Timeline or Int64 "
         "nanoseconds");
   }
   PLUSS_CHECK(std::is_sorted(ticks.begin(), ticks.end()),
@@ -1564,12 +1561,6 @@ Thread Thread::map(
                  pluss::codem::Platform::CPU) {
     null_mask = null_mask.to(
         prototype->as_timeline().epoch_nanos().platform());
-  } else if (
-      prototype->kind() == ThreadKind::TimeIndex &&
-      prototype->as_timeindex().timeline().epoch_nanos().platform() !=
-          pluss::codem::Platform::CPU) {
-    null_mask = null_mask.to(
-        prototype->as_timeindex().timeline().epoch_nanos().platform());
   }
   std::vector<Thread> values;
   values.reserve(mapped_values.size());
@@ -1621,19 +1612,15 @@ Thread Thread::map(
     }
     return Thread(output, mask);
   }
-  auto timeline = values.front().as_timeindex().timeline();
-  for (std::size_t i = 1; i < values.size(); ++i) {
-    timeline = timeline.concat(values[i].as_timeindex().timeline());
-  }
+  PLUSS_CHECK(kind == ThreadKind::Duration,
+              "Thread::map: unsupported mapped output kind");
+  std::vector<std::int64_t> nanos;
+  nanos.reserve(values.size());
   for (const auto& value : values) {
+    nanos.push_back(value.as_duration().host().front());
     validity.push_back(detail::valid_at(value, 0));
   }
-  auto mask = bool_series_from_bools(validity);
-  if (timeline.epoch_nanos().platform() !=
-      pluss::codem::Platform::CPU) {
-    mask = mask.to(timeline.epoch_nanos().platform());
-  }
-  return Thread(timeline.to_timeindex(false), mask);
+  return Thread(pluss::duration::nanos(nanos), bool_series_from_bools(validity));
 }
 
 Thread Thread::upper() const {
@@ -1657,7 +1644,8 @@ Thread Thread::titlecase() const {
 Thread Thread::length() const {
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::length: expected Note payload");
-  const auto lengths = as_note().lengths_chars().integers();
+  const auto measured = as_note().lengths_chars();
+  const auto lengths = measured.integers();
   auto output = pluss::Series::empty(
       {static_cast<std::int64_t>(lengths.size())},
       pluss::codem::ScalarType::Int64);
@@ -1983,7 +1971,8 @@ Thread Thread::pad(
   PLUSS_CHECK(kind() == ThreadKind::Note,
               "Thread::pad: expected Note payload");
   PLUSS_CHECK(width >= 0, "Thread::pad: width must be >= 0");
-  const auto lengths = as_note().lengths_chars().integers();
+  const auto measured = as_note().lengths_chars();
+  const auto lengths = measured.integers();
   std::vector<std::string> values;
   values.reserve(static_cast<std::size_t>(size()));
   for (std::int64_t row = 0; row < size(); ++row) {
@@ -2238,13 +2227,9 @@ Thread ThreadNoteAccessor::replace(
 namespace {
 
 const pluss::Timeline& tl_payload_(const Thread& base, std::string_view where) {
-  if (base.kind() == ThreadKind::Timeline) {
-    return base.as_timeline();
-  }
-  if (base.kind() == ThreadKind::TimeIndex) {
-    return base.as_timeindex().timeline();
-  }
-  PLUSS_FAIL(std::string(where) + ": expected Timeline or TimeIndex payload");
+  PLUSS_CHECK(base.kind() == ThreadKind::Timeline,
+              std::string(where) + ": expected Timeline payload");
+  return base.as_timeline();
 }
 
 pluss::Series tl_validity_(const Thread& base, std::string_view where) {
@@ -2336,9 +2321,7 @@ Thread tl_note_(const Thread& base, const pluss::Note& values, std::string_view 
 }
 
 Thread tl_temporal_(const Thread& base, const pluss::Timeline& values) {
-  auto out = base.kind() == ThreadKind::TimeIndex
-                 ? Thread(values.to_timeindex(false), detail::validity_mask(base))
-                 : Thread(values, detail::validity_mask(base));
+  auto out = Thread(values, detail::validity_mask(base));
   if (detail::has_display_labels(base)) {
     out = detail::with_display_labels(out, detail::display_labels(base));
   }
@@ -2358,6 +2341,28 @@ Thread tl_with_meta_(const Thread& base, Thread out) {
   return out;
 }
 
+std::string_view tl_period_unit_(std::string_view freq) {
+  if (freq == "Y" || freq == "YS" || freq == "y" || freq == "year" || freq == "years") {
+    return "year";
+  }
+  if (freq == "M" || freq == "MS" || freq == "month" || freq == "months") {
+    return "month";
+  }
+  if (freq == "D" || freq == "d" || freq == "day" || freq == "days") {
+    return "day";
+  }
+  if (freq == "H" || freq == "h" || freq == "hour" || freq == "hours") {
+    return "hour";
+  }
+  if (freq == "min" || freq == "T" || freq == "m" || freq == "minute" || freq == "minutes") {
+    return "minute";
+  }
+  if (freq == "S" || freq == "s" || freq == "second" || freq == "seconds") {
+    return "second";
+  }
+  return freq;
+}
+
 } // namespace
 
 ThreadTimelineAccessor Thread::tl() const {
@@ -2367,8 +2372,8 @@ ThreadTimelineAccessor Thread::tl() const {
 ThreadTimelineAccessor::ThreadTimelineAccessor(Thread base)
     : base_(std::move(base)) {
   PLUSS_CHECK(base_.defined(), "Thread::tl: Thread is undefined");
-  PLUSS_CHECK(base_.kind() == ThreadKind::Timeline || base_.kind() == ThreadKind::TimeIndex,
-              "Thread::tl: expected Timeline or TimeIndex payload");
+  PLUSS_CHECK(base_.kind() == ThreadKind::Timeline,
+              "Thread::tl: expected Timeline payload");
 }
 
 Thread ThreadTimelineAccessor::isnat() const {
@@ -2530,12 +2535,17 @@ Thread ThreadTimelineAccessor::time() const {
 
 Thread ThreadTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const {
   PLUSS_CHECK(!freq.empty(), "Thread::tl().shift: freq cannot be empty");
-  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().shift").shift(static_cast<int>(periods), freq));
+  return tl_temporal_(
+      base_,
+      tl_payload_(base_, "Thread::tl().shift")
+          .shift(static_cast<int>(periods), tl_period_unit_(freq)));
 }
 
 Thread ThreadTimelineAccessor::period(std::string_view freq) const {
   PLUSS_CHECK(!freq.empty(), "Thread::tl().period: freq cannot be empty");
-  return tl_temporal_(base_, tl_payload_(base_, "Thread::tl().period").period_start(freq));
+  return tl_temporal_(
+      base_,
+      tl_payload_(base_, "Thread::tl().period").period_start(tl_period_unit_(freq)));
 }
 
 Thread ThreadTimelineAccessor::tz(std::string_view name) const {
@@ -2554,18 +2564,4 @@ Thread ThreadTimelineAccessor::localize(const TimelineLocalizeOptions& options) 
 Thread ThreadTimelineAccessor::utc() const {
   return tl_temporal_(base_,
                       tl_payload_(base_, "Thread::tl().utc").tz_convert("UTC"));
-}
-
-Thread ThreadTimelineAccessor::index(bool require_sorted) const {
-  if (base_.kind() == ThreadKind::TimeIndex) {
-    return base_;
-  }
-  auto out = Thread(base_.as_timeline().to_timeindex(require_sorted), base_.validity_mask());
-  if (detail::has_display_labels(base_)) {
-    out = detail::with_display_labels(out, detail::display_labels(base_));
-  }
-  if (base_.named()) {
-    out = out.name(base_.name());
-  }
-  return out;
 }

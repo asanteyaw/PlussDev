@@ -13,7 +13,7 @@ AtlasTimelineAccessor::tz(std::string_view name) const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature's *display* timezone in **every frame of
+Replaces every `Timeline` feature's *display* timezone in **every frame of
 the stack** with `name` — the same transform
 [`DataFrame::tl().tz()`](../dataframe-timeline/tz.md) applies to a single frame,
 broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
@@ -86,7 +86,7 @@ July (Eastern Daylight Time).
   [`localize()`](localize.md) if the data is naive local wall-clock text that needs to
   be *anchored* to a real instant for the first time.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row stays `NaT` regardless of `name`.
 - Each frame is transformed independently — see

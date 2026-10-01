@@ -25,11 +25,11 @@ struct SequenceOptions {
 };
 
 struct SequenceBatch {
-  Series token_ids = Series::undefined();
-  Series position_ids = Series::undefined();
-  Series valid_mask = Series::undefined();
-  Series key_padding_mask = Series::undefined();
-  Series lengths = Series::undefined();
+  Series token_ids = pluss::series::undefined();
+  Series position_ids = pluss::series::undefined();
+  Series valid_mask = pluss::series::undefined();
+  Series key_padding_mask = pluss::series::undefined();
+  Series lengths = pluss::series::undefined();
   std::int64_t batch_size = 0;
   std::int64_t max_length = 0;
   bool batch_first = true;
@@ -96,8 +96,8 @@ public:
 
 private:
   EmbeddingOptions options_{};
-  Series weights_ = Series::undefined();
-  Series position_weights_ = Series::undefined();
+  Series weights_ = pluss::series::undefined();
+  Series position_weights_ = pluss::series::undefined();
   std::int64_t vocab_size_ = 0;
   std::int64_t pad_id_ = -1;
 };

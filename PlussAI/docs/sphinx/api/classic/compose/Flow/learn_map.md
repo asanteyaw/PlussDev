@@ -19,6 +19,16 @@ does for a single kernel.
     const classic::InferOptions& infer_options = {});
 ```
 
+## What It Does
+
+Fits every transform stage on `batch`, in order, then immediately maps
+`batch` through those same newly-fitted stages and returns the result --
+fit and transform, in one call, on the same data. Any attached model is
+never touched; this is the transform-only counterpart to
+[`learn`](learn.md), for a `Flow` used purely to produce a fitted
+representation of its training data rather than to also train a final
+model.
+
 ## Parameters
 
 `batch` — `FeatureBatch`

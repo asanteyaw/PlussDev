@@ -13,6 +13,14 @@ Only reachable via `->` (`net->reserve(count)`).
 void nn::Schedule::Impl::reserve(std::size_t count);
 ```
 
+## What It Does
+
+A pure allocation hint, forwarded straight to the internal stage vector's
+own `reserve`. Calling it before a known run of
+[`append`](append.md)/[`insert`](insert.md) calls avoids repeated reallocation
+as the chain grows; it has no effect on `size()`, lookups, or anything
+observable besides performance.
+
 ## Parameters
 
 `std::size_t count`
@@ -46,7 +54,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   // reserve() is purely a capacity hint for the internal stage vector --
-  // it never adds a stage. empty() stays true until the first then()/insert().
+  // it never adds a stage. empty() stays true until the first append()/insert().
   nn::Schedule net;
   net->reserve(8);
   std::cout << "after reserve(8): size()=" << net->size() << " empty()=" << std::boolalpha << net->empty() << "\n";
@@ -78,8 +86,8 @@ int main() {
   nn::Schedule net;
   std::cout << "fresh Schedule: size()=" << net->size() << " empty()=" << std::boolalpha << net->empty() << "\n";
 
-  net.then(nn::Fusion(3, 2));
-  std::cout << "after one then(): size()=" << net->size() << " empty()=" << net->empty() << "\n";
+  net.append(nn::Fusion(3, 2));
+  std::cout << "after one append(): size()=" << net->size() << " empty()=" << net->empty() << "\n";
 
   return 0;
 }
@@ -89,14 +97,14 @@ Output
 
 ```text
 fresh Schedule: size()=0 empty()=true
-after one then(): size()=1 empty()=false
+after one append(): size()=1 empty()=false
 ```
 
 ### Example 3
 
 The variadic `Schedule(Layers&&...)` constructor calls
-`reserve(sizeof...(layers))` once up front, then `then()`s each argument in
-order -- an alternative to building a `Schedule` with repeated `then()`
+`reserve(sizeof...(layers))` once up front, then `append()`s each argument in
+order -- an alternative to building a `Schedule` with repeated `append()`
 calls.
 
 ```cpp
@@ -130,7 +138,7 @@ size()=2
 ## See Also
 
 - [`size`](size.md) / [`empty`](empty.md) -- unaffected by `reserve` alone.
-- [`then`](then.md) -- what actually adds a stage.
+- [`append`](append.md) -- what actually adds a stage.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

@@ -28,9 +28,9 @@ using pluss::optim::trace;
 using pluss::optim::square;
 
 struct Garch11Params {
-  Series omega{Series::undefined()};
-  Series alpha{Series::undefined()};
-  Series beta{Series::undefined()};
+  Series omega{pluss::series::undefined()};
+  Series alpha{pluss::series::undefined()};
+  Series beta{pluss::series::undefined()};
 };
 
 struct RunStats {

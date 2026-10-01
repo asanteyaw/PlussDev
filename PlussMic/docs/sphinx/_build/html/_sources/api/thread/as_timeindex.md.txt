@@ -44,7 +44,7 @@ a `Thread`.
 ```cpp
 using namespace pluss::table;
 
-auto ticks = Thread(pluss::make_timeindex({
+auto ticks = Thread(pluss::timeindex::make({
     "2024-01-01T00:10:00Z",
     "2024-01-01T00:20:00Z",
     "2024-01-01T01:10:00Z",
@@ -88,7 +88,7 @@ Thread: payload is not TimeIndex
 
 - Returns a reference into the thread's own storage — no copy, no allocation.
 - Requires `TimeIndex`-kind specifically; a `Timeline`-kind thread does **not**
-  satisfy this — construct with `pluss::make_timeindex(...)` (or cast via
+  satisfy this — construct with `pluss::timeindex::make(...)` (or cast via
   [`cast()`](cast.md)`.timeindex()`) to get a `TimeIndex`-kind thread.
 - The result does not automatically become a `Thread` again — wrap it explicitly with
   `Thread(...)` when a `Thread`-only API needs it back.

@@ -84,8 +84,14 @@ bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t 
       return true;
     }
   }
-  return t.kind() == pluss::table::ThreadKind::Series
-         && series_value_is_nan_for_io(t.as_series(), row);
+  if (t.kind() == pluss::table::ThreadKind::Series) {
+    return series_value_is_nan_for_io(t.as_series(), row);
+  }
+  if (t.kind() == pluss::table::ThreadKind::Duration) {
+    return t.as_duration().host()[static_cast<std::size_t>(row)] ==
+           pluss::Duration::kNaT;
+  }
+  return false;
 }
 
 bool series_all_zero_i64_for_io(const pluss::Series& s) {
@@ -94,9 +100,7 @@ bool series_all_zero_i64_for_io(const pluss::Series& s) {
 }
 
 pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
-  const auto timeline = (t.kind() == pluss::table::ThreadKind::Timeline)
-                            ? t.as_timeline()
-                            : t.as_timeindex().timeline();
+  const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
                               || !series_all_zero_i64_for_io(timeline.minute())
@@ -111,7 +115,7 @@ pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
 }
 
 pluss::table::Thread thread_for_excel_io(const pluss::table::Thread& t) {
-  if (t.kind() == pluss::table::ThreadKind::Timeline || t.kind() == pluss::table::ThreadKind::TimeIndex) {
+  if (t.kind() == pluss::table::ThreadKind::Timeline) {
     return temporal_thread_for_io(t);
   }
   return t;
@@ -202,12 +206,10 @@ std::string thread_value_for_excel(const pluss::table::Thread& t, std::int64_t r
       return std::string(t.as_note().at(row));
     case pluss::table::ThreadKind::Timeline:
       return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case pluss::table::ThreadKind::TimeIndex:
-      return fmt::format("{}",
-                         t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
-    default:
-      return "";
+    case pluss::table::ThreadKind::Duration:
+      return fmt::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
+  PLUSS_FAIL("save_excel: unsupported Thread kind");
 }
 
 std::string column_letters(std::int64_t zero_based_col) {

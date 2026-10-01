@@ -15,6 +15,16 @@ classic::StatusOr<classic::SplitPlan> classic::ts_crossval_plan(
     std::int64_t sample_count, const classic::SplitOptions& options = {});
 ```
 
+## What It Does
+
+Lays out `folds` train/test windows across `sample_count` rows assumed to
+already be in chronological order, advancing each fold's windows forward
+in time -- never assigning a later row to train and an earlier row to
+test, the way an ordinary shuffled or unshuffled `crossval_plan` fold
+could for time-ordered data. `options.time_gap`/`time_max_train_size`
+control the buffer between train and test and whether the train window
+expands or stays a fixed recent size, respectively.
+
 ## Parameters
 
 `sample_count`

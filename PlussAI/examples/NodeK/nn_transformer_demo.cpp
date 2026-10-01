@@ -33,12 +33,12 @@ int main() {
   const Series y_train = model->forward(
       x,
       x,
-      Series(),
+      pluss::series::undefined(),
       tgt_mask,
       mem_mask,
-      Series(),
-      Series(),
-      Series(),
+      pluss::series::undefined(),
+      pluss::series::undefined(),
+      pluss::series::undefined(),
       false,
       true,
       false);
@@ -46,12 +46,12 @@ int main() {
   const Series y_eval = model->forward(
       x,
       x,
-      Series(),
+      pluss::series::undefined(),
       tgt_mask,
       mem_mask,
-      Series(),
-      Series(),
-      Series(),
+      pluss::series::undefined(),
+      pluss::series::undefined(),
+      pluss::series::undefined(),
       false,
       true,
       false);

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::mish &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::mode" href="mode.html" />
+    <link rel="prev" title="Series::minimum" href="minimum.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-mish">
+<h1>Series::mish<a class="headerlink" href="#series-mish" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">mish</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">mish_</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="a-smooth-non-monotonic-activation">
+<h2>A Smooth, Non-Monotonic Activation<a class="headerlink" href="#a-smooth-non-monotonic-activation" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mish()</span></code> applies</p>
+<p>$$
+\operatorname{mish}(x)=x\tanh(\log(1+e^x))
+$$</p>
+<p>elementwise. It keeps large positive values close to the identity, softly
+suppresses negative values, and permits a small negative output instead of
+clamping the entire negative half-line to zero. The shallow negative trough is
+why the function is non-monotonic.</p>
+<p>Choose it when a smooth activation with nonzero negative output is useful.
+Choose <a class="reference internal" href="hardswish.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hardswish()</span></code></span></a> when a cheaper piecewise-polynomial gate is
+more important, or <a class="reference internal" href="selu.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">selu()</span></code></span></a> when the fixed self-normalizing scale and
+negative saturation are specifically required.</p>
+</section>
+<section id="type-shape-and-derivative-contract">
+<h2>Type, Shape, And Derivative Contract<a class="headerlink" href="#type-shape-and-derivative-contract" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p>The operation is elementwise and preserves rank, shape, and platform.</p></li>
+<li><p>Floating-point dtype is preserved. Integer and Boolean receivers are promoted
+to <code class="docutils literal notranslate"><span class="pre">float32</span></code>, because fractional activation values cannot be represented in
+their original dtype.</p></li>
+<li><p>Complex input is rejected; the ordered real activation has no unambiguous
+complex extension in this API.</p></li>
+<li><p>The receiver is not mutated. The returned Series owns a new result.</p></li>
+<li><p>Reverse mode uses the analytic derivative</p>
+<p>$$
+\tanh(s)+x,\operatorname{sigmoid}(x)(1-\tanh^2(s)),
+\qquad s=\operatorname{softplus}(x).
+$$</p>
+<p>The derivative remains connected for higher-order differentiation.</p>
+</li>
+</ul>
+<p>At very negative input, the result approaches zero from below. At very
+positive input, it approaches <code class="docutils literal notranslate"><span class="pre">x</span></code>. The implementation uses the stable
+<code class="docutils literal notranslate"><span class="pre">softplus()</span></code> path rather than directly evaluating an overflowing <code class="docutils literal notranslate"><span class="pre">exp(x)</span></code>.</p>
+</section>
+<section id="in-place-form">
+<h2>In-Place Form<a class="headerlink" href="#in-place-form" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mish_()</span></code> is the in-place sibling of <a class="reference internal" href="#"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mish()</span></code></span></a>: it computes the same
+result and writes it back into <code class="docutils literal notranslate"><span class="pre">self</span></code> directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> — then
+returns a reference to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>Despite being declared <code class="docutils literal notranslate"><span class="pre">const</span></code> at the call site — a quirk of how this method’s wrapper is generated, not a promise that <code class="docutils literal notranslate"><span class="pre">self</span></code> is left unchanged — <code class="docutils literal notranslate"><span class="pre">mish_()</span></code> genuinely mutates the series it’s called on.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">mish_</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.25250148, 0, 1.943959]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="observe-both-tails-and-the-negative-trough">
+<h3>1. Observe both tails and the negative trough<a class="headerlink" href="#observe-both-tails-and-the-negative-trough" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mish</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-0.1456, -0.3034, 0.0000, 0.8651, 2.9865]
+</pre></div>
+</div>
+<p>The value at <code class="docutils literal notranslate"><span class="pre">-1</span></code> is more negative than at <code class="docutils literal notranslate"><span class="pre">-3</span></code>, demonstrating the
+non-monotonic negative region. Positive values increasingly approach the
+identity.</p>
+</section>
+</section>
+<section id="higher-rank-input-keeps-its-structure">
+<h3>2. Higher-rank input keeps its structure<a class="headerlink" href="#higher-rank-input-keeps-its-structure" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">mish</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ -0.2525 0.0000 ⎤
+⎣  0.8651 2.9865 ⎦
+</pre></div>
+</div>
+<p>No axis has special meaning. Every lane is transformed independently.</p>
+</section>
+</section>
+<section id="integer-input-is-promoted">
+<h3>3. Integer input is promoted<a class="headerlink" href="#integer-input-is-promoted" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}).</span><span class="n">mish</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float32, platform=cpu, numel=3, contiguous=true)
+data=[-0.2525, 0.0000, 1.9440]
+</pre></div>
+</div>
+<p>Promotion happens before evaluation, so the negative and positive fractional
+results are not truncated back to integers.</p>
+</section>
+</section>
+<section id="reverse-mode-follows-the-smooth-derivative">
+<h3>4. Reverse mode follows the smooth derivative<a class="headerlink" href="#reverse-mode-follows-the-smooth-derivative" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">mish</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id4">
+<h4>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.0592, 0.6000, 1.0490]
+</pre></div>
+</div>
+<p>The derivative at zero is exactly <code class="docutils literal notranslate"><span class="pre">0.6</span></code>. Near <code class="docutils literal notranslate"><span class="pre">1</span></code>, the derivative can exceed
+one; the activation is not a clipped gate.</p>
+</section>
+</section>
+<section id="complex-input-fails-explicitly">
+<h3>5. Complex input fails explicitly<a class="headerlink" href="#complex-input-fails-explicitly" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Complex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">{{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">}).</span><span class="n">mish</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h4>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mish: complex input is not supported
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mish()</span></code> is linear in <code class="docutils literal notranslate"><span class="pre">numel()</span></code> and uses exponential, logarithmic, and
+hyperbolic operations, so it is materially more expensive than piecewise
+linear activations. The named reverse node avoids retaining every temporary
+from the forward formula, while recomputing the derivative ingredients only
+when reverse propagation is requested.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="softplus.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">softplus()</span></code></span></a> is the smooth positive transform inside Mish.</p></li>
+<li><p><a class="reference internal" href="hardswish.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">hardswish()</span></code></span></a> is a cheaper piecewise activation.</p></li>
+<li><p><a class="reference internal" href="selu.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">selu()</span></code></span></a> supplies fixed self-normalizing constants.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="minimum.html" title="previous chapter">Series::minimum</a></li>
+      <li>Next: <a href="mode.html" title="next chapter">Series::mode</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/mish.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

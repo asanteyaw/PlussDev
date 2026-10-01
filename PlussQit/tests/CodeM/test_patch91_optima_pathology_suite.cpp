@@ -184,6 +184,9 @@ TEST_CASE("optima classifies live interior-point feasibility failures", "[optim]
   options.internal_protocol.minimum_barrier_parameter = 1e-6;
 
   const auto result = optima(make_feasibility_phase_problem(), ParameterPack<Series>({{"x", scalar(1.0)}}), options);
+  CAPTURE(static_cast<int>(result.exit_flag), result.message,
+          static_cast<int>(result.output.stall_category),
+          result.evaluation.max_constraint_violation);
 
   REQUIRE(result.exit_flag == OptimaExitFlag::NoProgress);
   REQUIRE(result.output.stall_category == OptimaStallCategory::FeasibilityFailure);

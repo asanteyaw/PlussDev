@@ -89,17 +89,14 @@ pluss::scribble::Slot Stream::scribbelize() const {
       }
       break;
     }
-    case pluss::kindle::StreamKind::TimeIndex: {
-      const auto& idx_tl = as_timeindex().timeline();
-      const std::string tz_name(idx_tl.tz());
-      const auto x = idx_tl.ticks();
+    case pluss::kindle::StreamKind::Duration: {
+      const auto x = as_duration().host();
       for (std::int64_t i = 0; i < n; ++i) {
         if (has_validity && !valid[static_cast<std::size_t>(i)]) {
           out.emplace_back(std::monostate{});
         } else {
-          out.emplace_back(pluss::make_timeindex(
-              pluss::timeline::from_epoch(std::vector<std::int64_t>{x[static_cast<std::size_t>(i)]}, tz_name),
-              false));
+          out.emplace_back(pluss::duration::nanos(
+              std::vector<std::int64_t>{x[static_cast<std::size_t>(i)]}));
         }
       }
       break;
@@ -284,10 +281,10 @@ const pluss::Timeline& Stream::as_timeline() const {
   return *p;
 }
 
-const pluss::TimeIndex& Stream::as_timeindex() const {
+const pluss::Duration& Stream::as_duration() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto* p = std::get_if<pluss::TimeIndex>(&impl_ref_().payload_);
-  PLUSS_CHECK(p != nullptr, "Stream payload is not TimeIndex");
+  const auto* p = std::get_if<pluss::Duration>(&impl_ref_().payload_);
+  PLUSS_CHECK(p != nullptr, "Stream payload is not Duration");
   return *p;
 }
 
@@ -357,8 +354,8 @@ std::string Stream::to_json() const {
       }
       break;
     }
-    case StreamKind::TimeIndex: {
-      const auto values = as_timeindex().timeline().ticks();
+    case StreamKind::Duration: {
+      const auto values = as_duration().host();
       for (std::size_t i = 0; i < values.size(); ++i) {
         if (i == 0) oss << "\n";
         oss << "    " << values[i];

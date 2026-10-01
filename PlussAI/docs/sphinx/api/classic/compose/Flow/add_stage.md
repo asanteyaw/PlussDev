@@ -56,6 +56,17 @@ classic::Status classic::Flow::add_polynomial_lift(
     classic::prep::PolynomialLiftOptions options = {}, /* feature indices */ feature_route = {});
 ```
 
+## What It Does
+
+Appends one transform stage of the specific kind the method name names --
+constructing the underlying `prep` transform from `options`, and, when
+`feature_route` narrows it, applying that transform only to the named
+feature subset rather than every column. Internally every one of these
+twenty methods forwards to
+[`add_named_transform`](add_named_transform.md); reach for a typed method
+here whenever the stage kind is known at the call site, and only drop down
+to the dynamic form when it is not.
+
 ## Parameters
 
 `options`

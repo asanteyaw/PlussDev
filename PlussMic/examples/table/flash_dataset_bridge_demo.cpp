@@ -9,7 +9,6 @@ namespace {
 
 using pluss::make_note;
 using pluss::make_series;
-using pluss::make_timeindex;
 using pluss::make_timeline;
 using pluss::pl::flash::Dataset;
 using pluss::pl::flash::FramePolicy;
@@ -113,7 +112,7 @@ void example_from_frame_subset() {
 void example_from_frame_timeindex() {
   std::cout << "== from_frame_timeindex ==\n";
   const auto frame = DataFrame({
-      {"event_idx", make_timeindex({
+      {"event_idx", make_timeline({
           "2026-01-01T09:00:00Z",
           "2026-01-01T10:00:00Z",
           "2026-01-01T11:00:00Z",
@@ -130,7 +129,7 @@ void example_from_frame_timeindex() {
 void example_from_frame_timeindex_disabled() {
   std::cout << "== from_frame_timeindex_disabled ==\n";
   const auto frame = DataFrame({
-      {"event_idx", make_timeindex({
+      {"event_idx", make_timeline({
           "2026-01-01T09:00:00Z",
           "2026-01-01T10:00:00Z",
       })},

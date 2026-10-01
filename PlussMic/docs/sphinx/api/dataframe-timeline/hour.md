@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::hour() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its hour-of-day
+Replaces every selected `Timeline` feature with its hour-of-day
 (`0`-`23`), as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -80,7 +80,7 @@ hour-of-day.
 ## Notes
 
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.
@@ -101,8 +101,8 @@ hour-of-day.
     <span class="label">Previous</span>
     <span class="title">fmt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="isnat.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">isnat</span>
   </a>
 </div>

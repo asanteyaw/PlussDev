@@ -12,9 +12,15 @@ template <typename ReturnType = Series, class... InputTypes>
 ReturnType nn::Schedule::run(InputTypes&&... inputs) const;
 ```
 
-The general form behind [`forward`](forward.md) (`forward(x)` is exactly
-`run<Series>(x)`) -- explicit about the chain's return type, and able to
-feed more than one argument to the first stage at once.
+## What It Does
+
+Runs the chain the same way [`forward`](forward.md) does -- each stage's
+output feeds the next -- but as the general form behind it: explicit about
+the expected return type instead of assuming `Series`, and able to feed
+more than one argument to the first stage at once (packed into a tuple).
+Reach for `run` instead of `forward`/`operator()` whenever the chain's real
+input or output type is not a plain `Series`, most commonly a chain built
+with [`append_as`](append_as.md)/[`insert_as`](insert_as.md) stages.
 
 ## Parameters
 
@@ -61,8 +67,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   net.to(pluss::ScalarType::Float64);
@@ -109,8 +115,8 @@ int main() {
   };
 
   nn::Schedule net;
-  net.then_as<std::tuple<Series, Series>, Series>("combine", Combine{});
-  net.then("head", nn::Fusion(4, 2));
+  net.append_as<std::tuple<Series, Series>, Series>("combine", Combine{});
+  net.append("head", nn::Fusion(4, 2));
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   net.to(pluss::ScalarType::Float64);
@@ -148,7 +154,7 @@ int main() {
   using pluss::Series;
 
   nn::Schedule net;
-  net.then("only", nn::Fusion(3, 2));  // produces a plain Series
+  net.append("only", nn::Fusion(3, 2));  // produces a plain Series
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   net.to(pluss::ScalarType::Float64);
@@ -176,7 +182,7 @@ caught: pluss::nn::Schedule::run: requested return type NSt3__15tupleIJN5pluss5c
 ## See Also
 
 - [`forward`](forward.md) -- the `Series -> Series`, single-input shorthand.
-- [`then_as`](then_as.md) -- builds the heterogeneous chains `run` is meant
+- [`append_as`](append_as.md) -- builds the heterogeneous chains `run` is meant
   to drive.
 
 <!-- apiref:nav:start -->

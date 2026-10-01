@@ -443,7 +443,7 @@ cudnnRNNMode_t mode_for_kind_(RnnKind kind, const ::pluss::ai::rnn::NetConfig& c
 
 Series add_bias_maybe_(const Series& a, ScalarType dtype) {
   if (a.defined()) return to_cuda_dtype_contiguous_(a, dtype);
-  return Series();
+  return pluss::series::undefined();
 }
 
 void materialize_biases_(
@@ -691,8 +691,8 @@ bool copy_gate_weights_and_biases_(
       const auto& p = params[static_cast<std::size_t>(layer_idx)];
       const Series w_ih = to_cuda_dtype_contiguous_(p.weight_ih, dtype);
       const Series w_hh = to_cuda_dtype_contiguous_(p.weight_hh, dtype);
-      Series b_ih;
-      Series b_hh;
+      Series b_ih = pluss::series::undefined();
+      Series b_hh = pluss::series::undefined();
       materialize_biases_(p, cfg, dtype, static_cast<std::int64_t>(gates) * hidden, &b_ih, &b_hh);
 
       for (int g = 0; g < gates; ++g) {
@@ -878,7 +878,7 @@ bool cudnn_forward_kind_(
 
   const Series input = to_cuda_dtype_contiguous_(input_raw, dtype);
   const Series hx = to_cuda_dtype_contiguous_(hx_raw, dtype);
-  const Series cx = (kind == RnnKind::Lstm && cx_raw != nullptr) ? to_cuda_dtype_contiguous_(*cx_raw, dtype) : Series();
+  const Series cx = (kind == RnnKind::Lstm && cx_raw != nullptr) ? to_cuda_dtype_contiguous_(*cx_raw, dtype) : pluss::series::undefined();
 
   const std::int64_t seq_len = input.sizes()[0];
   const std::int64_t batch = input.sizes()[1];
@@ -1274,8 +1274,8 @@ std::optional<std::tuple<Series, Series>> try_rnn(
   }
 
 #if PLUSS_AI_HAS_CUDNN_RNN_KERNELS && PLUSS_AI_HAS_DLOPEN
-  Series y;
-  Series hy;
+  Series y = pluss::series::undefined();
+  Series hy = pluss::series::undefined();
   if (!cudnn_forward_kind_(RnnKind::Vanilla, input, hx, nullptr, params, cfg, &y, &hy, nullptr, &reason)) {
     if (rnn_route_strict()) {
       PLUSS_FAIL(std::string("pluss::ai::rnn: strict cuDNN forward failed: ") + reason);
@@ -1309,8 +1309,8 @@ std::optional<std::tuple<Series, Series>> try_gru(
   }
 
 #if PLUSS_AI_HAS_CUDNN_RNN_KERNELS && PLUSS_AI_HAS_DLOPEN
-  Series y;
-  Series hy;
+  Series y = pluss::series::undefined();
+  Series hy = pluss::series::undefined();
   if (!cudnn_forward_kind_(RnnKind::Gru, input, hx, nullptr, params, cfg, &y, &hy, nullptr, &reason)) {
     if (rnn_route_strict()) {
       PLUSS_FAIL(std::string("pluss::ai::gru: strict cuDNN forward failed: ") + reason);
@@ -1345,9 +1345,9 @@ std::optional<std::tuple<Series, std::tuple<Series, Series>>> try_lstm(
   }
 
 #if PLUSS_AI_HAS_CUDNN_RNN_KERNELS && PLUSS_AI_HAS_DLOPEN
-  Series y;
-  Series hy;
-  Series cy;
+  Series y = pluss::series::undefined();
+  Series hy = pluss::series::undefined();
+  Series cy = pluss::series::undefined();
   if (!cudnn_forward_kind_(RnnKind::Lstm, input, hx, &cx, params, cfg, &y, &hy, &cy, &reason)) {
     if (rnn_route_strict()) {
       PLUSS_FAIL(std::string("pluss::ai::lstm: strict cuDNN forward failed: ") + reason);

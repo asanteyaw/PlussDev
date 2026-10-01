@@ -24,8 +24,8 @@ direct "give me this rectangle" convenience.
 Semantically, `zoom()` is the positional shorthand for:
 
 ```cpp
-df.case_study(DataFrame::Case::slice(case_start, case_stop),
-              DataFrame::Feat::slice(feature_start, feature_stop))
+df.case_study().slice(case_start, case_stop)
+  .features(selected_feature_names)
 ```
 
 So it is intentionally positional and half-open on both axes. If you need label-based
@@ -53,7 +53,7 @@ Python-style normalization as [`slice()`](slice.md).
 
 The contiguous feature block `[feature_start, feature_stop)`. Negative values are
 normalized relative to the end of the feature axis the same way
-`Feat::slice(...)` already does internally.
+the case-study accessor's positional slice does on the row axis.
 
 ## Returns
 
@@ -70,8 +70,8 @@ That usually happens in three situations:
 - you are visually inspecting a large frame and want to focus on one local region
 - you are debugging generated data and need a compact "window" into the middle or tail
   of a table
-- you want a matrix-like block extraction without spelling the longer
-  `case_study(Case::slice(...), Feat::slice(...))` form each time
+- you want a matrix-like block extraction without selecting cases and then resolving
+  the corresponding feature names yourself
 
 If your selection is not rectangular, not positional, or not contiguous, then
 `zoom()` is the wrong tool. In that case, `case_study()`, `slice()`, `features()`, or
@@ -164,14 +164,13 @@ Notice that the surviving labels remain `r0` and `r1`; they are not renumbered t
 new local positions. This matters when you are matching a zoomed block back to the
 source frame during debugging or reporting.
 
-Example 4. `zoom()` is equivalent to the explicit `case_study(...)` rectangle.
+Example 4. `zoom()` is equivalent to an accessor slice followed by feature
+projection.
 
 ```cpp
 auto via_zoom = grid.zoom(1, 4, 2, 4);
-auto via_case_study = grid.case_study(
-    DataFrame::Case::slice(1, 4),
-    DataFrame::Feat::slice(2, 4)
-);
+auto via_case_study = grid.case_study().slice(1, 4)
+                          .features({"y", "z"});
 
 std::cout << via_zoom;
 ```

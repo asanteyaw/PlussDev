@@ -213,12 +213,13 @@ Slot Slot::fillnull(const pluss::Timeline& value) const {
       scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Timeline, 0.0, {}, &value, nullptr));
 }
 
-Slot Slot::fillnull(const pluss::TimeIndex& value) const {
+Slot Slot::fillnull(const pluss::Duration& value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::ThreadCastTarget::TimeIndex,
-      "Slot::fillnull(TimeIndex)",
-      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::TimeIndex, 0.0, {}, nullptr, &value));
+      pluss::table::ThreadCastTarget::Duration,
+      "Slot::fillnull(Duration)",
+      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Duration,
+                                   0.0, {}, nullptr, &value));
 }
 
 Slot Slot::dropnull() const {
@@ -287,8 +288,6 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
   std::vector<Value> note_values;
   std::vector<std::int64_t> timeline_positions;
   std::vector<Value> timeline_values;
-  std::vector<std::int64_t> timeindex_positions;
-  std::vector<Value> timeindex_values;
   std::vector<std::int64_t> slow_positions;
 
   std::vector<Value> out(static_cast<std::size_t>(size()), std::monostate{});
@@ -324,9 +323,8 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
         timeline_positions.push_back(i);
         timeline_values.push_back(value);
         break;
-      case SlotKind::TimeIndex:
-        timeindex_positions.push_back(i);
-        timeindex_values.push_back(value);
+      case SlotKind::Duration:
+        slow_positions.push_back(i);
         break;
       case SlotKind::Empty:
       case SlotKind::Null:
@@ -350,7 +348,6 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
   }
   scatter_casted(note_positions, std::move(note_values));
   scatter_casted(timeline_positions, std::move(timeline_values));
-  scatter_casted(timeindex_positions, std::move(timeindex_values));
 
   for (const auto pos : slow_positions) {
     const auto& value = at(pos);
@@ -363,8 +360,8 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
           return thread.cast(options).note();
         case pluss::table::ThreadCastTarget::Timeline:
           return thread.cast(options).timeline();
-        case pluss::table::ThreadCastTarget::TimeIndex:
-          return thread.cast(options).timeindex();
+        case pluss::table::ThreadCastTarget::Duration:
+          return thread.cast(options).duration();
       }
       return thread;
     }();
@@ -502,37 +499,17 @@ pluss::kindle::Stream Slot::kindelize() const {
         tz_name.value_or("UTC")));
   }
 
-  if (profile.kind == SlotKind::TimeIndex) {
-    // Same 0D-scalar reshape as the Timeline branch above, via TimeIndex's
-    // own underlying Timeline.
-    if (values().size() == 1) {
-      const auto& tl = std::get<pluss::TimeIndex>(values().front()).timeline();
-      auto reshaped = pluss::codeh::ops_internal::timeline_from_series(
-          tl.unsafe_ticks().reshape({1}), std::string(tl.tz()));
-      return pluss::kindle::Stream(pluss::make_timeindex(reshaped, false));
+  if (profile.kind == SlotKind::Duration) {
+    std::vector<std::int64_t> nanos;
+    nanos.reserve(values().size());
+    for (const auto& value : values()) {
+      const auto& duration = std::get<pluss::Duration>(value);
+      PLUSS_CHECK(duration.numel() == 1,
+                  "Slot::kindelize: Duration values must be scalar-like");
+      nanos.push_back(duration.host()[0]);
     }
-    std::vector<std::int64_t> ticks;
-    ticks.reserve(values().size());
-    std::optional<std::string> tz_name;
-    for (const auto& v : values()) {
-      const auto& tl = std::get<pluss::TimeIndex>(v).timeline();
-      ticks.push_back(tl.ticks()[0]);
-      std::string value_tz(tl.tz());
-      if (!tz_name.has_value()) {
-        tz_name = std::move(value_tz);
-      } else {
-        PLUSS_CHECK(*tz_name == value_tz,
-                    std::string("Slot::kindelize: TimeIndex slot values carry mismatched timezones ('") +
-                        *tz_name + "' vs '" + value_tz +
-                        "'); a Stream's TimeIndex column has one shared tz, so relabel with tz() "
-                        "(or localize()) to a common zone before combining");
-      }
-    }
-    auto merged = pluss::timeline::from_epoch(
-        ticks,
-        std::vector<std::int64_t>{static_cast<std::int64_t>(ticks.size())},
-        tz_name.value_or("UTC"));
-    return pluss::kindle::Stream(pluss::make_timeindex(merged, false));
+    return pluss::kindle::Stream(pluss::duration::nanos(
+        nanos, {static_cast<std::int64_t>(nanos.size())}));
   }
 
   throw pluss::Error("Slot::kindelize: unsupported slot kind");

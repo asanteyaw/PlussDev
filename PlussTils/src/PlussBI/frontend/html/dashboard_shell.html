@@ -1,0 +1,36 @@
+<!-- PlussBI dashboard page shell.
+
+     This file is the single source of truth for the outer document
+     structure. It is embedded verbatim (byte-for-byte, no C++ string
+     interpolation of ITS OWN text) into a generated C++ header at
+     PlussBI's CMake configure step -- see ../../CMakeLists.txt and
+     include/pluss/bi/dashboard_assets.h.
+
+     The renderer (detail::dashboard_html_ in studio.h) fills in four
+     double-curly-brace PLUSSBI_* placeholders below with a single-pass,
+     exactly-once find/replace -- each placeholder appears exactly once in
+     this file (this comment spells them without their braces on purpose,
+     so this explanation itself is never mistaken for the placeholder):
+
+       PLUSSBI_TITLE      escaped page title (used in <title>)
+       PLUSSBI_STYLE_TAG  either an inline <style> block (static
+                          export/show) or a <link> to
+                          /assets/dashboard.css (Studio::serve())
+       PLUSSBI_SCRIPT_TAG either an inline <script> block or a
+                          <script src> to /assets/dashboard.js,
+                          mirroring PLUSSBI_STYLE_TAG's choice
+       PLUSSBI_BODY       the dynamically generated board/tile/filter
+                          markup, in either chrome mode -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{PLUSSBI_TITLE}}</title>
+  {{PLUSSBI_STYLE_TAG}}
+</head>
+<body>
+{{PLUSSBI_BODY}}
+{{PLUSSBI_SCRIPT_TAG}}
+</body>
+</html>

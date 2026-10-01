@@ -21,8 +21,8 @@ namespace {
 
 struct BoundsPack {
   bool enabled{false};
-  Series lower{Series::undefined()};
-  Series upper{Series::undefined()};
+  Series lower{pluss::series::undefined()};
+  Series upper{pluss::series::undefined()};
 };
 
 constexpr double kBoxEps = std::numeric_limits<double>::epsilon();
@@ -33,7 +33,7 @@ struct CommonSetup {
   Config work_cfg{};
   Config idx_cfg{};
   Config bool_cfg{};
-  Series flat_initial{Series::undefined()};
+  Series flat_initial{pluss::series::undefined()};
 };
 
 struct RngState {

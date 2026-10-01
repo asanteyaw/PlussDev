@@ -67,14 +67,3 @@ it directly.
 - [`abs`](abs.md): magnitude alone, the complementary piece of information
   `sign` discards.
 - [`clip`](clip.md): bounding into a range, another unary transform.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="abs.html">
-    <span class="label">Previous</span>
-    <span class="title">abs</span>
-  </a>
-  <a class="next-link" href="clip.html">
-    <span class="label">Next</span>
-    <span class="title">clip</span>
-  </a>
-</div>

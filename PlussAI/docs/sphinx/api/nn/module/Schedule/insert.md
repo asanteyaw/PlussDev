@@ -15,19 +15,24 @@ template <typename Layer>
 nn::Schedule& nn::Schedule::insert(std::size_t index, std::string name, Layer&& layer);
 ```
 
-[`then`](then.md) with a position: the stage lands at `index` (shifting
+## What It Does
+
+[`append`](append.md) with a position: the stage lands at `index` (shifting
 every later stage right by one) instead of always at the end. Both
 overloads assume `Series -> Series` -- use [`insert_as`](insert_as.md) when
-a stage's real type is something else.
+a stage's real type is something else. Reach for `insert` when a layer
+needs to land between two already-added stages -- inserting a normalization
+layer retroactively, for instance -- rather than rebuilding the whole chain
+in the right order from scratch.
 
 ## Parameters
 
 `std::size_t index`
 : Where the new stage lands, in `[0, size()]` inclusive -- `index == size()`
-  appends, exactly like `then`.
+  appends, exactly like `append`.
 
 `Layer&& layer`, `std::string name`
-: Same as [`then`](then.md).
+: Same as [`append`](append.md).
 
 ## Returns
 
@@ -39,7 +44,7 @@ a stage's real type is something else.
 - `name` already taken -- throws.
 - `layer`'s declared type does not match **either** neighbor it lands
   between (the stage now at `index - 1`, if any, and the stage now at
-  `index + 1`, if any) -- throws. Unlike `then`, which only ever has one
+  `index + 1`, if any) -- throws. Unlike `append`, which only ever has one
   neighbor to satisfy (the current last stage), `insert` in the middle of
   an existing chain must satisfy both sides at once.
 
@@ -66,8 +71,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   net.insert(1, "mid", nn::Fusion(4, 4));  // slots between "in" and "out" -- both neighbors are Series->Series
 
@@ -106,8 +111,8 @@ int main() {
   using pluss::Series;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   try {
     net.insert_as<Series, std::tuple<Series, Series>>(1, "bad", nn::RNN(4, 4));
@@ -136,7 +141,7 @@ and not meant to be read directly, only compared or logged.)
 ### Example 3
 
 Auto-naming is assigned in **call order**, not final position. Two stages
-added by `then()` (auto-named `"0"`, `"1"`), then a third inserted between
+added by `append()` (auto-named `"0"`, `"1"`), then a third inserted between
 them by `insert()`, is auto-named `"2"` -- the counter keeps counting
 regardless of where the stage ends up.
 
@@ -150,8 +155,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then(nn::Fusion(3, 4));   // auto-named "0"
-  net.then(nn::Fusion(4, 2));   // auto-named "1"
+  net.append(nn::Fusion(3, 4));   // auto-named "0"
+  net.append(nn::Fusion(4, 2));   // auto-named "1"
 
   net.insert(1, nn::Fusion(4, 4));  // auto-named "2" -- next_auto_name_ keeps counting regardless of position
 
@@ -173,7 +178,7 @@ stage 2: '1'
 
 ## See Also
 
-- [`then`](then.md) -- inserts only ever at the end.
+- [`append`](append.md) -- inserts only ever at the end.
 - [`insert_as`](insert_as.md) -- the same operation for a stage whose real
   type is not `Series -> Series`.
 - [`erase`](erase.md) -- the inverse operation.

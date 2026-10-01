@@ -103,7 +103,7 @@ Series fit_beta_(const Series& x, const Series& y, const DirectForecasterOptions
     }
   }
 
-  Series beta = Series::undefined();
+  Series beta = pluss::series::undefined();
   const std::array<double, 5> scales{1.0, 10.0, 100.0, 1000.0, 1.0e6};
   const double base_rcond = std::max(1e-12, opts.pinv_rcond);
   for (double scale : scales) {
@@ -207,7 +207,7 @@ Series DirectForecaster::predict(const Series& x, const Series& y, Config cfg) c
   const Config out_cfg = work_cfg_(cfg);
   const std::int64_t nobs = observed_count_(x, y, lag_plan_);
   const Series yv = y.defined() ? as_vector_(y, "DirectForecaster::predict").to(out_cfg.platform, out_cfg.dtype)
-                                : Series::undefined();
+                                : pluss::series::undefined();
 
   const Series design = build_lagged_predictors(x, yv, lag_plan_, out_cfg);
   std::vector<Series> preds;
@@ -231,7 +231,7 @@ Series DirectForecaster::prepared_predictors(const Series& x, const Series& y, s
   const auto& step_model = step_for_horizon_(steps_, horizon_step);
   const std::int64_t nobs = observed_count_(x, y, lag_plan_);
   const Series yv = y.defined() ? as_vector_(y, "DirectForecaster::prepared_predictors").to(out_cfg.platform, out_cfg.dtype)
-                                : Series::undefined();
+                                : pluss::series::undefined();
   const Series design = build_lagged_predictors(x, yv, lag_plan_, out_cfg);
   const std::int64_t row_start = lag_plan_.max_lead - (step_model.horizon - 1);
   Series x_step = select_rows_(design, row_start, nobs, out_cfg);

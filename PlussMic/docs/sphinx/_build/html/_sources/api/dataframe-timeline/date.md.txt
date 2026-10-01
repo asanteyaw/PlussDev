@@ -13,9 +13,9 @@ DataFrameTimelineAccessor::date() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with just its date
+Replaces every selected `Timeline` feature with just its date
 portion (time-of-day dropped to midnight), in local wall time — same feature
-name, still `Timeline`/`TimeIndex`-kind, same row order. Equivalent to
+name, still `Timeline`-kind, same row order. Equivalent to
 [`floor("D")`](floor.md).
 
 ## Parameters
@@ -83,7 +83,7 @@ displays without any time-of-day text at all.
 
 - Operates in **local wall time**, per the `Timeline`'s current timezone.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

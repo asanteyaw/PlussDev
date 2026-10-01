@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,10 +50,10 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Renders each bound key’s timestamp as its full English month name, replacing
-each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text) key.</p>
+each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text) key.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+<p>CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor::isnat</span></code></span></a>’s own important callout for the full
 explanation and the exact throw message.</p>
@@ -100,7 +100,7 @@ ts                       | Note         | Note             | 2       | [January,
 <ul class="simple">
 <li><p>Always the full English name (<code class="docutils literal notranslate"><span class="pre">&quot;January&quot;</span></code>, not <code class="docutils literal notranslate"><span class="pre">&quot;Jan&quot;</span></code>); use <a class="reference internal" href="fmt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fmt(&quot;%b&quot;)</span></code></span></a>
 for the abbreviated three-letter form.</p></li>
-<li><p>Changes each bound key’s kind from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> to <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
+<li><p>Changes each bound key’s kind from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> to <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
 <li><p>See the important callout above.</p></li>
 </ul>
 </section>

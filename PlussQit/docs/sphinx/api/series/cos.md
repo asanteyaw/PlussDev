@@ -8,6 +8,7 @@
 
 ```cpp
 Series::cos() const -> Series
+Series& Series::cos_()
 ```
 
 ## What It Does
@@ -47,6 +48,29 @@ That gives a clean mental model:
 
 The verified reverse-mode example below reflects that behavior on the current
 surface.
+
+## In-Place Form
+
+`cos_()` is the in-place sibling of [`cos()`](cos.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0, 2.0});
+
+auto& ref = x.cos_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 0.54030231, -0.41614684]
+same object: true
+```
 
 ## Examples
 

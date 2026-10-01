@@ -16,7 +16,7 @@ Stream StreamTimelineAccessor::fmt(std::string_view pattern) const
 Renders the bound stream's timestamp as custom text built from `pattern`,
 replacing it with a `Note` (text) stream.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.
@@ -66,7 +66,7 @@ label        | value
 - `pattern` cannot be empty — an empty pattern throws.
 - `%f` always emits all 9 nanosecond digits, zero-padded; `%z` always renders
   as a signed `HH:MM` offset, never a bare `"Z"`.
-- Changes the stream's kind from `Timeline`/`TimeIndex` to `Note`.
+- Changes the stream's kind from `Timeline` to `Note`.
 - See the important callout above.
 
 ## See Also

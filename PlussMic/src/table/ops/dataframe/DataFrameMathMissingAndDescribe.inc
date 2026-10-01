@@ -55,10 +55,10 @@ Thread cast_thread_target_(const Thread& thread,
       return thread.cast(options).note();
     case ThreadCastTarget::Timeline:
       return thread.cast(options).timeline();
-    case ThreadCastTarget::TimeIndex:
-      return thread.cast(options).timeindex();
+    case ThreadCastTarget::Duration:
+      return thread.cast(options).duration();
   }
-  return thread;
+  PLUSS_FAIL("DataFrame::cast: unsupported cast target");
 }
 
 }  // namespace
@@ -906,7 +906,7 @@ DataFrame DataFrame::replace(
       src,
       features,
       [](const Thread& col) {
-        return col.kind() == ThreadKind::Timeline || col.kind() == ThreadKind::TimeIndex;
+        return col.kind() == ThreadKind::Timeline;
       },
       [&from, &to](const Thread& col) { return col.replace(from, to); },
       "DataFrame::replace(Timeline, Timeline)");
@@ -926,7 +926,7 @@ DataFrame DataFrame::replace(
       src,
       features,
       [](const Thread& col) {
-        return col.kind() == ThreadKind::Timeline || col.kind() == ThreadKind::TimeIndex;
+        return col.kind() == ThreadKind::Timeline;
       },
       [&from, to](const Thread& col) { return col.replace(from, to); },
       "DataFrame::replace(Timeline, null)");
@@ -945,16 +945,16 @@ DataFrame DataFrame::replace(
 }
 
 DataFrame DataFrame::replace(
-    const pluss::TimeIndex& from,
-    const pluss::TimeIndex& to,
+    const pluss::Duration& from,
+    const pluss::Duration& to,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::TimeIndex; },
+      [](const Thread& col) { return col.kind() == ThreadKind::Duration; },
       [&from, &to](const Thread& col) { return col.replace(from, to); },
-      "DataFrame::replace(TimeIndex, TimeIndex)");
+      "DataFrame::replace(Duration, Duration)");
   if (!out_cols.has_value()) {
     return *this;
   }
@@ -963,16 +963,16 @@ DataFrame DataFrame::replace(
 }
 
 DataFrame DataFrame::replace(
-    const pluss::TimeIndex& from,
+    const pluss::Duration& from,
     pluss::null_t to,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::TimeIndex; },
+      [](const Thread& col) { return col.kind() == ThreadKind::Duration; },
       [&from, to](const Thread& col) { return col.replace(from, to); },
-      "DataFrame::replace(TimeIndex, null)");
+      "DataFrame::replace(Duration, null)");
   if (!out_cols.has_value()) {
     return *this;
   }
@@ -981,8 +981,8 @@ DataFrame DataFrame::replace(
 }
 
 DataFrame DataFrame::replace(
-    pluss::null_t from,
-    const pluss::TimeIndex& to,
+    pluss::null_t,
+    const pluss::Duration& to,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   return fillnull(to, features);
 }
@@ -1000,8 +1000,8 @@ std::int64_t normalize_reduce_axis_(Axis axis, std::string_view where) {
 }
 
 struct ReduceMatrix_ {
-  pluss::Series values;
-  pluss::Series valid;
+  pluss::Series values = pluss::series::undefined();
+  pluss::Series valid = pluss::series::undefined();
   std::vector<std::string> names;
   std::int64_t ncases{0};
 };
@@ -1190,7 +1190,7 @@ Thread reduce_numeric_(
 
   const auto invalid = matrix.valid.logical_not();
   const auto counts = matrix.valid.to(pluss::codem::ScalarType::Int64).sum(axis);
-  pluss::Series values;
+  pluss::Series values = pluss::series::undefined();
   switch (op) {
     case NumericAxisOp_::Sum:
       values = matrix.values.where(invalid, 0.0).sum(axis);
@@ -1213,9 +1213,26 @@ Thread reduce_numeric_(
                / counts.to(pluss::codem::ScalarType::Float64);
       break;
     case NumericAxisOp_::Median:
-      values = matrix.values
-                   .where(invalid, std::numeric_limits<double>::quiet_NaN())
-                   .nanmedian(axis);
+      {
+        const auto sorted = matrix.values
+                                .where(invalid, std::numeric_limits<double>::infinity())
+                                .sort_pair(axis)
+                                .first;
+        const auto lower = (counts - 1.0)
+                               .floor_divide(2.0)
+                               .to(pluss::codem::ScalarType::Int64);
+        const auto upper = counts.floor_divide(2.0)
+                               .to(pluss::codem::ScalarType::Int64);
+        const auto lower_index = axis == 0
+                                     ? lower.reshape({1, output_size})
+                                     : lower.reshape({output_size, 1});
+        const auto upper_index = axis == 0
+                                     ? upper.reshape({1, output_size})
+                                     : upper.reshape({output_size, 1});
+        const auto lower_values = sorted.gather(axis, lower_index).squeeze(axis);
+        const auto upper_values = sorted.gather(axis, upper_index).squeeze(axis);
+        values = (lower_values + upper_values) * 0.5;
+      }
       break;
     case NumericAxisOp_::Std:
     case NumericAxisOp_::Var: {
@@ -1271,7 +1288,7 @@ std::vector<std::size_t> resolve_temporal_reduce_indices_(const detail::DataFram
   indices.reserve(src.columns_.size());
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto kind = src.columns_[i].kind();
-    if (kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) {
+    if (kind == ThreadKind::Timeline) {
       indices.push_back(i);
     }
   }
@@ -1289,33 +1306,24 @@ pluss::Timeline reduce_rebuild_timeline_like_(
   return out;
 }
 
-// Per-feature min/max across Timeline/TimeIndex columns (Axis::Case only -- each
+// Per-feature min/max across Timeline columns (Axis::Case only -- each
 // feature reduces to one timestamp, mirroring Thread::min()/max() on a single
-// temporal column). All included columns must share the same temporal
-// representation (all Timeline, or all TimeIndex); a column with no valid rows
-// -- or any null when skipnull is false -- contributes a NULL entry instead.
+// temporal column). A column with no valid rows -- or any null when skipnull
+// is false -- contributes a NULL entry instead.
 Thread reduce_temporal_minmax_(
     const detail::DataFrameImpl& src,
     std::span<const std::size_t> indices,
     bool want_max,
     bool skipnull,
     std::string_view where) {
-  const bool as_timeindex = src.columns_[indices.front()].kind() == ThreadKind::TimeIndex;
-  for (const auto idx : indices) {
-    PLUSS_CHECK((src.columns_[idx].kind() == ThreadKind::TimeIndex) == as_timeindex,
-                std::string(where) + ": cannot mix Timeline and TimeIndex features in one reduction");
-  }
-
-  const auto reference_timeline = as_timeindex
-                                       ? src.columns_[indices.front()].as_timeindex().timeline()
-                                       : src.columns_[indices.front()].as_timeline();
+  const auto reference_timeline = src.columns_[indices.front()].as_timeline();
 
   std::vector<std::int64_t> ticks(indices.size(), 0);
   std::vector<bool> valid(indices.size(), false);
 
   for (std::size_t k = 0; k < indices.size(); ++k) {
     const auto& col = src.columns_[indices[k]];
-    const pluss::Timeline timeline = as_timeindex ? col.as_timeindex().timeline() : col.as_timeline();
+    const pluss::Timeline timeline = col.as_timeline();
     const auto all_ticks = timeline.ticks();
 
     bool any_invalid = false;
@@ -1338,8 +1346,7 @@ Thread reduce_temporal_minmax_(
 
   auto out_timeline = reduce_rebuild_timeline_like_(reference_timeline, ticks);
   auto validity = bool_series_from_keep(valid);
-  Thread values = as_timeindex ? Thread(out_timeline.to_timeindex(false), validity)
-                               : Thread(out_timeline, validity);
+  Thread values = Thread(out_timeline, validity);
   return with_reduce_labels_(values, src, reduce_names_(src, indices), /*axis=*/0);
 }
 
@@ -2130,7 +2137,7 @@ DataFrame DataFrame::fillnull(
   if (features.size() == 0) {
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
       const auto kind = src.columns_[i].kind();
-      if (kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) {
+      if (kind == ThreadKind::Timeline) {
         target_indices.insert(i);
       }
     }
@@ -2151,7 +2158,7 @@ DataFrame DataFrame::fillnull(
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
     const auto kind = col.kind();
-    if ((kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) && col.has_validity_mask()) {
+    if (kind == ThreadKind::Timeline && col.has_validity_mask()) {
       col = col.fillnull(value);
       changed = true;
     }
@@ -2164,30 +2171,29 @@ DataFrame DataFrame::fillnull(
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
-DataFrame DataFrame::fillnull(const pluss::TimeIndex& value) const {
+DataFrame DataFrame::fillnull(const pluss::Duration& value) const {
   return fillnull(value, {});
 }
 
 DataFrame DataFrame::fillnull(
-    const pluss::TimeIndex& value,
+    const pluss::Duration& value,
     pluss::msharp::RangeView::Of<std::string_view> features) const {
   const auto& src = impl_ref_();
   std::unordered_set<std::size_t> target_indices;
-
   if (features.size() == 0) {
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
-      if (src.columns_[i].kind() == ThreadKind::TimeIndex) {
+      if (src.columns_[i].kind() == ThreadKind::Duration) {
         target_indices.insert(i);
       }
     }
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(TimeIndex): unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(),
+                  "DataFrame::fillnull(Duration): unknown feature '" + name + "'");
       target_indices.insert(it->second);
     }
   }
-
   if (target_indices.empty()) {
     return *this;
   }
@@ -2196,12 +2202,11 @@ DataFrame DataFrame::fillnull(
   bool changed = false;
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
-    if (col.kind() == ThreadKind::TimeIndex && col.has_validity_mask()) {
+    if (col.kind() == ThreadKind::Duration) {
       col = col.fillnull(value);
       changed = true;
     }
   }
-
   if (!changed) {
     return *this;
   }
@@ -2259,18 +2264,18 @@ DataFrame& DataFrame::fillnull_(const pluss::Timeline& value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     const auto kind = c.kind();
-    if ((kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex) && c.has_validity_mask()) {
+    if (kind == ThreadKind::Timeline && c.has_validity_mask()) {
       c.fillnull_(value);
     }
   }
   return *this;
 }
 
-DataFrame& DataFrame::fillnull_(const pluss::TimeIndex& value) {
-  auto& w = mut_impl_();
-  for (auto& c : w.columns_) {
-    if (c.kind() == ThreadKind::TimeIndex && c.has_validity_mask()) {
-      c.fillnull_(value);
+DataFrame& DataFrame::fillnull_(const pluss::Duration& value) {
+  auto& writable = mut_impl_();
+  for (auto& column : writable.columns_) {
+    if (column.kind() == ThreadKind::Duration) {
+      column.fillnull_(value);
     }
   }
   return *this;
@@ -2310,7 +2315,7 @@ DataFrame DataFrame::dropnull(const DropOptions& options) const {
   if (options.axis == Axis::Case) {
     const auto valid = validity_matrix_(src, target_indices, "DataFrame::dropnull");
     const auto counts = valid.to(pluss::codem::ScalarType::Int64).sum(1);
-    pluss::Series keep;
+    pluss::Series keep = pluss::series::undefined();
     if (options.threshold >= 0) {
       keep = counts.ge(static_cast<double>(options.threshold));
     } else if (options.all) {

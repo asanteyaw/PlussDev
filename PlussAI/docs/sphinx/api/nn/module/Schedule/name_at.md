@@ -13,6 +13,13 @@ Only reachable via `->` (`net->name_at(index)`).
 const std::string& nn::Schedule::Impl::name_at(std::size_t index) const;
 ```
 
+## What It Does
+
+Resolves a stage's position to its name -- the inverse of
+[`index_of`](index_of.md). Useful when iterating stages by position (`for
+(std::size_t i = 0; i < net->size(); ++i)`) and printing or logging each
+one's name alongside whatever else is being inspected at that position.
+
 ## Parameters
 
 `std::size_t index`
@@ -46,8 +53,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   for (std::size_t i = 0; i < net->size(); ++i) {
     std::cout << "stage " << i << ": '" << net->name_at(i) << "'\n";
@@ -79,8 +86,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   const std::size_t i = net->index_of("out");
   const std::string& round_trip = net->name_at(i);
@@ -113,8 +120,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then(nn::Fusion(3, 4));   // auto-named "0"
-  net.then(nn::Fusion(4, 2));   // auto-named "1"
+  net.append(nn::Fusion(3, 4));   // auto-named "0"
+  net.append(nn::Fusion(4, 2));   // auto-named "1"
   net.insert(1, nn::Fusion(4, 4));  // auto-named "2"
 
   for (std::size_t i = 0; i < net->size(); ++i) {
@@ -140,13 +147,13 @@ stage 2: name_at(2)='1'
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index_of.html">
+  <a class="prev-link" href="module_at.html">
     <span class="label">Previous</span>
-    <span class="title">index_of</span>
+    <span class="title">module_at</span>
   </a>
-  <a class="next-link" href="insert.html">
+  <a class="next-link" href="output_type_at.html">
     <span class="label">Next</span>
-    <span class="title">insert</span>
+    <span class="title">output_type_at</span>
   </a>
 </div>
 <!-- apiref:nav:end -->

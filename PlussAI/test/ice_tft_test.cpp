@@ -17,8 +17,10 @@
 
 #include <array>
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <random>
+#include <string>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -40,10 +42,10 @@ Config float_cfg() {
 }
 
 struct SyntheticData {
-  Series static_inputs;   // [N, 1]
-  Series encoder_inputs;  // [N, encoder_length, 1]
-  Series decoder_inputs;  // [N, decoder_length, 1]
-  Series target;          // [N, decoder_length]
+  Series static_inputs = pluss::series::undefined();   // [N, 1]
+  Series encoder_inputs = pluss::series::undefined();  // [N, encoder_length, 1]
+  Series decoder_inputs = pluss::series::undefined();  // [N, decoder_length, 1]
+  Series target = pluss::series::undefined();          // [N, decoder_length]
   std::vector<double> levels;
 };
 
@@ -238,10 +240,10 @@ bool run_ice_tft_checks(std::ostream* err = nullptr) {
 // mapping through a single linear-ish pathway; only a real per-category
 // embedding lookup can.
 struct CategoricalSyntheticData {
-  Series static_inputs;   // [N, 1], category codes 0..3 stored as floats.
-  Series encoder_inputs;  // [N, encoder_length, 1]
-  Series decoder_inputs;  // [N, decoder_length, 1]
-  Series target;          // [N, decoder_length]
+  Series static_inputs = pluss::series::undefined();   // [N, 1], category codes 0..3 stored as floats.
+  Series encoder_inputs = pluss::series::undefined();  // [N, encoder_length, 1]
+  Series decoder_inputs = pluss::series::undefined();  // [N, decoder_length, 1]
+  Series target = pluss::series::undefined();          // [N, decoder_length]
 };
 
 CategoricalSyntheticData make_categorical_synthetic(std::int64_t n, std::int64_t encoder_length,
@@ -475,6 +477,76 @@ bool run_ice_tft_dataset_integration_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+bool run_ice_tft_save_load_checks(std::ostream* err = nullptr) {
+  constexpr std::int64_t kEncoderLength = 6;
+  constexpr std::int64_t kDecoderLength = 3;
+
+  const auto train_data = make_synthetic(96, kEncoderLength, kDecoderLength, /*seed=*/21);
+  const auto test_data = make_synthetic(24, kEncoderLength, kDecoderLength, /*seed=*/55);
+
+  models::TFTOptions options{};
+  options.static_size = 1;
+  options.encoder_size = 1;
+  options.decoder_size = 1;
+  options.encoder_length = kEncoderLength;
+  options.decoder_length = kDecoderLength;
+  options.hidden_size = 8;
+  options.lstm_layers = 1;
+  options.attention_heads = 2;
+  options.dropout = 0.0;
+  options.quantiles = {0.1, 0.5, 0.9};
+  options.cfg = float_cfg();
+  options.seed = 7;
+
+  models::TemporalFusionTransformer model(options);
+
+  models::TFTBatch train_batch{};
+  train_batch.static_inputs = train_data.static_inputs;
+  train_batch.encoder_inputs = train_data.encoder_inputs;
+  train_batch.decoder_inputs = train_data.decoder_inputs;
+  train_batch.target = train_data.target;
+
+  models::TFTTrainOptions train_options{};
+  train_options.execution.max_epochs = 25;
+  train_options.batch_size = 32;
+  train_options.learning_rate = 1e-2;
+  train_options.validation.split_ratio = 0.0;
+  train_options.loop_regularization.early_stopping = false;
+  train_options.seed = 3;
+  model.learn(train_batch, train_options);
+
+  models::TFTBatch test_batch{};
+  test_batch.static_inputs = test_data.static_inputs;
+  test_batch.encoder_inputs = test_data.encoder_inputs;
+  test_batch.decoder_inputs = test_data.decoder_inputs;
+  test_batch.target = test_data.target;
+
+  const char* path = "ice_tft_save_load_test.artifact";
+  model.save(path);
+  const auto before = model.predict(test_batch);
+
+  models::TemporalFusionTransformer loaded = models::TemporalFusionTransformer::load(path);
+  std::remove(path);
+  std::remove((std::string(path) + ".weights").c_str());
+
+  if (!loaded.ready()) {
+    if (err) *err << "ice TFT ::load should report ready()\n";
+    return false;
+  }
+
+  const auto after = loaded.predict(test_batch);
+  const double quantiles_diff = before.quantiles.sub(after.quantiles).abs().amax().item<double>();
+  const double attn_diff =
+      before.attention_weights.sub(after.attention_weights).abs().amax().item<double>();
+  if (quantiles_diff > 1e-9 || attn_diff > 1e-9) {
+    if (err) *err << "ice TFT ::load should reproduce identical predictions; quantiles_diff="
+                  << quantiles_diff << " attn_diff=" << attn_diff << "\n";
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -482,6 +554,7 @@ TEST_CASE("ice tft tranche", "[ice][models][tft]") {
   if (!run_ice_tft_checks(&std::cerr)) FAIL("ice TFT checks failed");
   if (!run_ice_tft_categorical_checks(&std::cerr)) FAIL("ice TFT categorical checks failed");
   if (!run_ice_tft_dataset_integration_checks(&std::cerr)) FAIL("ice TFT dataset integration checks failed");
+  if (!run_ice_tft_save_load_checks(&std::cerr)) FAIL("ice TFT save/load checks failed");
 }
 #else
 int main() {
@@ -489,6 +562,7 @@ int main() {
   ok = run_ice_tft_checks(&std::cerr) && ok;
   ok = run_ice_tft_categorical_checks(&std::cerr) && ok;
   ok = run_ice_tft_dataset_integration_checks(&std::cerr) && ok;
+  ok = run_ice_tft_save_load_checks(&std::cerr) && ok;
   if (!ok) {
     return 1;
   }

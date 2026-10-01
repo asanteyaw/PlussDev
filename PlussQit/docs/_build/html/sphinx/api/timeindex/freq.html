@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=009ae0e8"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimeIndex::host" href="host.html" />
-    <link rel="prev" title="TimeIndex::size" href="size.html" />
+    <link rel="next" title="TimeIndex::head" href="head.html" />
+    <link rel="prev" title="TimeIndex::floor" href="floor.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -39,11 +39,9 @@
   <section id="timeindex-freq">
 <h1>TimeIndex::freq<a class="headerlink" href="#timeindex-freq" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeindex_api_reference.html"><span class="doc std std-doc">Back to TimeIndex API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimeIndex</span><span class="o">::</span><span class="n">infer_freq</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">freq</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">frequency</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">TimeIndex</span><span class="o">::</span><span class="n">freq</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -52,7 +50,6 @@
 <p>Infers a regular frequency code from the spacing of the index.</p>
 <p>This is the quickest way to ask whether the axis looks like a regular hourly,
 minute, daily, or second-based series.</p>
-<p><code class="docutils literal notranslate"><span class="pre">freq()</span></code> and <code class="docutils literal notranslate"><span class="pre">frequency()</span></code> are convenience aliases for <code class="docutils literal notranslate"><span class="pre">infer_freq()</span></code>.</p>
 <p>Think of it as a descriptive read on the axis, not a guarantee that later
 operations must obey.</p>
 </section>
@@ -109,13 +106,13 @@ on inferred cadence.</p></li>
 <li><p><a class="reference internal" href="is_monotonic_increasing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::is_monotonic_increasing</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="size.html">
+  <a class="prev-link" href="floor.html">
     <span class="label">Previous</span>
-    <span class="title">size</span>
+    <span class="title">floor</span>
   </a>
-  <a class="next-link" href="host.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">host</span>
+    <span class="title">head</span>
   </a>
 </div>
 </section>
@@ -150,54 +147,13 @@ on inferred cadence.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
@@ -214,8 +170,8 @@ on inferred cadence.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeindex_api_reference.html">TimeIndex API Reference</a><ul>
-      <li>Previous: <a href="size.html" title="previous chapter">TimeIndex::size</a></li>
-      <li>Next: <a href="host.html" title="next chapter">TimeIndex::host</a></li>
+      <li>Previous: <a href="floor.html" title="previous chapter">TimeIndex::floor</a></li>
+      <li>Next: <a href="head.html" title="next chapter">TimeIndex::head</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

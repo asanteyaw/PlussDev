@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -44,6 +44,9 @@
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusPull</span>
 <span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">PullSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">Nexus</span><span class="o">::</span><span class="n">pull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">root</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PullSpec</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fields</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
@@ -255,7 +258,10 @@ feature table.</p>
 <span class="w">    </span><span class="p">.</span><span class="n">add</span><span class="p">({</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;recent_spend&quot;</span><span class="p">).</span><span class="n">windowed</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">)})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <section id="output">
@@ -347,7 +353,10 @@ better than one call per field.</p>
 <span class="w">    </span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
 <span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <section id="id1">
@@ -394,7 +403,10 @@ lists.</p>
 <span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;regions&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;zone&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;zone&quot;</span><span class="p">}})</span>
 <span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <section id="id2">
@@ -675,45 +687,80 @@ throws — checked before any aggregation runs.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">orders</span></code> (used as <code class="docutils literal notranslate"><span class="pre">root</span></code> here) never had <code class="docutils literal notranslate"><span class="pre">TableMeta</span></code> declared at all in this session, so
 the aggregate field’s primary-key requirement fails immediately.</p>
-</section>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Never changes <code class="docutils literal notranslate"><span class="pre">root</span></code>’s row count — plain fields must be root-preserving (throws
-otherwise); aggregate fields collapse any cardinality down to one value per <code class="docutils literal notranslate"><span class="pre">root</span></code> row.</p></li>
-<li><p>Output column aliases are generated automatically: bare name for a root feature,
-<code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;</span></code> for a plain related field, <code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;_&lt;aggregate&gt;</span></code> for an
-aggregate. Two requested fields that would alias to the same name throw.</p></li>
-<li><p>Aggregate fields require <code class="docutils literal notranslate"><span class="pre">root</span></code> to have a complete, unique declared <code class="docutils literal notranslate"><span class="pre">primary_key</span></code> — see
-the important callout above.</p></li>
-<li><p>Windowed aggregates require the related table’s declared <code class="docutils literal notranslate"><span class="pre">time_field</span></code>; the <code class="docutils literal notranslate"><span class="pre">_root</span></code>
-anchor additionally requires <code class="docutils literal notranslate"><span class="pre">root</span></code>’s own declared <code class="docutils literal notranslate"><span class="pre">time_field</span></code>. <code class="docutils literal notranslate"><span class="pre">ndistinct</span></code> windows are
-unsupported.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">ndistinct</span></code> aggregates fill unmatched <code class="docutils literal notranslate"><span class="pre">root</span></code> rows with <code class="docutils literal notranslate"><span class="pre">0</span></code>; every other
-aggregate leaves them missing (<code class="docutils literal notranslate"><span class="pre">NULL</span></code>) — see Examples 3 and 4.</p></li>
-</ul>
-</section>
-<section id="see-also">
-<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="materialize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::materialize</span></code></span></a>: the full-frame alternative, returning every
-column from every hop instead of hand-picked fields.</p></li>
-<li><p><a class="reference internal" href="path.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::path</span></code></span></a>: the same root-preservation check applies to the routes this
-method walks for plain fields.</p></li>
-<li><p><a class="reference internal" href="table_meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::table_meta</span></code></span></a>: declare <code class="docutils literal notranslate"><span class="pre">primary_key</span></code> and <code class="docutils literal notranslate"><span class="pre">time_field</span></code>, both
-required by different parts of this method.</p></li>
-</ul>
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="profile.html">
-    <span class="label">Previous</span>
-    <span class="title">profile</span>
-  </a>
-  <a class="next-link" href="relationship.html">
-    <span class="label">Next</span>
-    <span class="title">relationship</span>
-  </a>
+<p>Example 11. Continuing from Example 1’s <code class="docutils literal notranslate"><span class="pre">linked</span></code> workspace: the same
+<code class="docutils literal notranslate"><span class="pre">pull(root,</span> <span class="pre">fields)</span></code> request via named containers instead of a brace
+literal — a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code> (the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload) and a
+<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> (the templated overload, reached because owning
+<code class="docutils literal notranslate"><span class="pre">std::string</span></code> doesn’t match <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>’s same-element-type vector
+constructor but does satisfy the broader <code class="docutils literal notranslate"><span class="pre">StringViewNameRange</span></code> concept).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_owned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">p_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">as_view</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">p_owned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">as_owned</span><span class="p">);</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">p_view</span><span class="p">.</span><span class="n">features</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p_view</span><span class="p">.</span><span class="n">features</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">p_owned</span><span class="p">.</span><span class="n">features</span><span class="p">().</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">p_owned</span><span class="p">.</span><span class="n">features</span><span class="p">()[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
 </div>
+</section>
+<section id="id13">
+<h3>Output<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>name
+name
+</pre></div>
+</div>
+<p>```{note} <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView</span></code> is never spelled out in these examples
+See <a class="reference internal" href="select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::select</span></code></span></a>’s own note on this — the same
+three-overload pattern (brace literal / named <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>-convertible
+container / any other qualifying range) applies to every <code class="docutils literal notranslate"><span class="pre">fields</span></code>
+parameter on this page, including the fluent <a class="reference internal" href="../nexus-pull/take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::take</span></code></span></a>
+examples above.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Notes
+
+- Never changes `root`&#39;s row count — plain fields must be root-preserving (throws
+  otherwise); aggregate fields collapse any cardinality down to one value per `root` row.
+- Output column aliases are generated automatically: bare name for a root feature,
+  `&lt;table&gt;_&lt;feature&gt;` for a plain related field, `&lt;table&gt;_&lt;feature&gt;_&lt;aggregate&gt;` for an
+  aggregate. Two requested fields that would alias to the same name throw.
+- Aggregate fields require `root` to have a complete, unique declared `primary_key` — see
+  the important callout above.
+- Windowed aggregates require the related table&#39;s declared `time_field`; the `_root`
+  anchor additionally requires `root`&#39;s own declared `time_field`. `ndistinct` windows are
+  unsupported.
+- `count`/`ndistinct` aggregates fill unmatched `root` rows with `0`; every other
+  aggregate leaves them missing (`NULL`) — see Examples 3 and 4.
+
+## See Also
+
+- [`Nexus::materialize`](materialize.md): the full-frame alternative, returning every
+  column from every hop instead of hand-picked fields.
+- [`Nexus::path`](path.md): the same root-preservation check applies to the routes this
+  method walks for plain fields.
+- [`Nexus::table_meta`](table_meta.md): declare `primary_key` and `time_field`, both
+  required by different parts of this method.
+
+&lt;div class=&quot;pluss-inline-prev-next&quot;&gt;
+  &lt;a class=&quot;prev-link&quot; href=&quot;profile.html&quot;&gt;
+    &lt;span class=&quot;label&quot;&gt;Previous&lt;/span&gt;
+    &lt;span class=&quot;title&quot;&gt;profile&lt;/span&gt;
+  &lt;/a&gt;
+  &lt;a class=&quot;next-link&quot; href=&quot;relationship.html&quot;&gt;
+    &lt;span class=&quot;label&quot;&gt;Next&lt;/span&gt;
+    &lt;span class=&quot;title&quot;&gt;relationship&lt;/span&gt;
+  &lt;/a&gt;
+&lt;/div&gt;
+</pre></div>
+</div>
+</section>
 </section>
 </section>
 

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 00615aa9f037 -->
+<!-- pluss-signature-hash: c3243745ae01 -->
 
 # DataFrame::fillnull_
 
@@ -12,7 +12,7 @@ DataFrame::fillnull_(double value) -> DataFrame&
 DataFrame::fillnull_(std::string_view value) -> DataFrame&
 DataFrame::fillnull_(const char* value) -> DataFrame&
 DataFrame::fillnull_(const pluss::Timeline& value) -> DataFrame&
-DataFrame::fillnull_(const pluss::TimeIndex& value) -> DataFrame&
+DataFrame::fillnull_(const pluss::Duration& value) -> DataFrame&
 ```
 
 ## What It Does
@@ -38,7 +38,7 @@ Each overload only touches features of the matching kind:
 - `fillnull_(double)`: every `Series` feature.
 - `fillnull_(std::string_view)` / `fillnull_(const char*)`: every `Note` feature.
 - `fillnull_(const pluss::Timeline&)`: every `Timeline` feature.
-- `fillnull_(const pluss::TimeIndex&)`: every `TimeIndex` feature.
+- `fillnull_(const pluss::Duration&)`: every `Duration` feature.
 
 A feature of a *different* kind than the overload you called is left completely
 untouched — calling `fillnull_(0.0)` never affects a `Note` column, even if that
@@ -49,9 +49,9 @@ column also has missing values.
 **value**
 
 The replacement value, in whichever type matches the overload: a `double` for numeric
-`Series` features, a string for `Note` features, or a `Timeline` / `TimeIndex` scalar
-for those respective feature kinds. The same `value` is used for every matching
-feature on the frame — there is no per-feature value list.
+`Series` features, a string for `Note` features, a `Timeline` scalar for `Timeline`
+features, or a `Duration` scalar for `Duration` features. The same `value` is used for
+every matching feature on the frame — there is no per-feature value list.
 
 ## Returns
 
@@ -168,9 +168,9 @@ untouched, since `fillnull_(std::string_view)` never looks at `Series` columns a
   applies to every feature of the matching kind.
 - A feature whose kind doesn't match the overload called is left completely alone, even
   if it has nulls of its own — call the matching overload for each kind you need filled.
-- The `pluss::Timeline` and `pluss::TimeIndex` overloads follow the exact same
+- The `pluss::Timeline` and `pluss::Duration` overloads follow the exact same
   kind-scoped, whole-frame, mutating pattern as the `double` and `std::string_view`
-  overloads shown above, filling every `Timeline` or `TimeIndex` feature's nulls with
+  overloads shown above, filling every `Timeline` or `Duration` feature's nulls with
   the given scalar.
 
 ## See Also

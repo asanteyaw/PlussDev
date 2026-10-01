@@ -14,10 +14,9 @@ Stream StreamTimelineAccessor::ceil(std::string_view unit) const
 ## What It Does
 
 Rounds the bound stream's timestamp *up* to the nearest `unit` boundary,
-replacing its values in place (the stream stays `Timeline`- or
-`TimeIndex`-kind, whichever it already was).
+replacing its values in place (the stream stays `Timeline`-kind).
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

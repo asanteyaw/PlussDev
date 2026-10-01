@@ -160,8 +160,8 @@ std::string now_time_() {
 }
 
 struct CleanData {
-  Series y = Series::undefined();
-  Series x = Series::undefined();
+  Series y = pluss::series::undefined();
+  Series x = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t p = 0;
   std::int64_t dropped = 0;

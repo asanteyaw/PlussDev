@@ -115,7 +115,7 @@ private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     AdagradOptions options{};
-    Series step_scalar{};
+    Series step_scalar = pluss::series::undefined();
   };
 
   static bool same_shape_(const Series& a, const Series& b) {
@@ -478,7 +478,7 @@ private:
   void initialize_group_capture_state_() {
     const auto& params = parameters();
     for (auto& group : groups_) {
-      group.step_scalar = Series{};
+      group.step_scalar = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

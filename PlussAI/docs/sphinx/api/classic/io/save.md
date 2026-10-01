@@ -31,6 +31,14 @@ below). Reach for the first overload whenever a fallback matters; the
 second is for a `Flow` you are certain has a working fitted-state snapshot
 and never needs to be re-fit on restore.
 
+## What It Does
+
+Serializes everything a `Flow` needs to be reconstructed later -- its spec
+(model family, options, stages), its fitted state (or, failing that, a
+training batch it can be re-fit from on restore), category maps for any
+factorized columns, and free-form metadata -- into one file at `path`.
+This is the write half of the round trip [`io::load`](load.md) reads back.
+
 ## Parameters
 
 `path`

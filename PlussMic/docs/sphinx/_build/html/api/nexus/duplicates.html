@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -45,6 +45,9 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">duplicates</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
 <span class="n">Nexus</span><span class="o">::</span><span class="n">duplicates</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">duplicates</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">duplicates</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">table</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -81,6 +84,21 @@ conversational spelling.</p>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
+</pre></div>
+</div>
+<p>Example 2. The named-container forms alias through identically too — see
+<a class="reference internal" href="detect_duplicates.html#examples"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">detect_duplicates()</span></code></span></a>’s own Example 3 for
+why a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code> and a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> reach
+different overloads (<code class="docutils literal notranslate"><span class="pre">RangeView</span></code> vs. the templated form) but produce the
+same result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">duplicates</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">as_view</span><span class="p">).</span><span class="n">ncases</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
 </pre></div>
 </div>

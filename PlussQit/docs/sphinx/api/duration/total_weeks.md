@@ -57,14 +57,3 @@ data=3.0000
 - [`total().days()`](total_days.md): the finer unit this divides.
 - [`total().nanoseconds()`](total_nanoseconds.md): the finest unit, and the
   value every accessor in this family is ultimately derived from.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="total_days.html">
-    <span class="label">Previous</span>
-    <span class="title">total_days</span>
-  </a>
-  <a class="next-link" href="isnat.html">
-    <span class="label">Next</span>
-    <span class="title">isnat</span>
-  </a>
-</div>

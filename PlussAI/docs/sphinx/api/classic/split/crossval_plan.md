@@ -32,6 +32,18 @@ range of `std::int64_t` — including a plain `{...}` brace-initializer list
 of group ids — and wraps it into a `Series` internally before calling the
 first overload.
 
+## What It Does
+
+Partitions row indices into `folds` train/test pairs, each recorded in a
+[`SplitPlan`](SplitPlan.md) that [`cross_assess`](../metrics/cross_assess.md)
+and every other fold-consuming function in this reference reads. The three
+functions differ only in what constraint governs the partition:
+`crossval_plan` has none (rows are freely interchangeable);
+`stratified_crossval_plan` keeps each fold's class proportions close to the
+overall distribution; `group_crossval_plan` keeps every row sharing a group
+value together on one side of each fold, so a group is never split across
+train and test.
+
 ## Parameters
 
 `sample_count` (`crossval_plan` only)

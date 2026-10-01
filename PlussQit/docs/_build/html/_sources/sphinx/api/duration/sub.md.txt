@@ -88,14 +88,3 @@ data=true
 - [`construction`](construction.md): building the operands used here.
 - [`Timeline::sub_duration`](../timeline/sub_duration.md): the `Timeline`-side
   use of `Duration` subtraction.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="add.html">
-    <span class="label">Previous</span>
-    <span class="title">add</span>
-  </a>
-  <a class="next-link" href="neg.html">
-    <span class="label">Next</span>
-    <span class="title">neg</span>
-  </a>
-</div>

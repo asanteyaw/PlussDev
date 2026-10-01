@@ -57,13 +57,11 @@ ts                       | Timeline     | Timeline         | 2       | [2024-01-
 ## Notes
 
 - A `Timeline`-kind filter, not a cast — a `TimeIndex` key doesn't count as
-  `Timeline` here, per the important callout on [`timeindex()`](timeindex.md).
+  `Timeline` here, per the important callout on .
 - An empty result is a valid, defined, empty catalog — not a throw.
 
 ## See Also
 
-- [`CatalogKeyAxisAccessor::timeindex`](timeindex.md): the sibling filter for
-  `TimeIndex`-kind keys.
 - [`CatalogKeyAxisAccessor::series`](series.md) / [`note()`](note.md): the
   shorthands for the other scalar kinds.
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
@@ -72,8 +70,4 @@ ts                       | Timeline     | Timeline         | 2       | [2024-01-
   the scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

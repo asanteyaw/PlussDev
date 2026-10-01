@@ -32,5 +32,4 @@ Casts every feature currently bound on the accessor to `Series`, using the share
 - [`DataFrame::cast`](../dataframe/cast.md): enters the accessor and supplies shared
   `ThreadCastOptions`.
 - [`DataFrameCastAccessor::timeline`](timeline.md),
-  [`DataFrameCastAccessor::timeindex`](timeindex.md),
   [`DataFrameCastAccessor::note`](note.md): the other payload-family targets.

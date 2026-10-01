@@ -39,7 +39,7 @@ int main() {
   c.inequalities_trace = [](const std::vector<Trace>& x) {
     return std::vector<Trace>{pluss::subsp::math::diff::sum(pluss::subsp::math::diff::square(x[0])) - 5.0};
   };
-  c.lbs = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg), Series::undefined()};
+  c.lbs = {pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg), pluss::series::undefined()};
 
   const auto fit = pluss::optim::septima(
       [&](const std::vector<Trace>& x) -> Trace {

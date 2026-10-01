@@ -12,9 +12,7 @@ std::vector<std::string> formatted(const pluss::Timeline& value) {
   const auto text = pluss::timeline::format(value, "%FT%T.%f%z");
   std::vector<std::string> out;
   out.reserve(static_cast<std::size_t>(text.numel()));
-  for (std::int64_t i = 0; i < text.numel(); ++i) {
-    out.emplace_back(text.flat_at(i));
-  }
+  for (const auto cell : text.vector()) out.emplace_back(cell);
   return out;
 }
 

@@ -1218,7 +1218,7 @@ inline void sync_series_sidecar_(std::string_view base, std::string_view suffix,
                                                  std::string_view base,
                                                  std::string_view suffix) {
   if (!parse_bool_(field_or_(fields, present_key, "0"), "pluss::ai::procedure::load(series_sidecar)")) {
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   return ::pluss::io::load<Series>(sidecar_path_(base, suffix).string());
 }

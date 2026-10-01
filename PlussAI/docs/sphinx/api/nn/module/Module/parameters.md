@@ -12,6 +12,16 @@ std::vector<Series*> nn::Module::parameters();
 std::vector<const Series*> nn::Module::parameters() const;
 ```
 
+## What It Does
+
+Walks this module's registration tree and collects every `Series` any
+layer registered as trainable state (via `parameter_record`), flattened
+into one list with no name attached -- the input an
+[`optim::Optimizer`](../../optim/Optimizer.md) needs when built from a raw
+pointer list rather than directly from a `Module&`. The walk is recursive
+and depth-first, so a `Schedule` of several layers returns every stage's
+parameters in one call without the caller visiting each stage by hand.
+
 ## Parameters
 
 None.
@@ -115,12 +125,12 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule inner;
-  inner.then("proj", nn::Fusion(4, 4));
+  inner.append("proj", nn::Fusion(4, 4));
 
   nn::Schedule outer;
-  outer.then("in", nn::Fusion(3, 4));
-  outer.then("block", inner);
-  outer.then("out", nn::Fusion(4, 2));
+  outer.append("in", nn::Fusion(3, 4));
+  outer.append("block", inner);
+  outer.append("out", nn::Fusion(4, 2));
 
   std::cout << "total parameters across two nesting levels: " << outer.parameters().size() << "\n";
 

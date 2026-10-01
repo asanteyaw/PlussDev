@@ -8,6 +8,7 @@
 
 ```cpp
 Series::logical_or(const Series& rhs) const -> Series
+Series& Series::logical_or_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -35,6 +36,30 @@ Important behavior:
 `Series`
     A boolean `Series` whose lanes are true when either aligned input lane is
     truthy.
+
+## In-Place Form
+
+`logical_or_()` is the in-place sibling of [`logical_or()`](logical_or.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `logical_or_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({true, true, false}, pluss::ScalarType::Bool);
+auto y = pluss::make_series({true, false, false}, pluss::ScalarType::Bool);
+
+x.logical_or_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, true, false]
+```
 
 ## Examples
 

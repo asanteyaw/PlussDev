@@ -28,6 +28,17 @@ classic::StatusOr<classic::ClassReport> classic::classification_summary(
     const classic::ClassReportOptions& options = {});
 ```
 
+## What It Does
+
+Builds a confusion table from `truth_labels`/`predicted_labels` (the same
+work [`confusion_table`](confusion_table.md) does), then derives every
+per-class and aggregate statistic this reference offers -- precision,
+recall, F1, specificity, and more, each in per-class and macro/micro/
+weighted form -- into one [`ClassReport`](ClassReport.md). The third
+overload additionally fits the confusion table's inputs from a classifier
+and a batch directly, running inference internally rather than requiring
+already-computed predictions.
+
 The second overload accepts anything convertible to a range of `double`
 (including a plain `{...}` brace-initializer list) and forwards it as
 `ClassReportOptions::label_order`, alongside `zero_division` spelled as a

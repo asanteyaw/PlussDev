@@ -59,6 +59,10 @@ TEST_CASE("optima scaling path converges on an ill-scaled bounded problem",
   sqp_options.sequential_qp.problem_scaling = OptimaProblemScaling::InitialPoint;
 
   const auto sqp = optima(problem, initial, sqp_options);
+  CAPTURE(static_cast<int>(sqp.exit_flag), sqp.message,
+          sqp.evaluation.value.item<double>(),
+          sqp.params.at("x").select(0, 0).item<double>(),
+          sqp.params.at("x").select(0, 1).item<double>());
   REQUIRE(sqp.converged);
   REQUIRE(sqp.evaluation.value.item<double>() < 1e-6);
   REQUIRE(sqp.params.at("x").select(0, 0).item<double>() == Approx(1000.0).margin(1e-3));
@@ -70,6 +74,10 @@ TEST_CASE("optima scaling path converges on an ill-scaled bounded problem",
   ip_options.internal_protocol.problem_scaling = OptimaProblemScaling::InitialPoint;
 
   const auto ip = optima(problem, initial, ip_options);
+  CAPTURE(static_cast<int>(ip.exit_flag), ip.message,
+          ip.evaluation.value.item<double>(),
+          ip.params.at("x").select(0, 0).item<double>(),
+          ip.params.at("x").select(0, 1).item<double>());
   REQUIRE(ip.converged);
   REQUIRE(ip.evaluation.value.item<double>() < 1e-6);
   REQUIRE(ip.params.at("x").select(0, 0).item<double>() == Approx(1000.0).margin(1e-3));

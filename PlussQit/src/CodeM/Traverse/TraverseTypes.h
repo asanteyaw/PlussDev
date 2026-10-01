@@ -37,8 +37,8 @@ public:
   Series select_from(const Series& other) const;
 
 private:
-  Series coords_{};
-  Series values_{};
+  Series coords_{pluss::series::undefined()};
+  Series values_{pluss::series::undefined()};
   std::vector<std::int64_t> source_shape_{};
   std::int64_t indexed_rank_{0};
 };

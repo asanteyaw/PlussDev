@@ -112,7 +112,10 @@ auto out = biz.flow([](const Nexus& value) {
   return value.rename("orders", "purchases").head(3);
 });
 
-print_keys(out);
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
 ```
 
 ### Output

@@ -18,6 +18,16 @@ classic::StatusOr<classic::IndexSplit> classic::strat_holdout_split(
     const pluss::Series& labels, const classic::SplitOptions& options = {});
 ```
 
+## What It Does
+
+Divides row indices into one train partition and one test partition, sized
+by `options.holdout_fraction`, and returns them as an
+[`IndexSplit`](IndexSplit.md) -- a single train/test split, not the
+multi-fold form [`crossval_plan`](crossval_plan.md) produces.
+`holdout_split` places rows without regard to class; `strat_holdout_split`
+keeps each class's train/test proportion close to its overall proportion
+in the full label column.
+
 ## Parameters
 
 `sample_count` (`holdout_split` only)

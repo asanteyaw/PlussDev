@@ -142,9 +142,9 @@ reverse-mode connected on the current verified surface.
   producing a new result.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clear_sensitivity.html">
+  <a class="prev-link" href="clear.html">
     <span class="label">Previous</span>
-    <span class="title">clear_sensitivity</span>
+    <span class="title">clear</span>
   </a>
   <a class="next-link" href="comp.html">
     <span class="label">Next</span>

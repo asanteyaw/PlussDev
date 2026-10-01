@@ -1,3 +1,289 @@
+== metadata ==
+defined=true dim=0 numel=1 sizes=[]
+defined=true dim=1 numel=1 sizes=[1]
+defined=true dim=1 numel=3 sizes=[3]
+defined=true dim=2 numel=4 sizes=[2,2]
+defined=true dim=3 numel=4 sizes=[2,1,2]
+defined=true dim=3 numel=0 sizes=[2,0,3]
+defined=true isnat=true
+host=[9007199254740993,-1,-9223372036854775808]
+make_duration dim=2 numel=4 sizes=[2,2]
+same_shape=true same_values=true
+matrix_host=[1000000000,2000000000,3000000000,4000000000]
+copy_first=0 source_first=900000000000
+
+== component_days_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=1
+
+== component_days_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[-1, -1, -1]
+
+== component_days_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  1 -9223372036854775808 ⎤
+⎣ -1                    0 ⎦
+
+== component_days_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== component_hours_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=2
+
+== component_hours_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[23, 23, 0]
+
+== component_hours_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  2 -9223372036854775808 ⎤
+⎣ 23                    0 ⎦
+
+== component_hours_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== component_minutes_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=3
+
+== component_minutes_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[59, 0, 0]
+
+== component_minutes_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  3 -9223372036854775808 ⎤
+⎣ 59                    0 ⎦
+
+== component_minutes_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== component_seconds_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=4
+
+== component_seconds_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[59, 0, 0]
+
+== component_seconds_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  4 -9223372036854775808 ⎤
+⎣ 59                    0 ⎦
+
+== component_seconds_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== component_milliseconds_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=5
+
+== component_milliseconds_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[999, 0, 0]
+
+== component_milliseconds_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡   5 -9223372036854775808 ⎤
+⎣ 999                    0 ⎦
+
+== component_milliseconds_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== component_microseconds_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=6
+
+== component_microseconds_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[999, 0, 0]
+
+== component_microseconds_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡   6 -9223372036854775808 ⎤
+⎣ 999                    0 ⎦
+
+== component_microseconds_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== component_nanoseconds_positive ==
+Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=7
+
+== component_nanoseconds_negative ==
+Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[999, 0, 0]
+
+== component_nanoseconds_matrix ==
+Series(shape=[2,2], strides=[2,1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡   7 -9223372036854775808 ⎤
+⎣ 999                    0 ⎦
+
+== component_nanoseconds_empty ==
+Series(shape=[2,0,3], strides=[0,3,1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== floor_seconds ==
+dim=1 numel=8
+Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[-2.0000e+09, -2.0000e+09, -1.0000e+09, 0.0000e+00, 1.0000e+09, 2.0000e+09, 1.0000e+09, nan]
+
+== ceil_seconds ==
+dim=1 numel=8
+Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[-1.0000e+09, -1.0000e+09, 0.0000e+00, 1.0000e+09, 2.0000e+09, 3.0000e+09, 2.0000e+09, nan]
+
+== round_seconds_half_even ==
+dim=1 numel=8
+Series(shape=[8], strides=[1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data=[-2.0000e+09, -2.0000e+09, 0.0000e+00, 0.0000e+00, 2.0000e+09, 2.0000e+09, 1.0000e+09, nan]
+
+== floor_canonical_units ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=9.3600e+13
+
+== round_matrix_shape ==
+dim=2 numel=4
+Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 0.0000e+00 0.0000e+00 ⎤
+⎣ 1.0000e+09 2.0000e+09 ⎦
+
+== round_invalid_unit ==
+Duration: unsupported unit
+
+== ceil_overflow ==
+Duration rounding overflow
+
+== min_skip_nat ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-2.0000
+
+== max_skip_nat ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=9.0000
+
+== min_propagate_nat ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=nan
+
+== max_propagate_nat ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=nan
+
+== min_all_nat ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=nan
+
+== max_empty ==
+dim=0 numel=1
+Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=nan
+
+== min_skip_nat_print ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:59:59.999999998
+
+== max_skip_nat_print ==
+Duration(shape=[], dim=0, numel=1)
+0 days 00:00:00.000000009
+
+== min_propagate_nat_print ==
+Duration(shape=[], dim=0, numel=1)
+NaT
+
+== max_empty_print ==
+Duration(shape=[], dim=0, numel=1)
+NaT
+
+== sort_stable_nat_last ==
+dim=1 numel=6
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 3.0000, nan, nan]
+
+== argsort_stable_nat_last ==
+Series(shape=[6], strides=[1], dtype=int64, platform=cpu, numel=6, contiguous=true)
+data=[2, 5, 0, 3, 1, 4]
+
+== argsort_applied ==
+dim=1 numel=6
+Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 3.0000, nan, nan]
+
+== unique_first_occurrence ==
+dim=1 numel=4
+Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[3.0000, nan, 1.0000, 2.0000]
+
+== sort_empty ==
+dim=1 numel=0
+Series(shape=[0], strides=[1], dtype=float64, platform=cpu, numel=0, contiguous=true)
+[]
+
+== sort_stable_nat_last_print ==
+Duration(shape=[6], dim=1, numel=6)
+[ 0 days 00:00:00.000000001, 0 days 00:00:00.000000002, 0 days 00:00:00.000000003, 0 days 00:00:00.000000003, NaT, NaT ]
+
+== argsort_applied_print ==
+Duration(shape=[6], dim=1, numel=6)
+[ 0 days 00:00:00.000000001, 0 days 00:00:00.000000002, 0 days 00:00:00.000000003, 0 days 00:00:00.000000003, NaT, NaT ]
+
+== unique_first_occurrence_print ==
+Duration(shape=[4], dim=1, numel=4)
+[ 0 days 00:00:00.000000003, NaT, 0 days 00:00:00.000000001, 0 days 00:00:00.000000002 ]
+
+== sort_empty_print ==
+Duration(shape=[0], dim=1, numel=0)[  ]
+
+== sort_rank_error ==
+Duration::sort requires rank-one input
+
+== to_note_normalized ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["1 days 02:03:04.005006007", "-1 days 23:59:59.999999999", "0 days 00:00:00.000000000", "NaT"]
+
+== to_note_iso ==
+Note(shape=[4], dim=1, numel=4, encoding=utf8)
+["P1DT2H3M4.005006007S", "-PT0.000000001S", "PT0S", "NaT"]
+
+== to_note_matrix ==
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["0 days 00:00:00.000000000", "-1 days 23:59:59.999999999"],
+  ["0 days 00:00:01.000000000", "1 days 00:00:00.000000000"]
+]
+
+== to_note_iso_matrix ==
+Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
+[
+  ["PT0S", "-PT0.000000001S"],
+  ["PT1S", "P1D"]
+]
+
+== to_note_iso_fraction_trim ==
+Note(shape=[2], dim=1, numel=2, encoding=utf8)
+["PT1.5S", "PT1.000000001S"]
 
 == ctor_duration_minutes_90 ==
 dim=0 numel=1
@@ -134,6 +420,14 @@ data=true
 Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
 data=true
 
+== operator_lt_vector_scalar ==
+Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, false]
+
+== operator_ge_vector_scalar ==
+Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[false, true, true]
+
 == abs_neg15m ==
 dim=0 numel=1
 Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
@@ -225,7 +519,7 @@ Duration(shape=[], dim=0, numel=1)
 
 == neg_print ==
 Duration(shape=[], dim=0, numel=1)
--0 days 01:00:00.000000000
+-1 days 23:00:00.000000000
 
 == mul_print ==
 Duration(shape=[], dim=0, numel=1)
@@ -249,7 +543,7 @@ Duration(shape=[], dim=0, numel=1)
 
 == sign_print ==
 Duration(shape=[], dim=0, numel=1)
--0 days 00:00:00.000000001
+-1 days 23:59:59.999999999
 
 == clip_print ==
 Duration(shape=[6], dim=1, numel=6)
@@ -276,7 +570,14 @@ Duration(shape=[], dim=0, numel=1)
 0 days 01:30:00.000000000
 
 == operator_lshift_equals_print ==
-1
+true
+
+== operator_lshift_negative_tick ==
+Duration(shape=[], dim=0, numel=1)
+-1 days 23:59:59.999999999
+
+== operator_add_overflow ==
+Duration::operator+: nanosecond overflow
 
 == timeline_plus_duration ==
 Timeline(shape=[], tz=UTC)

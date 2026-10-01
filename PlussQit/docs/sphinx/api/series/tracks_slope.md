@@ -94,7 +94,7 @@ thing.
 ```cpp
 auto x = pluss::make_series({9.0, 10.0}, pluss::cfg::tracks_slope());
 x.mul(4.0).sum().reverse();
-x.clear_sensitivity();
+x.clear();
 
 std::cout << "tracks=" << (x.tracks_slope() ? "true" : "false") << "\n";
 std::cout << "has_dL_dx=" << (x.has_sensitivity() ? "true" : "false") << "\n";

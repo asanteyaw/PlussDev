@@ -1,0 +1,70 @@
+
+== make scalar text ==
+TimeIndex(shape=[1], tz=UTC)
+[ 2025-01-01 00:00:00 ]
+
+== make text vector ==
+TimeIndex(shape=[3], tz=UTC)
+[ 2025-01-01 00:00:00, 2025-01-01 01:00:00, 2025-01-01 02:00:00 ]
+
+== make epoch nanos ==
+TimeIndex(shape=[3], tz=UTC)
+[ 1970-01-01 00:00:00, 1970-01-01 00:00:01, 1970-01-01 00:00:02 ]
+make_timeindex_equal=true
+
+== make Timeline preserves timezone ==
+TimeIndex(shape=[2], tz=America/Edmonton)
+[ 2025-01-01 09:00:00, 2025-01-01 10:00:00 ]
+
+== make unordered permissively ==
+TimeIndex(shape=[3], tz=UTC)
+[ 2025-01-01 02:00:00, 2025-01-01 00:00:00, 2025-01-01 01:00:00 ]
+make_order_error=TimeIndex must be sorted (non-decreasing)
+make_rank_error=TimeIndex requires a 1D Timeline
+
+== from_buffer packed after source mutation ==
+TimeIndex(shape=[3], tz=UTC)
+[ 1970-01-01 00:00:00, 1970-01-01 00:00:01, 1970-01-01 00:00:02 ]
+packed_ticks=[0, 1500000000, 2000000000]
+packed_freed_inside=false
+packed_freed_after=true
+
+== from_buffer strided materialization ==
+TimeIndex(shape=[3], tz=UTC)
+[ 1970-01-01 00:00:00, 1970-01-01 00:00:01, 1970-01-01 00:00:02 ]
+strided_ticks=[0, 1000000000, 2000000000]
+strided_source_freed=true
+buffer_stride_error=timeindex::from_buffer: stride must be positive
+
+== from_buffer timezone metadata ==
+TimeIndex(shape=[1], tz=America/Edmonton)
+[ 2025-01-01 09:20:00 ]
+
+== date_range two hours ==
+TimeIndex(shape=[4], tz=UTC)
+[ 2025-01-01 00:00:00, 2025-01-01 02:00:00, 2025-01-01 04:00:00, 2025-01-01 06:00:00 ]
+
+== date_range civil days across DST ==
+TimeIndex(shape=[3], tz=America/Edmonton)
+[ 2024-03-09 09:00:00, 2024-03-10 09:00:00, 2024-03-11 09:00:00 ]
+
+== date_range descending permissively ==
+TimeIndex(shape=[3], tz=America/Edmonton)
+[ 2024-03-11 09:00:00, 2024-03-10 09:00:00, 2024-03-09 09:00:00 ]
+range_order_error=TimeIndex must be sorted (non-decreasing)
+range_step_error=date_range step must be non-zero
+
+== print bounded ==
+TimeIndex(shape=[5])
+[ 2025-01-01, ..., 2025-01-05 ]
+same_stream=true
+TimeIndex(shape=[5])
+[ 2025-01-01, ..., 2025-01-05 ]
+
+== print without header ==
+[ 2025-01-01, ..., 2025-01-05 ]
+operator_same_stream=true
+
+== operator stream ==
+TimeIndex(shape=[5], tz=UTC)
+[ 2025-01-01 00:00:00, 2025-01-02 00:00:00, 2025-01-03 00:00:00, 2025-01-04 00:00:00, 2025-01-05 00:00:00 ]

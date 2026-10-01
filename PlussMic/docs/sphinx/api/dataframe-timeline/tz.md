@@ -13,8 +13,8 @@ DataFrameTimelineAccessor::tz(std::string_view name) const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature's *display* timezone
-with `name` — same feature name, still `Timeline`/`TimeIndex`-kind, same row
+Replaces every selected `Timeline` feature's *display* timezone
+with `name` — same feature name, still `Timeline`-kind, same row
 order. **The underlying instant is unchanged** — only the timezone used to
 compute local calendar fields (year/month/day/hour, and box-table display)
 shifts.
@@ -256,7 +256,7 @@ backing it.
   if your data is naive local wall-clock text that needs to be *anchored* to
   a real instant for the first time.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` regardless of `name`.
 

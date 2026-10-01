@@ -16,8 +16,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/axel-cast/duration
 api/axel-cast/note
 api/axel-cast/series
-api/axel-cast/timeindex
 api/axel-cast/timeline
 ```

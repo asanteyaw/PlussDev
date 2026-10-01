@@ -57,7 +57,7 @@ Row `1` — the missing timestamp — flags `false` here.
   the `NaT` row shows `false`, not `NULL`. Nearly every other `.tl()` method
   (the calendar-field extractors, `fmt()`, `epoch()`, and so on) instead shows
   `"NULL"` for a `NaT` row.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 
 ## See Also

@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 308b27aafe5c -->
+<!-- pluss-signature-hash: 91a2796c8105 -->
 <section id="thread-compare">
 <h1>Thread::compare<a class="headerlink" href="#thread-compare" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -49,7 +49,7 @@
 <span class="n">Thread</span><span class="o">::</span><span class="n">compare</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadBinaryCompareOp</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">Thread</span><span class="o">::</span><span class="n">compare</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadBinaryCompareOp</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">Thread</span><span class="o">::</span><span class="n">compare</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadBinaryCompareOp</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-<span class="n">Thread</span><span class="o">::</span><span class="n">compare</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadBinaryCompareOp</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">compare</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadBinaryCompareOp</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">Thread</span><span class="o">::</span><span class="n">compare</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">ThreadBinaryCompareOp</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
@@ -74,14 +74,14 @@ otherwise the named methods or operators read more naturally at the call site.</
 </pre></div>
 </div>
 <p>The right-hand side can be a numeric scalar, a text scalar, one of the four native pluss
-payload types (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), or another <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — every
+payload types (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">Duration</span></code>), or another <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — every
 overload converges on the same row-by-row boolean result.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>A text literal against a Timeline/TimeIndex thread is parsed as a date, not compared as text
-Calling the <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> overload on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread does
-<strong>not</strong> perform a lexical string comparison — the literal is parsed as a timestamp first
-(via <code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>), then compared temporally. Only <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads (and, as a
+<p>A text literal against a Timeline thread is parsed as a date, not compared as text
+Calling the <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> overload on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread does <strong>not</strong> perform
+a lexical string comparison — the literal is parsed as a timestamp first (via
+<code class="docutils literal notranslate"><span class="pre">pluss::make_timeline</span></code>), then compared temporally. Only <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind threads (and, as a
 fallback, everything else) compare the literal as plain text. See Example 4.</p>
 </div>
 </section>
@@ -89,7 +89,7 @@ fallback, everything else) compare the literal as plain text. See Example 4.</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong>
 The right-hand comparison target — a numeric scalar (<code class="docutils literal notranslate"><span class="pre">double</span></code>), a text scalar
-(<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code>), one of <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or
+(<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code>), one of <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">Duration</span></code>, or
 another <code class="docutils literal notranslate"><span class="pre">Thread</span></code>. Non-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> payloads that carry more than one row are compared
 positionally and must match <code class="docutils literal notranslate"><span class="pre">size()</span></code>; a single-element (<code class="docutils literal notranslate"><span class="pre">dim()</span> <span class="pre">==</span> <span class="pre">0</span></code>) payload
 broadcasts across every row instead.</p>

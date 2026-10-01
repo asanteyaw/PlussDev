@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,8 +49,8 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every selected <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature’s display timezone
-with <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> — same feature name, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, same row
+<p>Replaces every selected <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature’s display timezone
+with <code class="docutils literal notranslate"><span class="pre">&quot;UTC&quot;</span></code> — same feature name, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, same row
 order. Exactly equivalent to <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz(&quot;UTC&quot;)</span></code></span></a>; like <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, the
 underlying instant never changes, only the timezone used to display it and
 compute local calendar fields.</p>
@@ -118,7 +118,7 @@ printed wall-clock text) changes back.</p>
 chaining <code class="docutils literal notranslate"><span class="pre">.tz(name).utc()</span></code> always round-trips back to the original
 displayed values.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code> requires <strong>every</strong> feature on the calling frame to already
-be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind — narrow with
+be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — narrow with
 <a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first if needed.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p></li>
 </ul>

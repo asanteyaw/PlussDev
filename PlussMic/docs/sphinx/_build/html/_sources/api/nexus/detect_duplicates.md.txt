@@ -10,6 +10,9 @@
 Nexus::detect_duplicates(std::string_view table) const -> DataFrame
 
 Nexus::detect_duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const -> DataFrame
+Nexus::detect_duplicates(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+Nexus::detect_duplicates(std::string_view table, const NameRange& keys) const -> DataFrame
 ```
 
 ## What It Does
@@ -31,9 +34,18 @@ two-argument overload takes an explicit key list.
 **table** (`std::string_view`)
     The table to check. Must already exist in the workspace.
 
-**keys** (`std::initializer_list<std::string_view>`, two-argument overload)
+**keys** (a range of `std::string_view` — a brace literal, a named container
+such as `std::vector<std::string_view>`/`std::vector<std::string>`, or any
+other range whose elements convert to `std::string_view`; two-argument
+overload only)
     The candidate key features. Same validation as
     [`validate_keys()`](validate_keys.md)'s two-argument overload.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+See [`Nexus::validate_keys`](validate_keys.md)'s own note on this — the
+same three-overload pattern (brace literal / named `RangeView`-convertible
+container / any other qualifying range) applies here identically.
+```
 
 ## Returns
 
@@ -90,6 +102,24 @@ std::cout << dups2.ncases();
 
 ```text
 2
+```
+
+Example 3. The same explicit-key check via named containers — a
+`std::vector<std::string_view>` (the `RangeView` overload) and a
+`std::vector<std::string>` (the templated overload).
+
+```cpp
+std::vector<std::string_view> as_view = {"customer_id"};
+std::vector<std::string> as_owned = {"customer_id"};
+
+std::cout << biz.detect_duplicates("customers", as_view).ncases() << " "
+          << biz.detect_duplicates("customers", as_owned).ncases();
+```
+
+### Output
+
+```text
+2 2
 ```
 
 ## Notes

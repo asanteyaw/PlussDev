@@ -161,7 +161,7 @@ that leaf to stop participating as a tracked source.
 
 - [`Series::tracks_slope`](tracks_slope.md): inspect the current tracking flag.
 - [`Series::reverse`](reverse.md): populate sensitivity on tracked leaves.
-- [`Series::clear_sensitivity`](clear_sensitivity.md): clear stored
+- [`Series::clear`](clear.md): clear stored
   sensitivity without disabling tracking.
 
 <div class="pluss-inline-prev-next">

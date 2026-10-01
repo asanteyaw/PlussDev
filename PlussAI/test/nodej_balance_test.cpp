@@ -56,7 +56,7 @@ bool run_nodej_balance_checks(std::ostream* err = nullptr) {
 
   TrainOptions balanced{};
   balanced.class_weight = ClassWeightMode::Balanced;
-  auto balanced_or = resolve_weight_plan(y, Series::undefined(), balanced);
+  auto balanced_or = resolve_weight_plan(y, pluss::series::undefined(), balanced);
   if (!balanced_or.ok()) {
     if (err) *err << "resolve_weight_plan should accept balanced class weighting\n";
     return false;
@@ -70,7 +70,7 @@ bool run_nodej_balance_checks(std::ostream* err = nullptr) {
   TrainOptions custom{};
   custom.class_weight = ClassWeightMode::Custom;
   custom.class_weights = pluss::make_series(std::vector<double>{1.0, 4.0}, {2}, f64());
-  auto custom_or = resolve_training_weights(y, Series::undefined(), custom);
+  auto custom_or = resolve_training_weights(y, pluss::series::undefined(), custom);
   if (!custom_or.ok()) {
     if (err) *err << "resolve_training_weights should accept custom class weights\n";
     return false;

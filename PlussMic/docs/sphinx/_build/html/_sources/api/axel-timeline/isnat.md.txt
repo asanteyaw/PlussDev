@@ -23,7 +23,7 @@ every frame via [`Axel::map`](../axel/map.md).
 Every method on this accessor — not just `isnat()` — routes through
 `Registry::tl()` per frame, which itself routes through `Slot::tl()`
 per field. If any bound field in any frame isn't `Timeline`-kind
-(`Series`, `Note`, `TimeIndex`, `Mixed`, `Null`, or `Empty`), the call
+(`Series`, `Note`, `Mixed`, `Null`, or `Empty`), the call
 throws `"Slot::tl: slot kind must be Timeline"`. Since
 [`Axel::tl()`](../axel/tl.md) binds *every* field of *every* frame by
 default, project down to just the timestamp fields first with
@@ -105,9 +105,9 @@ Slot::tl: slot kind must be Timeline
   fields before calling `.tl()`, per the important callout above.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

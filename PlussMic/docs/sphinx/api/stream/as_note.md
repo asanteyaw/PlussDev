@@ -77,8 +77,7 @@ Stream payload is not No
 
 ## See Also
 
-- [`Stream::as_series`](as_series.md) / [`Stream::as_timeline`](as_timeline.md) /
-  [`Stream::as_timeindex`](as_timeindex.md): the equivalent escape hatch for the other
+- [`Stream::as_series`](as_series.md) / [`Stream::as_timeline`](as_timeline.md): the equivalent escape hatch for the other
   three payload kinds.
 - [`Stream::kind`](kind.md): check the payload kind before calling this method.
 

@@ -8,13 +8,21 @@ turn a layer of raw class logits into per-class probabilities.
 ## Signature
 
 ```cpp
-explicit nn::Softmax::Softmax(nn::SoftmaxOptions options = {});
+explicit nn::Softmax::Softmax(nn::SoftmaxOptions options);
+explicit nn::Softmax::Softmax(std::int64_t dim = -1);
 ```
 
 ## Construction
 
-Default-construct to normalize over the last axis (`dim=-1`), or pass a
-[`SoftmaxOptions`](SoftmaxOptions.md) to normalize over a different axis.
+Two equivalent forms: pass a [`SoftmaxOptions`](SoftmaxOptions.md)
+directly, or spell out `dim` as a positional argument (which defaults to
+`-1`, the last axis, so `nn::Softmax sm;` alone works):
+
+```cpp
+nn::Softmax a(nn::SoftmaxOptions{1});  // dim=1
+nn::Softmax b(1);                      // equivalent positional form
+nn::Softmax c;                         // dim=-1 (default, the last axis)
+```
 
 ## State
 
@@ -158,6 +166,12 @@ softmax on MPS: OK, platform=2
 ## Changelog
 
 - **0.1** — the softmax normalization, `dim` option.
+- **0.2** — added the positional `Softmax(dim)` constructor alongside
+  the `SoftmaxOptions` form. Previously, a bare integer argument
+  silently bound to the inherited `Module(bool training)` constructor
+  instead of `dim`, since no positional form existed to compete with
+  it -- `nn::Softmax(1)`, an entirely plausible call for normalizing
+  over axis `1`, silently constructed a `dim=-1` instance instead.
 
 ## See Also
 

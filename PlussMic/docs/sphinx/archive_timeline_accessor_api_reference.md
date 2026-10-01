@@ -23,7 +23,6 @@ api/archive-timeline/epoch
 api/archive-timeline/floor
 api/archive-timeline/fmt
 api/archive-timeline/hour
-api/archive-timeline/index
 api/archive-timeline/isnat
 api/archive-timeline/iso
 api/archive-timeline/leap

@@ -99,16 +99,16 @@ struct TFTOptions {
 // these same tensors, packed as their integer category code stored as a
 // float (e.g. category 3 -> 3.0) — there's no separate tensor for them.
 struct TFTBatch {
-  Series static_inputs = Series::undefined();
-  Series encoder_inputs = Series::undefined();
-  Series decoder_inputs = Series::undefined();
-  Series target = Series::undefined();
+  Series static_inputs = pluss::series::undefined();
+  Series encoder_inputs = pluss::series::undefined();
+  Series decoder_inputs = pluss::series::undefined();
+  Series target = pluss::series::undefined();
 
   TFTBatch() = default;
   explicit TFTBatch(const data::Batch& batch)
       : static_inputs(batch.has(data::field_names::static_inputs)
                           ? batch.field(data::field_names::static_inputs)
-                          : Series::undefined()),
+                          : pluss::series::undefined()),
         encoder_inputs(batch.field(data::field_names::encoder_inputs)),
         decoder_inputs(batch.field(data::field_names::decoder_inputs)),
         target(batch.target()) {}
@@ -143,8 +143,8 @@ struct TFTTrainOptions {
 };
 
 struct TFTForecast {
-  Series quantiles = Series::undefined();
-  Series attention_weights = Series::undefined();
+  Series quantiles = pluss::series::undefined();
+  Series attention_weights = pluss::series::undefined();
 };
 
 class TemporalFusionTransformer final {

@@ -16,6 +16,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `DataFrame` exposes nested accessors, each with its own method pages and sidebar:
 
+- `case_study()` -> [`DataFrameCaseStudyAccessor`](dataframe_case_study_accessor_api_reference.md)
 - `nt()` -> [`DataFrameNoteAccessor`](dataframe_note_accessor_api_reference.md)
 - `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
 - `label()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
@@ -29,6 +30,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+dataframe_case_study_accessor_api_reference
 dataframe_note_accessor_api_reference
 dataframe_timeline_accessor_api_reference
 dataframe_label_accessor_api_reference

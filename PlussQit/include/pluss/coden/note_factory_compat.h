@@ -2,7 +2,7 @@
 
 // `pluss::note::*` (note_factory.h) is the primary Note factory surface.
 // `pluss::make_note` is the one flat spelling kept as a permanent shortcut
-// (mirroring pluss::make_series/make_timeline/make_timeindex/make_duration)
+// (mirroring the Series, Timeline, TimeIndex, and Duration factory families)
 // for the common construct-from-data case -- every other flat spelling
 // (pluss::full_note, pluss::bytes_content, ...) was a transitional
 // compatibility alias and has been removed now that all internal call sites

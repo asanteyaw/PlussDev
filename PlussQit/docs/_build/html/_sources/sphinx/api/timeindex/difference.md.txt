@@ -5,8 +5,7 @@
 ## Signatures
 
 ```cpp
-TimeIndex::difference(const TimeIndex& other) const -> TimeIndex
-TimeIndex::diffIndex(const TimeIndex& other) const -> TimeIndex
+TimeIndex TimeIndex::difference(const TimeIndex& other) const
 ```
 
 ## What It Does
@@ -60,9 +59,9 @@ auto left_only = base.difference(right);
 - [`TimeIndex::intersection`](intersection.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="intersection.html">
+  <a class="prev-link" href="ceil.html">
     <span class="label">Previous</span>
-    <span class="title">intersection</span>
+    <span class="title">ceil</span>
   </a>
   <a class="next-link" href="floor.html">
     <span class="label">Next</span>

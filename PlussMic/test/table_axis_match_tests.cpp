@@ -864,13 +864,13 @@ void test_temporal_subtraction_and_sort_builder() {
              right.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
          "Timeline - Timeline should preserve subtraction direction while matching tl().span(..., Nanos)");
 
-  const auto idx = Thread(pluss::make_timeindex({"2024-01-01", "2024-01-04"}));
+  const auto idx = Thread(pluss::make_timeline({"2024-01-01", "2024-01-04"}));
   expect((left - idx).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 86400000000000LL}),
-         "Timeline - TimeIndex should also produce nanosecond deltas");
+         "Timeline subtraction should produce nanosecond deltas for indexed axes");
   expect((left - idx).as_series().to_vec<std::int64_t>() ==
              idx.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
-         "Timeline - TimeIndex should also match tl().span(..., Nanos) with subtraction direction preserved");
+         "indexed Timeline subtraction should match tl().span(..., Nanos) with direction preserved");
 
   const auto values = Thread(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
   const Thread sorted_thread = values.sort();
@@ -1113,14 +1113,14 @@ void test_hierarchical_case_axis_engine() {
   expect(indexed.label().part("region").as_note().vector()[0] == "West",
          "label().part(name) should expose a typed case label");
 
-  const auto selected = indexed.case_study(
+  const auto selected = indexed.case_study().pick(
       DataFrame::CasePick{.label = "region", .value = "West"});
   expect(selected.ncases() == 2 &&
              selected.label().part("account").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({102, 101}),
          "case_study(level,value) should perform partial hierarchical selection");
 
-  const auto full_key = indexed.case_study(
+  const auto full_key = indexed.case_study().pick(
       DataFrame::CasePick{.key = {"East", "202"}});
   expect(full_key.ncases() == 1 &&
              full_key.features("sales").as_series().to_vec<double>() ==

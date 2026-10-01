@@ -24,14 +24,14 @@ constexpr double kLog2Pi = 1.83787706640934533908;
 constexpr double kTiny = 1e-12;
 
 struct LoadedSsmModel {
-  Series A = Series::undefined();
-  Series B = Series::undefined();
-  Series C = Series::undefined();
-  Series D = Series::undefined();
-  Series Q = Series::undefined();
-  Series R = Series::undefined();
-  Series mean0 = Series::undefined();
-  Series cov0 = Series::undefined();
+  Series A = pluss::series::undefined();
+  Series B = pluss::series::undefined();
+  Series C = pluss::series::undefined();
+  Series D = pluss::series::undefined();
+  Series Q = pluss::series::undefined();
+  Series R = pluss::series::undefined();
+  Series mean0 = pluss::series::undefined();
+  Series cov0 = pluss::series::undefined();
   std::int64_t n_state = 0;
   std::int64_t n_obs = 0;
   std::int64_t n_state_disturb = 0;
@@ -94,7 +94,7 @@ Series index_from_vector_(const std::vector<std::int64_t>& idx, Platform platfor
 
 Series stack_rows_(const std::vector<Series>& rows) {
   if (rows.empty()) {
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   if (rows.size() == 1) {
     return rows.front();
@@ -372,8 +372,10 @@ SsmSmoothResult Ssm::smooth(const Series& y,
   const std::int64_t t_obs = filt.filtered_states.sizes()[0];
   PLUSS_CHECK(t_obs > 0, "subsp::stats::ts::Ssm::smooth: observations must be non-empty");
 
-  std::vector<Series> xs(static_cast<std::size_t>(t_obs));
-  std::vector<Series> ps(static_cast<std::size_t>(t_obs));
+  std::vector<Series> xs(
+      static_cast<std::size_t>(t_obs), pluss::series::undefined());
+  std::vector<Series> ps(
+      static_cast<std::size_t>(t_obs), pluss::series::undefined());
 
   xs[static_cast<std::size_t>(t_obs - 1)] =
       slice_row_(filt.filtered_states, t_obs - 1, ssm.n_state, ssm.out_cfg.platform);

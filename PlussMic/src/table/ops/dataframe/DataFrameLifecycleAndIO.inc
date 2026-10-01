@@ -66,14 +66,6 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Timeline& value) 
   }
 }
 
-DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::TimeIndex& value) {
-  try {
-    return (*this = Thread(value));
-  } catch (const std::exception& e) {
-    PLUSS_FAIL("DataFrame::set(name)=TimeIndex failed: " + std::string(e.what()));
-  }
-}
-
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const DataFrame& frame) {
   PLUSS_CHECK(frame.nfeatures() == 1, "DataFrame::set(name)=DataFrame requires rhs with exactly one feature");
   const auto& names = frame.features();

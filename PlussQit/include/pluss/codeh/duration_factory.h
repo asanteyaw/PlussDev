@@ -56,8 +56,16 @@ constexpr std::int64_t kNanosPerUnit[] = {
     7LL * 86'400LL * 1'000'000'000LL, // Weeks
 };
 
-constexpr std::int64_t unit_nanos_(Unit unit) {
-  return kNanosPerUnit[static_cast<std::size_t>(unit)];
+inline std::int64_t unit_nanos_(Unit unit) {
+  const auto index = static_cast<std::size_t>(unit);
+  CODEM_CHECK(index < std::size(kNanosPerUnit),
+              "pluss::duration::make: unsupported unit");
+  return kNanosPerUnit[index];
+}
+
+inline std::int64_t checked_numel_(pluss::msharp::RangeView::Int sizes,
+                                   std::string_view where) {
+  return pluss::codeh::factory_detail::checked_numel(sizes, where);
 }
 
 // Every scaled factory funnels through this: build the *unscaled* (raw tick
@@ -158,6 +166,7 @@ inline std::ostream& print(std::ostream& os, const pluss::Duration& d) {
 // copied, by ops_internal::duration_from_series) rather than a host-side
 // fill + second memcpy through duration_from_nanos.
 inline pluss::Duration zeros(pluss::msharp::RangeView::Int sizes) {
+  (void)factory_detail_::checked_numel_(sizes, "pluss::duration::zeros");
   return pluss::codeh::ops_internal::duration_from_series(
       pluss::series::zeros(sizes, pluss::codem::ScalarType::Int64));
 }
@@ -176,8 +185,7 @@ inline pluss::Duration zeros_like(const pluss::Duration& like) {
 // already use, rather than Series::full's double-typed fill_value.
 inline pluss::Duration full(pluss::msharp::RangeView::Int sizes, const pluss::Duration& fill_value) {
   CODEM_CHECK(fill_value.dim() == 0, "pluss::duration::full: fill_value must be a scalar Duration");
-  std::int64_t n = 1;
-  for (const auto s : sizes) n *= s;
+  const auto n = factory_detail_::checked_numel_(sizes, "pluss::duration::full");
   const std::int64_t nanos = pluss::codeh::detail::impl_to_nanos_flat(fill_value)[0];
   const std::vector<std::int64_t> flat(static_cast<std::size_t>(n), nanos);
   return pluss::codeh::ops_internal::duration_from_nanos(flat, sizes);
@@ -205,9 +213,10 @@ inline pluss::Duration random(pluss::msharp::RangeView::Int sizes,
   CODEM_CHECK(lo.dim() == 0 && hi.dim() == 0, "pluss::duration::random: lo/hi must be scalar Durations");
   const std::int64_t lo_ns = pluss::codeh::detail::impl_to_nanos_flat(lo)[0];
   const std::int64_t hi_ns = pluss::codeh::detail::impl_to_nanos_flat(hi)[0];
+  CODEM_CHECK(lo_ns != pluss::Duration::kNaT && hi_ns != pluss::Duration::kNaT,
+              "pluss::duration::random: NaT bounds are unsupported");
   CODEM_CHECK(hi_ns > lo_ns, "pluss::duration::random: expected hi > lo");
-  std::int64_t n = 1;
-  for (const auto s : sizes) n *= s;
+  const auto n = factory_detail_::checked_numel_(sizes, "pluss::duration::random");
   auto rng = pluss::detail::FactoryCore::make_rng(seed);
   std::uniform_int_distribution<std::int64_t> dist(lo_ns, hi_ns - 1);
   std::vector<std::int64_t> flat(static_cast<std::size_t>(n));
@@ -224,10 +233,8 @@ inline pluss::Duration random(std::initializer_list<std::int64_t> sizes,
 } // namespace pluss::duration
 
 namespace pluss {
-// Permanent flat shortcut, mirroring pluss::make_series/make_note/
-// make_timeline/make_timeindex -- unlike those, Duration never had a flat
-// compat surface (it was namespaced from the start), so this is a new
-// addition for symmetry rather than a preserved legacy name.
+// Intentional root-level factory shortcut, matching the make_* spellings for
+// the other core value types. It forwards without changing shape or units.
 inline pluss::Duration make_duration(pluss::codeh::detail::Int64FlatReader data, pluss::duration::Unit unit) {
   return pluss::duration::make(std::move(data), unit);
 }

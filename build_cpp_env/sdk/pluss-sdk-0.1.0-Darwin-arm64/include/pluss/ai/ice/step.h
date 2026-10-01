@@ -13,7 +13,7 @@ namespace pluss::ai::ice {
 
 struct BatchField {
   std::string name;
-  Series values = Series::undefined();
+  Series values = pluss::series::undefined();
 };
 
 namespace batch_field_names {
@@ -47,7 +47,7 @@ public:
 
 private:
   std::vector<BatchField> fields_{};
-  Series targets_ = Series::undefined();
+  Series targets_ = pluss::series::undefined();
 };
 
 enum class StepStage : std::uint8_t {
@@ -66,8 +66,8 @@ struct StepContext {
 };
 
 struct StepResult {
-  Series predictions = Series::undefined();
-  Series loss = Series::undefined();
+  Series predictions = pluss::series::undefined();
+  Series loss = pluss::series::undefined();
 
   [[nodiscard]] bool has_predictions() const noexcept { return predictions.defined(); }
   [[nodiscard]] bool has_loss() const noexcept { return loss.defined(); }

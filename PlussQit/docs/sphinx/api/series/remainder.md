@@ -9,6 +9,8 @@
 ```cpp
 Series::remainder(const Series& other) const -> Series
 Series& Series::remainder_(const Series& other)
+Series& Series::remainder_(const Series& rhs) const
+Series& Series::remainder_(double rhs) const
 ```
 
 ## What It Does
@@ -59,6 +61,43 @@ d/db remainder(a, b) = -floor(a / b)
 The backward passes the upstream sensitivity straight through to the dividend
 and routes `-floor(a / b)` to the divisor. Gradient does not flow through the
 discrete step where `floor(a / b)` changes.
+
+## In-Place Form
+
+`remainder_()` is the in-place sibling of [`remainder()`](remainder.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `remainder_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({10.0, 11.0, -7.0}, {3});
+auto y = pluss::make_series({3.0, 3.0, 3.0}, {3});
+
+x.remainder_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 2]
+```
+
+```cpp
+auto x = pluss::make_series({10.0, 11.0, -7.0}, {3});
+x.remainder_(3.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 2]
+```
 
 ## Examples
 
@@ -189,8 +228,8 @@ Each `db` entry is `-floor(a / b)`: `-floor(-5/3) = 2`, `-floor(5.5/2) = -2`,
     <span class="label">Previous</span>
     <span class="title">relu</span>
   </a>
-  <a class="next-link" href="renorm.html">
+  <a class="next-link" href="rename.html">
     <span class="label">Next</span>
-    <span class="title">renorm</span>
+    <span class="title">rename</span>
   </a>
 </div>

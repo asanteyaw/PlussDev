@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::minute() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its minute-of-hour
+Replaces every selected `Timeline` feature with its minute-of-hour
 (`0`-`59`), as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -80,7 +80,7 @@ minute-of-hour.
 ## Notes
 
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.

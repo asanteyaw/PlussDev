@@ -181,9 +181,9 @@ data=[0.5000, 0.5000, 0.5000, 0.5000]
 - [`Series::random_`](random_.md): uniform integers over a range.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="beta.html">
+  <a class="prev-link" href="betaln.html">
     <span class="label">Previous</span>
-    <span class="title">beta</span>
+    <span class="title">betaln</span>
   </a>
   <a class="next-link" href="bernoulli_.html">
     <span class="label">Next</span>

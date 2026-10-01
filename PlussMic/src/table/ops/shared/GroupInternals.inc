@@ -80,8 +80,7 @@ pluss::codem::Platform group_thread_platform_(const Thread& value) {
       return value.as_series().platform();
     case ThreadKind::Timeline:
       return value.as_timeline().epoch_nanos().platform();
-    case ThreadKind::TimeIndex:
-      return value.as_timeindex().timeline().epoch_nanos().platform();
+    case ThreadKind::Duration:
     case ThreadKind::Note:
       return pluss::codem::Platform::CPU;
   }
@@ -144,15 +143,14 @@ std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
         }
         break;
       }
-      case ThreadKind::TimeIndex: {
-        const auto ticks = key.as_timeindex().timeline().epoch_nanos();
-        const auto* raw = reinterpret_cast<const std::int64_t*>(ticks.raw_data());
+      case ThreadKind::Duration: {
+        const auto nanos = key.as_duration().host();
         for (std::int64_t row = 0; row < nrows; ++row) {
           const auto idx = static_cast<std::size_t>(row);
           row_hashes[idx] = group_hash_mix_(
               row_hashes[idx],
               detail::valid_at(key, row)
-                  ? std::hash<std::int64_t>{}(raw[idx])
+                  ? std::hash<std::int64_t>{}(nanos[idx])
                   : kGroupNullHash_);
         }
         break;
@@ -798,7 +796,7 @@ Thread group_agg_thread_(const GroupState_& state,
       return group_numeric_thread_(*value, state, op);
     case GroupOp::Min:
     case GroupOp::Max:
-      if (value->kind() == ThreadKind::Timeline || value->kind() == ThreadKind::TimeIndex) {
+      if (value->kind() == ThreadKind::Timeline) {
         return group_temporal_thread_(*value, state, op);
       }
       return group_numeric_thread_(*value, state, op);
@@ -813,7 +811,7 @@ Thread group_count_thread_(const GroupState_& state,
     platform = value->as_series().platform();
   }
 
-  pluss::Series ids;
+  pluss::Series ids = pluss::series::undefined();
   if (value.has_value() && detail::has_validity_mask(*value)) {
     auto active = state.included_mask_cpu.platform() == platform
         ? state.included_mask_cpu
@@ -855,8 +853,9 @@ Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state) {
       return group_ndistinct_series_thread_(value.as_series(), state, &value);
     case ThreadKind::Timeline:
       return group_ndistinct_series_thread_(value.as_timeline().epoch_nanos(), state, &value);
-    case ThreadKind::TimeIndex:
-      return group_ndistinct_series_thread_(value.as_timeindex().timeline().epoch_nanos(), state, &value);
+    case ThreadKind::Duration:
+      return group_ndistinct_series_thread_(
+          group_i64_series_(value.as_duration().host()), state, &value);
     case ThreadKind::Note: {
       const auto note = value.as_note();
       return group_ndistinct_tokens_(state, &value, [&note](std::int64_t row) -> std::string_view {
@@ -1035,8 +1034,8 @@ Thread group_numeric_thread_(const Thread& value,
               "group: numeric aggregation requires a numeric Series thread");
   const auto platform = value.as_series().platform();
 
-  pluss::Series ids;
-  pluss::Series values;
+  pluss::Series ids = pluss::series::undefined();
+  pluss::Series values = pluss::series::undefined();
   auto numeric = value.as_series().to(pluss::codem::ScalarType::Float64);
   if (detail::has_validity_mask(value)) {
     auto active = state.included_mask_cpu.platform() == platform
@@ -1081,7 +1080,7 @@ Thread group_numeric_thread_(const Thread& value,
       pluss::codem::ScalarType::Float64,
       platform));
 
-  pluss::Series out;
+  pluss::Series out = pluss::series::undefined();
   pluss::Series validity = any_value;
   switch (op) {
     case GroupOp::Sum:
@@ -1132,16 +1131,14 @@ Thread group_numeric_thread_(const Thread& value,
 Thread group_temporal_thread_(const Thread& value,
                               const GroupState_& state,
                               GroupOp op) {
-  PLUSS_CHECK((value.kind() == ThreadKind::Timeline || value.kind() == ThreadKind::TimeIndex) &&
+  PLUSS_CHECK(value.kind() == ThreadKind::Timeline &&
                   (op == GroupOp::Min || op == GroupOp::Max),
               "group: temporal aggregation only supports min/max");
   const auto platform = group_thread_platform_(value);
-  const auto ticks_all = value.kind() == ThreadKind::Timeline
-      ? value.as_timeline().epoch_nanos()
-      : value.as_timeindex().timeline().epoch_nanos();
+  const auto ticks_all = value.as_timeline().epoch_nanos();
 
-  pluss::Series ids;
-  pluss::Series ticks;
+  pluss::Series ids = pluss::series::undefined();
+  pluss::Series ticks = pluss::series::undefined();
   if (detail::has_validity_mask(value)) {
     auto active = state.included_mask_cpu.platform() == platform
         ? state.included_mask_cpu
@@ -1200,9 +1197,7 @@ Thread group_temporal_thread_(const Thread& value,
     valid[i] = count_values[i] > 0.0;
   }
 
-  Thread out = value.kind() == ThreadKind::Timeline
-      ? Thread(group_rebuild_timeline_like_(value.as_timeline(), tick_values))
-      : Thread(group_rebuild_timeline_like_(value.as_timeindex().timeline(), tick_values).to_timeindex(false));
+  Thread out = Thread(group_rebuild_timeline_like_(value.as_timeline(), tick_values));
 
   if (std::any_of(valid.begin(), valid.end(), [](bool flag) { return !flag; })) {
     out = detail::with_validity_mask(out, group_bool_mask_(valid, group_thread_platform_(out)));

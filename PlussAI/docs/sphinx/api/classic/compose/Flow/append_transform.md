@@ -24,6 +24,17 @@ instead), or give it a callable that only touches the columns it cares about.
 classic::Status classic::Flow::append_transform(std::unique_ptr<classic::TransformerBase> transformer);
 ```
 
+## What It Does
+
+Takes ownership of any `TransformerBase` -- whatever concrete type it
+actually is -- and appends it to the `Flow` as an opaque stage that sees
+the entire batch every time it runs. This is the lowest-level attachment
+primitive in this family; both
+[`add_function_transformer`](add_function_transformer.md) and
+[`add_feature_transformer`](add_feature_transformer.md) are thin
+convenience wrappers that construct their specific transformer type and
+call this directly.
+
 ## Parameters
 
 `transformer` — `std::unique_ptr<TransformerBase>`

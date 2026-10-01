@@ -2,12 +2,10 @@
 
 [Back to TimeIndex API Reference](../../timeindex_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-TimeIndex::infer_freq() const -> std::string
-TimeIndex::freq() const -> std::string
-TimeIndex::frequency() const -> std::string
+std::string TimeIndex::freq() const
 ```
 
 ## What It Does
@@ -16,8 +14,6 @@ Infers a regular frequency code from the spacing of the index.
 
 This is the quickest way to ask whether the axis looks like a regular hourly,
 minute, daily, or second-based series.
-
-`freq()` and `frequency()` are convenience aliases for `infer_freq()`.
 
 Think of it as a descriptive read on the axis, not a guarantee that later
 operations must obey.
@@ -75,12 +71,12 @@ if (idx.freq().empty()) {
 - [`TimeIndex::is_monotonic_increasing`](is_monotonic_increasing.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="size.html">
+  <a class="prev-link" href="floor.html">
     <span class="label">Previous</span>
-    <span class="title">size</span>
+    <span class="title">floor</span>
   </a>
-  <a class="next-link" href="host.html">
+  <a class="next-link" href="head.html">
     <span class="label">Next</span>
-    <span class="title">host</span>
+    <span class="title">head</span>
   </a>
 </div>

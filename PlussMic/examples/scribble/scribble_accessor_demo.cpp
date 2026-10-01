@@ -55,10 +55,16 @@ int main() {
         pluss::make_timeline({"2024-03-15T10:05:45Z"}),
         std::monostate{},
     });
-    const Slot timeindex_slot({
-        pluss::make_timeindex({"2024-01-31T08:15:00Z"}),
-        pluss::make_timeindex({"2024-02-29T16:45:30Z"}),
-        pluss::make_timeindex({"2024-03-15T10:05:45Z"}),
+    const Slot duration_slot({
+        pluss::duration::nanos(1'000'000'000LL),
+        pluss::duration::nanos(2'000'000'000LL),
+        pluss::duration::nanos(3'000'000'000LL),
+        std::monostate{},
+    });
+    const Slot nanos_text({
+        pluss::make_note("1000000000"),
+        pluss::make_note("2000000000"),
+        pluss::make_note("3000000000"),
         std::monostate{},
     });
     const Slot amount({
@@ -95,7 +101,7 @@ int main() {
     std::cout << "cast().series()\n" << numeric_text.cast({.series_dtype = ScalarType::Float64}).series() << "\n";
     std::cout << "cast().note()\n" << amount.cast().note() << "\n";
     std::cout << "cast().timeline()\n" << date_text.cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeline() << "\n";
-    std::cout << "cast().timeindex()\n" << date_text.cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeindex() << "\n";
+    std::cout << "cast().duration()\n" << nanos_text.cast().duration() << "\n";
 
     std::cout << "\n=== Slot Note Accessor ===\n";
     std::cout << "nt().strip()\n" << codes.nt().strip() << "\n";
@@ -166,17 +172,17 @@ int main() {
     std::cout << "tl().localize({.tz = \"UTC\"})\n"
               << naive_timeline.tl().localize(TimelineLocalizeOptions{.tz = "UTC"}) << "\n";
     std::cout << "tl().utc()\n" << timeline_slot.tl().tz("America/New_York").tl().utc() << "\n";
-    std::cout << "tl().index(false)\n" << timeline_slot.tl().index(false) << "\n";
 
     const Registry registry({
         {"amount", amount},
         {"quantity", quantity},
         {"numeric_text", numeric_text},
+        {"nanos_text", nanos_text},
         {"code", codes},
         {"tag", tags},
         {"date_text", date_text},
         {"opened_at", timeline_slot},
-        {"stamp", timeindex_slot},
+        {"stamp", duration_slot},
         {"all_null", null_slot},
         {"empty_slot", empty_slot},
         {"mixed", mixed_slot},
@@ -199,6 +205,12 @@ int main() {
             pluss::make_note("100.5"),
             pluss::make_note("200.0"),
             pluss::make_note("300.25"),
+            std::monostate{},
+        })},
+        {"nanos_text", Slot({
+            pluss::make_note("8000000000"),
+            pluss::make_note("9000000000"),
+            pluss::make_note("10000000000"),
             std::monostate{},
         })},
         {"code", Slot({
@@ -226,9 +238,9 @@ int main() {
             std::monostate{},
         })},
         {"stamp", Slot({
-            pluss::make_timeindex({"2025-01-31T08:15:00Z"}),
-            pluss::make_timeindex({"2025-02-28T16:45:30Z"}),
-            pluss::make_timeindex({"2025-03-31T10:05:45Z"}),
+            pluss::duration::nanos(4'000'000'000LL),
+            pluss::duration::nanos(5'000'000'000LL),
+            pluss::duration::nanos(6'000'000'000LL),
             std::monostate{},
         })},
         {"all_null", null_slot},
@@ -236,7 +248,7 @@ int main() {
         {"mixed", Slot({
             pluss::make_note("mixed"),
             pluss::make_series(std::int64_t{9}, ScalarType::Int64),
-            pluss::make_timeindex({"2025-04-01T00:00:00Z"}),
+            pluss::duration::nanos(7'000'000'000LL),
         })},
     });
 
@@ -247,8 +259,8 @@ int main() {
               << registry.fields({"amount", "quantity"}).cast().note() << "\n";
     std::cout << "fields(...).cast().timeline()\n"
               << registry.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeline() << "\n";
-    std::cout << "fields(...).cast().timeindex()\n"
-              << registry.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeindex() << "\n";
+    std::cout << "fields(...).cast().duration()\n"
+              << registry.fields({"nanos_text"}).cast().duration() << "\n";
     std::cout << "fields(...).nt()\n"
               << registry.fields({"code", "tag"}).nt().strip().fields({"code", "tag"}).nt().upper() << "\n";
     std::cout << "fields(...).tl()\n" << registry.fields({"opened_at"}).tl().year() << "\n";
@@ -256,8 +268,8 @@ int main() {
     std::cout << "fields(...).fillnull(\"missing\")\n" << registry.fields({"code"}).fillnull("missing") << "\n";
     std::cout << "fields(...).fillnull(Timeline)\n"
               << registry.fields({"opened_at"}).fillnull(pluss::make_timeline({"2024-12-31T00:00:00Z"})) << "\n";
-    std::cout << "fields(...).fillnull(TimeIndex)\n"
-              << registry.fields({"stamp"}).fillnull(pluss::make_timeindex({"2024-12-31T00:00:00Z"})) << "\n";
+    std::cout << "fields(...).fillnull(Duration)\n"
+              << registry.fields({"stamp"}).fillnull(pluss::duration::nanos(0)) << "\n";
     std::cout << "fields(...).dropnull()\n" << registry.fields({"amount", "code"}).dropnull() << "\n";
     std::cout << "fields(...).isnull()\n" << registry.fields({"amount"}).isnull() << "\n";
     std::cout << "fields(...).notnull()\n" << registry.fields({"amount"}).notnull() << "\n";
@@ -277,7 +289,7 @@ int main() {
     std::cout << "fieldaxis().series()\n" << registry.fieldaxis().series() << "\n";
     std::cout << "fieldaxis().note()\n" << registry.fieldaxis().note() << "\n";
     std::cout << "fieldaxis().timeline()\n" << registry.fieldaxis().timeline() << "\n";
-    std::cout << "fieldaxis().timeindex()\n" << registry.fieldaxis().timeindex() << "\n";
+    std::cout << "fieldaxis().duration()\n" << registry.fieldaxis().duration() << "\n";
     std::cout << "fieldaxis().mixed()\n" << registry.fieldaxis().mixed() << "\n";
     std::cout << "fieldaxis().nulls()\n" << registry.fieldaxis().nulls() << "\n";
     std::cout << "fieldaxis().empty()\n" << registry.fieldaxis().empty() << "\n";
@@ -348,7 +360,6 @@ int main() {
                      .fields({"date_text"}).tl().localize(TimelineLocalizeOptions{.tz = "UTC"}) << "\n";
     std::cout << "tl().utc()\n"
               << registry.fields({"opened_at"}).tl().tz("America/New_York").fields({"opened_at"}).tl().utc() << "\n";
-    std::cout << "tl().index(false)\n" << registry.fields({"opened_at"}).tl().index(false) << "\n";
 
     const Axel axel({
         registry,
@@ -365,8 +376,8 @@ int main() {
               << axel.fields({"amount"}).cast().note().registry(0).fields("amount") << "\n";
     std::cout << "fields(...).cast().timeline()\n"
               << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeline().registry(0).fields("date_text") << "\n";
-    std::cout << "fields(...).cast().timeindex()\n"
-              << axel.fields({"date_text"}).cast({.format = "%Y-%m-%d", .invalid = ParseInvalid::Null}).timeindex().registry(0).fields("date_text") << "\n";
+    std::cout << "fields(...).cast().duration()\n"
+              << axel.fields({"nanos_text"}).cast().duration().registry(0).fields("nanos_text") << "\n";
     std::cout << "fields(...).nt()\n"
               << axel.fields({"code"}).nt().strip().fields({"code"}).nt().upper().registry(0).fields("code") << "\n";
     std::cout << "fields(...).tl()\n" << axel.fields({"opened_at"}).tl().year().registry(0).fields("opened_at") << "\n";
@@ -374,8 +385,6 @@ int main() {
     std::cout << "fields(...).fillnull(\"missing\")\n" << axel.fields({"code"}).fillnull("missing").registry(0).fields("code") << "\n";
     std::cout << "fields(...).fillnull(Timeline)\n"
               << axel.fields({"opened_at"}).fillnull(pluss::make_timeline({"2026-01-01T00:00:00Z"})).registry(0).fields("opened_at") << "\n";
-    std::cout << "fields(...).fillnull(TimeIndex)\n"
-              << axel.fields({"stamp"}).fillnull(pluss::make_timeindex({"2026-01-01T00:00:00Z"})).registry(0).fields("stamp") << "\n";
     std::cout << "fields(...).dropnull()\n" << axel.fields({"amount"}).dropnull().registry(0).fields("amount") << "\n";
     std::cout << "fields(...).isnull()\n" << axel.fields({"amount"}).isnull().registry(0).fields("amount") << "\n";
     std::cout << "fields(...).notnull()\n" << axel.fields({"amount"}).notnull().registry(0).fields("amount") << "\n";
@@ -396,7 +405,7 @@ int main() {
     std::cout << "fieldaxis().series() => " << axel.fieldaxis().series().registry(0).nfields() << "\n";
     std::cout << "fieldaxis().note() => " << axel.fieldaxis().note().registry(0).nfields() << "\n";
     std::cout << "fieldaxis().timeline() => " << axel.fieldaxis().timeline().registry(0).nfields() << "\n";
-    std::cout << "fieldaxis().timeindex() => " << axel.fieldaxis().timeindex().registry(0).nfields() << "\n";
+    std::cout << "fieldaxis().duration() => " << axel.fieldaxis().duration().registry(0).nfields() << "\n";
     std::cout << "fieldaxis().mixed() => " << axel.fieldaxis().mixed().registry(0).nfields() << "\n";
     std::cout << "fieldaxis().nulls() => " << axel.fieldaxis().nulls().registry(0).nfields() << "\n";
     std::cout << "fieldaxis().empty() => " << axel.fieldaxis().empty().registry(0).nfields() << "\n";
@@ -465,7 +474,6 @@ int main() {
                      .fields({"date_text"}).tl().localize(TimelineLocalizeOptions{.tz = "UTC"}).registry(0).fields("date_text") << "\n";
     std::cout << "tl().utc()\n"
               << axel.fields({"opened_at"}).tl().tz("America/New_York").fields({"opened_at"}).tl().utc().registry(0).fields("opened_at") << "\n";
-    std::cout << "tl().index(false)\n" << axel.fields({"opened_at"}).tl().index(false).registry(0).fields("opened_at") << "\n";
 
     return 0;
   } catch (const std::exception& e) {

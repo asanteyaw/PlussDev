@@ -132,7 +132,7 @@ bool is_phase0_family(ModelFamily family) {
 }
 
 struct DenseFeatureMatrix {
-  Series x_rows = Series::undefined();
+  Series x_rows = pluss::series::undefined();
   std::int64_t sample_count = 0;
   std::int64_t feature_count = 0;
   Platform original_platform = pluss::pCPU;
@@ -507,7 +507,7 @@ struct DenseFeatureMatrix {
   const Series weight_train_2d =
       train_weight.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
 
-  Series radius_prob = Series::undefined();
+  Series radius_prob = pluss::series::undefined();
   if (distance_weighted) {
     constexpr double eps = 1e-12;
     const Series zero_mask = dist2.le(eps).to(ScalarType::Float64).mul(mask);
@@ -528,7 +528,7 @@ struct DenseFeatureMatrix {
 }
 
 struct BinaryLabelEncoding {
-  Series y01 = Series::undefined();
+  Series y01 = pluss::series::undefined();
   double negative = 0.0;
   double positive = 1.0;
   ScalarType label_dtype = ScalarType::Float64;
@@ -578,7 +578,7 @@ struct BinaryLabelEncoding {
                                                         std::int64_t param_count,
                                                         Platform platform,
                                                         const char* where) {
-  if (!raw_bounds.defined()) return StatusOr<Series>(Series::undefined());
+  if (!raw_bounds.defined()) return StatusOr<Series>(pluss::series::undefined());
 
   Series bounds = raw_bounds.to(platform, ScalarType::Float64).reshape({raw_bounds.numel()});
   if (bounds.numel() == 1) {
@@ -998,8 +998,8 @@ public:
     if (options_.standardize) {
       x_train = standardize_fit_rows(x_train, mean_, scale_);
     } else {
-      mean_ = Series::undefined();
-      scale_ = Series::undefined();
+      mean_ = pluss::series::undefined();
+      scale_ = pluss::series::undefined();
     }
     x_train_ = std::move(x_train);
     y_train_ = labels.y01.to(x_train_.platform(), ScalarType::Float64).reshape({sample_count_});
@@ -1031,7 +1031,7 @@ public:
       x_query = standardize_apply_rows(x_query, mean_, scale_);
     }
 
-    Series probs = Series::undefined();
+    Series probs = pluss::series::undefined();
     if (query_mode_ == NeighborQueryMode::Radius) {
       probs = radius_probability_series(x_query,
                                         x_train_,
@@ -1201,11 +1201,11 @@ private:
   NeighborQueryMode query_mode_{NeighborQueryMode::KNearest};
   double radius_{1.0};
   std::int64_t radius_fallback_k_{1};
-  Series x_train_ = Series::undefined();
-  Series y_train_ = Series::undefined();
-  Series train_weight_ = Series::undefined();
-  Series mean_ = Series::undefined();
-  Series scale_ = Series::undefined();
+  Series x_train_ = pluss::series::undefined();
+  Series y_train_ = pluss::series::undefined();
+  Series train_weight_ = pluss::series::undefined();
+  Series mean_ = pluss::series::undefined();
+  Series scale_ = pluss::series::undefined();
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};
@@ -1747,9 +1747,9 @@ public:
     for (double& w : base_sample_weights) w /= base_weight_sum;
 
     TrainOptions member_options = fit_options;
-    member_options.sample_weights = Series::undefined();
+    member_options.sample_weights = pluss::series::undefined();
     member_options.class_weight = ClassWeightMode::None;
-    member_options.class_weights = Series::undefined();
+    member_options.class_weights = pluss::series::undefined();
 
     const std::int64_t learner_count = options_.learners;
     const std::int64_t subsample_count =
@@ -2736,14 +2736,14 @@ public:
       return Status::invalid_argument("BayesClassifier::learn requires both classes to be present in training data.");
     }
 
-    mean0_ = Series::undefined();
-    mean1_ = Series::undefined();
-    var0_ = Series::undefined();
-    var1_ = Series::undefined();
-    log_prob0_ = Series::undefined();
-    log_prob1_ = Series::undefined();
-    log_inv_prob0_ = Series::undefined();
-    log_inv_prob1_ = Series::undefined();
+    mean0_ = pluss::series::undefined();
+    mean1_ = pluss::series::undefined();
+    var0_ = pluss::series::undefined();
+    var1_ = pluss::series::undefined();
+    log_prob0_ = pluss::series::undefined();
+    log_prob1_ = pluss::series::undefined();
+    log_inv_prob0_ = pluss::series::undefined();
+    log_inv_prob1_ = pluss::series::undefined();
 
     if (likelihood_ == BayesLikelihood::Gaussian) {
       mean0_ = x.mul(mask0).sum(0, false).div(n0).reshape({feature_count_});
@@ -2827,8 +2827,8 @@ public:
     }
 
     const Series x = matrix.x_rows;
-    Series logp0 = Series::undefined();
-    Series logp1 = Series::undefined();
+    Series logp0 = pluss::series::undefined();
+    Series logp1 = pluss::series::undefined();
 
     if (likelihood_ == BayesLikelihood::Gaussian) {
       constexpr double two_pi = 6.28318530717958647692;
@@ -2982,10 +2982,10 @@ public:
     mean1_ = state[2];
     var0_ = state[3];
     var1_ = state[4];
-    log_prob0_ = state.size() > 5 ? state[5] : Series::undefined();
-    log_prob1_ = state.size() > 6 ? state[6] : Series::undefined();
-    log_inv_prob0_ = state.size() > 7 ? state[7] : Series::undefined();
-    log_inv_prob1_ = state.size() > 8 ? state[8] : Series::undefined();
+    log_prob0_ = state.size() > 5 ? state[5] : pluss::series::undefined();
+    log_prob1_ = state.size() > 6 ? state[6] : pluss::series::undefined();
+    log_inv_prob0_ = state.size() > 7 ? state[7] : pluss::series::undefined();
+    log_inv_prob1_ = state.size() > 8 ? state[8] : pluss::series::undefined();
     return Status::success();
   }
 
@@ -3004,14 +3004,14 @@ private:
   bool trained_{false};
   std::int64_t sample_count_{0};
   std::int64_t feature_count_{0};
-  Series mean0_ = Series::undefined();
-  Series mean1_ = Series::undefined();
-  Series var0_ = Series::undefined();
-  Series var1_ = Series::undefined();
-  Series log_prob0_ = Series::undefined();
-  Series log_prob1_ = Series::undefined();
-  Series log_inv_prob0_ = Series::undefined();
-  Series log_inv_prob1_ = Series::undefined();
+  Series mean0_ = pluss::series::undefined();
+  Series mean1_ = pluss::series::undefined();
+  Series var0_ = pluss::series::undefined();
+  Series var1_ = pluss::series::undefined();
+  Series log_prob0_ = pluss::series::undefined();
+  Series log_prob1_ = pluss::series::undefined();
+  Series log_inv_prob0_ = pluss::series::undefined();
+  Series log_inv_prob1_ = pluss::series::undefined();
   double prior0_{0.5};
   double prior1_{0.5};
   double negative_label_{0.0};
@@ -3073,7 +3073,7 @@ public:
                                                      options.max_iterations,
                                                      options.tolerance,
                                                      "KernelClassifier::learn");
-    Series alpha = Series::undefined();
+    Series alpha = pluss::series::undefined();
     if (beta_or.ok()) {
       alpha = beta_or.move_value().mul(sqrt_weight).reshape({sample_count_});
     } else {
@@ -3111,7 +3111,7 @@ public:
           "KernelClassifier::infer_scores does not support NaN features; apply the fitted imputer used for learn()."));
     }
 
-    Series scores = Series::undefined();
+    Series scores = pluss::series::undefined();
     if (matrix.x_rows.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
       scores = kernel_scores_cpu(matrix.x_rows, x_train_, alpha_, options_.kernel, gamma_);
     } else {
@@ -3229,8 +3229,8 @@ private:
   std::int64_t feature_count_{0};
   double gamma_{1.0};
   double lambda_{1.0};
-  Series x_train_ = Series::undefined();
-  Series alpha_ = Series::undefined();
+  Series x_train_ = pluss::series::undefined();
+  Series alpha_ = pluss::series::undefined();
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};
@@ -3812,7 +3812,7 @@ struct LinearPenalty {
 
   constexpr double eps = 1e-12;
   const Series probs = logits.softmax(1);
-  Series one_hot = Series::undefined();
+  Series one_hot = pluss::series::undefined();
   for (std::int64_t ci = 0; ci < k; ++ci) {
     const Series idx = pluss::series::arange(ci, ci + 1, i64_cfg);
     const Series cls_value = cls.index_select(0, idx).reshape({1});
@@ -3846,8 +3846,8 @@ struct LinearPenalty {
     if (metric == MetricKind::RocAuc || metric == MetricKind::Gini) needs_ovr_auc = true;
     if (metric == MetricKind::AveragePrecision) needs_ovr_ap = true;
   }
-  Series macro_roc_auc = Series::undefined();
-  Series macro_average_precision = Series::undefined();
+  Series macro_roc_auc = pluss::series::undefined();
+  Series macro_average_precision = pluss::series::undefined();
   if (needs_ovr_auc || needs_ovr_ap) {
     Series auc_sum = pluss::series::zeros({1}, f64_on(platform));
     Series ap_sum = pluss::series::zeros({1}, f64_on(platform));
@@ -3872,7 +3872,7 @@ struct LinearPenalty {
     if (needs_ovr_ap) macro_average_precision = ap_sum.div(k_scalar).reshape({1});
   }
   const Series gini =
-      needs_ovr_auc ? macro_roc_auc.mul(2.0).sub(1.0).reshape({1}) : Series::undefined();
+      needs_ovr_auc ? macro_roc_auc.mul(2.0).sub(1.0).reshape({1}) : pluss::series::undefined();
 
   std::vector<Series> out{};
   out.reserve(requested.size());
@@ -4046,7 +4046,7 @@ public:
     } else {
       double prev_loss = std::numeric_limits<double>::infinity();
       for (std::int64_t iter = 0; iter < options.max_iterations; ++iter) {
-        Series grad = Series::undefined();
+        Series grad = pluss::series::undefined();
         if (options_.objective == LinearObjective::Logistic) {
           grad = logistic_gradient(design, labels.y01, sample_weight, weights, options_.fit_intercept, penalty.l2);
         } else {
@@ -4335,7 +4335,7 @@ private:
   LinearFamilyOptions options_{};
   bool trained_{false};
   std::int64_t feature_count_{0};
-  Series weights_ = Series::undefined();
+  Series weights_ = pluss::series::undefined();
   bool calibrated_scores_{false};
   CalibrationKind calibration_kind_{CalibrationKind::None};
   double calibration_a_{1.0};
@@ -4553,7 +4553,7 @@ public:
     }
 
     const std::int64_t sample_count = batch.sample_count();
-    Series scores = Series::undefined();
+    Series scores = pluss::series::undefined();
     for (const std::unique_ptr<ClassifierBase>& model : models_) {
       StatusOr<Series> score_or = model->infer_scores(batch, options);
       if (!score_or.ok()) return StatusOr<Series>(score_or.status());
@@ -4690,7 +4690,7 @@ private:
   bool multiclass_{false};
   std::int64_t feature_count_{0};
   ScalarType label_dtype_{ScalarType::Float64};
-  Series classes_ = Series::undefined();
+  Series classes_ = pluss::series::undefined();
   std::vector<std::unique_ptr<ClassifierBase>> models_{};
 };
 

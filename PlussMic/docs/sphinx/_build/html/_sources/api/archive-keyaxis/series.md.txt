@@ -73,7 +73,7 @@ n                        | Series       | Series[float64]  | 1       | [1]
 ## See Also
 
 - [`ArchiveKeyAxisAccessor::note`](note.md) / [`timeline()`](timeline.md) /
-  [`timeindex()`](timeindex.md): the sibling kind filters.
+  : the sibling kind filters.
 - [`CatalogKeyAxisAccessor::series`](../catalog-keyaxis/series.md): the single-catalog
   delegate this method applies to every catalog independently.
 - [`Archive::keyaxis`](../archive/keyaxis.md): the entry point this accessor is reached

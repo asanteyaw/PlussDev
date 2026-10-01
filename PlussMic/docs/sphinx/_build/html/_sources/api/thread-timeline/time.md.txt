@@ -14,7 +14,7 @@ ThreadTimelineAccessor::time() const -> Thread
 
 Replaces the bound thread with just its time-of-day portion — the date is
 reset to the Unix epoch day (`1970-01-01`), and the clock time is kept, in
-local wall time — same length, still `Timeline`/`TimeIndex`-kind.
+local wall time — same length, still `Timeline`-kind.
 
 ## Parameters
 
@@ -23,7 +23,7 @@ local wall time — same length, still `Timeline`/`TimeIndex`-kind.
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound
+    A new `Timeline`-kind thread, same length as the bound
     thread, with its date portion reset to `1970-01-01`, keeping only the
     time-of-day.
 
@@ -58,12 +58,12 @@ exactly.
 
 ## Notes
 
-- The result is still a `Timeline`/`TimeIndex` (not a plain string or numeric
+- The result is still a `Timeline` (not a plain string or numeric
   type) with a fixed date component — it's meant for comparing or grouping by
   time-of-day, not as a display format. Use [`fmt("%H:%M:%S")`](fmt.md) if a
   bare text time is needed.
 - Operates in **local wall time**, per the thread's current timezone.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

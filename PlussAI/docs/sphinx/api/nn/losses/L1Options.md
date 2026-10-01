@@ -2,19 +2,28 @@
 
 The reduction mode.
 
-<!-- one paragraph on the role of this bag: which call consumes it and when -->
+Passed to [`L1`](L1.md)'s third argument, defaulted -- `L1(prediction,
+target)` alone is equivalent to `L1(prediction, target, {})`.
 
 ## Fields
 
 ### `reduction`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`nn::LossReduction reduction = nn::LossReduction::Mean`
+: How the per-element absolute errors are combined into the returned
+  value. See [`Introduction`](Introduction.md#the-shared-reduction-mode)
+  for the full three-way explanation shared by every loss in this
+  family.
 
 ## Guidance
 
-<!-- how the defaults fit together; which fields to touch only with a reason -->
+Identical guidance to [`MSEOptions::reduction`](MSEOptions.md#guidance):
+`Mean` is the right default for training; `Sum`/`None` are for the less
+common cases where batch-size-independence or the per-element values
+themselves matter more than a single scalar.
 
 ## See Also
 
-<!-- the consuming symbol(s) -->
+- [`L1`](L1.md) -- the only consumer of this options struct.
+- [`SmoothL1Options`](SmoothL1Options.md) -- `SmoothL1` with `beta=0`
+  reduces to exactly this loss.

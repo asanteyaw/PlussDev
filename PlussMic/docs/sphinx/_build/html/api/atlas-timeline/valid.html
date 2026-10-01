@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature in <strong>every frame of the stack</strong> with a
+<p>Replaces every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature in <strong>every frame of the stack</strong> with a
 boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> flagging whether the row is a real (non-<code class="docutils literal notranslate"><span class="pre">NaT</span></code>) timestamp — the logical
 inverse of <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnat()</span></code></span></a> — the same transform
 <a class="reference internal" href="../dataframe-timeline/valid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl().valid()</span></code></span></a> applies to a single frame,
@@ -146,7 +146,7 @@ nanoseconds via <code class="docutils literal notranslate"><span class="pre">plu
 (for now) real <code class="docutils literal notranslate"><span class="pre">NaT</span></code> values must be built via the epoch-nanoseconds splice shown above
 rather than an empty-string literal.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl()</span></code> requires <strong>every</strong> feature on each stacked frame to already be
-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, checked lazily per frame the first time a method like this
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, checked lazily per frame the first time a method like this
 one is actually called — see <a class="reference internal" href="../atlas/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::tl</span></code></span></a>.</p></li>
 <li><p>Each frame is transformed independently — a <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row in one frame has no effect on any
 other frame’s result.</p></li>

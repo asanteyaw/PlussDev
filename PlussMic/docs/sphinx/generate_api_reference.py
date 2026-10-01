@@ -15,7 +15,7 @@ DOCS = ROOT / 'PlussMic/docs/sphinx'
 API_CONTENT = DOCS / 'api_content'
 PER_METHOD_CLASSES = {
     'DataFrame', 'Thread', 'Catalog', 'Stream', 'Archive', 'Atlas',
-    'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
+    'DataFrameCaseStudyAccessor', 'DataFrameNoteAccessor', 'DataFrameTimelineAccessor', 'DataFrameLabelAccessor',
     'DataFrameFeatureAxisAccessor', 'DataFramePlotAccessor', 'DataFramePlot3DAccessor', 'DataFrameTsAccessor',
     'DataFrameTsWindowAccessor', 'DataFrameTsResampler', 'DataFrameGroupBuilder',
     'DataFrameSortBuilder', 'ContingencyTable',
@@ -92,6 +92,14 @@ CLASS_CONFIG = {
         'title': 'DataFrame API Reference',
         'subtitle': 'Practical DataFrame API Reference',
         'intro': 'This page documents the full public `DataFrame` surface with usage-first examples generated from the current table API.',
+    },
+    'DataFrameCaseStudyAccessor': {
+        'header': ROOT / 'PlussMic/src/table/DataFrame.h',
+        'output': DOCS / 'dataframe_case_study_accessor_api_reference.md',
+        'title': 'DataFrameCaseStudyAccessor API Reference',
+        'subtitle': 'Practical DataFrameCaseStudyAccessor API Reference',
+        'intro': 'This page documents the public case-selection accessor returned by `DataFrame::case_study()`.',
+        'binder': 'case_study()',
     },
     'DataFramePlotAccessor': {
         'header': ROOT / 'PlussMic/src/table/plot/DataFramePlot.h',
@@ -588,6 +596,7 @@ METHOD_PAGE_DIR = {
     'CatalogPlot3DAccessor': 'catalog-plot3d',
     'StreamPlotAccessor': 'stream-plot',
     'ArchivePlotAccessor': 'archive-plot',
+    'DataFrameCaseStudyAccessor': 'dataframe-case-study',
     'DataFrameNoteAccessor': 'dataframe-note',
     'DataFrameTimelineAccessor': 'dataframe-timeline',
     'DataFrameLabelAccessor': 'dataframe-label',
@@ -641,6 +650,7 @@ METHOD_PAGE_DIR = {
 # entry in this same dict, not a special case in the generator.
 ACCESSOR_CHILDREN: dict[str, list[str]] = {
     'DataFrame': [
+        'DataFrameCaseStudyAccessor',
         'DataFrameNoteAccessor',
         'DataFrameTimelineAccessor',
         'DataFrameLabelAccessor',
@@ -3858,7 +3868,7 @@ auto stamps = Thread(pluss::make_timeline({
 def thread_a_timeindex_base() -> str:
     return """using pluss::table::Thread;
 
-auto ticks = Thread(pluss::make_timeindex({
+auto ticks = Thread(pluss::timeindex::make({
     "2024-01-01T00:10:00Z",
     "2024-01-01T00:20:00Z",
     "2024-01-01T01:10:00Z",
@@ -6252,7 +6262,7 @@ def df_temporal_mixed() -> str:
     return """auto df = pluss::table::DataFrame({
     {\"start\", pluss::table::Thread(pluss::make_timeline({
         \"2020-01-01T00:00:00Z\",\n        \"2020-01-02T08:00:00Z\",\n    }))},
-    {\"end\", pluss::table::Thread(pluss::make_timeindex({
+    {\"end\", pluss::table::Thread(pluss::timeindex::make({
         \"2020-01-01T01:30:00Z\",\n        \"2020-01-02T09:00:00Z\",\n    }))},
     {\"load\", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
     {\"city\", pluss::table::Thread(pluss::make_note({\"Accra\", \"Tema\"}))},
@@ -6493,6 +6503,10 @@ def note_accessor_base() -> str:
     {\"sales\", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 auto notes = df.nt();"""
+
+
+def case_study_accessor_base() -> str:
+    return df_base() + '\n' + 'auto cases = df.case_study();'
 
 
 def timeline_accessor_base() -> str:
@@ -6845,6 +6859,7 @@ def archive_ts_accessor_base() -> str:
 
 
 ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
+    'DataFrameCaseStudyAccessor': case_study_accessor_base,
     'DataFrameNoteAccessor': note_accessor_base,
     'DataFrameTimelineAccessor': timeline_accessor_base,
     'DataFrameLabelAccessor': label_accessor_base,
@@ -6895,6 +6910,7 @@ ACCESSOR_STUB_BASE: dict[str, Callable[[], str]] = {
 }
 
 ACCESSOR_STUB_VAR: dict[str, str] = {
+    'DataFrameCaseStudyAccessor': 'cases',
     'DataFrameNoteAccessor': 'notes',
     'DataFrameTimelineAccessor': 'timelines',
     'DataFrameLabelAccessor': 'labels',
@@ -7005,7 +7021,7 @@ def thread_value_timeline_base() -> str:
 
 
 def thread_value_timeindex_base() -> str:
-    return 'auto thread = pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z"}));\nauto value = thread.value();'
+    return 'auto thread = pluss::table::Thread(pluss::timeindex::make({"2024-01-01T09:10:00Z"}));\nauto value = thread.value();'
 
 
 def call_line(obj: str, method: str, args: str, assign: bool = True) -> str:
@@ -7822,7 +7838,7 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'Timeline' in sig:
                     return 'auto df = pluss::table::DataFrame({{"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
                 if 'TimeIndex' in sig:
-                    return 'auto df = pluss::table::DataFrame({{"idx", pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::make_timeindex("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));')
+                    return 'auto df = pluss::table::DataFrame({{"idx", pluss::table::Thread(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))}});\n\n' + ('df.fillnull_(pluss::timeindex::make("2024-01-01T00:00:00Z"));' if mut else 'auto out = df.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));')
                 return df_base() + ('\n\ndf.fillnull_(0.0);' if mut else '\n\nauto out = df.fillnull(0.0, {"sales"});')
             if n == 'dropna_all':
                 return df_base() + '\n\nauto out = df.dropna_all({"sales"});'
@@ -8425,8 +8441,8 @@ def example_for(class_name: str, method: Method) -> str:
                 base = thread_time()
                 return base + ('\n\nthread.fillnull_(pluss::make_timeline("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));')
             if 'TimeIndex' in sig:
-                base = 'auto thread = pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z"}));'
-                return base + ('\n\nthread.fillnull_(pluss::make_timeindex("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));')
+                base = 'auto thread = pluss::table::Thread(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-02-01T11:00:00Z"}));'
+                return base + ('\n\nthread.fillnull_(pluss::timeindex::make("2024-01-01T00:00:00Z"));' if n.endswith('_') else '\n\nauto out = thread.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));')
             if n == 'clip':
                 return thread_series() + '\n\nauto out = thread.clip(0.0, 25.0);'
             return thread_series() + ('\n\nthread.fillnull_(0.0);' if n.endswith('_') else '\n\nauto out = thread.fillnull(0.0);')
@@ -8565,7 +8581,7 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'Timeline' in sig:
                     return stream_time() + '\n\nauto out = stream.fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));'
                 if 'TimeIndex' in sig:
-                    return 'auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));'
+                    return 'auto stream = pluss::kindle::Stream(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));'
                 return base + '\n\nauto out = stream.fillnull(0.0);'
             if n == 'clip': return base + '\n\nauto out = stream.clip(0.0, 25.0);'
             if n == 'with_cases' or n == 'with_cases_':
@@ -8588,7 +8604,7 @@ def example_for(class_name: str, method: Method) -> str:
         if n in {'as_series','as_note','as_timeline','as_timeindex'}:
             if 'note' in n: return stream_note() + f'\n\nauto out = stream.{n}();'
             if 'timeline' in n: return stream_time() + f'\n\nauto out = stream.{n}();'
-            if 'timeindex' in n: return 'auto stream = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.as_timeindex();'
+            if 'timeindex' in n: return 'auto stream = pluss::kindle::Stream(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}));\n\nauto out = stream.as_timeindex();'
             return base + f'\n\nauto out = stream.{n}();'
         if n == 'show':
             return base + '\n\nstream.show(std::cout);'
@@ -8695,7 +8711,7 @@ def example_for(class_name: str, method: Method) -> str:
                 if 'Timeline' in sig:
                     return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.keys({"ts"}).fillnull(pluss::make_timeline("2024-01-01T00:00:00Z"));'
                 if 'TimeIndex' in sig:
-                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"idx"_k = pluss::kindle::Stream(pluss::make_timeindex({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.keys({"idx"}).fillnull(pluss::make_timeindex("2024-01-01T00:00:00Z"));'
+                    return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"idx"_k = pluss::kindle::Stream(pluss::timeindex::make({"2024-01-01T09:10:00Z", "2024-01-01T09:40:00Z"}))});\n\nauto out = catalog.keys({"idx"}).fillnull(pluss::timeindex::make("2024-01-01T00:00:00Z"));'
                 return base + '\n\nauto out = catalog.keys({"metric"}).fillnull(0.0);'
             if n == 'cast':
                 return 'using namespace pluss::kindle::literals;\nauto catalog = pluss::kindle::Catalog({"metric"_k = pluss::kindle::Stream(pluss::make_note({"10.0", "20.0", "30.0"}))});\n\nauto out = catalog.keys({"metric"}).cast().series();'
@@ -10354,7 +10370,10 @@ def main(argv: list[str] | None = None) -> int:
                         f'{class_name}: preserved {len(skipped_hand_authored)} hand-authored page(s): '
                         f'{", ".join(skipped_hand_authored)}'
                     )
-                cfg['output'].write_text(build_method_index_page(class_name, methods))
+                if is_hand_authored(cfg['output']):
+                    print(f'{class_name}: preserved hand-authored landing page {cfg["output"].name}')
+                else:
+                    cfg['output'].write_text(build_method_index_page(class_name, methods))
                 print(
                     f'{class_name}: wrote {written} method page(s), '
                     f'preserved {len(skipped_hand_authored)} -> {cfg["output"].name}'

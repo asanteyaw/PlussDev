@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 399b703f25a0 -->
+<!-- pluss-signature-hash: bf3db398dcd7 -->
 
 # Thread::replace
 
@@ -27,9 +27,9 @@ Thread::replace(pluss::null_t from, const pluss::Note& to) const -> Thread
 Thread::replace(const pluss::Timeline& from, const pluss::Timeline& to) const -> Thread
 Thread::replace(const pluss::Timeline& from, pluss::null_t to) const -> Thread
 Thread::replace(pluss::null_t from, const pluss::Timeline& to) const -> Thread
-Thread::replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to) const -> Thread
-Thread::replace(const pluss::TimeIndex& from, pluss::null_t to) const -> Thread
-Thread::replace(pluss::null_t from, const pluss::TimeIndex& to) const -> Thread
+Thread::replace(const pluss::Duration& from, const pluss::Duration& to) const -> Thread
+Thread::replace(const pluss::Duration& from, pluss::null_t to) const -> Thread
+Thread::replace(pluss::null_t from, const pluss::Duration& to) const -> Thread
 ```
 
 ## What It Does
@@ -44,8 +44,9 @@ Thread::replace(pluss::null_t from, const pluss::TimeIndex& to) const -> Thread
   value** exactly equals `from` with `to`, the way a lookup-table substitution works.
   The C++ type of `from`/`to` determines which payload kind participates: `double`
   pairs with a `Series`-kind thread, a scalar `pluss::Note` pairs with a `Note`-kind
-  thread (matching the **whole cell's text**, not a substring), and scalar
-  `pluss::Timeline`/`pluss::TimeIndex` pair with temporal threads. The `pluss::Series`
+  thread (matching the **whole cell's text**, not a substring), a scalar
+  `pluss::Timeline` pairs with a `Timeline`-kind thread, and a scalar
+  `pluss::Duration` pairs with a `Duration`-kind thread. The `pluss::Series`
   scalar-wrapper overloads are typed convenience forms that unwrap to the `double`
   overload; passing `pluss::null_t` for `from` fills nulls (equivalent to
   [`fillnull()`](fillnull.md)), and passing it for `to` nullifies matching cells.
@@ -328,33 +329,27 @@ ptype: Timeline
 ```
 
 Both cells matching `2024-01-01T00:00:00Z` are replaced; `2024-01-02T00:00:00Z` is
-untouched. `replace(Timeline, Timeline)` and `replace(TimeIndex, TimeIndex)` both
-accept either a `Timeline`- or `TimeIndex`-kind calling thread — see Example 9b.
+untouched.
 
-Example 9b. The same replacement, called through the `TimeIndex` overload instead —
-on a plain `Timeline`-kind thread. Both temporal overloads accept both temporal
-kinds symmetrically.
+Example 9b. Whole-value replace on a `Duration`-kind thread works the same way, and
+also composes with `null_t` for nullify/fill — verified against
+`PlussMic/test/temporal_core_migration_tests.cpp:205-213`.
 
 ```cpp
-auto out9b = events.replace(
-    pluss::make_timeindex({"2024-01-01T00:00:00Z"}),
-    pluss::make_timeindex({"2024-06-15T00:00:00Z"}));
-std::cout << out9b;
+auto gaps = Thread(pluss::duration::nanos({1'000'000'000LL, 9, -2'000'000'000LL}));
+
+auto out9b = gaps.replace(pluss::duration::nanos(9), pluss::duration::nanos(-11));
+assert(out9b.as_duration().host() ==
+       std::vector<std::int64_t>({1'000'000'000LL, -11, -2'000'000'000LL}));
+
+auto nulled = out9b.replace(pluss::duration::nanos(-11), pluss::series::null);
+assert(pluss::table::detail::validity_mask(nulled)->to_vec<bool>() ==
+       std::vector<bool>({true, false, true}));
 ```
 
-### Output
-
-```text
-0  2024-06-15
-1  2024-01-02
-2  2024-06-15
-
-ptype: Timeline
-```
-
-Identical result to Example 9, just reached through the `TimeIndex`-argument
-overload instead of the `Timeline`-argument one — `events` itself is `Timeline`-kind
-in both cases.
+The first call substitutes the cell equal to `9ns` for `-11ns`, same as the numeric
+and temporal overloads above. The second nullifies the cell now equal to `-11ns` —
+`replace(from, pluss::series::null)` instead of substituting a value.
 
 Example 10. Payload-kind mismatches throw.
 
@@ -401,8 +396,9 @@ fixed so both spellings fail identically.
   same operation.
 - Whole-value replace requires `from`/`to` scalar wrapper objects (`numel() == 1` /
   `size() == 1`) — a multi-element `pluss::Series`/`pluss::Note`/etc. throws.
-- `replace(Timeline, Timeline)` and `replace(TimeIndex, TimeIndex)` both accept
-  either a `Timeline`- or `TimeIndex`-kind calling thread — symmetric on both sides.
+- `replace(Timeline, Timeline)` requires a `Timeline`-kind calling thread;
+  `replace(Duration, Duration)` requires a `Duration`-kind calling thread. Neither
+  accepts the other's payload kind.
 - `replace(null_t, to)` is equivalent to [`fillnull(to)`](fillnull.md).
 - `replace(from, null_t)` nullifies cells matching `from` rather than changing the
   thread's kind.

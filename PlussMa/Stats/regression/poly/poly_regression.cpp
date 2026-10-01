@@ -109,7 +109,7 @@ void emit_cross_terms_(std::int64_t pos,
 }
 
 struct PolyBasis {
-  Series design = Series::undefined();
+  Series design = pluss::series::undefined();
   std::vector<std::string> names{};
   std::vector<std::string> base_names{};
 };

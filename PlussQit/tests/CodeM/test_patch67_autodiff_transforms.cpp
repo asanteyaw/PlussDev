@@ -390,7 +390,7 @@ TEST_CASE("autodiff reverse distributes amax and amin ties across reduced lanes"
     REQUIRE(g == std::vector<double>{0.0, 0.5, 0.5, 0.5, 0.0, 0.5});
   }
 
-  x.clear_sensitivity();
+  x.clear();
   x.amin(0, false).sum().reverse();
   {
     const auto g = x.sensitivity().to_vec<double>();
@@ -503,7 +503,7 @@ TEST_CASE("autodiff reverse one-shot keep_graph=false fails on reuse", "[autodif
   one_shot.keep_graph = false;
   Trace(loss).reverse(one_shot);
 
-  x.clear_sensitivity();
+  x.clear();
   REQUIRE_THROWS_WITH(
       Trace(loss).reverse(),
       Catch::Matchers::ContainsSubstring("one-shot reverse pass"));
@@ -645,7 +645,7 @@ TEST_CASE("autodiff reverse policy tracks higher-order sensitivity graph when en
   REQUIRE(x.sensitivity().item<double>() == Approx(12.0).margin(1e-12));
 
   const Series first = x.sensitivity();
-  x.clear_sensitivity();
+  x.clear();
   first.reverse();
   REQUIRE(x.sensitivity().item<double>() == Approx(12.0).margin(1e-8));
 }
@@ -656,7 +656,7 @@ TEST_CASE("autodiff reverse does not build higher-order graph by default", "[aut
   const Trace y(x * x * x);
   y.reverse();
   const Series first = x.sensitivity();
-  x.clear_sensitivity();
+  x.clear();
   REQUIRE_THROWS(first.reverse());
   REQUIRE_FALSE(x.has_sensitivity());
 }
@@ -760,7 +760,7 @@ TEST_CASE("autodiff sensitivity examples stay verified", "[autodiff][reverse][do
       REQUIRE(g[2] == Approx(2.0).margin(1e-12));
     }
 
-    x.clear_sensitivity();
+    x.clear();
     x.mul(5.0).sum().reverse();
     {
       const auto g = x.sensitivity().to_vec<double>();
@@ -947,7 +947,7 @@ TEST_CASE("autodiff reverse handles mixed scalar objectives over selected entrie
     REQUIRE(g[2] == Approx(0.5 / std::sqrt(3.0)).margin(1e-12));
   }
 
-  reuse.clear_sensitivity();
+  reuse.clear();
   (reuse.pos(0).sin() - 1.5 * reuse.pos(1).cos() + reuse.pos(2).log()).reverse();
   {
     const auto g = reuse.sensitivity().to_vec<double>();
@@ -957,7 +957,7 @@ TEST_CASE("autodiff reverse handles mixed scalar objectives over selected entrie
     REQUIRE(g[2] == Approx(1.0 / 3.0).margin(1e-12));
   }
 
-  reuse.clear_sensitivity();
+  reuse.clear();
   (reuse.pos(0).sin() - 1.5 * reuse.pos(1).cos() * reuse.pos(2).log()).reverse();
   {
     const auto g = reuse.sensitivity().to_vec<double>();
@@ -1080,7 +1080,7 @@ TEST_CASE("autodiff grad policy tracks higher-order graph when requested", "[aut
       policy);
   REQUIRE(first.item<double>() == Approx(12.0).margin(1e-12));
 
-  x.clear_sensitivity();
+  x.clear();
   first.reverse();
   REQUIRE(x.has_sensitivity());
   REQUIRE(x.sensitivity().item<double>() == Approx(12.0).margin(1e-8));

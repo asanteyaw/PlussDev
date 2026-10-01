@@ -102,8 +102,8 @@ class Result final {
 
  private:
   std::string method_{};
-  Series labels_ = Series::undefined();
-  Series scores_ = Series::undefined();
+  Series labels_ = pluss::series::undefined();
+  Series scores_ = pluss::series::undefined();
   double threshold_ = std::numeric_limits<double>::quiet_NaN();
   std::optional<Model> model_{std::nullopt};
 };
@@ -121,7 +121,7 @@ class ModelRunner final {
                            const InferOptions& infer_options = {}) const {
     Model trained = model_;
     Series labels = trained.learn_map(batch, learn_options, infer_options);
-    return Result("model", std::move(labels), Series::undefined(), detail::model_threshold_(trained), std::move(trained));
+    return Result("model", std::move(labels), pluss::series::undefined(), detail::model_threshold_(trained), std::move(trained));
   }
 
   [[nodiscard]] Result run(const pluss::table::DataFrame& frame,
@@ -130,7 +130,7 @@ class ModelRunner final {
                            const InferOptions& infer_options = {}) const {
     Model trained = model_;
     Series labels = trained.learn_map(frame, data_options, learn_options, infer_options);
-    return Result("model", std::move(labels), Series::undefined(), detail::model_threshold_(trained), std::move(trained));
+    return Result("model", std::move(labels), pluss::series::undefined(), detail::model_threshold_(trained), std::move(trained));
   }
 
   [[nodiscard]] Result run(const pluss::table::DataFrame& x,
@@ -138,7 +138,7 @@ class ModelRunner final {
                            const InferOptions& infer_options = {}) const {
     Model trained = model_;
     Series labels = trained.learn_map(x, learn_options, infer_options);
-    return Result("model", std::move(labels), Series::undefined(), detail::model_threshold_(trained), std::move(trained));
+    return Result("model", std::move(labels), pluss::series::undefined(), detail::model_threshold_(trained), std::move(trained));
   }
 
  private:

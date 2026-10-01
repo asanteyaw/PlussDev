@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=009ae0e8"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimeIndex::join_asof" href="join_asof.html" />
-    <link rel="prev" title="TimeIndex::rolling_sum" href="rolling_sum.html" />
+    <link rel="next" title="TimeIndex::rolling_count" href="rolling_count.html" />
+    <link rel="prev" title="TimeIndex::resample_sum" href="resample_sum.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,65 +36,100 @@
 
           <div class="body" role="main">
             
-  <section id="timeindex-rolling-agg">
+  <!-- pluss-hand-authored -->
+<section id="timeindex-rolling-agg">
 <h1>TimeIndex::rolling_agg<a class="headerlink" href="#timeindex-rolling-agg" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeindex_api_reference.html"><span class="doc std std-doc">Back to TimeIndex API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_agg</span><span class="p">(</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="w"> </span><span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_agg</span><span class="p">(</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">,</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
-
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_mean</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_min</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_max</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_first</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">rolling_last</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">window</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Computes trailing window aggregations selected either dynamically by operation
-name or directly through named wrapper methods.</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">rolling_agg(...)</span></code> when the operation is configuration-driven. Use the named
-wrapper when you want the call site to state the aggregation explicitly.</p>
-<p>This is the rolling counterpart to <a class="reference internal" href="resample_agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">resample_agg</span></code></span></a>. The
-trailing <code class="docutils literal notranslate"><span class="pre">window</span></code> decides membership. The wrapper name or <code class="docutils literal notranslate"><span class="pre">op</span></code> string decides
-how the visible values are reduced.</p>
+<section id="runtime-selection-of-a-trailing-reduction">
+<h2>Runtime Selection Of A Trailing Reduction<a class="headerlink" href="#runtime-selection-of-a-trailing-reduction" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">rolling_agg()</span></code> is the dynamic entry point for the TimeIndex rolling family.
+It applies the reducer named by <code class="docutils literal notranslate"><span class="pre">op</span></code> to every inclusive trailing interval
+<code class="docutils literal notranslate"><span class="pre">[index[i]</span> <span class="pre">-</span> <span class="pre">window,</span> <span class="pre">index[i]]</span></code> and returns one result per original timestamp.</p>
+<p>Use this method when the reducer is data-driven, for example when a command-line
+option or configuration file chooses between <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code>.
+When the reduction is fixed in source code, prefer the corresponding named
+method. <code class="docutils literal notranslate"><span class="pre">rolling_min(values,</span> <span class="pre">window)</span></code> is checked by the compiler and states its
+purpose more directly than <code class="docutils literal notranslate"><span class="pre">rolling_agg(values,</span> <span class="pre">window,</span> <span class="pre">&quot;min&quot;)</span></code>.</p>
 </section>
-<section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>values</strong></p>
-<p>The 1D numeric payload aligned case-for-case with the index.</p>
-<p><strong>window</strong></p>
-<p>The trailing duration window.</p>
-<p>The same window semantics apply to every named wrapper here. Only the reducer
-changes.</p>
-<p><strong>op</strong></p>
-<p>The aggregation name when using the dynamic form.</p>
-<p>Common choices include:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code></p></li>
-</ul>
+<section id="supported-operations">
+<h2>Supported Operations<a class="headerlink" href="#supported-operations" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></th>
+<th class="head"><p>Reduction</p></th>
+<th class="head"><p>Dedicated method</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;count&quot;</span></code></p></td>
+<td><p>Number of timestamps in the window; <code class="docutils literal notranslate"><span class="pre">values</span></code> is validated but not reduced</p></td>
+<td><p><a class="reference internal" href="rolling_count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_count()</span></code></span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code></p></td>
+<td><p>Earliest valid payload still visible</p></td>
+<td><p><a class="reference internal" href="rolling_first.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_first()</span></code></span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code></p></td>
+<td><p>Most recent valid payload still visible</p></td>
+<td><p><a class="reference internal" href="rolling_last.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_last()</span></code></span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code></p></td>
+<td><p>Largest valid payload</p></td>
+<td><p><a class="reference internal" href="rolling_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_max()</span></code></span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code></p></td>
+<td><p>Arithmetic mean of valid payloads</p></td>
+<td><p><a class="reference internal" href="rolling_mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_mean()</span></code></span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code></p></td>
+<td><p>Smallest valid payload</p></td>
+<td><p><a class="reference internal" href="rolling_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_min()</span></code></span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code></p></td>
+<td><p>Sum of payloads</p></td>
+<td><p><a class="reference internal" href="rolling_sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling_sum()</span></code></span></a></p></td>
+</tr>
+</tbody>
+</table>
+<p>Names are exact and case-sensitive. An unrecognized name is an error; there is
+no fallback reducer.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>
-A 1D numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> with one rolling result per original timestamp.</p>
+<section id="shared-contract">
+<h2>Shared Contract<a class="headerlink" href="#shared-contract" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">values</span></code> must be one-dimensional and aligned lane-for-lane with the index. The
+window must be one positive scalar <code class="docutils literal notranslate"><span class="pre">Duration</span></code>, and the index must be monotonic
+increasing. Named extrema, endpoint, and mean reducers accept CPU <code class="docutils literal notranslate"><span class="pre">int64</span></code> and
+<code class="docutils literal notranslate"><span class="pre">float64</span></code> payloads. Floating <code class="docutils literal notranslate"><span class="pre">NaN</span></code> lanes are skipped by those reducers, and an
+all-invalid window returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p>
+<p>The left boundary is inclusive: a lane whose timestamp is exactly one window
+length behind the current timestamp remains visible. Resampling differs
+fundamentally: rolling preserves the original axis and overlaps windows;
+resampling creates non-overlapping bins and may change output length.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Rolling mean over 45 minutes.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">win</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">45</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">rolling_mean</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">win</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">45</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Example 1. Select a mean at runtime.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">reducer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mean&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">index</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="n">reducer</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
@@ -103,9 +138,11 @@ A 1D numeric <code class="docutils literal notranslate"><span class="pre">Series
 data=[1.0000, 1.5000, 2.0000, 3.0000, 4.0000]
 </pre></div>
 </div>
-<p>Example 2. Rolling minimum over the same window.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">rolling_min</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">win</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<p>Example 2. Change only the reducer, not window membership.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">index</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;min&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">index</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;max&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -113,84 +150,65 @@ data=[1.0000, 1.5000, 2.0000, 3.0000, 4.0000]
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[1.0000, 1.0000, 1.0000, 2.0000, 3.0000]
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 4.0000, 5.0000]
 </pre></div>
 </div>
-<p>Example 3. Rolling maximum over the same window.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">rolling_max</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">win</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">first</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span></code> are temporal endpoints, not extrema.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">index</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;first&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">index</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;last&quot;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.0000, 1.0000, 1.0000, 2.0000, 3.0000]
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[1.0000, 2.0000, 3.0000, 4.0000, 5.0000]
 </pre></div>
 </div>
-<p>Example 4. Rolling first keeps the earliest value still visible inside each
-trailing window.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">rolling_first</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">win</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<p>Example 4. A misspelled or unsupported reducer fails immediately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">index</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;median&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()).</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()).</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[1.0000, 2.0000, 3.0000, 4.0000, 5.0000]
-</pre></div>
-</div>
-<p>Example 5. Rolling last keeps the most recent value still visible inside each
-window.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">rolling_last</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">win</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[1.0000, 1.0000, 1.0000, 2.0000, 3.0000]
-</pre></div>
-</div>
-<p>Example 6. Dynamic operation dispatch.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">rolling_agg</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">win</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mean&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[1.0000, 1.5000, 2.0000, 3.0000, 4.0000]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>rolling_agg: unknown op
 </pre></div>
 </div>
 </section>
 </section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>The dynamic and named forms share the same window semantics.</p></li>
-<li><p>Use the named wrappers when the reduction is known in code.</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">rolling_agg()</span></code> when the reduction is chosen at runtime.</p></li>
-<li><p>Keep the named wrappers when the operation is fixed in code; they document
-intent better.</p></li>
-</ul>
+<section id="cost-and-ownership">
+<h2>Cost And Ownership<a class="headerlink" href="#cost-and-ownership" title="Link to this heading">¶</a></h2>
+<p>The named reducers use moving-window kernels. Extrema use monotonic deques;
+means and endpoints advance their boundaries without rescanning prior lanes.
+Their runtime is <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> with <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> worst-case window storage. The result is a
+new contiguous <code class="docutils literal notranslate"><span class="pre">Series</span></code>; neither input is mutated.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="rolling_sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::rolling_sum</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="rolling_count.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::rolling_count</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="rolling_mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::rolling_mean</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="rolling_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::rolling_min</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="resample_agg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::resample_agg</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rolling_sum.html">
+  <a class="prev-link" href="resample_sum.html">
     <span class="label">Previous</span>
-    <span class="title">rolling_sum</span>
+    <span class="title">resample_sum</span>
   </a>
-  <a class="next-link" href="join_asof.html">
+  <a class="next-link" href="rolling_count.html">
     <span class="label">Next</span>
-    <span class="title">join_asof</span>
+    <span class="title">rolling_count</span>
   </a>
 </div>
 </section>
@@ -225,54 +243,13 @@ intent better.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
@@ -289,8 +266,8 @@ intent better.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeindex_api_reference.html">TimeIndex API Reference</a><ul>
-      <li>Previous: <a href="rolling_sum.html" title="previous chapter">TimeIndex::rolling_sum</a></li>
-      <li>Next: <a href="join_asof.html" title="next chapter">TimeIndex::join_asof</a></li>
+      <li>Previous: <a href="resample_sum.html" title="previous chapter">TimeIndex::resample_sum</a></li>
+      <li>Next: <a href="rolling_count.html" title="next chapter">TimeIndex::rolling_count</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

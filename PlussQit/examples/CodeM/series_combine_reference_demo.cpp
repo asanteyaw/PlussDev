@@ -67,8 +67,8 @@ int main() {
   std::cout << "\n";
 
   heading("pile_gradient_split");
-  tracked_left.clear_sensitivity();
-  tracked_right.clear_sensitivity();
+  tracked_left.clear();
+  tracked_right.clear();
   auto stacked = tracked_left.pile({tracked_right}, 1);
   stacked.sum().reverse();
   std::cout << "dleft=" << tracked_left.sensitivity() << "\n";

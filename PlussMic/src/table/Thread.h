@@ -89,7 +89,7 @@ enum class ThreadKind : std::uint8_t {
   Series = 0,
   Note = 1,
   Timeline = 2,
-  TimeIndex = 3,
+  Duration = 4,
 };
 
 std::string_view thread_kind_name(ThreadKind kind) noexcept;
@@ -154,7 +154,7 @@ enum class ThreadCastTarget : std::uint8_t {
   Series = 0,
   Note = 1,
   Timeline = 2,
-  TimeIndex = 3,
+  Duration = 4,
 };
 
 enum class ParseInvalid : std::uint8_t {
@@ -363,9 +363,9 @@ public:
   Thread(const pluss::Timeline& data,
          std::optional<pluss::Series> validity_mask,
          const ThreadOptions& options);
-  Thread(const pluss::TimeIndex& data, std::optional<pluss::Series> validity_mask = std::nullopt);
-  Thread(const pluss::TimeIndex& data, const ThreadOptions& options);
-  Thread(const pluss::TimeIndex& data,
+  Thread(const pluss::Duration& data, std::optional<pluss::Series> validity_mask = std::nullopt);
+  Thread(const pluss::Duration& data, const ThreadOptions& options);
+  Thread(const pluss::Duration& data,
          std::optional<pluss::Series> validity_mask,
          const ThreadOptions& options);
   Thread(const Thread& other);
@@ -401,7 +401,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Thread fillnull(const pluss::Timeline& value) const;
-  Thread fillnull(const pluss::TimeIndex& value) const;
+  Thread fillnull(const pluss::Duration& value) const;
   Thread abs() const;
   Thread clip(double min_value, double max_value) const;
   Thread round(std::int64_t decimals = 0) const;
@@ -415,7 +415,7 @@ public:
     return fillnull_(std::string_view{value != nullptr ? value : ""});
   }
   Thread& fillnull_(const pluss::Timeline& value);
-  Thread& fillnull_(const pluss::TimeIndex& value);
+  Thread& fillnull_(const pluss::Duration& value);
 
   // 1D row-space transforms.
   ThreadView head(std::int64_t n = 5, bool render = false) const;
@@ -518,7 +518,7 @@ public:
   Thread map(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
   Thread transform(const std::function<ThreadValue(const ThreadValue&)>& fn) const;
   Thread transform(const std::function<Thread(const Thread&)>& fn,
-                   ResultShape shape = ResultShape::Reduce) const;
+                   ResultShape shape = ResultShape::Preserve) const;
   Thread fold(const std::function<Thread(const Thread&)>& fn,
               ResultShape shape = ResultShape::Reduce) const;
   Thread flow(const std::function<Thread(const Thread&)>& fn) const;
@@ -596,9 +596,9 @@ public:
   Thread replace(const pluss::Timeline& from, const pluss::Timeline& to) const;
   Thread replace(const pluss::Timeline& from, pluss::null_t to) const;
   Thread replace(pluss::null_t from, const pluss::Timeline& to) const;
-  Thread replace(const pluss::TimeIndex& from, const pluss::TimeIndex& to) const;
-  Thread replace(const pluss::TimeIndex& from, pluss::null_t to) const;
-  Thread replace(pluss::null_t from, const pluss::TimeIndex& to) const;
+  Thread replace(const pluss::Duration& from, const pluss::Duration& to) const;
+  Thread replace(const pluss::Duration& from, pluss::null_t to) const;
+  Thread replace(pluss::null_t from, const pluss::Duration& to) const;
   static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
                        pluss::msharp::RangeView::Of<Thread> choices,
                        const Thread& default_value);
@@ -619,9 +619,6 @@ public:
   static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
                        pluss::msharp::RangeView::Of<Thread> choices,
                        const pluss::Timeline& default_value);
-  static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
-                       pluss::msharp::RangeView::Of<Thread> choices,
-                       const pluss::TimeIndex& default_value);
   static Thread select(pluss::msharp::RangeView::Of<Thread> conditions,
                        pluss::msharp::RangeView::Of<Thread> choices,
                        pluss::null_t default_value);
@@ -660,14 +657,6 @@ public:
   static Thread select(std::initializer_list<Thread> conditions,
                        std::initializer_list<Thread> choices,
                        const pluss::Timeline& default_value) {
-    return select(
-        pluss::msharp::RangeView::Of<Thread>(conditions),
-        pluss::msharp::RangeView::Of<Thread>(choices),
-        default_value);
-  }
-  static Thread select(std::initializer_list<Thread> conditions,
-                       std::initializer_list<Thread> choices,
-                       const pluss::TimeIndex& default_value) {
     return select(
         pluss::msharp::RangeView::Of<Thread>(conditions),
         pluss::msharp::RangeView::Of<Thread>(choices),
@@ -726,7 +715,7 @@ public:
   Thread compare(const pluss::Series& other, ThreadBinaryCompareOp op) const;
   Thread compare(const pluss::Note& other, ThreadBinaryCompareOp op) const;
   Thread compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) const;
-  Thread compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const;
+  Thread compare(const pluss::Duration& other, ThreadBinaryCompareOp op) const;
   Thread compare(const Thread& other, ThreadBinaryCompareOp op) const;
   Thread eq(double other) const;
   Thread eq(std::string_view other) const;
@@ -791,7 +780,7 @@ public:
   const pluss::Series& as_series() const;
   const pluss::Note& as_note() const;
   const pluss::Timeline& as_timeline() const;
-  const pluss::TimeIndex& as_timeindex() const;
+  const pluss::Duration& as_duration() const;
 
   TimeSeriesAccessor ts() const;
 
@@ -991,10 +980,10 @@ struct GroupStateCache {
   std::vector<std::int64_t> group_offsets{};
   std::vector<std::int64_t> broadcast_positions{};
   std::vector<std::int64_t> grouped_rows{};
-  pluss::Series included_mask_cpu{};
-  pluss::Series included_rows_cpu{};
-  pluss::Series group_ids_cpu{};
-  pluss::Series included_group_ids_cpu{};
+  pluss::Series included_mask_cpu = pluss::series::undefined();
+  pluss::Series included_rows_cpu = pluss::series::undefined();
+  pluss::Series group_ids_cpu = pluss::series::undefined();
+  pluss::Series included_group_ids_cpu = pluss::series::undefined();
   std::int64_t ngroups{0};
   bool all_included{true};
 };
@@ -1076,14 +1065,14 @@ class TimeSeriesAccessor {
                                std::string_view freq,
                                std::int64_t step = 1) const;
   TimeSeriesResampler resample(const Thread& axis,
-                               const pluss::TimeIndex::ResampleOptions& options) const;
+                               const pluss::Timeline::ResampleOptions& options) const;
   TimeSeriesResample resample(const Thread& axis,
                               std::string_view freq,
                               pluss::subsp::stats::ts::ResampleOp op,
                               std::int64_t step = 1) const;
   TimeSeriesResample resample(
       const Thread& axis,
-      const pluss::TimeIndex::ResampleOptions& options,
+      const pluss::Timeline::ResampleOptions& options,
       pluss::subsp::stats::ts::ResampleOp op) const;
   Thread add(const Thread& other,
              const Thread& left_axis,
@@ -1131,8 +1120,20 @@ class TimeSeriesAccessor {
               bool nulls_last = true) const;
 
  private:
+  friend class DataFrameTsAccessor;
   const pluss::Series& series_payload_(const char* op) const;
   pluss::Series masked_series_payload_(const char* op) const;
+  TimeSeriesResample resample_index_(
+      const pluss::Timeline::TimelineIndexAccessor& index,
+      const pluss::Timeline::ResampleOptions& options,
+      pluss::subsp::stats::ts::ResampleOp op) const;
+  Thread align_index_(
+      const Thread& other,
+      const Thread& left_axis,
+      const Thread& right_axis,
+      TsAlignMode mode,
+      const pluss::Timeline::TimelineIndexAccessor* left_index,
+      const pluss::Timeline::TimelineIndexAccessor* right_index) const;
   Thread base_{};
 };
 
@@ -1140,7 +1141,7 @@ class TimeSeriesResampler {
  public:
   TimeSeriesResampler(Thread base,
                       Thread axis,
-                      pluss::TimeIndex::ResampleOptions options);
+                      pluss::Timeline::ResampleOptions options);
 
   Thread mean() const;
   Thread sum() const;
@@ -1160,7 +1161,7 @@ class TimeSeriesResampler {
 
   Thread base_{};
   Thread axis_{};
-  pluss::TimeIndex::ResampleOptions options_{};
+  pluss::Timeline::ResampleOptions options_{};
 };
 
 class ThreadLabelAccessor {
@@ -1190,7 +1191,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Thread fillnull(const pluss::Timeline& value) const;
-  Thread fillnull(const pluss::TimeIndex& value) const;
+  Thread fillnull(const pluss::Duration& value) const;
   Thread duplicated(bool keep_first = true, bool keep_last = false) const;
   Thread repeated() const;
   Thread distinct(bool dropnull = true) const;
@@ -1257,7 +1258,7 @@ public:
   Thread series() const;
   Thread note() const;
   Thread timeline() const;
-  Thread timeindex() const;
+  Thread duration() const;
 
 private:
   Thread base_{};
@@ -1409,7 +1410,6 @@ public:
   Thread tz(std::string_view name) const;
   Thread localize(const TimelineLocalizeOptions& options = {}) const;
   Thread utc() const;
-  Thread index(bool require_sorted = true) const;
 
 private:
   Thread base_{};
@@ -1442,7 +1442,6 @@ Thread operator==(const char* lhs, const Thread& rhs);
 Thread operator==(const Thread& lhs, const pluss::Series& rhs);
 Thread operator==(const Thread& lhs, const pluss::Note& rhs);
 Thread operator==(const Thread& lhs, const pluss::Timeline& rhs);
-Thread operator==(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator==(const Thread& lhs, const Thread& rhs);
 Thread operator!=(const Thread& lhs, double rhs);
 Thread operator!=(double lhs, const Thread& rhs);
@@ -1453,7 +1452,6 @@ Thread operator!=(const char* lhs, const Thread& rhs);
 Thread operator!=(const Thread& lhs, const pluss::Series& rhs);
 Thread operator!=(const Thread& lhs, const pluss::Note& rhs);
 Thread operator!=(const Thread& lhs, const pluss::Timeline& rhs);
-Thread operator!=(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator!=(const Thread& lhs, const Thread& rhs);
 Thread operator<(const Thread& lhs, double rhs);
 Thread operator<(double lhs, const Thread& rhs);
@@ -1464,7 +1462,6 @@ Thread operator<(const char* lhs, const Thread& rhs);
 Thread operator<(const Thread& lhs, const pluss::Series& rhs);
 Thread operator<(const Thread& lhs, const pluss::Note& rhs);
 Thread operator<(const Thread& lhs, const pluss::Timeline& rhs);
-Thread operator<(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator<(const Thread& lhs, const Thread& rhs);
 Thread operator<=(const Thread& lhs, double rhs);
 Thread operator<=(double lhs, const Thread& rhs);
@@ -1475,7 +1472,6 @@ Thread operator<=(const char* lhs, const Thread& rhs);
 Thread operator<=(const Thread& lhs, const pluss::Series& rhs);
 Thread operator<=(const Thread& lhs, const pluss::Note& rhs);
 Thread operator<=(const Thread& lhs, const pluss::Timeline& rhs);
-Thread operator<=(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator<=(const Thread& lhs, const Thread& rhs);
 Thread operator>(const Thread& lhs, double rhs);
 Thread operator>(double lhs, const Thread& rhs);
@@ -1486,7 +1482,6 @@ Thread operator>(const char* lhs, const Thread& rhs);
 Thread operator>(const Thread& lhs, const pluss::Series& rhs);
 Thread operator>(const Thread& lhs, const pluss::Note& rhs);
 Thread operator>(const Thread& lhs, const pluss::Timeline& rhs);
-Thread operator>(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator>(const Thread& lhs, const Thread& rhs);
 Thread operator>=(const Thread& lhs, double rhs);
 Thread operator>=(double lhs, const Thread& rhs);
@@ -1497,12 +1492,11 @@ Thread operator>=(const char* lhs, const Thread& rhs);
 Thread operator>=(const Thread& lhs, const pluss::Series& rhs);
 Thread operator>=(const Thread& lhs, const pluss::Note& rhs);
 Thread operator>=(const Thread& lhs, const pluss::Timeline& rhs);
-Thread operator>=(const Thread& lhs, const pluss::TimeIndex& rhs);
 Thread operator>=(const Thread& lhs, const Thread& rhs);
 
 class ThreadValue {
 public:
-  using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
+  using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::Duration>;
 
   class HostAny {
   public:
@@ -1513,6 +1507,7 @@ public:
       Double = 3,
       String = 4,
       Time = 5,
+      Duration = 6,
     };
 
     using Storage = std::variant<bool, std::int64_t, std::uint64_t, double, std::string>;
@@ -1524,6 +1519,7 @@ public:
     static HostAny floating(double value);
     static HostAny string(std::string value);
     static HostAny time(std::int64_t epoch_nanos, std::string iso);
+    static HostAny duration(std::int64_t nanos, std::string text);
 
     Kind kind() const noexcept;
     const Storage& storage() const noexcept;
@@ -1548,7 +1544,7 @@ public:
   pluss::Series as_series() const;
   pluss::Note as_note() const;
   pluss::Timeline as_timeline() const;
-  pluss::TimeIndex as_timeindex() const;
+  pluss::Duration as_duration() const;
   HostAny host() const;
   double to_dbl() const;
   std::int64_t to_int() const;
@@ -1557,7 +1553,7 @@ public:
   operator pluss::Series() const;
   operator pluss::Note() const;
   operator pluss::Timeline() const;
-  operator pluss::TimeIndex() const;
+  operator pluss::Duration() const;
 
 private:
   Thread thread_{};

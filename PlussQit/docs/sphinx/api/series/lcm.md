@@ -9,6 +9,7 @@
 ```cpp
 Series Series::lcm(const Series& other) const
 Series& Series::lcm_(const Series& other)
+Series& Series::lcm_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -56,6 +57,30 @@ Raises if either operand is a floating-point or complex series.
 ## Gradient
 
 `lcm()` is a discrete integer operation and is **not differentiable**.
+
+## In-Place Form
+
+`lcm_()` is the in-place sibling of [`lcm()`](lcm.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `lcm_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series(std::vector<std::int64_t>{4, 6}, {2});
+auto y = pluss::make_series(std::vector<std::int64_t>{6, 9}, {2});
+
+x.lcm_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[12, 18]
+```
 
 ## Examples
 

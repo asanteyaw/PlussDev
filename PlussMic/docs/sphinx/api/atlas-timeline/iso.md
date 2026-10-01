@@ -13,7 +13,7 @@ AtlasTimelineAccessor::iso() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with a
+Replaces every `Timeline` feature in **every frame of the stack** with a
 fixed ISO-8601-with-offset text representation, as a `Note` `Series` — the same
 transform [`DataFrame::tl().iso()`](../dataframe-timeline/iso.md) applies to a single
 frame, broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
@@ -76,7 +76,7 @@ but the box render clips any cell wider than 22 characters with a trailing `~`.
 - Always includes the full 9-digit nanosecond fraction and a signed `%z` offset — use
   [`fmt()`](fmt.md) with your own pattern for a more compact string.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row displays as `"NULL"` in the output, same as on a single frame — see
   [`AtlasTimelineAccessor::isnat`](isnat.md).

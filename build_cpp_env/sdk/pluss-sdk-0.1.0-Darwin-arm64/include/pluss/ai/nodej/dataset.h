@@ -6,7 +6,7 @@
 namespace pluss::ai::nodej {
 
 struct FeatureBatch {
-  Series x = Series::undefined();
+  Series x = pluss::series::undefined();
   ObservationLayout layout = ObservationLayout::Rows;
 
   [[nodiscard]] bool defined() const noexcept { return x.defined(); }
@@ -22,8 +22,8 @@ struct FeatureBatch {
 
 struct LabeledBatch {
   FeatureBatch features{};
-  Series y = Series::undefined();
-  Series sample_weights = Series::undefined();
+  Series y = pluss::series::undefined();
+  Series sample_weights = pluss::series::undefined();
 
   [[nodiscard]] bool has_labels() const noexcept { return y.defined(); }
   [[nodiscard]] bool has_weights() const noexcept { return sample_weights.defined(); }

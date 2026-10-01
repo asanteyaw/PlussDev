@@ -8,8 +8,8 @@
 namespace pluss::subsp::actuarial::loss_models {
 
 struct AggregateMoments {
-  pluss::codem::Series mean = pluss::codem::Series::undefined();
-  pluss::codem::Series variance = pluss::codem::Series::undefined();
+  pluss::codem::Series mean = pluss::series::undefined();
+  pluss::codem::Series variance = pluss::series::undefined();
 };
 
 // Poisson frequency moments.

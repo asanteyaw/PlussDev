@@ -11,6 +11,17 @@
 virtual void nn::Module::train(bool enabled = true) noexcept;
 ```
 
+## What It Does
+
+Switches this module, and every module registered beneath it, between
+training mode and evaluation mode by setting `is_training()`. Most layers
+in this reference ignore the distinction entirely (`Fusion`, every
+`activation`, `LayerNorm` all compute the same thing either way), but it
+exists as the hook a future layer with genuinely different train/eval
+behavior (dropout, batch statistics) would override `on_training_changed_`
+to react to. Calling it on any node in a composed `Schedule` propagates to
+every registered child in one call, so callers never walk the tree by hand.
+
 ## Parameters
 
 `bool enabled`
@@ -50,8 +61,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("a", nn::Fusion(3, 4));
-  net.then("b", nn::Fusion(4, 2));
+  net.append("a", nn::Fusion(3, 4));
+  net.append("b", nn::Fusion(4, 2));
 
   std::cout << "before: net.is_training()=" << std::boolalpha << net.is_training() << "\n";
 

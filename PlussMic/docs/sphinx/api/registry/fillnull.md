@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 2c6dd874c25e -->
+<!-- pluss-signature-hash: 58f03f51f754 -->
 
 # Registry::fillnull
 
@@ -12,7 +12,7 @@ Registry Registry::fillnull(double value) const
 Registry Registry::fillnull(std::string_view value) const
 Registry Registry::fillnull(const char* value) const
 Registry Registry::fillnull(const pluss::Timeline& value) const
-Registry Registry::fillnull(const pluss::TimeIndex& value) const
+Registry Registry::fillnull(const pluss::Duration& value) const
 ```
 
 ## What It Does
@@ -20,8 +20,8 @@ Registry Registry::fillnull(const pluss::TimeIndex& value) const
 Returns a new registry with null values replaced by `value`, applying
 [`Slot::fillnull(value)`](../slot/fillnull.md) to **every** field via
 [`map()`](map.md) — one overload per fill-value kind (`double` for numeric
-fields, `std::string_view`/`const char*` for text fields, `Timeline`/`TimeIndex`
-for datetime fields).
+fields, `std::string_view`/`const char*` for text fields, `Timeline` for
+datetime fields, `Duration` for duration fields).
 
 ```{important} Every field is filled, and every field's kind must match — even fields with no nulls
 Because `fillnull()` applies to every field unconditionally via `map()`, calling
@@ -38,7 +38,7 @@ just that `Slot`, and reinsert with [`set()`](set.md).
 
 ## Parameters
 
-**value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` / `const pluss::TimeIndex&`)
+**value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` / `const pluss::Duration&`)
     The replacement for null values, in the kind matching the overload selected.
 
 ## Returns

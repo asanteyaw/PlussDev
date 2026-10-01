@@ -15,6 +15,16 @@ the *same* family and options to an identical fitted state, without re-running
 classic::StatusOr<std::vector<pluss::Series>> classic::EstimatorBase::dump_state() const;
 ```
 
+## What It Does
+
+Extracts this trained estimator's fitted parameters -- whatever family-
+specific tensors (weights, calibration values, category maps) it actually
+learned -- into a flat, opaque list of `Series`. This is the raw
+serialization primitive [`io::save`](../../io/save.md) calls internally;
+the returned list means nothing on its own except as the exact input
+[`load_state`](load_state.md) needs to reproduce this fit on a fresh
+estimator, without re-running `learn`.
+
 ## Parameters
 
 None.

@@ -19,6 +19,16 @@ classic::StatusOr<classic::LabeledBatch> classic::balance_rows(
     classic::RandomState random = {});
 ```
 
+## What It Does
+
+Resolves a [`BalanceTarget`](BalanceTarget.md) against `batch` into a
+concrete row plan, then materializes that plan into an actual rebalanced
+`LabeledBatch`: rows to keep or duplicate are sliced out directly, and any
+class the plan calls for synthesizing gets real interpolated rows computed
+between its own base and neighbor observations. The caller gets back a
+ready-to-train batch in one call, rather than resolving a
+[`BalancePlan`](BalancePlan.md) and materializing it by hand.
+
 ## Parameters
 
 `batch` / `target` / `random`

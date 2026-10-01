@@ -8,6 +8,7 @@
 
 ```cpp
 Series::bitwise_or(const Series& rhs) const -> Series
+Series& Series::bitwise_or_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -29,6 +30,30 @@ boolean dtype.
 
 `Series`
     A new `Series` containing the bitwise union of the two operands.
+
+## In-Place Form
+
+`bitwise_or_()` is the in-place sibling of [`bitwise_or()`](bitwise_or.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `bitwise_or_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({6, 12}, pluss::ScalarType::Int64);
+auto y = pluss::make_series({3, 10}, pluss::ScalarType::Int64);
+
+x.bitwise_or_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[7, 14]
+```
 
 ## Examples
 
@@ -91,8 +116,8 @@ Use `bitwise_or()` when you need the bitwise union of two inputs.
     <span class="label">Previous</span>
     <span class="title">bitwise_not</span>
   </a>
-  <a class="next-link" href="bitwise_xor.html">
+  <a class="next-link" href="bitwise_right_shift.html">
     <span class="label">Next</span>
-    <span class="title">bitwise_xor</span>
+    <span class="title">bitwise_right_shift</span>
   </a>
 </div>

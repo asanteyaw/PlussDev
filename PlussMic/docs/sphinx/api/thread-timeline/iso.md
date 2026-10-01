@@ -57,7 +57,7 @@ ptype: Note
   pattern for a more compact string.
 - The offset is always `+HH:MM`/`-HH:MM` — UTC renders as `"+00:00"`, never a
   bare `"Z"`.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`.

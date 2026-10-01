@@ -4272,7 +4272,7 @@ Series sample(dst::Kind kind,
       return nig_sample_(params[0], params[1], params[2], params[3], sizes, cfg, seed);
   }
 
-  return Series::undefined();
+  return pluss::series::undefined();
 }
 
 Series sample(dst::Kind kind,
@@ -4345,9 +4345,9 @@ Series sample_like(dst::Kind kind, const Series& like, std::uint64_t seed, RngMe
 }
 
 struct MixtureNormalParams {
-  Series weights;
-  Series means;
-  Series stddevs;
+  Series weights = pluss::series::undefined();
+  Series means = pluss::series::undefined();
+  Series stddevs = pluss::series::undefined();
   std::int64_t num_components = 0;
 };
 
@@ -4872,7 +4872,7 @@ Series pdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       return nig_pdf_(x, params[0], params[1], params[2], params[3]);
   }
 
-  return Series::undefined();
+  return pluss::series::undefined();
 }
 
 Series pdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {
@@ -5153,7 +5153,7 @@ Series logpdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       return nig_logpdf_(x, params[0], params[1], params[2], params[3]);
   }
 
-  return Series::undefined();
+  return pluss::series::undefined();
 }
 
 Series logpdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {
@@ -5434,7 +5434,7 @@ Series cdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       return nig_cdf_(x, params[0], params[1], params[2], params[3]);
   }
 
-  return Series::undefined();
+  return pluss::series::undefined();
 }
 
 Series cdf(dst::Kind kind, const Series& x, std::initializer_list<double> params) {

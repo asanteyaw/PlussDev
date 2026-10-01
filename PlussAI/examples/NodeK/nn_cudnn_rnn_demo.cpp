@@ -27,10 +27,10 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
       out.push_back(pluss::ai::rnn::NetWeight{
           .weight_ih = pluss::series::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
           .weight_hh = pluss::series::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
-          .bias = pluss::Series(),
+          .bias = pluss::series::undefined(),
           .bias_ih = pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL),
           .bias_hh = pluss::series::rand({gates * hidden_size}, cfg, seed + 4ULL),
-          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
+          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::series::undefined(),
       });
     }
   }
@@ -104,10 +104,10 @@ int main() {
       return ai::rnn::NetWeight{
           .weight_ih = w.weight_ih.to(pluss::pCUDA),
           .weight_hh = w.weight_hh.to(pluss::pCUDA),
-          .bias = w.bias.defined() ? w.bias.to(pluss::pCUDA) : pluss::Series(),
-          .bias_ih = w.bias_ih.defined() ? w.bias_ih.to(pluss::pCUDA) : pluss::Series(),
-          .bias_hh = w.bias_hh.defined() ? w.bias_hh.to(pluss::pCUDA) : pluss::Series(),
-          .weight_hr = w.weight_hr.defined() ? w.weight_hr.to(pluss::pCUDA) : pluss::Series(),
+          .bias = w.bias.defined() ? w.bias.to(pluss::pCUDA) : pluss::series::undefined(),
+          .bias_ih = w.bias_ih.defined() ? w.bias_ih.to(pluss::pCUDA) : pluss::series::undefined(),
+          .bias_hh = w.bias_hh.defined() ? w.bias_hh.to(pluss::pCUDA) : pluss::series::undefined(),
+          .weight_hr = w.weight_hr.defined() ? w.weight_hr.to(pluss::pCUDA) : pluss::series::undefined(),
       };
     };
     auto to_cuda_weights = [&](const std::vector<ai::rnn::NetWeight>& ws) {

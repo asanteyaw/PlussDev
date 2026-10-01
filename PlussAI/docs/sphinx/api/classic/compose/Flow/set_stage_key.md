@@ -16,6 +16,16 @@ what a fit depends on.
 classic::Status classic::Flow::set_stage_key(std::int64_t stage_index, std::string stage_key);
 ```
 
+## What It Does
+
+Renames the stage at `stage_index` to `stage_key` (or clears its name with
+an empty string), after that stage has already been added -- an
+alternative to naming it up front via
+[`add_column_stage`](add_column_stage.md). Because a stage's name is only
+bookkeeping for [`nested_param`](nested_param.md) lookups, not something a
+fit depends on, this is the one `set_stage_*` method that does not reset
+`trained()`.
+
 ## Parameters
 
 `stage_index` — `std::int64_t`, 0-based

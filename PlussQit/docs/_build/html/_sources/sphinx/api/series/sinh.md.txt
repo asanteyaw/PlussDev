@@ -8,6 +8,7 @@
 
 ```cpp
 Series::sinh() const -> Series
+Series& Series::sinh_()
 ```
 
 ## What It Does
@@ -44,6 +45,29 @@ is always at least `1` for real inputs.
 On the current verified public surface used here, the reverse-mode example
 returns zero sensitivities. So the value transform is verified, but this method
 path should not currently be treated as backward-ready.
+
+## In-Place Form
+
+`sinh_()` is the in-place sibling of [`sinh()`](sinh.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.sinh_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 1.1752012]
+same object: true
+```
 
 ## Examples
 

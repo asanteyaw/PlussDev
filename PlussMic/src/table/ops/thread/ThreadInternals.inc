@@ -1,6 +1,6 @@
 namespace detail {
 
-using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
+using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::Duration>;
 
 class ThreadImpl final : public pluss::msharp::RefCounted {
 public:
@@ -128,17 +128,17 @@ std::int64_t infer_size(const pluss::Timeline& t) {
   return t.numel();
 }
 
-std::int64_t infer_size(const pluss::TimeIndex& ti) {
-  PLUSS_CHECK(ti.timeline().defined(), "Thread: TimeIndex payload is undefined");
-  PLUSS_CHECK(ti.timeline().dim() == 1, "Thread: TimeIndex payload must be strictly 1D");
-  return ti.size();
+std::int64_t infer_size(const pluss::Duration& duration) {
+  PLUSS_CHECK(duration.defined(), "Thread: Duration payload is undefined");
+  PLUSS_CHECK(duration.dim() == 1, "Thread: Duration payload must be strictly 1D");
+  return duration.numel();
 }
 
 ThreadKind infer_kind(const Payload& payload) {
   if (std::holds_alternative<pluss::Series>(payload)) return ThreadKind::Series;
   if (std::holds_alternative<pluss::Note>(payload)) return ThreadKind::Note;
   if (std::holds_alternative<pluss::Timeline>(payload)) return ThreadKind::Timeline;
-  return ThreadKind::TimeIndex;
+  return ThreadKind::Duration;
 }
 
 std::int64_t infer_size(const Payload& payload) {
@@ -158,7 +158,11 @@ bool series_uses_nan_missing(const pluss::Series& s) {
 pluss::Series thread_non_missing_mask(const Thread& t) {
   auto valid = detail::has_validity_mask(t)
                    ? *detail::validity_mask(t)
-                   : pluss::Series::ones({t.size()}, pluss::codem::ScalarType::Bool);
+                   : pluss::Series::ones(
+                         {t.size()}, pluss::codem::ScalarType::Bool,
+                         t.kind() == ThreadKind::Series
+                             ? t.as_series().platform()
+                             : pluss::codem::Platform::CPU);
   if (t.kind() == ThreadKind::Timeline) {
     auto temporal_valid = t.as_timeline().isvalid();
     if (temporal_valid.platform() != valid.platform()) {
@@ -166,12 +170,12 @@ pluss::Series thread_non_missing_mask(const Thread& t) {
     }
     return valid.logical_and(temporal_valid);
   }
-  if (t.kind() == ThreadKind::TimeIndex) {
-    auto temporal_valid = t.as_timeindex().timeline().isvalid();
-    if (temporal_valid.platform() != valid.platform()) {
-      temporal_valid = temporal_valid.to(valid.platform());
+  if (t.kind() == ThreadKind::Duration) {
+    auto duration_valid = t.as_duration().isvalid();
+    if (duration_valid.platform() != valid.platform()) {
+      duration_valid = duration_valid.to(valid.platform());
     }
-    return valid.logical_and(temporal_valid);
+    return valid.logical_and(duration_valid);
   }
   if (t.kind() != ThreadKind::Series) {
     return valid;
@@ -316,7 +320,7 @@ std::string infer_dtype(const Payload& payload) {
     } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
       return std::string("datetime64[ns, ") + std::string(v.tz()) + "]";
     } else {
-      return std::string("datetime64[ns, ") + std::string(v.timeline().tz()) + "]";
+      return "duration64[ns]";
     }
   }, payload);
 }
@@ -364,6 +368,22 @@ pluss::Timeline timeline_take(const pluss::Timeline& t, std::span<const std::int
       std::span<const std::int64_t>(shape.data(), shape.size()));
   result.unsafe_tz_name() = std::string(t.tz());
   return result;
+}
+
+pluss::Duration duration_take(const pluss::Duration& duration,
+                              std::span<const std::int64_t> indices,
+                              std::int64_t size) {
+  const auto nanos = duration.host();
+  std::vector<std::int64_t> out;
+  out.reserve(indices.size());
+  for (const auto raw_idx : indices) {
+    const auto idx = normalize_index(raw_idx, size);
+    out.push_back(nanos[static_cast<std::size_t>(idx)]);
+  }
+  const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(out.size())};
+  return pluss::codeh::ops_internal::duration_from_nanos(
+      std::span<const std::int64_t>(out.data(), out.size()),
+      std::span<const std::int64_t>(shape.data(), shape.size()));
 }
 
 } // namespace
@@ -737,11 +757,10 @@ std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:
       return std::to_string(t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case ThreadKind::TimeIndex:
-      return std::to_string(t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
-    default:
-      return "";
+    case ThreadKind::Duration:
+      return std::to_string(t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
+  PLUSS_FAIL("Thread: unsupported payload kind in scalar formatting");
 }
 
 bool compare_numbers(double lhs, double rhs, ThreadBinaryCompareOp op) {
@@ -989,15 +1008,6 @@ Thread forward_fill_thread(const Thread& t, std::int64_t limit = -1) {
       }
       return Thread(out, bool_series_from_bools(valid));
     }
-    case ThreadKind::TimeIndex: {
-      auto base = Thread(t.as_timeindex().timeline(), detail::validity_mask(t));
-      auto filled = forward_fill_thread(base, limit);
-      auto out = filled.as_timeline().to_timeindex(false);
-      if (!detail::has_validity_mask(filled)) {
-        return Thread(out);
-      }
-      return Thread(out, *detail::validity_mask(filled));
-    }
     default:
       return t;
   }
@@ -1083,15 +1093,6 @@ Thread backward_fill_thread(const Thread& t, std::int64_t limit = -1) {
         return Thread(out);
       }
       return Thread(out, bool_series_from_bools(valid));
-    }
-    case ThreadKind::TimeIndex: {
-      auto base = Thread(t.as_timeindex().timeline(), detail::validity_mask(t));
-      auto filled = backward_fill_thread(base, limit);
-      auto out = filled.as_timeline().to_timeindex(false);
-      if (!detail::has_validity_mask(filled)) {
-        return Thread(out);
-      }
-      return Thread(out, *detail::validity_mask(filled));
     }
     default:
       return t;

@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-Series Duration::isnat() const;
-Series Duration::isnan() const;  // alias for isnat()
+Series Duration::isnat() const
 ```
 
 ## What It Does
@@ -52,8 +51,6 @@ data=true
   with `Timeline::kNaT` — both alias `Duration::kNaT` under the hood), not a
   distinct type; build a missing `Duration` with
   `pluss::duration::nanos(Duration::kNaT)`.
-- `isnan()` is a pure alias for `isnat()` — provided for readers coming from a
-  floating-point-NaN background, not a separate concept.
 
 ## See Also
 
@@ -62,14 +59,3 @@ data=true
 - [`where`](where.md): conditional selection, another mask-driven operation.
 - [`Timeline::isnat`](../timeline/isnat.md): the same convention on the
   instant side.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="total_weeks.html">
-    <span class="label">Previous</span>
-    <span class="title">total_weeks</span>
-  </a>
-  <a class="next-link" href="isvalid.html">
-    <span class="label">Next</span>
-    <span class="title">isvalid</span>
-  </a>
-</div>

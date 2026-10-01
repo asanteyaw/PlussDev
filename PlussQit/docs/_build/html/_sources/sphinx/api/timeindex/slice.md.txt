@@ -95,12 +95,12 @@ gather aligned values with the same positions.
   primitive behind range slicing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="searchsorted.html">
+  <a class="prev-link" href="size.html">
     <span class="label">Previous</span>
-    <span class="title">searchsorted</span>
+    <span class="title">size</span>
   </a>
-  <a class="next-link" href="slice_time.html">
+  <a class="next-link" href="slice_index.html">
     <span class="label">Next</span>
-    <span class="title">slice_time</span>
+    <span class="title">slice_index</span>
   </a>
 </div>

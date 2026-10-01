@@ -14,11 +14,9 @@ Duration Duration::where(const Series& mask, const Duration& other) const;
 
 Elementwise conditional selection: **keeps `self`'s own value where `mask` is
 `true`, and replaces it with the corresponding position of `other` where
-`mask` is `false`** — the same "true keeps self, false replaces" convention
-pandas' `Series.where(cond, other)` uses. This is the opposite reading from
-`numpy.where(cond, x, y)`, which picks its *first* value argument where the
-condition is true; `Duration::where` has no "first value" argument at all —
-only `self` (implicit) and `other`.
+`mask` is `false`**. Read the call as "keep this value where the condition is
+true; otherwise use the replacement." The receiver and replacement are not
+symmetric, so swapping them changes the result.
 
 ```{important} Verify this direction before relying on it
 This convention is easy to get backwards when writing the mask. The example
@@ -76,10 +74,9 @@ unchanged.
 
 ## Notes
 
-- `mask`'s "`true` keeps `self`, `false` selects `other`" direction is the
-  same one pandas' `Series.where` uses, and the opposite of `numpy.where`'s
-  "condition selects the first value" reading — worth double-checking against
-  a small example like the one above if you're coming from `numpy`.
+- `mask` is receiver-preserving: `true` keeps `self`, while `false` selects
+  `other`. Remember it as `receiver.where(mask, replacement)` rather than as a
+  symmetric selector.
 - [`fill_nat`](fill_nat.md) is the special case of `where` where `mask` is
   `isnat()` and `other` is the fill value.
 
@@ -88,10 +85,3 @@ unchanged.
 - [`fill_nat`](fill_nat.md): the missing-value-specific special case of this
   operation.
 - [`isnat`](isnat.md), [`isvalid`](isvalid.md): common sources for `mask`.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fill_nat.html">
-    <span class="label">Previous</span>
-    <span class="title">fill_nat</span>
-  </a>
-</div>

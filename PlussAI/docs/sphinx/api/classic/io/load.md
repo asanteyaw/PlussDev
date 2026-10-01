@@ -20,6 +20,15 @@ classic::StatusOr<classic::Flow> classic::io::load_and_restore(
     const std::string& path);
 ```
 
+## What It Does
+
+Reads a previously saved bundle back off disk and turns it into a runnable
+`Flow` again. `load` stops at the raw data (`FlowBundle`) without
+constructing anything runnable; `restore` takes that data and rebuilds the
+live `Flow` object (models, transforms, and all); `load_and_restore` is
+both steps in one call -- the one to reach for unless the raw bundle needs
+inspecting or editing before it becomes a `Flow`.
+
 ## Parameters
 
 `path` (`load` / `load_and_restore`)

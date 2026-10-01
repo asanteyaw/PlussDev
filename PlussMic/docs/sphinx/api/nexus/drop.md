@@ -8,6 +8,9 @@
 
 ```cpp
 Nexus::drop(std::initializer_list<std::string_view> keys) const -> Nexus
+Nexus::drop(pluss::msharp::RangeView::Of<std::string_view> keys) const -> Nexus
+template <detail::StringViewNameRange NameRange>
+Nexus::drop(const NameRange& keys) const -> Nexus
 ```
 
 ## What It Does
@@ -30,15 +33,31 @@ structural sense after the removal.
 
 ## Parameters
 
-**keys** (`std::initializer_list<std::string_view>`)
+**keys** (a range of `std::string_view` — a brace literal, a named
+container such as `std::vector<std::string_view>`/`std::vector<std::string>`,
+or any other range whose elements convert to `std::string_view`)
 
 The table names to remove.
 
 - Each key must be non-empty.
 - Each key must be unique within the request.
 - Each key must already exist in the source workspace.
+- Unlike [`select()`](select.md), request/iteration order never affects the
+  output here — surviving tables always keep the *source* workspace's
+  original order, regardless of what order (or container) you list them to
+  remove in.
 
-An empty list is allowed and acts as a no-op.
+An empty range is allowed and acts as a no-op.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+`RangeView::Of<std::string_view>` has implicit constructors from a brace
+list, a `std::vector<std::string_view>`, and other contiguous containers, so
+passing any of those at a call site works without ever naming `RangeView`
+yourself. Example 1 below uses a brace literal (the dedicated
+`initializer_list` overload exists specifically to keep that call
+unambiguous); Example 2 passes a named container instead, to exercise the
+`RangeView`/templated overloads without naming either.
+```
 
 ## Returns
 
@@ -106,10 +125,45 @@ customers, payments
 customers, orders, payments, refunds
 ```
 
-Example 2. Continuing from Example 1, dropping an empty list is a no-op.
+Example 2. Continuing from Example 1: the same request via named containers —
+a `std::vector<std::string_view>` (the `RangeView` overload) and a
+`std::vector<std::string>` (the templated overload, reached because owning
+`std::string` doesn't match `RangeView`'s same-element-type vector
+constructor but does satisfy the broader `StringViewNameRange` concept).
+Both produce the identical, source-ordered result.
 
 ```cpp
-print_keys(biz.drop({}));
+std::vector<std::string_view> remove_view = {"orders", "refunds"};
+std::vector<std::string> remove_owned = {"orders", "refunds"};
+
+auto out_view = biz.drop(remove_view);
+auto out_owned = biz.drop(remove_owned);
+for (std::int64_t i = 0; i < out_view.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out_view.keys()[static_cast<std::size_t>(i)];
+}
+std::cout << "\n";
+for (std::int64_t i = 0; i < out_owned.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out_owned.keys()[static_cast<std::size_t>(i)];
+}
+```
+
+### Output
+
+```text
+customers, payments
+customers, payments
+```
+
+Example 3. Continuing from Example 1, dropping an empty list is a no-op.
+
+```cpp
+auto out = biz.drop({});
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
 ```
 
 ### Output
@@ -118,7 +172,7 @@ print_keys(biz.drop({}));
 customers, orders, payments, refunds
 ```
 
-Example 3. Continuing from Example 1, validation is strict: empty names,
+Example 4. Continuing from Example 1, validation is strict: empty names,
 duplicate names in the request, and unknown names all throw.
 
 ```cpp

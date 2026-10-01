@@ -11,7 +11,7 @@ TEST_CASE("index_put_ multiple advanced tensors broadcast mixed shapes", "[index
   pluss::Series i0 = pluss::make_series(std::vector<std::int64_t>{0,3}, {2,1}); // -> [2,1]
   pluss::Series i2 = pluss::make_series(std::vector<std::int64_t>{1,2,4}, {1,3}); // -> [1,3]
 
-  std::vector<pluss::Series> idx = { i0, pluss::Series{}, i2 };
+  std::vector<pluss::Series> idx = {i0, pluss::series::undefined(), i2};
   pluss::Series v = pluss::series::full({2,3,5}, 7, pluss::ScalarType::Int64);
   pluss::Series out = pluss::index_put(a, idx, v, false);
 
@@ -28,7 +28,7 @@ TEST_CASE("index_put_ multidim bool mask inside indices vector", "[indexing]") {
   mp[0] = true;
   mp[5] = true;
 
-  std::vector<pluss::Series> idx = { pluss::Series{}, m };
+  std::vector<pluss::Series> idx = {pluss::series::undefined(), m};
   pluss::Series v = pluss::series::full({2,2}, 9, pluss::ScalarType::Int64); // head=2, tail dim0=2
   pluss::Series out = pluss::index_put(a, idx, v, false);
 

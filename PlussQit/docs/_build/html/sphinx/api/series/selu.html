@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::selu &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::sensitivity" href="sensitivity.html" />
+    <link rel="prev" title="Series::select_scatter" href="select_scatter.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-selu">
+<h1>Series::selu<a class="headerlink" href="#series-selu" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">selu</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">selu_</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="fixed-scaled-exponential-activation">
+<h2>Fixed Scaled Exponential Activation<a class="headerlink" href="#fixed-scaled-exponential-activation" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">selu()</span></code> applies a scaled exponential linear unit with fixed constants:</p>
+<p>$$
+\operatorname{selu}(x)=\lambda
+\begin{cases}
+x, &amp; x&gt;0,\
+\alpha(e^x-1), &amp; x\le 0,
+\end{cases}
+$$</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">alpha</span></code> is approximately <code class="docutils literal notranslate"><span class="pre">1.6732632423543772</span></code> and <code class="docutils literal notranslate"><span class="pre">lambda</span></code> is
+approximately <code class="docutils literal notranslate"><span class="pre">1.0507009873554805</span></code>. The fixed pair is the operation’s contract;
+use <a class="reference internal" href="elu.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">elu()</span></code></span></a> when those coefficients need to be controlled directly.</p>
+<p>The positive branch is linear with slope greater than one. The negative branch
+saturates toward <code class="docutils literal notranslate"><span class="pre">-lambda</span> <span class="pre">*</span> <span class="pre">alpha</span></code>, approximately <code class="docutils literal notranslate"><span class="pre">-1.7581</span></code>, instead of
+decreasing without bound. This asymmetric shape is intended for networks whose
+initialization and architecture are designed around self-normalizing behavior;
+the activation alone does not guarantee that property for an arbitrary model.</p>
+</section>
+<section id="contract">
+<h2>Contract<a class="headerlink" href="#contract" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Evaluation is elementwise and preserves shape, rank, and platform.</p></li>
+<li><p>Floating dtype is preserved; integer and Boolean input is promoted to
+<code class="docutils literal notranslate"><span class="pre">float32</span></code>.</p></li>
+<li><p>Complex input is rejected.</p></li>
+<li><p>The method is out of place and leaves the receiver unchanged.</p></li>
+<li><p>Reverse mode uses slope <code class="docutils literal notranslate"><span class="pre">lambda</span></code> on positive lanes and
+<code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">*</span> <span class="pre">alpha</span> <span class="pre">*</span> <span class="pre">exp(x)</span></code> on non-positive lanes. At exactly zero, the
+non-positive branch is used, giving slope <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">*</span> <span class="pre">alpha</span></code>.</p></li>
+</ul>
+</section>
+<section id="in-place-form">
+<h2>In-Place Form<a class="headerlink" href="#in-place-form" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">selu_()</span></code> is the in-place sibling of <a class="reference internal" href="#"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">selu()</span></code></span></a>: it computes the same
+result and writes it back into <code class="docutils literal notranslate"><span class="pre">self</span></code> directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> — then
+returns a reference to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>Despite being declared <code class="docutils literal notranslate"><span class="pre">const</span></code> at the call site — a quirk of how this method’s wrapper is generated, not a promise that <code class="docutils literal notranslate"><span class="pre">self</span></code> is left unchanged — <code class="docutils literal notranslate"><span class="pre">selu_()</span></code> genuinely mutates the series it’s called on.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">selu_</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-1.5201665, 0, 2.101402]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="compare-the-exponential-and-linear-regions">
+<h3>1. Compare the exponential and linear regions<a class="headerlink" href="#compare-the-exponential-and-linear-regions" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">selu</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1.6706, -1.1113, 0.0000, 1.0507, 3.1521]
+</pre></div>
+</div>
+<p>The negative values bend toward the finite lower asymptote. Positive values are
+scaled by the fixed factor <code class="docutils literal notranslate"><span class="pre">lambda</span></code>.</p>
+</section>
+</section>
+<section id="shape-is-preserved-for-matrices">
+<h3>2. Shape is preserved for matrices<a class="headerlink" href="#shape-is-preserved-for-matrices" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">selu</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ -1.5202 0.0000 ⎤
+⎣  1.0507 3.1521 ⎦
+</pre></div>
+</div>
+</section>
+</section>
+<section id="integer-lanes-are-promoted-before-activation">
+<h3>3. Integer lanes are promoted before activation<a class="headerlink" href="#integer-lanes-are-promoted-before-activation" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">-2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}).</span><span class="n">selu</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float32, platform=cpu, numel=3, contiguous=true)
+data=[-1.5202, 0.0000, 2.1014]
+</pre></div>
+</div>
+<p>The result is <code class="docutils literal notranslate"><span class="pre">float32</span></code>; neither the exponential branch nor the fixed scale is
+truncated to an integer.</p>
+</section>
+</section>
+<section id="reverse-mode-distinguishes-the-zero-boundary">
+<h3>4. Reverse mode distinguishes the zero boundary<a class="headerlink" href="#reverse-mode-distinguishes-the-zero-boundary" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">selu</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id4">
+<h4>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.6468, 1.7581, 1.0507]
+</pre></div>
+</div>
+<p>At zero the derivative comes from the exponential branch and is approximately
+<code class="docutils literal notranslate"><span class="pre">1.7581</span></code>; immediately on the positive side it is approximately <code class="docutils literal notranslate"><span class="pre">1.0507</span></code>.</p>
+</section>
+</section>
+<section id="complex-input-is-outside-the-contract">
+<h3>5. Complex input is outside the contract<a class="headerlink" href="#complex-input-is-outside-the-contract" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Complex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">{{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">}).</span><span class="n">selu</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h4>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>selu: complex input is not supported
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h2>
+<p>The operation is linear in <code class="docutils literal notranslate"><span class="pre">numel()</span></code>. Positive lanes require only scaling;
+negative lanes require an exponential. The analytic activation node keeps the
+forward tape compact and supports reverse and higher-order differentiation.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="elu.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">elu()</span></code></span></a> exposes the related coefficients.</p></li>
+<li><p><a class="reference internal" href="mish.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mish()</span></code></span></a> is smooth across zero and does not saturate to the same
+negative constant.</p></li>
+<li><p><a class="reference internal" href="leaky_relu.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">leaky_relu()</span></code></span></a> uses a linear negative branch.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="select_scatter.html" title="previous chapter">Series::select_scatter</a></li>
+      <li>Next: <a href="sensitivity.html" title="next chapter">Series::sensitivity</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/selu.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

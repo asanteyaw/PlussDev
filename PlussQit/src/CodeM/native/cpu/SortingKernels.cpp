@@ -170,8 +170,13 @@ std::pair<Series, Series> sort(const Series& a, std::int64_t dim, bool descendin
   std::int64_t rows = 1;
   for (std::size_t i=0;i+1<x.sizes().size();++i) rows *= x.sizes()[i];
 
-  Series vals = Series::empty(x.sizes(), x.scalar_type());
-  Series idx = Series::empty(x.sizes(), ScalarType::Int64);
+  // Explicit Platform::CPU, not the ambient platform scope: this is a
+  // CPU-only kernel (namespace pluss::codem::native::cpu) that assumes its
+  // input is already on CPU, but the 2-arg Series::empty resolves platform
+  // from the current PlatformScope, which can still be MPS when called from
+  // an MPS-originated op that first moved its data to CPU for this sort.
+  Series vals = Series::empty(x.sizes(), x.scalar_type(), Platform::CPU);
+  Series idx = Series::empty(x.sizes(), ScalarType::Int64, Platform::CPU);
 
   switch (x.scalar_type()) {
     case ScalarType::Float64:
@@ -236,7 +241,7 @@ Series argsort(const Series& a, std::int64_t dim, bool descending, bool stable) 
   std::int64_t rows = 1;
   for (std::size_t i = 0; i + 1 < x.sizes().size(); ++i) rows *= x.sizes()[i];
 
-  Series idx = Series::empty(x.sizes(), ScalarType::Int64);
+  Series idx = Series::empty(x.sizes(), ScalarType::Int64, Platform::CPU);
   switch (x.scalar_type()) {
     case ScalarType::Float64:
       argsort_rows((const double*)x.raw_data(), (std::int64_t*)idx.raw_data(), rows, cols, descending, stable);
@@ -300,8 +305,8 @@ std::pair<Series, Series> topk(const Series& a, std::int64_t k, std::int64_t dim
 
   auto out_sizes = std::vector<std::int64_t>(x.sizes().begin(), x.sizes().end());
   out_sizes.back() = k;
-  Series vals = Series::empty(out_sizes, x.scalar_type());
-  Series idx = Series::empty(out_sizes, ScalarType::Int64);
+  Series vals = Series::empty(out_sizes, x.scalar_type(), Platform::CPU);
+  Series idx = Series::empty(out_sizes, ScalarType::Int64, Platform::CPU);
 
   switch (x.scalar_type()) {
     case ScalarType::Float64:

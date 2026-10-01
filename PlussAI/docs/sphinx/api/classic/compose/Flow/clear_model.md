@@ -14,6 +14,15 @@ added independently of it. This holds for every `ModelSpec` task, including
 void classic::Flow::clear_model() noexcept;
 ```
 
+## What It Does
+
+Detaches whichever model [`set_model`](set_model.md)/
+[`set_classifier`](set_classifier.md)/[`set_regressor`](set_regressor.md)
+last attached, leaving every transform stage in place exactly as it was.
+Reach for it to turn a classify-or-regress `Flow` into a transform-only
+one, or to swap in a different model without rebuilding the transform
+pipeline from scratch.
+
 ## Parameters
 
 None.

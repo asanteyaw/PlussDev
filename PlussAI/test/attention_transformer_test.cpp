@@ -66,7 +66,7 @@ bool run_attention_transformer_checks(std::ostream* err = nullptr) {
       x,
       x,
       x,
-      Series(),
+      pluss::series::undefined(),
       pluss::nn::AttentionOptions{
           .dropout = 0.0,
           .training = true,

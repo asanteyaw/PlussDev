@@ -29,8 +29,8 @@ struct ModelDims {
 };
 
 struct VarDesign {
-  Series design = Series::undefined();
-  Series target = Series::undefined();
+  Series design = pluss::series::undefined();
+  Series target = pluss::series::undefined();
   std::int64_t t = 0;
   std::int64_t d = 0;
   std::int64_t k = 0;

@@ -48,17 +48,15 @@ auto city = df.features("city");
 auto sales = df.features("sales");
 auto case_axis = df.label().values();
 
-auto first_row = df.case_study(pluss::table::pos(0));
-auto first_value = df.case_study(
-    pluss::table::pos(0),
-    pluss::table::feature("city"));
+auto first_row = df.case_study().at(0);
+auto first_value = df.case_study().at(0).features({"city"});
 ```
 
 Notes:
 
 - `features("name")` returns a typed `Thread`
 - `caselbl()` is the row axis, not just a display index
-- `case_study(...)` is the case/feature selection surface
+- `case_study()` is the case-selection accessor; chain `features(...)` for projection
 - `describe()` is the fastest way to check whether numeric casts and missing values look right
 
 ## Common Everyday Tasks

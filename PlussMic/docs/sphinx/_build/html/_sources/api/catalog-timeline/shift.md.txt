@@ -18,7 +18,7 @@ negative) by `periods * freq`, replacing each bound key's values in place.
 Month/year shifts are calendar-aware: a day-of-month that doesn't exist in the
 target month is clamped down to that month's last valid day.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.

@@ -13,6 +13,15 @@ classic::Status classic::EstimatorBase::load_state(
     /* a range of pluss::Series -- pass a std::vector<Series> or braced list */);
 ```
 
+## What It Does
+
+Writes a previously captured [`dump_state`](dump_state.md) tensor list
+directly into this estimator's internal parameters, on the receiving
+side's own untrained construction -- reproducing a prior fit exactly
+without ever calling `learn`. Requires the receiving estimator to be the
+same family (and, where shape depends on it, the same options) as whatever
+estimator `dump_state` was captured from.
+
 ## Parameters
 
 `state`

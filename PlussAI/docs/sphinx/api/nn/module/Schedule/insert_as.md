@@ -15,14 +15,18 @@ template <typename In, typename Out, typename Layer>
 nn::Schedule& nn::Schedule::insert_as(std::size_t index, std::string name, Layer&& layer);
 ```
 
+## What It Does
+
 [`insert`](insert.md) with the stage's real input/output types stated
-explicitly, the same relationship [`then_as`](then_as.md) has to
-[`then`](then.md).
+explicitly, the same relationship [`append_as`](append_as.md) has to
+[`append`](append.md). Reach for this over `append_as` when the non-`Series`-typed
+stage needs to land in the middle of an existing chain rather than at the
+end.
 
 ## Parameters
 
 `typename In, typename Out` (explicit template arguments)
-: The stage's declared input and output types -- see [`then_as`](then_as.md).
+: The stage's declared input and output types -- see [`append_as`](append_as.md).
 
 `std::size_t index`, `Layer&& layer`, `std::string name`
 : Same as [`insert`](insert.md).
@@ -64,8 +68,8 @@ int main() {
   using pluss::Series;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   try {
     net.insert_as<Series, std::tuple<Series, Series>>(1, "bad", nn::RNN(4, 4));
@@ -90,7 +94,7 @@ size() is still 2
 ### Example 2
 
 Inserting a tuple-consuming stage between two stages that already agree on
-the tuple type -- `insert_as` succeeds exactly like `then_as` would for the
+the tuple type -- `insert_as` succeeds exactly like `append_as` would for the
 equivalent append.
 
 ```cpp
@@ -114,8 +118,8 @@ int main() {
   };
 
   nn::Schedule net;
-  net.then_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(3, 4));
-  net.then_as<std::tuple<Series, Series>, Series>("take_output", TakeOutput{});
+  net.append_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(3, 4));
+  net.append_as<std::tuple<Series, Series>, Series>("take_output", TakeOutput{});
 
   net.insert_as<std::tuple<Series, Series>, std::tuple<Series, Series>>(1, "scale_hidden", ScaleHidden{});
 
@@ -138,7 +142,7 @@ stage 2: 'take_output'
 ### Example 3
 
 The auto-naming overload -- `insert_as<In, Out>(index, layer)` with no
-explicit name, generating one the same way `then`/`insert` do.
+explicit name, generating one the same way `append`/`insert` do.
 
 ```cpp
 #include <pluss/pluss.h>
@@ -156,7 +160,7 @@ int main() {
   };
 
   nn::Schedule net;
-  net.then_as<Series, std::tuple<Series, Series>>(nn::RNN(3, 4));       // auto-named "0"
+  net.append_as<Series, std::tuple<Series, Series>>(nn::RNN(3, 4));       // auto-named "0"
   net.insert_as<std::tuple<Series, Series>, Series>(1, TakeOutput{});   // auto-named "1"
 
   std::cout << "stage 1 name='" << net->name_at(1) << "'\n";
@@ -174,7 +178,7 @@ stage 1 name='1'
 ## See Also
 
 - [`insert`](insert.md) -- the `Series -> Series` shorthand this generalizes.
-- [`then_as`](then_as.md) -- the equivalent append-only operation.
+- [`append_as`](append_as.md) -- the equivalent append-only operation.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

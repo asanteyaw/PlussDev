@@ -89,8 +89,8 @@ class LinearRegressionModel final : public ice::Model {
   [[nodiscard]] Series forward(const Series& x) const override { return x.matmul(weight_).add(bias_); }
 
  private:
-  Series weight_;
-  Series bias_;
+  Series weight_ = pluss::series::undefined();
+  Series bias_ = pluss::series::undefined();
 };
 
 } // namespace

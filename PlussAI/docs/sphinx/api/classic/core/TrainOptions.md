@@ -99,7 +99,7 @@ See [`RandomState`](RandomState.md).
 
 ### `sample_weights`
 
-`Series sample_weights = Series::undefined()`
+`Series sample_weights = pluss::series::undefined()`
 
 Optional per-row weights, `[n_samples]`, applied during the fit. Undefined
 (the default) means every row counts equally. When both this field and a
@@ -118,7 +118,7 @@ explicit per-class weights from `class_weights` below).
 
 ### `class_weights`
 
-`Series class_weights = Series::undefined()`
+`Series class_weights = pluss::series::undefined()`
 
 Consulted only when `class_weight == Custom`. For a binary classifier, a
 2-element `[negative_class_weight, positive_class_weight]` vector — a
@@ -151,11 +151,11 @@ Convergence tolerance for the calibrator's own solver. Ignored when
 
 ### `parameter_lower_bounds`
 
-`Series parameter_lower_bounds = Series::undefined()`
+`Series parameter_lower_bounds = pluss::series::undefined()`
 
 ### `parameter_upper_bounds`
 
-`Series parameter_upper_bounds = Series::undefined()`
+`Series parameter_upper_bounds = pluss::series::undefined()`
 
 Optional per-coefficient bounds (the pair, above and below), consulted only by
 bound-constrained gradient-based solvers (currently the linear classification

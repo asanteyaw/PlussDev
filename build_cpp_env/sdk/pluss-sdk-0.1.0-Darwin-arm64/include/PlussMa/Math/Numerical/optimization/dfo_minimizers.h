@@ -34,7 +34,7 @@ struct PopulationSolverDiagnostics {
 };
 
 struct PopulationSolverOutcome {
-  Series minimizer{Series::undefined()};
+  Series minimizer{pluss::series::undefined()};
   double minimum{0.0};
   PopulationSolverStatus status{PopulationSolverStatus::ReachedIterationBudget};
   PopulationSolverDiagnostics diagnostics{};
@@ -52,8 +52,8 @@ struct DifferentialEvolutionConfig {
   double best_mix{0.0};
 
   double initial_radius{0.5};
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
@@ -81,8 +81,8 @@ struct DifferentialEvolutionPrmmConfig {
   double diversity_epsilon{0.5};
 
   double initial_radius{0.5};
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
@@ -111,8 +111,8 @@ struct ParticleSwarmConfig {
   double velocity_clamp_ratio{0.0};
 
   double initial_radius{0.5};
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
@@ -135,8 +135,8 @@ struct ParticleSwarmDvConfig {
   std::int64_t stagnation_limit{50};
 
   double initial_radius{0.5};
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};

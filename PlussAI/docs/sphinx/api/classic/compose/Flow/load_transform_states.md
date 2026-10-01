@@ -19,6 +19,14 @@ classic::Status classic::Flow::load_transform_states(
        std::vector<std::vector<Series>> or braced list */);
 ```
 
+## What It Does
+
+Writes each stage's own fitted-parameter bundle from `states` back into
+this `Flow`'s already-added stages, in order -- restoring a stage-only fit
+without re-running `learn`. The target `Flow` must already have the same
+stages added, in the same order, as the one `states` was dumped from; only
+the fitted numbers are restored here, not the stage structure itself.
+
 ## Parameters
 
 `states` — a range of `std::vector<pluss::Series>`

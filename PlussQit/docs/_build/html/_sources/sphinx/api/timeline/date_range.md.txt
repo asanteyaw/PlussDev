@@ -133,7 +133,7 @@ Timeline(shape=[4], tz=UTC)
 
 ## See Also
 
-- [`TimeIndex API Reference`](../../timeindex_api_reference.md)
+- [Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference.md)
 - [`Timeline::floor`](floor.md)
 - [`Timeline::searchsorted_left`](searchsorted_left.md)
 

@@ -16,7 +16,7 @@ Stream StreamTimelineAccessor::utc() const
 Shorthand for [`tz("UTC")`](tz.md) — relabels the bound stream's display
 timezone back to `"UTC"` without changing the underlying instant.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

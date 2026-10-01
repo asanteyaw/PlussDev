@@ -152,10 +152,6 @@ Axel Axel::fillnull(const pluss::Timeline& value) const {
   return map([&](const Registry& reg) { return reg.fillnull(value); });
 }
 
-Axel Axel::fillnull(const pluss::TimeIndex& value) const {
-  return map([&](const Registry& reg) { return reg.fillnull(value); });
-}
-
 Axel Axel::dropnull() const {
   return map([](const Registry& reg) { return reg.dropnull(); });
 }

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::as_strided &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::asin" href="asin.html" />
+    <link rel="prev" title="Series::argsort" href="argsort.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-as-strided">
+<h1>Series::as_strided<a class="headerlink" href="#series-as-strided" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">as_strided</span><span class="p">(</span><span class="n">IntRange</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">IntRange</span><span class="w"> </span><span class="n">strides</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">as_strided</span><span class="p">(</span><span class="n">IntRange</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">IntRange</span><span class="w"> </span><span class="n">strides</span><span class="p">,</span>
+<span class="w">                          </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">storage_offset</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">as_strided_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="w"> </span><span class="n">strides</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">IntRange</span></code> is the public integer-range input accepted by the API, including an
+initializer list or <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::int64_t&gt;</span></code>.</p>
+</section>
+<section id="a-view-from-storage-geometry">
+<h2>A View From Storage Geometry<a class="headerlink" href="#a-view-from-storage-geometry" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">as_strided()</span></code> constructs a view by describing exactly how logical coordinates
+map into the receiver’s storage. For coordinate <code class="docutils literal notranslate"><span class="pre">(i0,</span> <span class="pre">...,</span> <span class="pre">ik)</span></code>, it reads</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>storage_offset + i0 * strides[0] + ... + ik * strides[k]
+</pre></div>
+</div>
+<p>Sizes, strides, and offsets are measured in <strong>elements</strong>, not bytes. This is
+the lowest-level public shape operation: it can express a transpose, cropped
+window, zero-stride expansion, or overlapping sliding windows without copying.
+Prefer <code class="docutils literal notranslate"><span class="pre">reshape()</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose()</span></code>, <code class="docutils literal notranslate"><span class="pre">unsqueeze()</span></code>, or <code class="docutils literal notranslate"><span class="pre">expand()</span></code> when a named
+operation states the intention. Use <code class="docutils literal notranslate"><span class="pre">as_strided()</span></code> when the storage mapping is
+itself the contract.</p>
+<p>The two-argument overload starts at the receiver’s current storage offset. The
+three-argument overload supplies an absolute element offset in the underlying
+storage. That matters when the receiver is already a view: omitting the offset
+keeps the current starting point, whereas an explicit offset can point to a
+different region of the shared allocation.</p>
+<p>The result aliases the same storage. It preserves dtype and platform but may
+be non-contiguous, and multiple logical coordinates may refer to one physical
+element. Reading an overlapping view is defined. Writes are alias-sensitive;
+prefer a functional scatter operation when several lanes can target one slot.</p>
+</section>
+<section id="validation">
+<h2>Validation<a class="headerlink" href="#validation" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sizes</span></code> and <code class="docutils literal notranslate"><span class="pre">strides</span></code> must have equal lengths.</p></li>
+<li><p>Sizes, strides, and the explicit offset must be non-negative.</p></li>
+<li><p>Negative-stride views are not supported.</p></li>
+<li><p>The greatest reachable element offset must remain inside the allocation.</p></li>
+<li><p>A zero-sized view may begin one element past the allocation because it reads
+no value.</p></li>
+</ul>
+<p>Offset calculations are checked for integer overflow before the view exists.</p>
+</section>
+<section id="reverse-mode-and-overlap">
+<h2>Reverse Mode And Overlap<a class="headerlink" href="#reverse-mode-and-overlap" title="Link to this heading">¶</a></h2>
+<p>Reverse mode scatters each output sensitivity back to the storage location it
+read. Contributions add when output lanes overlap. A 3 by 3 view with strides
+<code class="docutils literal notranslate"><span class="pre">{1,</span> <span class="pre">1}</span></code> over five elements therefore yields multiplicities
+<code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1]</span></code> when summed. If the receiver itself aliases storage, the
+physical contribution is apportioned across equivalent receiver lanes rather
+than counted repeatedly. General <code class="docutils literal notranslate"><span class="pre">as_strided()</span></code> reverse is CPU-only.</p>
+</section>
+<section id="in-place-form">
+<h2>In-Place Form<a class="headerlink" href="#in-place-form" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">as_strided_()</span></code> is the in-place sibling of <a class="reference internal" href="#"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">as_strided()</span></code></span></a>: it computes the same
+result and writes it back into <code class="docutils literal notranslate"><span class="pre">self</span></code> directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> — then
+returns a reference to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>Despite being declared <code class="docutils literal notranslate"><span class="pre">const</span></code> at the call site — a quirk of how this method’s wrapper is generated, not a promise that <code class="docutils literal notranslate"><span class="pre">self</span></code> is left unchanged — <code class="docutils literal notranslate"><span class="pre">as_strided_()</span></code> genuinely mutates the series it’s called on.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">6</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">strides</span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
+
+<span class="n">x</span><span class="p">.</span><span class="n">as_strided_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="p">(</span><span class="n">sizes</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">sizes</span><span class="p">.</span><span class="n">size</span><span class="p">()),</span>
+<span class="w">              </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="p">(</span><span class="n">strides</span><span class="p">.</span><span class="n">data</span><span class="p">(),</span><span class="w"> </span><span class="n">strides</span><span class="p">.</span><span class="n">size</span><span class="p">()));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 2, 3],
+  [4, 5, 6]]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Strides <code class="docutils literal notranslate"><span class="pre">{1,</span> <span class="pre">3}</span></code> produce a transposed 3 by 2 view without moving
+data.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span>
+<span class="w">    </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">as_strided</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}));</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3,2], strides=[1,3], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=
+⎡ 0.0000 3.0000 ⎤
+⎢ 1.0000 4.0000 ⎥
+⎣ 2.0000 5.0000 ⎦
+</pre></div>
+</div>
+<p>Example 2. Equal strides create overlapping diagonal windows.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">as_strided</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}));</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3,3], strides=[1,1], dtype=float64, platform=cpu, numel=9, contiguous=false)
+data=
+⎡ 0.0000 1.0000 2.0000 ⎤
+⎢ 1.0000 2.0000 3.0000 ⎥
+⎣ 2.0000 3.0000 4.0000 ⎦
+</pre></div>
+</div>
+<p>Example 3. An explicit offset skips the first storage element.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">as_strided</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 1.0000 2.0000 ⎤
+⎣ 3.0000 4.0000 ⎦
+</pre></div>
+</div>
+<p>Example 4. Reverse accumulation exposes overlap multiplicity directly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span>
+<span class="w">    </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">as_strided</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 2.0000, 1.0000]
+</pre></div>
+</div>
+<p>Example 5. Rank disagreement is rejected before returning a view.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">x</span><span class="p">.</span><span class="n">as_strided</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>as_strided: sizes/strides rank mismatch
+</pre></div>
+</div>
+<p>Example 6. Rank-valid geometry can still exceed the allocation.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">x</span><span class="p">.</span><span class="n">as_strided</span><span class="p">({</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>as_strided: requested view exceeds storage bounds
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="stride.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stride()</span></code></span></a> and <a class="reference internal" href="strides.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">strides()</span></code></span></a> inspect layout.</p></li>
+<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> expresses ordinary shape changes safely.</p></li>
+<li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">scatter()</span></code></span></a> performs indexed functional writes without exposing
+storage strides.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="argsort.html" title="previous chapter">Series::argsort</a></li>
+      <li>Next: <a href="asin.html" title="next chapter">Series::asin</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/as_strided.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

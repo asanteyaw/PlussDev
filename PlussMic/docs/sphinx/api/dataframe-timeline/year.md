@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::year() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its calendar year,
+Replaces every selected `Timeline` feature with its calendar year,
 as a numeric `Series` — same feature name, same row order, only the payload
 kind changes.
 
@@ -82,7 +82,7 @@ calendar year.
 ## Notes
 
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind, so in practice every feature ends up
+  be `Timeline`-kind, so in practice every feature ends up
   selected — narrow with [`features()`](../dataframe/features.md) first
   (`df.features({"ts"}).tl().year()`) if the source frame also has non-time
   columns.

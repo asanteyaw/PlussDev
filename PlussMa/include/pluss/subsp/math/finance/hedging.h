@@ -5,11 +5,11 @@
 namespace pluss::subsp::math::finance::hedging {
 
 struct DeltaHedgeResult {
-  pluss::codem::Series option_value = pluss::codem::Series::undefined();
-  pluss::codem::Series delta = pluss::codem::Series::undefined();
-  pluss::codem::Series cash = pluss::codem::Series::undefined();
-  pluss::codem::Series portfolio = pluss::codem::Series::undefined();
-  pluss::codem::Series hedge_error = pluss::codem::Series::undefined();
+  pluss::codem::Series option_value = pluss::series::undefined();
+  pluss::codem::Series delta = pluss::series::undefined();
+  pluss::codem::Series cash = pluss::series::undefined();
+  pluss::codem::Series portfolio = pluss::series::undefined();
+  pluss::codem::Series hedge_error = pluss::series::undefined();
   double terminal_pnl = 0.0;
 };
 

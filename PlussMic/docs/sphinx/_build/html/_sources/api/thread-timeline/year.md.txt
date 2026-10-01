@@ -52,7 +52,7 @@ ptype: Series
 
 ## Notes
 
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A row whose underlying timestamp is `NaT` (or whose thread already carries a
   null mask) displays as `"NULL"` in the year output, not some sentinel

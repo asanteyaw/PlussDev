@@ -31,6 +31,17 @@ classic::StatusOr<classic::TuneReport> classic::tune(
     classic::TuneObjectivePolicy objective_policy = classic::TuneObjectivePolicy::Auto);
 ```
 
+## What It Does
+
+Reads `tune_options.search` and dispatches to whichever underlying
+strategy that value selects -- [`sweep`](sweep.md) for an exhaustive pass
+over `candidates`, [`probe`](probe.md) for a sampled search from
+`sampler`, or one of the two strategies neither of those directly
+implements. Which overload is called (candidate list vs. sampler) fixes
+which *shape* of search is possible; `tune_options.search` then fixes
+which strategy actually runs within that shape -- see the dispatch tables
+below for the exact mapping.
+
 ## Parameters
 
 `candidates` (first overload) / `sampler` (second overload)

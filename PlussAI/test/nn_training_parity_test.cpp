@@ -252,7 +252,7 @@ std::pair<Series, Series> make_linear_data() {
 struct TinyLSTMParityRegressorImpl final : pluss::nn::Module {
   pluss::nn::LSTM lstm;
   pluss::nn::Fusion head;
-  mutable Series last_seq{};
+  mutable Series last_seq = pluss::series::undefined();
 
   explicit TinyLSTMParityRegressorImpl(const Config& cfg)
       : Module(true),
@@ -567,7 +567,7 @@ TrainingTrace run_linear_training_trace(Platform platform, int epochs, LinearOpt
   TrainingTrace trace{};
   trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
   for (int epoch = 0; epoch < epochs; ++epoch) {
-    Series loss;
+    Series loss = pluss::series::undefined();
     if (manual_step) {
       optimizer->clear();
       loss = pluss::nn::losses::MSE(model->forward(x), y);
@@ -731,13 +731,13 @@ TrainingTrace run_lstm_training_trace(Platform platform, int epochs) {
                   << " tracks=" << (p->tracks_slope() ? 1 : 0) << "\n";
       }
     }
-    Series pred;
+    Series pred = pluss::series::undefined();
     try {
       pred = model->forward(x);
     } catch (const std::exception& ex) {
       throw std::runtime_error("lstm forward failed at epoch " + std::to_string(epoch + 1) + ": " + ex.what());
     }
-    Series loss;
+    Series loss = pluss::series::undefined();
     try {
       loss = pluss::nn::losses::MSE(pred, y);
     } catch (const std::exception& ex) {
@@ -962,9 +962,9 @@ TrainingTrace run_schedule_training_trace(Platform platform, int epochs) {
   const Series y = y_cpu.to(platform, ScalarType::Float32);
 
   pluss::nn::Schedule model;
-  model.then("encoder", pluss::nn::Fusion(2, 12, true, cfg, 41ULL))
-      .then("activation", pluss::nn::Tanh())
-      .then("head", pluss::nn::Fusion(12, 1, true, cfg, 43ULL));
+  model.append("encoder", pluss::nn::Fusion(2, 12, true, cfg, 41ULL))
+      .append("activation", pluss::nn::Tanh())
+      .append("head", pluss::nn::Fusion(12, 1, true, cfg, 43ULL));
   model->train(true);
   model->to(platform, ScalarType::Float32);
 
@@ -1047,7 +1047,7 @@ TrainingTrace run_conv_training_trace(Platform platform, int epochs) {
   TrainingTrace trace{};
   trace.epoch_loss.reserve(static_cast<std::size_t>(epochs));
   for (int epoch = 0; epoch < epochs; ++epoch) {
-    Series loss;
+    Series loss = pluss::series::undefined();
     if (debug_trace && epoch < debug_epochs) {
       optimizer.clear();
       const Series pred = model->forward(x);

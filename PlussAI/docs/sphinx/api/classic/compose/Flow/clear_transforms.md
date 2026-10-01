@@ -16,6 +16,16 @@ slot: clearing the stage list clears it too (see
 void classic::Flow::clear_transforms() noexcept;
 ```
 
+## What It Does
+
+Removes every transform stage -- named or opaque -- and resets the flags
+those stages had set (`has_opaque_transforms()` among them), leaving a
+Classification/Regression model spec attached exactly as it was. Reach for
+it to rebuild a `Flow`'s preprocessing from scratch without also
+rediscarding the model, keeping in mind that a `Transform`-task model runs
+as the last stage rather than a separate slot, so clearing the stage list
+clears it too.
+
 ## Parameters
 
 None.

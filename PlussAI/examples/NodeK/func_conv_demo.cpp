@@ -38,8 +38,8 @@ int main() {
                                     cfg);
   const Series temporal_kernel1 = make_series(std::vector<double>{0.2, 0.6, 0.2}, {1, 1, 3}, cfg);
   const Series temporal_kernel2 = make_series(std::vector<double>{1.0, 0.0, -1.0}, {1, 1, 3}, cfg);
-  const Series tcn_stage1 = conv1d(signal, temporal_kernel1, Series(), 1, 1, 1, 1).relu();
-  const Series tcn_stage2 = conv1d(tcn_stage1, temporal_kernel2, Series(), 1, 2, 2, 1);
+  const Series tcn_stage1 = conv1d(signal, temporal_kernel1, pluss::series::undefined(), 1, 1, 1, 1).relu();
+  const Series tcn_stage2 = conv1d(tcn_stage1, temporal_kernel2, pluss::series::undefined(), 1, 2, 2, 1);
 
   std::cout << "func_conv_demo\n";
   std::cout << "surface: pluss::nn::conv / pluss::nn::conv1d via #include <pluss/pluss.h> + <pluss/ai.h>\n";

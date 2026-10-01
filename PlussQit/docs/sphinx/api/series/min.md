@@ -11,9 +11,6 @@ Series::min() const -> Series
 Series::min(std::int64_t dim) const -> Series
 Series::min(std::int64_t dim, bool keepdim) const -> Series
 Series::min(const Series& other) const -> Series
-
-Series::min_pair(std::int64_t dim, bool keepdim = false) const
-    -> std::pair<Series, Series>
 ```
 
 ## What It Does
@@ -124,20 +121,6 @@ For `min(other)`:
 - at an exact tie, the derivative stays with `self`
 
 So the binary overload is again left-biased at the tie boundary.
-
-## Paired Value And Index (`min_pair`)
-
-`min_pair(dim [, keepdim])` runs the axis reduction and returns **both**
-channels at once: `.first` is the winning values (identical to `min(dim,
-keepdim)`), `.second` is the `int64` position each winner held along `dim`
-(identical to [`argmin(dim, keepdim)`](argmin.md)). The result is a
-`std::pair<Series, Series>` -- `result.first` is the values, `result.second` the indices.
-
-Use it when you need the smallest value and where it sits without two separate
-scans. There is no whole-series overload — `min_pair` always reduces a named
-axis. On a tie inside a lane the reported index is the **first** occurrence,
-matching [`argmin()`](argmin.md). The value channel is differentiable exactly
-as `min(dim)` is; the index channel never carries gradient.
 
 ## Examples
 
@@ -372,55 +355,6 @@ reduce: dim out of range
 
 This is the expected failure mode when the dim does not exist.
 
-Example 12. `min_pair(dim)` returns the smallest values and their positions
-together.
-
-```cpp
-auto grid = pluss::make_series({
-    {3.0, 1.0, 4.0},
-    {1.0, 5.0, 9.0},
-});
-
-auto result = grid.min_pair(1);
-std::cout << "values=" << result.first << "\n";
-std::cout << "indices=" << result.second;
-```
-
-### Output
-
-```text
-values=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[1, 1]
-indices=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 0]
-```
-
-Row `0`'s smallest value is `1` at column `1`; row `1`'s is `1` at column `0`.
-
-Example 13. The value channel of `min_pair` is differentiable; the index
-channel is inert.
-
-```cpp
-auto grid = pluss::make_series({
-    {3.0, 1.0, 4.0},
-    {1.0, 5.0, 9.0},
-});
-grid.tracks_slope_(true);
-
-grid.min_pair(1).first.sum().reverse();
-
-pluss::series::print(std::cout, grid.sensitivity());
-```
-
-### Output
-
-```text
-Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=
-⎡ 0.0000 1.0000 0.0000 ⎤
-⎣ 1.0000 0.0000 0.0000 ⎦
-```
-
 ## Gotchas And Failure Modes
 
 - `min()` and `min(other)` are different operation families that happen to
@@ -433,8 +367,6 @@ data=
   gradients to the left operand.
 - Broadcastability matters for `min(other)`.
 - Out-of-range dims throw immediately.
-- `min_pair` has no whole-series overload — it always takes a `dim`. Its index
-  channel reports the first tied position and never carries gradient.
 
 ## Summary
 
@@ -458,16 +390,18 @@ shape and keeps tie gradients on the left operand.
 - [`Series::max`](max.md): upper-bound counterpart with the same overload map.
 - [`Series::argmin`](argmin.md): returns winning indices instead of winning
   values.
+- [`Series::min_pair`](min_pair.md): returns one winning value and its selected
+  source position together.
 - [`Series::max`](max.md) / [`Series::argmax`](argmax.md): the upper-bound
   counterparts, including `max_pair`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="max.html">
+  <a class="prev-link" href="median.html">
     <span class="label">Previous</span>
-    <span class="title">max</span>
+    <span class="title">median</span>
   </a>
-  <a class="next-link" href="argmax.html">
+  <a class="next-link" href="min_pair.html">
     <span class="label">Next</span>
-    <span class="title">argmax</span>
+    <span class="title">min_pair</span>
   </a>
 </div>

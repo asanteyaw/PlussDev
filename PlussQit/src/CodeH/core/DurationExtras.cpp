@@ -5,7 +5,9 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <sstream>
 #include <string>
+#include <unordered_set>
 
 namespace pluss::codeh {
 
@@ -179,8 +181,20 @@ Duration impl_where_duration(const Duration& a, const pluss::codem::Series& mask
 Duration impl_mul_i64(const Duration& a, std::int64_t k) {
   check_duration_core_(a.nanos_);
   auto out = pluss::codem::Series::empty(a.nanos_.sizes(), pluss::codem::ScalarType::Int64);
+  const auto* values = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
+  auto validation = pluss::codem::SeriesIterator::unary(a.nanos_, out);
+  validation.for_each_index([&](std::int64_t, std::int64_t offset,
+                                std::int64_t, std::int64_t) {
+    const auto x = values[offset];
+    if (x == Duration::kNaT) return;
+    const auto product = static_cast<__int128>(x) * k;
+    CODEM_CHECK(product >= (std::numeric_limits<std::int64_t>::min)() + 1 &&
+                    product <= (std::numeric_limits<std::int64_t>::max)(),
+                "Duration::mul: nanosecond overflow");
+  });
   apply_unary_i64_scalar(a.nanos_, out, [k](std::int64_t x) -> std::int64_t {
-    return (x == Duration::kNaT) ? Duration::kNaT : (x * k);
+    if (x == Duration::kNaT) return Duration::kNaT;
+    return x * k;
   });
   return Duration(std::move(out));
 }
@@ -242,6 +256,18 @@ pluss::codem::Series impl_component(const Duration& a, std::string_view componen
   const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
   auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
 
+  enum class Component { Days, Hours, Minutes, Seconds, Milliseconds, Microseconds, Nanoseconds };
+  const auto field = [&] {
+    if (component == "days") return Component::Days;
+    if (component == "hours") return Component::Hours;
+    if (component == "minutes") return Component::Minutes;
+    if (component == "seconds") return Component::Seconds;
+    if (component == "milliseconds") return Component::Milliseconds;
+    if (component == "microseconds") return Component::Microseconds;
+    if (component == "nanoseconds") return Component::Nanoseconds;
+    CODEM_FAIL("Duration: unknown component");
+  }();
+
   const std::int64_t day = 86400LL * 1'000'000'000LL;
   const std::int64_t hour = 3600LL * 1'000'000'000LL;
   const std::int64_t min = 60LL * 1'000'000'000LL;
@@ -252,15 +278,23 @@ pluss::codem::Series impl_component(const Duration& a, std::string_view componen
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto x = av[ao];
     if (x == Duration::kNaT) { o[oo] = Duration::kNaT; return; }
-    const auto ax = (x < 0) ? -x : x;
-    if (component == "days") o[oo] = x / day;
-    else if (component == "hours") o[oo] = (ax % day) / hour;
-    else if (component == "minutes") o[oo] = (ax % hour) / min;
-    else if (component == "seconds") o[oo] = (ax % min) / sec;
-    else if (component == "milliseconds") o[oo] = (ax % sec) / ms;
-    else if (component == "microseconds") o[oo] = (ax % ms) / us;
-    else if (component == "nanoseconds") o[oo] = (ax % us);
-    else CODEM_FAIL("Duration: unknown component");
+
+    auto days = x / day;
+    auto within_day = x % day;
+    if (within_day < 0) {
+      --days;
+      within_day += day;
+    }
+
+    switch (field) {
+      case Component::Days: o[oo] = days; break;
+      case Component::Hours: o[oo] = within_day / hour; break;
+      case Component::Minutes: o[oo] = (within_day % hour) / min; break;
+      case Component::Seconds: o[oo] = (within_day % min) / sec; break;
+      case Component::Milliseconds: o[oo] = (within_day % sec) / ms; break;
+      case Component::Microseconds: o[oo] = (within_day % ms) / us; break;
+      case Component::Nanoseconds: o[oo] = within_day % us; break;
+    }
   });
   return out;
 }
@@ -276,37 +310,49 @@ Duration impl_round(const Duration& a, std::string_view mode, std::string_view u
   it.for_each_index([&](std::int64_t, std::int64_t ao, std::int64_t, std::int64_t oo) {
     const auto x = av[ao];
     if (x == Duration::kNaT) { o[oo] = Duration::kNaT; return; }
-    const auto div = x / q;
-    const auto rem = x % q;
+    auto floor_div = x / q;
+    auto rem = x % q;
+    if (rem < 0) {
+      --floor_div;
+      rem += q;
+    }
+    __int128 rounded = 0;
     if (mode == "floor") {
-      const bool need = (rem != 0) && ((rem > 0) != (q > 0));
-      o[oo] = (need ? (div - 1) : div) * q;
+      rounded = static_cast<__int128>(floor_div) * q;
     } else if (mode == "ceil") {
-      const bool need = (rem != 0) && ((rem > 0) == (q > 0));
-      o[oo] = (need ? (div + 1) : div) * q;
+      rounded = static_cast<__int128>(floor_div + (rem != 0 ? 1 : 0)) * q;
     } else if (mode == "round") {
-      // Round half away from zero
-      const auto half = q / 2;
-      const auto arem = (rem < 0) ? -rem : rem;
-      const bool up = arem >= half;
-      o[oo] = (div + (up ? ((x >= 0) ? 1 : -1) : 0)) * q;
+      const auto twice_rem = static_cast<__int128>(rem) * 2;
+      auto nearest = floor_div;
+      if (twice_rem > q || (twice_rem == q && (floor_div % 2 != 0))) {
+        ++nearest;
+      }
+      rounded = static_cast<__int128>(nearest) * q;
     } else {
       CODEM_FAIL("Duration: unknown rounding mode");
     }
+    CODEM_CHECK(rounded >= (std::numeric_limits<std::int64_t>::min)() + 1 &&
+                    rounded <= (std::numeric_limits<std::int64_t>::max)(),
+                "Duration rounding overflow");
+    o[oo] = static_cast<std::int64_t>(rounded);
   });
   return Duration(std::move(out));
 }
 
-static Duration reduce_minmax_(const Duration& a, bool want_min) {
+static Duration reduce_minmax_(const Duration& a, bool want_min, bool skipna) {
   CODEM_CHECK(a.defined(), "Duration reduction on undefined array");
   const auto av = impl_to_nanos_flat(a);
-  CODEM_CHECK(!av.empty(), "Duration reduction on empty array");
   std::int64_t best = want_min ? (std::numeric_limits<std::int64_t>::max)()
                                : (std::numeric_limits<std::int64_t>::min)();
   bool any = false;
-  for (std::size_t i = 0; i < av.size(); ++i) {
-    const auto x = av[i];
-    if (x == Duration::kNaT) continue;
+  for (const auto x : av) {
+    if (x == Duration::kNaT) {
+      if (!skipna) {
+        any = false;
+        break;
+      }
+      continue;
+    }
     any = true;
     best = want_min ? std::min(best, x) : std::max(best, x);
   }
@@ -314,14 +360,17 @@ static Duration reduce_minmax_(const Duration& a, bool want_min) {
   return ops_internal::duration_from_nanos(std::span<const std::int64_t>(&best, 1), {});
 }
 
-Duration impl_min_duration(const Duration& a) { return reduce_minmax_(a, true); }
-Duration impl_max_duration(const Duration& a) { return reduce_minmax_(a, false); }
+Duration impl_min_duration(const Duration& a, bool skipna) {
+  return reduce_minmax_(a, true, skipna);
+}
+Duration impl_max_duration(const Duration& a, bool skipna) {
+  return reduce_minmax_(a, false, skipna);
+}
 
 Duration impl_sort_duration(const Duration& a) {
   check_duration_core_(a.nanos_);
-  CODEM_CHECK(a.dim() == 1, "Duration::sort currently requires 1D");
-  std::vector<std::int64_t> v(a.numel());
-  std::memcpy(v.data(), a.nanos_.raw_data(), v.size() * sizeof(std::int64_t));
+  CODEM_CHECK(a.dim() == 1, "Duration::sort requires rank-one input");
+  auto v = impl_to_nanos_flat(a);
   std::stable_sort(v.begin(), v.end(), [](std::int64_t x, std::int64_t y) {
     if (x == Duration::kNaT && y == Duration::kNaT) return false;
     if (x == Duration::kNaT) return false;
@@ -336,16 +385,13 @@ Duration impl_sort_duration(const Duration& a) {
 Duration impl_unique_duration(const Duration& a) {
   // 1D unique preserving first occurrence, NaT treated as a distinct value.
   check_duration_core_(a.nanos_);
-  CODEM_CHECK(a.dim() == 1, "Duration::unique currently requires 1D");
+  CODEM_CHECK(a.dim() == 1, "Duration::unique requires rank-one input");
   std::vector<std::int64_t> outv;
   outv.reserve((size_t)a.numel());
-  std::vector<std::int64_t> seen;
-  seen.reserve((size_t)a.numel());
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
-  for (std::int64_t i = 0; i < a.numel(); ++i) {
-    const auto x = av[i];
-    if (std::find(seen.begin(), seen.end(), x) != seen.end()) continue;
-    seen.push_back(x);
+  std::unordered_set<std::int64_t> seen;
+  seen.reserve(static_cast<std::size_t>(a.numel()));
+  for (const auto x : impl_to_nanos_flat(a)) {
+    if (!seen.insert(x).second) continue;
     outv.push_back(x);
   }
   auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
@@ -355,13 +401,14 @@ Duration impl_unique_duration(const Duration& a) {
 
 pluss::codem::Series impl_argsort_duration(const Duration& a) {
   check_duration_core_(a.nanos_);
-  CODEM_CHECK(a.dim() == 1, "Duration::argsort currently requires 1D");
+  CODEM_CHECK(a.dim() == 1, "Duration::argsort requires rank-one input");
   const auto n = a.numel();
   std::vector<std::int64_t> idx(n);
   for (std::int64_t i = 0; i < n; ++i) idx[i] = i;
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
+  const auto av = impl_to_nanos_flat(a);
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t i, std::int64_t j) {
-    const auto x = av[i], y = av[j];
+    const auto x = av[static_cast<std::size_t>(i)];
+    const auto y = av[static_cast<std::size_t>(j)];
     if (x == Duration::kNaT && y == Duration::kNaT) return i < j;
     if (x == Duration::kNaT) return false;
     if (y == Duration::kNaT) return true;
@@ -375,29 +422,60 @@ pluss::codem::Series impl_argsort_duration(const Duration& a) {
 
 std::vector<std::int64_t> impl_to_nanos_flat(const Duration& a) {
   check_duration_core_(a.nanos_);
-  std::vector<std::int64_t> v((size_t)a.numel());
-  std::memcpy(v.data(), a.nanos_.raw_data(), v.size() * sizeof(std::int64_t));
-  return v;
+  return a.nanos_.to_vec<std::int64_t>();
 }
 
-static std::string format_one_(std::int64_t ns, bool compact) {
+static std::string format_one_(std::int64_t ns, std::string_view style) {
   if (ns == Duration::kNaT) return "NaT";
-  bool neg = ns < 0;
-  std::int64_t a = neg ? -ns : ns;
   const std::int64_t day = 86400LL * 1'000'000'000LL;
   const std::int64_t hour = 3600LL * 1'000'000'000LL;
   const std::int64_t min = 60LL * 1'000'000'000LL;
   const std::int64_t sec = 1'000'000'000LL;
-  const auto d = a / day; a %= day;
-  const auto h = a / hour; a %= hour;
-  const auto m = a / min; a %= min;
-  const auto s = a / sec; a %= sec;
-  const auto n = a;
+
+  if (style == "iso") {
+    const bool neg = ns < 0;
+    auto magnitude = neg ? -ns : ns;
+    const auto d = magnitude / day; magnitude %= day;
+    const auto h = magnitude / hour; magnitude %= hour;
+    const auto m = magnitude / min; magnitude %= min;
+    const auto s = magnitude / sec;
+    const auto n = magnitude % sec;
+    std::ostringstream oss;
+    if (neg) oss << '-';
+    oss << 'P';
+    if (d != 0) oss << d << 'D';
+    if (h != 0 || m != 0 || s != 0 || n != 0 || d == 0) {
+      oss << 'T';
+      if (h != 0) oss << h << 'H';
+      if (m != 0) oss << m << 'M';
+      if (n != 0) {
+        char fraction[16];
+        std::snprintf(fraction, sizeof(fraction), "%09lld", static_cast<long long>(n));
+        std::string digits(fraction);
+        while (!digits.empty() && digits.back() == '0') digits.pop_back();
+        oss << s << '.' << digits << 'S';
+      } else if (s != 0 || (h == 0 && m == 0)) {
+        oss << s << 'S';
+      }
+    }
+    return oss.str();
+  }
+
+  auto d = ns / day;
+  auto remainder = ns % day;
+  if (remainder < 0) {
+    --d;
+    remainder += day;
+  }
+  const auto h = remainder / hour; remainder %= hour;
+  const auto m = remainder / min; remainder %= min;
+  const auto s = remainder / sec;
+  const auto n = remainder % sec;
   char buf[128];
-  if (compact) {
-    std::snprintf(buf, sizeof(buf), "%s%lld %02lld:%02lld:%02lld", neg?"-":"", (long long)d, (long long)h, (long long)m, (long long)s);
+  if (style == "compact") {
+    std::snprintf(buf, sizeof(buf), "%lld %02lld:%02lld:%02lld", (long long)d, (long long)h, (long long)m, (long long)s);
   } else {
-    std::snprintf(buf, sizeof(buf), "%s%lld days %02lld:%02lld:%02lld.%09lld", neg?"-":"", (long long)d, (long long)h, (long long)m, (long long)s, (long long)n);
+    std::snprintf(buf, sizeof(buf), "%lld days %02lld:%02lld:%02lld.%09lld", (long long)d, (long long)h, (long long)m, (long long)s, (long long)n);
   }
   return std::string(buf);
 }
@@ -407,9 +485,7 @@ pluss::coden::Note impl_duration_to_note(const Duration& a, std::string_view sty
   // Build flattened string vector then use Note factory.
   std::vector<std::string> ss;
   ss.reserve((size_t)a.numel());
-  const auto* av = reinterpret_cast<const std::int64_t*>(a.nanos_.raw_data());
-  const bool compact = (style == "compact");
-  for (std::int64_t i = 0; i < a.numel(); ++i) ss.push_back(format_one_(av[i], compact));
+  for (const auto value : impl_to_nanos_flat(a)) ss.push_back(format_one_(value, style));
   std::vector<std::string_view> sv; sv.reserve(ss.size());
   for (auto& s : ss) sv.push_back(s);
   return ::pluss::coden::ops_internal::note_from_utf8(sv, a.sizes());

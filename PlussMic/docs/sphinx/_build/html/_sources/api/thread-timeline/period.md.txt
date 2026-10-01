@@ -13,7 +13,7 @@ ThreadTimelineAccessor::period(std::string_view freq) const -> Thread
 ## What It Does
 
 Truncates every row of the bound thread to the *start* of its enclosing `freq`
-period — same length, still `Timeline`/`TimeIndex`-kind.
+period — same length, still `Timeline`-kind.
 
 ## Parameters
 
@@ -30,7 +30,7 @@ Cannot be empty.
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind thread, same length as the bound thread,
     truncated to the start of its `freq` period.
 
 ## Examples
@@ -125,7 +125,7 @@ Timeline::to_period: unsupported frequency
   [`floor()`](floor.md) with the corresponding unit; `"year"`/`"month"` go
   further than `floor()` supports (`floor()` has no calendar-unit option).
 - `freq` cannot be empty, and an unrecognized string throws.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

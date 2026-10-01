@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=76d8b11c"></script>
+    <script src="_static/api_nav.js?v=af5a0516"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -50,17 +50,17 @@
 </section>
 <section id="a">
 <h2>A<a class="headerlink" href="#a" title="Link to this heading">¶</a></h2>
-<section id="as-note">
-<h3><code class="docutils literal notranslate"><span class="pre">as_note</span></code><a class="headerlink" href="#as-note" title="Link to this heading">¶</a></h3>
+<section id="as-duration">
+<h3><code class="docutils literal notranslate"><span class="pre">as_duration</span></code><a class="headerlink" href="#as-duration" title="Link to this heading">¶</a></h3>
 <section id="signature">
 <h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">as_note</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">as_duration</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h4>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h4>
-<p>Converts the wrapped scalar-like value into a <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>.</p>
+<p>Converts or reinterprets the current payload as another public Pluss type so downstream operations route through the right text, numeric, or temporal surface.</p>
 </section>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
@@ -68,11 +68,55 @@
 </section>
 <section id="returns">
 <h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code>
 Value produced by this call.</p>
 </section>
 <section id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h4>
+<p>Example 1. Convert the current object into the <code class="docutils literal notranslate"><span class="pre">duration</span></code> representation before continuing with another type-specific workflow.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">as_duration</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h5>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h5>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>The call completes and returns the contract described under Output.
+</pre></div>
+</div>
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#as_note">
+    <span class="label">Next</span>
+    <span class="title">as_note</span>
+  </a>
+</div>
+</section>
+</section>
+</section>
+<section id="as-note">
+<h3><code class="docutils literal notranslate"><span class="pre">as_note</span></code><a class="headerlink" href="#as-note" title="Link to this heading">¶</a></h3>
+<section id="id1">
+<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">as_note</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h4>What It Does<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<p>Converts the wrapped scalar-like value into a <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>.</p>
+</section>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>
+Value produced by this call.</p>
+</section>
+<section id="id5">
+<h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
 <p>Example 1. Convert the current object into the <code class="docutils literal notranslate"><span class="pre">note</span></code> representation before continuing with another type-specific workflow.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
@@ -80,12 +124,16 @@ Value produced by this call.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">as_note</span><span class="p">();</span>
 </pre></div>
 </div>
-<section id="output">
-<h5>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h5>
+<section id="id6">
+<h5>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h5>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[&quot;Accra&quot;]
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_duration">
+    <span class="label">Previous</span>
+    <span class="title">as_duration</span>
+  </a>
   <a class="next-link" href="#as_series">
     <span class="label">Next</span>
     <span class="title">as_series</span>
@@ -96,63 +144,15 @@ Value produced by this call.</p>
 </section>
 <section id="as-series">
 <h3><code class="docutils literal notranslate"><span class="pre">as_series</span></code><a class="headerlink" href="#as-series" title="Link to this heading">¶</a></h3>
-<section id="id1">
-<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">as_series</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
-</pre></div>
-</div>
-</section>
-<section id="id2">
-<h4>What It Does<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
-<p>Converts the wrapped scalar-like value into a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>.</p>
-</section>
-<section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
-</section>
-<section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>
-Value produced by this call.</p>
-</section>
-<section id="id5">
-<h4>Examples<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
-<p>Example 1. Convert the current object into the <code class="docutils literal notranslate"><span class="pre">series</span></code> representation before continuing with another type-specific workflow.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
-</pre></div>
-</div>
-<section id="id6">
-<h5>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0]
-</pre></div>
-</div>
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_note">
-    <span class="label">Previous</span>
-    <span class="title">as_note</span>
-  </a>
-  <a class="next-link" href="#as_timeindex">
-    <span class="label">Next</span>
-    <span class="title">as_timeindex</span>
-  </a>
-</div>
-</section>
-</section>
-</section>
-<section id="as-timeindex">
-<h3><code class="docutils literal notranslate"><span class="pre">as_timeindex</span></code><a class="headerlink" href="#as-timeindex" title="Link to this heading">¶</a></h3>
 <section id="id7">
 <h4>Signature<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">as_timeindex</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">as_series</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id8">
 <h4>What It Does<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h4>
-<p>Converts the wrapped scalar-like value into a <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>.</p>
+<p>Converts the wrapped scalar-like value into a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>.</p>
 </section>
 <section id="id9">
 <h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h4>
@@ -160,27 +160,27 @@ Value produced by this call.</p>
 </section>
 <section id="id10">
 <h4>Returns<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>
 Value produced by this call.</p>
 </section>
 <section id="id11">
 <h4>Examples<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h4>
-<p>Example 1. Convert the current object into the <code class="docutils literal notranslate"><span class="pre">timeindex</span></code> representation before continuing with another type-specific workflow.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span><span class="s">&quot;2024-01-01T09:10:00Z&quot;</span><span class="p">}));</span>
+<p>Example 1. Convert the current object into the <code class="docutils literal notranslate"><span class="pre">series</span></code> representation before continuing with another type-specific workflow.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">as_timeindex</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="id12">
 <h5>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h5>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[&quot;2024-01-01T09:10:00Z&quot;]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[10.0]
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_series">
+  <a class="prev-link" href="#as_note">
     <span class="label">Previous</span>
-    <span class="title">as_series</span>
+    <span class="title">as_note</span>
   </a>
   <a class="next-link" href="#as_timeline">
     <span class="label">Next</span>
@@ -226,9 +226,9 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_timeindex">
+  <a class="prev-link" href="#as_series">
     <span class="label">Previous</span>
-    <span class="title">as_timeindex</span>
+    <span class="title">as_series</span>
   </a>
   <a class="next-link" href="#defined">
     <span class="label">Next</span>
@@ -434,25 +434,25 @@ Value produced by this call.</p>
     <span class="label">Previous</span>
     <span class="title">kind</span>
   </a>
-  <a class="next-link" href="#pluss::Note">
+  <a class="next-link" href="#pluss::Duration">
     <span class="label">Next</span>
-    <span class="title">pluss::Note</span>
+    <span class="title">pluss::Duration</span>
   </a>
 </div>
 </section>
 </section>
 </section>
-<section id="pluss-note">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code><a class="headerlink" href="#pluss-note" title="Link to this heading">¶</a></h3>
+<section id="pluss-duration">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code><a class="headerlink" href="#pluss-duration" title="Link to this heading">¶</a></h3>
 <section id="id43">
 <h4>Signature<a class="headerlink" href="#id43" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">operator</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">operator</span>
 </pre></div>
 </div>
 </section>
 <section id="id44">
 <h4>What It Does<a class="headerlink" href="#id44" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>.</p>
+<p>Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.</p>
 </section>
 <section id="id45">
 <h4>Parameters<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h4>
@@ -469,7 +469,7 @@ Value produced by this call.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="id48">
@@ -482,25 +482,25 @@ Value produced by this call.</p>
     <span class="label">Previous</span>
     <span class="title">payload</span>
   </a>
-  <a class="next-link" href="#pluss::Series">
+  <a class="next-link" href="#pluss::Note">
     <span class="label">Next</span>
-    <span class="title">pluss::Series</span>
+    <span class="title">pluss::Note</span>
   </a>
 </div>
 </section>
 </section>
 </section>
-<section id="pluss-series">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code><a class="headerlink" href="#pluss-series" title="Link to this heading">¶</a></h3>
+<section id="pluss-note">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code><a class="headerlink" href="#pluss-note" title="Link to this heading">¶</a></h3>
 <section id="id49">
 <h4>Signature<a class="headerlink" href="#id49" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">operator</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">operator</span>
 </pre></div>
 </div>
 </section>
 <section id="id50">
 <h4>What It Does<a class="headerlink" href="#id50" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>.</p>
+<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Note</span></code>.</p>
 </section>
 <section id="id51">
 <h4>Parameters<a class="headerlink" href="#id51" title="Link to this heading">¶</a></h4>
@@ -517,7 +517,7 @@ Value produced by this call.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="id54">
@@ -526,29 +526,29 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#pluss::Note">
+  <a class="prev-link" href="#pluss::Duration">
     <span class="label">Previous</span>
-    <span class="title">pluss::Note</span>
+    <span class="title">pluss::Duration</span>
   </a>
-  <a class="next-link" href="#pluss::TimeIndex">
+  <a class="next-link" href="#pluss::Series">
     <span class="label">Next</span>
-    <span class="title">pluss::TimeIndex</span>
+    <span class="title">pluss::Series</span>
   </a>
 </div>
 </section>
 </section>
 </section>
-<section id="pluss-timeindex">
-<h3><code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code><a class="headerlink" href="#pluss-timeindex" title="Link to this heading">¶</a></h3>
+<section id="pluss-series">
+<h3><code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code><a class="headerlink" href="#pluss-series" title="Link to this heading">¶</a></h3>
 <section id="id55">
 <h4>Signature<a class="headerlink" href="#id55" title="Link to this heading">¶</a></h4>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">operator</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadValue</span><span class="o">::</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">operator</span>
 </pre></div>
 </div>
 </section>
 <section id="id56">
 <h4>What It Does<a class="headerlink" href="#id56" title="Link to this heading">¶</a></h4>
-<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code>.</p>
+<p>Uses the implicit conversion operator to materialize the wrapped value as a <code class="docutils literal notranslate"><span class="pre">pluss::Series</span></code>.</p>
 </section>
 <section id="id57">
 <h4>Parameters<a class="headerlink" href="#id57" title="Link to this heading">¶</a></h4>
@@ -565,7 +565,7 @@ Value produced by this call.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">.</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="p">();</span>
 </pre></div>
 </div>
 <section id="id60">
@@ -574,9 +574,9 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#pluss::Series">
+  <a class="prev-link" href="#pluss::Note">
     <span class="label">Previous</span>
-    <span class="title">pluss::Series</span>
+    <span class="title">pluss::Note</span>
   </a>
   <a class="next-link" href="#pluss::Timeline">
     <span class="label">Next</span>
@@ -622,9 +622,9 @@ Value produced by this call.</p>
 </pre></div>
 </div>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#pluss::TimeIndex">
+  <a class="prev-link" href="#pluss::Series">
     <span class="label">Previous</span>
-    <span class="title">pluss::TimeIndex</span>
+    <span class="title">pluss::Series</span>
   </a>
   <a class="next-link" href="#thread">
     <span class="label">Next</span>

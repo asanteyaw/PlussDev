@@ -9,7 +9,6 @@
 int main() {
   using pluss::make_note;
   using pluss::make_series;
-  using pluss::make_timeindex;
   using pluss::make_timeline;
   using pluss::table::Thread;
   using pluss::table::WindowOptions;
@@ -30,12 +29,12 @@ int main() {
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",
   }));
-  auto ticks = Thread(make_timeindex({
+  auto ticks = Thread(make_timeline({
       "2024-01-01T00:10:00Z",
       "2024-01-01T12:00:00Z",
       "2024-01-02T09:00:00Z",
       "2024-01-03T18:00:00Z",
-  }, true));
+  }));
   auto lower = Thread(make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
   auto upper = Thread(make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
 

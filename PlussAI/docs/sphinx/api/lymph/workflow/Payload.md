@@ -57,7 +57,7 @@ the caller already assembled.
 : The held data; each throws if the `Payload` was not built from that shape.
 
 `const Series& label() const` · `weights() const` · `groups() const` · `time() const`
-: The externally-supplied `Series` for each role — `Series::undefined()` if
+: The externally-supplied `Series` for each role — `pluss::series::undefined()` if
   that role was set by name, or not at all.
 
 `std::string time_feature() const` · `const std::optional<TimeOptions>& time_options() const`

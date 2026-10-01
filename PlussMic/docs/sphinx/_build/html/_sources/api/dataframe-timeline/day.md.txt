@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::day() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its day-of-month
+Replaces every selected `Timeline` feature with its day-of-month
 (`1`-`31`), as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -80,7 +80,7 @@ day-of-month.
 ## Notes
 
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if the source frame has
   other kinds mixed in.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as

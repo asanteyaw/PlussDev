@@ -24,11 +24,11 @@ Series scalar_like(const Series& like, double v) {
 }
 
 struct NGARCHModuleImpl final : pluss::nn::Module {
-  Series raw_omega;
-  Series raw_alpha;
-  Series raw_phi;
-  Series raw_lambda;
-  Series raw_gamma;
+  Series raw_omega = pluss::series::undefined();
+  Series raw_alpha = pluss::series::undefined();
+  Series raw_phi = pluss::series::undefined();
+  Series raw_lambda = pluss::series::undefined();
+  Series raw_gamma = pluss::series::undefined();
 
   explicit NGARCHModuleImpl(const Config& cfg)
       : Module(true),

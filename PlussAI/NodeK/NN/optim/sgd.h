@@ -110,19 +110,19 @@ private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     SGDOptions options{};
-    Series one_scalar{};
-    Series learning_rate_scalar{};
-    Series momentum_scalar{};
-    Series dampening_scalar{};
-    Series weight_decay_scalar{};
+    Series one_scalar = pluss::series::undefined();
+    Series learning_rate_scalar = pluss::series::undefined();
+    Series momentum_scalar = pluss::series::undefined();
+    Series dampening_scalar = pluss::series::undefined();
+    Series weight_decay_scalar = pluss::series::undefined();
   };
 
   struct GroupScalars {
-    Series one{};
-    Series learning_rate{};
-    Series momentum{};
-    Series dampening{};
-    Series weight_decay{};
+    Series one = pluss::series::undefined();
+    Series learning_rate = pluss::series::undefined();
+    Series momentum = pluss::series::undefined();
+    Series dampening = pluss::series::undefined();
+    Series weight_decay = pluss::series::undefined();
   };
 
   void apply_step_(pluss::msharp::RangeView::Series gradients) override {
@@ -473,11 +473,11 @@ private:
   void initialize_group_capture_state_() {
     const auto& params = parameters();
     for (auto& group : groups_) {
-      group.one_scalar = Series{};
-      group.learning_rate_scalar = Series{};
-      group.momentum_scalar = Series{};
-      group.dampening_scalar = Series{};
-      group.weight_decay_scalar = Series{};
+      group.one_scalar = pluss::series::undefined();
+      group.learning_rate_scalar = pluss::series::undefined();
+      group.momentum_scalar = pluss::series::undefined();
+      group.dampening_scalar = pluss::series::undefined();
+      group.weight_decay_scalar = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

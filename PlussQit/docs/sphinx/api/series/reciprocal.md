@@ -8,6 +8,7 @@
 
 ```cpp
 Series::reciprocal() const -> Series
+Series& Series::reciprocal_()
 ```
 
 ## What It Does
@@ -35,6 +36,29 @@ If `y = 1 / x`, then:
 
 In the example below, `L = sum(y)`, so each lane receives a seed of `1` and the
 stored sensitivity becomes exactly `-1 / x_i²`.
+
+## In-Place Form
+
+`reciprocal_()` is the in-place sibling of [`reciprocal()`](reciprocal.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 4.0});
+
+auto& ref = x.reciprocal_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 0.5, 0.25]
+same object: true
+```
 
 ## Examples
 

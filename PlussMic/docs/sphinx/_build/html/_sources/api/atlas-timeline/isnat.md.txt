@@ -13,7 +13,7 @@ AtlasTimelineAccessor::isnat() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with a
+Replaces every `Timeline` feature in **every frame of the stack** with a
 boolean `Series` flagging whether the row is `NaT` (missing timestamp) — the same
 transform [`DataFrame::tl().isnat()`](../dataframe-timeline/isnat.md) applies to a single
 frame, broadcast across the whole `Atlas` via
@@ -131,7 +131,7 @@ nanoseconds via `pluss::from_epoch_nanos` — a genuine `NaT` value, not a maske
   (for now) real `NaT` values must be built via the epoch-nanoseconds splice shown above
   rather than an empty-string literal.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - Each frame is transformed independently — a `NaT` row in one frame has no effect on any
   other frame's result.
@@ -146,9 +146,9 @@ nanoseconds via `pluss::from_epoch_nanos` — a genuine `NaT` value, not a maske
   accessor is built on.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

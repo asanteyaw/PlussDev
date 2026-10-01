@@ -55,7 +55,7 @@ using pluss::ScalarType;
 }
 
 struct DenseFeatureMatrix {
-  Series x_rows = Series::undefined();
+  Series x_rows = pluss::series::undefined();
   std::int64_t sample_count = 0;
   std::int64_t feature_count = 0;
   Platform original_platform = pluss::pCPU;
@@ -90,7 +90,7 @@ struct DenseFeatureMatrix {
 }
 
 struct BinaryLabelEncoding {
-  Series y01 = Series::undefined();
+  Series y01 = pluss::series::undefined();
   double negative = 0.0;
   double positive = 1.0;
   ScalarType label_dtype = ScalarType::Float64;

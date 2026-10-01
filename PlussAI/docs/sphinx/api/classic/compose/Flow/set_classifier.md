@@ -16,6 +16,16 @@ becomes `false`.
 classic::Status classic::Flow::set_classifier(std::unique_ptr<classic::ClassifierBase> model);
 ```
 
+## What It Does
+
+Takes ownership of an already-built `ClassifierBase` and attaches it
+directly as this `Flow`'s model, replacing any existing classifier or
+regressor -- bypassing `ModelSpec`/`make_classifier` entirely. Reach for
+this when the classifier came from somewhere other than a `ModelSpec`
+(restored state, a hand-authored subclass); unlike
+[`set_model`](set_model.md), there is no spec behind the result, so
+`has_model_spec()` becomes `false`.
+
 ## Parameters
 
 `model` — `std::unique_ptr<ClassifierBase>`

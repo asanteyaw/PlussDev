@@ -56,12 +56,12 @@ std::cout << pluss::timeindex::print(preview) << "\n";
 - [`TimeIndex::slice_index`](slice_index.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="head.html">
+  <a class="prev-link" href="sort.html">
     <span class="label">Previous</span>
-    <span class="title">head</span>
+    <span class="title">sort</span>
   </a>
-  <a class="next-link" href="union_.html">
+  <a class="next-link" href="take.html">
     <span class="label">Next</span>
-    <span class="title">union_</span>
+    <span class="title">take</span>
   </a>
 </div>

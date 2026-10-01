@@ -16,6 +16,17 @@ tunable on an arbitrary `Flow` without hardcoding stage or family knowledge.
 [[nodiscard]] std::vector<std::string> classic::Flow::nested_param_keys() const;
 ```
 
+## What It Does
+
+Enumerates every path string valid for
+[`nested_param`](nested_param.md)/[`set_nested_param`](set_nested_param.md)
+on this specific `Flow`, in its current shape -- one entry per stage's
+route metadata and configuration field, plus the attached model's own
+hyperparameters if one is set. This is what lets generic tooling (a
+hyperparameter search, a config dumper) discover what is tunable on an
+arbitrary `Flow` without hardcoding any particular stage or family's field
+names.
+
 ## Parameters
 
 None.

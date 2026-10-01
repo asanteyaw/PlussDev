@@ -105,7 +105,7 @@ Thread::tl().fmt: pattern cannot be empty
   digits are needed.
 - `%z` always renders as a signed `HH:MM` offset (e.g. `"+00:00"`), never the
   bare `"Z"` suffix some ISO-8601 tooling uses for UTC.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, regardless of `pattern`.

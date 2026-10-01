@@ -274,7 +274,7 @@ Archive Archive::fillnull(const pluss::Timeline& value) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value); });
 }
 
-Archive Archive::fillnull(const pluss::TimeIndex& value) const {
+Archive Archive::fillnull(const pluss::Duration& value) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.fillnull(value); });
 }
 

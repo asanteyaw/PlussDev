@@ -20,7 +20,7 @@ local reading corresponds to. **This changes the underlying instant** (unlike
 attached by `localize()` also survives being read back through any further
 `.tl()` call — see Example 1.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

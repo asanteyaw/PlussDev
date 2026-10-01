@@ -41,8 +41,9 @@ struct SoftplusOptions {
 
 class PLUSS_API SoftplusImpl final : public Module {
 public:
-  using Module::Module;
-  explicit SoftplusImpl(SoftplusOptions options = {}) : options_(options) {}
+  explicit SoftplusImpl(SoftplusOptions options) : options_(options) {}
+  explicit SoftplusImpl(double beta = 1.0, double threshold = 20.0)
+      : options_(SoftplusOptions{beta, threshold}) {}
 
   Series forward(const Series& input) const { return input.softplus(options_.beta, options_.threshold); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -63,8 +64,8 @@ struct LeakyReLUOptions {
 
 class PLUSS_API LeakyReLUImpl final : public Module {
 public:
-  using Module::Module;
-  explicit LeakyReLUImpl(LeakyReLUOptions options = {}) : options_(options) {}
+  explicit LeakyReLUImpl(LeakyReLUOptions options) : options_(options) {}
+  explicit LeakyReLUImpl(double negative_slope = 0.01) : options_(LeakyReLUOptions{negative_slope}) {}
 
   Series forward(const Series& input) const { return input.leaky_relu(options_.negative_slope); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -91,8 +92,8 @@ struct EluOptions {
 // see ICE_BLUEPRINT.md's centralization note.
 class PLUSS_API EluImpl final : public Module {
 public:
-  using Module::Module;
-  explicit EluImpl(EluOptions options = {}) : options_(options) {}
+  explicit EluImpl(EluOptions options) : options_(options) {}
+  explicit EluImpl(double alpha = 1.0) : options_(EluOptions{alpha}) {}
 
   Series forward(const Series& input) const { return input.elu(options_.alpha); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -137,8 +138,8 @@ struct GELUOptions {
 
 class PLUSS_API GELUImpl final : public Module {
 public:
-  using Module::Module;
-  explicit GELUImpl(GELUOptions options = {}) : options_(options) {}
+  explicit GELUImpl(GELUOptions options) : options_(options) {}
+  explicit GELUImpl(bool approximate = false) : options_(GELUOptions{approximate}) {}
 
   Series forward(const Series& input) const { return input.gelu(options_.approximate); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -159,8 +160,8 @@ struct HardshrinkOptions {
 
 class PLUSS_API HardshrinkImpl final : public Module {
 public:
-  using Module::Module;
-  explicit HardshrinkImpl(HardshrinkOptions options = {}) : options_(options) {}
+  explicit HardshrinkImpl(HardshrinkOptions options) : options_(options) {}
+  explicit HardshrinkImpl(double lambd = 0.5) : options_(HardshrinkOptions{lambd}) {}
 
   Series forward(const Series& input) const { return input.hardshrink(options_.lambd); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -181,8 +182,8 @@ struct SoftmaxOptions {
 
 class PLUSS_API SoftmaxImpl final : public Module {
 public:
-  using Module::Module;
-  explicit SoftmaxImpl(SoftmaxOptions options = {}) : options_(options) {}
+  explicit SoftmaxImpl(SoftmaxOptions options) : options_(options) {}
+  explicit SoftmaxImpl(std::int64_t dim = -1) : options_(SoftmaxOptions{dim}) {}
 
   Series forward(const Series& input) const { return input.softmax(options_.dim); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -203,8 +204,8 @@ struct LogSoftmaxOptions {
 
 class PLUSS_API LogSoftmaxImpl final : public Module {
 public:
-  using Module::Module;
-  explicit LogSoftmaxImpl(LogSoftmaxOptions options = {}) : options_(options) {}
+  explicit LogSoftmaxImpl(LogSoftmaxOptions options) : options_(options) {}
+  explicit LogSoftmaxImpl(std::int64_t dim = -1) : options_(LogSoftmaxOptions{dim}) {}
 
   Series forward(const Series& input) const { return input.log_softmax(options_.dim); }
   Series operator()(const Series& input) const { return forward(input); }
@@ -261,7 +262,7 @@ private:
   }
 
   PReLUOptions options_;
-  Series weight_;
+  Series weight_ = pluss::series::undefined();
 };
 PLUSS_MODULE(PReLU);
 

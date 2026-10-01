@@ -14,9 +14,9 @@ Catalog CatalogTimelineAccessor::weekday_name() const
 ## What It Does
 
 Renders each bound key's timestamp as its full English weekday name, replacing
-each `Timeline`- or `TimeIndex`-kind key with a `Note` (text) key.
+each `Timeline`-kind key with a `Note` (text) key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -63,7 +63,7 @@ ts                       | Note         | Note             | 2       | [Wednesda
 
 - Always the full English name (`"Monday"`, not `"Mon"`); use [`fmt("%a")`](fmt.md)
   for the abbreviated three-letter form.
-- Changes each bound key's kind from `Timeline`/`TimeIndex` to `Note`.
+- Changes each bound key's kind from `Timeline` to `Note`.
 - See the important callout above.
 
 ## See Also

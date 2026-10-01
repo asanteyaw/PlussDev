@@ -29,7 +29,7 @@ be rejected.
 
 ### `sample_weights`
 
-`Series sample_weights = Series::undefined()`
+`Series sample_weights = pluss::series::undefined()`
 
 Per-row weights for the metric computation itself — independent of any
 `sample_weights` used at fit time. Undefined (the default) weights every row

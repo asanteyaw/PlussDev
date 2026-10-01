@@ -194,8 +194,8 @@ data=[[2, 5, 3],
     <span class="label">Previous</span>
     <span class="title">clamp_max</span>
   </a>
-  <a class="next-link" href="clear_sensitivity.html">
+  <a class="next-link" href="clear.html">
     <span class="label">Next</span>
-    <span class="title">clear_sensitivity</span>
+    <span class="title">clear</span>
   </a>
 </div>

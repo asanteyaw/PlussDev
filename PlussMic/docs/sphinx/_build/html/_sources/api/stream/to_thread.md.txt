@@ -88,7 +88,7 @@ ptype: Series
 - [`Stream::slice`](slice.md): the `Stream`-native row-range operation, returning a
   `Stream` instead of converting to `Thread`.
 - [`Stream::as_series`](as_series.md) / [`Stream::as_note`](as_note.md) /
-  [`Stream::as_timeline`](as_timeline.md) / [`Stream::as_timeindex`](as_timeindex.md): a
+  [`Stream::as_timeline`](as_timeline.md): a
   narrower escape hatch to the raw typed payload instead of a `Thread`.
 
 <div class="pluss-inline-prev-next">

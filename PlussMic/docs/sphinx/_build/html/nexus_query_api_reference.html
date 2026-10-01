@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=76d8b11c"></script>
+    <script src="_static/api_nav.js?v=af5a0516"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -56,6 +56,9 @@ named table workspace, not for mutating persisted storage.</p>
 longer limited to a hand-curated subset of <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> syntax. Normal grouped queries,
 CTEs, subqueries, <code class="docutils literal notranslate"><span class="pre">LEFT</span> <span class="pre">JOIN</span></code>, and similar query shapes are valid as long as the
 statement produces a result set.</p>
+<p><code class="docutils literal notranslate"><span class="pre">.prepare(&quot;SELECT</span> <span class="pre">...&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared</span></code> — a separate small
+type, also documented here, whose own <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> overloads are what
+actually run a prepared statement with bound parameters.</p>
 </section>
 <section id="using-this-reference">
 <h2>Using This Reference<a class="headerlink" href="#using-this-reference" title="Link to this heading">¶</a></h2>
@@ -67,7 +70,8 @@ outputs, and working previous/next navigation.</p></li>
 </section>
 <section id="method-pages">
 <h2>Method Pages<a class="headerlink" href="#method-pages" title="Link to this heading">¶</a></h2>
-<p>The sidebar lists the two SQL entry points: <code class="docutils literal notranslate"><span class="pre">execute</span></code> and <code class="docutils literal notranslate"><span class="pre">prepare</span></code>.</p>
+<p>The sidebar lists the two <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code> entry points (<code class="docutils literal notranslate"><span class="pre">execute</span></code>, <code class="docutils literal notranslate"><span class="pre">prepare</span></code>)
+and <code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared</span></code>’s own <code class="docutils literal notranslate"><span class="pre">execute</span></code>.</p>
 <div class="toctree-wrapper compound">
 </div>
 </section>

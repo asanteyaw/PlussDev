@@ -9,6 +9,7 @@
 ```cpp
 Series::exp2() const -> Series
 Series& Series::exp2_()
+Series& Series::exp2_() const
 ```
 
 ## What It Does
@@ -46,6 +47,31 @@ d/dx 2^x = 2^x * ln 2 = y * ln 2
 So the backward multiplier is the output value scaled by `ln 2` (about
 `0.6931`). As with [`exp()`](exp.md), the same rapid growth that affects the
 forward value also affects the gradient.
+
+## In-Place Form
+
+`exp2_()` is the in-place sibling of [`exp2()`](exp2.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `exp2_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0, 3.0});
+
+auto& ref = x.exp2_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 8]
+same object: true
+```
 
 ## Examples
 

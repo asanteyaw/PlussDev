@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
+<!-- pluss-signature-hash: 78ba43002ed8 -->
 
 # `pluss::ai::nn::GradMode::is_enabled`
 
@@ -8,47 +8,55 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] static bool nn::GradMode::is_enabled() noexcept;
 ```
+
+## What It Does
+
+Reads the current thread's grad-recording switch. Returns `true` when new
+operations on a `Series` that tracks its slope are currently allowed to
+record a reverse-mode graph node, `false` when they are not. The value
+reflects every [`set_enabled`](set_enabled.md) call and every
+[`AutoGradMode`](../AutoGradMode.md)/[`NoGradGuard`](../NoGradGuard.md)
+guard currently in scope on the calling thread -- it is a plain read, with
+no side effect of its own.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`bool` -- the current value of the thread-local switch. Defaults to `true`
+on a thread that has never called `set_enabled` or constructed a guard.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None. `is_enabled` is `noexcept` and has no preconditions.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the default value on a thread that has touched nothing
+else, its response to a direct `set_enabled` call, and reading it from
+inside nested guards to show it reports whatever is actually in effect at
+the moment of the call, not just the innermost guard's own argument.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
+A thread that has never called `set_enabled` or constructed a guard reports
+`true` -- recording happens by default; a caller opts out for a scope,
+never the reverse.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace nn = pluss::ai::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::cout << "is_enabled() on a fresh thread = " << std::boolalpha << nn::GradMode::is_enabled() << "\n";
 
   return 0;
 }
@@ -57,27 +65,30 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+is_enabled() on a fresh thread = true
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+`is_enabled()` reflects a direct `set_enabled` call immediately -- there is
+no delay or batching, the read and the write operate on the same variable.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace nn = pluss::ai::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::cout << "before: " << std::boolalpha << nn::GradMode::is_enabled() << "\n";
+
+  nn::GradMode::set_enabled(false);
+  std::cout << "after set_enabled(false): " << nn::GradMode::is_enabled() << "\n";
+
+  nn::GradMode::set_enabled(true);
+  std::cout << "after set_enabled(true): " << nn::GradMode::is_enabled() << "\n";
 
   return 0;
 }
@@ -86,27 +97,38 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+before: true
+after set_enabled(false): false
+after set_enabled(true): true
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Nested guards -- `NoGradGuard` disables, a nested `AutoGradMode(true)`
+temporarily re-enables inside it, and `is_enabled()` reports the value that
+is actually active at each point, not the outermost or innermost guard's
+argument in isolation.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace nn = pluss::ai::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::cout << "outside any guard: " << std::boolalpha << nn::GradMode::is_enabled() << "\n";
+  {
+    const nn::NoGradGuard guard;
+    std::cout << "inside NoGradGuard: " << nn::GradMode::is_enabled() << "\n";
+    {
+      const nn::AutoGradMode reenable(true);
+      std::cout << "inside nested AutoGradMode(true): " << nn::GradMode::is_enabled() << "\n";
+    }
+    std::cout << "back inside NoGradGuard, after nested guard exits: " << nn::GradMode::is_enabled() << "\n";
+  }
+  std::cout << "outside again, after NoGradGuard exits: " << nn::GradMode::is_enabled() << "\n";
 
   return 0;
 }
@@ -115,12 +137,19 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+outside any guard: true
+inside NoGradGuard: false
+inside nested AutoGradMode(true): true
+back inside NoGradGuard, after nested guard exits: false
+outside again, after NoGradGuard exits: true
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`set_enabled`](set_enabled.md) -- the corresponding write.
+- [`AutoGradMode`](../AutoGradMode.md) / [`NoGradGuard`](../NoGradGuard.md)
+  -- the RAII guards that call `set_enabled` for you and restore it on scope
+  exit.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

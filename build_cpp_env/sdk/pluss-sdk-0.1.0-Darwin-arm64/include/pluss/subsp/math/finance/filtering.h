@@ -15,25 +15,25 @@ using ObsFn = std::function<pluss::codem::Series(const pluss::codem::Series&, st
 using JacobianFn = std::function<pluss::codem::Series(const pluss::codem::Series&, std::int64_t)>;
 
 struct KalmanModel {
-  pluss::codem::Series transition = pluss::codem::Series::undefined();      // [n,n]
-  pluss::codem::Series observation = pluss::codem::Series::undefined();     // [m,n]
-  pluss::codem::Series process_cov = pluss::codem::Series::undefined();     // [n,n]
-  pluss::codem::Series observation_cov = pluss::codem::Series::undefined(); // [m,m]
-  pluss::codem::Series initial_mean = pluss::codem::Series::undefined();    // [n] or [n,1]
-  pluss::codem::Series initial_cov = pluss::codem::Series::undefined();     // [n,n]
-  pluss::codem::Series control = pluss::codem::Series::undefined();         // [T,k] optional
-  pluss::codem::Series control_matrix = pluss::codem::Series::undefined();  // [n,k] optional
+  pluss::codem::Series transition = pluss::series::undefined();      // [n,n]
+  pluss::codem::Series observation = pluss::series::undefined();     // [m,n]
+  pluss::codem::Series process_cov = pluss::series::undefined();     // [n,n]
+  pluss::codem::Series observation_cov = pluss::series::undefined(); // [m,m]
+  pluss::codem::Series initial_mean = pluss::series::undefined();    // [n] or [n,1]
+  pluss::codem::Series initial_cov = pluss::series::undefined();     // [n,n]
+  pluss::codem::Series control = pluss::series::undefined();         // [T,k] optional
+  pluss::codem::Series control_matrix = pluss::series::undefined();  // [n,k] optional
   double info_tol = 0.0;                                                     // ignore obs channels with forecast var <= info_tol
 };
 
 struct KalmanResult {
-  pluss::codem::Series filtered_mean = pluss::codem::Series::undefined();   // [T,n]
-  pluss::codem::Series filtered_cov = pluss::codem::Series::undefined();    // [T,n,n]
-  pluss::codem::Series predicted_mean = pluss::codem::Series::undefined();  // [T,n]
-  pluss::codem::Series predicted_cov = pluss::codem::Series::undefined();   // [T,n,n]
-  pluss::codem::Series innovation = pluss::codem::Series::undefined();      // [T,m]
-  pluss::codem::Series innovation_cov = pluss::codem::Series::undefined();  // [T,m,m]
-  pluss::codem::Series data_used = pluss::codem::Series::undefined();       // [T,m], 1.0 if channel used in update else 0.0
+  pluss::codem::Series filtered_mean = pluss::series::undefined();   // [T,n]
+  pluss::codem::Series filtered_cov = pluss::series::undefined();    // [T,n,n]
+  pluss::codem::Series predicted_mean = pluss::series::undefined();  // [T,n]
+  pluss::codem::Series predicted_cov = pluss::series::undefined();   // [T,n,n]
+  pluss::codem::Series innovation = pluss::series::undefined();      // [T,m]
+  pluss::codem::Series innovation_cov = pluss::series::undefined();  // [T,m,m]
+  pluss::codem::Series data_used = pluss::series::undefined();       // [T,m], 1.0 if channel used in update else 0.0
   double loglik = 0.0;
 };
 
@@ -46,10 +46,10 @@ struct EkfModel {
   ObsFn observation;
   JacobianFn transition_jacobian;
   JacobianFn observation_jacobian;
-  pluss::codem::Series process_cov = pluss::codem::Series::undefined();
-  pluss::codem::Series observation_cov = pluss::codem::Series::undefined();
-  pluss::codem::Series initial_mean = pluss::codem::Series::undefined();
-  pluss::codem::Series initial_cov = pluss::codem::Series::undefined();
+  pluss::codem::Series process_cov = pluss::series::undefined();
+  pluss::codem::Series observation_cov = pluss::series::undefined();
+  pluss::codem::Series initial_mean = pluss::series::undefined();
+  pluss::codem::Series initial_cov = pluss::series::undefined();
   double info_tol = 0.0; // ignore obs channels with forecast var <= info_tol
 };
 
@@ -67,10 +67,10 @@ struct UkfOptions {
 struct UkfModel {
   StateFn transition;
   ObsFn observation;
-  pluss::codem::Series process_cov = pluss::codem::Series::undefined();
-  pluss::codem::Series observation_cov = pluss::codem::Series::undefined();
-  pluss::codem::Series initial_mean = pluss::codem::Series::undefined();
-  pluss::codem::Series initial_cov = pluss::codem::Series::undefined();
+  pluss::codem::Series process_cov = pluss::series::undefined();
+  pluss::codem::Series observation_cov = pluss::series::undefined();
+  pluss::codem::Series initial_mean = pluss::series::undefined();
+  pluss::codem::Series initial_cov = pluss::series::undefined();
   double info_tol = 0.0; // ignore obs channels with forecast var <= info_tol
   UkfOptions options{};
 };
@@ -107,16 +107,16 @@ struct ParticleFilterOptions {
 struct ParticleFilterModel {
   ParticleTransitionFn transition;
   ParticleLogLikFn loglik;
-  pluss::codem::Series initial_particles = pluss::codem::Series::undefined(); // [N,n]
-  pluss::codem::Series initial_weights = pluss::codem::Series::undefined();   // [N] optional
+  pluss::codem::Series initial_particles = pluss::series::undefined(); // [N,n]
+  pluss::codem::Series initial_weights = pluss::series::undefined();   // [N] optional
   ParticleFilterOptions options{};
 };
 
 struct ParticleFilterResult {
-  pluss::codem::Series filtered_mean = pluss::codem::Series::undefined(); // [T,n]
-  pluss::codem::Series particle_weights = pluss::codem::Series::undefined(); // [T,N]
-  pluss::codem::Series particles = pluss::codem::Series::undefined(); // [T,N,n] if stored
-  pluss::codem::Series ess = pluss::codem::Series::undefined(); // [T]
+  pluss::codem::Series filtered_mean = pluss::series::undefined(); // [T,n]
+  pluss::codem::Series particle_weights = pluss::series::undefined(); // [T,N]
+  pluss::codem::Series particles = pluss::series::undefined(); // [T,N,n] if stored
+  pluss::codem::Series ess = pluss::series::undefined(); // [T]
   double loglik = 0.0;
 };
 

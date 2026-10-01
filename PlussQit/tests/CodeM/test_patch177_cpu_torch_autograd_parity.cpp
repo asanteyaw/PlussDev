@@ -363,7 +363,7 @@ TEST_CASE("complex CPU reduced SVD reverse matches phase-invariant libtorch path
       const auto decomposition = pluss::subsp::linearalg::svd(input, false);
       Series output = slot == 0 ? decomposition.u :
           (slot == 1 ? decomposition.s : decomposition.vh);
-      Series seed;
+      Series seed = pluss::series::undefined();
       if (slot == 0) {
         seed = output.mul(make_series(
             std::vector<double>{0.4, 1.1, 0.7, 0.4, 1.1, 0.7}, {3, 2})
@@ -694,7 +694,7 @@ void check_unary_reverse(const UnaryCase& test, ScalarType st, at::ScalarType at
                          bool strided, double value_tol, double grad_tol) {
   const auto n = static_cast<std::int64_t>(test.input.size());
 
-  Series pluss_leaf;
+  Series pluss_leaf = pluss::series::undefined();
   at::Tensor torch_leaf;
   std::function<Series(const Series&)> pluss_view;
   std::function<at::Tensor(const at::Tensor&)> torch_view;
@@ -1006,7 +1006,7 @@ void check_shaped_reverse(const ShapedCase& c, ScalarType st, at::ScalarType at_
   const std::vector<double> base_gen{0.4, -1.1, 0.7, -0.3, 1.2, -0.8, 0.9, -0.2, 1.5};
   const std::vector<double>& data = c.positive ? base_pos : base_gen;
 
-  Series pluss_leaf;
+  Series pluss_leaf = pluss::series::undefined();
   at::Tensor torch_leaf;
   std::function<Series(const Series&)> pv;
   std::function<at::Tensor(const at::Tensor&)> tv;
@@ -1116,7 +1116,7 @@ void check_linalg_real_reverse(const LinalgCase& c, ScalarType st, at::ScalarTyp
       }
   }
 
-  Series leaf;
+  Series leaf = pluss::series::undefined();
   at::Tensor tleaf;
   std::function<Series(const Series&)> pv;
   std::function<at::Tensor(const at::Tensor&)> tv;
@@ -1339,7 +1339,7 @@ TEST_CASE("CPU fused-activation double-backward matches libtorch",
       REQUIRE(x.has_sensitivity());
       Series g1 = x.sensitivity();
       REQUIRE(g1.tracks_slope());
-      x.clear_sensitivity();
+      x.clear();
       g1.sum().reverse();
       REQUIRE(x.has_sensitivity());
       const auto got_g2 = x.sensitivity().to_vec<double>();
@@ -1629,9 +1629,9 @@ TEST_CASE("CPU layer-norm double-backward matches libtorch",
   Series gg1 = g.sensitivity();
   Series gb1 = b.sensitivity();
   REQUIRE(gx1.tracks_slope());
-  x.clear_sensitivity();
-  g.clear_sensitivity();
-  b.clear_sensitivity();
+  x.clear();
+  g.clear();
+  b.clear();
   gx1.sum().add(gg1.sum()).add(gb1.sum()).reverse();
   REQUIRE(x.has_sensitivity());
   const auto got_gx2 = x.sensitivity().to_vec<double>();
@@ -1695,7 +1695,7 @@ TEST_CASE("CPU elu family value/reverse/double-backward matches libtorch",
       REQUIRE(x.has_sensitivity());
       Series g1 = x.sensitivity();
       REQUIRE(g1.tracks_slope());
-      x.clear_sensitivity();
+      x.clear();
       g1.sum().reverse();
       REQUIRE(x.has_sensitivity());
       const auto got_g2 = x.sensitivity().to_vec<double>();
@@ -1776,7 +1776,7 @@ TEST_CASE("CPU hardswish/mish value/reverse/double-backward matches libtorch",
       REQUIRE(x.has_sensitivity());
       Series g1 = x.sensitivity();
       REQUIRE(g1.tracks_slope());
-      x.clear_sensitivity();
+      x.clear();
       g1.sum().reverse();
       REQUIRE(x.has_sensitivity());
       const auto got_g2 = x.sensitivity().to_vec<double>();
@@ -2405,7 +2405,7 @@ void check_head_chain(ScalarType st, at::ScalarType at_st, bool strided_x,
   Series w = make_series(w_v, {F, K}).to(st);
   Series b = make_series(b_v, {K}).to(st);
   Series target = make_series(t_v, {N, K}).to(st);
-  Series x_leaf;
+  Series x_leaf = pluss::series::undefined();
   if (!strided_x) {
     x_leaf = make_series(x_v, {N, F}).to(st);
   } else {
@@ -2502,7 +2502,8 @@ TEST_CASE("CPU stft matches libtorch value and reverse",
 
       Series x = make_series(sv, {T}).to(ScalarType::Float64);
       x.tracks_slope_(true);
-      Series w = c.window ? make_series(wv, {win_len}).to(ScalarType::Float64) : Series{};
+      Series w = c.window ? make_series(wv, {win_len}).to(ScalarType::Float64)
+                          : pluss::series::undefined();
       const Series spec =
           x.stft(n_fft, hop, win_len, w, c.center, "reflect", c.normalized, c.onesided, true);
       spec.abs().sum().reverse();
@@ -2531,8 +2532,8 @@ TEST_CASE("CPU istft round-trips and matches libtorch reverse",
       Series x = make_series(sv, {T}).to(ScalarType::Float64);
       x.tracks_slope_(true);
       const Series recon =
-          x.stft(n_fft, hop, n_fft, Series{}, true, "reflect", normalized, true, true)
-              .istft(n_fft, hop, n_fft, Series{}, true, normalized, true, T);
+          x.stft(n_fft, hop, n_fft, pluss::series::undefined(), true, "reflect", normalized, true, true)
+              .istft(n_fft, hop, n_fft, pluss::series::undefined(), true, normalized, true, T);
       recon.mul(recon).sum().reverse();
 
       at::Tensor tx = at::tensor(sv, at::TensorOptions().dtype(at::kDouble)).set_requires_grad(true);

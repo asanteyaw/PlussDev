@@ -10,6 +10,7 @@
 Series Series::renorm(double p, std::int64_t dim, double maxnorm) const
 Series Series::renorm(double p) const
 Series& Series::renorm_(double p, std::int64_t dim, double maxnorm) const
+Series& Series::renorm_(double p, std::int64_t dim, double maxnorm) const
 ```
 
 ## What It Does
@@ -64,6 +65,29 @@ Differentiable. For a sub-tensor left untouched the gradient passes straight
 through. For a rescaled sub-tensor the scale factor `maxnorm / norm` itself
 depends on the data, so the backward carries both the direct `scale * grad`
 term and the contribution through the shrinking factor.
+
+## In-Place Form
+
+`renorm_()` is the in-place sibling of [`renorm()`](renorm.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `renorm_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{3.0, 4.0}, {6.0, 8.0}});
+x.renorm_(2.0, 0, 1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[0.59999999, 0.79999998],
+  [0.59999999, 0.79999999]]
+```
 
 ## Examples
 
@@ -278,9 +302,9 @@ Both rows were over the cap, so both are pulled onto norm `2`.
   unit variance rather than to a norm ceiling.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="remainder.html">
+  <a class="prev-link" href="rename.html">
     <span class="label">Previous</span>
-    <span class="title">remainder</span>
+    <span class="title">rename</span>
   </a>
   <a class="next-link" href="repeat.html">
     <span class="label">Next</span>

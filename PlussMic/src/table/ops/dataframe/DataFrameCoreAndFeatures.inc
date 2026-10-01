@@ -101,11 +101,12 @@ DataFrame::MatrixValues DataFrame::matrix() const {
   auto& series_out = std::get<0>(out);
   auto& note_out = std::get<1>(out);
   auto& timeline_out = std::get<2>(out);
-  auto& timeindex_out = std::get<3>(out);
+  auto& duration_out = std::get<3>(out);
 
   std::vector<pluss::Series> series_cols{};
   std::vector<pluss::Note> note_cols{};
   std::vector<pluss::Timeline> timeline_cols{};
+  std::vector<pluss::Duration> duration_cols{};
 
   for (const auto& thread : impl_ref_().columns_) {
     switch (thread.kind()) {
@@ -118,8 +119,8 @@ DataFrame::MatrixValues DataFrame::matrix() const {
       case ThreadKind::Timeline:
         timeline_cols.push_back(thread.as_timeline());
         break;
-      case ThreadKind::TimeIndex:
-        timeindex_out.push_back(thread.as_timeindex());
+      case ThreadKind::Duration:
+        duration_cols.push_back(thread.as_duration());
         break;
     }
   }
@@ -135,6 +136,11 @@ DataFrame::MatrixValues DataFrame::matrix() const {
   if (!timeline_cols.empty()) {
     timeline_out.push_back(
         pack_timeline_columns(timeline_cols, "DataFrame::matrix(timeline)", /*force_matrix_2d=*/true));
+  }
+
+  if (!duration_cols.empty()) {
+    duration_out.push_back(
+        pack_duration_columns(duration_cols, "DataFrame::matrix(duration)", /*force_matrix_2d=*/true));
   }
 
   return out;
@@ -172,6 +178,10 @@ DataFrameLabelAccessor DataFrame::label() const {
 
 DataFrameFeatureAxisAccessor DataFrame::feataxis() const {
   return DataFrameFeatureAxisAccessor(*this);
+}
+
+DataFrameCaseStudyAccessor DataFrame::case_study() const {
+  return DataFrameCaseStudyAccessor(*this);
 }
 
 DataFrameCastAccessor DataFrame::cast() const {
@@ -339,13 +349,13 @@ detail::CaseAxis filter_case_axis_(const detail::CaseAxis& axis, const pluss::Se
   return out;
 }
 
-std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const DataFrame::Case& selector) {
+std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const detail::CaseSelector& selector) {
   std::vector<std::int64_t> indices;
   switch (selector.kind) {
-    case DataFrame::Case::Kind::PositionScalar:
+    case detail::CaseSelector::Kind::PositionScalar:
       indices.push_back(normalize_row_index(selector.first, frame.ncases()));
       return indices;
-    case DataFrame::Case::Kind::PositionSlice: {
+    case detail::CaseSelector::Kind::PositionSlice: {
       const auto [start, stop] = normalize_slice(selector.first, selector.second, frame.ncases());
       indices.reserve(static_cast<std::size_t>(stop - start));
       for (std::int64_t i = start; i < stop; ++i) {
@@ -353,29 +363,29 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
       }
       return indices;
     }
-    case DataFrame::Case::Kind::PositionList:
+    case detail::CaseSelector::Kind::PositionList:
       indices.reserve(selector.positions.size());
       for (const auto row : selector.positions) {
         indices.push_back(normalize_row_index(row, frame.ncases()));
       }
       return indices;
-    case DataFrame::Case::Kind::Mask:
+    case detail::CaseSelector::Kind::Mask:
       PLUSS_FAIL("resolve_case_positions_: mask selectors must be handled by DataFrame::case_study directly");
-    case DataFrame::Case::Kind::LabelScalar:
-    case DataFrame::Case::Kind::LabelList:
-    case DataFrame::Case::Kind::LabelSlice:
+    case detail::CaseSelector::Kind::LabelScalar:
+    case detail::CaseSelector::Kind::LabelList:
+    case detail::CaseSelector::Kind::LabelSlice:
       break;
   }
 
   const auto lookup = build_case_lookup_(frame);
-  if (selector.kind == DataFrame::Case::Kind::LabelScalar) {
+  if (selector.kind == detail::CaseSelector::Kind::LabelScalar) {
     const auto& key = selector.label_values.front();
     const auto it = lookup.find(key);
     PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'");
     return it->second;
   }
 
-  if (selector.kind == DataFrame::Case::Kind::LabelList) {
+  if (selector.kind == detail::CaseSelector::Kind::LabelList) {
     for (const auto& key : selector.label_values) {
       const auto it = lookup.find(key);
       PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'");
@@ -402,17 +412,17 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
   return indices;
 }
 
-std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, const DataFrame::Feat& selector) {
+std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, const detail::FeatureSelector& selector) {
   std::vector<std::size_t> indices;
   switch (selector.kind) {
-    case DataFrame::Feat::Kind::All:
+    case detail::FeatureSelector::Kind::All:
       indices.resize(static_cast<std::size_t>(frame.nfeatures()));
       std::iota(indices.begin(), indices.end(), static_cast<std::size_t>(0));
       return indices;
-    case DataFrame::Feat::Kind::PositionScalar:
+    case detail::FeatureSelector::Kind::PositionScalar:
       indices.push_back(static_cast<std::size_t>(normalize_row_index(selector.first, frame.nfeatures())));
       return indices;
-    case DataFrame::Feat::Kind::PositionSlice: {
+    case detail::FeatureSelector::Kind::PositionSlice: {
       const auto [start, stop] = normalize_slice(selector.first, selector.second, frame.nfeatures());
       indices.reserve(static_cast<std::size_t>(stop - start));
       for (std::int64_t i = start; i < stop; ++i) {
@@ -420,15 +430,15 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
       }
       return indices;
     }
-    case DataFrame::Feat::Kind::PositionList:
+    case detail::FeatureSelector::Kind::PositionList:
       indices.reserve(selector.positions.size());
       for (const auto pos : selector.positions) {
         indices.push_back(static_cast<std::size_t>(normalize_row_index(pos, frame.nfeatures())));
       }
       return indices;
-    case DataFrame::Feat::Kind::NameScalar:
-    case DataFrame::Feat::Kind::NameList:
-    case DataFrame::Feat::Kind::NameSlice:
+    case detail::FeatureSelector::Kind::NameScalar:
+    case detail::FeatureSelector::Kind::NameList:
+    case detail::FeatureSelector::Kind::NameSlice:
       break;
   }
 
@@ -439,7 +449,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
     by_name.emplace(names[i], i);
   }
 
-  if (selector.kind == DataFrame::Feat::Kind::NameScalar) {
+  if (selector.kind == detail::FeatureSelector::Kind::NameScalar) {
     const auto& key = selector.name_values.front();
     const auto it = by_name.find(key);
     PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'");
@@ -447,7 +457,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
     return indices;
   }
 
-  if (selector.kind == DataFrame::Feat::Kind::NameList) {
+  if (selector.kind == detail::FeatureSelector::Kind::NameList) {
     indices.reserve(selector.name_values.size());
     for (const auto& key : selector.name_values) {
       const auto it = by_name.find(key);
@@ -526,6 +536,10 @@ Thread DataFrameLabelAccessor::values() const {
 
 DataFrame DataFrameLabelAccessor::set(const Thread& labels) const {
   return frame_.caselbl(labels);
+}
+
+DataFrame DataFrameLabelAccessor::set(const pluss::Note& labels) const {
+  return set(Thread(labels));
 }
 
 bool DataFrameLabelAccessor::has() const {
@@ -767,10 +781,6 @@ Thread DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const {
   return frame_.label().values().fillnull(value);
 }
 
-Thread DataFrameLabelAccessor::fillnull(const pluss::TimeIndex& value) const {
-  return frame_.label().values().fillnull(value);
-}
-
 Thread DataFrameLabelAccessor::isnull() const {
   return frame_.label().values().isnull().label().set(frame_.label().values()).name("isnull");
 }
@@ -922,11 +932,7 @@ DataFrame DataFrameLabelAccessor::levels() const {
   return DataFrame(std::move(columns));
 }
 
-DataFrame DataFrame::case_study(const Case& rows) const {
-  return case_study(rows, Feat::all());
-}
-
-DataFrame DataFrame::case_study(const CasePick& pick) const {
+DataFrame DataFrame::pick_cases_(const CasePick& pick) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(src.case_axis_.defined(), "DataFrame::case_study: current DataFrame has no case labels");
 
@@ -985,8 +991,9 @@ DataFrame DataFrame::case_study(const CasePick& pick) const {
   return out;
 }
 
-DataFrame DataFrame::case_study(const Case& rows, const Feat& selected_features) const {
-  if (rows.kind == Case::Kind::Mask) {
+DataFrame DataFrame::select_cases_(const detail::CaseSelector& rows,
+                                  const detail::FeatureSelector& selected_features) const {
+  if (rows.kind == detail::CaseSelector::Kind::Mask) {
     auto filtered = filter(rows.mask);
     return project_feature_positions_(filtered, resolve_feature_positions_(filtered, selected_features));
   }
@@ -995,57 +1002,139 @@ DataFrame DataFrame::case_study(const Case& rows, const Feat& selected_features)
   return project_feature_positions_(out, resolve_feature_positions_(out, selected_features));
 }
 
-DataFrame::Case DataFrame::Case::at(std::int64_t row) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::PositionScalar;
+DataFrameCaseStudyAccessor::DataFrameCaseStudyAccessor(const DataFrame& frame) : frame_(frame) {}
+
+DataFrame DataFrameCaseStudyAccessor::at(std::int64_t row) const {
+  return frame_.select_cases_(detail::CaseSelector::at(row), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::slice(std::int64_t start, std::int64_t stop) const {
+  return frame_.select_cases_(detail::CaseSelector::slice(start, stop), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::take(std::initializer_list<std::int64_t> rows) const {
+  return frame_.select_cases_(detail::CaseSelector::take(rows), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::take(pluss::RangeView<std::int64_t> rows) const {
+  return frame_.select_cases_(detail::CaseSelector::take(rows), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(std::string_view value) const {
+  return frame_.select_cases_(detail::CaseSelector::label(value), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(std::int64_t value) const {
+  return frame_.select_cases_(detail::CaseSelector::label(value), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(double value) const {
+  return frame_.select_cases_(detail::CaseSelector::label(value), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(std::initializer_list<std::string_view> values) const {
+  return frame_.select_cases_(detail::CaseSelector::labels(values), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(pluss::RangeView<std::string_view> values) const {
+  return frame_.select_cases_(detail::CaseSelector::labels(values), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(std::initializer_list<std::int64_t> values) const {
+  return frame_.select_cases_(detail::CaseSelector::labels(values), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(pluss::RangeView<std::int64_t> values) const {
+  return frame_.select_cases_(detail::CaseSelector::labels(values), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::labels(const Thread& values) const {
+  return frame_.select_cases_(detail::CaseSelector::labels(values), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::span(std::string_view start, std::string_view stop) const {
+  return frame_.select_cases_(detail::CaseSelector::span(start, stop), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::span(std::int64_t start, std::int64_t stop) const {
+  return frame_.select_cases_(detail::CaseSelector::span(start, stop), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::span(double start, double stop) const {
+  return frame_.select_cases_(detail::CaseSelector::span(start, stop), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::span(const Thread& start, const Thread& stop) const {
+  return frame_.select_cases_(detail::CaseSelector::span(start, stop), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::where(const Thread& values) const {
+  return frame_.select_cases_(detail::CaseSelector::where(values), detail::FeatureSelector::all());
+}
+
+DataFrame DataFrameCaseStudyAccessor::where(const pluss::Series& values) const {
+  // Intentionally bypasses CaseSelector::where(Series), which wraps into a
+  // Thread and loses strict positional validation to label alignment.
+  // The Series overload's contract is positional and must match ncases()
+  // exactly; DataFrame::filter(Series) is what actually enforces that.
+  return frame_.filter(values);
+}
+
+DataFrame DataFrameCaseStudyAccessor::pick(const DataFrame::CasePick& pick) const {
+  return frame_.pick_cases_(pick);
+}
+
+detail::CaseSelector detail::CaseSelector::at(std::int64_t row) {
+  CaseSelector out;
+  out.kind = Kind::PositionScalar;
   out.first = row;
   return out;
 }
 
-DataFrame::Case DataFrame::Case::slice(std::int64_t start, std::int64_t stop) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::PositionSlice;
+detail::CaseSelector detail::CaseSelector::slice(std::int64_t start, std::int64_t stop) {
+  CaseSelector out;
+  out.kind = Kind::PositionSlice;
   out.first = start;
   out.second = stop;
   return out;
 }
 
-DataFrame::Case DataFrame::Case::take(std::initializer_list<std::int64_t> rows) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::PositionList;
+detail::CaseSelector detail::CaseSelector::take(std::initializer_list<std::int64_t> rows) {
+  CaseSelector out;
+  out.kind = Kind::PositionList;
   out.positions.assign(rows.begin(), rows.end());
   return out;
 }
 
-DataFrame::Case DataFrame::Case::take(pluss::RangeView<std::int64_t> rows) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::PositionList;
+detail::CaseSelector detail::CaseSelector::take(pluss::RangeView<std::int64_t> rows) {
+  CaseSelector out;
+  out.kind = Kind::PositionList;
   out.positions.assign(rows.begin(), rows.end());
   return out;
 }
 
-DataFrame::Case DataFrame::Case::label(std::string_view value) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelScalar;
+detail::CaseSelector detail::CaseSelector::label(std::string_view value) {
+  CaseSelector out;
+  out.kind = Kind::LabelScalar;
   out.label_values.emplace_back(value);
   return out;
 }
 
-DataFrame::Case DataFrame::Case::label(const char* value) {
+detail::CaseSelector detail::CaseSelector::label(const char* value) {
   return label(std::string_view{value != nullptr ? value : ""});
 }
 
-DataFrame::Case DataFrame::Case::label(std::int64_t value) {
+detail::CaseSelector detail::CaseSelector::label(std::int64_t value) {
   return label(fmt::format("{}", value));
 }
 
-DataFrame::Case DataFrame::Case::label(double value) {
+detail::CaseSelector detail::CaseSelector::label(double value) {
   return label(fmt::format("{:.12g}", value));
 }
 
-DataFrame::Case DataFrame::Case::labels(std::initializer_list<std::string_view> values) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelList;
+detail::CaseSelector detail::CaseSelector::labels(std::initializer_list<std::string_view> values) {
+  CaseSelector out;
+  out.kind = Kind::LabelList;
   out.label_values.reserve(values.size());
   for (const auto value : values) {
     out.label_values.emplace_back(value);
@@ -1053,9 +1142,9 @@ DataFrame::Case DataFrame::Case::labels(std::initializer_list<std::string_view> 
   return out;
 }
 
-DataFrame::Case DataFrame::Case::labels(pluss::RangeView<std::string_view> values) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelList;
+detail::CaseSelector detail::CaseSelector::labels(pluss::RangeView<std::string_view> values) {
+  CaseSelector out;
+  out.kind = Kind::LabelList;
   out.label_values.reserve(values.size());
   for (const auto value : values) {
     out.label_values.emplace_back(value);
@@ -1063,9 +1152,9 @@ DataFrame::Case DataFrame::Case::labels(pluss::RangeView<std::string_view> value
   return out;
 }
 
-DataFrame::Case DataFrame::Case::labels(std::initializer_list<std::int64_t> values) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelList;
+detail::CaseSelector detail::CaseSelector::labels(std::initializer_list<std::int64_t> values) {
+  CaseSelector out;
+  out.kind = Kind::LabelList;
   out.label_values.reserve(values.size());
   for (const auto value : values) {
     out.label_values.push_back(fmt::format("{}", value));
@@ -1073,9 +1162,9 @@ DataFrame::Case DataFrame::Case::labels(std::initializer_list<std::int64_t> valu
   return out;
 }
 
-DataFrame::Case DataFrame::Case::labels(pluss::RangeView<std::int64_t> values) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelList;
+detail::CaseSelector detail::CaseSelector::labels(pluss::RangeView<std::int64_t> values) {
+  CaseSelector out;
+  out.kind = Kind::LabelList;
   out.label_values.reserve(values.size());
   for (const auto value : values) {
     out.label_values.push_back(fmt::format("{}", value));
@@ -1083,70 +1172,66 @@ DataFrame::Case DataFrame::Case::labels(pluss::RangeView<std::int64_t> values) {
   return out;
 }
 
-DataFrame::Case DataFrame::Case::labels(const Thread& values) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelList;
+detail::CaseSelector detail::CaseSelector::labels(const Thread& values) {
+  CaseSelector out;
+  out.kind = Kind::LabelList;
   out.label_values = selector_labels_from_thread_(values, "labels(Thread)");
   return out;
 }
 
-DataFrame::Case DataFrame::Case::span(std::string_view start, std::string_view stop) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::LabelSlice;
+detail::CaseSelector detail::CaseSelector::span(std::string_view start, std::string_view stop) {
+  CaseSelector out;
+  out.kind = Kind::LabelSlice;
   out.label_values.emplace_back(start);
   out.label_values.emplace_back(stop);
   return out;
 }
 
-DataFrame::Case DataFrame::Case::span(std::int64_t start, std::int64_t stop) {
+detail::CaseSelector detail::CaseSelector::span(std::int64_t start, std::int64_t stop) {
   return span(fmt::format("{}", start), fmt::format("{}", stop));
 }
 
-DataFrame::Case DataFrame::Case::span(double start, double stop) {
+detail::CaseSelector detail::CaseSelector::span(double start, double stop) {
   return span(fmt::format("{:.12g}", start), fmt::format("{:.12g}", stop));
 }
 
-DataFrame::Case DataFrame::Case::span(const Thread& start, const Thread& stop) {
+detail::CaseSelector detail::CaseSelector::span(const Thread& start, const Thread& stop) {
   return span(selector_label_from_scalar_thread_(start, "Case::span(start)"),
               selector_label_from_scalar_thread_(stop, "Case::span(stop)"));
 }
 
-DataFrame::Case DataFrame::Case::where(const Thread& values) {
-  DataFrame::Case out;
-  out.kind = DataFrame::Case::Kind::Mask;
+detail::CaseSelector detail::CaseSelector::where(const Thread& values) {
+  CaseSelector out;
+  out.kind = Kind::Mask;
   out.mask = values;
   return out;
 }
 
-DataFrame::Case DataFrame::Case::where(const pluss::Series& values) {
-  return where(Thread(values));
-}
-
-DataFrame::Feat DataFrame::Feat::all() {
+detail::FeatureSelector detail::FeatureSelector::all() {
   return {};
 }
 
-DataFrame::Feat DataFrame::Feat::name(std::string_view value) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::NameScalar;
+detail::FeatureSelector detail::FeatureSelector::name(std::string_view value) {
+  FeatureSelector out;
+  out.kind = Kind::NameScalar;
   out.name_values.emplace_back(value);
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::name(const char* value) {
+detail::FeatureSelector detail::FeatureSelector::name(const char* value) {
   return name(std::string_view{value != nullptr ? value : ""});
 }
 
-DataFrame::Feat DataFrame::Feat::at(std::int64_t position) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::PositionScalar;
+detail::FeatureSelector detail::FeatureSelector::at(std::int64_t position) {
+  FeatureSelector out;
+  out.kind = Kind::PositionScalar;
   out.first = position;
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::names(std::initializer_list<std::string_view> values) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::NameList;
+detail::FeatureSelector detail::FeatureSelector::names(std::initializer_list<std::string_view> values) {
+  FeatureSelector out;
+  out.kind = Kind::NameList;
   out.name_values.reserve(values.size());
   for (const auto value : values) {
     out.name_values.emplace_back(value);
@@ -1154,9 +1239,9 @@ DataFrame::Feat DataFrame::Feat::names(std::initializer_list<std::string_view> v
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::names(pluss::RangeView<std::string_view> values) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::NameList;
+detail::FeatureSelector detail::FeatureSelector::names(pluss::RangeView<std::string_view> values) {
+  FeatureSelector out;
+  out.kind = Kind::NameList;
   out.name_values.reserve(values.size());
   for (const auto value : values) {
     out.name_values.emplace_back(value);
@@ -1164,31 +1249,31 @@ DataFrame::Feat DataFrame::Feat::names(pluss::RangeView<std::string_view> values
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::take(std::initializer_list<std::int64_t> positions) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::PositionList;
+detail::FeatureSelector detail::FeatureSelector::take(std::initializer_list<std::int64_t> positions) {
+  FeatureSelector out;
+  out.kind = Kind::PositionList;
   out.positions.assign(positions.begin(), positions.end());
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::take(pluss::RangeView<std::int64_t> positions) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::PositionList;
+detail::FeatureSelector detail::FeatureSelector::take(pluss::RangeView<std::int64_t> positions) {
+  FeatureSelector out;
+  out.kind = Kind::PositionList;
   out.positions.assign(positions.begin(), positions.end());
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::slice(std::int64_t start, std::int64_t stop) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::PositionSlice;
+detail::FeatureSelector detail::FeatureSelector::slice(std::int64_t start, std::int64_t stop) {
+  FeatureSelector out;
+  out.kind = Kind::PositionSlice;
   out.first = start;
   out.second = stop;
   return out;
 }
 
-DataFrame::Feat DataFrame::Feat::span(std::string_view start, std::string_view stop) {
-  DataFrame::Feat out;
-  out.kind = DataFrame::Feat::Kind::NameSlice;
+detail::FeatureSelector detail::FeatureSelector::span(std::string_view start, std::string_view stop) {
+  FeatureSelector out;
+  out.kind = Kind::NameSlice;
   out.name_values.emplace_back(start);
   out.name_values.emplace_back(stop);
   return out;
@@ -1493,7 +1578,7 @@ DataFrame DataFrame::timeline_features() const {
   out_cols.reserve(src.columns_.size());
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto k = src.columns_[i].kind();
-    if (k != ThreadKind::Timeline && k != ThreadKind::TimeIndex) {
+    if (k != ThreadKind::Timeline) {
       continue;
     }
     out_names.push_back(src.names_[i]);
@@ -1523,6 +1608,22 @@ DataFrame DataFrameFeatureAxisAccessor::note() const {
 
 DataFrame DataFrameFeatureAxisAccessor::timeline() const {
   return frame_.timeline_features();
+}
+
+DataFrame DataFrameFeatureAxisAccessor::duration() const {
+  const auto& src = frame_.impl_ref_();
+  std::vector<std::string> out_names;
+  std::vector<Thread> out_cols;
+  out_names.reserve(src.names_.size());
+  out_cols.reserve(src.columns_.size());
+  for (std::size_t i = 0; i < src.columns_.size(); ++i) {
+    if (src.columns_[i].kind() == ThreadKind::Duration) {
+      out_names.push_back(src.names_[i]);
+      out_cols.push_back(src.columns_[i]);
+    }
+  }
+  return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
+      std::move(out_names), std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
 DataFrame DataFrameFeatureAxisAccessor::prefix(std::string_view prefix) const {
@@ -1565,10 +1666,8 @@ DataFrame DataFrameCastAccessor::cast_all_(ThreadCastTarget target) const {
       case ThreadCastTarget::Timeline:
         out_cols[it->second] = src.columns_[it->second].cast(options_).timeline();
         break;
-      case ThreadCastTarget::TimeIndex:
-        out_cols[it->second] = src.columns_[it->second].cast(options_).timeindex();
-        break;
-      default:
+      case ThreadCastTarget::Duration:
+        out_cols[it->second] = src.columns_[it->second].cast(options_).duration();
         break;
     }
   }
@@ -1589,8 +1688,8 @@ DataFrame DataFrameCastAccessor::timeline() const {
   return cast_all_(ThreadCastTarget::Timeline);
 }
 
-DataFrame DataFrameCastAccessor::timeindex() const {
-  return cast_all_(ThreadCastTarget::TimeIndex);
+DataFrame DataFrameCastAccessor::duration() const {
+  return cast_all_(ThreadCastTarget::Duration);
 }
 
 DataFrame DataFrame::astype(pluss::codem::ScalarType dtype) const {
@@ -2943,12 +3042,8 @@ std::vector<std::string> unify_key_parts(const Thread& values) {
       }
       return out;
     }
-    case ThreadKind::Timeline:
-    case ThreadKind::TimeIndex: {
-      const auto ticks =
-          values.kind() == ThreadKind::Timeline
-              ? values.as_timeline().epoch_nanos().to_vec<std::int64_t>()
-              : values.as_timeindex().timeline().epoch_nanos().to_vec<std::int64_t>();
+    case ThreadKind::Timeline: {
+      const auto ticks = values.as_timeline().epoch_nanos().to_vec<std::int64_t>();
       std::vector<std::string> out(count);
       for (std::size_t i = 0; i < count; ++i) {
         if (!valid[i] || ticks[i] == pluss::Timeline::kNaT) {
@@ -2959,6 +3054,19 @@ std::vector<std::string> unify_key_parts(const Thread& values) {
             reinterpret_cast<const char*>(&ticks[i]),
             sizeof(std::int64_t));
         out[i].insert(out[i].begin(), '\3');
+      }
+      return out;
+    }
+    case ThreadKind::Duration: {
+      const auto nanos = values.as_duration().host();
+      std::vector<std::string> out(count);
+      for (std::size_t i = 0; i < count; ++i) {
+        if (!valid[i] || nanos[i] == pluss::Duration::kNaT) {
+          out[i].assign(1, '\0');
+          continue;
+        }
+        out[i].assign(reinterpret_cast<const char*>(&nanos[i]), sizeof(std::int64_t));
+        out[i].insert(out[i].begin(), '\4');
       }
       return out;
     }
@@ -2984,11 +3092,6 @@ void ensure_unify_key_compatibility(
         left.as_timeline().epoch_nanos().platform() ==
             right.as_timeline().epoch_nanos().platform(),
         "DataFrame::unify: paired timeline key features must use the same platform");
-  } else if (left.kind() == ThreadKind::TimeIndex) {
-    PLUSS_CHECK(
-        left.as_timeindex().timeline().epoch_nanos().platform() ==
-            right.as_timeindex().timeline().epoch_nanos().platform(),
-        "DataFrame::unify: paired time-index key features must use the same platform");
   }
 }
 
@@ -3077,19 +3180,12 @@ Thread make_unify_null_thread(const Thread& reference, std::int64_t size) {
               pluss::codem::ScalarType::Bool,
               platform));
     }
-    case ThreadKind::TimeIndex: {
-      const auto platform =
-          reference.as_timeindex().timeline().epoch_nanos().platform();
+    case ThreadKind::Duration:
       return Thread(
-          pluss::timeline::from_epoch(pluss::Series::zeros(
-              {size},
-              pluss::codem::ScalarType::Int64,
-              platform)).to_timeindex(false),
+          pluss::duration::nanos(
+              std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)),
           pluss::Series::zeros(
-              {size},
-              pluss::codem::ScalarType::Bool,
-              platform));
-    }
+              {size}, pluss::codem::ScalarType::Bool, pluss::codem::Platform::CPU));
   }
   PLUSS_FAIL("DataFrame::unify: unsupported Thread kind");
 }
@@ -3135,8 +3231,6 @@ Thread take_rows_for_unify(const Thread& source, const std::vector<std::int64_t>
     platform = out.as_series().platform();
   } else if (out.kind() == ThreadKind::Timeline) {
     platform = out.as_timeline().epoch_nanos().platform();
-  } else if (out.kind() == ThreadKind::TimeIndex) {
-    platform = out.as_timeindex().timeline().epoch_nanos().platform();
   }
   return detail::with_validity_mask(out, bool_mask_from_values(out_valid, platform));
 }
@@ -3160,8 +3254,6 @@ Thread take_unified_key_rows(
     platform = output.as_series().platform();
   } else if (output.kind() == ThreadKind::Timeline) {
     platform = output.as_timeline().epoch_nanos().platform();
-  } else if (output.kind() == ThreadKind::TimeIndex) {
-    platform = output.as_timeindex().timeline().epoch_nanos().platform();
   }
   return output.put(
       Thread(bool_mask_from_values(use_right, platform)),
@@ -3220,8 +3312,6 @@ CategoryEncoding DataFrame::factor(
     platform = source.as_series().platform();
   } else if (source.kind() == ThreadKind::Timeline) {
     platform = source.as_timeline().epoch_nanos().platform();
-  } else if (source.kind() == ThreadKind::TimeIndex) {
-    platform = source.as_timeindex().timeline().epoch_nanos().platform();
   }
   if (platform != pluss::codem::Platform::CPU) {
     code_values = code_values.to(platform);
@@ -3357,13 +3447,9 @@ Thread CategoryEncoding::decode() const {
             pluss::codem::ScalarType::Int64,
             levels.as_timeline().epoch_nanos().platform())));
         break;
-      case ThreadKind::TimeIndex:
-        output = Thread(
-            pluss::timeline::from_epoch(pluss::Series::zeros(
-                {size},
-                pluss::codem::ScalarType::Int64,
-                levels.as_timeindex().timeline().epoch_nanos().platform()))
-                .to_timeindex(false));
+      case ThreadKind::Duration:
+        output = Thread(pluss::duration::nanos(
+            std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
         break;
     }
   }
@@ -3374,9 +3460,7 @@ Thread CategoryEncoding::decode() const {
             ? output.as_series().platform()
             : (output.kind() == ThreadKind::Timeline
                    ? output.as_timeline().epoch_nanos().platform()
-                   : (output.kind() == ThreadKind::TimeIndex
-                          ? output.as_timeindex().timeline().epoch_nanos().platform()
-                          : pluss::codem::Platform::CPU));
+                   : pluss::codem::Platform::CPU);
     if (mask.platform() != platform) {
       mask = mask.to(platform);
     }

@@ -88,7 +88,7 @@ TEST_CASE("CUDA cuBLAS strict matmul route executes without CPU fallback", "[cud
   REQUIRE(a_cuda.storage().location() == pluss::codem::StorageLocation::CudaDevice);
   REQUIRE(b_cuda.storage().location() == pluss::codem::StorageLocation::CudaDevice);
 
-  pluss::Series got_cuda;
+  auto got_cuda = pluss::series::undefined();
   {
     const ScopedEnvVar no_materialize("PLUSS_CUDA_FORBID_CPU_MATERIALIZATION", "1");
     got_cuda = a_cuda.matmul(b_cuda);

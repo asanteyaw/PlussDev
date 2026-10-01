@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::unwrap &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::var" href="var.html" />
+    <link rel="prev" title="Series::unsqueeze" href="unsqueeze.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-unwrap">
+<h1>Series::unwrap<a class="headerlink" href="#series-unwrap" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">unwrap</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">unwrap</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">discont</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">unwrap</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">discont</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="recovering-a-continuous-phase-path">
+<h2>Recovering A Continuous Phase Path<a class="headerlink" href="#recovering-a-continuous-phase-path" title="Link to this heading">¶</a></h2>
+<p>Wrapped phase is commonly reported in a principal interval even when the
+underlying angle evolves continuously. That representation creates apparent
+jumps near a full turn. <code class="docutils literal notranslate"><span class="pre">unwrap()</span></code> removes those artificial jumps by adding
+integer multiples of <code class="docutils literal notranslate"><span class="pre">2*pi</span></code> along one axis while preserving genuine local
+movement.</p>
+<p>For adjacent values with difference <code class="docutils literal notranslate"><span class="pre">delta</span></code>, the method finds the congruent
+difference in <code class="docutils literal notranslate"><span class="pre">[-pi,</span> <span class="pre">pi]</span></code> and accumulates the required multiple of <code class="docutils literal notranslate"><span class="pre">2*pi</span></code> into
+all subsequent lanes. Differences smaller than <code class="docutils literal notranslate"><span class="pre">discont</span></code> are left alone.
+A positive boundary difference of exactly <code class="docutils literal notranslate"><span class="pre">pi</span></code> remains positive rather than
+being changed to <code class="docutils literal notranslate"><span class="pre">-pi</span></code>.</p>
+<p>The overloads mean:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Call</p></th>
+<th class="head"><p>Discontinuity threshold</p></th>
+<th class="head"><p>Axis</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">unwrap()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pi</span></code></p></td>
+<td><p>Final axis</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unwrap(discont)</span></code></p></td>
+<td><p>Caller supplied</p></td>
+<td><p>Final axis</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">unwrap(discont,</span> <span class="pre">dim)</span></code></p></td>
+<td><p>Caller supplied</p></td>
+<td><p>Caller selected; negative axes are accepted</p></td>
+</tr>
+</tbody>
+</table>
+<p>Choosing <code class="docutils literal notranslate"><span class="pre">discont</span> <span class="pre">&lt;</span> <span class="pre">pi</span></code> does not force corrections for smaller jumps: a jump
+must still have a shorter complement across the <code class="docutils literal notranslate"><span class="pre">2*pi</span></code> boundary. Choosing a
+value greater than <code class="docutils literal notranslate"><span class="pre">pi</span></code> suppresses corrections until that larger threshold is
+crossed. <code class="docutils literal notranslate"><span class="pre">discont</span></code> must be finite and non-negative.</p>
+</section>
+<section id="shape-dtype-empty-inputs-and-reverse-mode">
+<h2>Shape, Dtype, Empty Inputs, And Reverse Mode<a class="headerlink" href="#shape-dtype-empty-inputs-and-reverse-mode" title="Link to this heading">¶</a></h2>
+<p>The receiver must have at least one axis. Floating and integral inputs are
+accepted; integral values are promoted to <code class="docutils literal notranslate"><span class="pre">float64</span></code> because the correction
+contains <code class="docutils literal notranslate"><span class="pre">pi</span></code>. Complex inputs are rejected. Shape and platform are preserved.
+An empty selected axis returns an empty Series of the resolved floating dtype.</p>
+<p>The chosen wrap count is discrete. Away from wrap-decision boundaries, adding
+a constant multiple of <code class="docutils literal notranslate"><span class="pre">2*pi</span></code> has derivative one, so reverse mode passes each
+output sensitivity to the corresponding input lane. At a discontinuity
+decision boundary the mathematical operation is not differentiable; the
+recorded piecewise branch is used.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="unwrap-the-final-axis-with-the-default-threshold">
+<h3>1. Unwrap the final axis with the default threshold<a class="headerlink" href="#unwrap-the-final-axis-with-the-default-threshold" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">phase</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">phase</span><span class="p">.</span><span class="n">unwrap</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h4>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 1.0000, 2.0000, 4.0000, 4.2832, 6.2832]
+</pre></div>
+</div>
+<p>The transition from <code class="docutils literal notranslate"><span class="pre">4</span></code> to <code class="docutils literal notranslate"><span class="pre">-2</span></code> is interpreted as a short positive movement
+across the wrap boundary, so one full turn is added from that point onward.</p>
+</section>
+</section>
+<section id="show-why-a-threshold-below-pi-has-no-extra-effect">
+<h3>2. Show why a threshold below <code class="docutils literal notranslate"><span class="pre">pi</span></code> has no extra effect<a class="headerlink" href="#show-why-a-threshold-below-pi-has-no-extra-effect" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">phase</span><span class="p">.</span><span class="n">unwrap</span><span class="p">(</span><span class="mf">0.5</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 1.0000, 2.0000, 4.0000, 4.2832, 6.2832]
+</pre></div>
+</div>
+<p>Although several ordinary differences exceed <code class="docutils literal notranslate"><span class="pre">0.5</span></code>, only differences with a
+shorter modulo-<code class="docutils literal notranslate"><span class="pre">2*pi</span></code> complement are corrected.</p>
+</section>
+</section>
+<section id="preserve-a-large-jump-deliberately">
+<h3>3. Preserve a large jump deliberately<a class="headerlink" href="#preserve-a-large-jump-deliberately" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">phase</span><span class="p">.</span><span class="n">unwrap</span><span class="p">(</span><span class="mf">7.0</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0.0000, 1.0000, 2.0000, 4.0000, -2.0000, 0.0000]
+</pre></div>
+</div>
+<p>The apparent six-radian jump is below the requested discontinuity threshold,
+so it is treated as intentional.</p>
+</section>
+</section>
+<section id="select-a-non-final-axis">
+<h3>4. Select a non-final axis<a class="headerlink" href="#select-a-non-final-axis" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-4.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">matrix</span><span class="p">.</span><span class="n">unwrap</span><span class="p">(</span><span class="mf">3.141592653589793</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ 0.0000 4.0000 ⎤
+⎣ 0.0000 2.2832 ⎦
+</pre></div>
+</div>
+<p>Each column is an independent path because axis zero is selected. The first
+column needs no correction; the second crosses its boundary.</p>
+</section>
+</section>
+<section id="correct-jumps-spanning-more-than-one-full-turn">
+<h3>5. Correct jumps spanning more than one full turn<a class="headerlink" href="#correct-jumps-spanning-more-than-one-full-turn" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">13.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-13.0</span><span class="p">}).</span><span class="n">unwrap</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id4">
+<h4>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.0000, 0.4336, -0.4336]
+</pre></div>
+</div>
+<p>The correction is not limited to one turn. It chooses the required integer
+multiple of <code class="docutils literal notranslate"><span class="pre">2*pi</span></code> for each adjacent difference.</p>
+</section>
+</section>
+<section id="promote-integral-phase-samples">
+<h3>6. Promote integral phase samples<a class="headerlink" href="#promote-integral-phase-samples" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">-2</span><span class="p">}).</span><span class="n">unwrap</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id5">
+<h4>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0.0000, -2.2832, -2.0000]
+</pre></div>
+</div>
+<p>Promotion prevents the irrational turn correction from being truncated back
+to integers.</p>
+</section>
+</section>
+<section id="differentiate-through-the-selected-branch">
+<h3>7. Differentiate through the selected branch<a class="headerlink" href="#differentiate-through-the-selected-branch" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tracked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">phase</span><span class="p">.</span><span class="n">clone</span><span class="p">();</span>
+<span class="n">tracked</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">tracked</span><span class="p">.</span><span class="n">unwrap</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">tracked</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id6">
+<h4>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="preserve-an-empty-selected-axis">
+<h3>8. Preserve an empty selected axis<a class="headerlink" href="#preserve-an-empty-selected-axis" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">empty</span><span class="p">({</span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">unwrap</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id7">
+<h4>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[0], strides=[1], dtype=float64, platform=cpu, numel=0, contiguous=true)
+[]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="reject-a-scalar-receiver">
+<h3>9. Reject a scalar receiver<a class="headerlink" href="#reject-a-scalar-receiver" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">).</span><span class="n">unwrap</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id8">
+<h4>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>unwrap: dim out of range
+</pre></div>
+</div>
+<p>A scalar has no axis along which adjacent phase samples can be compared.</p>
+</section>
+</section>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h2>
+<p>The operation performs one sequential accumulation along each selected-axis
+path and parallelizes naturally across the remaining coordinates. Work and
+new storage are linear in <code class="docutils literal notranslate"><span class="pre">numel()</span></code>. Choose the axis that already represents
+the physical sample order; sorting or permuting phase samples after unwrapping
+changes the problem rather than merely its layout.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="angle.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">angle()</span></code></span></a> obtains wrapped phase from complex values.</p></li>
+<li><p><a class="reference internal" href="diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff()</span></code></span></a> computes adjacent differences without cumulative turn correction.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="unsqueeze.html">
+    <span class="label">Previous</span>
+    <span class="title">unsqueeze</span>
+  </a>
+  <a class="next-link" href="var.html">
+    <span class="label">Next</span>
+    <span class="title">var</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="unsqueeze.html" title="previous chapter">Series::unsqueeze</a></li>
+      <li>Next: <a href="var.html" title="next chapter">Series::var</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/unwrap.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

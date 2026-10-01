@@ -16,6 +16,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/registry-fieldaxis/duration
 api/registry-fieldaxis/empty
 api/registry-fieldaxis/kind
 api/registry-fieldaxis/like
@@ -26,6 +27,5 @@ api/registry-fieldaxis/nulls
 api/registry-fieldaxis/prefix
 api/registry-fieldaxis/series
 api/registry-fieldaxis/suffix
-api/registry-fieldaxis/timeindex
 api/registry-fieldaxis/timeline
 ```

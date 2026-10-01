@@ -26,7 +26,7 @@ struct LatencyStats {
 struct BenchResult {
   double millis{0.0};
   float checksum{0.0f};
-  pluss::Series last{pluss::Series::undefined()};
+  pluss::Series last{pluss::series::undefined()};
   std::vector<double> round_ms{};
   LatencyStats latency{};
 };

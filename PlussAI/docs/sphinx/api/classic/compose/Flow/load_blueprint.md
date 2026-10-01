@@ -16,6 +16,15 @@ restore state via [`load_transform_states`](load_transform_states.md).
 classic::Status classic::Flow::load_blueprint(std::string_view text);
 ```
 
+## What It Does
+
+Clears whatever stages this `Flow` already had, then parses `text` (a
+prior [`save_blueprint()`](save_blueprint.md) result) and rebuilds each
+stage from it -- structure only, kinds/keys/routes/options, never fitted
+parameters. The resulting `Flow` is unfit until `learn`/`learn_map` runs,
+or its state is separately restored via
+[`load_transform_states`](load_transform_states.md).
+
 ## Parameters
 
 `text` — `std::string_view`

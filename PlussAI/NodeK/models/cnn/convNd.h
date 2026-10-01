@@ -141,7 +141,7 @@ inline Series conv2d_impl_(const Series& input,
   PLUSS_CHECK(x.dim() == 4, "pluss::ai::conv: expected input with shape [N,C,H,W] or [C,H,W]");
 
   const Series w = cast_like_(weight, x);
-  const Series b = bias.defined() ? cast_like_(bias, x) : Series();
+  const Series b = bias.defined() ? cast_like_(bias, x) : pluss::series::undefined();
 
   const std::int64_t batch = x.sizes()[0];
   const std::int64_t in_channels = x.sizes()[1];
@@ -198,7 +198,7 @@ inline Series conv2d_impl_(const Series& input,
     if (mps_conv_cpu_bridge_enabled_) {
       const Series x_cpu = x.to(pluss::pCPU, x.scalar_type());
       const Series w_cpu = w.to(pluss::pCPU, w.scalar_type());
-      const Series b_cpu = b.defined() ? b.to(pluss::pCPU, b.scalar_type()) : Series();
+      const Series b_cpu = b.defined() ? b.to(pluss::pCPU, b.scalar_type()) : pluss::series::undefined();
       const Series out_cpu = conv2d_impl_(x_cpu, w_cpu, b_cpu, stride, padding, dilation, groups);
       const Series out = out_cpu.to(x.platform(), x.scalar_type());
       return batched ? out : out.squeeze(0);
@@ -291,7 +291,7 @@ inline Series conv3d_impl_(const Series& input,
   PLUSS_CHECK(x.dim() == 5, "pluss::ai::conv3d: expected input with shape [N,C,D,H,W] or [C,D,H,W]");
 
   const Series w = cast_like_(weight, x);
-  const Series b = bias.defined() ? cast_like_(bias, x) : Series();
+  const Series b = bias.defined() ? cast_like_(bias, x) : pluss::series::undefined();
 
   const std::int64_t batch = x.sizes()[0];
   const std::int64_t in_channels = x.sizes()[1];
@@ -336,7 +336,7 @@ inline Series conv3d_impl_(const Series& input,
   std::vector<Series> depth_outputs;
   depth_outputs.reserve(static_cast<std::size_t>(out_d));
   for (std::int64_t od = 0; od < out_d; ++od) {
-    Series depth_accum;
+    Series depth_accum = pluss::series::undefined();
     for (std::int64_t kd = 0; kd < kernel_d; ++kd) {
       const std::int64_t src_depth = od * stride[0] + kd * dilation[0];
       const Series x_slice = padded.select(2, src_depth).contiguous();
@@ -344,7 +344,7 @@ inline Series conv3d_impl_(const Series& input,
       const Series plane = conv2d_impl_(
           x_slice,
           w_slice,
-          Series(),
+          pluss::series::undefined(),
           Pair{stride[1], stride[2]},
           Pair{0, 0},
           Pair{dilation[1], dilation[2]},
@@ -368,7 +368,7 @@ namespace pluss::ai {
 
 inline Series conv(const Series& input,
                    const Series& weight,
-                   const Series& bias = Series(),
+                   const Series& bias = pluss::series::undefined(),
                    std::array<std::int64_t, 2> stride = {1, 1},
                    std::array<std::int64_t, 2> padding = {0, 0},
                    std::array<std::int64_t, 2> dilation = {1, 1},
@@ -388,7 +388,7 @@ inline Series conv(const Series& input,
 
 inline Series conv2d(const Series& input,
                      const Series& weight,
-                     const Series& bias = Series(),
+                     const Series& bias = pluss::series::undefined(),
                      std::array<std::int64_t, 2> stride = {1, 1},
                      std::array<std::int64_t, 2> padding = {0, 0},
                      std::array<std::int64_t, 2> dilation = {1, 1},
@@ -408,7 +408,7 @@ inline Series conv2d(const Series& input,
 
 inline Series conv3d(const Series& input,
                      const Series& weight,
-                     const Series& bias = Series(),
+                     const Series& bias = pluss::series::undefined(),
                      std::array<std::int64_t, 3> stride = {1, 1, 1},
                      std::array<std::int64_t, 3> padding = {0, 0, 0},
                      std::array<std::int64_t, 3> dilation = {1, 1, 1},

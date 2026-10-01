@@ -23,6 +23,16 @@ classic::StatusOr<classic::BalancePlan> classic::plan_balance(
     classic::RandomState random = {});
 ```
 
+## What It Does
+
+Decides, for every class, which rows to keep, duplicate, synthesize new
+rows from, or drop in order to reach the class mix `target` describes --
+and returns that decision as a plain data record, without touching
+`labels`/`batch` at all. Two overloads exist because the richer resampling
+strategies (synthesizing new rows, cleaning existing ones) need real
+feature data to work from; the `labels`-only overload covers the subset of
+strategies that only ever move or duplicate whole rows by index.
+
 ## Parameters
 
 `labels` (`Series`-only overload)

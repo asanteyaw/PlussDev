@@ -77,8 +77,8 @@ public:
   std::tuple<Series, Series> forward(const Series& query,
                                      const Series& key,
                                      const Series& value,
-                                     const Series& attn_mask = Series(),
-                                     const Series& key_padding_mask = Series(),
+                                     const Series& attn_mask = pluss::series::undefined(),
+                                     const Series& key_padding_mask = pluss::series::undefined(),
                                      bool causal = false) const {
     pluss::ai::AttentionOptions attn_options{
         .dropout = options_.dropout,
@@ -115,8 +115,8 @@ public:
   auto operator()(const Series& query,
                   const Series& key,
                   const Series& value,
-                  const Series& attn_mask = Series(),
-                  const Series& key_padding_mask = Series(),
+                  const Series& attn_mask = pluss::series::undefined(),
+                  const Series& key_padding_mask = pluss::series::undefined(),
                   bool causal = false) const {
     return forward(query, key, value, attn_mask, key_padding_mask, causal);
   }
@@ -182,14 +182,14 @@ private:
   }
 
   MultiheadAttentionOptions options_;
-  Series q_weight_;
-  Series k_weight_;
-  Series v_weight_;
-  Series out_weight_;
-  Series q_bias_;
-  Series k_bias_;
-  Series v_bias_;
-  Series out_bias_;
+  Series q_weight_ = pluss::series::undefined();
+  Series k_weight_ = pluss::series::undefined();
+  Series v_weight_ = pluss::series::undefined();
+  Series out_weight_ = pluss::series::undefined();
+  Series q_bias_ = pluss::series::undefined();
+  Series k_bias_ = pluss::series::undefined();
+  Series v_bias_ = pluss::series::undefined();
+  Series out_bias_ = pluss::series::undefined();
 };
 
 PLUSS_MODULE(MultiheadAttention);

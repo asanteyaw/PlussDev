@@ -107,12 +107,12 @@ whether the new case belongs before or after the equal block.
   matching case positions.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="host.html">
+  <a class="prev-link" href="round.html">
     <span class="label">Previous</span>
-    <span class="title">host</span>
+    <span class="title">round</span>
   </a>
-  <a class="next-link" href="slice.html">
+  <a class="next-link" href="size.html">
     <span class="label">Next</span>
-    <span class="title">slice</span>
+    <span class="title">size</span>
   </a>
 </div>

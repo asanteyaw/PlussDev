@@ -11,9 +11,6 @@ Series::topk(std::int64_t k) const -> Series
 Series::topk(std::int64_t k, std::int64_t dim) const -> Series
 Series::topk(std::int64_t k, std::int64_t dim, bool largest) const -> Series
 Series::topk(std::int64_t k, std::int64_t dim, bool largest, bool sorted) const -> Series
-Series::topk_pair(std::int64_t k, std::int64_t dim = -1,
-                  bool largest = true, bool sorted = true) const
-    -> std::pair<Series, Series>
 ```
 
 ## What It Does
@@ -25,8 +22,8 @@ result, but its size becomes `k`.
 The default means "the largest `k` values on the final axis, in descending
 order." `largest=false` selects the smallest side instead. `sorted=false`
 keeps the correct membership but removes the promise that selected values will
-be presented in rank order. `topk_pair()` adds the local source indices that
-identify where the winners came from.
+be presented in rank order. Use [`topk_pair()`](topk_pair.md) when local source
+indices must accompany the selected values.
 
 ## Parameters
 
@@ -43,8 +40,7 @@ presentation guarantees, not which values are selected.
 
 ## Returns
 
-`topk()` returns selected values. `topk_pair()` returns a `std::pair` of `.first` (values) and `.second`
-(aligned local `int64` positions).
+`topk()` returns selected values.
 
 ## Gradient
 
@@ -53,8 +49,7 @@ is differentiable**: the backward routes each output's gradient to the input
 position that value came from, and every position outside the selected set
 receives `0`. The selection boundary itself is discrete — which positions make
 the cut is held fixed during the backward pass, so no gradient flows through a
-rank exchange or a tie at the cutoff. The `int64` index series from
-`topk_pair()` never carries gradient.
+rank exchange or a tie at the cutoff.
 
 ## Examples
 
@@ -116,24 +111,7 @@ This run happens to be ordered. The `sorted=false` contract permits another
 valid ordering of the same three winners, so presentation code must not rely
 on this appearance.
 
-Example 5. The paired form preserves each winner's source position.
-
-```cpp
-auto winners = scores.topk_pair(3, 0, true, true);
-std::cout << "values=" << winners.first << "\n";
-std::cout << "indices=" << winners.second;
-```
-
-### Output
-
-```text
-values=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[5, 4, 3]
-indices=pluss::Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
-data=[4, 2, 0]
-```
-
-Example 6. `k=0` is valid and keeps an empty selected axis.
+Example 5. `k=0` is valid and keeps an empty selected axis.
 
 ```cpp
 std::cout << scores.topk(0);
@@ -146,7 +124,7 @@ pluss::Series(shape=[0], strides=[1], dtype=float64, platform=cpu, numel=0, cont
 []
 ```
 
-Example 7. Asking for more winners than a lane contains fails.
+Example 6. Asking for more winners than a lane contains fails.
 
 ```cpp
 try { std::cout << scores.topk(6); }
@@ -159,7 +137,7 @@ catch (const std::exception& error) { std::cout << error.what(); }
 topk: k must be <= size(dim)
 ```
 
-Example 8. The value channel is differentiable; unselected positions get `0`.
+Example 7. The value channel is differentiable; unselected positions get `0`.
 
 ```cpp
 auto x = pluss::make_series({3.0, 1.0, 4.0, 1.0, 5.0});
@@ -188,8 +166,7 @@ nothing.
   present.
 - `sorted=false` does not mean random and does not imply stable ordering.
 - Ties at the cutoff have no stable winner contract.
-- The value channel is differentiable; the selection boundary and the
-  `topk_pair()` indices are not.
+- The value channel is differentiable; the selection boundary is not.
 - Complex-valued inputs are rejected.
 
 ## Summary
@@ -204,3 +181,13 @@ recover the winning source positions.
 - [`Series::argsort`](argsort.md)
 - [`Series::kthvalue`](kthvalue.md)
 
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="to.html">
+    <span class="label">Previous</span>
+    <span class="title">to</span>
+  </a>
+  <a class="next-link" href="topk_pair.html">
+    <span class="label">Next</span>
+    <span class="title">topk_pair</span>
+  </a>
+</div>

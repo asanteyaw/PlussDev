@@ -8,6 +8,7 @@
 
 ```cpp
 Series::neg() const -> Series
+Series& Series::neg_() const
 ```
 
 ## What It Does
@@ -44,6 +45,31 @@ None.
 
 That makes it one of the clearest introductory examples of a transform whose
 gradient is constant.
+
+## In-Place Form
+
+`neg_()` is the in-place sibling of [`neg()`](neg.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `neg_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, -2.0, 3.0});
+
+auto& ref = x.neg_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-1, 2, -3]
+same object: true
+```
 
 ## Examples
 
@@ -115,6 +141,13 @@ data=[-1, -1, -1]
 Use `neg()` as the explicit method form of unary minus. It is simple, but it is
 also a useful anchor because its derivative is constant and easy to reason
 about.
+
+## Aliases
+
+**`negative()`** / **`negative_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `neg()` / `neg_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

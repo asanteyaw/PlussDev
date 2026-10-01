@@ -31,7 +31,7 @@ TraverseMatch::TraverseMatch(
 }
 
 TraverseMatch::TraverseMatch(Series coords, std::vector<std::int64_t> source_shape, std::int64_t indexed_rank)
-    : TraverseMatch(std::move(coords), Series::undefined(), std::move(source_shape), indexed_rank) {}
+    : TraverseMatch(std::move(coords), pluss::series::undefined(), std::move(source_shape), indexed_rank) {}
 
 bool TraverseMatch::defined() const noexcept {
   return coords_.defined();

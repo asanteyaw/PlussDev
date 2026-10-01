@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::month_name() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its full English
+Replaces every selected `Timeline` feature with its full English
 month name, as a `Note` (text) `Series` — same feature name, same row order.
 
 ## Parameters
@@ -82,7 +82,7 @@ full month name.
 - Always the full English name (`"January"`, not `"Jan"`); use
   [`fmt("%b")`](fmt.md) for the abbreviated three-letter form.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`, not a text placeholder.

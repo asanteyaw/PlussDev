@@ -24,9 +24,9 @@ constexpr double kLog2Pi = 1.83787706640934533908;
 constexpr double kEps = 1e-14;
 
 struct VecmDesign {
-  Series design = Series::undefined();
-  Series target = Series::undefined();
-  Series level_lag = Series::undefined();
+  Series design = pluss::series::undefined();
+  Series target = pluss::series::undefined();
+  Series level_lag = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t t = 0;
   std::int64_t k = 0;
@@ -300,7 +300,7 @@ JohansenResult johansen_test(const Series& y, const JohansenOptions& options, Co
       },
       k);
 
-  Series w = Series::undefined();
+  Series w = pluss::series::undefined();
   if (layout.impact_row0 > 0) {
     w = design.design.index_select(1, i64_range_(0, layout.impact_row0, out_cfg));
   } else {

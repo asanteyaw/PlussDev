@@ -13,7 +13,7 @@ ThreadTimelineAccessor::floor(std::string_view unit) const -> Thread
 ## What It Does
 
 Rounds every row of the bound thread *down* to the nearest `unit` boundary, in
-local wall time — same length, still `Timeline`/`TimeIndex`-kind.
+local wall time — same length, still `Timeline`-kind.
 
 ## Parameters
 
@@ -26,7 +26,7 @@ empty. Coarser units (weeks, months) aren't supported.
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind thread, same length as the bound thread,
     floored to `unit`.
 
 ## Examples
@@ -109,7 +109,7 @@ Timeline: unsupported unit (expected S/min/H/D)
   UTC midnight, if the timezone isn't `"UTC"`.
 - `unit` cannot be empty, and only accepts the fixed clock units listed above —
   see [`period()`](period.md) for month/year truncation instead.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`) regardless of `unit`.
 

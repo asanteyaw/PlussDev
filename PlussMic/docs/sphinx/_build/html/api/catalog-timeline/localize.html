@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -57,7 +57,7 @@ by <code class="docutils literal notranslate"><span class="pre">localize()</span
 — see Example 1.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+<p>CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor::isnat</span></code></span></a>’s own important callout for the full
 explanation and the exact throw message.</p>
@@ -121,7 +121,7 @@ rendered as NY-local wall-clock time.</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">localize()</span></code> changes the underlying instant; <a class="reference internal" href="tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tz()</span></code></span></a> never does.</strong></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">options.tz</span></code> only accepts the same four names as <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, and cannot be empty.</p></li>
-<li><p>Internally, each bound key stores its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> values
+<li><p>Internally, each bound key stores its <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> values
 independently; the resulting per-row tz labels round-trip correctly through
 the <code class="docutils literal notranslate"><span class="pre">kindle::Stream</span></code> boundary every further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call goes through. If
 every row does not already share the same display timezone going into a

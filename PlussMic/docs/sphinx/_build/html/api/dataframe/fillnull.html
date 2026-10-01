@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c7d49206cbc1 -->
+<!-- pluss-signature-hash: d4a93f9e2cdd -->
 <section id="dataframe-fillnull">
 <h1>DataFrame::fillnull<a class="headerlink" href="#dataframe-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
@@ -62,10 +62,10 @@
 <span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">FillSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">FillSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
@@ -81,11 +81,11 @@ before a summary (<code class="docutils literal notranslate"><span class="pre">d
 destination format.</p>
 <p>The overload set exists because “the right fill value” depends on the column’s dtype:
 a <code class="docutils literal notranslate"><span class="pre">double</span></code> fills numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> columns, a <code class="docutils literal notranslate"><span class="pre">string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> fills <code class="docutils literal notranslate"><span class="pre">Note</span></code>
-columns, and a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> / <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> fills the matching temporal column type. Passing
-a scalar fills <strong>every feature whose dtype matches that scalar’s type</strong>, unless you
-narrow the target with the <code class="docutils literal notranslate"><span class="pre">features</span></code> overload. When different columns need different
-fill values or you want to mix dtypes in a single call, use the <code class="docutils literal notranslate"><span class="pre">FillSpec</span></code> overload
-instead of chaining several single-value calls.</p>
+columns, a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> fills <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> columns, and a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> fills <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+columns. Passing a scalar fills <strong>every feature whose dtype matches that scalar’s
+type</strong>, unless you narrow the target with the <code class="docutils literal notranslate"><span class="pre">features</span></code> overload. When different
+columns need different fill values or you want to mix dtypes in a single call, use
+the <code class="docutils literal notranslate"><span class="pre">FillSpec</span></code> overload instead of chaining several single-value calls.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fillnull()</span></code> is non-mutating — it returns a new frame and leaves the original untouched.
 For an in-place variant, see <a class="reference internal" href="fillnull_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code></span></a> (note the trailing
 underscore, the project-wide convention for mutating siblings of a non-mutating method).</p>
@@ -93,7 +93,7 @@ underscore, the project-wide convention for mutating siblings of a non-mutating 
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code> /
-<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span></code>)</p>
+<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Duration&amp;</span></code>)</p>
 <p>The replacement value. Its type determines which columns are eligible: a <code class="docutils literal notranslate"><span class="pre">double</span></code> only
 ever fills numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> features, a string only fills <code class="docutils literal notranslate"><span class="pre">Note</span></code> features, and so on.
 Columns whose dtype does not match <code class="docutils literal notranslate"><span class="pre">value</span></code>’s type are left completely unchanged, nulls
@@ -195,7 +195,7 @@ because their dtype does not match the fill value’s type.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Scalar-typed overloads (<code class="docutils literal notranslate"><span class="pre">double</span></code>, string, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>) only ever fill
+<li><p>Scalar-typed overloads (<code class="docutils literal notranslate"><span class="pre">double</span></code>, string, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">Duration</span></code>) only ever fill
 columns whose dtype matches the scalar’s type. This is the most common source of
 “why didn’t my fill do anything?” confusion — check that the column you expected to
 change actually has the same logical dtype as the value you passed.</p></li>

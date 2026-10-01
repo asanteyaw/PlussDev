@@ -33,7 +33,7 @@ struct FeatureSelectorOptions_ {
 
 [[nodiscard]] inline std::vector<std::string> temporal_features_(const pluss::table::DataFrame& frame) {
   return make_feature_selector_(frame, FeatureSelectorOptions_{
-                                           .include = {pluss::table::ThreadKind::Timeline, pluss::table::ThreadKind::TimeIndex},
+                                           .include = {pluss::table::ThreadKind::Timeline},
                                            .exclude = {},
                                        });
 }

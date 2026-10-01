@@ -14,14 +14,14 @@ Archive ArchiveTimelineAccessor::isnat() const
 ## What It Does
 
 Flags whether each bound key's timestamp is `NaT` (missing/"Not a Time"), replacing
-each `Timeline`- or `TimeIndex`-kind key with a `Bool` `Series` key. Applied to **every catalog** in the stack, by delegating to that catalog's own
+each `Timeline`-kind key with a `Bool` `Series` key. Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::isnat`](../catalog-timeline/isnat.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 
@@ -83,9 +83,9 @@ ts                       | Series       | Series[bool]     | 2       | [true, fa
   the full list of 32 methods this accessor exposes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

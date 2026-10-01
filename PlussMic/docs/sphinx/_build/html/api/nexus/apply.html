@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,6 +43,7 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">apply</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">apply_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span><span class="o">&amp;</span>
 </pre></div>
 </div>
 </section>
@@ -56,6 +57,12 @@ precise than <a class="reference internal" href="apply_all.html"><span class="st
 <p>The method is non-mutating. It returns a new <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> whose table keys are the
 same as the source workspace, with only the named table’s <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> payload
 replaced by the callback result.</p>
+<p><code class="docutils literal notranslate"><span class="pre">apply_()</span></code> (trailing underscore) is the in-place sibling: same validation,
+same callback contract, but it mutates the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> it’s called on and
+returns a reference to that same object, rather than returning a new one.
+Prefer <code class="docutils literal notranslate"><span class="pre">apply()</span></code> in ordinary chained/functional-style code; reach for
+<code class="docutils literal notranslate"><span class="pre">apply_()</span></code> when you’re deliberately building up one workspace value in a
+loop or a sequence of steps and want to avoid intermediate copies.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -158,7 +165,25 @@ table’s schema, not just its values.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1 2
 </pre></div>
 </div>
-<p>Example 3. Continuing from Example 1, validation is strict: empty callbacks,
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">apply_()</span></code> mutates the workspace in place instead of returning a
+new one.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scratch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">}});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;before: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scratch</span><span class="p">.</span><span class="n">frame</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; rows</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">scratch</span><span class="p">.</span><span class="n">apply_</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">frame</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">head</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;after: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">scratch</span><span class="p">.</span><span class="n">frame</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; rows&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>before: 2 rows
+after: 1 rows
+</pre></div>
+</div>
+<p>Example 4. Continuing from Example 1, validation is strict: empty callbacks,
 unknown keys, and undefined callback results all throw.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">DataFrame</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">empty</span><span class="p">;</span>
@@ -188,8 +213,8 @@ unknown keys, and undefined callback results all throw.</p>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::apply: callback is empty
 Nexus::apply: unknown key &#39;missing&#39;
 Nexus::apply: callback returned undefined DataFrame
@@ -210,6 +235,9 @@ key metadata depend on, those higher-level structures may need manual review
 afterward.</p></li>
 <li><p>For the “same callback on every table” variant, use
 <a class="reference internal" href="apply_all.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_all()</span></code></span></a> or <a class="reference internal" href="map_frames.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map_frames()</span></code></span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apply_()</span></code> shares every validation rule and edge case shown above — it
+differs only in mutating in place and returning <code class="docutils literal notranslate"><span class="pre">Nexus&amp;</span></code> instead of a new
+<code class="docutils literal notranslate"><span class="pre">Nexus</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

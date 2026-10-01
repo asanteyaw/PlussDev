@@ -16,6 +16,18 @@ an enum, an `int64_t`). It is the generic read half of the same mechanism
 [[nodiscard]] classic::StatusOr<double> classic::Flow::nested_param(std::string_view path) const;
 ```
 
+## What It Does
+
+Resolves `path` to a specific stage's route metadata or option field (or
+the attached model's task/family/option field), and returns its current
+value as a `double` regardless of the field's real underlying type. This
+is the generic, type-erased read half of a mechanism
+[`nested_param_keys`](nested_param_keys.md) enumerates the valid paths for
+and [`set_nested_param`](set_nested_param.md) writes through -- reach for
+it when a configuration value needs to be read back programmatically by
+path, such as after a [`tune`](../../tune/tune.md) run, rather than by
+navigating typed accessors.
+
 ## Parameters
 
 `path` — `std::string_view`

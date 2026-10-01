@@ -22,8 +22,8 @@ public:
   }
 
   // Exposed linear summary for reference-aligned convenience.
-  Series coeff = Series::undefined();
-  Series intercept = Series::undefined();
+  Series coeff = pluss::series::undefined();
+  Series intercept = pluss::series::undefined();
 
   [[nodiscard]] bool trained() const noexcept { return workflow_.trained(); }
   [[nodiscard]] bool has_model() const noexcept { return workflow_.has_model(); }
@@ -638,8 +638,8 @@ public:
   ModelCore& mark_trained_(bool trained = true) {
     workflow_.mark_trained(trained);
     if (!trained) {
-      coeff = Series::undefined();
-      intercept = Series::undefined();
+      coeff = pluss::series::undefined();
+      intercept = pluss::series::undefined();
     } else {
       refresh_linear_summary_();
     }
@@ -737,7 +737,7 @@ private:
     LabeledBatch batch{
         .features = x_batch,
         .y = y_aligned,
-        .sample_weights = Series::undefined(),
+        .sample_weights = pluss::series::undefined(),
     };
     resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
     return batch;
@@ -884,8 +884,8 @@ private:
   }
 
   void refresh_linear_summary_() {
-    coeff = Series::undefined();
-    intercept = Series::undefined();
+    coeff = pluss::series::undefined();
+    intercept = pluss::series::undefined();
     // linear_parameters() also throws before a linear model has been trained
     // because there is no coefficient state yet. This helper runs during
     // construction, cloning, learn/save transitions, and CV/search fan-out, so

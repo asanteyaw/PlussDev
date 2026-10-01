@@ -8,6 +8,7 @@
 
 ```cpp
 Series::abs() const -> Series
+Series& Series::abs_() const
 ```
 
 ## What It Does
@@ -45,6 +46,33 @@ Away from zero, `abs()` behaves the way you expect:
 That makes `abs()` a useful example for value-vs-gradient distinction:
 the forward values are all non-negative, but the backward sensitivity still
 remembers which side of zero each input came from.
+
+## In-Place Form
+
+`abs_()` is the in-place sibling of [`abs()`](abs.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this
+method's wrapper is generated, not a promise that `self` is left unchanged —
+`abs_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({-3.0, -1.0, 4.0});
+
+auto& ref = x.abs_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[3, 1, 4]
+same object: true
+```
 
 ## Examples
 
@@ -133,6 +161,13 @@ data=[-1, -1, 1]
 Use `abs()` when the quantity you care about is magnitude rather than
 direction. The simplest mental model is "same shape, same dtype family when
 possible, all values reflected onto the non-negative side."
+
+## Aliases
+
+**`absolute()`** / **`absolute_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `abs()` / `abs_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

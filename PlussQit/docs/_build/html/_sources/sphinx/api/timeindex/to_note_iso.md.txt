@@ -5,11 +5,7 @@
 ## Signatures
 
 ```cpp
-TimeIndex::to_note_iso() const -> Note
-TimeIndex::tostring() const -> Note
-TimeIndex::to_string() const -> Note
-TimeIndex::format_iso() const -> Note
-TimeIndex::format() const -> Note
+Note TimeIndex::to_note_iso() const
 ```
 
 ## What It Does
@@ -63,9 +59,9 @@ std::cout << pluss::note::print(labels) << "\n";
 - [`TimeIndex::timeline`](timeline.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="normalize.html">
+  <a class="prev-link" href="timeline.html">
     <span class="label">Previous</span>
-    <span class="title">normalize</span>
+    <span class="title">timeline</span>
   </a>
   <a class="next-link" href="tz_convert.html">
     <span class="label">Next</span>

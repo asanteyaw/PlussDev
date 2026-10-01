@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NexusPull::std &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="nexuspull-std">
+<h1>NexusPull::std<a class="headerlink" href="#nexuspull-std" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_pull_api_reference.html"><span class="doc std std-doc">Back to NexusPull API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">NexusPull</span><span class="o">::</span><span class="n">std</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">alias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusPull</span><span class="o">&amp;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Adds a <code class="docutils literal notranslate"><span class="pre">std</span></code> (standard deviation) aggregate directly on this <code class="docutils literal notranslate"><span class="pre">NexusPull</span></code>,
+with no scoping step — <code class="docutils literal notranslate"><span class="pre">source</span></code> must already be a fully qualified
+<code class="docutils literal notranslate"><span class="pre">&quot;table.feature&quot;</span></code> path (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;events.spend&quot;</span></code>, meaning table <code class="docutils literal notranslate"><span class="pre">&quot;events&quot;</span></code>,
+feature <code class="docutils literal notranslate"><span class="pre">&quot;spend&quot;</span></code>). This is the key difference from
+<a class="reference internal" href="agg-std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPullAgg::std</span></code></span></a>: calling <code class="docutils literal notranslate"><span class="pre">.std(...)</span></code> through a scope
+opened by <code class="docutils literal notranslate"><span class="pre">.agg(&quot;events&quot;)</span></code> auto-prefixes a bare feature name with
+<code class="docutils literal notranslate"><span class="pre">&quot;events.&quot;</span></code>, but calling <code class="docutils literal notranslate"><span class="pre">.std(...)</span></code> directly on <code class="docutils literal notranslate"><span class="pre">NexusPull</span></code> has no scope to
+inherit a table name from, so the table must be spelled out in <code class="docutils literal notranslate"><span class="pre">source</span></code>
+every time.</p>
+<p>Internally, this builds a <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> via the free
+<a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nexus::std(source,</span> <span class="pre">alias)</span></code></span></a> factory (in namespace
+<code class="docutils literal notranslate"><span class="pre">pluss::bundle::nexus</span></code>) and appends it with <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> — the same
+mechanism <code class="docutils literal notranslate"><span class="pre">NexusPullAgg::std</span></code> uses once it has prefixed <code class="docutils literal notranslate"><span class="pre">source</span></code> itself.
+Reach for this unscoped form for a single reducer on a related table; reach
+for <code class="docutils literal notranslate"><span class="pre">.agg(table)</span></code> when stacking several reducers on the same table.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>source</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The feature to compute the standard deviation of. Typically
+<code class="docutils literal notranslate"><span class="pre">&quot;table.feature&quot;</span></code> for a related table (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;events.spend&quot;</span></code>); a bare
+root feature name is accepted syntactically but rarely useful, per
+<a class="reference internal" href="../nexus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::pull</span></code></span></a>’s restriction against aggregate fields
+targeting <code class="docutils literal notranslate"><span class="pre">root</span></code> itself.</p>
+<p><strong>alias</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, default empty)
+The output column name. When omitted, the default alias is
+<code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;_std</span></code> (dots replaced by underscores) — see
+<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::sum</span></code></span></a> for the auto-alias pattern in detail.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">NexusPull&amp;</span></code>
+A reference to the same builder, so calls chain in place.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A single unscoped <code class="docutils literal notranslate"><span class="pre">std</span></code>, with an explicit alias.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">pulled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;customer_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;std_spend&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer_id std_spend
+</pre></div>
+</div>
+<p>Customer 1’s group is <code class="docutils literal notranslate"><span class="pre">{10,</span> <span class="pre">5}</span></code>, customer 2’s is <code class="docutils literal notranslate"><span class="pre">{2,</span> <span class="pre">8,</span> <span class="pre">4}</span></code>, and customer 3
+has no <code class="docutils literal notranslate"><span class="pre">events</span></code> rows at all — following the same rule as
+<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum</span></code></span></a>/<a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean</span></code></span></a>/etc., <code class="docutils literal notranslate"><span class="pre">std</span></code> over an empty group is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>,
+not <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>Example 2. Omitting <code class="docutils literal notranslate"><span class="pre">alias</span></code> falls back to the default
+<code class="docutils literal notranslate"><span class="pre">&lt;table&gt;_&lt;feature&gt;_std</span></code> naming.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">pulled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;customer_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">std</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">collect</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pulled</span><span class="p">.</span><span class="n">features</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customer_id events_spend_std
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">std</span></code> on an empty group is <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — the same rule as
+<code class="docutils literal notranslate"><span class="pre">sum</span></code>/<code class="docutils literal notranslate"><span class="pre">mean</span></code>/<code class="docutils literal notranslate"><span class="pre">median</span></code>/<code class="docutils literal notranslate"><span class="pre">min</span></code>/<code class="docutils literal notranslate"><span class="pre">max</span></code>/<code class="docutils literal notranslate"><span class="pre">var</span></code>, and unlike <code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">ndistinct</span></code>,
+which produce <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std</span></code> is not supported for windowed pulls yet, only ordinary grouped ones —
+see <a class="reference internal" href="../nexus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::pull</span></code></span></a>’s windowed-aggregate callout. This
+applies here too, even though the windowed form can only be reached via
+<a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a> with a <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> built through <code class="docutils literal notranslate"><span class="pre">.windowed(...)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std</span></code> is the square root of <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a> — the two follow the same
+sample/population convention as the rest of the aggregate surface.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span></code> is used verbatim — there is no table-name prefixing here, unlike
+<a class="reference internal" href="agg-std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPullAgg::std</span></code></span></a>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="agg-std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPullAgg::std</span></code></span></a>: the scoped equivalent, for when you
+want several reducers on the same related table without repeating its
+name.</p></li>
+<li><p><a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::var</span></code></span></a>: the squared-units counterpart <code class="docutils literal notranslate"><span class="pre">std</span></code> is the
+square root of.</p></li>
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::mean</span></code></span></a>: the central value <code class="docutils literal notranslate"><span class="pre">std</span></code>/<code class="docutils literal notranslate"><span class="pre">var</span></code> measure spread
+around.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="specs.html">
+    <span class="label">Previous</span>
+    <span class="title">specs</span>
+  </a>
+  <a class="next-link" href="sum.html">
+    <span class="label">Next</span>
+    <span class="title">sum</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/nexus-pull/std.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

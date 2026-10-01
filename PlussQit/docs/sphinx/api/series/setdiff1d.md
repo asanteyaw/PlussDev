@@ -155,9 +155,9 @@ Use `setdiff1d()` for "keep what is only on the left."
 - [`Series::intersect1d`](intersect1d.md): keep shared values instead.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sensitivity.html">
+  <a class="prev-link" href="set.html">
     <span class="label">Previous</span>
-    <span class="title">sensitivity</span>
+    <span class="title">set</span>
   </a>
   <a class="next-link" href="setdiff_along.html">
     <span class="label">Next</span>

@@ -838,7 +838,7 @@ struct DataReader final {
   }
 
   ContainerType type_{ContainerType::Scalar};
-  Series staged_cpu_{Series::undefined()};
+  Series staged_cpu_{pluss::series::undefined()};
   ScalarType source_dtype_{ScalarType::Float32};
   std::vector<std::int64_t> sizes_{};
   std::int64_t element_count_{0};

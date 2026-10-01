@@ -14,10 +14,10 @@ Catalog CatalogTimelineAccessor::month_start() const
 ## What It Does
 
 Flags whether each bound key's timestamp falls on the first day of its calendar
-month, replacing each `Timeline`- or `TimeIndex`-kind key with a `Bool` `Series`
+month, replacing each `Timeline`-kind key with a `Bool` `Series`
 key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.

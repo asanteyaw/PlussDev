@@ -17,7 +17,7 @@ Strips the time-of-day from the bound stream's timestamp (dropped to
 midnight), replacing its values in place. Equivalent to
 [`floor("D")`](floor.md).
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

@@ -25,8 +25,8 @@ struct ContextualEmbedder::Impl {
   // `embed` never touch it — but it's kept (rather than discarded after
   // `learn()`, as it used to be) so both save()/load() and generate() have
   // something to persist/use.
-  Series output_weight = Series::undefined();
-  Series output_bias = Series::undefined();
+  Series output_weight = pluss::series::undefined();
+  Series output_bias = pluss::series::undefined();
   bool trained = false;
 };
 

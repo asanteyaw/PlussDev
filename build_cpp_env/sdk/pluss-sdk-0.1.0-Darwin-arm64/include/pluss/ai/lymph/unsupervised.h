@@ -58,7 +58,7 @@ class Result final {
   [[nodiscard]] pluss::table::DataFrame board() const {
     const std::int64_t k = cluster_count();
     const Series flat_labels = labels_.reshape({labels_.numel()});
-    Series counts = Series::undefined();
+    Series counts = pluss::series::undefined();
     for (std::int64_t ci = 0; ci < k; ++ci) {
       const Series count = flat_labels.eq(static_cast<double>(ci)).to(ScalarType::Float64).sum().reshape({1});
       counts = counts.defined() ? counts.unite({count}, 0) : count;
@@ -71,7 +71,7 @@ class Result final {
 
  private:
   Model model_;
-  Series labels_ = Series::undefined();
+  Series labels_ = pluss::series::undefined();
 };
 
 class Runner final {
@@ -152,7 +152,7 @@ class Result final {
 
  private:
   Model model_;
-  Series coordinates_ = Series::undefined();
+  Series coordinates_ = pluss::series::undefined();
 };
 
 class Runner final {

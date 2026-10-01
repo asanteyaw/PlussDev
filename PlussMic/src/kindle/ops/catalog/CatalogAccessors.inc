@@ -109,11 +109,6 @@ pluss::Series catalog_thread_to_plot_numeric_series(const pluss::table::Thread& 
       numeric_thread = pluss::table::Thread(t.as_timeline().epoch_nanos(), pluss::table::detail::validity_mask(t));
       break;
     }
-    case pluss::table::ThreadKind::TimeIndex: {
-      numeric_thread = pluss::table::Thread(
-          t.as_timeindex().timeline().epoch_nanos(), pluss::table::detail::validity_mask(t));
-      break;
-    }
     case pluss::table::ThreadKind::Note: {
       numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
       break;
@@ -172,8 +167,7 @@ CatalogTemporalLabelKind catalog_infer_temporal_label_kind(const pluss::Timeline
 std::vector<std::string> catalog_temporal_thread_to_plot_labels(
     const pluss::table::Thread& t,
     pluss::table::DateTimeLabelView datetime_label_view) {
-  const auto timeline =
-      (t.kind() == pluss::table::ThreadKind::Timeline) ? t.as_timeline() : t.as_timeindex().timeline();
+  const auto timeline = t.as_timeline();
   const auto has_subsecond = !catalog_series_all_zero_i64(timeline.nanosecond());
   const auto rendered = [&]() -> pluss::Note {
     switch (catalog_infer_temporal_label_kind(timeline)) {
@@ -203,7 +197,7 @@ std::vector<std::string> catalog_temporal_thread_to_plot_labels(
 
 std::vector<std::string> catalog_thread_to_plot_labels(const pluss::table::Thread& t,
                                                        const pluss::table::DataFramePlotOptions& options) {
-  if (t.kind() == pluss::table::ThreadKind::Timeline || t.kind() == pluss::table::ThreadKind::TimeIndex) {
+  if (t.kind() == pluss::table::ThreadKind::Timeline) {
     return catalog_temporal_thread_to_plot_labels(t, options.datetime_label_view);
   }
   const auto note_like = (t.kind() == pluss::table::ThreadKind::Note) ? t : t.cast().note();
@@ -235,8 +229,7 @@ struct CatalogResolvedAxis {
 
 bool catalog_thread_prefers_labeled_axis(const pluss::table::Thread& t) {
   return t.kind() == pluss::table::ThreadKind::Note
-         || t.kind() == pluss::table::ThreadKind::Timeline
-         || t.kind() == pluss::table::ThreadKind::TimeIndex;
+         || t.kind() == pluss::table::ThreadKind::Timeline;
 }
 
 CatalogResolvedAxis catalog_resolve_axis_from_thread(const pluss::table::Thread& axis_thread,
@@ -353,7 +346,7 @@ std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
   if (keys.size() == 0) {
     for (const auto& key : base.keys()) {
       const auto kind = base.keys(key).kind();
-      if (kind == StreamKind::Series || kind == StreamKind::Timeline || kind == StreamKind::TimeIndex) {
+      if (kind == StreamKind::Series || kind == StreamKind::Timeline) {
         out.push_back(key);
       }
     }
@@ -371,8 +364,7 @@ std::vector<std::string> catalog_resolve_plot_keys(const Catalog& base,
 
 bool catalog_thread_supports_hue(const pluss::table::Thread& thread) {
   return thread.kind() == pluss::table::ThreadKind::Note
-         || thread.kind() == pluss::table::ThreadKind::Timeline
-         || thread.kind() == pluss::table::ThreadKind::TimeIndex;
+         || thread.kind() == pluss::table::ThreadKind::Timeline;
 }
 
 enum class ResolvedPairAlignBy : std::uint8_t {
@@ -1881,15 +1873,15 @@ Catalog CatalogKeyAccessor::fillnull(std::string_view value) const {
 
 Catalog CatalogKeyAccessor::fillnull(const pluss::Timeline& value) const {
   return map_selected_([&](const Stream& stream) {
-    return (stream.kind() == StreamKind::Timeline || stream.kind() == StreamKind::TimeIndex)
+    return stream.kind() == StreamKind::Timeline
                ? stream.fillnull(value)
                : stream;
   });
 }
 
-Catalog CatalogKeyAccessor::fillnull(const pluss::TimeIndex& value) const {
+Catalog CatalogKeyAccessor::fillnull(const pluss::Duration& value) const {
   return map_selected_([&](const Stream& stream) {
-    return stream.kind() == StreamKind::TimeIndex ? stream.fillnull(value) : stream;
+    return stream.kind() == StreamKind::Duration ? stream.fillnull(value) : stream;
   });
 }
 
@@ -2008,20 +2000,20 @@ Catalog CatalogKeyAxisAccessor::timeline() const {
   out.reserve(static_cast<std::size_t>(base_.nkeys()));
   for (const auto& key : base_.keys()) {
     const auto stream = base_.keys(key);
-    if (stream.kind() == StreamKind::Timeline || stream.kind() == StreamKind::TimeIndex) {
+    if (stream.kind() == StreamKind::Timeline) {
       out.emplace_back(key, std::move(stream));
     }
   }
   return Catalog(std::move(out));
 }
 
-Catalog CatalogKeyAxisAccessor::timeindex() const {
+Catalog CatalogKeyAxisAccessor::duration() const {
   PLUSS_CHECK(base_.defined(), "Catalog::keyaxis: undefined handle");
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(base_.nkeys()));
   for (const auto& key : base_.keys()) {
     const auto stream = base_.keys(key);
-    if (stream.kind() == StreamKind::TimeIndex) out.emplace_back(key, std::move(stream));
+    if (stream.kind() == StreamKind::Duration) out.emplace_back(key, std::move(stream));
   }
   return Catalog(std::move(out));
 }
@@ -2069,8 +2061,8 @@ Catalog CatalogCastAccessor::timeline() const {
   return keysel_.map_selected_([&](const Stream& stream) { return stream.cast(options_).timeline(); });
 }
 
-Catalog CatalogCastAccessor::timeindex() const {
-  return keysel_.map_selected_([&](const Stream& stream) { return stream.cast(options_).timeindex(); });
+Catalog CatalogCastAccessor::duration() const {
+  return keysel_.map_selected_([&](const Stream& stream) { return stream.cast(options_).duration(); });
 }
 
 CatalogNoteAccessor::CatalogNoteAccessor(Catalog base, std::vector<std::string> keys)
@@ -2284,10 +2276,6 @@ Catalog CatalogTimelineAccessor::tz(std::string_view name) const {
 
 Catalog CatalogTimelineAccessor::localize(const pluss::table::TimelineLocalizeOptions& options) const {
   return keysel_.map_selected_([&](const Stream& stream) { return stream.tl().localize(options); });
-}
-
-Catalog CatalogTimelineAccessor::index(bool require_sorted) const {
-  return keysel_.map_selected_([&](const Stream& stream) { return stream.tl().index(require_sorted); });
 }
 
 CatalogTimeSeriesAccessor::CatalogTimeSeriesAccessor(Catalog base, std::vector<std::string> keys)

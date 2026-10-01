@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::valid() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a boolean `Series`
+Replaces every selected `Timeline` feature with a boolean `Series`
 flagging whether the row is a real (non-`NaT`) timestamp — the logical
 inverse of [`isnat()`](isnat.md) — same feature name, same row order.
 
@@ -82,7 +82,7 @@ Row `1` — the missing timestamp — flags `false` here.
   method (the calendar-field extractors, `fmt()`, `epoch()`, and so on)
   instead shows `"NULL"` for a `NaT` row.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 
 ## See Also

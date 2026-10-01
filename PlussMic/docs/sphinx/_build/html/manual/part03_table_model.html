@@ -13,7 +13,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../_static/api_nav.js?v=af5a0516"></script>
     <script src="../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -155,8 +155,8 @@ new <code class="docutils literal notranslate"><span class="pre">DataFrame</span
 <p>The case axis is the row label/index axis. It may be default integer labels or
 loaded from a feature.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">first_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">first_ten</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">first_ten</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">indexed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">reset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">reset</span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="p">);</span>

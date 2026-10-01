@@ -30,4 +30,3 @@ Casts every feature currently bound on the accessor to `Timeline`, using the sha
 
 - [`DataFrame::cast`](../dataframe/cast.md): enters the accessor and supplies shared
   `ThreadCastOptions`.
-- [`DataFrameCastAccessor::timeindex`](timeindex.md): the indexed temporal target.

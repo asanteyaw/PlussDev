@@ -154,7 +154,7 @@ void write_series_(std::ostringstream& out, std::string_view prefix, const Serie
 
 [[nodiscard]] Series read_series_(const StringMap& kv, std::string_view prefix) {
   if (!maybe_bool_(kv, std::string(prefix) + ".defined", true)) {
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   const auto dtype = static_cast<ScalarType>(std::stoi(require_(kv, std::string(prefix) + ".dtype")));
   const auto platform = static_cast<Platform>(std::stoi(require_(kv, std::string(prefix) + ".platform")));

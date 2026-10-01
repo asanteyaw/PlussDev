@@ -8,6 +8,7 @@
 
 ```cpp
 Series::bitwise_xor(const Series& rhs) const -> Series
+Series& Series::bitwise_xor_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -33,6 +34,30 @@ use an integer or boolean dtype.
 
 `Series`
     A new `Series` containing the differing bits of the two operands.
+
+## In-Place Form
+
+`bitwise_xor_()` is the in-place sibling of [`bitwise_xor()`](bitwise_xor.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `bitwise_xor_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({6, 12}, pluss::ScalarType::Int64);
+auto y = pluss::make_series({3, 10}, pluss::ScalarType::Int64);
+
+x.bitwise_xor_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[5, 6]
+```
 
 ## Examples
 
@@ -90,9 +115,9 @@ patterns differ.
   raw bit-pattern difference.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="bitwise_or.html">
+  <a class="prev-link" href="bitwise_right_shift.html">
     <span class="label">Previous</span>
-    <span class="title">bitwise_or</span>
+    <span class="title">bitwise_right_shift</span>
   </a>
   <a class="next-link" href="block.html">
     <span class="label">Next</span>

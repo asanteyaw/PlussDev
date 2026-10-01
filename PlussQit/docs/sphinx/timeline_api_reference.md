@@ -22,14 +22,16 @@ Use it when timestamps are part of the data itself:
 - timezone conversion
 - mask-based filling and temporal selection
 
-Use [`TimeIndex`](timeindex_api_reference.md) instead when the timestamps are
-the ordered case axis and you specifically want ordered lookup, as-of matching,
-resampling, rolling windows, and alignment semantics.
+Call [`Timeline::index()`](api/timeline/index.md) when the timestamps are the
+ordered case axis and you specifically want ordered lookup, as-of matching,
+resampling, rolling windows, and alignment semantics. The accessor's complete
+surface lives in the
+[Timeline Index Accessor API Reference](timeline_index_accessor_api_reference.md).
 
 That difference is the clean split:
 
 - `Timeline` is the general time payload.
-- `TimeIndex` is the 1D ordered time axis surface built on top of a
+- `TimelineIndexAccessor` is the 1D ordered-axis surface built on top of a
   `Timeline`.
 
 ## Includes
@@ -125,8 +127,8 @@ The current handwritten pages cover these starting families:
 - temporal ordering and identity: `argsort`, `min`, `max`, `sort`, `unique`
 - structural axis-0 operations: `concat`, `repeat`, `empty_like`, and
   shape-preserving constant construction with `fill_like`
-- runtime-selected temporal movement with `shift`, and checked promotion from
-  a one-dimensional `Timeline` to `TimeIndex` with `to_timeindex`
+- runtime-selected temporal movement with `shift`, and checked ordered-axis
+  access through `index`
 - scalar formatting: `isoformat`
 - formatting and text conversion: `strftime`, `to_note_iso`, `weekday_name`,
   and `month_name`; custom layouts belong in `strftime()` rather than named
@@ -212,6 +214,7 @@ api/timeline/host
 api/timeline/hour
 api/timeline/hour_scalar
 api/timeline/hours_between
+api/timeline/index
 api/timeline/is_business_day
 api/timeline/is_friday
 api/timeline/is_leap_year
@@ -281,7 +284,6 @@ api/timeline/sub_duration
 api/timeline/ticks
 api/timeline/time
 api/timeline/to_note_iso
-api/timeline/to_timeindex
 api/timeline/tz
 api/timeline/tz_convert
 api/timeline/tz_localize

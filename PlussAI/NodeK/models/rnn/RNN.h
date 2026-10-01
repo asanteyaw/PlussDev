@@ -48,7 +48,7 @@ inline std::pair<Series, Series> rnn_layer(const Series& input,
   std::vector<Series> outputs;
   outputs.reserve(static_cast<std::size_t>(seq_len));
   Series hidden = initial_hidden;
-  Series precomputed;
+  Series precomputed = pluss::series::undefined();
   if (cfg.pre_compute_input) {
     precomputed = cfg.split_bias ? pluss::ai::ff(input, params.weight_ih, params.bias_ih)
                                  : pluss::ai::ff(input, params.weight_ih, unified_bias(params, input));
@@ -73,7 +73,7 @@ inline std::pair<Series, Series> gru_layer(const Series& input,
   std::vector<Series> outputs;
   outputs.reserve(static_cast<std::size_t>(seq_len));
   Series hidden = initial_hidden;
-  Series precomputed;
+  Series precomputed = pluss::series::undefined();
   if (cfg.pre_compute_input) {
     precomputed = cfg.split_bias ? pluss::ai::ff(input, params.weight_ih, params.bias_ih)
                                  : pluss::ai::ff(input, params.weight_ih, unified_bias(params, input));
@@ -105,7 +105,7 @@ inline std::tuple<Series, Series, Series> lstm_layer(const Series& input,
   outputs.reserve(static_cast<std::size_t>(seq_len));
   Series hidden = initial_hidden;
   Series cell = initial_cell;
-  Series precomputed;
+  Series precomputed = pluss::series::undefined();
   if (cfg.pre_compute_input) {
     precomputed = cfg.split_bias ? pluss::ai::ff(input, params.weight_ih, params.bias_ih)
                                  : pluss::ai::ff(input, params.weight_ih, unified_bias(params, input));
@@ -196,7 +196,7 @@ inline std::tuple<Series, Series> rnn(const Series& input,
 inline std::tuple<Series, Series> rnn(const Series& input,
                                       pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
-  return rnn(input, Series(), params, std::move(cfg));
+  return rnn(input, pluss::series::undefined(), params, std::move(cfg));
 }
 
 inline std::tuple<Series, Series> rnn(const Series& input,
@@ -209,7 +209,7 @@ inline std::tuple<Series, Series> rnn(const Series& input,
 inline std::tuple<Series, Series> rnn(const Series& input,
                                       const NetWeight& params,
                                       NetConfig cfg = {}) {
-  return rnn(input, Series(), pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+  return rnn(input, pluss::series::undefined(), pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
 }
 
 inline std::tuple<Series, Series> gru(const Series& input,
@@ -271,7 +271,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
 inline std::tuple<Series, Series> gru(const Series& input,
                                       pluss::msharp::RangeView::Of<NetWeight> params,
                                       NetConfig cfg = {}) {
-  return gru(input, Series(), params, std::move(cfg));
+  return gru(input, pluss::series::undefined(), params, std::move(cfg));
 }
 
 inline std::tuple<Series, Series> gru(const Series& input,
@@ -284,7 +284,7 @@ inline std::tuple<Series, Series> gru(const Series& input,
 inline std::tuple<Series, Series> gru(const Series& input,
                                       const NetWeight& params,
                                       NetConfig cfg = {}) {
-  return gru(input, Series(), pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+  return gru(input, pluss::series::undefined(), pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
 }
 
 using LSTMState = std::tuple<Series, Series>;
@@ -377,7 +377,11 @@ inline std::tuple<Series, LSTMState> lstm(const Series& input,
 inline std::tuple<Series, LSTMState> lstm(const Series& input,
                                           pluss::msharp::RangeView::Of<NetWeight> params,
                                           NetConfig cfg = {}) {
-  return lstm(input, LSTMState{}, params, std::move(cfg));
+  return lstm(
+      input,
+      LSTMState{pluss::series::undefined(), pluss::series::undefined()},
+      params,
+      std::move(cfg));
 }
 
 inline std::tuple<Series, LSTMState> lstm(const Series& input,
@@ -398,7 +402,11 @@ inline std::tuple<Series, LSTMState> lstm(const Series& input,
 inline std::tuple<Series, LSTMState> lstm(const Series& input,
                                           const NetWeight& params,
                                           NetConfig cfg = {}) {
-  return lstm(input, LSTMState{}, pluss::msharp::RangeView::Of<NetWeight>{&params, 1}, std::move(cfg));
+  return lstm(
+      input,
+      LSTMState{pluss::series::undefined(), pluss::series::undefined()},
+      pluss::msharp::RangeView::Of<NetWeight>{&params, 1},
+      std::move(cfg));
 }
 
 } // namespace pluss::ai::rnn

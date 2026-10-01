@@ -12,6 +12,19 @@ std::vector<Module::ModuleRef> nn::Module::named_modules();
 std::vector<Module::ConstModuleRef> nn::Module::named_modules() const;
 ```
 
+## What It Does
+
+The same recursive module walk as [`modules`](modules.md), with each
+result's dotted registration name attached -- the module counterpart to
+[`named_parameters`](named_parameters.md). Unlike
+[`Schedule`](../Schedule.md)'s own stage lookups
+([`contains`](../Schedule/contains.md),
+[`index_of`](../Schedule/index_of.md),
+[`module_at`](../Schedule/module_at.md)), which only see that `Schedule`'s
+own immediate stages, `named_modules` walks the *entire* registration tree
+by dotted name -- useful for finding a specific layer nested several levels
+deep without walking children by hand.
+
 ## Parameters
 
 None.
@@ -47,12 +60,12 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule inner;
-  inner.then("proj", nn::Fusion(4, 4));
+  inner.append("proj", nn::Fusion(4, 4));
 
   nn::Schedule outer;
-  outer.then("in", nn::Fusion(3, 4));
-  outer.then("block", inner);
-  outer.then("out", nn::Fusion(4, 2));
+  outer.append("in", nn::Fusion(3, 4));
+  outer.append("block", inner);
+  outer.append("out", nn::Fusion(4, 2));
 
   for (auto& named : outer.named_modules()) {
     std::cout << "'" << (named.name.empty() ? "<self>" : named.name) << "'\n";

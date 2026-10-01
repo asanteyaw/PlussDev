@@ -78,6 +78,8 @@ TEST_CASE("optima sqp recovers from non-finite trial evaluations by shrinking th
 
   const auto result = optima(problem, initial, options);
   const auto x = result.params.at("x").to_vec<double>();
+  CAPTURE(static_cast<int>(result.exit_flag), result.message,
+          result.evaluation.value.item<double>(), x[0], x[1]);
 
   REQUIRE(result.exit_flag == OptimaExitFlag::Converged);
   REQUIRE(result.evaluation.status == pluss::subsp::math::optim::EvalStatus::Ok);

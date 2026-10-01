@@ -22,6 +22,15 @@ classic::Status classic::Flow::learn(
     const classic::TrainOptions& options = {});
 ```
 
+## What It Does
+
+Fits every transform stage, in order, on `batch`'s features, feeding each
+stage's output forward into the next; once every stage has fit, fits the
+attached model (if any) on whatever the final stage produced. This single
+call is what turns an assembled `Flow` -- stages added, a model attached
+or not -- into one where `trained()` is `true` and
+[`infer`](infer.md)/[`assess`](assess.md) can run.
+
 ## Parameters
 
 `batch` — `LabeledBatch`

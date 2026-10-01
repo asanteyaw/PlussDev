@@ -18,10 +18,10 @@ timezone back to `"UTC"` without changing the underlying instant. Applied to **e
 [`CatalogTimelineAccessor::utc`](../catalog-timeline/utc.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 

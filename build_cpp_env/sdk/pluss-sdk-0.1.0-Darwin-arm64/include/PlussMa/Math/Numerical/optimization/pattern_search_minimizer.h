@@ -13,8 +13,8 @@
 namespace pluss::subsp::math::optimization {
 
 struct PSConstraintValues {
-  Series inequality{Series::undefined()};
-  Series equality{Series::undefined()};
+  Series inequality{pluss::series::undefined()};
+  Series equality{pluss::series::undefined()};
 };
 
 enum class PSStatus {
@@ -121,13 +121,13 @@ struct PSConfig {
   std::int64_t cache_max_entries{10000};
   double cache_tolerance{1e-12};
 
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 
-  Series linear_ineq_matrix{Series::undefined()};
-  Series linear_ineq_rhs{Series::undefined()};
-  Series linear_eq_matrix{Series::undefined()};
-  Series linear_eq_rhs{Series::undefined()};
+  Series linear_ineq_matrix{pluss::series::undefined()};
+  Series linear_ineq_rhs{pluss::series::undefined()};
+  Series linear_eq_matrix{pluss::series::undefined()};
+  Series linear_eq_rhs{pluss::series::undefined()};
 
   std::function<PSConstraintValues(const Series&)> nonlinear_constraints{};
 
@@ -151,7 +151,7 @@ struct PSDiagnostics {
 };
 
 struct PSOutcome {
-  Series minimizer{Series::undefined()};
+  Series minimizer{pluss::series::undefined()};
   double minimum{0.0};
   PSStatus status{PSStatus::ReachedIterationBudget};
   PSDiagnostics diagnostics{};

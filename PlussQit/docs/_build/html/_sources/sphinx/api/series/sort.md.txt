@@ -11,8 +11,6 @@ Series::sort() const -> Series
 Series::sort(std::int64_t dim) const -> Series
 Series::sort(std::int64_t dim, bool descending) const -> Series
 Series::sort(std::int64_t dim, bool descending, bool stable) const -> Series
-Series::sort_pair(std::int64_t dim = -1, bool descending = false,
-                  bool stable = false) const -> std::pair<Series, Series>
 ```
 
 ## What It Does
@@ -23,11 +21,8 @@ By default it orders the final axis ascending. `dim` chooses another axis,
 `descending` changes direction, and `stable` controls the relative order of
 equal values.
 
-`sort_pair()` is the provenance-preserving form. It returns a
-`std::pair<Series, Series>`: `.first` is the sorted values, and `.second` is
-the local `int64` index that each value had before sorting. The pair makes it
-possible to reorder other aligned series consistently without re-running
-comparison logic.
+Use [`sort_pair()`](sort_pair.md) when sorted values and their original
+positions must be returned together.
 
 ## Parameters
 
@@ -42,8 +37,7 @@ largest-to-smallest.
 
 ## Returns
 
-`sort()` returns ordered values with the source shape and dtype. `sort_pair()`
-returns value and index series with the same shape as the source.
+`sort()` returns ordered values with the source shape and dtype.
 
 ## Gradient
 
@@ -52,8 +46,7 @@ differentiable**: in backpropagation each output's gradient is routed back to
 the position that value held in the input. What is *not* differentiable is the
 ordering itself — which input position maps to which rank is a discrete
 function of the data, held fixed during the backward pass, so no gradient flows
-through a rank change when two values cross. The `int64` index series from
-`sort_pair()` never carries gradient.
+through a rank change when two values cross.
 
 ## Examples
 
@@ -107,28 +100,7 @@ data=[[1, 3, 4],
 The first result is non-contiguous because the ordered axis is not final. That
 is a layout detail, not a different value ordering.
 
-Example 4. `sort_pair()` keeps values and their original positions together.
-
-```cpp
-auto tied = pluss::make_series({2LL, 1LL, 2LL, 1LL});
-auto ordered = tied.sort_pair(0, false, true);
-std::cout << "values=" << ordered.first << "\n";
-std::cout << "indices=" << ordered.second;
-```
-
-### Output
-
-```text
-values=pluss::Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
-data=[1, 1, 2, 2]
-indices=pluss::Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
-data=[1, 3, 0, 2]
-```
-
-With stable sorting, the equal `1`s came from positions `1` then `3`, and the
-equal `2`s from `0` then `2`.
-
-Example 5. An absent dimension is rejected rather than interpreted as a flat
+Example 4. An absent dimension is rejected rather than interpreted as a flat
 sort.
 
 ```cpp
@@ -142,7 +114,7 @@ catch (const std::exception& error) { std::cout << error.what(); }
 sort: dim out of range
 ```
 
-Example 6. The value channel is differentiable — a weighted sum of the sorted
+Example 5. The value channel is differentiable — a weighted sum of the sorted
 values sends each weight back to the position that supplied that rank.
 
 ```cpp
@@ -174,8 +146,7 @@ The ascending order is `[1, 1, 3, 4, 5]`, drawn from input positions
 - Sorting non-final axes can produce a non-contiguous result. Call
   [`contiguous()`](contiguous.md) only when a downstream operation requires
   contiguous layout.
-- The value channel is differentiable; the ordering and the `sort_pair()`
-  indices are not.
+- The value channel is differentiable; the ordering decision is not.
 - Complex-valued inputs are rejected.
 
 ## Summary
@@ -195,8 +166,8 @@ the source positions must travel with that sequence.
     <span class="label">Previous</span>
     <span class="title">softplus</span>
   </a>
-  <a class="next-link" href="split.html">
+  <a class="next-link" href="sort_pair.html">
     <span class="label">Next</span>
-    <span class="title">split</span>
+    <span class="title">sort_pair</span>
   </a>
 </div>

@@ -1,73 +1,76 @@
+<!-- pluss-hand-authored -->
+
 # TimeIndex::rolling_agg
 
 [Back to TimeIndex API Reference](../../timeindex_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-TimeIndex::rolling_agg(
+pluss::Series TimeIndex::rolling_agg(
     const pluss::Series& values,
-    const Duration& window,
-    std::string_view op) const -> pluss::Series
-
-TimeIndex::rolling_mean(const pluss::Series& values, const Duration& window) const -> pluss::Series
-TimeIndex::rolling_min(const pluss::Series& values, const Duration& window) const -> pluss::Series
-TimeIndex::rolling_max(const pluss::Series& values, const Duration& window) const -> pluss::Series
-TimeIndex::rolling_first(const pluss::Series& values, const Duration& window) const -> pluss::Series
-TimeIndex::rolling_last(const pluss::Series& values, const Duration& window) const -> pluss::Series
+    const pluss::Duration& window,
+    std::string_view op) const
 ```
 
-## What It Does
+## Runtime Selection Of A Trailing Reduction
 
-Computes trailing window aggregations selected either dynamically by operation
-name or directly through named wrapper methods.
+`rolling_agg()` is the dynamic entry point for the TimeIndex rolling family.
+It applies the reducer named by `op` to every inclusive trailing interval
+`[index[i] - window, index[i]]` and returns one result per original timestamp.
 
-Use `rolling_agg(...)` when the operation is configuration-driven. Use the named
-wrapper when you want the call site to state the aggregation explicitly.
+Use this method when the reducer is data-driven, for example when a command-line
+option or configuration file chooses between `"mean"`, `"min"`, and `"max"`.
+When the reduction is fixed in source code, prefer the corresponding named
+method. `rolling_min(values, window)` is checked by the compiler and states its
+purpose more directly than `rolling_agg(values, window, "min")`.
 
-This is the rolling counterpart to [`resample_agg`](resample_agg.md). The
-trailing `window` decides membership. The wrapper name or `op` string decides
-how the visible values are reduced.
+## Supported Operations
 
-## Parameters
+| `op` | Reduction | Dedicated method |
+|---|---|---|
+| `"count"` | Number of timestamps in the window; `values` is validated but not reduced | [`rolling_count()`](rolling_count.md) |
+| `"first"` | Earliest valid payload still visible | [`rolling_first()`](rolling_first.md) |
+| `"last"` | Most recent valid payload still visible | [`rolling_last()`](rolling_last.md) |
+| `"max"` | Largest valid payload | [`rolling_max()`](rolling_max.md) |
+| `"mean"` | Arithmetic mean of valid payloads | [`rolling_mean()`](rolling_mean.md) |
+| `"min"` | Smallest valid payload | [`rolling_min()`](rolling_min.md) |
+| `"sum"` | Sum of payloads | [`rolling_sum()`](rolling_sum.md) |
 
-**values**
+Names are exact and case-sensitive. An unrecognized name is an error; there is
+no fallback reducer.
 
-The 1D numeric payload aligned case-for-case with the index.
+## Shared Contract
 
-**window**
+`values` must be one-dimensional and aligned lane-for-lane with the index. The
+window must be one positive scalar `Duration`, and the index must be monotonic
+increasing. Named extrema, endpoint, and mean reducers accept CPU `int64` and
+`float64` payloads. Floating `NaN` lanes are skipped by those reducers, and an
+all-invalid window returns `NaN`.
 
-The trailing duration window.
-
-The same window semantics apply to every named wrapper here. Only the reducer
-changes.
-
-**op**
-
-The aggregation name when using the dynamic form.
-
-Common choices include:
-
-- `"mean"`
-- `"min"`
-- `"max"`
-- `"first"`
-- `"last"`
-
-## Returns
-
-`pluss::Series`
-    A 1D numeric `Series` with one rolling result per original timestamp.
+The left boundary is inclusive: a lane whose timestamp is exactly one window
+length behind the current timestamp remains visible. Resampling differs
+fundamentally: rolling preserves the original axis and overlaps windows;
+resampling creates non-overlapping bins and may change output length.
 
 ## Examples
 
-Example 1. Rolling mean over 45 minutes.
+```cpp
+auto index = pluss::timeindex::make({
+    "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
+    "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
+    "2024-11-01T01:20:00Z",
+});
+auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
+auto window = pluss::duration::minutes(45);
+```
+
+Example 1. Select a mean at runtime.
 
 ```cpp
-auto values = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5});
-auto win = pluss::duration::minutes(45);
-auto out = base.rolling_mean(values, win);
-std::cout << pluss::series::print(out) << "\n";
+std::string reducer = "mean";
+std::cout << pluss::series::print(
+    index.rolling_agg(values, window, reducer)) << "\n";
 ```
 
 ### Output
@@ -77,11 +80,13 @@ Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=
 data=[1.0000, 1.5000, 2.0000, 3.0000, 4.0000]
 ```
 
-Example 2. Rolling minimum over the same window.
+Example 2. Change only the reducer, not window membership.
 
 ```cpp
-auto out = base.rolling_min(values, win);
-std::cout << pluss::series::print(out) << "\n";
+std::cout << pluss::series::print(
+    index.rolling_agg(values, window, "min")) << "\n";
+std::cout << pluss::series::print(
+    index.rolling_agg(values, window, "max")) << "\n";
 ```
 
 ### Output
@@ -89,43 +94,17 @@ std::cout << pluss::series::print(out) << "\n";
 ```text
 Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[1.0000, 1.0000, 1.0000, 2.0000, 3.0000]
-```
-
-Example 3. Rolling maximum over the same window.
-
-```cpp
-auto out = base.rolling_max(values, win);
-std::cout << pluss::series::print(out) << "\n";
-```
-
-### Output
-
-```text
 Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[1.0000, 2.0000, 3.0000, 4.0000, 5.0000]
 ```
 
-Example 4. Rolling first keeps the earliest value still visible inside each
-trailing window.
+Example 3. `first` and `last` are temporal endpoints, not extrema.
 
 ```cpp
-auto out = idx.rolling_first(values, win);
-std::cout << pluss::series::print(out) << "\n";
-```
-
-### Output
-
-```text
-Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[1.0000, 2.0000, 3.0000, 4.0000, 5.0000]
-```
-
-Example 5. Rolling last keeps the most recent value still visible inside each
-window.
-
-```cpp
-auto out = idx.rolling_last(values, win);
-std::cout << pluss::series::print(out) << "\n";
+std::cout << pluss::series::print(
+    index.rolling_agg(values, window, "first")) << "\n";
+std::cout << pluss::series::print(
+    index.rolling_agg(values, window, "last")) << "\n";
 ```
 
 ### Output
@@ -133,42 +112,47 @@ std::cout << pluss::series::print(out) << "\n";
 ```text
 Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[1.0000, 1.0000, 1.0000, 2.0000, 3.0000]
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 4.0000, 5.0000]
 ```
 
-Example 6. Dynamic operation dispatch.
+Example 4. A misspelled or unsupported reducer fails immediately.
 
 ```cpp
-auto out = idx.rolling_agg(values, win, "mean");
-std::cout << pluss::series::print(out) << "\n";
+try {
+  (void)index.rolling_agg(values, window, "median");
+} catch (const std::exception& e) {
+  std::cout << std::string_view(e.what()).substr(0,
+      std::string_view(e.what()).find('\n')) << "\n";
+}
 ```
 
 ### Output
 
 ```text
-Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[1.0000, 1.5000, 2.0000, 3.0000, 4.0000]
+rolling_agg: unknown op
 ```
 
-## Notes
+## Cost And Ownership
 
-- The dynamic and named forms share the same window semantics.
-- Use the named wrappers when the reduction is known in code.
-- Use `rolling_agg()` when the reduction is chosen at runtime.
-- Keep the named wrappers when the operation is fixed in code; they document
-  intent better.
+The named reducers use moving-window kernels. Extrema use monotonic deques;
+means and endpoints advance their boundaries without rescanning prior lanes.
+Their runtime is `O(n)` with `O(n)` worst-case window storage. The result is a
+new contiguous `Series`; neither input is mutated.
 
 ## See Also
 
-- [`TimeIndex::rolling_sum`](rolling_sum.md)
-- [`TimeIndex::rolling_count`](rolling_count.md)
+- [`TimeIndex::rolling_mean`](rolling_mean.md)
+- [`TimeIndex::rolling_min`](rolling_min.md)
+- [`TimeIndex::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rolling_sum.html">
+  <a class="prev-link" href="resample_sum.html">
     <span class="label">Previous</span>
-    <span class="title">rolling_sum</span>
+    <span class="title">resample_sum</span>
   </a>
-  <a class="next-link" href="join_asof.html">
+  <a class="next-link" href="rolling_count.html">
     <span class="label">Next</span>
-    <span class="title">join_asof</span>
+    <span class="title">rolling_count</span>
   </a>
 </div>

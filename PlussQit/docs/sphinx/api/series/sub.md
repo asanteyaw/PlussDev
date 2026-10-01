@@ -9,6 +9,7 @@
 ```cpp
 Series::sub(const Series& rhs) const -> Series
 Series::sub(const Series& rhs, double alpha) const -> Series
+Series& Series::sub_(const Series& rhs)
 ```
 
 ## What It Does
@@ -79,6 +80,30 @@ For differentiable dtypes:
   `-1` on the plain overload
 
 This makes `sub()` a useful method for showing sign flow in reverse mode.
+
+## In-Place Form
+
+`sub_()` is the in-place sibling of [`sub()`](sub.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({10.0, 20.0, 30.0}, {3});
+auto y = pluss::make_series({1.0, 2.0, 3.0}, {3});
+
+auto& ref = x.sub_(y);
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[9, 18, 27]
+same object: true
+```
 
 ## Examples
 
@@ -207,6 +232,13 @@ broadcast: incompatible shapes
 RHS." Once that mental model is stable, the plain overload, the broadcast case,
 and the gradient signs all become predictable.
 
+## Aliases
+
+**`subtract()`** / **`subtract_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `sub()` / `sub_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
+
 ## See Also
 
 - [`Series::add`](add.md): additive mirror with the same `alpha` idea.
@@ -214,9 +246,9 @@ and the gradient signs all become predictable.
 - [`Series::div`](div.md): elementwise division.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="stride.html">
+  <a class="prev-link" href="strides.html">
     <span class="label">Previous</span>
-    <span class="title">stride</span>
+    <span class="title">strides</span>
   </a>
   <a class="next-link" href="sum.html">
     <span class="label">Next</span>

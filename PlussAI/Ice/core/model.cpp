@@ -76,6 +76,16 @@ Series Model::compute_loss(const Series& predictions, const Series& y, LossKind 
   PLUSS_FAIL("pluss::ai::ice::Model::compute_loss: unknown LossKind.");
 }
 
+Series Model::compute_loss(const Series& predictions,
+                           const Series& y,
+                           LossKind kind,
+                           double label_smoothing) const {
+  if (kind == LossKind::CrossEntropy && label_smoothing != 0.0) {
+    return pluss::nn::losses::CrossEntropy(predictions, y, {.label_smoothing = label_smoothing});
+  }
+  return compute_loss(predictions, y, kind);
+}
+
 Series Model::apply_objective_regularization_(const Series& base_loss, const StepContext& ctx) const {
   PLUSS_CALL_GUARD();
   if (ctx.recipe == nullptr) {
@@ -112,7 +122,10 @@ Series Model::compute_loss(const Series& predictions,
               "pluss::ai::ice::Model::compute_loss(batch): batch.targets must be defined.");
   PLUSS_CHECK(ctx.loss_kind.has_value(),
               "pluss::ai::ice::Model::compute_loss(batch): StepContext.loss_kind must be set.");
-  return apply_objective_regularization_(compute_loss(predictions, batch.targets(), *ctx.loss_kind), ctx);
+  const double label_smoothing =
+      ctx.recipe != nullptr ? ctx.recipe->objective_regularization.label_smoothing : 0.0;
+  return apply_objective_regularization_(
+      compute_loss(predictions, batch.targets(), *ctx.loss_kind, label_smoothing), ctx);
 }
 
 StepResult Model::learn_step(const Batch& batch, const StepContext& ctx) const {
@@ -147,7 +160,7 @@ StepResult Model::infer_step(const Batch& batch, const StepContext& ctx) const {
   static_cast<void>(ctx);
   return StepResult{
       .predictions = forward(batch),
-      .loss = Series::undefined(),
+      .loss = pluss::series::undefined(),
   };
 }
 

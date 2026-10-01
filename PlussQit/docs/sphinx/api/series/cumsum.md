@@ -11,6 +11,7 @@ Series::cumsum(std::int64_t dim) const -> Series
 Series::cumsum(std::int64_t dim, bool keepdim) const -> Series
 Series& Series::cumsum_(std::int64_t dim)
 Series& Series::cumsum_(std::int64_t dim, bool keepdim)
+Series& Series::cumsum_(std::int64_t dim) const
 ```
 
 ## What It Does
@@ -66,6 +67,29 @@ Its backward is a reverse cumulative sum along the same axis. Intuitively:
 
 That is why, when you reduce the scanned result to a scalar loss, the
 sensitivity is largest at the front of each lane and decreases toward the end.
+
+## In-Place Form
+
+`cumsum_()` is the in-place sibling of [`cumsum()`](cumsum.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `cumsum_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+x.cumsum_(1);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 3],
+  [3, 7]]
+```
 
 ## Examples
 

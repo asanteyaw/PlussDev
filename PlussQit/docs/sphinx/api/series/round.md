@@ -8,6 +8,7 @@
 
 ```cpp
 Series::round() const -> Series
+Series& Series::round_()
 ```
 
 ## What It Does
@@ -32,6 +33,29 @@ discontinuity points matter most.
 
 Between tie and integer boundaries, `round()` is locally constant, so the usual
 reverse-mode sensitivity is `0` through those lanes.
+
+## In-Place Form
+
+`round_()` is the in-place sibling of [`round()`](round.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.4, 1.5, 2.5});
+
+auto& ref = x.round_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 2, 2]
+same object: true
+```
 
 ## Examples
 

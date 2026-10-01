@@ -9,6 +9,7 @@
 ```cpp
 Series::minimum(const Series& rhs) const -> Series
 Series::minimum(double rhs) const -> Series
+Series& Series::minimum_(double rhs)
 ```
 
 ## What It Does
@@ -73,6 +74,26 @@ When `self[i] == rhs[i]`, the full gradient still goes to `self`. The engine
 uses one consistent comparison-boundary convention across
 `maximum()`/`minimum()`/`clamp_min()`/`clamp_max()` rather than flipping the tie
 direction between `max`-like and `min`-like operations.
+```
+
+## In-Place Form
+
+`minimum_()` is the in-place sibling of [`minimum()`](minimum.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, 5.0, 3.0}, {3});
+x.minimum_(4.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 4, 3]
 ```
 
 ## Examples
@@ -224,9 +245,9 @@ Read `minimum()` in one of two ways:
   comparison family.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="maximum.html">
+  <a class="prev-link" href="min_pair.html">
     <span class="label">Previous</span>
-    <span class="title">maximum</span>
+    <span class="title">min_pair</span>
   </a>
   <a class="next-link" href="sum.html">
     <span class="label">Next</span>

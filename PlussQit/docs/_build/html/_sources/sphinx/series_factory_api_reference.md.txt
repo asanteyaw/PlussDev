@@ -32,6 +32,7 @@ Use it for:
 - like-factories such as `zeros_like` and `randn_like`
 - complex constructors such as `complex` and `polar`
 - interop constructors such as `from_torch` (torch-enabled builds)
+- explicit absence through the named `pluss::series::undefined()` sentinel factory
 
 ## Reading the Overloads
 
@@ -87,35 +88,36 @@ and quantized constructor stub family.
 :maxdepth: 1
 
 api/series_factory/arange
+api/series_factory/bernoulli
+api/series_factory/complex
 api/series_factory/empty
+api/series_factory/empty_like
 api/series_factory/eye
+api/series_factory/eye_like
+api/series_factory/from_torch
 api/series_factory/full
+api/series_factory/full_like
 api/series_factory/linspace
 api/series_factory/make
-api/series_factory/print
-api/series_factory/select
+api/series_factory/multinomial
+api/series_factory/normal
 api/series_factory/ones
-api/series_factory/zeros
+api/series_factory/ones_like
+api/series_factory/poisson
+api/series_factory/polar
+api/series_factory/print
 api/series_factory/rand
 api/series_factory/rand_btw
-api/series_factory/randint
-api/series_factory/randn
-api/series_factory/normal
-api/series_factory/randperm
-api/series_factory/empty_like
-api/series_factory/zeros_like
-api/series_factory/ones_like
-api/series_factory/full_like
 api/series_factory/rand_like
-api/series_factory/randn_like
+api/series_factory/randint
 api/series_factory/randint_like
-api/series_factory/eye_like
-api/series_factory/bernoulli
-api/series_factory/poisson
-api/series_factory/multinomial
-api/series_factory/complex
-api/series_factory/polar
-api/series_factory/from_torch
+api/series_factory/randn
+api/series_factory/randn_like
+api/series_factory/randperm
+api/series_factory/select
+api/series_factory/undefined
+api/series_factory/zeros
+api/series_factory/zeros_like
 ```
 
 <div class="pluss-inline-prev-next">

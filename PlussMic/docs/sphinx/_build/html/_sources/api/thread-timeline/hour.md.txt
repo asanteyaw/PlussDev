@@ -53,7 +53,7 @@ ptype: Series
 
 ## Notes
 
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`.
@@ -74,8 +74,8 @@ ptype: Series
     <span class="label">Previous</span>
     <span class="title">fmt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="isnat.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">isnat</span>
   </a>
 </div>

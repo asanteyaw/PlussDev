@@ -11,6 +11,7 @@ Series::cumprod(std::int64_t dim) const -> Series
 Series::cumprod(std::int64_t dim, bool keepdim) const -> Series
 Series& Series::cumprod_(std::int64_t dim)
 Series& Series::cumprod_(std::int64_t dim, bool keepdim)
+Series& Series::cumprod_(std::int64_t dim) const
 ```
 
 ## What It Does
@@ -63,6 +64,29 @@ populate source sensitivity through `cumprod()`.
 That limitation is especially worth documenting because a multiplicative scan
 is often expected to behave analogously to the fully differentiable
 `cumsum()` path. Right now it does not.
+
+## In-Place Form
+
+`cumprod_()` is the in-place sibling of [`cumprod()`](cumprod.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `cumprod_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+x.cumprod_(1);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 2],
+  [3, 12]]
+```
 
 ## Examples
 

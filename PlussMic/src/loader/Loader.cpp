@@ -1522,6 +1522,17 @@ std::int64_t time_unit_to_nanos(arrow::TimeUnit::type unit) {
   return 1LL;
 }
 
+std::int64_t duration_value_to_nanos(
+    std::int64_t value,
+    arrow::TimeUnit::type unit) {
+  const auto scaled = static_cast<__int128>(value) * time_unit_to_nanos(unit);
+  PLUSS_CHECK(
+      scaled > static_cast<__int128>(pluss::Duration::kNaT) &&
+          scaled <= static_cast<__int128>(std::numeric_limits<std::int64_t>::max()),
+      "loader::load_parquet: Duration value cannot be represented as nanoseconds");
+  return static_cast<std::int64_t>(scaled);
+}
+
 pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>& array) {
   const auto valid = arrow_validity(array);
   const auto n = static_cast<std::int64_t>(array->length());
@@ -1618,6 +1629,22 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
         }
       }
       return pluss::table::Thread(pluss::timeline::from_epoch(ticks, {n}), validity_mask_from_valid(valid));
+    }
+    case arrow::Type::DURATION: {
+      const auto* duration_type =
+          static_cast<const arrow::DurationType*>(array->type().get());
+      const auto values = std::static_pointer_cast<arrow::DurationArray>(array);
+      std::vector<std::int64_t> nanos(static_cast<std::size_t>(n), 0);
+      for (std::int64_t i = 0; i < n; ++i) {
+        if (!valid[static_cast<std::size_t>(i)]) {
+          continue;
+        }
+        nanos[static_cast<std::size_t>(i)] =
+            duration_value_to_nanos(values->Value(i), duration_type->unit());
+      }
+      return pluss::table::Thread(
+          pluss::duration::nanos(std::move(nanos), {n}),
+          validity_mask_from_valid(valid));
     }
     case arrow::Type::STRING:
     case arrow::Type::LARGE_STRING: {
@@ -1844,18 +1871,26 @@ std::shared_ptr<arrow::Array> timeline_thread_to_arrow_array(const pluss::table:
   return out;
 }
 
-std::shared_ptr<arrow::Array> timeindex_thread_to_arrow_array(const pluss::table::Thread& thread) {
+std::shared_ptr<arrow::Array> duration_thread_to_arrow_array(
+    const pluss::table::Thread& thread) {
   const auto valid = thread_validity(thread);
-  const auto ticks = thread.as_timeindex().timeline().ticks();
-  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: TimeIndex thread length mismatch");
-  arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
-  for (std::size_t i = 0; i < ticks.size(); ++i) {
-    auto st = valid[i] ? builder.Append(ticks[i]) : builder.AppendNull();
-    PLUSS_CHECK(st.ok(), "loader::save_parquet: failed to append TimeIndex value: " + st.ToString());
+  const auto nanos = thread.as_duration().host();
+  PLUSS_CHECK(nanos.size() == valid.size(),
+              "loader::save_parquet: Duration thread length mismatch");
+  arrow::DurationBuilder builder(
+      arrow::duration(arrow::TimeUnit::NANO), arrow::default_memory_pool());
+  for (std::size_t i = 0; i < nanos.size(); ++i) {
+    const bool observed = valid[i] && nanos[i] != pluss::Duration::kNaT;
+    auto status = observed ? builder.Append(nanos[i]) : builder.AppendNull();
+    PLUSS_CHECK(status.ok(),
+                "loader::save_parquet: failed to append Duration value: " +
+                    status.ToString());
   }
   std::shared_ptr<arrow::Array> out;
-  auto st = builder.Finish(&out);
-  PLUSS_CHECK(st.ok() && out != nullptr, "loader::save_parquet: failed to finalize TimeIndex arrow array: " + st.ToString());
+  const auto status = builder.Finish(&out);
+  PLUSS_CHECK(status.ok() && out != nullptr,
+              "loader::save_parquet: failed to finalize Duration arrow array: " +
+                  status.ToString());
   return out;
 }
 
@@ -1867,11 +1902,10 @@ std::shared_ptr<arrow::Array> thread_to_arrow_array(const pluss::table::Thread& 
       return note_thread_to_arrow_string_array(thread);
     case pluss::table::ThreadKind::Timeline:
       return timeline_thread_to_arrow_array(thread);
-    case pluss::table::ThreadKind::TimeIndex:
-      return timeindex_thread_to_arrow_array(thread);
-    default:
-      return note_thread_to_arrow_string_array(thread.cast().note());
+    case pluss::table::ThreadKind::Duration:
+      return duration_thread_to_arrow_array(thread);
   }
+  PLUSS_FAIL("loader::save_parquet: unsupported Thread kind");
 }
 
 parquet::Compression::type parquet_compression_from_config(const Config& config) {
@@ -2701,6 +2735,11 @@ std::string thread_json_scalar_token(const pluss::table::Thread& thread,
   if (valid_mask.has_value() && !(*valid_mask)[static_cast<std::size_t>(row)]) {
     return "null";
   }
+  if (thread.kind() == pluss::table::ThreadKind::Duration &&
+      thread.as_duration().host()[static_cast<std::size_t>(row)] ==
+          pluss::Duration::kNaT) {
+    return "null";
+  }
 
   switch (thread.kind()) {
     case pluss::table::ThreadKind::Series:
@@ -2713,8 +2752,7 @@ std::string thread_json_scalar_token(const pluss::table::Thread& thread,
       }
       return json_string_token(note->at(row));
     }
-    case pluss::table::ThreadKind::Timeline:
-    case pluss::table::ThreadKind::TimeIndex: {
+    case pluss::table::ThreadKind::Timeline: {
       const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
       if (note == nullptr) {
         const auto local = thread.cast().note().as_note();
@@ -2722,9 +2760,11 @@ std::string thread_json_scalar_token(const pluss::table::Thread& thread,
       }
       return json_string_token(note->at(row));
     }
-    default:
-      return "null";
+    case pluss::table::ThreadKind::Duration:
+      return json_string_token(fmt::format(
+          "{}", thread.as_duration().host()[static_cast<std::size_t>(row)]));
   }
+  return "null";
 }
 
 enum class JsonSaveOrient : std::uint8_t {

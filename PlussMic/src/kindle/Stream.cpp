@@ -16,13 +16,12 @@
 #include "CodeM/core/Errors.h"
 #include "scribble/Slot.h"
 #include "kindle/display/Display.h"
-#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 
 namespace pluss::kindle {
 
 namespace {
-using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::TimeIndex>;
+using Payload = std::variant<pluss::Series, pluss::Note, pluss::Timeline, pluss::Duration>;
 
 StreamKind to_kind(const Payload& payload) {
   return std::visit(
@@ -31,7 +30,7 @@ StreamKind to_kind(const Payload& payload) {
         if constexpr (std::is_same_v<T, pluss::Series>) return StreamKind::Series;
         if constexpr (std::is_same_v<T, pluss::Note>) return StreamKind::Note;
         if constexpr (std::is_same_v<T, pluss::Timeline>) return StreamKind::Timeline;
-        return StreamKind::TimeIndex;
+        return StreamKind::Duration;
       },
       payload);
 }
@@ -39,12 +38,7 @@ StreamKind to_kind(const Payload& payload) {
 std::int64_t payload_size(const Payload& payload) {
   return std::visit(
       [](const auto& v) -> std::int64_t {
-        using T = std::decay_t<decltype(v)>;
-        if constexpr (std::is_same_v<T, pluss::TimeIndex>) {
-          return v.size();
-        } else {
-          return v.numel();
-        }
+        return v.numel();
       },
       payload);
 }
@@ -56,7 +50,7 @@ std::string payload_dtype(const Payload& payload) {
         if constexpr (std::is_same_v<T, pluss::Series>) return std::string("Series[") + std::string(v.dtype().name) + "]";
         if constexpr (std::is_same_v<T, pluss::Note>) return std::string("Note");
         if constexpr (std::is_same_v<T, pluss::Timeline>) return std::string("Timeline");
-        return std::string("TimeIndex");
+        return std::string("duration64[ns]");
       },
       payload);
 }

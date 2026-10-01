@@ -8,6 +8,7 @@
 
 ```cpp
 Series::t() const -> Series
+Series& Series::t_() const
 ```
 
 ## What It Does
@@ -41,6 +42,30 @@ None.
 
 `t()` is differentiable. It only relabels axes, so the backward transposes the
 upstream gradient back — values pass through untouched.
+
+## In-Place Form
+
+`t_()` is the in-place sibling of [`t()`](t.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `t_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
+x.t_();
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,2], strides=[1,3], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=[[1, 4],
+  [2, 5],
+  [3, 6]]
+```
 
 ## Examples
 

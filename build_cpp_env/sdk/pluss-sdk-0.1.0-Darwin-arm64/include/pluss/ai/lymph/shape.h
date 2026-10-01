@@ -118,16 +118,16 @@ class Result final {
  private:
   std::vector<std::string> feature_names_{};
   std::int64_t sample_count_{0};
-  Series mean_ = Series::undefined();
-  Series stddev_ = Series::undefined();
-  Series minimum_ = Series::undefined();
-  Series maximum_ = Series::undefined();
-  Series skewness_ = Series::undefined();
-  Series excess_kurtosis_ = Series::undefined();
-  Series missing_rate_ = Series::undefined();
-  Series negative_rate_ = Series::undefined();
-  Series zero_rate_ = Series::undefined();
-  Series gaussianize_candidate_ = Series::undefined();
+  Series mean_ = pluss::series::undefined();
+  Series stddev_ = pluss::series::undefined();
+  Series minimum_ = pluss::series::undefined();
+  Series maximum_ = pluss::series::undefined();
+  Series skewness_ = pluss::series::undefined();
+  Series excess_kurtosis_ = pluss::series::undefined();
+  Series missing_rate_ = pluss::series::undefined();
+  Series negative_rate_ = pluss::series::undefined();
+  Series zero_rate_ = pluss::series::undefined();
+  Series gaussianize_candidate_ = pluss::series::undefined();
 };
 
 class Runner final {

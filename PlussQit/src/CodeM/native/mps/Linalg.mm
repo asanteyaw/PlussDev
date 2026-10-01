@@ -84,9 +84,9 @@ void check_square_f32_(const Series& a, const char* op) {
 }
 
 struct LuWorkspace {
-  Series lu{Series::undefined()};
-  Series pivots{Series::undefined()};
-  Series status{Series::undefined()};
+  Series lu{pluss::series::undefined()};
+  Series pivots{pluss::series::undefined()};
+  Series status{pluss::series::undefined()};
 };
 
 LuWorkspace run_lu_factorization_(const Series& a, const char* op) {

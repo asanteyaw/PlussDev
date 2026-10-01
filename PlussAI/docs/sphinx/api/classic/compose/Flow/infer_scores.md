@@ -22,6 +22,15 @@ outright.
     const classic::InferOptions& options = {}) const;
 ```
 
+## What It Does
+
+The scores counterpart to [`infer`](infer.md): runs `batch` through the
+same fitted-stage pipeline, then hands the transformed result to the
+attached classifier's own `infer_scores` instead of `infer` -- raw
+per-class decision scores rather than a hard label. Only meaningful for a
+`Flow` whose attached model is a classifier; a regressor or no model at
+all rejects the call outright.
+
 ## Parameters
 
 `batch` — `FeatureBatch`

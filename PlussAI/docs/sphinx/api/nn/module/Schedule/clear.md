@@ -20,6 +20,16 @@ share a name.
 void nn::Schedule::clear();
 ```
 
+## What It Does
+
+Removes every stage from the chain, rebuilds the (now-empty)
+module-registration tree so `parameters()`/`buffers()`/`modules()` reflect
+the removal immediately, and resets the auto-naming counter
+[`append`](append.md) uses back to `0`. After `clear()`, the `Schedule` is
+indistinguishable from a freshly default-constructed one -- reach for it to
+reuse a `Schedule` value for a different chain rather than constructing a
+new one.
+
 ## Parameters
 
 None.
@@ -51,8 +61,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
   std::cout << "before: size()=" << net->size() << "\n";
 
   net.clear();
@@ -95,8 +105,8 @@ int main() {
   // there is no `using Module::clear;` bringing the base version back).
   // Schedule::clear() is destructive: it erases every stage.
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
   net.clear();
   std::cout << "Schedule: clear() leaves size()=" << net->size()
             << " (every stage is gone, not just their gradient state)\n";
@@ -128,13 +138,13 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then(nn::Fusion(3, 4));   // auto-named "0"
-  net.then(nn::Fusion(4, 2));   // auto-named "1"
+  net.append(nn::Fusion(3, 4));   // auto-named "0"
+  net.append(nn::Fusion(4, 2));   // auto-named "1"
 
   net.clear();
-  net.then(nn::Fusion(5, 5));   // clear() resets the auto-name counter too
+  net.append(nn::Fusion(5, 5));   // clear() resets the auto-name counter too
 
-  std::cout << "after clear() + one more then(): stage 0 name='" << net->name_at(0) << "'\n";
+  std::cout << "after clear() + one more append(): stage 0 name='" << net->name_at(0) << "'\n";
 
   return 0;
 }
@@ -143,7 +153,7 @@ int main() {
 Output
 
 ```text
-after clear() + one more then(): stage 0 name='0'
+after clear() + one more append(): stage 0 name='0'
 ```
 
 ## See Also
@@ -155,9 +165,9 @@ after clear() + one more then(): stage 0 name='0'
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="Introduction.html">
+  <a class="prev-link" href="append_as.html">
     <span class="label">Previous</span>
-    <span class="title">Introduction</span>
+    <span class="title">append_as</span>
   </a>
   <a class="next-link" href="contains.html">
     <span class="label">Next</span>

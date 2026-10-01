@@ -20,8 +20,8 @@ struct TokenClassifierState {
   runtime::Indexer indexer{};
   std::shared_ptr<runtime::EmbeddingTable> embedding{};
   std::shared_ptr<runtime::TransformerTextEncoder> encoder{};
-  Series cls_weight = Series::undefined();
-  Series cls_bias = Series::undefined();
+  Series cls_weight = pluss::series::undefined();
+  Series cls_bias = pluss::series::undefined();
   std::vector<std::string> labels{};
   std::int64_t width = 0;
   std::int64_t num_layers = 0;

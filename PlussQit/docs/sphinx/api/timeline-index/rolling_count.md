@@ -1,0 +1,92 @@
+# TimelineIndexAccessor::rolling_count
+
+[Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
+
+## Signature
+
+```cpp
+pluss::Series TimelineIndexAccessor::rolling_count(const Duration& window) const
+```
+
+## What It Does
+
+Counts how many observations fall inside each trailing time window.
+
+Unlike fixed-row rolling windows, this is time-aware: the membership of a window
+depends on the timestamp spacing, not just on row count.
+
+That makes it useful on irregular clocks where "last 45 minutes" and "last 3
+rows" are not even close to the same question.
+
+## Parameters
+
+**window**
+
+The trailing duration window. Examples include:
+
+- `pluss::duration::minutes(15)`
+- `pluss::duration::minutes(45)`
+- `pluss::duration::hours(2)`
+
+In the current implementation the window is trailing and inclusive of values
+whose timestamp is still at least `current_timestamp - window`.
+
+## Returns
+
+`pluss::Series`
+    A 1D numeric `Series` with one rolling count per original observation.
+
+## Examples
+
+Example 1. Count how many observations fall inside a trailing 45-minute window.
+
+```cpp
+auto counts = idx.rolling_count(pluss::duration::minutes(45));
+std::cout << pluss::series::print(counts) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[1, 2, 3, 3, 3]
+```
+
+Example 2. Increase the duration when you want each trailing window to see
+further backward in time.
+
+```cpp
+auto counts = idx.rolling_count(pluss::duration::minutes(60));
+std::cout << pluss::series::print(counts) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=int64, platform=cpu, numel=5, contiguous=true)
+data=[1, 2, 3, 4, 4]
+```
+
+## Notes
+
+- This is the right primitive when you care about observation density through
+  time, not row position.
+- Widening the window can only keep the count the same or increase it.
+- For rolling numeric aggregation on an aligned values vector, use
+  [`rolling_sum`](rolling_sum.md).
+
+## See Also
+
+- [`TimelineIndexAccessor::rolling_sum`](rolling_sum.md)
+- [`TimelineIndexAccessor::resample_count`](resample_count.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_agg.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_agg</span>
+  </a>
+  <a class="next-link" href="rolling_first.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_first</span>
+  </a>
+</div>

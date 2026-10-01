@@ -8,6 +8,7 @@
 
 ```cpp
 Series::nan_to_num(double nan, double posinf, double neginf) const -> Series
+Series& Series::nan_to_num_(double nan, double posinf, double neginf)
 ```
 
 ## What It Does
@@ -44,6 +45,26 @@ negatively".
 `Series`
     A new `Series` with the same shape as `self`, but with exceptional numeric
     states repaired according to the three replacement parameters.
+
+## In-Place Form
+
+`nan_to_num_()` is the in-place sibling of [`nan_to_num()`](nan_to_num.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()});
+x.nan_to_num_(0.0, 1e9, -1e9);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1e+09, -1e+09]
+```
 
 ## Examples
 

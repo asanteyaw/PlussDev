@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: c7d49206cbc1 -->
+<!-- pluss-signature-hash: d4a93f9e2cdd -->
 
 # DataFrame::fillnull
 
@@ -27,10 +27,10 @@ DataFrame::fillnull(const pluss::Timeline& value, pluss::RangeView<std::string_v
 template <detail::StringViewNameRange NameRange>
 DataFrame::fillnull(const pluss::Timeline& value, const NameRange& features) const -> DataFrame
 
-DataFrame::fillnull(const pluss::TimeIndex& value) const -> DataFrame
-DataFrame::fillnull(const pluss::TimeIndex& value, pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame::fillnull(const pluss::Duration& value) const -> DataFrame
+DataFrame::fillnull(const pluss::Duration& value, pluss::RangeView<std::string_view> features) const -> DataFrame
 template <detail::StringViewNameRange NameRange>
-DataFrame::fillnull(const pluss::TimeIndex& value, const NameRange& features) const -> DataFrame
+DataFrame::fillnull(const pluss::Duration& value, const NameRange& features) const -> DataFrame
 
 DataFrame::fillnull(pluss::RangeView<FillSpec> specs) const -> DataFrame
 DataFrame::fillnull(std::initializer_list<FillSpec> specs) const -> DataFrame
@@ -46,11 +46,11 @@ destination format.
 
 The overload set exists because "the right fill value" depends on the column's dtype:
 a `double` fills numeric `Series` columns, a `string_view`/`const char*` fills `Note`
-columns, and a `Timeline` / `TimeIndex` fills the matching temporal column type. Passing
-a scalar fills **every feature whose dtype matches that scalar's type**, unless you
-narrow the target with the `features` overload. When different columns need different
-fill values or you want to mix dtypes in a single call, use the `FillSpec` overload
-instead of chaining several single-value calls.
+columns, a `Timeline` fills `Timeline` columns, and a `Duration` fills `Duration`
+columns. Passing a scalar fills **every feature whose dtype matches that scalar's
+type**, unless you narrow the target with the `features` overload. When different
+columns need different fill values or you want to mix dtypes in a single call, use
+the `FillSpec` overload instead of chaining several single-value calls.
 
 `fillnull()` is non-mutating — it returns a new frame and leaves the original untouched.
 For an in-place variant, see [`fillnull_()`](fillnull_.md) (note the trailing
@@ -59,7 +59,7 @@ underscore, the project-wide convention for mutating siblings of a non-mutating 
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
-`const pluss::TimeIndex&`)
+`const pluss::Duration&`)
 
 The replacement value. Its type determines which columns are eligible: a `double` only
 ever fills numeric `Series` features, a string only fills `Note` features, and so on.
@@ -173,7 +173,7 @@ because their dtype does not match the fill value's type.
 
 ## Notes
 
-- Scalar-typed overloads (`double`, string, `Timeline`, `TimeIndex`) only ever fill
+- Scalar-typed overloads (`double`, string, `Timeline`, `Duration`) only ever fill
   columns whose dtype matches the scalar's type. This is the most common source of
   "why didn't my fill do anything?" confusion — check that the column you expected to
   change actually has the same logical dtype as the value you passed.

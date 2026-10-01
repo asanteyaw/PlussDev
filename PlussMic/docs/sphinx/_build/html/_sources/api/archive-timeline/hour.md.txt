@@ -14,14 +14,14 @@ Archive ArchiveTimelineAccessor::hour() const
 ## What It Does
 
 Extracts the hour-of-day (`0`-`23`) of each bound key's timestamp, replacing each
-`Timeline`- or `TimeIndex`-kind key with an `Int32` `Series` key. Applied to **every catalog** in the stack, by delegating to that catalog's own
+`Timeline`-kind key with an `Int32` `Series` key. Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::hour`](../catalog-timeline/hour.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 
@@ -86,8 +86,8 @@ ts                       | Series       | Series[int32]    | 2       | [9, 23]
     <span class="label">Previous</span>
     <span class="title">fmt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="isnat.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">isnat</span>
   </a>
 </div>

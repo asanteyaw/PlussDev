@@ -35,7 +35,7 @@ notes = [
 The label surface is about row labels only. Feature names still live on `df.features()`, `df.rename(...)`, `df.reorder(...)`, and related feature-axis methods.
 """,
   """
-`label().values()` is the direct equivalent of the old DataFrame case-label getter. Row selection remains on `case_study(...)`.
+`label().values()` is the direct equivalent of the old DataFrame case-label getter. Row selection remains on `case_study().*()`.
 """,
   """
 `label().set(feature, true)` promotes a feature into the case-label axis and drops that feature from ordinary columns. Pass `false` to preserve the source feature as data.

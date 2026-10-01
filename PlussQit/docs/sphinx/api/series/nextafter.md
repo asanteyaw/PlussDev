@@ -9,6 +9,7 @@
 ```cpp
 Series::nextafter(const Series& other) const -> Series
 Series& Series::nextafter_(const Series& other)
+Series& Series::nextafter_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -42,6 +43,30 @@ The direction to step. Only whether `b` is greater than, less than, or equal to
 
 `nextafter()` is not differentiable. It is a discrete step along the
 representable grid.
+
+## In-Place Form
+
+`nextafter_()` is the in-place sibling of [`nextafter()`](nextafter.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `nextafter_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0}, {1});
+auto y = pluss::make_series({2.0}, {1});
+
+x.nextafter_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[1]
+```
 
 ## Examples
 

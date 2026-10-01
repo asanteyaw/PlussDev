@@ -76,6 +76,15 @@ public:
 private:
   void register_parameters_() {
     this->clear_parameter_records_();
+    PLUSS_CHECK(options_.kernel_size[0] > 0 && options_.kernel_size[1] > 0,
+                "pluss::ai::nn::Conv: kernel_size values must be > 0");
+    PLUSS_CHECK(options_.stride[0] > 0 && options_.stride[1] > 0,
+                "pluss::ai::nn::Conv: stride values must be > 0");
+    PLUSS_CHECK(options_.padding[0] >= 0 && options_.padding[1] >= 0,
+                "pluss::ai::nn::Conv: padding values must be >= 0");
+    PLUSS_CHECK(options_.dilation[0] > 0 && options_.dilation[1] > 0,
+                "pluss::ai::nn::Conv: dilation values must be > 0");
+    PLUSS_CHECK(options_.groups > 0, "pluss::ai::nn::Conv: groups must be > 0");
     PLUSS_CHECK(options_.in_channels % options_.groups == 0, "pluss::ai::nn::Conv: in_channels must be divisible by groups");
     const Config cfg = ::pluss::detail::nn::floating_cfg_(options_.cfg);
     const std::int64_t group_in = options_.in_channels / options_.groups;
@@ -92,8 +101,8 @@ private:
   void on_dtype_changed_(ScalarType dtype) override { options_.cfg = options_.cfg.with_dtype(dtype); }
 
   ConvOptions options_;
-  Series weight_;
-  Series bias_;
+  Series weight_ = pluss::series::undefined();
+  Series bias_ = pluss::series::undefined();
 };
 
 using Conv2dOptions = ConvOptions;

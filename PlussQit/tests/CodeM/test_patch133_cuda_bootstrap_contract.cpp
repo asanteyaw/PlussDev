@@ -93,14 +93,14 @@ TEST_CASE("CUDA Series::empty is runtime-gated only", "[cuda][bootstrap][policy]
   REQUIRE_NOTHROW((void)pluss::Series::empty(shape, pluss::ScalarType::Float32, pluss::codem::Platform::CUDA));
 }
 
-TEST_CASE("CUDA Series::platform transfer is runtime-gated only", "[cuda][bootstrap][policy]") {
+TEST_CASE("CUDA Series::to transfer is runtime-gated only", "[cuda][bootstrap][policy]") {
   const auto cpu = pluss::Series::ones({2, 2}, pluss::ScalarType::Float32);
   REQUIRE(cpu.platform() == pluss::codem::Platform::CPU);
   if (!pluss::cuda::is_ready()) {
-    REQUIRE_THROWS((void)cpu.platform(pluss::codem::Platform::CUDA));
+    REQUIRE_THROWS((void)cpu.to(pluss::codem::Platform::CUDA));
     return;
   }
-  REQUIRE_NOTHROW((void)cpu.platform(pluss::codem::Platform::CUDA));
+  REQUIRE_NOTHROW((void)cpu.to(pluss::codem::Platform::CUDA));
 }
 
 TEST_CASE("CUDA transfer policy is runtime-dynamic", "[cuda][bootstrap][policy][runtime]") {

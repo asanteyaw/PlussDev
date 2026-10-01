@@ -13,11 +13,11 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../_static/api_nav.js?v=d45ea178"></script>
     <script src="../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Series::abs" href="api/series/abs.html" />
+    <link rel="next" title="SeriesStatAccessor API Reference" href="series_stat_accessor_api_reference.html" />
     <link rel="prev" title="PlussQit API Reference" href="../api_reference.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -53,9 +53,7 @@ than a tutorial sequence.</p></li>
 section for anything differentiable, verified output under every example, and
 working previous/next navigation.</p></li>
 <li><p>This landing page stays intentionally short so the content panel is not one giant
-scroll of every method. Use the left sidebar as the primary lookup index, and
-see <a class="reference internal" href="../Series_Methods.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series_Methods</span></code></span></a> for the broader method
-naming-and-organization note.</p></li>
+scroll of every method. Use the left sidebar as the primary lookup index.</p></li>
 </ul>
 </section>
 <section id="coverage">
@@ -81,7 +79,7 @@ below is a mechanically generated stub.</p>
 <li><p>activations II: <code class="docutils literal notranslate"><span class="pre">gelu</span></code>, <code class="docutils literal notranslate"><span class="pre">silu</span></code>, <code class="docutils literal notranslate"><span class="pre">softplus</span></code>, <code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code>, <code class="docutils literal notranslate"><span class="pre">prelu</span></code>, <code class="docutils literal notranslate"><span class="pre">logit</span></code>,
 <code class="docutils literal notranslate"><span class="pre">hardshrink</span></code></p></li>
 <li><p>probability normalization: <code class="docutils literal notranslate"><span class="pre">softmax</span></code>, <code class="docutils literal notranslate"><span class="pre">log_softmax</span></code></p></li>
-<li><p>broadcast &amp; tiling: <code class="docutils literal notranslate"><span class="pre">broadcast_to</span></code>, <code class="docutils literal notranslate"><span class="pre">expand</span></code>, <code class="docutils literal notranslate"><span class="pre">expand_as</span></code>, <code class="docutils literal notranslate"><span class="pre">repeat</span></code>, <code class="docutils literal notranslate"><span class="pre">tile</span></code>,
+<li><p>broadcast and repetition: <code class="docutils literal notranslate"><span class="pre">broadcast_to</span></code>, <code class="docutils literal notranslate"><span class="pre">expand</span></code>, <code class="docutils literal notranslate"><span class="pre">expand_as</span></code>, <code class="docutils literal notranslate"><span class="pre">repeat</span></code>,
 <code class="docutils literal notranslate"><span class="pre">repeat_interleave</span></code></p></li>
 <li><p>windowed / gather / difference: <code class="docutils literal notranslate"><span class="pre">unfold</span></code>, <code class="docutils literal notranslate"><span class="pre">take_along_dim</span></code>, <code class="docutils literal notranslate"><span class="pre">narrow_copy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">ravel</span></code></p></li>
@@ -154,7 +152,7 @@ summary results</p></li>
 <code class="docutils literal notranslate"><span class="pre">argmin</span></code>, <code class="docutils literal notranslate"><span class="pre">amax</span></code>, <code class="docutils literal notranslate"><span class="pre">amin</span></code>, <code class="docutils literal notranslate"><span class="pre">norm</span></code>, <code class="docutils literal notranslate"><span class="pre">cumsum</span></code>, <code class="docutils literal notranslate"><span class="pre">cumprod</span></code></p></li>
 <li><p>autodiff and state controls: <code class="docutils literal notranslate"><span class="pre">tracks_slope</span></code>, <code class="docutils literal notranslate"><span class="pre">tracks_slope_</span></code>, <code class="docutils literal notranslate"><span class="pre">reverse</span></code>,
 <code class="docutils literal notranslate"><span class="pre">detach</span></code>, <code class="docutils literal notranslate"><span class="pre">detach_</span></code>, <code class="docutils literal notranslate"><span class="pre">retain_grad</span></code>, <code class="docutils literal notranslate"><span class="pre">retains_grad</span></code>, <code class="docutils literal notranslate"><span class="pre">has_sensitivity</span></code>,
-<code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">clear_sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_version</span></code></p></li>
+<code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">clear</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_version</span></code></p></li>
 <li><p>accessors: <code class="docutils literal notranslate"><span class="pre">stat</span></code></p></li>
 <li><p>linear-algebra accessor entrypoint: <code class="docutils literal notranslate"><span class="pre">linearalg</span></code>, with its complete product,
 determinant, transformation, factorization, norm, and solver surface
@@ -232,54 +230,13 @@ matched values, and flat offsets of every position that satisfies it.</p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
@@ -296,7 +253,7 @@ matched values, and flat offsets of every position that satisfies it.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
       <li>Previous: <a href="../api_reference.html" title="previous chapter">PlussQit API Reference</a></li>
-      <li>Next: <a href="api/series/abs.html" title="next chapter">Series::abs</a></li>
+      <li>Next: <a href="series_stat_accessor_api_reference.html" title="next chapter">SeriesStatAccessor API Reference</a></li>
   </ul></li>
   </ul></li>
 </ul>

@@ -6,12 +6,12 @@
 namespace pluss::subsp::actuarial {
 
 struct CommutationTable {
-  pluss::codem::Series lx = pluss::codem::Series::undefined();  // n+1
-  pluss::codem::Series dx = pluss::codem::Series::undefined();  // n
-  pluss::codem::Series D = pluss::codem::Series::undefined();   // n+1
-  pluss::codem::Series N = pluss::codem::Series::undefined();   // n+1 (tail zero at n)
-  pluss::codem::Series C = pluss::codem::Series::undefined();   // n
-  pluss::codem::Series M = pluss::codem::Series::undefined();   // n+1 (tail zero at n)
+  pluss::codem::Series lx = pluss::series::undefined();  // n+1
+  pluss::codem::Series dx = pluss::series::undefined();  // n
+  pluss::codem::Series D = pluss::series::undefined();   // n+1
+  pluss::codem::Series N = pluss::series::undefined();   // n+1 (tail zero at n)
+  pluss::codem::Series C = pluss::series::undefined();   // n
+  pluss::codem::Series M = pluss::series::undefined();   // n+1 (tail zero at n)
 };
 
 // qx is expected to be 1D with values in [0, 1], where qx[t] = P[T in (t, t+1] | T > t].

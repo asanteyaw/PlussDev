@@ -203,15 +203,6 @@ std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
       }
       return values;
     }
-    case pluss::table::ThreadKind::TimeIndex: {
-      const auto ticks = thread.as_timeindex().timeline().ticks();
-      std::vector<double> values;
-      values.reserve(ticks.size());
-      for (const auto tick : ticks) {
-        values.push_back(static_cast<double>(tick));
-      }
-      return values;
-    }
     case pluss::table::ThreadKind::Note: {
       std::vector<double> values;
       const auto note = thread.as_note();

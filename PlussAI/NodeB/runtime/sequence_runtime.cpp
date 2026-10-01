@@ -471,7 +471,7 @@ void EmbeddingTable::reset(std::int64_t vocab_size,
   }
 
   if (!options_.use_positions) {
-    position_weights_ = Series();
+    position_weights_ = pluss::series::undefined();
   } else if (options_.learned_positions) {
     position_weights_ = pluss::series::rand(
         {options_.max_positions, options_.width},
@@ -556,7 +556,7 @@ std::vector<std::string> EmbeddingTable::dump_state_lines() const {
 
   const Series weights_cpu = weights_.defined()
       ? weights_.to(pluss::pCPU, ScalarType::Float64).reshape({weights_.numel()})
-      : Series();
+      : pluss::series::undefined();
   const auto weight_shape = weights_.defined() ? weights_.sizes() : std::vector<std::int64_t>{0, 0};
   lines.push_back("weight_rows=" + std::to_string(weight_shape.empty() ? 0 : weight_shape[0]));
   lines.push_back("weight_cols=" + std::to_string(weight_shape.size() < 2 ? 0 : weight_shape[1]));
@@ -564,7 +564,7 @@ std::vector<std::string> EmbeddingTable::dump_state_lines() const {
 
   const Series pos_cpu = position_weights_.defined()
       ? position_weights_.to(pluss::pCPU, ScalarType::Float64).reshape({position_weights_.numel()})
-      : Series();
+      : pluss::series::undefined();
   const auto pos_shape = position_weights_.defined() ? position_weights_.sizes() : std::vector<std::int64_t>{0, 0};
   lines.push_back("pos_rows=" + std::to_string(pos_shape.empty() ? 0 : pos_shape[0]));
   lines.push_back("pos_cols=" + std::to_string(pos_shape.size() < 2 ? 0 : pos_shape[1]));
@@ -640,7 +640,7 @@ Status EmbeddingTable::load_state_lines(pluss::msharp::RangeView::Of<std::string
                              options_.cfg)
                              .to(options_.cfg.platform, options_.cfg.dtype);
   } else {
-    position_weights_ = Series();
+    position_weights_ = pluss::series::undefined();
   }
   return Status::success();
 }
@@ -669,7 +669,7 @@ Series TransformerTextEncoder::forward(const Series& embedded,
   }
 
   const Series mask = causal ? batch.causal_mask().to(embedded.platform(), ScalarType::Bool)
-                             : Series();
+                             : pluss::series::undefined();
   return encoder_->forward(
       embedded,
       mask,
@@ -713,7 +713,7 @@ Series LstmTextEncoder::forward(const Series& embedded,
   }
 
   const auto packed = batch.pack(embedded);
-  auto [packed_out, _state] = lstm_->forward(packed, {});
+  auto [packed_out, _state] = lstm_->forward(packed);
   auto [padded, _lengths] = pluss::nn::pad_packed_sequence(
       packed_out,
       batch.batch_first);

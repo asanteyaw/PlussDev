@@ -92,10 +92,7 @@ std::vector<std::int64_t> timeline_ticks(const Thread& labels) {
   if (labels.kind() == ThreadKind::Timeline) {
     return labels.as_timeline().ticks();
   }
-  if (labels.kind() == ThreadKind::TimeIndex) {
-    return labels.as_timeindex().timeline().ticks();
-  }
-  PLUSS_FAIL("Atlas::loc(Timeline): axis0 labels must be Timeline or TimeIndex");
+  PLUSS_FAIL("Atlas::loc(Timeline): axis0 labels must be Timeline");
 }
 
 std::int64_t find_timeline_label(const Thread& labels, const pluss::Timeline& key) {
@@ -128,8 +125,6 @@ std::string label_string_at(const Thread& labels, std::int64_t i) {
       return std::string(labels.as_note().at(i));
     case ThreadKind::Timeline:
       return std::to_string(labels.as_timeline().ticks()[static_cast<std::size_t>(i)]);
-    case ThreadKind::TimeIndex:
-      return std::to_string(labels.as_timeindex().timeline().ticks()[static_cast<std::size_t>(i)]);
     default:
       return std::to_string(i);
   }

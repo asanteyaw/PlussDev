@@ -13,6 +13,13 @@ Only reachable via `->` (`net->empty()`).
 bool nn::Schedule::Impl::empty() const noexcept;
 ```
 
+## What It Does
+
+A convenience spelling of `size() == 0` -- useful before calling
+[`forward`](forward.md)/[`run`](run.md), which both throw on a `Schedule`
+with no stages, or simply for a clearer condition than comparing `size()`
+to `0` directly.
+
 ## Parameters
 
 None.
@@ -44,8 +51,8 @@ int main() {
   nn::Schedule net;
   std::cout << "fresh Schedule: size()=" << net->size() << " empty()=" << std::boolalpha << net->empty() << "\n";
 
-  net.then(nn::Fusion(3, 2));
-  std::cout << "after one then(): size()=" << net->size() << " empty()=" << net->empty() << "\n";
+  net.append(nn::Fusion(3, 2));
+  std::cout << "after one append(): size()=" << net->size() << " empty()=" << net->empty() << "\n";
 
   return 0;
 }
@@ -55,7 +62,7 @@ Output
 
 ```text
 fresh Schedule: size()=0 empty()=true
-after one then(): size()=1 empty()=false
+after one append(): size()=1 empty()=false
 ```
 
 ### Example 2
@@ -99,8 +106,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
   std::cout << "before: size()=" << net->size() << "\n";
 
   net.clear();

@@ -44,7 +44,7 @@ struct NelderMeadDiagnostics {
 };
 
 struct NelderMeadOutcome {
-  Series minimizer{Series::undefined()};
+  Series minimizer{pluss::series::undefined()};
   double minimum{0.0};
   SolverStatus status{SolverStatus::ReachedIterationBudget};
   NelderMeadDiagnostics diagnostics{};

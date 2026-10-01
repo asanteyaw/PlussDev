@@ -20,6 +20,16 @@ classic::StatusOr<classic::DependenceSurface> classic::dependence_surface(
     std::int64_t grid_points_b = 16);
 ```
 
+## What It Does
+
+The joint, two-feature form of
+[`dependence_curve`](dependence_curve.md): fits a model from `spec` on
+`train`, then for every pair of grid values across `feature_a` and
+`feature_b` jointly, sets both features to that pair across `eval`
+(holding everything else at its own real value), re-predicts, and
+averages -- surfacing how the two features interact rather than each one's
+effect in isolation.
+
 ## Parameters
 
 `spec` / `train` / `eval`

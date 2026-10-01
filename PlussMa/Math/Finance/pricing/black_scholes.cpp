@@ -17,12 +17,12 @@ constexpr double kInvSqrt2 = 0.70710678118654752440;
 constexpr double kInvSqrt2Pi = 0.39894228040143267794;
 
 struct BsSeriesCore {
-  Series price = Series::undefined();
-  Series delta = Series::undefined();
-  Series gamma = Series::undefined();
-  Series vega = Series::undefined();
-  Series theta = Series::undefined();
-  Series rho = Series::undefined();
+  Series price = pluss::series::undefined();
+  Series delta = pluss::series::undefined();
+  Series gamma = pluss::series::undefined();
+  Series vega = pluss::series::undefined();
+  Series theta = pluss::series::undefined();
+  Series rho = pluss::series::undefined();
 };
 
 Config f64_cfg_(Config cfg) {

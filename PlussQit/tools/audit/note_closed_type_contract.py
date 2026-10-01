@@ -182,6 +182,8 @@ def accessor_records(path: Path, class_name: str) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     inside_class = False
     public = False
+    statement = ""
+    statement_line = 0
     for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         stripped = line.strip()
         if stripped.startswith(f"class CODEN_API {class_name}"):
@@ -197,8 +199,20 @@ def accessor_records(path: Path, class_name: str) -> list[dict[str, object]]:
             continue
         if stripped == "};":
             break
-        match = DECL_RE.match(line)
-        if not public or not match:
+        if not public or not stripped or stripped.startswith("//"):
+            continue
+        if not statement:
+            if "(" not in stripped:
+                continue
+            if re.search(rf"\b{re.escape(class_name)}\s*\(", stripped):
+                continue
+            statement_line = line_number
+        statement = compact(f"{statement} {stripped}")
+        if ";" not in stripped:
+            continue
+        match = DECL_RE.match(statement)
+        statement = ""
+        if not match:
             continue
         current_return, name, parameters = match.groups()
         current_return = compact(current_return)
@@ -207,7 +221,7 @@ def accessor_records(path: Path, class_name: str) -> list[dict[str, object]]:
         record: dict[str, object] = {
             "source": str(path.relative_to(ROOT)),
             "scope": class_name,
-            "line": line_number,
+            "line": statement_line,
             "name": name,
             "signature": f"{current_return} {class_name}::{name}({compact(parameters)}) const",
             "current_return": current_return,

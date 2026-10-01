@@ -11,6 +11,7 @@ Series Series::index_add(std::int64_t dim, const Series& index, const Series& so
 Series Series::index_add(std::int64_t dim, const Series& index, const Series& source, double alpha) const
 Series& Series::index_add_(std::int64_t dim, const Series& index, const Series& source) const
 Series& Series::index_add_(std::int64_t dim, const Series& index, const Series& source, double alpha) const
+Series& Series::index_add_(std::int64_t dim, const Series& index, const Series& source) const
 ```
 
 ## What It Does
@@ -86,6 +87,31 @@ dL/dsource.select(dim, i)    = alpha * dL/dresult.select(dim, index[i])
 When a destination repeats, every source slice routed there independently
 receives that destination's *entire* upstream sensitivity — the mirror image
 of how, forward, every one of them independently contributed there.
+
+## In-Place Form
+
+`index_add_()` is the in-place sibling of [`index_add()`](index_add.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `index_add_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 0.0, 0.0}, {3});
+auto idx = pluss::series::arange(0, 3, 2, pluss::ScalarType::Int64);
+auto src = pluss::make_series({5.0, 7.0}, {2});
+
+x.index_add_(0, idx, src);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 0, 7]
+```
 
 ## Examples
 

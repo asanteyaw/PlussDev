@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0af463f0b327 -->
+<!-- pluss-signature-hash: 3b90e7494017 -->
 
 # Catalog::fillnull
 
@@ -12,7 +12,7 @@ Catalog::fillnull(double value) const -> Catalog
 Catalog::fillnull(std::string_view value) const -> Catalog
 Catalog::fillnull(const char* value) const -> Catalog
 Catalog::fillnull(const pluss::Timeline& value) const -> Catalog
-Catalog::fillnull(const pluss::TimeIndex& value) const -> Catalog
+Catalog::fillnull(const pluss::Duration& value) const -> Catalog
 ```
 
 ## What It Does
@@ -25,8 +25,8 @@ the numeric streams, in one call, without first selecting them by name.
 ```{important} Only streams matching value's kind are touched — silently, no throw
 - `fillnull(double)` fills only `Series`-kind streams.
 - `fillnull(std::string_view)` fills only `Note`-kind streams.
-- `fillnull(const pluss::Timeline&)` fills `Timeline`-**and**-`TimeIndex`-kind streams.
-- `fillnull(const pluss::TimeIndex&)` fills only `TimeIndex`-kind streams.
+- `fillnull(const pluss::Timeline&)` fills only `Timeline`-kind streams.
+- `fillnull(const pluss::Duration&)` fills only `Duration`-kind streams.
 
 Streams of every other kind are returned exactly as they were — not skipped with a
 warning, not thrown on, just left alone. This silent skip is specific to calling
@@ -38,7 +38,7 @@ stream whose kind does not match `value` is left untouched rather than throwing.
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
-`const pluss::TimeIndex&`)
+`const pluss::Duration&`)
     The fill value. Its C++ type selects both the overload and which streams are eligible
     to be filled — see the important callout above.
 

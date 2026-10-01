@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e8d6e5372185 -->
+<!-- pluss-signature-hash: 22a41f195cf6 -->
 
 # Axel::fillnull
 
@@ -12,7 +12,6 @@ Axel Axel::fillnull(double value) const
 Axel Axel::fillnull(std::string_view value) const
 Axel Axel::fillnull(const char* value) const
 Axel Axel::fillnull(const pluss::Timeline& value) const
-Axel Axel::fillnull(const pluss::TimeIndex& value) const
 ```
 
 ## What It Does
@@ -21,7 +20,13 @@ Returns a new axel with null values replaced by `value`, applying
 [`Registry::fillnull(value)`](../registry/fillnull.md) to **every**
 frame via [`map()`](map.md) — one overload per fill-value kind
 (`double` for numeric fields, `std::string_view`/`const char*` for text
-fields, `Timeline`/`TimeIndex` for datetime fields).
+fields, `Timeline` for datetime fields).
+
+```{note} No Duration overload here
+Unlike `Registry::fillnull`, `Axel::fillnull` does not have a `pluss::Duration`
+overload. Fill a `Duration` field by narrowing with [`fields()`](fields.md)
+first and calling [`Slot::fillnull`](../slot/fillnull.md) on it directly.
+```
 
 ```{important} Every field in every frame is filled, and every field's kind must match
 Because `fillnull()` applies unconditionally to every field of every
@@ -36,7 +41,7 @@ for a mixed-kind axel, narrow with [`fields()`](fields.md) first.
 
 ## Parameters
 
-**value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` / `const pluss::TimeIndex&`)
+**value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&`)
     The replacement for null values, in the kind matching the overload
     selected.
 

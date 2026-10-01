@@ -174,7 +174,6 @@ public:
   Atlas tz(std::string_view name) const;
   Atlas localize(const TimelineLocalizeOptions& options = {}) const;
   Atlas utc() const;
-  Atlas index(bool require_sorted = true) const;
 
 private:
   Atlas map_(const std::function<DataFrame(const DataFrame&)>& fn, std::string_view op) const;

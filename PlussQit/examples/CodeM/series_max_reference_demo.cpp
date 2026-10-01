@@ -85,5 +85,40 @@ int main() {
   }
   std::cout << "\n";
 
+  heading("max_pair_rows");
+  const auto [row_values, row_indices] = scores.max_pair(1);
+  std::cout << "values=" << row_values << "\n";
+  std::cout << "indices=" << row_indices << "\n\n";
+
+  heading("max_pair_keepdim_negative_axis");
+  const auto kept = scores.max_pair(-1, true);
+  std::cout << "values=" << kept.first << "\n";
+  std::cout << "indices=" << kept.second << "\n\n";
+
+  auto pair_ties = pluss::make_series({
+      {5.0, 5.0, 1.0},
+      {2.0, 4.0, 4.0},
+  });
+  pair_ties.tracks_slope_(true);
+  const auto tied_pair = pair_ties.max_pair(1);
+  tied_pair.first.sum().reverse();
+  heading("max_pair_first_tie_and_gradient");
+  std::cout << "values=" << tied_pair.first << "\n";
+  std::cout << "indices=" << tied_pair.second << "\n";
+  std::cout << "dx=" << pair_ties.sensitivity() << "\n\n";
+
+  heading("max_pair_scalar");
+  const auto scalar_pair = pluss::make_series(42.0).max_pair(0);
+  std::cout << "value=" << scalar_pair.first << "\n";
+  std::cout << "index=" << scalar_pair.second << "\n\n";
+
+  heading("max_pair_empty_axis_error");
+  try {
+    std::cout << pluss::series::zeros({2, 0}).max_pair(1).first << "\n";
+  } catch (const std::exception& e) {
+    print_error(e);
+  }
+  std::cout << "\n";
+
   return 0;
 }

@@ -1,16 +1,37 @@
 #include "pluss/ai/ice/models/ts/temporal_fusion_transformer.h"
 
 #include "tft_blocks.h"
+#include "ts_artifact.h"
 
 #include "pluss/ai/ice/callback.h"
+#include "pluss/ai/ice/io.h"
 #include "pluss/ai/ice/no_grad.h"
 #include "pluss/ai/ice/optim.h"
 
 #include <algorithm>
+#include <fstream>
 #include <numeric>
 #include <random>
+#include <sstream>
 
 namespace pluss::ai::ice::models {
+
+namespace {
+
+using io::detail::parse_kv_body;
+using io::detail::require_f64;
+using io::detail::require_i64;
+using io::detail::require_u64;
+using io::detail::write_num_line;
+using ts_artifact::read_categoricals;
+using ts_artifact::write_categoricals;
+
+constexpr std::string_view kMagic = "pluss_ice_temporal_fusion_transformer";
+constexpr std::int64_t kSchema = 1;
+constexpr std::string_view kLoadContext =
+    "pluss::ai::ice::models::TemporalFusionTransformer::load";
+
+} // namespace
 
 struct TemporalFusionTransformer::Impl {
   explicit Impl(const TFTOptions& options) {
@@ -180,10 +201,10 @@ struct TemporalFusionTransformer::Impl {
 
     const bool has_static = options.static_size > 0;
 
-    Series c_selection{};
-    Series c_enrichment{};
-    Series c_hidden{};
-    Series c_cell{};
+    Series c_selection = pluss::series::undefined();
+    Series c_enrichment = pluss::series::undefined();
+    Series c_hidden = pluss::series::undefined();
+    Series c_cell = pluss::series::undefined();
     if (has_static) {
       const auto [static_embedding, static_weights] = static_vsn->forward(batch.static_inputs);
       (void)static_weights;
@@ -200,7 +221,8 @@ struct TemporalFusionTransformer::Impl {
     (void)encoder_weights;
     (void)decoder_weights;
 
-    std::tuple<Series, Series> initial_state{};
+    std::tuple<Series, Series> initial_state{
+        pluss::series::undefined(), pluss::series::undefined()};
     if (has_static) {
       const auto batch_size = batch.encoder_inputs.sizes()[0];
       const Series h0 = c_hidden.unsqueeze(0).expand({options.lstm_layers, batch_size, options.hidden_size});
@@ -222,7 +244,7 @@ struct TemporalFusionTransformer::Impl {
     // mask, then keep only the decoder queries -- the encoder half exists so
     // the decoder has something to attend back into, not as an output itself.
     auto [attn_out, attn_weights] =
-        attention->forward(enriched, enriched, enriched, Series(), Series(), /*causal=*/true);
+        attention->forward(enriched, enriched, enriched, pluss::series::undefined(), pluss::series::undefined(), /*causal=*/true);
 
     const Series decoder_enriched = enriched.narrow_copy(1, options.encoder_length, options.decoder_length);
     const Series decoder_attn_out = attn_out.narrow_copy(1, options.encoder_length, options.decoder_length);
@@ -300,6 +322,101 @@ TemporalFusionTransformer& TemporalFusionTransformer::to(Platform platform) {
   PLUSS_CALL_GUARD();
   impl_->move_to(platform);
   return *this;
+}
+
+void TemporalFusionTransformer::save(std::string_view filepath) const {
+  PLUSS_CALL_GUARD();
+  PLUSS_CHECK(impl_ != nullptr && impl_->trained,
+              "pluss::ai::ice::models::TemporalFusionTransformer::save: model has not been trained.");
+  PLUSS_CHECK(!filepath.empty(),
+              "pluss::ai::ice::models::TemporalFusionTransformer::save: output path cannot be empty.");
+  const auto weights_path = std::string(filepath) + ".weights";
+  io::save_parameters(weights_path, impl_->all_parameters());
+
+  std::ostringstream out{};
+  out << kMagic << '\n';
+  write_num_line(out, "schema", kSchema);
+  write_num_line(out, "static_size", options_.static_size);
+  write_num_line(out, "encoder_size", options_.encoder_size);
+  write_num_line(out, "decoder_size", options_.decoder_size);
+  write_num_line(out, "encoder_length", options_.encoder_length);
+  write_num_line(out, "decoder_length", options_.decoder_length);
+  write_num_line(out, "hidden_size", options_.hidden_size);
+  write_num_line(out, "lstm_layers", options_.lstm_layers);
+  write_num_line(out, "attention_heads", options_.attention_heads);
+  write_num_line(out, "dropout", options_.dropout);
+  write_num_line(out, "quantile_count", static_cast<std::int64_t>(options_.quantiles.size()));
+  for (std::size_t i = 0; i < options_.quantiles.size(); ++i) {
+    write_num_line(out, "quantile." + std::to_string(i), options_.quantiles[i]);
+  }
+  write_categoricals(out, "static_categoricals", options_.static_categoricals);
+  write_categoricals(out, "encoder_categoricals", options_.encoder_categoricals);
+  write_categoricals(out, "decoder_categoricals", options_.decoder_categoricals);
+  write_num_line(out, "cfg_dtype", static_cast<int>(options_.cfg.dtype));
+  write_num_line(out, "cfg_platform", static_cast<int>(options_.cfg.platform));
+  write_num_line(out, "seed", options_.seed);
+
+  std::ofstream file{std::string(filepath)};
+  PLUSS_CHECK(file.good(),
+              "pluss::ai::ice::models::TemporalFusionTransformer::save: failed to open '" +
+                  std::string(filepath) + "'.");
+  file << out.str();
+  PLUSS_CHECK(file.good(),
+              "pluss::ai::ice::models::TemporalFusionTransformer::save: failed while writing '" +
+                  std::string(filepath) + "'.");
+}
+
+TemporalFusionTransformer TemporalFusionTransformer::load(std::string_view filepath) {
+  PLUSS_CALL_GUARD();
+  PLUSS_CHECK(!filepath.empty(),
+              "pluss::ai::ice::models::TemporalFusionTransformer::load: input path cannot be empty.");
+  std::ifstream file{std::string(filepath)};
+  PLUSS_CHECK(file.good(),
+              "pluss::ai::ice::models::TemporalFusionTransformer::load: failed to open '" +
+                  std::string(filepath) + "'.");
+  std::string magic{};
+  PLUSS_CHECK(std::getline(file, magic) && magic == kMagic,
+              "pluss::ai::ice::models::TemporalFusionTransformer::load: invalid model artifact header.");
+  std::ostringstream body{};
+  body << file.rdbuf();
+  const auto kv = parse_kv_body(body.str(), kLoadContext);
+  PLUSS_CHECK(require_i64(kv, "schema", kLoadContext) == kSchema,
+              "pluss::ai::ice::models::TemporalFusionTransformer::load: unsupported schema.");
+
+  TFTOptions options{};
+  options.static_size = require_i64(kv, "static_size", kLoadContext);
+  options.encoder_size = require_i64(kv, "encoder_size", kLoadContext);
+  options.decoder_size = require_i64(kv, "decoder_size", kLoadContext);
+  options.encoder_length = require_i64(kv, "encoder_length", kLoadContext);
+  options.decoder_length = require_i64(kv, "decoder_length", kLoadContext);
+  options.hidden_size = require_i64(kv, "hidden_size", kLoadContext);
+  options.lstm_layers = require_i64(kv, "lstm_layers", kLoadContext);
+  options.attention_heads = require_i64(kv, "attention_heads", kLoadContext);
+  options.dropout = require_f64(kv, "dropout", kLoadContext);
+  const auto quantile_count = require_i64(kv, "quantile_count", kLoadContext);
+  options.quantiles.clear();
+  options.quantiles.reserve(static_cast<std::size_t>(quantile_count));
+  for (std::int64_t i = 0; i < quantile_count; ++i) {
+    options.quantiles.push_back(require_f64(kv, "quantile." + std::to_string(i), kLoadContext));
+  }
+  options.static_categoricals = read_categoricals(kv, "static_categoricals", kLoadContext);
+  options.encoder_categoricals = read_categoricals(kv, "encoder_categoricals", kLoadContext);
+  options.decoder_categoricals = read_categoricals(kv, "decoder_categoricals", kLoadContext);
+  options.cfg = Config{}
+                    .with_dtype(static_cast<ScalarType>(require_i64(kv, "cfg_dtype", kLoadContext)))
+                    .with_platform(static_cast<Platform>(require_i64(kv, "cfg_platform", kLoadContext)));
+  options.seed = require_u64(kv, "seed", kLoadContext);
+
+  TemporalFusionTransformer model(options);
+  const auto weights_path = std::string(filepath) + ".weights";
+  io::load_parameters(weights_path, model.impl_->all_parameters());
+  for (auto* parameter : model.impl_->all_parameters()) {
+    parameter->tracks_slope_(false);
+    parameter->clear();
+  }
+  model.impl_->trained = true;
+  model.impl_->set_training(false);
+  return model;
 }
 
 void TemporalFusionTransformer::learn(const TFTBatch& train, const TFTTrainOptions& options) {

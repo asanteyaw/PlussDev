@@ -8,6 +8,7 @@
 
 ```cpp
 Series::acosh() const -> Series
+Series& Series::acosh_()
 ```
 
 ## What It Does
@@ -51,6 +52,29 @@ d acosh(x) / dx = 1 / sqrt(x^2 - 1)
 The derivative is positive and becomes unbounded as `x` approaches `1` from
 above. The forward boundary is valid, but it is not a numerically gentle point
 for gradient-based work.
+
+## In-Place Form
+
+`acosh_()` is the in-place sibling of [`acosh()`](acosh.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 5.0});
+
+auto& ref = x.acosh_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1.3169579, 2.2924317]
+same object: true
+```
 
 ## Examples
 
@@ -113,6 +137,13 @@ data=[1.3333333, 0.57735027]
 
 Use `acosh()` to recover nonnegative hyperbolic coordinates from values in
 `[1,infinity)`. Guard the lower domain boundary when gradients matter.
+
+## Aliases
+
+**`arccosh()`** / **`arccosh_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `acosh()` / `acosh_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

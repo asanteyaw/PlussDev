@@ -9,6 +9,7 @@
 ```cpp
 Series Series::erfcinv() const
 Series& Series::erfcinv_()
+Series& Series::erfcinv_() const
 ```
 
 ## What It Does
@@ -69,6 +70,31 @@ d/dy erfcinv(y) = -sqrt(pi)/2 * exp( erfcinv(y)^2 )
 The slope is `-sqrt(pi)/2 = -0.8862` at `y = 1` and diverges toward either
 endpoint. At `y = 0` or `y = 2` the sensitivity is `-inf`; outside `[0, 2]` it
 is `NaN`.
+
+## In-Place Form
+
+`erfcinv_()` is the in-place sibling of [`erfcinv()`](erfcinv.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `erfcinv_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.5, 1.0});
+
+auto& ref = x.erfcinv_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.47693628, 0]
+same object: true
+```
 
 ## Examples
 

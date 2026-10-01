@@ -34,9 +34,9 @@ stream_timeline_accessor_api_reference
 stream_ts_accessor_api_reference
 stream_lbl_accessor_api_reference
 api/stream/abs
+api/stream/as_duration
 api/stream/as_note
 api/stream/as_series
-api/stream/as_timeindex
 api/stream/as_timeline
 api/stream/astype
 api/stream/bfill

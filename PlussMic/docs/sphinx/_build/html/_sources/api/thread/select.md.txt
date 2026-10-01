@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 11c32841eede -->
+<!-- pluss-signature-hash: 6feb4f53f361 -->
 
 # Thread::select
 
@@ -23,9 +23,6 @@ static Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
 static Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
                               pluss::msharp::RangeView::Of<Thread> choices,
                               const pluss::Timeline& default_value)
-static Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
-                              pluss::msharp::RangeView::Of<Thread> choices,
-                              const pluss::TimeIndex& default_value)
 static Thread Thread::select(pluss::msharp::RangeView::Of<Thread> conditions,
                               pluss::msharp::RangeView::Of<Thread> choices,
                               pluss::null_t default_value)
@@ -68,7 +65,7 @@ broadcasting to every selected row) or exactly that same length.
     `conditions`, and every entry must share one payload kind (see the important callout).
 
 **default_value** (`Thread` / `double` / `std::string_view` / `const char*` /
-`pluss::Timeline` / `pluss::TimeIndex` / `pluss::null_t`)
+`pluss::Timeline` / `pluss::null_t`)
     The value used for any row where **no** condition is `true`. Must match `choices`'
     payload kind (or be `pluss::series::null`, which is always accepted).
 

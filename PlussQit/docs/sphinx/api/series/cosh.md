@@ -8,6 +8,7 @@
 
 ```cpp
 Series::cosh() const -> Series
+Series& Series::cosh_()
 ```
 
 ## What It Does
@@ -48,6 +49,29 @@ So:
 On the current verified public surface used here, the reverse-mode example
 below returns zero sensitivities. So the forward values are verified, but the
 current backward path should not be assumed to be active for this method.
+
+## In-Place Form
+
+`cosh_()` is the in-place sibling of [`cosh()`](cosh.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.cosh_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1, 1.5430806]
+same object: true
+```
 
 ## Examples
 

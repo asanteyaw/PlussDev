@@ -8,6 +8,7 @@
 
 ```cpp
 Series::floor() const -> Series
+Series& Series::floor_()
 ```
 
 ## What It Does
@@ -31,6 +32,29 @@ derivative is `0`.
 
 That means a scalar objective built from `floor()` does not propagate ordinary
 value sensitivity through those lanes on the current reverse-mode surface.
+
+## In-Place Form
+
+`floor_()` is the in-place sibling of [`floor()`](floor.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.7, -1.2});
+
+auto& ref = x.floor_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1, -2]
+same object: true
+```
 
 ## Examples
 

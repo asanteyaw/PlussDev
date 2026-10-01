@@ -50,7 +50,7 @@ Series cumulant_from_raw_moments_series_(const std::vector<Series>& raw,
   PLUSS_CHECK(!raw.empty(), std::string(op) + ": raw moments must be non-empty");
   PLUSS_CHECK(static_cast<std::size_t>(order) < raw.size(),
               std::string(op) + ": raw moments must include moment of requested order");
-  std::vector<Series> cumulants(static_cast<std::size_t>(order) + 1, Series::undefined());
+  std::vector<Series> cumulants(static_cast<std::size_t>(order) + 1, pluss::series::undefined());
   cumulants[0] = raw[0].mul(0.0);
   for (std::int64_t n = 1; n <= order; ++n) {
     Series value = raw[static_cast<std::size_t>(n)];
@@ -298,7 +298,7 @@ Series Bernoulli::cumulant(std::int64_t order) const {
     const Series ps = p_series.to(ScalarType::Float64).contiguous();
     detail::require_all_true(ps.ge(0.0).logical_and(ps.le(1.0)),
                              "Bernoulli::cumulant: p_series must lie in [0, 1]");
-    std::vector<Series> raw(static_cast<std::size_t>(order) + 1, Series::undefined());
+    std::vector<Series> raw(static_cast<std::size_t>(order) + 1, pluss::series::undefined());
     raw[0] = ps.mul(0.0).add(1.0);
     for (std::int64_t n = 1; n <= order; ++n) {
       raw[static_cast<std::size_t>(n)] = ps;

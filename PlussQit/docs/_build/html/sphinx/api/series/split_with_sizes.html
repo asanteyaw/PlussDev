@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::split_with_sizes &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::sparse_resize" href="sparse_resize.html" />
+    <link rel="prev" title="Series::split" href="split.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-split-with-sizes">
+<h1>Series::split_with_sizes<a class="headerlink" href="#series-split-with-sizes" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">split_with_sizes</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="w"> </span><span class="n">split_sizes</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="partition-an-axis-by-exact-lengths">
+<h2>Partition An Axis By Exact Lengths<a class="headerlink" href="#partition-an-axis-by-exact-lengths" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">split_with_sizes()</span></code> partitions one axis into consecutive pieces whose lengths
+are supplied explicitly. It exists for boundaries known from a schema, packed
+record, or earlier size calculation. Unlike <a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">split()</span></code></span></a>, no final
+remainder is inferred; the requested lengths must account for the axis exactly.</p>
+<p>The return type is <code class="docutils literal notranslate"><span class="pre">std::vector&lt;Series&gt;</span></code> because the number of pieces is known
+only at runtime. Every element is a zero-copy slice view over the receiver.
+Pieces preserve dtype, platform, untouched dimensions, and the receiver’s
+strides; splitting columns can therefore produce valid non-dense views.</p>
+</section>
+<section id="parameters-and-validation">
+<h2>Parameters And Validation<a class="headerlink" href="#parameters-and-validation" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">split_sizes</span></code></p></td>
+<td><p>Non-empty sequence of non-negative piece lengths. Their sum must equal <code class="docutils literal notranslate"><span class="pre">size(dim)</span></code>.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dim</span></code></p></td>
+<td><p>Axis partitioned; negative values count from the end.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>A zero length is meaningful and produces an empty piece at that boundary.
+Negative lengths, an empty size list, a wrong total, rank-zero input, and an
+out-of-range axis are rejected. The checks occur before returning a partial
+result.</p>
+<p>Because pieces alias the receiver, materialize with <a class="reference internal" href="clone.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clone()</span></code></span></a> when
+independent ownership is required. Reverse mode uses slice provenance: a loss
+through one piece contributes only to the source region covered by that piece.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="three-explicit-one-dimensional-regions">
+<h3>1. Three Explicit One-Dimensional Regions<a class="headerlink" href="#three-explicit-one-dimensional-regions" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">1L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">2L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">3L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">4L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mf">5L</span><span class="n">L</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">split_with_sizes</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;part[&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>count=3
+part[0]=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[0, 1]
+part[1]=pluss::Series(shape=[1], strides=[1], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=[2]
+part[2]=pluss::Series(shape=[3], strides=[1], dtype=int64, platform=cpu, numel=3, contiguous=true)
+data=[3, 4, 5]
+</pre></div>
+</div>
+</section>
+<section id="preserve-an-empty-region">
+<h3>2. Preserve An Empty Region<a class="headerlink" href="#preserve-an-empty-region" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">split_with_sizes</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;count=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;part[&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>count=3
+part[0]=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[0, 1]
+part[1]=pluss::Series(shape=[0], strides=[1], dtype=int64, platform=cpu, numel=0, contiguous=true)
+[]
+part[2]=pluss::Series(shape=[4], strides=[1], dtype=int64, platform=cpu, numel=4, contiguous=true)
+data=[2, 3, 4, 5]
+</pre></div>
+</div>
+</section>
+<section id="partition-columns-with-a-negative-axis">
+<h3>3. Partition Columns With A Negative Axis<a class="headerlink" href="#partition-columns-with-a-negative-axis" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">table</span><span class="p">.</span><span class="n">split_with_sizes</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,1], strides=[4,1], dtype=float64, platform=cpu, numel=2, contiguous=false)
+data=[[4],
+  [3]]
+pluss::Series(shape=[2,3], strides=[4,1], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=[[1, 4, 2],
+  [5, 0, 5]]
+</pre></div>
+</div>
+</section>
+<section id="reverse-through-only-one-piece">
+<h3>4. Reverse Through Only One Piece<a class="headerlink" href="#reverse-through-only-one-piece" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">parts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">split_with_sizes</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">});</span>
+<span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[0, 0, 0, 1, 1, 1]
+</pre></div>
+</div>
+</section>
+<section id="require-an-exact-total">
+<h3>5. Require An Exact Total<a class="headerlink" href="#require-an-exact-total" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">x</span><span class="p">.</span><span class="n">split_with_sizes</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span><span class="w"> </span><span class="p">}</span>
+<span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>split_with_sizes: sizes must sum to size(dim) (4 != 6)
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::split</span></code></span></a>: fixed-size pieces with an inferred remainder.</p></li>
+<li><p><a class="reference internal" href="chunk.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::chunk</span></code></span></a>: request a target piece count.</p></li>
+<li><p><a class="reference internal" href="tensor_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::tensor_split</span></code></span></a>: split by count or cut positions.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="split.html"><span class="label">Previous</span><span class="title">split</span></a>
+  <a class="next-link" href="sparse_resize.html"><span class="label">Next</span><span class="title">sparse_resize</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="split.html" title="previous chapter">Series::split</a></li>
+      <li>Next: <a href="sparse_resize.html" title="next chapter">Series::sparse_resize</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/split_with_sizes.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

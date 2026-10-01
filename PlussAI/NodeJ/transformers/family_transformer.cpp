@@ -56,7 +56,7 @@ using pluss::ScalarType;
 }
 
 struct DenseFeatureMatrix {
-  Series x_rows = Series::undefined();
+  Series x_rows = pluss::series::undefined();
   std::int64_t sample_count = 0;
   std::int64_t feature_count = 0;
   ObservationLayout layout = ObservationLayout::Rows;
@@ -195,7 +195,7 @@ public:
     std::uint64_t base_seed = compose_seed(options.random);
     if (base_seed == 0) base_seed = 1;
 
-    Series best_centers = Series::undefined();
+    Series best_centers = pluss::series::undefined();
     double best_inertia = std::numeric_limits<double>::infinity();
 
     for (std::int64_t restart = 0; restart < options_.restarts; ++restart) {
@@ -206,7 +206,7 @@ public:
       ids.resize(static_cast<std::size_t>(k));
       Series center_idx = pluss::make_series(ids, {k}, i64_on(platform));
       Series centers = matrix.x_rows.index_select(0, center_idx).reshape({k, p});
-      Series prev_assign = Series::undefined();
+      Series prev_assign = pluss::series::undefined();
 
       for (std::int64_t iter = 0; iter < options_.max_iterations; ++iter) {
         const Series d2 = pairwise_distance2(matrix.x_rows, centers);
@@ -214,11 +214,11 @@ public:
         if (prev_assign.defined() && assign.eq(prev_assign).all().item<bool>()) break;
         prev_assign = assign;
 
-        Series next_centers = Series::undefined();
+        Series next_centers = pluss::series::undefined();
         for (std::int64_t ci = 0; ci < k; ++ci) {
           const Series mask = assign.eq(ci).to(ScalarType::Float64).reshape({n, 1});
           const double count = mask.sum().item<double>();
-          Series center_row = Series::undefined();
+          Series center_row = pluss::series::undefined();
           if (count > 0.0) {
             center_row = mask.mul(matrix.x_rows).sum(0, false).reshape({1, p}).div(count);
           } else {
@@ -306,7 +306,7 @@ private:
   bool trained_{false};
   std::int64_t feature_count_{0};
   ObservationLayout layout_{ObservationLayout::Rows};
-  Series centers_ = Series::undefined();
+  Series centers_ = pluss::series::undefined();
 };
 
 class KernelOneClassTransformer final : public TransformerBase {
@@ -415,8 +415,8 @@ private:
   std::int64_t feature_count_{0};
   ObservationLayout layout_{ObservationLayout::Rows};
   double gamma_{1.0};
-  Series offset_ = Series::undefined();
-  Series x_train_ = Series::undefined();
+  Series offset_ = pluss::series::undefined();
+  Series x_train_ = pluss::series::undefined();
 };
 
 class IsolationDetectorTransformer final : public TransformerBase {
@@ -613,9 +613,9 @@ private:
   std::int64_t feature_count_{0};
   std::int64_t component_count_{0};
   ObservationLayout layout_{ObservationLayout::Rows};
-  Series mean_ = Series::undefined();
-  Series components_ = Series::undefined();
-  Series variances_ = Series::undefined();
+  Series mean_ = pluss::series::undefined();
+  Series components_ = pluss::series::undefined();
+  Series variances_ = pluss::series::undefined();
 };
 
 } // namespace

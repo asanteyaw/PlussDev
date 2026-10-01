@@ -44,7 +44,7 @@ auto customers = DataFrame({
 
 auto biz = Nexus({{"customers", customers}});
 
-biz.show();
+biz.show(); // writes directly to std::cout
 ```
 
 ### Output

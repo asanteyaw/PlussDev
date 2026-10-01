@@ -85,12 +85,12 @@ data=[1.0000, 3.0000, 6.0000, 10.0000, 14.0000]
 - [`TimeIndex::resample_sum`](resample_sum.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rolling_count.html">
+  <a class="prev-link" href="rolling_min.html">
     <span class="label">Previous</span>
-    <span class="title">rolling_count</span>
+    <span class="title">rolling_min</span>
   </a>
-  <a class="next-link" href="join_asof.html">
+  <a class="next-link" href="round.html">
     <span class="label">Next</span>
-    <span class="title">join_asof</span>
+    <span class="title">round</span>
   </a>
 </div>

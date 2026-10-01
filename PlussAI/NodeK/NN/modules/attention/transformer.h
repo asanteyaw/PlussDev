@@ -149,8 +149,8 @@ public:
   }
 
   Series forward(const Series& src,
-                 const Series& src_mask = Series(),
-                 const Series& src_key_padding_mask = Series(),
+                 const Series& src_mask = pluss::series::undefined(),
+                 const Series& src_key_padding_mask = pluss::series::undefined(),
                  bool is_causal = false) const {
     const auto self_attn_block = [&](const Series& x) {
       auto [attn_out, _] = self_attn_->forward(x, x, x, src_mask, src_key_padding_mask, is_causal);
@@ -180,8 +180,8 @@ public:
   }
 
   Series operator()(const Series& src,
-                    const Series& src_mask = Series(),
-                    const Series& src_key_padding_mask = Series(),
+                    const Series& src_mask = pluss::series::undefined(),
+                    const Series& src_key_padding_mask = pluss::series::undefined(),
                     bool is_causal = false) const {
     return forward(src, src_mask, src_key_padding_mask, is_causal);
   }
@@ -240,10 +240,10 @@ private:
   MultiheadAttention self_attn_;
   Fusion linear1_;
   Fusion linear2_;
-  Series norm1_weight_;
-  Series norm1_bias_;
-  Series norm2_weight_;
-  Series norm2_bias_;
+  Series norm1_weight_ = pluss::series::undefined();
+  Series norm1_bias_ = pluss::series::undefined();
+  Series norm2_weight_ = pluss::series::undefined();
+  Series norm2_bias_ = pluss::series::undefined();
 };
 
 PLUSS_MODULE(TransformerEncoderLayer);
@@ -326,8 +326,8 @@ public:
   }
 
   Series forward(const Series& src,
-                 const Series& mask = Series(),
-                 const Series& src_key_padding_mask = Series(),
+                 const Series& mask = pluss::series::undefined(),
+                 const Series& src_key_padding_mask = pluss::series::undefined(),
                  bool is_causal = false) const {
     Series x = src;
     for (const auto& layer : layers_) {
@@ -340,8 +340,8 @@ public:
   }
 
   Series operator()(const Series& src,
-                    const Series& mask = Series(),
-                    const Series& src_key_padding_mask = Series(),
+                    const Series& mask = pluss::series::undefined(),
+                    const Series& src_key_padding_mask = pluss::series::undefined(),
                     bool is_causal = false) const {
     return forward(src, mask, src_key_padding_mask, is_causal);
   }
@@ -419,8 +419,8 @@ private:
 
   TransformerEncoderOptions options_;
   std::vector<TransformerEncoderLayer> layers_;
-  Series norm_weight_;
-  Series norm_bias_;
+  Series norm_weight_ = pluss::series::undefined();
+  Series norm_bias_ = pluss::series::undefined();
 };
 
 PLUSS_MODULE(TransformerEncoder);
@@ -533,10 +533,10 @@ public:
 
   Series forward(const Series& tgt,
                  const Series& memory,
-                 const Series& tgt_mask = Series(),
-                 const Series& memory_mask = Series(),
-                 const Series& tgt_key_padding_mask = Series(),
-                 const Series& memory_key_padding_mask = Series(),
+                 const Series& tgt_mask = pluss::series::undefined(),
+                 const Series& memory_mask = pluss::series::undefined(),
+                 const Series& tgt_key_padding_mask = pluss::series::undefined(),
+                 const Series& memory_key_padding_mask = pluss::series::undefined(),
                  bool tgt_is_causal = false,
                  bool memory_is_causal = false) const {
     const auto self_attn_block = [&](const Series& x) {
@@ -582,10 +582,10 @@ public:
 
   Series operator()(const Series& tgt,
                     const Series& memory,
-                    const Series& tgt_mask = Series(),
-                    const Series& memory_mask = Series(),
-                    const Series& tgt_key_padding_mask = Series(),
-                    const Series& memory_key_padding_mask = Series(),
+                    const Series& tgt_mask = pluss::series::undefined(),
+                    const Series& memory_mask = pluss::series::undefined(),
+                    const Series& tgt_key_padding_mask = pluss::series::undefined(),
+                    const Series& memory_key_padding_mask = pluss::series::undefined(),
                     bool tgt_is_causal = false,
                     bool memory_is_causal = false) const {
     return forward(
@@ -598,6 +598,18 @@ public:
         tgt_is_causal,
         memory_is_causal);
   }
+
+  TransformerDecoderLayerOptions& options() noexcept { return options_; }
+  const TransformerDecoderLayerOptions& options() const noexcept { return options_; }
+
+  MultiheadAttention& self_attn() noexcept { return self_attn_; }
+  const MultiheadAttention& self_attn() const noexcept { return self_attn_; }
+  MultiheadAttention& cross_attn() noexcept { return cross_attn_; }
+  const MultiheadAttention& cross_attn() const noexcept { return cross_attn_; }
+  Fusion& linear1() noexcept { return linear1_; }
+  const Fusion& linear1() const noexcept { return linear1_; }
+  Fusion& linear2() noexcept { return linear2_; }
+  const Fusion& linear2() const noexcept { return linear2_; }
 
 private:
   void validate_options_() const {
@@ -645,12 +657,12 @@ private:
   MultiheadAttention cross_attn_;
   Fusion linear1_;
   Fusion linear2_;
-  Series norm1_weight_;
-  Series norm1_bias_;
-  Series norm2_weight_;
-  Series norm2_bias_;
-  Series norm3_weight_;
-  Series norm3_bias_;
+  Series norm1_weight_ = pluss::series::undefined();
+  Series norm1_bias_ = pluss::series::undefined();
+  Series norm2_weight_ = pluss::series::undefined();
+  Series norm2_bias_ = pluss::series::undefined();
+  Series norm3_weight_ = pluss::series::undefined();
+  Series norm3_bias_ = pluss::series::undefined();
 };
 
 PLUSS_MODULE(TransformerDecoderLayer);
@@ -685,6 +697,34 @@ public:
     reset_parameters();
   }
 
+  TransformerDecoderImpl(std::int64_t d_model,
+                         std::int64_t nhead,
+                         std::int64_t num_layers = 6,
+                         std::int64_t dim_feedforward = 2048,
+                         double dropout = 0.1,
+                         TransformerActivation activation = TransformerActivation::ReLU,
+                         bool batch_first = false,
+                         bool norm_first = false,
+                         bool bias = true,
+                         Config cfg = ::pluss::detail::nn::default_cfg_(),
+                         std::uint64_t seed = 0)
+      : TransformerDecoderImpl(TransformerDecoderOptions{
+            .d_model = d_model,
+            .nhead = nhead,
+            .num_layers = num_layers,
+            .dim_feedforward = dim_feedforward,
+            .dropout = dropout,
+            .activation = activation,
+            .layer_norm_eps = 1e-5,
+            .batch_first = batch_first,
+            .norm_first = norm_first,
+            .bias = bias,
+            .final_norm = true,
+            .cfg = cfg,
+            .seed = seed,
+            .training = true,
+        }) {}
+
   // Re-randomizes norm_weight_/norm_bias_ in place (when final_norm), and
   // re-delegates to every layer's own reset_parameters() (also in-place).
   // Never reassigns norm_weight_/norm_bias_, so it's safe to call any
@@ -703,10 +743,10 @@ public:
 
   Series forward(const Series& tgt,
                  const Series& memory,
-                 const Series& tgt_mask = Series(),
-                 const Series& memory_mask = Series(),
-                 const Series& tgt_key_padding_mask = Series(),
-                 const Series& memory_key_padding_mask = Series(),
+                 const Series& tgt_mask = pluss::series::undefined(),
+                 const Series& memory_mask = pluss::series::undefined(),
+                 const Series& tgt_key_padding_mask = pluss::series::undefined(),
+                 const Series& memory_key_padding_mask = pluss::series::undefined(),
                  bool tgt_is_causal = false,
                  bool memory_is_causal = false) const {
     Series x = tgt;
@@ -725,6 +765,43 @@ public:
       x = detail::transformer::layer_norm_(x, norm_weight_, norm_bias_, options_.layer_norm_eps);
     }
     return x;
+  }
+
+  Series operator()(const Series& tgt,
+                    const Series& memory,
+                    const Series& tgt_mask = pluss::series::undefined(),
+                    const Series& memory_mask = pluss::series::undefined(),
+                    const Series& tgt_key_padding_mask = pluss::series::undefined(),
+                    const Series& memory_key_padding_mask = pluss::series::undefined(),
+                    bool tgt_is_causal = false,
+                    bool memory_is_causal = false) const {
+    return forward(
+        tgt,
+        memory,
+        tgt_mask,
+        memory_mask,
+        tgt_key_padding_mask,
+        memory_key_padding_mask,
+        tgt_is_causal,
+        memory_is_causal);
+  }
+
+  TransformerDecoderImpl* operator->() noexcept { return this; }
+  const TransformerDecoderImpl* operator->() const noexcept { return this; }
+
+  TransformerDecoderOptions& options() noexcept { return options_; }
+  const TransformerDecoderOptions& options() const noexcept { return options_; }
+
+  std::size_t depth() const noexcept { return layers_.size(); }
+
+  TransformerDecoderLayer& layer(std::size_t index) {
+    PLUSS_CHECK(index < layers_.size(), "pluss::ai::nn::TransformerDecoder::layer: index out of range");
+    return layers_[index];
+  }
+
+  const TransformerDecoderLayer& layer(std::size_t index) const {
+    PLUSS_CHECK(index < layers_.size(), "pluss::ai::nn::TransformerDecoder::layer: index out of range");
+    return layers_[index];
   }
 
 private:
@@ -781,8 +858,8 @@ private:
 
   TransformerDecoderOptions options_;
   std::vector<TransformerDecoderLayer> layers_;
-  Series norm_weight_;
-  Series norm_bias_;
+  Series norm_weight_ = pluss::series::undefined();
+  Series norm_bias_ = pluss::series::undefined();
 };
 
 PLUSS_MODULE(TransformerDecoder);
@@ -877,12 +954,12 @@ public:
 
   Series forward(const Series& src,
                  const Series& tgt,
-                 const Series& src_mask = Series(),
-                 const Series& tgt_mask = Series(),
-                 const Series& memory_mask = Series(),
-                 const Series& src_key_padding_mask = Series(),
-                 const Series& tgt_key_padding_mask = Series(),
-                 const Series& memory_key_padding_mask = Series(),
+                 const Series& src_mask = pluss::series::undefined(),
+                 const Series& tgt_mask = pluss::series::undefined(),
+                 const Series& memory_mask = pluss::series::undefined(),
+                 const Series& src_key_padding_mask = pluss::series::undefined(),
+                 const Series& tgt_key_padding_mask = pluss::series::undefined(),
+                 const Series& memory_key_padding_mask = pluss::series::undefined(),
                  bool src_is_causal = false,
                  bool tgt_is_causal = false,
                  bool memory_is_causal = false) const {
@@ -905,8 +982,8 @@ public:
   }
 
   Series encode(const Series& src,
-                const Series& src_mask = Series(),
-                const Series& src_key_padding_mask = Series(),
+                const Series& src_mask = pluss::series::undefined(),
+                const Series& src_key_padding_mask = pluss::series::undefined(),
                 bool src_is_causal = false) const {
     validate_encoder_io_(src);
     return encoder_->forward(src, src_mask, src_key_padding_mask, src_is_causal);
@@ -914,6 +991,14 @@ public:
 
   Series operator()(const Series& src, const Series& tgt) const { return forward(src, tgt); }
   Series operator()(const Series& src) const { return forward(src); }
+
+  TransformerOptions& options() noexcept { return options_; }
+  const TransformerOptions& options() const noexcept { return options_; }
+
+  TransformerEncoder& encoder() noexcept { return encoder_; }
+  const TransformerEncoder& encoder() const noexcept { return encoder_; }
+  TransformerDecoder& decoder() noexcept { return decoder_; }
+  const TransformerDecoder& decoder() const noexcept { return decoder_; }
 
 private:
   void validate_options_() const {

@@ -757,14 +757,14 @@ bool cudnn_forward_(
   const auto& api = ctx.api;
   const Series input = input_raw.is_contiguous() ? input_raw : input_raw.contiguous();
   const Series weight = weight_raw.is_contiguous() ? weight_raw : weight_raw.contiguous();
-  const Series bias = bias_raw.defined() ? (bias_raw.is_contiguous() ? bias_raw : bias_raw.contiguous()) : Series();
+  const Series bias = bias_raw.defined() ? (bias_raw.is_contiguous() ? bias_raw : bias_raw.contiguous()) : pluss::series::undefined();
 
   HandleGuard handle{&api};
   TensorDescGuard x_desc{&api};
   FilterDescGuard w_desc{&api};
   ConvDescGuard conv_desc{&api};
   TensorDescGuard y_desc{&api};
-  Series output;
+  Series output = pluss::series::undefined();
   if (!prepare_common_(
           api,
           input,
@@ -867,7 +867,7 @@ bool cudnn_backward_input_(
   FilterDescGuard w_desc{&api};
   ConvDescGuard conv_desc{&api};
   TensorDescGuard y_desc{&api};
-  Series output;
+  Series output = pluss::series::undefined();
   if (!prepare_common_(
           api,
           input_like,
@@ -994,7 +994,7 @@ bool cudnn_backward_weight_(
   FilterDescGuard w_desc{&api};
   ConvDescGuard conv_desc{&api};
   TensorDescGuard y_desc{&api};
-  Series output;
+  Series output = pluss::series::undefined();
   if (!prepare_common_(
           api,
           input,
@@ -1220,7 +1220,7 @@ std::optional<Series> try_conv2d(
   }
 
 #if PLUSS_AI_HAS_CUDNN_CONV_KERNELS && PLUSS_AI_HAS_DLOPEN
-  Series out;
+  Series out = pluss::series::undefined();
   if (!cudnn_forward_(input, weight, bias, geom, &out, &reason)) {
     if (route_strict()) {
       PLUSS_FAIL(std::string("pluss::ai::conv: strict cuDNN forward failed: ") + reason);
@@ -1243,7 +1243,7 @@ std::optional<Series> try_conv2d(
             : output_sens.to(input.platform(), input.scalar_type()).contiguous();
 
         if (track_input) {
-          Series grad_input;
+          Series grad_input = pluss::series::undefined();
           std::string why{};
           if (!cudnn_backward_input_(go, weight, input, geom, &grad_input, &why)) {
             PLUSS_FAIL(std::string("pluss::ai::conv backward(input): ") + why);
@@ -1251,7 +1251,7 @@ std::optional<Series> try_conv2d(
           pluss::codem::series_tape::accumulate_sensitivity(input, grad_input);
         }
         if (track_weight) {
-          Series grad_weight;
+          Series grad_weight = pluss::series::undefined();
           std::string why{};
           if (!cudnn_backward_weight_(go, input, weight, geom, &grad_weight, &why)) {
             PLUSS_FAIL(std::string("pluss::ai::conv backward(weight): ") + why);

@@ -9,6 +9,7 @@
 ```cpp
 Series::lgamma() const -> Series
 Series& Series::lgamma_()
+Series& Series::lgamma_()
 ```
 
 ## What It Does
@@ -93,6 +94,29 @@ Anchor values, useful for spot-checking a reverse pass:
 Where `Gamma` has a pole, `psi` does too: the sensitivity at `x = 0` or a
 negative integer is `NaN`. `psi` itself is not differentiable here, so a second
 reverse pass through `lgamma()` is not supported.
+
+## In-Place Form
+
+`lgamma_()` is the in-place sibling of [`lgamma()`](lgamma.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 5.0});
+
+auto& ref = x.lgamma_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0, 3.1780538]
+same object: true
+```
 
 ## Examples
 

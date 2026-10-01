@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::quarter() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its calendar
+Replaces every selected `Timeline` feature with its calendar
 quarter (`1`-`4`), as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -79,7 +79,7 @@ January, February, and March all fall in Q1; July falls in Q3.
 ## Notes
 
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.

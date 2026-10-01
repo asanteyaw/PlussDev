@@ -11,6 +11,8 @@ Series Series::masked_fill(const Series& mask, double value) const
 Series Series::masked_fill(const Series& mask, const Series& value) const
 Series& Series::masked_fill_(const Series& mask, double value) const
 Series& Series::masked_fill_(const Series& mask, const Series& value) const
+Series& Series::masked_fill_(const Series& mask, double value) const
+Series& Series::masked_fill_(const Series& mask, const Series& value) const
 ```
 
 ## What It Does
@@ -68,6 +70,46 @@ influences the result. When `value` is itself a tracked `Series`, every
 Broadcasting is honored in reverse the usual way: if `self` expands from
 `[1, N]` to `[M, N]`, its sensitivity sums the contributions from all `M`
 broadcast rows. `mask` itself is non-differentiable.
+
+## In-Place Form
+
+`masked_fill_()` is the in-place sibling of [`masked_fill()`](masked_fill.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `masked_fill_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
+
+x.masked_fill_(mask, 0.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 2, 0]
+```
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto mask = pluss::make_series({true, false, true}, pluss::ScalarType::Bool);
+auto value = pluss::make_series(0.0);  // must be rank-zero
+
+x.masked_fill_(mask, value);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 2, 0]
+```
 
 ## Examples
 
@@ -281,9 +323,9 @@ produce one.
   integer position along one axis, rather than an arbitrary boolean pattern.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="lt.html">
+  <a class="prev-link" href="mT.html">
     <span class="label">Previous</span>
-    <span class="title">lt</span>
+    <span class="title">mT</span>
   </a>
   <a class="next-link" href="masked_scatter.html">
     <span class="label">Next</span>

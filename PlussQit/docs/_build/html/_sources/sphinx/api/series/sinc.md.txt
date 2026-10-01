@@ -9,6 +9,7 @@
 ```cpp
 Series Series::sinc() const
 Series& Series::sinc_()
+Series& Series::sinc_() const
 ```
 
 ## What It Does
@@ -62,6 +63,31 @@ d/dx sinc(x) = ( pi x cos(pi x) - sin(pi x) ) / ( pi x^2 )
 At `x = 0` the derivative is `0` — `sinc` has a smooth maximum there — and the
 backward pass returns exactly `0` for that element rather than dividing by
 zero.
+
+## In-Place Form
+
+`sinc_()` is the in-place sibling of [`sinc()`](sinc.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `sinc_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.sinc_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1, 3.8981718e-17]
+same object: true
+```
 
 ## Examples
 

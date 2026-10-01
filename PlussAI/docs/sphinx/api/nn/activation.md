@@ -34,16 +34,16 @@ learnable weight.
 namespace nn = pluss::ai::nn;
 
 nn::Schedule net;
-net.then("fc1", nn::Fusion(784, 128));
-net.then("act1", nn::ReLU());
-net.then("fc2", nn::Fusion(128, 10));
+net.append("fc1", nn::Fusion(784, 128));
+net.append("act1", nn::ReLU());
+net.append("fc2", nn::Fusion(128, 10));
 
 const Series logits = net.forward(x);
 ```
 
 Every type here is added into a [`Schedule`](module/Schedule.md) the same
 way any other layer is -- there is nothing activation-specific about
-`then`/`insert`. The only structural difference from `fusion`/`cnn`/`rnn` is
+`append`/`insert`. The only structural difference from `fusion`/`cnn`/`rnn` is
 that none of these types register any parameters, so a `Schedule`'s
 [`parameters()`](module/Module/parameters.md) is unaffected by how many
 activation stages it has.
@@ -71,12 +71,12 @@ activation/Tanh
 activation/Softplus
 activation/LeakyReLU
 activation/Elu
+activation/Identity
 activation/SiLU
 activation/GELU
 activation/Hardshrink
 activation/Softmax
 activation/LogSoftmax
 activation/PReLU
-activation/Identity
 ```
 <!-- apiref:toctree:end -->

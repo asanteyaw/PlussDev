@@ -460,7 +460,6 @@ tan_
 tanh
 tanh_
 tensor_split
-tile
 to_dense
 to_mkldnn
 to_padded_tensor

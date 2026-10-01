@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamTimelineAccessor::iso" href="iso.html" />
-    <link rel="prev" title="StreamTimelineAccessor::index" href="index.html" />
+    <link rel="prev" title="StreamTimelineAccessor::hour" href="hour.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -53,11 +53,11 @@
 replacing it with a <code class="docutils literal notranslate"><span class="pre">Bool</span></code> <code class="docutils literal notranslate"><span class="pre">Series</span></code> stream.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+<p>StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Every method on this accessor — not just <code class="docutils literal notranslate"><span class="pre">isnat()</span></code> — routes through
-<code class="docutils literal notranslate"><span class="pre">Thread::tl()</span></code> for the bound stream. <code class="docutils literal notranslate"><span class="pre">tl()</span></code> accepts <strong>both</strong> <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind
-and <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind streams uniformly; if the stream is neither, the call
-throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::tl:</span> <span class="pre">expected</span> <span class="pre">Timeline</span> <span class="pre">or</span> <span class="pre">TimeIndex</span> <span class="pre">payload&quot;</span></code>. Cast first with
+<code class="docutils literal notranslate"><span class="pre">Thread::tl()</span></code> for the bound stream. <code class="docutils literal notranslate"><span class="pre">tl()</span></code> requires the stream to be
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind; if it is not, the call throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Thread::tl:</span> <span class="pre">expected</span> <span class="pre">Timeline</span> <span class="pre">payload&quot;</span></code>. Cast first with
 <a class="reference internal" href="../stream/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(ThreadCastTarget::Timeline)</span></code></span></a> if the stream
 isn’t already a timestamp.</p>
 </div>
@@ -97,7 +97,7 @@ label        | value
 ========================================================================================================================
 </pre></div>
 </div>
-<p>Example 2 (edge case). A non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> stream throws — see the
+<p>Example 2 (edge case). A non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> stream throws — see the
 important callout above.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}));</span>
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -111,7 +111,7 @@ important callout above.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::tl: expected Timeline or TimeIndex payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::tl: expected Timeline payload
 </pre></div>
 </div>
 </section>
@@ -134,9 +134,9 @@ never itself masked — it directly answers the missingness question.</p></li>
 whole-catalog equivalent.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>
@@ -199,7 +199,7 @@ whole-catalog equivalent.</p></li>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../stream_api_reference.html">Stream API Reference</a><ul>
   <li><a href="../../stream_timeline_accessor_api_reference.html">StreamTimelineAccessor API Reference</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">StreamTimelineAccessor::index</a></li>
+      <li>Previous: <a href="hour.html" title="previous chapter">StreamTimelineAccessor::hour</a></li>
       <li>Next: <a href="iso.html" title="next chapter">StreamTimelineAccessor::iso</a></li>
   </ul></li>
   </ul></li>

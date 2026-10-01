@@ -649,7 +649,7 @@ class HoldoutPlan final {
   }
 
   HoldoutPlan& stratify(std::string feature_name) {
-    options_.stratify = Series::undefined();
+    options_.stratify = pluss::series::undefined();
     options_.stratify_feature = std::move(feature_name);
     return *this;
   }

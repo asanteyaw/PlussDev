@@ -9,7 +9,7 @@ int main() {
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  std::cout << "undefined labels ok = " << std::boolalpha << cls::class_mix(pluss::Series::undefined()).ok() << "\n";
+  std::cout << "undefined labels ok = " << std::boolalpha << cls::class_mix(pluss::series::undefined()).ok() << "\n";
 
   const pluss::Series empty = pluss::make_series(std::vector<double>{}, {0}, f64);
   std::cout << "empty labels ok = " << cls::class_mix(empty).ok() << "\n";

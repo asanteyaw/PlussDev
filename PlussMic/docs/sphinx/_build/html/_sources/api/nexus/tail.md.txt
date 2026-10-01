@@ -119,7 +119,11 @@ Example 3. Continuing from Example 1, asking for more tables than exist returns
 the whole workspace.
 
 ```cpp
-print_keys(biz.tail(99));
+auto out = biz.tail(99);
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
 ```
 
 ### Output

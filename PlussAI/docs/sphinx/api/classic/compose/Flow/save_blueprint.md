@@ -18,6 +18,15 @@ elsewhere.
 [[nodiscard]] classic::StatusOr<std::string> classic::Flow::save_blueprint() const;
 ```
 
+## What It Does
+
+Serializes every stage's kind, key, remainder policy, feature route, and
+options into one versioned, plain-text string -- structure only, no fitted
+parameters and no model attachment. Pair it with
+[`dump_transform_states`](dump_transform_states.md)/
+[`dump_model_state`](dump_model_state.md) for a fully persisted `Flow`, or
+use it alone when only the unfit pipeline shape needs to travel elsewhere.
+
 ## Parameters
 
 None.

@@ -25,8 +25,8 @@ using pluss::Series;
 constexpr double kLog2Pi = 1.83787706640934533908;
 
 struct VarDesign {
-  Series design = Series::undefined();
-  Series target = Series::undefined();
+  Series design = pluss::series::undefined();
+  Series target = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t t = 0;
   std::int64_t k = 0;
@@ -96,7 +96,7 @@ VarDesign build_design_(const Series& y_in,
   PLUSS_CHECK(k > 0, std::string("subsp::stats::ts::") + op_name + ": expected at least one series");
 
   std::int64_t m = 0;
-  Series x = Series::undefined();
+  Series x = pluss::series::undefined();
   if (x_in != nullptr && x_in->defined()) {
     x = as_matrix_(*x_in, op_name).to(out_cfg.platform, out_cfg.dtype);
     const auto xs = x.sizes();
@@ -436,7 +436,7 @@ VarFit fit_impl_(const Series& y, const Series* x, const VarOptions& options, Co
     y_fit = y_fit.unite({pluss::series::zeros({design.d, design.k}, cpu_f64_cfg_())}, 0);
   }
 
-  Series coeff = Series::undefined();
+  Series coeff = pluss::series::undefined();
   const std::array<double, 5> scales{1.0, 10.0, 100.0, 1000.0, 1.0e6};
   for (double s : scales) {
     coeff = pluss::subsp::math::linalg::pinverse(z_fit, options.pinv_rcond * s).matmul(y_fit);
@@ -612,7 +612,7 @@ Series vecm_to_var(const Series& short_run, const Series& impact, Config cfg) {
   PLUSS_CHECK(is[0] == is[1], "subsp::stats::ts::vecm_to_var: impact must be square");
   const std::int64_t k = is[0];
 
-  Series sr = Series::undefined();
+  Series sr = pluss::series::undefined();
   std::int64_t q = 0;
   std::vector<double> srv;
   if (short_run.defined()) {

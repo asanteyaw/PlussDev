@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DataFrameCaseStudyAccessor::at &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="DataFrameCaseStudyAccessor::labels" href="labels.html" />
+    <link rel="prev" title="DataFrameCaseStudyAccessor API Reference" href="../../dataframe_case_study_accessor_api_reference.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f5d6d8112642 -->
+<section id="dataframecasestudyaccessor-at">
+<h1>DataFrameCaseStudyAccessor::at<a class="headerlink" href="#dataframecasestudyaccessor-at" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../dataframe_case_study_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameCaseStudyAccessor API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">at</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Selects exactly one case by position while preserving the result as a one-row
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. Nonnegative positions count from the front; negative positions count
+from the end, so <code class="docutils literal notranslate"><span class="pre">-1</span></code> is the last case. The selected case label, all feature dtypes,
+the frame title, and feature order survive. Unlike <code class="docutils literal notranslate"><span class="pre">slice()</span></code>, <code class="docutils literal notranslate"><span class="pre">at()</span></code> does not clamp an
+out-of-range position: it fails before constructing a result.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">at()</span></code> when one physical row is the contract. Use <code class="docutils literal notranslate"><span class="pre">labels()</span></code> when a case-axis value
+is the contract, because one label may match several rows.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>row</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+The case position to select. <code class="docutils literal notranslate"><span class="pre">0</span></code> is the first case; <code class="docutils literal notranslate"><span class="pre">-1</span></code> is the last. Must satisfy
+<code class="docutils literal notranslate"><span class="pre">-ncases()</span> <span class="pre">&lt;=</span> <span class="pre">row</span> <span class="pre">&lt;</span> <span class="pre">ncases()</span></code> after normalization, or the call throws.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new, one-case frame with every feature, dtype, and the selected case’s label
+preserved. The source frame is unchanged.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Select the first case by a nonnegative position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">}))},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">first</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>===================
+     | city   units
+-------------------
+0    | Accra  10   
+-------------------
+[1 cs x 2 feat]
+</pre></div>
+</div>
+<p>Example 2. A negative position counts from the end; <code class="docutils literal notranslate"><span class="pre">-1</span></code> is the last case. Chaining
+<code class="docutils literal notranslate"><span class="pre">features(...)</span></code> afterward projects down to a single column.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">-1</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">last</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
+     | city  
+-------------
+2    | Kumasi
+-------------
+[1 cs x 1 feat]
+</pre></div>
+</div>
+<p>Example 3. An out-of-range position fails rather than clamping.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame: row index out of bounds
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">at()</span></code> never clamps. Compare with <a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a>, whose bounds are always
+normalized into range instead of throwing.</p></li>
+<li><p>The case label at the selected position is preserved on the result, so a one-row
+frame from <code class="docutils literal notranslate"><span class="pre">at()</span></code> still reports its original case identity, not a synthetic <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">at()</span></code> is the scalar-position sibling of <a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">take()</span></code></span></a> (several positions) and
+<a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">slice()</span></code></span></a> (one contiguous interval).</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="slice.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameCaseStudyAccessor::slice</span></code></span></a>: a contiguous positional interval,
+with clamped rather than validated bounds.</p></li>
+<li><p><a class="reference internal" href="take.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameCaseStudyAccessor::take</span></code></span></a>: several explicit positions, gathered
+in request order.</p></li>
+<li><p><a class="reference internal" href="labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameCaseStudyAccessor::labels</span></code></span></a>: select by case-axis value instead
+of physical position.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="labels.html"><span class="label">Next</span><span class="title">labels</span></a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../dataframe_api_reference.html">DataFrame API Reference</a><ul>
+  <li><a href="../../dataframe_case_study_accessor_api_reference.html">DataFrameCaseStudyAccessor API Reference</a><ul>
+      <li>Previous: <a href="../../dataframe_case_study_accessor_api_reference.html" title="previous chapter">DataFrameCaseStudyAccessor API Reference</a></li>
+      <li>Next: <a href="labels.html" title="next chapter">DataFrameCaseStudyAccessor::labels</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/dataframe-case-study/at.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

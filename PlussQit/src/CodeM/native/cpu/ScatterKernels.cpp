@@ -153,7 +153,7 @@ static void scatter_reduce_impl_contig(Series& a, std::int64_t dim, const Series
 //   - if include_self: keep existing self values
 //   - else: fill identity for reduce
   if (has_initial) {
-    Series self_backup = Series::undefined();
+    Series self_backup = pluss::series::undefined();
     if (include_self) self_backup = a.clone();
     T* ap0 = reinterpret_cast<T*>(const_cast<std::byte*>(a.raw_data()));
     const T init = (T)initial;
@@ -286,7 +286,7 @@ static void scatter_reduce_complex_sum_contig(
   auto sh = compute_shape(a, dim, index, "scatter_reduce");
 
   if (has_initial) {
-    Series self_backup = Series::undefined();
+    Series self_backup = pluss::series::undefined();
     if (include_self) self_backup = a.clone();
     auto* ap0 = reinterpret_cast<ComplexT*>(const_cast<std::byte*>(a.raw_data()));
     const ComplexT init(static_cast<typename ComplexT::value_type>(initial), static_cast<typename ComplexT::value_type>(0));

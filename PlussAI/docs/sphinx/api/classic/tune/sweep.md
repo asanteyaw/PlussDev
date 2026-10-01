@@ -20,6 +20,16 @@ classic::StatusOr<classic::TuneReport> classic::sweep(
     std::int64_t max_parallel = 0);
 ```
 
+## What It Does
+
+Cross-assesses every candidate in `candidates` against the same `batch`
+(the same work [`cross_assess`](../metrics/cross_assess.md) does per
+candidate), then ranks all results into one
+[`TuneReport`](TuneReport.md) by `objective_metric`. Every candidate is
+always evaluated, in full -- there is no early stopping, sampling, or
+budget here, only the underlying strategy
+[`tune`](tune.md)'s `search = Grid`/`None` modes reduce to.
+
 ## Parameters
 
 `candidates`

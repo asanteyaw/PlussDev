@@ -5,17 +5,12 @@
 ## Signature
 
 ```cpp
-TimeIndex::round(std::string_view unit) const -> TimeIndex
+TimeIndex TimeIndex::round(std::string_view unit) const
 ```
 
 ## What It Does
 
 Rounds each timestamp to the nearest requested unit.
-
-Wrapper families mirror the generic method:
-
-- `round_ns()`, `round_us()`, `round_ms()`, `round_s()`
-- `round_min()`, `round_h()`, `round_D()`, `round_W()`
 
 This is the symmetric rounding form. Use it when neither earlier nor later
 bucket ownership is inherently privileged.
@@ -60,12 +55,12 @@ std::cout << pluss::timeindex::print(nearest_hours) << "\n";
 - [`TimeIndex::ceil`](ceil.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ceil.html">
+  <a class="prev-link" href="rolling_sum.html">
     <span class="label">Previous</span>
-    <span class="title">ceil</span>
+    <span class="title">rolling_sum</span>
   </a>
-  <a class="next-link" href="normalize.html">
+  <a class="next-link" href="searchsorted.html">
     <span class="label">Next</span>
-    <span class="title">normalize</span>
+    <span class="title">searchsorted</span>
   </a>
 </div>

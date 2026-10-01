@@ -11,13 +11,21 @@ indistinguishable from `x` itself out there anyway.
 ## Signature
 
 ```cpp
-explicit nn::Softplus::Softplus(nn::SoftplusOptions options = {});
+explicit nn::Softplus::Softplus(nn::SoftplusOptions options);
+explicit nn::Softplus::Softplus(double beta = 1.0, double threshold = 20.0);
 ```
 
 ## Construction
 
-Default-construct for `beta=1.0, threshold=20.0`, or pass a
-[`SoftplusOptions`](SoftplusOptions.md) to change either.
+Two equivalent forms: pass a [`SoftplusOptions`](SoftplusOptions.md)
+directly, or spell out `beta`/`threshold` as positional arguments (both
+default, so `nn::Softplus sp;` alone works):
+
+```cpp
+nn::Softplus a(nn::SoftplusOptions{2.0, 15.0});  // beta=2.0, threshold=15.0
+nn::Softplus b(2.0, 15.0);                        // equivalent positional form
+nn::Softplus c;                                   // beta=1.0, threshold=20.0 (defaults)
+```
 
 ## State
 
@@ -143,6 +151,11 @@ data=[30] -- above threshold, falls back to x itself
 ## Changelog
 
 - **0.1** — the smooth `ReLU` approximation, `beta`/`threshold` options.
+- **0.2** — added the positional `Softplus(beta, threshold)` constructor
+  alongside the `SoftplusOptions` form (previously, a bare numeric
+  argument silently bound to the inherited `Module(bool training)`
+  constructor instead of `beta`, since no positional form existed to
+  compete with it).
 
 ## See Also
 

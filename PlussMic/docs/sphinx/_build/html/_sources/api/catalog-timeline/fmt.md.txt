@@ -14,9 +14,9 @@ Catalog CatalogTimelineAccessor::fmt(std::string_view pattern) const
 ## What It Does
 
 Renders each bound key's timestamp as custom text built from `pattern`,
-replacing each `Timeline`- or `TimeIndex`-kind key with a `Note` (text) key.
+replacing each `Timeline`-kind key with a `Note` (text) key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -65,39 +65,12 @@ ts                       | Note         | Note             | 2       | [31 Jan 2
 ========================================================================================================================
 ```
 
-Example 2. `fmt()` also works on an already-`TimeIndex`-kind key (produced by
-[`index()`](index.md)), formatting each row the same way.
-
-```cpp
-using namespace pluss::kindle::literals;
-
-auto ct = pluss::kindle::Catalog({
-    "ts"_k = pluss::kindle::Stream(pluss::make_timeline({"2024-01-31T09:15:30Z"})),
-});
-auto ti = ct.tl().index();
-auto out = ti.tl().fmt("%Y");
-std::cout << out;
-```
-
-### Output
-
-```text
-========================================================================================================================
-kindle::Catalog  keys=1
-keys: [ts]
-------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
-------------------------------------------------------------------------------------------------------------------------
-ts                       | Note         | Note             | 1       | [2024]                                          
-========================================================================================================================
-```
-
 ## Notes
 
 - `pattern` cannot be empty — an empty pattern throws.
 - `%f` always emits all 9 nanosecond digits, zero-padded; `%z` always renders as
   a signed `HH:MM` offset, never a bare `"Z"`.
-- Changes each bound key's kind from `Timeline`/`TimeIndex` to `Note`.
+- Changes each bound key's kind from `Timeline` to `Note`.
 - See the important callout above.
 
 ## See Also

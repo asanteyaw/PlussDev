@@ -9,6 +9,7 @@
 ```cpp
 Series::baddbmm(const Series& batch1, const Series& batch2,
                 double beta = 1.0, double alpha = 1.0) const -> Series
+Series& Series::baddbmm_(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const
 ```
 
 ## What It Does
@@ -48,6 +49,32 @@ row bias reused by every row of every batch.
 Differentiable in `input`, `batch1`, and `batch2`, applying the
 [`bmm()`](bmm.md) backward per batch and scaling by `alpha`, with `beta`
 straight through to `input`.
+
+## In-Place Form
+
+`baddbmm_()` is the in-place sibling of [`baddbmm()`](baddbmm.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `baddbmm_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{{0.0, 0.0}, {0.0, 0.0}}});
+auto batch1 = pluss::make_series({{{1.0, 0.0}, {0.0, 1.0}}});
+auto batch2 = pluss::make_series({{{1.0, 2.0}, {3.0, 4.0}}});
+
+x.baddbmm_(batch1, batch2, 1.0, 1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1,2,2], strides=[4,2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[[1, 2],
+  [3, 4]]]
+```
 
 ## Examples
 

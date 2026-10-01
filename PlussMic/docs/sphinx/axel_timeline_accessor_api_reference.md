@@ -23,7 +23,6 @@ api/axel-timeline/epoch
 api/axel-timeline/floor
 api/axel-timeline/fmt
 api/axel-timeline/hour
-api/axel-timeline/index
 api/axel-timeline/isnat
 api/axel-timeline/iso
 api/axel-timeline/leap

@@ -56,14 +56,14 @@ struct HjmParams {
 };
 
 struct RatePaths {
-  pluss::codem::Series rate = pluss::codem::Series::undefined();
-  pluss::codem::Series innovation = pluss::codem::Series::undefined();
+  pluss::codem::Series rate = pluss::series::undefined();
+  pluss::codem::Series innovation = pluss::series::undefined();
 };
 
 struct HjmPaths {
-  pluss::codem::Series rate = pluss::codem::Series::undefined();
-  pluss::codem::Series forward = pluss::codem::Series::undefined();      // [steps+1, paths, tenors]
-  pluss::codem::Series innovation = pluss::codem::Series::undefined();   // [steps, paths]
+  pluss::codem::Series rate = pluss::series::undefined();
+  pluss::codem::Series forward = pluss::series::undefined();      // [steps+1, paths, tenors]
+  pluss::codem::Series innovation = pluss::series::undefined();   // [steps, paths]
 };
 
 CODEM_API RatePaths vasicek_paths(std::int64_t steps,

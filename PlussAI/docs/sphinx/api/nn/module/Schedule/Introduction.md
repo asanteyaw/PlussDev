@@ -23,7 +23,7 @@ a throwaway `Module` subclass just to hold it.
 
 ## Type-Checked, Not Shape-Checked
 
-Adding a stage (`then`/`then_as`/`insert`/`insert_as`) checks that its
+Adding a stage (`append`/`append_as`/`insert`/`insert_as`) checks that its
 declared **type** matches its neighbor's -- `Series` next to `Series`,
 `std::tuple<Series, Series>` next to the same tuple type, and so on, compared
 via `std::type_info`. This check is compile-time-declared but
@@ -37,9 +37,9 @@ underlying matrix multiply fails.
 ## Heterogeneous Chains
 
 Most chains are `Series -> Series` throughout, which is what
-[`then`](then.md) assumes by default. `Schedule` is not limited to that,
+[`append`](append.md) assumes by default. `Schedule` is not limited to that,
 though: `RNN`/`GRU`/`LSTM`'s own `forward` returns `std::tuple<Series,
-Series>` (or a nested tuple, for `LSTM`), and [`then_as`](then_as.md) lets a
+Series>` (or a nested tuple, for `LSTM`), and [`append_as`](append_as.md) lets a
 stage declare exactly that as its output type, so a `Schedule` can chain
 directly into one and back out of it with an ordinary stage that unpacks the
 tuple. [`run`](run.md) extends the same idea to the chain's *input*: passing
@@ -72,13 +72,13 @@ see [`clear`](clear.md) for a direct side-by-side comparison.
 - [`Module`](../Module.md) -- the base contract every `Module`-like stage,
   and `Schedule` itself, implements.
 - [`rnn`](../../rnn.md) -- `RNN`/`GRU`/`LSTM`, whose tuple-returning
-  `forward` is the most common reason to reach for `then_as`.
+  `forward` is the most common reason to reach for `append_as`.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="clear.html">
+  <a class="next-link" href="append.html">
     <span class="label">Next</span>
-    <span class="title">clear</span>
+    <span class="title">append</span>
   </a>
 </div>
 <!-- apiref:nav:end -->

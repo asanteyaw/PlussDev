@@ -14,7 +14,7 @@ int main() {
 
   cls::TrainOptions options{};
   options.class_weight = cls::ClassWeightMode::Balanced;
-  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::Series::undefined(), options).value();
+  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::series::undefined(), options).value();
   std::cout << "class_weights = " << plan.class_weights << "\n";
   std::cout << "mix.inverse_frequency (expect identical) = " << plan.mix.inverse_frequency << "\n";
   std::cout << "weights (minority rows weigh more) = " << plan.weights << "\n";

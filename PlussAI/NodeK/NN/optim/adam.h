@@ -128,8 +128,8 @@ private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     AdamOptions options{};
-    Series beta1_power{};
-    Series beta2_power{};
+    Series beta1_power = pluss::series::undefined();
+    Series beta2_power = pluss::series::undefined();
   };
 
   void apply_step_(pluss::msharp::RangeView::Series gradients) override {
@@ -317,8 +317,8 @@ private:
     const double b1_correction = 1.0 - std::pow(options.beta1, static_cast<double>(step_));
     const double b2_correction = 1.0 - std::pow(options.beta2, static_cast<double>(step_));
 
-    Series b1_corr_series;
-    Series b2_corr_series;
+    Series b1_corr_series = pluss::series::undefined();
+    Series b2_corr_series = pluss::series::undefined();
     if (options.execution.capturable) {
       const Series one_b1 = scalar_on_(1.0, group.beta1_power);
       const Series one_b2 = scalar_on_(1.0, group.beta2_power);
@@ -607,8 +607,8 @@ private:
   void initialize_group_capture_state_() {
     const auto& params = parameters();
     for (auto& group : groups_) {
-      group.beta1_power = Series{};
-      group.beta2_power = Series{};
+      group.beta1_power = pluss::series::undefined();
+      group.beta2_power = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

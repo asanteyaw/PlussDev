@@ -16,6 +16,18 @@ classic::StatusOr<classic::FeatureRankReport> classic::rank_features(
     const classic::FeatureRankOptions& options = {});
 ```
 
+## What It Does
+
+Computes a univariate F-statistic for every feature column in `batch`
+against `batch.y` -- ANOVA F for a classification target, correlation-based
+F for a regression target -- and returns the full result: every feature's
+score, in ranked order, with nothing dropped. This is the base primitive
+[`pick_features`](pick_features.md),
+[`f_score_rank`](f_score_rank.md), and
+[`f_regression_rank`](f_regression_rank.md) all narrow down to a smaller
+result; call `rank_features` directly when the complete picture, not just
+a reduced batch or a top-k index list, is what's needed.
+
 ## Parameters
 
 `batch`

@@ -11,6 +11,15 @@ classic::StatusOr<std::unique_ptr<classic::ClassifierBase>> classic::make_classi
     const classic::ModelSpec& spec);
 ```
 
+## What It Does
+
+Reads `spec.family` and dispatches to that family's concrete classifier
+implementation, constructing it with the matching `*FamilyOptions`
+alternative from `spec.options`. The returned object is a real, working
+classifier -- just not yet fit to any data; nothing about its shape,
+parameters, or predictions is meaningful until
+[`learn`](EstimatorBase/learn.md) has run.
+
 ## Parameters
 
 `spec` — `ModelSpec`

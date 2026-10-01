@@ -52,34 +52,34 @@ TEST_CASE("Timeline shift distinguishes civil days from elapsed hours",
               .item<std::int64_t>() == 23);
 }
 
-TEST_CASE("Timeline to_timeindex validates axis invariants",
+TEST_CASE("Timeline index validates axis invariants",
           "[timeline-shift-promotion]") {
   const auto sorted = pluss::timeline::make({
       "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z",
       "2024-01-03T00:00:00Z"});
-  const auto index = sorted.to_timeindex();
+  const auto index = sorted.index();
   REQUIRE(index.size() == 3);
   REQUIRE(index.is_monotonic_increasing());
   REQUIRE_FALSE(index.is_unique());
 
-  const auto empty = pluss::timeline::epoch({0}).to_timeindex();
+  const auto empty = pluss::timeline::epoch({0}).index();
   REQUIRE(empty.size() == 0);
   REQUIRE(empty.is_monotonic_increasing());
 
   const auto unsorted = pluss::timeline::make({
       "2024-01-03T00:00:00Z", "2024-01-01T00:00:00Z"});
-  REQUIRE_THROWS(unsorted.to_timeindex());
-  REQUIRE_FALSE(unsorted.to_timeindex(false).is_monotonic_increasing());
+  REQUIRE_THROWS(unsorted.index());
+  REQUIRE_FALSE(unsorted.index(false).is_monotonic_increasing());
 
   REQUIRE_THROWS(pluss::timeline::make({"2024-01-01", ""})
-                     .to_timeindex(false));
-  REQUIRE_THROWS(pluss::timeline::date("2024-01-01").to_timeindex());
+                     .index(false));
+  REQUIRE_THROWS(pluss::timeline::date("2024-01-01").index());
   REQUIRE_THROWS(pluss::timeline::date(
                      std::vector<std::string>{"2024-01-01"}, {1, 1})
-                     .to_timeindex());
+                     .index());
 }
 
-TEST_CASE("Timeline to_timeindex materializes strided axes safely",
+TEST_CASE("Timeline index materializes strided axes safely",
           "[timeline-shift-promotion]") {
   std::array<std::int64_t, 5> backing{
       1'704'067'200'000'000'000LL, 99,
@@ -89,7 +89,7 @@ TEST_CASE("Timeline to_timeindex materializes strided axes safely",
   const std::array<std::int64_t, 1> strides{2};
   const auto source = pluss::Timeline::from_buffer(
       backing.data(), shape, strides, {}, "America/Edmonton");
-  const auto index = source.to_timeindex();
+  const auto index = source.index();
   REQUIRE(index.host() == std::vector<std::int64_t>{
       backing[0], backing[2], backing[4]});
   REQUIRE(index.timeline().tz() == "America/Edmonton");

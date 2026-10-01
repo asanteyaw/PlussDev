@@ -184,9 +184,9 @@ data=[[1, 4, 3],
   terminology.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="chunk.html">
+  <a class="prev-link" href="clamp.html">
     <span class="label">Previous</span>
-    <span class="title">chunk</span>
+    <span class="title">clamp</span>
   </a>
   <a class="next-link" href="clamp_min.html">
     <span class="label">Next</span>

@@ -55,7 +55,7 @@ Series stabilize_cov_(const Series& cov, double jitter, Config cfg) {
 
 Series stack_rows_(const std::vector<Series>& rows) {
   if (rows.empty()) {
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   if (rows.size() == 1) {
     return rows.front();
@@ -340,8 +340,8 @@ KalmanResult kalman_filter(const Series& observations, const KalmanModel& model,
 
   const bool use_control = model.control.defined() || model.control_matrix.defined();
   const double info_tol = std::max(model.info_tol, 0.0);
-  Series U = Series::undefined();
-  Series B = Series::undefined();
+  Series U = pluss::series::undefined();
+  Series B = pluss::series::undefined();
   if (use_control) {
     U = as_matrix_(model.control, op, "control").to(out_cfg.platform, out_cfg.dtype);
     B = as_matrix_(model.control_matrix, op, "control_matrix").to(out_cfg.platform, out_cfg.dtype);
@@ -705,7 +705,7 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
   PLUSS_CHECK(n_particles > 1 && n_state > 0,
               "subsp::math::finance::filtering::particle_filter: initial_particles must have N>1 and n>0");
 
-  Series weights;
+  Series weights = pluss::series::undefined();
   if (model.initial_weights.defined()) {
     weights = as_vector_col_(model.initial_weights, op, "initial_weights").reshape({n_particles}).to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(weights.numel() == n_particles,
@@ -789,7 +789,7 @@ ParticleFilterResult particle_filter(const Series& observations, const ParticleF
   return ParticleFilterResult{
       .filtered_mean = stack_rows_(mean_rows),
       .particle_weights = stack_rows_(weight_rows),
-      .particles = model.options.store_particles ? stack_rows_(particle_rows) : Series::undefined(),
+      .particles = model.options.store_particles ? stack_rows_(particle_rows) : pluss::series::undefined(),
       .ess = stack_rows_(ess_rows).reshape({t_obs}),
       .loglik = ll,
   };

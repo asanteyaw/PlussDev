@@ -9,8 +9,8 @@ namespace pluss::ai::nodej {
 
 struct VariancePruneResult {
   FeatureBatch reduced{};
-  Series selected_feature_indices = Series::undefined();
-  Series feature_variances = Series::undefined();
+  Series selected_feature_indices = pluss::series::undefined();
+  Series feature_variances = pluss::series::undefined();
 };
 
 enum class FeatureScoreMode : std::uint8_t {
@@ -38,15 +38,15 @@ struct FeaturePickOptions {
 };
 
 struct FeatureRankReport {
-  Series scores = Series::undefined();
-  Series ranked_feature_indices = Series::undefined();
+  Series scores = pluss::series::undefined();
+  Series ranked_feature_indices = pluss::series::undefined();
 };
 
 struct FeaturePickResult {
   FeatureBatch reduced{};
-  Series selected_feature_indices = Series::undefined();
-  Series scores = Series::undefined();
-  Series ranked_feature_indices = Series::undefined();
+  Series selected_feature_indices = pluss::series::undefined();
+  Series scores = pluss::series::undefined();
+  Series ranked_feature_indices = pluss::series::undefined();
 };
 
 StatusOr<FeatureBatch> take_features(const FeatureBatch& batch,

@@ -196,9 +196,9 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       x_cpu_g.tracks_slope_(true);
       w_cpu_g.tracks_slope_(true);
       b_cpu_g.tracks_slope_(true);
-      x_cpu_g.clear_sensitivity();
-      w_cpu_g.clear_sensitivity();
-      b_cpu_g.clear_sensitivity();
+      x_cpu_g.clear();
+      w_cpu_g.clear();
+      b_cpu_g.clear();
       pluss::nn::conv(x_cpu_g, w_cpu_g, b_cpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
       const std::vector<float> gx_ref = x_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
       const std::vector<float> gw_ref = w_cpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
@@ -210,9 +210,9 @@ bool run_rigorous_cudnn_conv_parity(std::ostream* err = nullptr) {
       x_gpu_g.tracks_slope_(true);
       w_gpu_g.tracks_slope_(true);
       b_gpu_g.tracks_slope_(true);
-      x_gpu_g.clear_sensitivity();
-      w_gpu_g.clear_sensitivity();
-      b_gpu_g.clear_sensitivity();
+      x_gpu_g.clear();
+      w_gpu_g.clear();
+      b_gpu_g.clear();
       pluss::nn::conv(x_gpu_g, w_gpu_g, b_gpu_g, tc.stride, tc.padding, tc.dilation, tc.groups).sum().reverse();
       const std::vector<float> gx_val = x_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();
       const std::vector<float> gw_val = w_gpu_g.sensitivity().to(pluss::pCPU, pluss::ScalarType::Float32).to_vec<float>();

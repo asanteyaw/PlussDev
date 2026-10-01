@@ -16,7 +16,7 @@ Catalog CatalogTimelineAccessor::utc() const
 Shorthand for [`tz("UTC")`](tz.md) — relabels each bound key's display
 timezone back to `"UTC"` without changing the underlying instant.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -64,7 +64,7 @@ UTC-relabeled: 2024-01-31 09:15:30
 
 ## Notes
 
-- Internally, each bound key stores its `Timeline`/`TimeIndex` values
+- Internally, each bound key stores its `Timeline` values
   independently; the resulting per-row tz labels round-trip correctly through
   the `kindle::Stream` boundary every further `.tl()` call goes through, the
   same as [`tz()`](tz.md).

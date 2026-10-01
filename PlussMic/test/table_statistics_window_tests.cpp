@@ -1108,9 +1108,9 @@ void test_thread_delegation_and_advanced_windows() {
       Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}));
   const auto right_labeled = resample_values.ts().resample(
       resample_axis,
-      pluss::TimeIndex::ResampleOptions{
+      pluss::Timeline::ResampleOptions{
           .freq = "D",
-          .label = pluss::TimeIndex::ResampleLabel::Right,
+          .label = pluss::Timeline::ResampleLabel::Right,
       },
       pluss::subsp::stats::ts::ResampleOp::Sum);
   expect(right_labeled.labels.as_timeline().day().to_vec<std::int32_t>() ==
@@ -1121,7 +1121,7 @@ void test_thread_delegation_and_advanced_windows() {
          "Thread ts resample options should preserve aggregation");
   const auto chained_daily = resample_values.ts().resample(
       resample_axis,
-      pluss::TimeIndex::ResampleOptions{.freq = "D"}).sum();
+      pluss::Timeline::ResampleOptions{.freq = "D"}).sum();
   expect(chained_daily.label().values().as_timeline().day().to_vec<std::int32_t>() ==
              std::vector<std::int32_t>({1, 2}) &&
              chained_daily.as_series().to_vec<double>() ==
@@ -1129,7 +1129,7 @@ void test_thread_delegation_and_advanced_windows() {
          "Thread ts resample(...).sum() should materialize labels and aggregated values");
   const auto shifted_bins = resample_values.ts().resample(
       resample_axis,
-      pluss::TimeIndex::ResampleOptions{
+      pluss::Timeline::ResampleOptions{
           .freq = "D",
           .offset_nanos = 12LL * 60LL * 60LL * 1'000'000'000LL,
       },
@@ -1139,7 +1139,7 @@ void test_thread_delegation_and_advanced_windows() {
          "Thread ts resample should support offset bin anchors");
   const auto six_hour_exact = resample_values.ts().resample(
       resample_axis,
-      pluss::TimeIndex::ResampleOptions{.freq = "6H"}).asfreq();
+      pluss::Timeline::ResampleOptions{.freq = "6H"}).asfreq();
   const auto six_hour_exact_vals = six_hour_exact.as_series().to_vec<double>();
   expect(six_hour_exact.label().values().as_timeline().hour().to_vec<std::int32_t>() ==
                  std::vector<std::int32_t>({0, 6, 12, 18, 0}) &&
@@ -1152,13 +1152,13 @@ void test_thread_delegation_and_advanced_windows() {
          "Thread ts resample(...).asfreq() should reindex exactly onto the target frequency");
   const auto six_hour_ffill = resample_values.ts().resample(
       resample_axis,
-      pluss::TimeIndex::ResampleOptions{.freq = "6H"}).ffill();
+      pluss::Timeline::ResampleOptions{.freq = "6H"}).ffill();
   expect(six_hour_ffill.as_series().to_vec<double>() ==
              std::vector<double>({1.0, 1.0, 2.0, 2.0, 3.0}),
          "Thread ts resample(...).ffill() should forward fill across inserted bins");
   const auto six_hour_bfill = resample_values.ts().resample(
       resample_axis,
-      pluss::TimeIndex::ResampleOptions{.freq = "6H"}).bfill();
+      pluss::Timeline::ResampleOptions{.freq = "6H"}).bfill();
   expect(six_hour_bfill.as_series().to_vec<double>() ==
              std::vector<double>({1.0, 2.0, 2.0, 3.0, 3.0}),
          "Thread ts resample(...).bfill() should backward fill across inserted bins");
@@ -1173,9 +1173,9 @@ void test_thread_delegation_and_advanced_windows() {
       {"x", resample_values},
   });
   const auto frame_right_labeled = resample_frame.features({"x"}).ts({.axis = resample_frame.features("when")}).resample(
-      pluss::TimeIndex::ResampleOptions{
+      pluss::Timeline::ResampleOptions{
           .freq = "D",
-          .label = pluss::TimeIndex::ResampleLabel::Right,
+          .label = pluss::Timeline::ResampleLabel::Right,
       },
       pluss::subsp::stats::ts::ResampleOp::Sum);
   expect(frame_right_labeled.label().values().as_timeline().day().to_vec<std::int32_t>() ==
@@ -1494,15 +1494,12 @@ void test_axis_dtype_and_host_exports() {
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
   });
-  const auto timeindex = pluss::make_timeindex({
-      "2024-01-01T00:00:00Z",
-      "2024-01-02T00:00:00Z",
-  });
+  const auto duration = pluss::duration::nanos({1'000'000'000LL, 2'000'000'000LL});
   const auto frame = DataFrame({
       {"amount", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
       {"city", Thread(pluss::make_note({"Accra", "Tema"}))},
       {"event", Thread(timeline)},
-      {"axis", Thread(timeindex)},
+      {"axis", Thread(duration)},
   });
 
   expect(frame.features() ==
@@ -1514,11 +1511,11 @@ void test_axis_dtype_and_host_exports() {
   expect(ptypes["amount"] == "Series", "numeric ptype should report Series payload");
   expect(ptypes["city"] == "Note", "note ptype should be Note");
   expect(ptypes["event"] == "Timeline", "timeline ptype should be Timeline");
-  expect(ptypes["axis"] == "TimeIndex", "time index ptype should be TimeIndex");
+  expect(ptypes["axis"] == "Duration", "duration ptype should be Duration");
 
   const auto payloads = ptypes.payloads();
   expect(payloads.size() == 4, "DataFrame::ptypes payloads size mismatch");
-  expect(payloads == std::vector<std::string>({"Series", "Note", "Timeline", "TimeIndex"}),
+  expect(payloads == std::vector<std::string>({"Series", "Note", "Timeline", "Duration"}),
          "DataFrame::ptypes payloads should preserve payload-family order");
 
   const auto dtypes = frame.dtypes();
@@ -1526,11 +1523,11 @@ void test_axis_dtype_and_host_exports() {
   expect(dtypes["amount"].find("Series<") == 0, "numeric dtype should include Series concrete dtype");
   expect(dtypes["city"] == "Note<utf8>", "note dtype should include Note concrete dtype");
   expect(dtypes["event"].find("Timeline<datetime64[ns, ") == 0, "timeline dtype should include timezone-aware concrete dtype");
-  expect(dtypes["axis"].find("TimeIndex<datetime64[ns, ") == 0,
-         "time index dtype should distinguish TimeIndex concrete dtype");
+  expect(dtypes["axis"] == "Duration<duration64[ns]>",
+         "duration dtype should distinguish Duration concrete dtype");
 
   expect(frame.features("amount").ptype() == "Series", "Thread::ptype should expose Series payload family");
-  expect(frame.features("axis").ptype() == "TimeIndex", "Thread::ptype should expose TimeIndex payload family");
+  expect(frame.features("axis").ptype() == "Duration", "Thread::ptype should expose Duration payload family");
 
   std::ostringstream stream;
   stream << ptypes;
@@ -1551,10 +1548,10 @@ void test_axis_dtype_and_host_exports() {
              timeline_host.tz() == "UTC",
          "Timeline::host should export epoch-nanos vector with timezone metadata");
 
-  const auto timeindex_host = timeindex.host();
-  expect(timeindex_host.size() == 2 &&
-             timeindex_host == timeline.ticks(),
-         "TimeIndex::host should export epoch-nanos vector");
+  const auto duration_host = duration.host();
+  expect(duration_host.size() == 2 &&
+             duration_host == std::vector<std::int64_t>({1'000'000'000LL, 2'000'000'000LL}),
+         "Duration::host should export epoch-nanos vector");
 
   const auto amount_value = frame.features("amount").sum();
   near(amount_value.to_dbl(), 3.0, 1e-12,
@@ -1587,10 +1584,9 @@ void test_axis_dtype_and_host_exports() {
   expect(raw_time.str().find("2024-01-01") != std::string::npos,
          "ThreadValue::host stream should print raw Timeline ISO text");
 
-  const auto timeindex_value = Thread(pluss::make_timeindex({"2024-01-02T00:00:00Z"})).value();
-  const auto timeindex_nanos = pluss::make_timeindex({"2024-01-02T00:00:00Z"}).host().front();
-  expect(timeindex_value.to_int() == timeindex_nanos,
-         "ThreadValue::to_int should extract epoch nanoseconds from TimeIndex");
+  const auto duration_value = Thread(pluss::duration::nanos({5'000'000'000LL})).value();
+  expect(duration_value.to_int() == 5'000'000'000LL,
+         "ThreadValue::to_int should extract nanoseconds from Duration");
 }
 
 void test_mps_parity() {

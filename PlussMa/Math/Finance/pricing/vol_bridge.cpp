@@ -23,10 +23,10 @@ using volatility::Ngarch11Params;
 constexpr double kLog2Pi = 1.83787706640934533908;
 
 struct NgarchCore {
-  Series variance = Series::undefined();
-  Series mean = Series::undefined();
-  Series standardized_innovation = Series::undefined();
-  Series loglik_per_obs = Series::undefined();
+  Series variance = pluss::series::undefined();
+  Series mean = pluss::series::undefined();
+  Series standardized_innovation = pluss::series::undefined();
+  Series loglik_per_obs = pluss::series::undefined();
 };
 
 Config f64_cfg_(Config cfg) {
@@ -165,7 +165,7 @@ Series ngarch_forecast_(std::int64_t horizon,
 
   const double persistence = params.beta + params.alpha * (1.0 + params.gamma * params.gamma);
   for (std::int64_t h = 0; h < horizon; ++h) {
-    Series h_next = Series::undefined();
+    Series h_next = pluss::series::undefined();
     if (h == 0) {
       h_next = h_prev.mul(params.beta)
                    .add(params.omega)

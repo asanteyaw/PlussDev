@@ -8,8 +8,8 @@
 namespace pluss::ai::nodej {
 
 struct KNearestResult {
-  Series indices = Series::undefined();     // [n_queries, k], int64 -- row indices into the built index
-  Series distances2 = Series::undefined();  // [n_queries, k], float64 -- squared distance, ascending per row
+  Series indices = pluss::series::undefined();     // [n_queries, k], int64 -- row indices into the built index
+  Series distances2 = pluss::series::undefined();  // [n_queries, k], float64 -- squared distance, ascending per row
 };
 
 // Exact k-nearest-neighbor index over a fixed point set, backed by a classic

@@ -37,6 +37,16 @@ three braced `{...}` lists instead of three existing ranges (a
 triples are known at the call site rather than already collected
 somewhere else.
 
+## What It Does
+
+`make_sparse_triplet` validates every `(row, column, value)` triple --
+indices in range, values finite -- and bundles the three parallel arrays
+into one `SparseTripletMatrix`, rejecting anything invalid before
+returning rather than deferring the check to first use.
+`sparse_triplet_to_csr` converts an already-built triplet matrix into the
+compressed-row form every sparse learner's `learn`/`infer`/`assess` code
+path actually runs against internally.
+
 ## Parameters
 
 `rows` / `cols`

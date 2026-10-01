@@ -1,0 +1,113 @@
+/* PlussBI dashboard stylesheet.
+ *
+ * This file is the single source of truth for dashboard styling. It is
+ * embedded verbatim (byte-for-byte, no C++ string interpolation) into a
+ * generated C++ header at PlussBI's CMake configure step -- see
+ * ../../CMakeLists.txt and include/pluss/bi/dashboard_assets.h -- and is
+ * either inlined into a self-contained exported/shown document, or served
+ * as-is over HTTP at `/assets/dashboard.css` by `Studio::serve()`.
+ *
+ * The handful of values that legitimately vary per render (dashboard max
+ * width, a minimum plot height derived from the requested window height)
+ * are threaded through as CSS custom properties set inline on the root
+ * wrapper element by the C++ renderer, never by rewriting this file's text.
+ */
+
+:root {
+  color-scheme: light;
+  --bg:#eef3f8;
+  --card:#ffffff;
+  --ink:#12212f;
+  --muted:#627483;
+  --line:#d8e2eb;
+  --accent:#0b7e87;
+  --chip:#e6f6f7;
+  --topbar-h:64px;
+  --sidebar-w:260px;
+  --dash-max-w:1280px;
+  --svg-min-h:420px;
+}
+
+* { box-sizing:border-box; }
+html, body { margin:0; padding:0; background:var(--bg); color:var(--ink); height:100%; }
+body { font-family: 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif; }
+
+/* ---------------------------------------------------------------------- */
+/* Shared atoms -- identical in every chrome mode.                        */
+/* ---------------------------------------------------------------------- */
+
+.bi-kicker { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); font-weight:800; }
+.bi-status { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap; }
+.bi-live-dot { width:8px; height:8px; border-radius:50%; background:#1fa971; box-shadow:0 0 0 3px rgba(31,169,113,.18); }
+.bi-live-dot.offline { background:#9aa7b1; box-shadow:0 0 0 3px rgba(154,167,177,.18); }
+
+.bi-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; background:var(--chip); border:1px solid #bfe8ea; color:#0e5760; font-size:12px; font-weight:700; }
+.bi-chip.muted { background:#f4f7fa; border-color:var(--line); color:var(--muted); }
+.bi-chip-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+.bi-chip-col { display:flex; flex-direction:column; gap:6px; }
+.bi-chip-col .bi-chip { width:fit-content; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+
+.bi-board { margin-bottom:18px; padding:16px; border:1px solid var(--line); border-radius:18px; background:var(--card); box-shadow:0 14px 34px rgba(24,38,53,.08); }
+.bi-board-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+.bi-board-head h2 { margin:0; font-size:22px; }
+.bi-board-meta { color:var(--muted); font-size:13px; }
+.bi-grid { display:grid; gap:14px; grid-auto-rows:minmax(140px, auto); }
+.bi-tile { display:flex; flex-direction:column; gap:12px; padding:14px; border:1px solid #e3ebf2; border-radius:16px; background:linear-gradient(180deg,#fff 0%,#fbfdff 100%); overflow:hidden; }
+.bi-tile-title { font-size:13px; font-weight:800; letter-spacing:.02em; color:#334757; }
+.bi-kpi { display:flex; flex:1; flex-direction:column; justify-content:center; gap:8px; min-height:100%; }
+.bi-kpi-label { color:var(--muted); font-size:13px; font-weight:700; }
+.bi-kpi-value { font-size:38px; line-height:1; font-weight:800; letter-spacing:-.03em; }
+.bi-kpi-meta { color:var(--muted); font-size:12px; }
+.bi-control { display:flex; flex:1; flex-direction:column; gap:10px; }
+.bi-control-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+.bi-control-label { font-weight:800; }
+.bi-control-feature { color:var(--muted); font-size:12px; margin-top:4px; }
+.bi-field-label { display:block; margin-bottom:6px; font-size:12px; color:var(--muted); font-weight:700; }
+.bi-select, .bi-input { width:100%; border:1px solid #c8d5df; border-radius:12px; background:#fff; padding:10px 12px; font:inherit; color:inherit; }
+.bi-range-grid { display:grid; gap:10px; grid-template-columns:repeat(2, minmax(0,1fr)); }
+.bi-help, .bi-empty { color:var(--muted); font-size:12px; line-height:1.45; }
+.bi-svg-wrap { flex:1; min-height:100%; overflow:auto; }
+.bi-svg-wrap svg { display:block; width:100%; height:auto; min-height:var(--svg-min-h, 420px); }
+.bi-table-shell { flex:1; min-height:0; }
+.bi-table-frame { width:100%; min-height:100%; height:100%; border:0; border-radius:12px; background:#fff; }
+
+/* ---------------------------------------------------------------------- */
+/* Chrome: none -- a single centered scrolling column, no fixed nav or    */
+/* sidebar. This is the flat, Phase-0-style layout: boards are simply     */
+/* stacked top to bottom, in document flow, with nothing pinned.          */
+/* ---------------------------------------------------------------------- */
+
+.bi-shell { width:min(100%, var(--dash-max-w)); margin:0 auto; padding:20px; }
+.bi-banner { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:18px; padding:18px 20px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(135deg,#dff4f6 0%,#fffaf3 100%); box-shadow:0 18px 40px rgba(18,33,47,.08); }
+.bi-banner-brand { display:flex; align-items:baseline; gap:10px; }
+.bi-banner h1 { margin:0; font-size:30px; line-height:1.1; }
+.bi-banner-aside { display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+
+/* ---------------------------------------------------------------------- */
+/* Chrome: sidebar -- a fixed, non-scrolling top navbar and a fixed,      */
+/* non-scrolling left sidebar (one tab per board, plus active filters).   */
+/* Only `.bi-content` scrolls.                                            */
+/* ---------------------------------------------------------------------- */
+
+.bi-app { min-height:100vh; }
+.bi-topbar { position:fixed; top:0; left:0; right:0; height:var(--topbar-h); z-index:30; display:flex; justify-content:space-between; align-items:center; gap:18px; padding:0 22px; border-bottom:1px solid var(--line); background:linear-gradient(135deg,#dff4f6 0%,#fffaf3 100%); box-shadow:0 6px 20px rgba(18,33,47,.06); }
+.bi-topbar-brand { display:flex; align-items:baseline; gap:10px; min-width:0; }
+.bi-topbar h1 { margin:0; font-size:20px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bi-sidebar { position:fixed; top:var(--topbar-h); left:0; bottom:0; width:var(--sidebar-w); z-index:20; overflow-y:auto; padding:18px 14px; border-right:1px solid var(--line); background:var(--card); }
+.bi-sidebar-title { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:800; margin:4px 8px 10px; }
+.bi-sidebar-filters-title { margin-top:22px; }
+.bi-tab { display:block; width:100%; text-align:left; background:none; border:0; border-radius:12px; padding:10px 12px; margin-bottom:4px; font:inherit; font-weight:700; font-size:14px; color:var(--ink); cursor:pointer; }
+.bi-tab:hover { background:#eef6f7; }
+.bi-tab.active { background:var(--chip); color:#0e5760; }
+.bi-content { margin-left:var(--sidebar-w); margin-top:var(--topbar-h); padding:22px; min-height:calc(100vh - var(--topbar-h)); }
+
+@media (max-width: 980px) {
+  .bi-shell { padding:14px; }
+  .bi-banner { flex-direction:column; }
+  :root { --sidebar-w:0px; }
+  .bi-sidebar { top:var(--topbar-h); left:0; right:0; bottom:auto; width:100%; height:auto; max-height:40vh; border-right:0; border-bottom:1px solid var(--line); padding:12px; }
+  .bi-content { margin-left:0; margin-top:calc(var(--topbar-h) + 160px); padding:14px; }
+  .bi-range-grid { grid-template-columns:1fr; }
+  .bi-grid { grid-template-columns:1fr !important; }
+  .bi-tile { grid-column:auto !important; grid-row:auto !important; min-height:180px !important; }
+}

@@ -34,7 +34,7 @@ struct DoubleSpan {
 
 inline Series pile_span(pluss::msharp::RangeView::Of<Series> values, std::int64_t dim = 0) {
   if (values.empty()) {
-    return {};
+    return pluss::series::undefined();
   }
   if (values.size() == 1) {
     return values.front().unsqueeze(dim);
@@ -46,7 +46,7 @@ inline Series unite_span(pluss::msharp::RangeView::Of<Series> values,
                          std::int64_t dim = 0,
                          bool strict_dtype = true) {
   if (values.empty()) {
-    return {};
+    return pluss::series::undefined();
   }
   if (values.size() == 1) {
     return values.front();

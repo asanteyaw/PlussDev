@@ -33,6 +33,20 @@ public:
   // Default dispatches on `kind` to the matching pluss::nn::losses:: free
   // function. Override for models that need a custom objective.
   [[nodiscard]] virtual Series compute_loss(const Series& predictions, const Series& y, LossKind kind) const;
+
+  // Same as the 3-argument overload, except that when `kind ==
+  // LossKind::CrossEntropy` and `label_smoothing != 0.0`, the default
+  // implementation calls `nn::losses::CrossEntropy` with that smoothing
+  // applied instead of delegating to the 3-argument overload -- so a
+  // model whose 3-argument `compute_loss` is overridden only sees that
+  // override when `label_smoothing == 0.0`. `Model::compute_loss(batch,
+  // ctx)` is what actually threads `ctx.recipe->objective_regularization
+  // .label_smoothing` through to this overload; nothing else calls it.
+  [[nodiscard]] virtual Series compute_loss(const Series& predictions,
+                                            const Series& y,
+                                            LossKind kind,
+                                            double label_smoothing) const;
+
   [[nodiscard]] virtual Series compute_loss(const Series& predictions,
                                             const Batch& batch,
                                             const StepContext& ctx) const;

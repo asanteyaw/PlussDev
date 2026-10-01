@@ -56,14 +56,3 @@ element, same as every other unit accessor in this family.
 
 - [`total().hours()`](total_hours.md): the finer unit this divides.
 - [`total().weeks()`](total_weeks.md): the next unit up.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="total_hours.html">
-    <span class="label">Previous</span>
-    <span class="title">total_hours</span>
-  </a>
-  <a class="next-link" href="total_weeks.html">
-    <span class="label">Next</span>
-    <span class="title">total_weeks</span>
-  </a>
-</div>

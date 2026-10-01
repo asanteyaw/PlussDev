@@ -23,7 +23,6 @@ api/slot-timeline/epoch
 api/slot-timeline/floor
 api/slot-timeline/fmt
 api/slot-timeline/hour
-api/slot-timeline/index
 api/slot-timeline/isnat
 api/slot-timeline/iso
 api/slot-timeline/leap

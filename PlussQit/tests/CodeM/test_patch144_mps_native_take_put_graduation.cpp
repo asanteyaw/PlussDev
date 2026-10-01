@@ -91,7 +91,7 @@ TEST_CASE("MPS native put survives strict no-fallback policy", "[mps][put][nativ
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{5, 1, 4, 0}, {4});
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f, 6.f}, {4});
   auto base_mps = base_cpu.to(pluss::pMPS);
-  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
+  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
 
   base_cpu = (base_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   base_mps = (base_mps.*put_fn)(idx_cpu.to(pluss::pMPS), src_cpu.to(pluss::pMPS), /*accumulate=*/false);
@@ -162,7 +162,7 @@ TEST_CASE("MPS native put supports uint8 lane under strict policy", "[mps][put][
   const auto idx_cpu = pluss::make_series(std::vector<std::int64_t>{5, 1, 4, 0}, {4});
   const auto src_cpu = pluss::make_series(std::vector<std::uint8_t>{9, 200, 7, 60}, {4});
   auto base_mps = base_cpu.to(pluss::pMPS);
-  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
+  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
 
   base_cpu = (base_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   base_mps = (base_mps.*put_fn)(idx_cpu.to(pluss::pMPS), src_cpu.to(pluss::pMPS), /*accumulate=*/false);
@@ -182,7 +182,7 @@ TEST_CASE("MPS strict put rejects unsupported accumulate lane when fallback is d
   const auto idx = pluss::make_series(std::vector<std::int64_t>{1, 1, 2}, {3}).to(pluss::pMPS);
   const auto src = pluss::make_series(std::vector<std::int16_t>{2, 3, 4}, {3}).to(pluss::pMPS);
   try {
-    auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
+    auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
     (void)(base.*put_fn)(idx, src, /*accumulate=*/true);
     FAIL("strict native put should fail for unsupported accumulate lane");
   } catch (const std::exception& e) {

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Duration Factory API Reference &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/api_ref.css?v=15722e59" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pluss::duration::days" href="api/duration_factory/days.html" />
+    <link rel="prev" title="Duration::where" href="api/duration/where.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="duration-factory-api-reference">
+<h1>Duration Factory API Reference<a class="headerlink" href="#duration-factory-api-reference" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../api_reference.html"><span class="std std-doc">Back to PlussQit API Reference</span></a></p>
+<p>The free functions in <code class="docutils literal notranslate"><span class="pre">pluss::duration</span></code> construct and render elapsed-time
+arrays. They are separate from the <a class="reference internal" href="duration_api_reference.html"><span class="std std-doc">Duration method reference</span></a>:
+factories answer how a value enters the type; methods answer what an existing
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> can do.</p>
+<section id="choose-by-intent">
+<h2>Choose By Intent<a class="headerlink" href="#choose-by-intent" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">nanos</span></code>, <code class="docutils literal notranslate"><span class="pre">microseconds</span></code>, <code class="docutils literal notranslate"><span class="pre">milliseconds</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes</span></code>, <code class="docutils literal notranslate"><span class="pre">hours</span></code>,
+<code class="docutils literal notranslate"><span class="pre">days</span></code>, or <code class="docutils literal notranslate"><span class="pre">weeks</span></code> when the source unit is known at the call site.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">make(values,</span> <span class="pre">Unit)</span></code> when the unit is selected at runtime.
+<code class="docutils literal notranslate"><span class="pre">pluss::make_duration(...)</span></code> is its intentional root-level forwarding form.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">range</span></code> for an inclusive, fixed-width one-dimensional progression.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">zeros</span></code> and <code class="docutils literal notranslate"><span class="pre">full</span></code> for shape-first allocation; use their <code class="docutils literal notranslate"><span class="pre">_like</span></code>
+counterparts when an existing Duration supplies the shape.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">random</span></code> for seeded or entropy-seeded uniform integer nanoseconds in a
+half-open interval.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">print</span></code> for diagnostic rendering to a string or stream.</p></li>
+</ul>
+<p>All duration values are stored as signed 64-bit nanoseconds. Construction is
+exact: integer inputs never pass through floating point. Public arrays support
+ranks zero through three; explicit shapes reject negative extents, cardinality
+overflow, and flat-data length mismatches before allocating. Unit scaling also
+checks signed-nanosecond overflow. <code class="docutils literal notranslate"><span class="pre">Duration::kNaT</span></code> is the reserved absent value.</p>
+<p>The unit constructors accept four data geometries: one integer produces a
+scalar; a contiguous integer range or flat braced list produces rank one;
+rectangular nested braces infer rank and shape; and <code class="docutils literal notranslate"><span class="pre">(flat,</span> <span class="pre">sizes)</span></code> applies
+runtime shape metadata. Every deterministic output in this family comes from
+<code class="docutils literal notranslate"><span class="pre">examples/CodeH/duration_factory_reference_demo.cpp</span></code>; its transcript is
+<code class="docutils literal notranslate"><span class="pre">docs/sphinx/_verified/duration_factory_reference_output.txt</span></code>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api_reference.html">PlussQit API Reference</a><ul>
+      <li>Previous: <a href="api/duration/where.html" title="previous chapter">Duration::where</a></li>
+      <li>Next: <a href="api/duration_factory/days.html" title="next chapter">pluss::duration::days</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/sphinx/duration_factory_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

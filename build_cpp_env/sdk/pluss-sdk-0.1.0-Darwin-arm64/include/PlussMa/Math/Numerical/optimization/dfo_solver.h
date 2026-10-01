@@ -36,18 +36,18 @@ enum class DfoStatus {
 };
 
 struct DfoConstraintValues {
-  Series inequality{Series::undefined()};
-  Series equality{Series::undefined()};
+  Series inequality{pluss::series::undefined()};
+  Series equality{pluss::series::undefined()};
 };
 
 struct DfoProblem {
-  Series initial{Series::undefined()};
+  Series initial{pluss::series::undefined()};
   std::function<Series(const Series&)> objective{};
   std::function<Series(const Series&)> constraints{};
   std::function<DfoConstraintValues(const Series&)> constraints_values{};
   std::function<BlackboxEvaluation(const Series&)> blackbox{};
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 };
 
 struct DfoAutoPolicy {
@@ -95,8 +95,8 @@ struct DfoDiagnostics {
 };
 
 struct DfoResult {
-  Series minimizer{Series::undefined()};
-  Series objective_vector{Series::undefined()};
+  Series minimizer{pluss::series::undefined()};
+  Series objective_vector{pluss::series::undefined()};
   double minimum{0.0};
   DfoStatus status{DfoStatus::ReachedIterationBudget};
   DfoSolverKind selected_solver{DfoSolverKind::Auto};

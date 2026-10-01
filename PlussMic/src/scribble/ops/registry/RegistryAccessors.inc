@@ -79,7 +79,7 @@ Registry RegistryFieldAxisAccessor::kind(SlotKind kind_value) const {
 Registry RegistryFieldAxisAccessor::series() const { return kind(SlotKind::Series); }
 Registry RegistryFieldAxisAccessor::note() const { return kind(SlotKind::Note); }
 Registry RegistryFieldAxisAccessor::timeline() const { return kind(SlotKind::Timeline); }
-Registry RegistryFieldAxisAccessor::timeindex() const { return kind(SlotKind::TimeIndex); }
+Registry RegistryFieldAxisAccessor::duration() const { return kind(SlotKind::Duration); }
 Registry RegistryFieldAxisAccessor::mixed() const { return kind(SlotKind::Mixed); }
 Registry RegistryFieldAxisAccessor::nulls() const { return kind(SlotKind::Null); }
 Registry RegistryFieldAxisAccessor::empty() const { return kind(SlotKind::Empty); }
@@ -101,8 +101,8 @@ Registry RegistryCastAccessor::timeline() const {
   return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).timeline(); });
 }
 
-Registry RegistryCastAccessor::timeindex() const {
-  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).timeindex(); });
+Registry RegistryCastAccessor::duration() const {
+  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.cast(options_).duration(); });
 }
 
 RegistryNoteAccessor::RegistryNoteAccessor(Registry base, std::vector<std::string> keys)
@@ -265,6 +265,3 @@ Registry RegistryTimelineAccessor::localize(const pluss::table::TimelineLocalize
   return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().localize(options); });
 }
 
-Registry RegistryTimelineAccessor::index(bool require_sorted) const {
-  return registry_map_selected(base_, keys_, [&](const Slot& slot) { return slot.tl().index(require_sorted); });
-}

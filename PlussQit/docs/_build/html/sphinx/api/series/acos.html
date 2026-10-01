@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -43,6 +43,7 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">acos</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">acos_</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
@@ -88,6 +89,28 @@ example below returns zero sensitivities rather than the mathematical derivative
 So <code class="docutils literal notranslate"><span class="pre">acos()</span></code> should currently be treated as value-correct, but backward support
 is not yet reliable through this method path.</p>
 </section>
+<section id="in-place-form">
+<h2>In-Place Form<a class="headerlink" href="#in-place-form" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">acos_()</span></code> is the in-place sibling of <a class="reference internal" href="#"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">acos()</span></code></span></a>: it computes the same
+result and writes it back into <code class="docutils literal notranslate"><span class="pre">self</span></code> directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> — then
+returns a reference to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">acos_</span><span class="p">();</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;x=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;same object: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="o">&amp;</span><span class="n">ref</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2.0943951, 1.5707963, 1.0471976]
+same object: true
+</pre></div>
+</div>
+</section>
+</section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Standard anchor values make the angle mapping easy to read.</p>
@@ -96,8 +119,8 @@ is not yet reliable through this method path.</p>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}).</span><span class="n">acos</span><span class="p">());</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[3.1416, 1.5708, 1.0472, 0.0000]
 </pre></div>
@@ -110,8 +133,8 @@ data=[3.1416, 1.5708, 1.0472, 0.0000]
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[[3.1415927, 2.0943951],
   [1.0471976, 0]]
@@ -130,8 +153,8 @@ surface, which is an important present-day limitation to know.</p>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>out=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[2.0943951, 1.5707963, 1.0471976]
 dx=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
@@ -143,8 +166,8 @@ data=[0, 0, 0]
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[nan, 3.1415927, 1.5707963, 0, nan]
 </pre></div>
@@ -166,6 +189,13 @@ just because the value transform works.</p></li>
 <p>Use <code class="docutils literal notranslate"><span class="pre">acos()</span></code> when your inputs represent cosine values and you need principal
 angles back in radians. The two checks that matter most are domain discipline
 and current backward-support expectations.</p>
+</section>
+<section id="aliases">
+<h2>Aliases<a class="headerlink" href="#aliases" title="Link to this heading">¶</a></h2>
+<p><strong><code class="docutils literal notranslate"><span class="pre">arccos()</span></code></strong> / <strong><code class="docutils literal notranslate"><span class="pre">arccos_()</span></code></strong> — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as <code class="docutils literal notranslate"><span class="pre">acos()</span></code> / <code class="docutils literal notranslate"><span class="pre">acos_()</span></code>
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
@@ -216,54 +246,13 @@ and current backward-support expectations.</p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>

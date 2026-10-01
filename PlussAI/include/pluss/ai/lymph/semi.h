@@ -139,8 +139,8 @@ class Result final {
 
  private:
   Model model_;
-  Series labels_ = Series::undefined();
-  Series labeled_round_ = Series::undefined();
+  Series labels_ = pluss::series::undefined();
+  Series labeled_round_ = pluss::series::undefined();
   std::int64_t rounds_{0};
   StopReason stop_{StopReason::None};
 };
@@ -199,8 +199,8 @@ class Runner final {
       const Series predicted = trained.infer(query, infer_options).reshape({unlabeled_idx.numel()});
       const Series confidence = detail::score_confidence_(trained.infer_scores(query, infer_options));
 
-      Series selected_full = Series::undefined();
-      Series selected_pred = Series::undefined();
+      Series selected_full = pluss::series::undefined();
+      Series selected_pred = pluss::series::undefined();
       if (options.select == SelectKind::Confidence) {
         const Series selected_mask = confidence.gt(options.confidence).reshape({confidence.numel()});
         selected_full = unlabeled_idx.masked_select(selected_mask).to(label_platform, ScalarType::Int64);

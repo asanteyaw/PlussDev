@@ -40,7 +40,7 @@ int main() {
   };
   constraints.lbs = {
       pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, cfg),
-      Series::undefined(),
+      pluss::series::undefined(),
   };
 
   options.progress_hook = [&](const pluss::optim::SeptimaProgressSnapshot& s) {

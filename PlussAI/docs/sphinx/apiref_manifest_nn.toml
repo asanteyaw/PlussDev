@@ -31,13 +31,15 @@
 title = "nn"
 summary = "PlussAI neural-network module framework."
 include = "<pluss/ai/nn.h>"
-header = "PlussAI"
-# `header` must be a single directory apiref.py can rglob("*.h") under; nn's
-# real symbols span PlussAI/NodeK, PlussAI/include/pluss (both covered by
-# pointing at PlussAI itself) and PlussTils/include/pluss/tils (nn/data's
-# pluss::loader, NOT covered -- no single directory spans both top-level
-# libraries). The nn/data family's class-name-presence lint check is a
-# known, permanent, accepted gap for exactly this reason.
+header = ["PlussAI", "PlussTils/include/pluss/tils/aux"]
+# `header` accepts a list of directories/files apiref.py rglobs("*.h")
+# under; nn's real symbols span PlussAI/NodeK, PlussAI/include/pluss
+# (covered by "PlussAI") and PlussTils/include/pluss/tils/aux (nn/data's
+# pluss::loader -- Dataset/SeriesDataset/DataLoader/Sampler and its
+# subclasses -- physically defined in data_loader.h/sampler.h there).
+# <pluss/ai/nn.h> itself #includes "pluss/tils/aux/data_loader.h" (see that
+# header) so this second path matches nn.h's own real dependency, not an
+# approximation of it.
 
 # ===========================================================================
 #  FAMILIES
@@ -104,7 +106,7 @@ path = "nn/losses"
 page = "api/nn/losses.md"
 title = "losses"
 maxdepth = 2
-children = ["losses/Introduction", "losses/MSE", "losses/RelativeMSE", "losses/Huber", "losses/L1", "losses/SmoothL1", "losses/BCEWithLogits", "losses/NLL", "losses/CrossEntropy"]
+children = ["losses/Introduction", "losses/MSE", "losses/MSEOptions", "losses/RelativeMSE", "losses/RelativeMSEOptions", "losses/Huber", "losses/HuberOptions", "losses/L1", "losses/L1Options", "losses/SmoothL1", "losses/SmoothL1Options", "losses/BCEWithLogits", "losses/BCEWithLogitsOptions", "losses/NLL", "losses/NLLOptions", "losses/CrossEntropy", "losses/CrossEntropyOptions"]
 
 [[family]]
 path = "nn/functional"
@@ -132,7 +134,7 @@ path = "nn/data"
 page = "api/nn/data.md"
 title = "data"
 maxdepth = 2
-children = ["data/Introduction", "data/Dataset", "data/SeriesDataset", "data/DataBatch", "data/DataLoader", "data/DataLoaderOptions", "data/DataSplit", "data/DataSplitOptions", "data/split_fields", "data/split_loaders", "data/TemporalSplitOptions", "data/temporal_split_indices", "data/temporal_split_fields", "data/temporal_split_loaders"]
+children = ["data/Introduction", "data/Dataset", "data/SeriesDataset", "data/DataBatch", "data/DataLoader", "data/Sampler", "data/SequentialSampler", "data/RandomSampler", "data/SubsetRandomSampler", "data/WeightedRandomSampler", "data/DataSplit", "data/DataSplitOptions", "data/split_fields", "data/DataLoaderSplit", "data/split_loaders", "data/TemporalSplitOptions", "data/temporal_split_indices", "data/TemporalIndexSplit", "data/temporal_split_fields", "data/TemporalFieldSplit", "data/temporal_split_loaders", "data/TemporalLoaderSplit"]
 
 # ===========================================================================
 #  SYMBOLS
@@ -153,7 +155,7 @@ kind = "class"
 family = "nn/module"
 page = "api/nn/module/Schedule.md"
 summary = "A named, ordered composition of modules and callables run in sequence -- the container every multi-layer network is built from."
-methods = ["then", "then_as", "insert", "insert_as", "extend", "erase", "forward", "run", "size", "empty", "reserve", "contains", "index_of", "name_at", "input_type_at", "output_type_at", "module_at", "stage_info", "stage_manifest", "clear"]
+methods = ["append", "append_as", "insert", "insert_as", "extend", "erase", "forward", "run", "size", "empty", "reserve", "contains", "index_of", "name_at", "input_type_at", "output_type_at", "module_at", "stage_info", "stage_manifest", "clear"]
 
 # --- activation --------------------------------------------------------
 [[symbol]]
@@ -938,6 +940,7 @@ qualname = "pluss::ai::nn::optim::SGDGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/SGDGroup.md"
+owner = "pluss::ai::nn::optim::SGD"
 summary = "One per-parameter-group entry: its own parameter list plus its own SGDOptions."
 
 [[symbol]]
@@ -961,6 +964,7 @@ qualname = "pluss::ai::nn::optim::AdagradGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/AdagradGroup.md"
+owner = "pluss::ai::nn::optim::Adagrad"
 summary = "One per-parameter-group entry: its own parameter list plus its own AdagradOptions."
 
 [[symbol]]
@@ -984,6 +988,7 @@ qualname = "pluss::ai::nn::optim::AdamGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/AdamGroup.md"
+owner = "pluss::ai::nn::optim::Adam"
 summary = "One per-parameter-group entry: its own parameter list plus its own AdamOptions."
 
 [[symbol]]
@@ -1007,6 +1012,7 @@ qualname = "pluss::ai::nn::optim::AdamWGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/AdamWGroup.md"
+owner = "pluss::ai::nn::optim::AdamW"
 summary = "One per-parameter-group entry: its own parameter list plus its own AdamWOptions."
 
 [[symbol]]
@@ -1030,6 +1036,7 @@ qualname = "pluss::ai::nn::optim::NAdamGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/NAdamGroup.md"
+owner = "pluss::ai::nn::optim::NAdam"
 summary = "One per-parameter-group entry: its own parameter list plus its own NAdamOptions."
 
 [[symbol]]
@@ -1053,6 +1060,7 @@ qualname = "pluss::ai::nn::optim::RMSpropGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/RMSpropGroup.md"
+owner = "pluss::ai::nn::optim::RMSprop"
 summary = "One per-parameter-group entry: its own parameter list plus its own RMSpropOptions."
 
 [[symbol]]
@@ -1076,6 +1084,7 @@ qualname = "pluss::ai::nn::optim::MinimaxConstraints"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/MinimaxConstraints.md"
+owner = "pluss::ai::nn::optim::Minimax"
 summary = "The equality/inequality residual callables (plain or Trace-differentiable) and optional per-parameter bounds Minimax enforces."
 
 [[symbol]]
@@ -1083,6 +1092,7 @@ qualname = "pluss::ai::nn::optim::MinimaxGroup"
 kind = "class"
 family = "nn/optim"
 page = "api/nn/optim/MinimaxGroup.md"
+owner = "pluss::ai::nn::optim::Minimax"
 summary = "One per-parameter-group entry: its own parameter list plus its own MinimaxOptions."
 
 # --- data (pluss::loader / pluss::tils, lives in PlussTils) ----------
@@ -1124,8 +1134,44 @@ kind = "options"
 family = "nn/data"
 page = "api/nn/data/DataLoaderOptions.md"
 owner = "pluss::loader::DataLoader"
-summary = "Batch size, shuffle, drop-last, seed, batch dimension, reshuffle-per-epoch, target platform/dtype, and an optional collate function."
-fields = ["batch_size", "shuffle", "drop_last", "seed", "batch_dim", "reshuffle_each_epoch", "target_platform", "target_dtype", "collate_fn"]
+summary = "Batch size, shuffle/sampler, drop-last, seed, batch dimension, reshuffle-per-epoch, target platform/dtype, collate function, and the threaded-prefetch controls (num_workers/prefetch_factor/persistent_workers/pin_memory/timeout/in_order/worker_init_fn)."
+fields = ["batch_size", "shuffle", "drop_last", "seed", "batch_dim", "reshuffle_each_epoch", "target_platform", "target_dtype", "collate_fn", "sampler", "num_workers", "prefetch_factor", "persistent_workers", "pin_memory", "timeout", "in_order", "worker_init_fn"]
+
+[[symbol]]
+qualname = "pluss::loader::Sampler"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/Sampler.md"
+summary = "The index-sampling strategy interface DataLoaderOptions::sampler takes: sample(size, epoch_seed) returns the full epoch order up front."
+methods = ["sample"]
+
+[[symbol]]
+qualname = "pluss::loader::SequentialSampler"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/SequentialSampler.md"
+summary = "Sampler that produces the plain 0..size-1 order, unshuffled."
+
+[[symbol]]
+qualname = "pluss::loader::RandomSampler"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/RandomSampler.md"
+summary = "Sampler that shuffles the full index range, optionally with replacement and/or a num_samples count different from the dataset size."
+
+[[symbol]]
+qualname = "pluss::loader::SubsetRandomSampler"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/SubsetRandomSampler.md"
+summary = "Sampler over a fixed, caller-supplied index subset, shuffled each epoch."
+
+[[symbol]]
+qualname = "pluss::loader::WeightedRandomSampler"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/WeightedRandomSampler.md"
+summary = "Sampler that draws indices proportional to per-index weights, with or without replacement."
 
 [[symbol]]
 qualname = "pluss::loader::DataSplit"
@@ -1139,8 +1185,7 @@ qualname = "pluss::loader::DataSplitOptions"
 kind = "options"
 family = "nn/data"
 page = "api/nn/data/DataSplitOptions.md"
-owner = "pluss::loader::split_fields"
-summary = "Train/val ratios (test is the remainder), shuffle, seed, and batch dimension."
+summary = "Train/val ratios (test is the remainder), shuffle, seed, and batch dimension. Consumed by split_fields/split_loaders -- a free function, not a class, so this stays at family level rather than nesting (apiref.py's owner-nesting only applies to class owners)."
 fields = ["train_ratio", "val_ratio", "shuffle", "seed", "batch_dim"]
 
 [[symbol]]
@@ -1160,12 +1205,18 @@ summary = "split_fields plus a DataLoader per part, each with its own DataLoader
 overloads = 4
 
 [[symbol]]
+qualname = "pluss::loader::DataLoaderSplit"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/DataLoaderSplit.md"
+summary = "The train/val/test DataLoader trio returned by split_loaders."
+
+[[symbol]]
 qualname = "pluss::loader::TemporalSplitOptions"
 kind = "options"
 family = "nn/data"
 page = "api/nn/data/TemporalSplitOptions.md"
-owner = "pluss::loader::temporal_split_indices"
-summary = "Fold count, explicit test size, max train size cap, the train/test gap, and batch dimension for forward-chaining time-series cross-validation."
+summary = "Fold count, explicit test size, max train size cap, the train/test gap, and batch dimension for forward-chaining time-series cross-validation. Consumed by temporal_split_indices/temporal_split_fields/temporal_split_loaders -- free functions, so this stays at family level."
 fields = ["folds", "test_size", "max_train_size", "gap", "batch_dim"]
 
 [[symbol]]
@@ -1176,6 +1227,13 @@ page = "api/nn/data/temporal_split_indices.md"
 summary = "Forward-chaining (walk-forward) train/test index folds over a sample count -- never trains on future data."
 
 [[symbol]]
+qualname = "pluss::loader::TemporalIndexSplit"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/TemporalIndexSplit.md"
+summary = "The vector<TemporalIndexFold> returned by temporal_split_indices -- each fold's own train_indices/test_indices."
+
+[[symbol]]
 qualname = "pluss::loader::temporal_split_fields"
 kind = "function"
 family = "nn/data"
@@ -1184,9 +1242,23 @@ summary = "temporal_split_indices applied directly to aligned field Series (or a
 overloads = 4
 
 [[symbol]]
+qualname = "pluss::loader::TemporalFieldSplit"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/TemporalFieldSplit.md"
+summary = "The vector<TemporalFieldFold> returned by temporal_split_fields -- each fold's own train_fields/test_fields Series."
+
+[[symbol]]
 qualname = "pluss::loader::temporal_split_loaders"
 kind = "function"
 family = "nn/data"
 page = "api/nn/data/temporal_split_loaders.md"
 summary = "temporal_split_fields plus a DataLoader per fold's train/test part."
 overloads = 4
+
+[[symbol]]
+qualname = "pluss::loader::TemporalLoaderSplit"
+kind = "class"
+family = "nn/data"
+page = "api/nn/data/TemporalLoaderSplit.md"
+summary = "The vector<TemporalLoaderFold> returned by temporal_split_loaders -- each fold's own train/test DataLoader."

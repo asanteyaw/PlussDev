@@ -9,7 +9,7 @@ reads it back.
 ```cpp
 struct HoldoutSplitOptions {
   double        test_size        = 0.2;
-  Series        stratify         = Series::undefined();
+  Series        stratify         = pluss::series::undefined();
   std::string   stratify_feature = {};
   std::uint64_t random_state     = 0;
   bool          deterministic    = true;
@@ -28,7 +28,7 @@ Fraction of rows in the test set. Must be strictly between 0 and 1. Setter:
 
 ### `stratify`
 
-`Series stratify = Series::undefined()`
+`Series stratify = pluss::series::undefined()`
 
 An explicit stratification key. Set by `HoldoutPlan::stratify(Series)`, which
 also clears `stratify_feature`.

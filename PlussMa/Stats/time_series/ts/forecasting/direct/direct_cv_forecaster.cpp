@@ -106,7 +106,7 @@ DirectCVForecaster DirectCVForecaster::fit(const Series& x,
   PLUSS_CHECK(nobs == partition.num_observations(),
               "subsp::stats::ts::DirectCVForecaster::fit: partition observation count must match Y");
 
-  Series xm = Series::undefined();
+  Series xm = pluss::series::undefined();
   std::int64_t num_predictors = 0;
   if (x.defined()) {
     xm = as_matrix_(x, "DirectCVForecaster::fit").to(out_cfg.platform, out_cfg.dtype);
@@ -129,7 +129,7 @@ DirectCVForecaster DirectCVForecaster::fit(const Series& x,
   for (std::int64_t i = 0; i < partition.num_test_sets(); ++i) {
     const Series train_idx = partition.training(i, idx_cfg);
     const Series y_train = select_rows_(yv, train_idx, out_cfg).reshape({train_idx.numel()});
-    const Series x_train = xm.defined() ? select_rows_(xm, train_idx, out_cfg) : Series::undefined();
+    const Series x_train = xm.defined() ? select_rows_(xm, train_idx, out_cfg) : pluss::series::undefined();
     models.push_back(DirectForecaster::fit(x_train, y_train, options, out_cfg));
   }
   return DirectCVForecaster(partition, options, std::move(models));
@@ -144,7 +144,7 @@ Series DirectCVForecaster::cvpredict(const Series& x, const Series& y, Config cf
   const std::int64_t nobs = yv.numel();
   PLUSS_CHECK(nobs == partition_.num_observations(),
               "subsp::stats::ts::DirectCVForecaster::cvpredict: partition observation count must match Y");
-  Series xm = Series::undefined();
+  Series xm = pluss::series::undefined();
   if (x.defined()) {
     xm = as_matrix_(x, "DirectCVForecaster::cvpredict").to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(xm.sizes()[0] == nobs,
@@ -178,7 +178,7 @@ Series DirectCVForecaster::cvloss(const Series& x, const Series& y, CVLossMode m
   const std::int64_t nobs = yv.numel();
   PLUSS_CHECK(nobs == partition_.num_observations(),
               "subsp::stats::ts::DirectCVForecaster::cvloss: partition observation count must match Y");
-  Series xm = Series::undefined();
+  Series xm = pluss::series::undefined();
   if (x.defined()) {
     xm = as_matrix_(x, "DirectCVForecaster::cvloss").to(out_cfg.platform, out_cfg.dtype);
     PLUSS_CHECK(xm.sizes()[0] == nobs,

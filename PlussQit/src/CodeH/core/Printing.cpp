@@ -16,26 +16,29 @@ namespace pluss::codeh {
 
 namespace {
 
-// Same "[D] days HH:MM:SS.nnnnnnnnn" format as Duration::to_note()'s
-// non-compact style (see DurationExtras.cpp's format_one_) -- duplicated
-// here rather than shared since that one is file-local and this is a small,
-// self-contained amount of logic.
+// Same floor-normalized "[D] days HH:MM:SS.nnnnnnnnn" representation as
+// Duration::to_note(). The sub-day fields therefore stay non-negative even
+// when the duration itself is negative.
 static std::string format_duration_one_(std::int64_t ns) {
   if (ns == Duration::kNaT) return "NaT";
-  const bool neg = ns < 0;
-  std::int64_t a = neg ? -ns : ns;
   const std::int64_t day = 86400LL * 1'000'000'000LL;
   const std::int64_t hour = 3600LL * 1'000'000'000LL;
   const std::int64_t min = 60LL * 1'000'000'000LL;
   const std::int64_t sec = 1'000'000'000LL;
-  const auto d = a / day; a %= day;
-  const auto h = a / hour; a %= hour;
-  const auto m = a / min; a %= min;
-  const auto s = a / sec; a %= sec;
-  const auto n = a;
+  std::int64_t d = ns / day;
+  std::int64_t remainder = ns % day;
+  if (remainder < 0) {
+    --d;
+    remainder += day;
+  }
+  const auto h = remainder / hour; remainder %= hour;
+  const auto m = remainder / min; remainder %= min;
+  const auto s = remainder / sec; remainder %= sec;
+  const auto n = remainder;
   char buf[128];
-  std::snprintf(buf, sizeof(buf), "%s%lld days %02lld:%02lld:%02lld.%09lld",
-                neg ? "-" : "", (long long)d, (long long)h, (long long)m, (long long)s, (long long)n);
+  std::snprintf(buf, sizeof(buf), "%lld days %02lld:%02lld:%02lld.%09lld",
+                (long long)d, (long long)h, (long long)m, (long long)s,
+                (long long)n);
   return std::string(buf);
 }
 
@@ -322,11 +325,11 @@ std::ostream& operator<<(std::ostream& os, const Duration& d) {
   return os;
 }
 
-std::string to_string(const TimeIndex& idx) {
+std::string to_string(const TimeIndex& idx, const TimelinePrintOptions& opt) {
   if (!idx.timeline().defined()) {
     return "TimeIndex(undefined)";
   }
-  std::string s = to_string(idx.timeline());
+  std::string s = to_string(idx.timeline(), opt);
   // Reuse Timeline's rendering verbatim -- only the leading type name in the
   // header differs, since a TimeIndex's values are exactly its Timeline's.
   constexpr std::string_view kFrom = "Timeline(";
@@ -336,17 +339,20 @@ std::string to_string(const TimeIndex& idx) {
   return s;
 }
 
-std::string print_timeindex(const TimeIndex& idx) {
-  return to_string(idx);
+std::string print_timeindex(const TimeIndex& idx,
+                            const TimelinePrintOptions& opt) {
+  return to_string(idx, opt);
 }
 
-std::ostream& print_timeindex(std::ostream& os, const TimeIndex& idx) {
-  os << to_string(idx);
+std::ostream& print_timeindex(std::ostream& os,
+                             const TimeIndex& idx,
+                             const TimelinePrintOptions& opt) {
+  os << to_string(idx, opt);
   return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const TimeIndex& idx) {
-  os << to_string(idx);
+  os << to_string(idx, {});
   return os;
 }
 

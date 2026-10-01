@@ -110,11 +110,11 @@ int main() {
       {"final", make_series({80.0, 75.0, std::numeric_limits<double>::quiet_NaN(), 90.0})},
   }).title("missing");
 
-  print_block("CASE_STUDY_POS", labeled.case_study(DataFrame::Case::at(1)).to_string());
-  print_block("CASE_STUDY_LABELS", labeled.case_study(DataFrame::Case::labels({"B200", "A100"})).to_string());
+  print_block("CASE_STUDY_POS", labeled.case_study().at(1).to_string());
+  print_block("CASE_STUDY_LABELS", labeled.case_study().labels({"B200", "A100"}).to_string());
   print_block("CASE_STUDY_MASK_FEATURES",
-              labeled.case_study(DataFrame::Case::where(labeled.features("region") == "south"),
-                                 DataFrame::Feat::names({"city", "price"})).to_string());
+              labeled.case_study().where(labeled.features("region") == "south")
+                  .features({"city", "price"}).to_string());
 
   print_block("CASES", labeled.label().values().to_string());
   print_block("CASES_AS_SERIES", Thread(numeric_cases.label().values().as_series()).to_string());

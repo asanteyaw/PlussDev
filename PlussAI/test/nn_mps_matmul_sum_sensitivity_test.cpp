@@ -108,7 +108,7 @@ bool run_case_(std::ostream* err = nullptr) {
       }
       return false;
     }
-    x.clear_sensitivity();
+    x.clear();
     picked.sum().reverse();
     if (!x.has_sensitivity()) {
       if (err) *err << "mps index_select+sum sensitivity missing\n";
@@ -124,7 +124,7 @@ bool run_case_(std::ostream* err = nullptr) {
         }
       }
     }
-    x.clear_sensitivity();
+    x.clear();
     picked.squeeze(0).sum().reverse();
     if (!x.has_sensitivity()) {
       if (err) *err << "mps index_select+squeeze sensitivity missing\n";

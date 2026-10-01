@@ -19,7 +19,7 @@ units, this is equivalent to [`floor(freq)`](floor.md); for the calendar
 units it accepts, it snaps to the start of that calendar period (e.g. the
 first of the month).
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

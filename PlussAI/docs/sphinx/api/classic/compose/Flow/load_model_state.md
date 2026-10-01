@@ -15,6 +15,15 @@ classic::Status classic::Flow::load_model_state(
     /* a range of pluss::Series -- pass a std::vector<Series> or braced list */);
 ```
 
+## What It Does
+
+Passes `state` straight into the attached model's own `load_state`,
+restoring its fitted parameters without re-running `learn` -- the model
+half of reconstructing a `Flow`, paired with
+[`load_transform_states`](load_transform_states.md) for the stage side.
+For a transform-only `Flow` with no model, `state` must be empty; anything
+else is rejected.
+
 ## Parameters
 
 `state` — a range of `pluss::Series`

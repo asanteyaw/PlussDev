@@ -9,6 +9,7 @@
 ```cpp
 Series::le(const Series& rhs) const -> Series
 Series::le(double rhs) const -> Series
+Series& Series::le_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -59,6 +60,30 @@ The scalar overload checks every element against one repeated boundary value.
 `le()` is mask logic. Its job is to produce a boolean condition that other
 operations can use, not to serve as a numerically smooth transform in a
 differentiable pipeline.
+
+## In-Place Form
+
+`le_()` is the in-place sibling of [`le()`](le.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `le_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({1.0, 1.0, 5.0}, {3});
+
+x.le_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, true]
+```
 
 ## Examples
 
@@ -169,6 +194,13 @@ broadcast: incompatible shapes
 Use `le()` when your boundary is inclusive. If you are reasoning about interval logic,
 this is the closed-boundary counterpart to the open-boundary behavior of
 [`Series::lt`](lt.md).
+
+## Aliases
+
+**`less_equal()`** / **`less_equal_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `le()` / `le_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

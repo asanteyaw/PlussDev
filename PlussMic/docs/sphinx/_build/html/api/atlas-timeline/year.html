@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature in <strong>every frame of the stack</strong> with its
+<p>Replaces every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature in <strong>every frame of the stack</strong> with its
 calendar year, as a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — the same transform
 <a class="reference internal" href="../dataframe-timeline/year.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl().year()</span></code></span></a> applies to a single frame,
 broadcast across the whole <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> via <a class="reference internal" href="../atlas/map_frames.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map_frames()</span></code></span></a>. The
@@ -111,7 +111,7 @@ values across the depth axis, only within each frame.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl()</span></code> (like <a class="reference internal" href="../dataframe/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code></span></a>) requires <strong>every</strong>
-feature on each stacked frame to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind; there is no
+feature on each stacked frame to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind; there is no
 public way to narrow to a subset of features first the way
 <a class="reference internal" href="../atlas/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::features()</span></code></span></a> narrows for other operations. Build the
 atlas from frames that already contain only time features if this matters.</p></li>

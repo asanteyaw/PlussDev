@@ -16,6 +16,15 @@ individually.
 [[nodiscard]] classic::StatusOr<classic::FlowGraphInfo> classic::Flow::graph_info() const;
 ```
 
+## What It Does
+
+Gathers every introspection field this `Flow` exposes -- `task_kind()`,
+`trained()`, `has_model()`, `has_opaque_transforms()`, and one
+`FlowStageInfo` per transform stage -- into a single
+[`FlowGraphInfo`](../FlowGraphInfo.md) value, in one call. Reach for it
+when several of those facts are needed together, rather than querying each
+accessor separately.
+
 ## Parameters
 
 None.

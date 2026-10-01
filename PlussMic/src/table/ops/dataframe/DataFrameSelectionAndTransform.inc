@@ -65,7 +65,7 @@ DataFrame expanded_text_result_(const DataFrame& expanded,
 }
 
 bool is_time_like_thread_(ThreadKind kind) {
-  return kind == ThreadKind::Timeline || kind == ThreadKind::TimeIndex;
+  return kind == ThreadKind::Timeline;
 }
 
 std::vector<std::size_t> resolve_time_feature_indices_(
@@ -81,7 +81,7 @@ std::vector<std::size_t> resolve_time_feature_indices_(
                       src.names_[i] + "'. Select timeline feature(s) first, e.g. df.features({\"date\"}).tl()");
       indices.push_back(i);
     }
-    PLUSS_CHECK(!indices.empty(), std::string(where) + ": current frame has no Timeline/TimeIndex features");
+    PLUSS_CHECK(!indices.empty(), std::string(where) + ": current frame has no Timeline features");
     return indices;
   }
 
@@ -96,7 +96,7 @@ std::vector<std::size_t> resolve_time_feature_indices_(
     PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'");
     const auto k = src.columns_[it->second].kind();
     PLUSS_CHECK(is_time_like_thread_(k),
-                std::string(where) + ": feature '" + name + "' is not Timeline/TimeIndex");
+                std::string(where) + ": feature '" + name + "' is not Timeline");
     indices.push_back(it->second);
   }
   return indices;
@@ -380,7 +380,8 @@ DataFrame DataFrame::zoom(std::int64_t case_start,
                           std::int64_t case_stop,
                           std::int64_t feature_start,
                           std::int64_t feature_stop) const {
-  return case_study(Case::slice(case_start, case_stop), Feat::slice(feature_start, feature_stop));
+  return select_cases_(detail::CaseSelector::slice(case_start, case_stop),
+                       detail::FeatureSelector::slice(feature_start, feature_stop));
 }
 
 DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const {
@@ -637,15 +638,14 @@ Thread DataFrame::transform(
     }
     return Thread(values, mask);
   }
-  auto values = mapped.front().as_timeindex().timeline();
-  for (std::size_t i = 1; i < mapped.size(); ++i) {
-    values = values.concat(mapped[i].as_timeindex().timeline());
+  PLUSS_CHECK(mapped.front().kind() == ThreadKind::Duration,
+              "DataFrame::transform: unsupported callback output kind");
+  std::vector<std::int64_t> values;
+  values.reserve(mapped.size());
+  for (const auto& value : mapped) {
+    values.push_back(value.as_duration().host().front());
   }
-  if (values.epoch_nanos().platform() !=
-      pluss::codem::Platform::CPU) {
-    mask = mask.to(values.epoch_nanos().platform());
-  }
-  return Thread(values.to_timeindex(false), mask);
+  return Thread(pluss::duration::nanos(values), mask);
 }
 
 DataFrame DataFrame::transform(
@@ -1000,7 +1000,7 @@ DataFrameTimelineAccessor::DataFrameTimelineAccessor(DataFrame frame,
                                                      std::vector<std::string> features)
     : frame_(std::move(frame)),
       features_(std::move(features)) {
-  PLUSS_CHECK(!features_.empty(), "DataFrame::tl: expected at least one Timeline/TimeIndex feature");
+  PLUSS_CHECK(!features_.empty(), "DataFrame::tl: expected at least one Timeline feature");
 }
 
 DataFrame DataFrameTimelineAccessor::map_(
@@ -1014,7 +1014,7 @@ DataFrame DataFrameTimelineAccessor::map_(
     const auto source = frame_.features(name);
     if (selected.contains(name)) {
       PLUSS_CHECK(is_time_like_thread_(source.kind()),
-                  std::string(op) + ": feature '" + name + "' is not Timeline/TimeIndex");
+                  std::string(op) + ": feature '" + name + "' is not Timeline");
       columns.emplace_back(name, fn(source));
     } else {
       columns.emplace_back(name, source);
@@ -1144,7 +1144,7 @@ DataFrame DataFrameTimelineAccessor::span(
       continue;
     }
     PLUSS_CHECK(is_time_like_thread_(source.kind()),
-                "DataFrame::tl().span: feature '" + name + "' is not Timeline/TimeIndex");
+                "DataFrame::tl().span: feature '" + name + "' is not Timeline");
     PLUSS_CHECK(other.get(name).has_value(),
                 "DataFrame::tl().span: other DataFrame is missing feature '" + name + "'");
     columns.emplace_back(name, source.tl().span(other.features(name), options));
@@ -1196,11 +1196,6 @@ DataFrame DataFrameTimelineAccessor::localize(const TimelineLocalizeOptions& opt
 
 DataFrame DataFrameTimelineAccessor::utc() const {
   return map_([](const Thread& t) { return t.tl().utc(); }, "DataFrame::tl().utc");
-}
-
-DataFrame DataFrameTimelineAccessor::index(bool require_sorted) const {
-  return map_([require_sorted](const Thread& t) { return t.tl().index(require_sorted); },
-              "DataFrame::tl().index");
 }
 
 DataFrame DataFrame::transform(const std::function<Thread(const Thread&)>& fn) const {

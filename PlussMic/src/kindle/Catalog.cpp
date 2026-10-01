@@ -325,9 +325,22 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
       case StreamKind::Timeline:
         out = out_note.cast().timeline();
         break;
-      case StreamKind::TimeIndex:
-        out = out_note.cast().timeindex();
+      case StreamKind::Duration: {
+        const auto source_values = stream.as_duration().host();
+        std::vector<std::int64_t> duration_values(
+            static_cast<std::size_t>(target_len), 0);
+        for (std::int64_t out_i = 0; out_i < target_len; ++out_i) {
+          const auto src_i = source_index[static_cast<std::size_t>(out_i)];
+          if (src_i >= 0) {
+            duration_values[static_cast<std::size_t>(out_i)] =
+                source_values[static_cast<std::size_t>(src_i)];
+          }
+        }
+        out = pluss::table::Thread(
+            pluss::duration::nanos(std::move(duration_values), {target_len}),
+            optional_mask_from_valid(valid));
         break;
+      }
     }
   } catch (const std::exception&) {
     if (policy.dtype == DTypePolicy::BestEffort && stream.kind() == StreamKind::Series) {

@@ -50,7 +50,6 @@ inline constexpr bool enable_let = false;
 template <> inline constexpr bool enable_let<::pluss::Series> = true;
 template <> inline constexpr bool enable_let<::pluss::Note> = true;
 template <> inline constexpr bool enable_let<::pluss::codeh::Timeline> = true;
-template <> inline constexpr bool enable_let<::pluss::codeh::TimeIndex> = true;
 template <> inline constexpr bool enable_let<::pluss::codeh::Duration> = true;
 template <> inline constexpr bool enable_let<::pluss::codev::Queue> = true;
 

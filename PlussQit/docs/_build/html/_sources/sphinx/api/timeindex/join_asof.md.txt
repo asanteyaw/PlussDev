@@ -166,12 +166,12 @@ data=[0, 1, 2, 2, -1]
   nearest-key matching.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="rolling_sum.html">
+  <a class="prev-link" href="is_unique.html">
     <span class="label">Previous</span>
-    <span class="title">rolling_sum</span>
+    <span class="title">is_unique</span>
   </a>
-  <a class="next-link" href="align_union.html">
+  <a class="next-link" href="max.html">
     <span class="label">Next</span>
-    <span class="title">align_union</span>
+    <span class="title">max</span>
   </a>
 </div>

@@ -146,7 +146,7 @@ enum class BalanceCleanVote : std::uint8_t {
 struct BalanceTarget {
   BalanceTargetKind kind = BalanceTargetKind::Keep;
   double ratio = 1.0;
-  Series counts = Series::undefined();
+  Series counts = pluss::series::undefined();
   BalanceGrowthKind growth = BalanceGrowthKind::ReuseRows;
   std::int64_t neighbors = 5;
   BalanceCleanKind clean = BalanceCleanKind::None;
@@ -169,18 +169,18 @@ struct TrainOptions {
   bool warm_start = false;
   bool track_diagnostics = true;
   RandomState random{};
-  Series sample_weights = Series::undefined();
+  Series sample_weights = pluss::series::undefined();
   ClassWeightMode class_weight = ClassWeightMode::None;
   // For ClassWeightMode::Custom use [negative_class_weight, positive_class_weight]
   // for binary classifiers. Multiclass OvR applies this pair per one-vs-rest leg.
-  Series class_weights = Series::undefined();
+  Series class_weights = pluss::series::undefined();
   ScoreCalibration calibration = ScoreCalibration::None;
   std::int64_t calibration_iterations = 400;
   double calibration_tolerance = 1e-6;
   // Optional coefficient bounds used by minimax-constrained updates in
   // gradient-based learners (currently linear classification).
-  Series parameter_lower_bounds = Series::undefined();
-  Series parameter_upper_bounds = Series::undefined();
+  Series parameter_lower_bounds = pluss::series::undefined();
+  Series parameter_upper_bounds = pluss::series::undefined();
   // Classification row balancing/cleaning applied before estimator fitting.
   // Default Keep + no cleaning leaves training data unchanged.
   BalanceTarget balance{};
@@ -197,7 +197,7 @@ struct InferOptions {
 struct AssessOptions {
   ObservationLayout layout = ObservationLayout::Rows;
   std::vector<MetricKind> metrics{};
-  Series sample_weights = Series::undefined();
+  Series sample_weights = pluss::series::undefined();
   // Binary decision threshold in probability space for classification metrics
   // that require hard labels (for example Accuracy/F1).
   double positive_threshold = 0.5;
@@ -220,7 +220,7 @@ struct SplitOptions {
   bool stratified = false;
   // Optional per-sample group labels used when plan == CVPlanKind::GroupCrossVal.
   // Length must match the sample count.
-  Series groups = Series::undefined();
+  Series groups = pluss::series::undefined();
   bool reliability_defaults = true;
   bool shuffle = true;
   // Parallel workers for fold evaluation in cross_assess.

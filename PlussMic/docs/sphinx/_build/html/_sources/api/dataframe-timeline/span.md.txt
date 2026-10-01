@@ -18,7 +18,7 @@ DataFrameTimelineAccessor::span(const Thread& other, TimeUnit unit) const -> Dat
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with the elapsed
+Replaces every selected `Timeline` feature with the elapsed
 distance between it and `other`, in `options.unit` (or plain `unit`) — same
 feature name, now a numeric `Series`. `other` can be another `DataFrame`
 (paired feature-by-feature, by matching name), a bare `Thread`, or a
@@ -478,7 +478,7 @@ in Example 1) have no such requirement.
 - `signed_result = false` returns the absolute magnitude instead of a
   direction-sensitive (possibly negative) value.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - If either side is `NaT` for a row, that row's span displays as `"NULL"`.
 

@@ -12,6 +12,10 @@ Series nn::Schedule::forward(const Series& input) const;
 Series nn::Schedule::operator()(const Series& input) const;
 ```
 
+## What It Does
+
+Runs `input` through every stage in the chain, in order, feeding each
+stage's output to the next, and returns the last stage's output.
 `operator()` is exactly `forward` -- a `Schedule` is callable directly, the
 same convention every layer in this reference follows. Both are
 `Series -> Series` shorthand for [`run<Series>(input)`](run.md); reach for
@@ -56,8 +60,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   net.to(pluss::ScalarType::Float64);
@@ -90,8 +94,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   net.to(pluss::ScalarType::Float64);
@@ -153,7 +157,7 @@ caught: pluss::nn::Schedule::run: cannot run an empty schedule
 
 - [`run`](run.md) -- the general form, for chains with a different input
   count or return type.
-- [`then`](then.md) -- builds the chain `forward` runs.
+- [`append`](append.md) -- builds the chain `forward` runs.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

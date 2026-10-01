@@ -11,6 +11,16 @@
 Module::RestoreReport nn::Module::restore(const Module::Snapshot& snap, bool strict = true);
 ```
 
+## What It Does
+
+Writes a previously captured [`snapshot`](snapshot.md) back into this
+module's parameters, buffers, and training mode -- the other half of
+`Module`'s checkpointing primitive. Matching is by name, not position, so a
+snapshot taken from one module instance restores correctly onto a
+different instance of the same architecture (loading a saved checkpoint
+into a freshly constructed network), and the `strict` flag controls how
+strongly a structural mismatch between the two is enforced.
+
 ## Parameters
 
 `const Module::Snapshot& snap`

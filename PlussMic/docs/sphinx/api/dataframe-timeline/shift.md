@@ -13,9 +13,9 @@ DataFrameTimelineAccessor::shift(std::int64_t periods, std::string_view freq) co
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with each row shifted
+Replaces every selected `Timeline` feature with each row shifted
 forward (or backward, if `periods` is negative) by `periods * freq` — same
-feature name, still `Timeline`/`TimeIndex`-kind, same row order.
+feature name, still `Timeline`-kind, same row order.
 Month/year shifts are calendar-aware: a day-of-month that doesn't exist in
 the target month is clamped down to that month's last valid day (never
 rolls over into the next month).
@@ -286,7 +286,7 @@ frequency groups, so the call throws instead of picking a nearby unit.
 - `freq` cannot be empty, and an unrecognized string throws
   (`"Timeline::shift: unsupported frequency"`).
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` regardless of `periods`/`freq`.
 

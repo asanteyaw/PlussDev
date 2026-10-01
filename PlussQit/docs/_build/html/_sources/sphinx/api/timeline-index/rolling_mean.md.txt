@@ -1,0 +1,151 @@
+<!-- pluss-hand-authored -->
+
+# TimelineIndexAccessor::rolling_mean
+
+[Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
+
+## Signature
+
+```cpp
+pluss::Series TimelineIndexAccessor::rolling_mean(
+    const pluss::Series& values,
+    const pluss::Duration& window) const
+```
+
+## A Mean On The Clock, Not On Row Positions
+
+`rolling_mean()` emits one arithmetic mean for every timestamp in the index.
+For timestamp `t[i]`, it averages the valid payload lanes whose timestamps lie
+in the inclusive interval `[t[i] - window, t[i]]`. The result therefore has the
+same length and ordering as the index even when observations are irregularly
+spaced.
+
+That time-based membership is the reason this method exists. A three-row mean
+always sees three positions; a 45-minute mean may see one observation during a
+quiet period and dozens during a burst. Use `rolling_mean()` when elapsed time
+defines relevance. Use [`resample_mean()`](resample_mean.md) when the objective
+is instead to collapse observations into non-overlapping bins.
+
+The index and payload play separate roles: the `TimelineIndexAccessor` determines window
+membership, while `values[i]` is the measurement attached to timestamp `i`.
+`values` must consequently be one-dimensional and exactly as long as the
+index.
+
+## Boundary, Absence, And Dtype Rules
+
+The left boundary is inclusive. An observation exactly one `window` behind the
+current timestamp remains in the mean; it leaves only when its age becomes
+greater than the window.
+
+Floating `NaN` lanes do not enter either the numerator or denominator. If a
+window contains timestamps but no valid payload value, its result is `NaN`.
+Integer input is promoted to `float64`, because an arithmetic mean is generally
+fractional. `float64` input remains `float64`.
+
+The current kernel accepts CPU `int64` and `float64` payloads. It requires a
+positive scalar `Duration` and a monotonic-increasing index. Repeated
+timestamps are valid and participate as separate observations.
+
+## Examples
+
+All examples use this irregular index unless stated otherwise:
+
+```cpp
+auto index = pluss::timeindex::make({
+    "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
+    "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
+    "2024-11-01T01:20:00Z",
+});
+auto window = pluss::duration::minutes(45);
+```
+
+Example 1. Each result averages the valid values in its own trailing 45-minute
+interval.
+
+```cpp
+auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
+std::cout << pluss::series::print(index.rolling_mean(values, window)) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[1.0000, 1.5000, 2.0000, 3.0000, 4.0000]
+```
+
+At `01:00`, the visible timestamps are `00:20`, `00:40`, and `01:00`; the
+`00:00` lane is already 60 minutes old. The result is therefore `(2+3+4)/3`,
+not the mean of every preceding row.
+
+Example 2. Invalid floating lanes are skipped rather than poisoning later
+windows.
+
+```cpp
+auto sparse = pluss::make_series(std::vector<double>{
+    std::numeric_limits<double>::quiet_NaN(), 8.0, 2.0, 9.0, 4.0});
+std::cout << pluss::series::print(index.rolling_mean(sparse, window)) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[nan, 8.0000, 5.0000, 6.3333, 5.0000]
+```
+
+Example 3. Integer measurements produce a floating result.
+
+```cpp
+auto counts = pluss::make_series(std::vector<std::int64_t>{8, 2, 9, 3, 7});
+std::cout << pluss::series::print(
+    index.rolling_mean(counts, pluss::duration::minutes(30))) << "\n";
+```
+
+### Output
+
+```text
+Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[8.0000, 5.0000, 5.5000, 6.0000, 5.0000]
+```
+
+Example 4. Payload alignment is exact, not broadcasted.
+
+```cpp
+try {
+  (void)index.rolling_mean(pluss::make_series({1.0, 2.0}), window);
+} catch (const std::exception& e) {
+  std::cout << std::string_view(e.what()).substr(0,
+      std::string_view(e.what()).find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+values length must equal index length
+```
+
+## Cost And Ownership
+
+The implementation advances a window boundary once and maintains a running
+valid-value sum, so time is `O(n)` and auxiliary storage is `O(n)` in the
+largest window. The returned `Series` owns newly allocated contiguous storage;
+neither the index nor `values` is modified.
+
+## See Also
+
+- [`TimelineIndexAccessor::rolling_min`](rolling_min.md)
+- [`TimelineIndexAccessor::rolling_sum`](rolling_sum.md)
+- [`TimelineIndexAccessor::resample_mean`](resample_mean.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_max.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_max</span>
+  </a>
+  <a class="next-link" href="rolling_min.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_min</span>
+  </a>
+</div>

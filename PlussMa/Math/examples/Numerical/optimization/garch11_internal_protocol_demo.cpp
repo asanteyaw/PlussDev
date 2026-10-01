@@ -29,9 +29,9 @@ using pluss::optim::optima;
 using pluss::optim::optima_stall_category_name;
 
 struct Garch11Params {
-  Series omega{Series::undefined()};
-  Series alpha{Series::undefined()};
-  Series beta{Series::undefined()};
+  Series omega{pluss::series::undefined()};
+  Series alpha{pluss::series::undefined()};
+  Series beta{pluss::series::undefined()};
 };
 
 Series scalar(double v, const pluss::Config& cfg) {

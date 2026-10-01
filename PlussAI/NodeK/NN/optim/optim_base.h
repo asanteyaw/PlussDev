@@ -116,7 +116,7 @@ public:
     std::size_t covered_count = 0;
     for (Series* p : parameters_) {
       if (!p || !p->defined()) {
-        grads.emplace_back();
+        grads.push_back(pluss::series::undefined());
         continue;
       }
       const bool tracked = p->tracks_slope();
@@ -124,7 +124,7 @@ public:
         ++tracked_count;
       }
       if (!p->has_sensitivity()) {
-        grads.emplace_back();
+        grads.push_back(pluss::series::undefined());
       } else {
         if (tracked) {
           ++covered_count;

@@ -19,17 +19,13 @@ namespace _compat { namespace detail { struct Access; } }
 
 // A 1D, (optionally) monotonic Timeline axis with index-oriented utilities.
 // This is the key building block for pandas-like resampling/alignment.
-// Construction is intentionally routed through pluss::timeindex::make(...)
-// and Timeline::to_timeindex(...), not public constructors.
+// Construction is intentionally routed through Timeline::index(...), not
+// public constructors -- this class is CodeH's private implementation
+// detail; the public name for what index() returns is
+// Timeline::TimelineIndexAccessor.
 class CODEH_API TimeIndex {
 public:
   TimeIndex() = delete;
-
-  static TimeIndex from_buffer(std::int64_t* data,
-                               std::int64_t size,
-                               std::int64_t stride = 1,
-                               pluss::codem::BlobDeleter deleter = {},
-                               bool require_sorted = true);
 
 // ---------------------------------------------------------------------------
 // Full op surface (pandas/MATLAB-inspired)
@@ -60,30 +56,13 @@ public:
     pluss::codem::Series bin_id;  // 1D int64 of length size(): bin index per observation
   };
 
-  enum class ResampleClosed : std::uint8_t {
-    Left = 0,
-    Right = 1,
-  };
-
-  enum class ResampleLabel : std::uint8_t {
-    Left = 0,
-    Right = 1,
-  };
-
-  enum class ResampleOrigin : std::uint8_t {
-    StartDay = 0,
-    Start = 1,
-    Epoch = 2,
-  };
-
-  struct ResampleOptions {
-    std::string freq{"D"};
-    std::int64_t step{1};
-    ResampleClosed closed{ResampleClosed::Left};
-    ResampleLabel label{ResampleLabel::Left};
-    ResampleOrigin origin{ResampleOrigin::StartDay};
-    std::int64_t offset_nanos{0};
-  };
+  // Canonically defined on Timeline now (reachable publicly as
+  // Timeline::ResampleOptions/ResampleClosed/ResampleLabel/ResampleOrigin);
+  // aliased here for source compatibility while callers migrate off TimeIndex.
+  using ResampleClosed = Timeline::ResampleClosed;
+  using ResampleLabel = Timeline::ResampleLabel;
+  using ResampleOrigin = Timeline::ResampleOrigin;
+  using ResampleOptions = Timeline::ResampleOptions;
 
   ResampleBins resample_bins(const ResampleOptions& options) const {
     return ::pluss::codeh::_compat::invoke<ResampleBins>(
@@ -173,7 +152,7 @@ public:
   pluss::codem::Series rolling_sum(const pluss::codem::Series& values, const Duration& window) const { return ::pluss::codeh::_compat::invoke<pluss::codem::Series>("rolling_sum", *this, {values, window}); }
 
   // ---- Alignment/join skeletons ----
-  enum class AsofDirection { Backward, Forward, Nearest };
+  using AsofDirection = Timeline::AsofDirection;
 
   // For each left timestamp, find matching right timestamp index (or -1).
   pluss::codem::Series join_asof(const TimeIndex& right,
@@ -190,28 +169,18 @@ public:
   AlignUnion align_union(const TimeIndex& other) const { return ::pluss::codeh::_compat::invoke<AlignUnion>("align_union", *this, {other}); }
 
 private:
-  explicit TimeIndex(Timeline t) : t_(std::move(t)) {}
+  enum class OrderState : std::uint8_t {
+    Unchecked = 0,
+    Nondecreasing = 1,
+  };
+
+  explicit TimeIndex(Timeline t, OrderState order_state)
+      : t_(std::move(t)), order_state_(order_state) {}
   Timeline t_;
+  mutable OrderState order_state_{OrderState::Unchecked};
 
   friend struct ::pluss::codeh::_compat::detail::Access;
 };
-
-inline TimeIndex TimeIndex::from_buffer(std::int64_t* data,
-                                                    std::int64_t size,
-                                                    std::int64_t stride,
-                                                    pluss::codem::BlobDeleter deleter,
-                                                    bool require_sorted) {
-  CODEM_CHECK(size >= 0, "TimeIndex::from_buffer: size must be non-negative");
-  CODEM_CHECK(stride > 0, "TimeIndex::from_buffer: stride must be positive");
-  const std::array<std::int64_t, 1> sizes{size};
-  const std::array<std::int64_t, 1> strides{stride};
-  auto t = Timeline::from_buffer(
-      data,
-      std::span<const std::int64_t>(sizes.data(), sizes.size()),
-      std::span<const std::int64_t>(strides.data(), strides.size()),
-      std::move(deleter));
-  return ::pluss::codeh::_compat::invoke<TimeIndex>("make_timeindex", t, {require_sorted});
-}
 
 } // namespace pluss::codeh
 

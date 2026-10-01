@@ -9,6 +9,7 @@
 ```cpp
 Series::ge(const Series& rhs) const -> Series
 Series::ge(double rhs) const -> Series
+Series& Series::ge_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -60,6 +61,30 @@ boundary value.
 
 `ge()` is comparison logic that yields a boolean mask. Its practical role is
 conditional control, not numeric differentiation.
+
+## In-Place Form
+
+`ge_()` is the in-place sibling of [`ge()`](ge.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `ge_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({1.0, 3.0, 3.0}, {3});
+
+x.ge_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, true]
+```
 
 ## Examples
 
@@ -169,6 +194,13 @@ broadcast: incompatible shapes
 
 Use `ge()` when your lower bound is inclusive. In interval language, it closes
 the boundary that [`Series::gt`](gt.md) leaves open.
+
+## Aliases
+
+**`greater_equal()`** / **`greater_equal_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `ge()` / `ge_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

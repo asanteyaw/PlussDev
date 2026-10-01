@@ -23,6 +23,10 @@ longer limited to a hand-curated subset of `SELECT` syntax. Normal grouped queri
 CTEs, subqueries, `LEFT JOIN`, and similar query shapes are valid as long as the
 statement produces a result set.
 
+`.prepare("SELECT ...")` returns a `NexusQueryPrepared` — a separate small
+type, also documented here, whose own `.execute(...)` overloads are what
+actually run a prepared statement with bound parameters.
+
 ## Using This Reference
 
 - Use the left sidebar to open one method page at a time.
@@ -31,7 +35,8 @@ statement produces a result set.
 
 ## Method Pages
 
-The sidebar lists the two SQL entry points: `execute` and `prepare`.
+The sidebar lists the two `NexusQuery` entry points (`execute`, `prepare`)
+and `NexusQueryPrepared`'s own `execute`.
 
 ```{toctree}
 :hidden:
@@ -39,4 +44,5 @@ The sidebar lists the two SQL entry points: `execute` and `prepare`.
 
 api/nexus-sql/execute
 api/nexus-sql/prepare
+api/nexus-sql/prepared-execute
 ```

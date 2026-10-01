@@ -13,6 +13,14 @@ Only reachable via `->` (`net->size()`).
 std::size_t nn::Schedule::Impl::size() const noexcept;
 ```
 
+## What It Does
+
+Reports how many stages the chain currently holds -- the count that
+[`append`](append.md)/[`insert`](insert.md)/[`extend`](extend.md) grow and
+[`erase`](erase.md)/[`clear`](clear.md) shrink, and the valid index range
+`[0, size())` every other position-based accessor on this page
+(`name_at`, `module_at`, `stage_info`, ...) expects.
+
 ## Parameters
 
 None.
@@ -45,8 +53,8 @@ int main() {
   nn::Schedule net;
   std::cout << "fresh Schedule: size()=" << net->size() << " empty()=" << std::boolalpha << net->empty() << "\n";
 
-  net.then(nn::Fusion(3, 2));
-  std::cout << "after one then(): size()=" << net->size() << " empty()=" << net->empty() << "\n";
+  net.append(nn::Fusion(3, 2));
+  std::cout << "after one append(): size()=" << net->size() << " empty()=" << net->empty() << "\n";
 
   return 0;
 }
@@ -56,7 +64,7 @@ Output
 
 ```text
 fresh Schedule: size()=0 empty()=true
-after one then(): size()=1 empty()=false
+after one append(): size()=1 empty()=false
 ```
 
 ### Example 2
@@ -90,7 +98,7 @@ after reserve(8): size()=0 empty()=true
 ### Example 3
 
 The variadic `Schedule(Layers&&...)` constructor calls `reserve` once, then
-`then`s each argument -- `size()` reflects the full count immediately after
+`append`s each argument -- `size()` reflects the full count immediately after
 construction.
 
 ```cpp

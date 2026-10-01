@@ -14,6 +14,17 @@ classic::StatusOr<classic::online::OnlineLinearRegressor> classic::online::make_
     const classic::online::OnlineLinearOptions& options = {});
 ```
 
+## What It Does
+
+Validates every field of `options` against its objective and
+regularization constraints, then constructs an
+[`OnlineLinearRegressor`](OnlineLinearRegressor.md) only once validation
+passes -- the same fail-loudly-at-construction contract
+[`make_online_linear_classifier`](make_online_linear_classifier.md) gives
+its side, with the regression-specific constraints (including the
+unconditional `robust_transition` check) instead of the classification
+ones.
+
 ## Parameters
 
 `options` (`OnlineLinearOptions`, default `{}`)

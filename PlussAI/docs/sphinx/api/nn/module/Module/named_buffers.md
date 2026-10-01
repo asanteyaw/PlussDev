@@ -12,6 +12,14 @@ std::vector<Module::BufferRef> nn::Module::named_buffers();
 std::vector<Module::ConstBufferRef> nn::Module::named_buffers() const;
 ```
 
+## What It Does
+
+The same recursive buffer walk as [`buffers`](buffers.md), with each
+result's dotted registration name attached -- the buffer counterpart to
+[`named_parameters`](named_parameters.md). As with `buffers()`, no type in
+this reference currently registers a buffer, so this returns empty today;
+it exists for the same forward-looking reason.
+
 ## Parameters
 
 None.

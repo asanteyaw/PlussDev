@@ -14,6 +14,17 @@ model afterward.
 classic::Status classic::Flow::set_model(const classic::ModelSpec& spec);
 ```
 
+## What It Does
+
+Dispatches to [`make_classifier`](../../estimators/make_classifier.md),
+[`make_regressor`](../../estimators/make_regressor.md), or
+[`make_transformer`](../../estimators/make_transformer.md) based on
+`spec.task`, and attaches (or replaces) the resulting model on this
+`Flow` -- the same construction [`make_flow`](../make_flow.md) performs at
+creation time, callable here so the transform pipeline can be built first
+and the model attached afterward. A `Transform`-task model runs as the
+last transform stage, so it counts toward `stage_count()` too.
+
 ## Parameters
 
 `spec` — `ModelSpec`

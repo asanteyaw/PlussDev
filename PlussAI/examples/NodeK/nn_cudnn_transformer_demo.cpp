@@ -35,7 +35,7 @@ int main() {
   });
 
   const Series tgt_mask = pluss::nn::generate_square_subsequent_mask(tgt.sizes()[1], tgt);
-  const Series out_cpu = model->forward(src, tgt, Series(), tgt_mask, Series(), Series(), Series(), Series(), false, true, false);
+  const Series out_cpu = model->forward(src, tgt, pluss::series::undefined(), tgt_mask, pluss::series::undefined(), pluss::series::undefined(), pluss::series::undefined(), pluss::series::undefined(), false, true, false);
   std::cout << "transformer_cpu_mean=" << out_cpu.mean().item<double>() << "\n";
 
   if (pluss::cuda::is_ready()) {
@@ -46,12 +46,12 @@ int main() {
     const Series out_cuda = model->forward(
         src_cuda,
         tgt_cuda,
-        Series(),
+        pluss::series::undefined(),
         tgt_mask_cuda,
-        Series(),
-        Series(),
-        Series(),
-        Series(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
         false,
         true,
         false);

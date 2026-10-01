@@ -14,6 +14,16 @@ classic::Status classic::EstimatorBase::learn(
     const classic::TrainOptions& options = {});
 ```
 
+## What It Does
+
+Fits this estimator's internal parameters to `batch`, applying whatever
+missing-value handling, class weighting, row balancing, and other per-fit
+configuration `options` specifies -- family-specific work (a linear solve,
+a tree split search, a distance-based fit, whatever the concrete
+classifier or regressor implements). It is the only method that moves
+`trained()` from `false` to `true`, and every call re-fits from scratch
+rather than continuing a previous fit.
+
 ## Parameters
 
 `batch` — `LabeledBatch`

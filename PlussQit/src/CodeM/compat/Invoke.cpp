@@ -16,6 +16,7 @@
 #include "CodeM/native/cpu/IndexingExtras.h"
 #include "CodeM/native/cpu/SignalDistanceKernels.h"
 #include "CodeM/native/cpu/SortingKernels.h"
+#include "CodeM/native/mps/BufferCache.h"
 #include "CodeM/native/mps/Matmul.h"
 #include "CodeM/native/mps/Sorting.h"
 #include "CodeM/native/mps/Stochastic.h"
@@ -731,7 +732,7 @@ static std::vector<Series> normalize_index_list_for_put_(
   out.reserve(indices.size());
   for (const auto& idx_raw : indices) {
     if (!idx_raw.defined()) {
-      out.push_back(Series::undefined());
+      out.push_back(pluss::series::undefined());
       continue;
     }
     Series idx = idx_raw;
@@ -788,7 +789,8 @@ static Series alias_view_on_(const Series& base, const Series& view_like) {
       storage_offset_elems,
       std::vector<std::int64_t>(view_like.sizes().begin(), view_like.sizes().end()),
       std::vector<std::int64_t>(view_like.strides().begin(), view_like.strides().end()),
-      base.scalar_type());
+      base.scalar_type(),
+      base.platform());
 }
 
 static Series find_root_alias_for_view_(const Series& view) {
@@ -808,7 +810,7 @@ static Series find_root_alias_for_view_(const Series& view) {
 
 static Series make_pre_copy_parent_snapshot_(const Series& root_before) {
   const auto root_link = series_tape::source_link(root_before);
-  if (!root_link) return Series::undefined();
+  if (!root_link) return pluss::series::undefined();
 
   // Snapshot must own stable storage so subsequent in-place writes on root do
   // not invalidate saved-version checks for historical links.
@@ -977,7 +979,7 @@ static void bind_put_backward_1d_(
       Series g_self = accumulate ? sens : sens.clone();
       if (!accumulate) {
         Series zeros = Series::zeros({index_i64.numel()}, self_before.scalar_type()).to(self_before.platform());
-        auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+        auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_raw_);
         g_self = (g_self.*put_fn)(index_i64, zeros, /*accumulate=*/false);
       }
       series_tape::accumulate_sensitivity(self_before, g_self);
@@ -1023,7 +1025,7 @@ static Series put_dispatch_copy_indices_(
       is_integer_index_dtype_(normalized_indices.front().scalar_type());
 
   if (use_flat_put_fast_path) {
-    auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+    auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_raw_);
     out = (out.*put_fn)(normalized_indices.front(), val, accumulate);
   } else {
     native::cpu::index_put_inplace(out, normalized_indices, val, accumulate);
@@ -1057,7 +1059,7 @@ static Series put_dispatch_copy_(
   Series val = src;
   if (val.platform() != out.platform()) val = val.to(out.platform());
   if (val.scalar_type() != out.scalar_type()) val = val.to(out.scalar_type());
-  auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+  auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_raw_);
   out = (out.*put_fn)(idx, val, accumulate);
 
   const bool track_src = series_tape::recording_enabled() && series_tape::tracks_slope(src);
@@ -1122,7 +1124,7 @@ static Series& copy_dispatch_inplace_(Series& self, const Series& other) {
   const Series root_before = find_root_alias_for_view_(self_before);
   const bool track_root = recording && series_tape::tracks_slope(root_before);
   const bool track_src = recording && series_tape::tracks_slope(src_user);
-  Series root_parent_snapshot = Series::undefined();
+  Series root_parent_snapshot = pluss::series::undefined();
   if (track_root) series_tape::set_tracks_slope(root_before, true);
   if (track_root) {
     root_parent_snapshot = make_pre_copy_parent_snapshot_(root_before);
@@ -1548,7 +1550,7 @@ static Series tensor_split_first(const Series& self, const Arg& sections_or_indi
     return split_first_by_boundaries(self, as_intlist(sections_or_indices), dim, "tensor_split");
   }
   PLUSS_CHECK(false, "tensor_split: expected sections(int) or indices(int[])");
-  return Series::undefined();
+  return pluss::series::undefined();
 }
 
 static std::int64_t split_family_dim(const Series& self, std::string_view op_name) {
@@ -1938,7 +1940,7 @@ static Series bernoulli_sample_from_probs_cpu_(const Series& probs) {
   // above, but Series::rand's 3-arg overload resolves its platform from
   // the current PlatformScope, which is still MPS when called from
   // bernoulli_sample_from_probs_mps_ below -- allocating a Float64 tensor
-  // under an ambient MPS scope trips Series::platform(MPS)'s Float64 guard
+  // under an ambient MPS scope trips Series::to(MPS)'s Float64 guard
   // even though this function never intends to touch MPS at all.
   auto u = Series::rand(p.sizes(), ScalarType::Float64, /*seed=*/0, Platform::CPU);
   // torch parity: torch.bernoulli(input) preserves input's own dtype
@@ -2313,7 +2315,7 @@ static Series dropout_noise_like_(const Series& self, bool feature, double keep)
 // previous mul(+add for alpha-dropout)+div composite into one node:
 // out = self*scale (+shift), backward = g*scale.
 static Series dropout_affine_fused_(const Series& self, const Series& scale, const Series& shift) {
-  Series out;
+  Series out = pluss::series::undefined();
   {
     series_tape::NoGradGuard no_grad;
     out = shift.defined() ? ops_internal::add(ops_internal::mul(self, scale), shift)
@@ -2343,7 +2345,7 @@ static Series dropout_family_impl_(std::string_view op, const Series& self, doub
   const double keep = 1.0 - p;
   Series noise = dropout_noise_like_(self, feature, keep);
   if (!alpha) {
-    return dropout_affine_fused_(self, div_scalar(noise, keep), Series());
+    return dropout_affine_fused_(self, div_scalar(noise, keep), pluss::series::undefined());
   }
 
   constexpr double kAlphaDropoutAlpha = 1.7580993408473766;
@@ -2435,7 +2437,7 @@ static void write_scalar_value_(Series& s, double value) {
 // required (recomputing would silently sample a *different* mask than the
 // one the forward pass actually used).
 static Series rrelu_slope_fused_(const Series& self, const Series& slopes) {
-  Series out;
+  Series out = pluss::series::undefined();
   {
     series_tape::NoGradGuard no_grad;
     const Series zero = scalar_like(self, 0.0);
@@ -2457,7 +2459,10 @@ static Series rrelu_slope_fused_(const Series& self, const Series& slopes) {
 }
 
 static Series rrelu_impl_(const Series& self, double lower, double upper, bool training) {
-  PLUSS_CHECK(lower >= 0.0 && upper >= lower, "rrelu: expected 0 <= lower <= upper");
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()),
+              "rrelu: input must have a floating-point dtype");
+  PLUSS_CHECK(std::isfinite(lower) && std::isfinite(upper) && lower <= upper,
+              "rrelu: expected finite bounds with lower <= upper");
   if (!training) {
     return ops_internal::leaky_relu(self, 0.5 * (lower + upper));
   }
@@ -2705,43 +2710,114 @@ static Series zeta_impl(const Series& s, const Series& q) {
   return out;
 }
 
-static Series airy_impl(const Series& self) {
-  constexpr double ai0 = 0.35502805388781723926;
-  return unary_f64_impl(self, [](double x) {
-    if (x == 0.0) return ai0;
-    if (x > 0.0) {
-      const double t = 2.0 * std::pow(x, 1.5) / 3.0;
-      return 0.5 * std::exp(-t) / std::sqrt(kPi) / std::pow(x, 0.25);
+static double airy_ai_scalar(double x) {
+  constexpr double ai0 = 0.355028053887817239260;
+  constexpr double aip0 = -0.258819403792806798405;
+  if (std::isnan(x)) return x;
+  if (std::isinf(x)) return std::numeric_limits<double>::quiet_NaN();
+  if (x > 103.892) return 0.0;
+
+  // The power series follows directly from Ai''(x) = x Ai(x). It is stable
+  // through the central interval; asymptotic forms avoid cancellation in the
+  // two tails.
+  if (x >= -8.0 && x <= 8.0) {
+    std::array<double, 192> c{};
+    c[0] = ai0;
+    c[1] = aip0;
+    for (std::size_t n = 1; n + 2 < c.size(); ++n) {
+      c[n + 2] = c[n - 1] /
+          (static_cast<double>(n + 2) * static_cast<double>(n + 1));
     }
-    const double ax = -x;
-    const double t = 2.0 * std::pow(ax, 1.5) / 3.0;
-    return std::sin(t + kPi / 4.0) / std::sqrt(kPi) / std::pow(ax, 0.25);
-  });
+    double value = c.back();
+    for (std::size_t n = c.size() - 1; n-- > 0;) value = value * x + c[n];
+    return value;
+  }
+
+  if (x > 0.0) {
+    const double z = 2.0 * x * std::sqrt(x) / 3.0;
+    const double inv_z = 1.0 / z;
+    const double correction = 1.0 - 5.0 * inv_z / 72.0 +
+        385.0 * inv_z * inv_z / 10368.0;
+    return std::exp(-z) * correction /
+        (2.0 * std::sqrt(kPi) * std::pow(x, 0.25));
+  }
+
+  const double ax = -x;
+  const double z = 2.0 * ax * std::sqrt(ax) / 3.0;
+  const double phase = z + kPi / 4.0;
+  const double inv_z = 1.0 / z;
+  return (std::sin(phase) * (1.0 - 385.0 * inv_z * inv_z / 10368.0) -
+          std::cos(phase) * 5.0 * inv_z / 72.0) /
+      (std::sqrt(kPi) * std::pow(ax, 0.25));
+}
+
+static double airy_ai_prime_scalar(double x) {
+  if (!std::isfinite(x)) return std::numeric_limits<double>::quiet_NaN();
+  const double h = std::cbrt(std::numeric_limits<double>::epsilon()) *
+      std::max(1.0, std::abs(x));
+  return (airy_ai_scalar(x + h) - airy_ai_scalar(x - h)) / (2.0 * h);
+}
+
+static Series airy_impl(const Series& self) {
+  return unary_f64_impl(self, [](double x) { return airy_ai_scalar(x); });
 }
 
 static double bessel_j_series(double nu, double x) {
-  double acc = 0.0;
-  double half = x * 0.5;
-  for (int m = 0; m < 24; ++m) {
-    const double sign = (m % 2 == 0) ? 1.0 : -1.0;
-    const double den = std::tgamma(m + 1.0) * std::tgamma(m + nu + 1.0);
-    const double term = sign * std::pow(half, 2.0 * m + nu) / den;
+  const double rounded = std::nearbyint(nu);
+  if (std::abs(nu - rounded) <= 1e-12 &&
+      rounded >= static_cast<double>(std::numeric_limits<int>::min()) &&
+      rounded <= static_cast<double>(std::numeric_limits<int>::max())) {
+    return ::jn(static_cast<int>(rounded), x);
+  }
+  if (x < 0.0) return std::numeric_limits<double>::quiet_NaN();
+  if (x == 0.0) return nu == 0.0 ? 1.0 : (nu > 0.0 ? 0.0 : std::numeric_limits<double>::infinity());
+  double term = std::pow(0.5 * x, nu) / std::tgamma(nu + 1.0);
+  double acc = term;
+  const double quarter_x2 = 0.25 * x * x;
+  for (int m = 1; m < 512; ++m) {
+    term *= -quarter_x2 / (static_cast<double>(m) * (static_cast<double>(m) + nu));
     acc += term;
-    if (std::abs(term) < 1e-16) break;
+    if (std::abs(term) <= std::abs(acc) * 4.0 * std::numeric_limits<double>::epsilon()) break;
   }
   return acc;
 }
 
 static double bessel_i_series(double nu, double x) {
-  double acc = 0.0;
-  double half = x * 0.5;
-  for (int m = 0; m < 24; ++m) {
-    const double den = std::tgamma(m + 1.0) * std::tgamma(m + nu + 1.0);
-    const double term = std::pow(half, 2.0 * m + nu) / den;
+  const double rounded = std::nearbyint(nu);
+  const bool integer_order = std::abs(nu - rounded) <= 1e-12;
+  if (x < 0.0 && !integer_order) return std::numeric_limits<double>::quiet_NaN();
+  const double effective_order = integer_order ? std::abs(rounded) : nu;
+  if (x == 0.0) return effective_order == 0.0 ? 1.0
+      : (effective_order > 0.0 ? 0.0 : std::numeric_limits<double>::infinity());
+  const double ax = std::abs(x);
+  double term = std::pow(0.5 * ax, effective_order) /
+      std::tgamma(effective_order + 1.0);
+  double acc = term;
+  const double quarter_x2 = 0.25 * ax * ax;
+  for (int m = 1; m < 512; ++m) {
+    term *= quarter_x2 /
+        (static_cast<double>(m) * (static_cast<double>(m) + effective_order));
     acc += term;
-    if (std::abs(term) < 1e-16) break;
+    if (std::abs(term) <= std::abs(acc) * 4.0 * std::numeric_limits<double>::epsilon()) break;
   }
+  if (x < 0.0 && (static_cast<long long>(std::llround(rounded)) & 1LL)) acc = -acc;
   return acc;
+}
+
+static double bessel_k_integral(double nu, double x) {
+  if (x < 0.0) return std::numeric_limits<double>::quiet_NaN();
+  if (x == 0.0) return std::numeric_limits<double>::infinity();
+  constexpr int steps = 2048;
+  constexpr double limit = 12.0;
+  constexpr double h = limit / static_cast<double>(steps);
+  auto f = [nu, x](double t) {
+    const double log_cosh = std::log(std::cosh(nu * t));
+    const double exponent = -x * std::cosh(t) + log_cosh;
+    return exponent < -745.0 ? 0.0 : std::exp(exponent);
+  };
+  double sum = f(0.0) + f(limit);
+  for (int i = 1; i < steps; ++i) sum += (i & 1 ? 4.0 : 2.0) * f(h * i);
+  return sum * h / 3.0;
 }
 
 static Series cast_like_(const Series& value, const Series& like);
@@ -2764,7 +2840,7 @@ static void bind_normal_stat_backward_(
   link->propagate = [self, out, mean, std, kind](const Series& out_sens) {
     const Series x = self.to(out.scalar_type());
     const Series centered = ops_internal::sub(x, scalar_like(x, mean));
-    Series factor;
+    Series factor = pluss::series::undefined();
     switch (kind) {
       case NormalStatKind::Pdf:
         factor = mul_scalar(ops_internal::mul(centered, out), -1.0 / (std * std));
@@ -2788,12 +2864,19 @@ static void bind_normal_stat_backward_(
 }
 
 static Series bessel_impl(const Series& self, double order, std::string_view kind) {
-  const double nu = (std::abs(std::sin(kPi * order)) < 1e-8) ? (order + 1e-6) : order;
+  PLUSS_CHECK(std::isfinite(order), "bessel: order must be finite");
+  const double nu = order;
   if (kind == "j") {
     return unary_f64_impl(self, [nu](double x) { return bessel_j_series(nu, x); });
   }
   if (kind == "y") {
     return unary_f64_impl(self, [nu](double x) {
+      const double rounded = std::nearbyint(nu);
+      if (std::abs(nu - rounded) <= 1e-12 &&
+          rounded >= static_cast<double>(std::numeric_limits<int>::min()) &&
+          rounded <= static_cast<double>(std::numeric_limits<int>::max())) {
+        return ::yn(static_cast<int>(rounded), x);
+      }
       const double s = std::sin(kPi * nu);
       return (bessel_j_series(nu, x) * std::cos(kPi * nu) - bessel_j_series(-nu, x)) / s;
     });
@@ -2802,13 +2885,30 @@ static Series bessel_impl(const Series& self, double order, std::string_view kin
     return unary_f64_impl(self, [nu](double x) { return bessel_i_series(nu, x); });
   }
   if (kind == "k") {
-    return unary_f64_impl(self, [nu](double x) {
-      const double s = std::sin(kPi * nu);
-      return (kPi * 0.5) * (bessel_i_series(-nu, x) - bessel_i_series(nu, x)) / s;
-    });
+    return unary_f64_impl(self, [nu](double x) { return bessel_k_integral(nu, x); });
   }
   PLUSS_CHECK(false, "bessel: unsupported kind");
-  return Series::undefined();
+  return pluss::series::undefined();
+}
+
+static Series bessel_prime_impl(const Series& self, double order, std::string_view kind) {
+  series_tape::NoGradGuard no_grad;
+  if (kind == "j" || kind == "y") {
+    return ops_internal::mul(
+        ops_internal::sub(bessel_impl(self, order - 1.0, kind),
+                          bessel_impl(self, order + 1.0, kind)),
+        0.5);
+  }
+  if (kind == "i") {
+    return ops_internal::mul(
+        ops_internal::add(bessel_impl(self, order - 1.0, kind),
+                          bessel_impl(self, order + 1.0, kind)),
+        0.5);
+  }
+  return ops_internal::mul(
+      ops_internal::add(bessel_impl(self, order - 1.0, kind),
+                        bessel_impl(self, order + 1.0, kind)),
+      -0.5);
 }
 
 static Series pdf_impl(const Series& self, double mean, double std) {
@@ -2960,7 +3060,7 @@ static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim
   std::int64_t inner = 1;
   for (std::int64_t d = 0; d < dim; ++d) outer *= x.sizes()[(std::size_t)d];
   for (std::int64_t d = dim + 1; d < nd; ++d) inner *= x.sizes()[(std::size_t)d];
-  for (std::int64_t o = 0; o < outer; ++o) {
+  for (std::int64_t o = 0; n > 0 && o < outer; ++o) {
     for (std::int64_t i = 0; i < inner; ++i) {
       for (std::int64_t t = 0; t < n; ++t) {
         const auto start = std::max<std::int64_t>(0, t - window + 1);
@@ -3012,7 +3112,7 @@ static Series mov_impl(const Series& self, std::int64_t window, std::int64_t dim
 }
 
 static Series ediff1d_impl(const Series& self) {
-  return diff_impl(self.flatten(0, -1).to(compat_real_dtype_for_(self)), 1, 0);
+  return diff_impl(self.flatten(0, -1), 1, 0);
 }
 
 static Series centered_impl(const Series& self, std::optional<std::int64_t> dim = std::nullopt) {
@@ -3132,7 +3232,7 @@ static Series cdist_impl(const Series& a, const Series& b, double p = 2.0) {
   const bool track_euclidean = p == 2.0 && series_tape::recording_enabled() &&
       (series_tape::tracks_slope(a) || series_tape::tracks_slope(b));
   if (track_euclidean) {
-    Series out;
+    Series out = pluss::series::undefined();
     {
       series_tape::NoGradGuard no_grad;
       out = cdist_forward_primitives_(a.to(dt), b.to(dt), p);
@@ -3193,7 +3293,7 @@ static void bind_trig_xform_backward_(
                     (static_cast<double>(k) + 1.0) * inv_n);
                 break;
               case TrigXform::Idst:
-                coefficient = 2.0 * inv_n * std::sin(
+                coefficient = (t == n - 1 ? inv_n : 2.0 * inv_n) * std::sin(
                     kPi * (static_cast<double>(t) + 1.0) *
                     (static_cast<double>(k) + 0.5) * inv_n);
                 break;
@@ -3210,93 +3310,43 @@ static void bind_trig_xform_backward_(
 }
 
 static Series trig_xform_impl(const Series& self, std::int64_t dim, TrigXform kind) {
-  const auto dt = compat_real_dtype_for_(self);
-  auto x = self.to(dt).contiguous();
-  dim = wrap_dim(dim, x.dim(), "dct/idct/dst/idst");
-  auto out = Series::empty(x.sizes(), dt);
-  const auto nd = x.dim();
-  const auto n = x.sizes()[(std::size_t)dim];
-  if (n == 0) {
-    bind_trig_xform_backward_(out, self, dim, kind);
-    return out;
-  }
-
-  std::int64_t outer = 1;
-  std::int64_t inner = 1;
-  for (std::int64_t d = 0; d < dim; ++d) outer *= x.sizes()[(std::size_t)d];
-  for (std::int64_t d = dim + 1; d < nd; ++d) inner *= x.sizes()[(std::size_t)d];
-
-  const double inv_n = 1.0 / static_cast<double>(n);
-  for (std::int64_t o = 0; o < outer; ++o) {
-    for (std::int64_t i = 0; i < inner; ++i) {
-      for (std::int64_t k = 0; k < n; ++k) {
-        double acc = 0.0;
-        switch (kind) {
-          case TrigXform::Dct:
-            for (std::int64_t t = 0; t < n; ++t) {
-              const auto off = (o * n + t) * inner + i;
-              const double basis = std::cos(kPi * (static_cast<double>(t) + 0.5) * static_cast<double>(k) * inv_n);
-              acc += read_real_(x, off) * basis;
-            }
-            break;
-          case TrigXform::Idct: {
-            acc += 0.5 * read_real_(x, (o * n + 0) * inner + i);
-            for (std::int64_t t = 1; t < n; ++t) {
-              const auto off = (o * n + t) * inner + i;
-              const double basis = std::cos(kPi * static_cast<double>(t) * (static_cast<double>(k) + 0.5) * inv_n);
-              acc += read_real_(x, off) * basis;
-            }
-            acc *= (2.0 * inv_n);
-            break;
-          }
-          case TrigXform::Dst:
-            for (std::int64_t t = 0; t < n; ++t) {
-              const auto off = (o * n + t) * inner + i;
-              const double basis =
-                  std::sin(kPi * (static_cast<double>(t) + 0.5) * (static_cast<double>(k) + 1.0) * inv_n);
-              acc += read_real_(x, off) * basis;
-            }
-            break;
-          case TrigXform::Idst:
-            for (std::int64_t t = 0; t < n; ++t) {
-              const auto off = (o * n + t) * inner + i;
-              const double basis =
-                  std::sin(kPi * (static_cast<double>(t) + 1.0) * (static_cast<double>(k) + 0.5) * inv_n);
-              acc += read_real_(x, off) * basis;
-            }
-            acc *= (2.0 * inv_n);
-            break;
-        }
-        write_real_(out, (o * n + k) * inner + i, acc);
-      }
-    }
-  }
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
+              "dct/idct/dst/idst: complex input is not supported");
+  dim = wrap_dim(dim, self.dim(), "dct/idct/dst/idst");
+  const Series cpu_input = self.to(Platform::CPU).to(ScalarType::Float64);
+  const auto native_kind = kind == TrigXform::Dct
+      ? native::cpu::TrigTransformKind::Dct
+      : kind == TrigXform::Idct
+          ? native::cpu::TrigTransformKind::Idct
+          : kind == TrigXform::Dst
+              ? native::cpu::TrigTransformKind::Dst
+              : native::cpu::TrigTransformKind::Idst;
+  Series out = native::cpu::trig_transform(cpu_input, dim, native_kind);
+  if (self.platform() == Platform::MPS) out = out.to(ScalarType::Float32);
+  if (self.platform() != Platform::CPU) out = out.to(self.platform());
   bind_trig_xform_backward_(out, self, dim, kind);
   return out;
 }
 
 static Series hilbert_impl(const Series& self, std::int64_t dim = -1) {
-  if (self.platform() != Platform::MPS) {
-    const auto d = wrap_dim(dim, self.dim(), "hilbert");
-    Series out = native::cpu::hilbert_transform(self, d);
-    if (series_tape::recording_enabled() && series_tape::tracks_slope(self)) {
-      auto link = std::make_shared<series_tape::SourceLink>();
-      link->op_name = "hilbert";
-      link->parents = {self};
-      link->propagate = [self, d](const Series& out_sens) {
-        series_tape::NoGradGuard no_grad;
-        Series grad = native::cpu::hilbert_transform(
-            out_sens.to(Platform::CPU).to(ScalarType::Complex128), d);
-        if (!is_complex_dtype(self.scalar_type())) grad = ops_internal::real(grad);
-        series_tape::accumulate_sensitivity(self, cast_like_(grad, self));
-      };
-      series_tape::bind_source_link(out, std::move(link));
-    }
-    return out;
+  const auto d = wrap_dim(dim, self.dim(), "hilbert");
+  PLUSS_CHECK(self.size(d) > 0, "hilbert: transformed axis must be non-empty");
+  Series out = native::cpu::hilbert_transform(self.to(Platform::CPU), d);
+  if (self.platform() != Platform::CPU) out = out.to(self.platform());
+  if (series_tape::recording_enabled() && series_tape::tracks_slope(self)) {
+    auto link = std::make_shared<series_tape::SourceLink>();
+    link->op_name = "hilbert";
+    link->parents = {self};
+    link->propagate = [self, d](const Series& out_sens) {
+      series_tape::NoGradGuard no_grad;
+      Series grad = native::cpu::hilbert_transform(
+          out_sens.to(Platform::CPU).to(ScalarType::Complex128), d);
+      if (!is_complex_dtype(self.scalar_type())) grad = ops_internal::real(grad);
+      series_tape::accumulate_sensitivity(self, cast_like_(grad, self));
+    };
+    series_tape::bind_source_link(out, std::move(link));
   }
-  // Keep a platform-native fallback until dedicated complex MPS kernels are added.
-  (void)dim;
-  return self.clone();
+  return out;
 }
 
 // --- Short-time Fourier transform -----------------------------------------
@@ -3328,14 +3378,36 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
                         bool return_complex) {
   PLUSS_CHECK(self.dim() == 1 || self.dim() == 2, "stft: expected a 1D or 2D tensor");
   PLUSS_CHECK(n_fft > 0, "stft: n_fft must be > 0");
+  PLUSS_CHECK(is_floating_dtype(self.scalar_type()) || is_complex_dtype(self.scalar_type()),
+              "stft: input must have a floating-point or complex dtype");
   const bool was_1d = self.dim() == 1;
   const std::int64_t hop = hop_length > 0 ? hop_length : (n_fft >> 2);
   const std::int64_t win = win_length > 0 ? win_length : n_fft;
+  PLUSS_CHECK(hop > 0, "stft: hop_length must be > 0");
   PLUSS_CHECK(win > 0 && win <= n_fft, "stft: expected 0 < win_length <= n_fft");
 
+  ScalarType effective_dtype = self.scalar_type();
+  if (window.defined()) {
+    ops_internal::require_same_platform(self, window, "stft");
+    PLUSS_CHECK(is_floating_dtype(window.scalar_type()) ||
+                    is_complex_dtype(window.scalar_type()),
+                "stft: window must have a floating-point or complex dtype");
+    PLUSS_CHECK(window.dim() == 1 && window.sizes()[0] == win,
+                "stft: window must be 1D of length win_length");
+    effective_dtype = promote_types(effective_dtype, window.scalar_type());
+  }
+
+  const bool complex_transform = is_complex_dtype(effective_dtype);
+  PLUSS_CHECK(!complex_transform || !onesided,
+              "stft: onesided output is unavailable for complex input or window");
+
   const ScalarType rdt =
-      (self.scalar_type() == ScalarType::Float32) ? ScalarType::Float32 : ScalarType::Float64;
-  Series x = self.to(rdt);
+      (effective_dtype == ScalarType::Float32 || effective_dtype == ScalarType::Complex64)
+          ? ScalarType::Float32
+          : ScalarType::Float64;
+  const ScalarType cdt =
+      rdt == ScalarType::Float32 ? ScalarType::Complex64 : ScalarType::Complex128;
+  Series x = self.to(complex_transform ? cdt : rdt);
   if (was_1d) x = x.unsqueeze(0);
   if (center) x = stft_pad_center_(x, n_fft / 2, pad_mode);
 
@@ -3347,14 +3419,13 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
   Series frames = x.unfold(1, n_fft, hop);  // [batch, n_frames, n_fft]
 
   if (window.defined() || win < n_fft) {
-    Series w = window.defined() ? window.to(rdt).to(x.platform())
-                                : Series::ones({win}, rdt).to(x.platform());
-    PLUSS_CHECK(w.dim() == 1 && w.sizes()[0] == win,
-                "stft: window must be 1D of length win_length");
+    Series w = window.defined()
+        ? window.to(complex_transform ? cdt : rdt)
+        : Series::ones({win}, complex_transform ? cdt : rdt).to(x.platform());
     if (win < n_fft) {
       const std::int64_t left = (n_fft - win) / 2;
-      const Series zl = Series::zeros({left}, rdt).to(x.platform());
-      const Series zr = Series::zeros({n_fft - win - left}, rdt).to(x.platform());
+      const Series zl = Series::zeros({left}, w.scalar_type()).to(x.platform());
+      const Series zr = Series::zeros({n_fft - win - left}, w.scalar_type()).to(x.platform());
       w = zl.unite({w, zr}, 0);
     }
     frames = frames.mul(w);
@@ -3368,8 +3439,18 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
   const Series nsin_mat = ang.sin().neg();
 
   Series flat = frames.reshape({batch * n_frames, n_fft});
-  Series re = flat.matmul(cos_mat).reshape({batch, n_frames, n_freq});
-  Series im = flat.matmul(nsin_mat).reshape({batch, n_frames, n_freq});
+  Series re = pluss::series::undefined();
+  Series im = pluss::series::undefined();
+  if (complex_transform) {
+    const Series basis = ops_internal::complex_from_parts(cos_mat, nsin_mat, cdt);
+    const Series transformed = flat.to(cdt).matmul(basis)
+                                   .reshape({batch, n_frames, n_freq});
+    re = ops_internal::real(transformed);
+    im = ops_internal::imag(transformed);
+  } else {
+    re = flat.matmul(cos_mat).reshape({batch, n_frames, n_freq});
+    im = flat.matmul(nsin_mat).reshape({batch, n_frames, n_freq});
+  }
   if (normalized) {
     const double s = 1.0 / std::sqrt(static_cast<double>(n_fft));
     re = re.mul(s);
@@ -3382,8 +3463,6 @@ static Series stft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop
     im = im.squeeze(0);
   }
   if (return_complex) {
-    const ScalarType cdt =
-        (rdt == ScalarType::Float32) ? ScalarType::Complex64 : ScalarType::Complex128;
     return ops_internal::complex_from_parts(re, im, cdt);
   }
   return re.pile({im}, re.dim());  // [..., n_freq, n_frames, 2]
@@ -3411,12 +3490,16 @@ static Series stft_overlap_add_(const Series& frames, std::int64_t hop, std::int
 static Series istft_impl(const Series& self, std::int64_t n_fft, std::int64_t hop_length,
                          std::int64_t win_length, const Series& window, bool center,
                          bool normalized, bool onesided, std::int64_t length) {
+  PLUSS_CHECK(n_fft > 0, "istft: n_fft must be > 0");
   const std::int64_t hop = hop_length > 0 ? hop_length : (n_fft >> 2);
   const std::int64_t win = win_length > 0 ? win_length : n_fft;
   PLUSS_CHECK(win > 0 && win <= n_fft && hop > 0 && hop <= win,
               "istft: expected 0 < hop_length <= win_length <= n_fft");
   PLUSS_CHECK(is_complex_dtype(self.scalar_type()),
               "istft requires a complex-valued input (stft(..., return_complex=true))");
+  PLUSS_CHECK(self.numel() > 0, "istft: input spectrum cannot be empty");
+  PLUSS_CHECK(length == -1 || length > 0,
+              "istft: length must be -1 (inferred) or greater than 0");
   const bool was_2d = self.dim() == 2;
   PLUSS_CHECK(was_2d || self.dim() == 3, "istft: expected a 2D or 3D complex tensor");
 
@@ -3426,6 +3509,14 @@ static Series istft_impl(const Series& self, std::int64_t n_fft, std::int64_t ho
   const std::int64_t n_frames = spec.sizes()[2];
   PLUSS_CHECK(onesided ? (n_freq == n_fft / 2 + 1) : (n_freq == n_fft),
               "istft: frequency dimension does not match n_fft / onesided");
+  if (window.defined()) {
+    PLUSS_CHECK(window.platform() == self.platform(),
+                "istft: input and window must be on the same platform");
+    PLUSS_CHECK(!is_complex_dtype(window.scalar_type()),
+                "istft: complex windows are not supported for real output");
+    PLUSS_CHECK(window.dim() == 1 && window.size(0) == win,
+                "istft: window must be one-dimensional with length win_length");
+  }
 
   const ScalarType rdt = (self.scalar_type() == ScalarType::Complex64) ? ScalarType::Float32
                                                                        : ScalarType::Float64;
@@ -3476,12 +3567,24 @@ static Series istft_impl(const Series& self, std::int64_t n_fft, std::int64_t ho
   Series envelope = stft_overlap_add_(w2, hop, expected);  // [1, expected]
 
   const std::int64_t start = center ? n_fft / 2 : 0;
-  std::int64_t end = expected;
-  if (length > 0) end = start + length;
-  else if (center) end = expected - n_fft / 2;
-  y = y.slice(1, start, end);
-  envelope = envelope.slice(1, start, end);
+  const std::int64_t end = length > 0
+                               ? start + length
+                               : (center ? expected - n_fft / 2 : expected);
+  const std::int64_t crop_end = std::min(end, expected);
+  y = y.slice(1, start, crop_end);
+  envelope = envelope.slice(1, start, crop_end);
+  {
+    series_tape::NoGradGuard no_grad;
+    const double lowest =
+        envelope.abs().min().to(Platform::CPU).to(ScalarType::Float64).item<double>();
+    PLUSS_CHECK(lowest >= 1e-11,
+                "istft: window overlap-add envelope contains an uncovered sample");
+  }
   y = y.div(envelope);
+  if (end > expected) {
+    const Series tail = Series::zeros({batch, end - expected}, y.scalar_type()).to(y.platform());
+    y = y.unite({tail}, 1);
+  }
   if (!was_2d) return y;
   return y.squeeze(0);
 }
@@ -3509,6 +3612,8 @@ static Series shift_impl(const Series& self, std::span<const std::int64_t> dims,
 }
 
 static Series unwrap_impl(const Series& self, double discont = kPi, std::int64_t dim = -1) {
+  PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
+              "unwrap: complex input is not supported");
   const auto dt = compat_real_dtype_for_(self);
   auto x = self.to(dt).contiguous();
   dim = wrap_dim(dim, x.dim(), "unwrap");
@@ -3528,8 +3633,13 @@ static Series unwrap_impl(const Series& self, double discont = kPi, std::int64_t
         const auto prev = (o * n + (t - 1)) * inner + i;
         const auto cur = (o * n + t) * inner + i;
         const double delta = read_real_(x, cur) - read_real_(x, prev);
-        if (delta > discont) offset -= 2.0 * kPi;
-        else if (delta < -discont) offset += 2.0 * kPi;
+        double wrapped = std::fmod(delta + kPi, 2.0 * kPi);
+        if (wrapped < 0.0) wrapped += 2.0 * kPi;
+        wrapped -= kPi;
+        if (wrapped == -kPi && delta > 0.0) wrapped = kPi;
+        double correction = wrapped - delta;
+        if (std::abs(delta) < discont) correction = 0.0;
+        offset += correction;
         write_real_(out, cur, read_real_(x, cur) + offset);
       }
     }
@@ -3547,25 +3657,75 @@ static Series unwrap_impl(const Series& self, double discont = kPi, std::int64_t
 }
 
 static Series cplxpair_impl(const Series& self) {
-  if (!is_complex_dtype(self.scalar_type())) return sort_values_only(self, -1, false, false);
-  auto x = self.to(ScalarType::Complex128).contiguous();
+  if (!is_complex_dtype(self.scalar_type())) {
+    return sort_values_only(self.flatten(0, -1), -1, false, false).reshape(self.sizes());
+  }
+  const auto original_dtype = self.scalar_type();
+  const auto original_platform = self.platform();
+  auto x = self.to(Platform::CPU).to(ScalarType::Complex128).contiguous();
   auto flat = x.flatten(0, -1).contiguous();
   const auto n = flat.numel();
-  std::vector<std::pair<Complex128, std::int64_t>> vals((std::size_t)n);
   const auto* ip = reinterpret_cast<const Complex128*>(flat.raw_data());
-  for (std::int64_t i = 0; i < n; ++i) vals[(std::size_t)i] = {ip[i], i};
-  std::stable_sort(vals.begin(), vals.end(), [](const auto& a, const auto& b) {
-    if (std::real(a.first) == std::real(b.first)) return std::imag(a.first) < std::imag(b.first);
-    return std::real(a.first) < std::real(b.first);
+  struct Entry { Complex128 value; std::int64_t index; };
+  struct Pair { Entry lower; Entry upper; };
+  std::vector<bool> used(static_cast<std::size_t>(n), false);
+  std::vector<Pair> pairs;
+  std::vector<Entry> real_values;
+  const auto tolerance = [](const Complex128& a, const Complex128& b = Complex128{}) {
+    return 100.0 * std::numeric_limits<double>::epsilon() *
+           std::max({1.0, std::abs(a), std::abs(b)});
+  };
+  for (std::int64_t i = 0; i < n; ++i) {
+    if (used[static_cast<std::size_t>(i)]) continue;
+    const Complex128 value = ip[i];
+    if (std::abs(std::imag(value)) <= tolerance(value)) {
+      used[static_cast<std::size_t>(i)] = true;
+      real_values.push_back({value, i});
+      continue;
+    }
+    std::int64_t mate = -1;
+    for (std::int64_t j = i + 1; j < n; ++j) {
+      if (used[static_cast<std::size_t>(j)]) continue;
+      const double tol = tolerance(value, ip[j]);
+      if (std::abs(std::real(value) - std::real(ip[j])) <= tol &&
+          std::abs(std::imag(value) + std::imag(ip[j])) <= tol) {
+        mate = j;
+        break;
+      }
+    }
+    PLUSS_CHECK(mate >= 0, "cplxpair: complex value has no conjugate partner");
+    used[static_cast<std::size_t>(i)] = true;
+    used[static_cast<std::size_t>(mate)] = true;
+    Entry first{value, i};
+    Entry second{ip[mate], mate};
+    if (std::imag(first.value) > std::imag(second.value)) std::swap(first, second);
+    pairs.push_back({first, second});
+  }
+  std::stable_sort(pairs.begin(), pairs.end(), [](const Pair& a, const Pair& b) {
+    if (std::real(a.lower.value) != std::real(b.lower.value)) {
+      return std::real(a.lower.value) < std::real(b.lower.value);
+    }
+    return std::abs(std::imag(a.lower.value)) < std::abs(std::imag(b.lower.value));
+  });
+  std::stable_sort(real_values.begin(), real_values.end(), [](const Entry& a, const Entry& b) {
+    return std::real(a.value) < std::real(b.value);
   });
   auto out_flat = Series::empty({n}, ScalarType::Complex128);
   auto* op = reinterpret_cast<Complex128*>(out_flat.raw_data());
   std::vector<std::int64_t> order((std::size_t)n);
-  for (std::int64_t i = 0; i < n; ++i) {
-    op[i] = vals[(std::size_t)i].first;
-    order[(std::size_t)i] = vals[(std::size_t)i].second;
+  std::int64_t cursor = 0;
+  const auto append = [&](const Entry& entry) {
+    op[cursor] = entry.value;
+    order[static_cast<std::size_t>(cursor)] = entry.index;
+    ++cursor;
+  };
+  for (const auto& pair : pairs) {
+    append(pair.lower);
+    append(pair.upper);
   }
-  Series out = out_flat.reshape(self.sizes());
+  for (const auto& entry : real_values) append(entry);
+  Series out = out_flat.reshape(self.sizes()).to(original_dtype);
+  if (original_platform != Platform::CPU) out = out.to(original_platform);
   if (series_tape::recording_enabled() && series_tape::tracks_slope(self)) {
     auto link = std::make_shared<series_tape::SourceLink>();
     link->op_name = "cplxpair";
@@ -3791,7 +3951,7 @@ static Series fmax_fmin_impl_(const Series& a, const Series& b, bool is_max) {
   const auto dt = promote_types(a.scalar_type(), b.scalar_type());
   const Series aa = a.to(dt);
   const Series bb = b.to(dt);
-  Series bn;
+  Series bn = pluss::series::undefined();
   {
     series_tape::NoGradGuard ng;
     bn = ops_internal::isnan(bb);
@@ -3937,7 +4097,7 @@ static Series quantile_flat_impl(const Series& self, double q, bool ignore_nan) 
   PLUSS_CHECK(q >= 0.0 && q <= 1.0, "quantile: q must be between 0 and 1");
   PLUSS_CHECK(dtype_of(self.scalar_type()).is_floating(),
               "quantile: input must have a floating dtype");
-  auto x = self.to(ScalarType::Float64).flatten(0, -1);
+  auto x = self.to(Platform::CPU).to(ScalarType::Float64).flatten(0, -1);
   const auto n = x.numel();
   PLUSS_CHECK(n > 0, "quantile: input must be non-empty");
   const Series host = x.contiguous();
@@ -4189,16 +4349,36 @@ static Series rot90_impl(const Series& self, std::int64_t k, std::int64_t d0, st
 static Series unflatten_impl(const Series& self, std::int64_t dim, std::span<const std::int64_t> new_sizes) {
   PLUSS_CHECK(!new_sizes.empty(), "unflatten: new_sizes must be non-empty");
   dim = wrap_dim(dim, self.dim(), "unflatten");
-  std::int64_t prod = 1;
-  for (const auto s : new_sizes) {
-    PLUSS_CHECK(s >= 0, "unflatten: sizes must be >= 0");
-    prod *= s;
+  std::vector<std::int64_t> inferred(new_sizes.begin(), new_sizes.end());
+  std::int64_t known_product = 1;
+  std::int64_t infer_at = -1;
+  for (std::size_t i = 0; i < inferred.size(); ++i) {
+    const auto size = inferred[i];
+    PLUSS_CHECK(size >= -1, "unflatten: sizes must be >= -1");
+    if (size == -1) {
+      PLUSS_CHECK(infer_at == -1, "unflatten: only one size may be inferred");
+      infer_at = static_cast<std::int64_t>(i);
+      continue;
+    }
+    PLUSS_CHECK(size == 0 || known_product <= std::numeric_limits<std::int64_t>::max() / size,
+                "unflatten: size product overflow");
+    known_product *= size;
   }
-  PLUSS_CHECK(prod == self.sizes()[(std::size_t)dim], "unflatten: product mismatch");
+  const auto extent = self.sizes()[static_cast<std::size_t>(dim)];
+  if (infer_at >= 0) {
+    PLUSS_CHECK(known_product != 0,
+                "unflatten: inferred size is ambiguous when known sizes multiply to zero");
+    PLUSS_CHECK(extent % known_product == 0,
+                "unflatten: sizes do not multiply to the selected dimension");
+    inferred[static_cast<std::size_t>(infer_at)] = extent / known_product;
+  } else {
+    PLUSS_CHECK(known_product == extent,
+                "unflatten: sizes do not multiply to the selected dimension");
+  }
   std::vector<std::int64_t> out_sizes;
-  out_sizes.reserve((std::size_t)(self.dim() - 1 + static_cast<std::int64_t>(new_sizes.size())));
+  out_sizes.reserve((std::size_t)(self.dim() - 1 + static_cast<std::int64_t>(inferred.size())));
   for (std::int64_t d = 0; d < dim; ++d) out_sizes.push_back(self.sizes()[(std::size_t)d]);
-  out_sizes.insert(out_sizes.end(), new_sizes.begin(), new_sizes.end());
+  out_sizes.insert(out_sizes.end(), inferred.begin(), inferred.end());
   for (std::int64_t d = dim + 1; d < self.dim(); ++d) out_sizes.push_back(self.sizes()[(std::size_t)d]);
   return self.reshape(std::span<const std::int64_t>(out_sizes.data(), out_sizes.size()));
 }
@@ -4330,7 +4510,7 @@ struct MpsSelectionCacheKey {
 struct MpsSelectionCacheEntry {
   bool valid{false};
   MpsSelectionCacheKey key{};
-  Series value{Series::undefined()};
+  Series value{pluss::series::undefined()};
 };
 
 static std::uint64_t hash_layout_signature_(const Series& self) {
@@ -4763,12 +4943,127 @@ static Series bind_selection_permutation_backward_(Series out,
   return out;
 }
 
+std::pair<Series, Series> sort_pair(
+    const Series& self, std::int64_t dim, bool descending, bool stable) {
+  const std::int64_t d = wrap_dim(dim, self.dim(), "sort_pair");
+  std::pair<Series, Series> result{
+      pluss::series::undefined(), pluss::series::undefined()};
+  if (self.platform() == Platform::CPU) {
+    result = native::cpu::sort(self, d, descending, stable);
+  } else if (self.platform() == Platform::MPS) {
+    const bool native_enabled = mps_native_sort_selection_enabled_();
+    const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_strict && self.scalar_type() != ScalarType::Float32) {
+      throw_error("sort_pair: strict native MPS route rejects cast-assisted dtype lane");
+    }
+    bool completed = false;
+    if (native_enabled && native::mps::supports_sort_selection(self, d, stable)) {
+      try {
+        result = native::mps::sort_with_indices(self, d, descending);
+        completed = true;
+      } catch (const std::exception& e) {
+        if (native_strict) {
+          throw_error(std::string("sort_pair: strict native MPS route failed: ") + e.what());
+        }
+      }
+    } else if (native_strict) {
+      throw_error("sort_pair: strict native MPS route requested but kernel is unsupported");
+    }
+    if (!completed) {
+      auto [cpu, casted] = prepare_cpu_sort_input_(self);
+      auto cpu_result = native::cpu::sort(cpu, d, descending, stable);
+      result.first = restore_sorted_value_dtype_(cpu_result.first, self, casted).to(Platform::MPS);
+      result.second = cpu_result.second.to(Platform::MPS);
+    }
+  } else if (self.platform() == Platform::CUDA) {
+    const bool strict = native::cuda::native_selection_strict();
+    const bool bridge = native::cuda::cpu_bridge_enabled();
+    if (strict && !native::cuda::supports_sort_selection(self, d, stable)) {
+      throw_error("sort_pair: strict native CUDA route requested but kernel is unsupported");
+    }
+    if (!bridge) {
+      throw_error("sort_pair: CUDA selection requires the CPU bridge until a native paired kernel is available");
+    }
+    auto [cpu, casted] = prepare_cpu_sort_input_(self);
+    auto cpu_result = native::cpu::sort(cpu, d, descending, stable);
+    result.first = restore_sorted_value_dtype_(cpu_result.first, self, casted).to(Platform::CUDA);
+    result.second = cpu_result.second.to(Platform::CUDA);
+  } else {
+    throw_error("sort_pair: unsupported platform");
+  }
+  result.first = bind_selection_permutation_backward_(
+      std::move(result.first), self, result.second, d, "sort_pair");
+  return result;
+}
+
+std::pair<Series, Series> topk_pair(
+    const Series& self,
+    std::int64_t k,
+    std::int64_t dim,
+    bool largest,
+    bool sorted) {
+  const std::int64_t d = wrap_dim(dim, self.dim(), "topk_pair");
+  PLUSS_CHECK(k >= 0, "topk_pair: k must be >= 0");
+  PLUSS_CHECK(k <= self.size(d), "topk_pair: k must be <= size(dim)");
+
+  std::pair<Series, Series> result{
+      pluss::series::undefined(), pluss::series::undefined()};
+  if (self.platform() == Platform::CPU) {
+    result = native::cpu::topk(self, k, d, largest, sorted);
+  } else if (self.platform() == Platform::MPS) {
+    const bool native_enabled = mps_native_sort_selection_enabled_();
+    const bool topk_enabled = mps_native_topk_selection_enabled_();
+    const bool native_strict = mps_native_sort_selection_strict_();
+    if (native_strict && self.scalar_type() != ScalarType::Float32) {
+      throw_error("topk_pair: strict native MPS route rejects cast-assisted dtype lane");
+    }
+    bool completed = false;
+    if (native_enabled && topk_enabled && sorted && k > 0 &&
+        native::mps::supports_sort_selection(self, d, /*stable=*/false)) {
+      try {
+        result = native::mps::topk_with_indices(self, k, d, largest);
+        completed = true;
+      } catch (const std::exception& e) {
+        if (native_strict) {
+          throw_error(std::string("topk_pair: strict native MPS route failed: ") + e.what());
+        }
+      }
+    } else if (native_strict && topk_enabled && sorted && k > 0) {
+      throw_error("topk_pair: strict native MPS route requested but kernel is unsupported");
+    }
+    if (!completed) {
+      auto [cpu, casted] = prepare_cpu_sort_input_(self);
+      auto cpu_result = native::cpu::topk(cpu, k, d, largest, sorted);
+      result.first = restore_sorted_value_dtype_(cpu_result.first, self, casted).to(Platform::MPS);
+      result.second = cpu_result.second.to(Platform::MPS);
+    }
+  } else if (self.platform() == Platform::CUDA) {
+    const bool strict = native::cuda::native_selection_strict();
+    const bool bridge = native::cuda::cpu_bridge_enabled();
+    if (strict && !native::cuda::supports_topk_selection(self, k, d, sorted)) {
+      throw_error("topk_pair: strict native CUDA route requested but kernel is unsupported");
+    }
+    if (!bridge) {
+      throw_error("topk_pair: CUDA selection requires the CPU bridge until a native paired kernel is available");
+    }
+    auto [cpu, casted] = prepare_cpu_sort_input_(self);
+    auto cpu_result = native::cpu::topk(cpu, k, d, largest, sorted);
+    result.first = restore_sorted_value_dtype_(cpu_result.first, self, casted).to(Platform::CUDA);
+    result.second = cpu_result.second.to(Platform::CUDA);
+  } else {
+    throw_error("topk_pair: unsupported platform");
+  }
+  result.first = bind_selection_permutation_backward_(
+      std::move(result.first), self, result.second, d, "topk_pair");
+  return result;
+}
+
 static Series sort_values_only(const Series& self, std::int64_t dim, bool descending, bool stable) {
   Series values = sort_values_only_impl_(self, dim, descending, stable);
   if (series_tape::recording_enabled() && series_tape::tracks_slope(self) &&
       dtype_of(self.scalar_type()).is_floating()) {
     const std::int64_t d = wrap_dim(dim, self.dim(), "sort");
-    Series perm;
+    Series perm = pluss::series::undefined();
     {
       // The index computation must not itself record onto the tape, but the
       // link below must be bound with recording still active -- so the guard
@@ -4787,7 +5082,7 @@ static Series topk_values_only(const Series& self, std::int64_t k, std::int64_t 
       series_tape::tracks_slope(self) &&
       dtype_of(self.scalar_type()).is_floating()) {
     const std::int64_t d = wrap_dim(dim, self.dim(), "topk");
-    Series idx;
+    Series idx = pluss::series::undefined();
     {
       series_tape::NoGradGuard ng;
       // `topk(sorted=true)` returns the k selected values in the same order the
@@ -5494,6 +5789,18 @@ static Series as_strided_impl(
   PLUSS_CHECK(empty ? storage_offset_elems <= capacity : max_offset < capacity,
               "as_strided: requested view exceeds storage bounds");
 
+  // The new SeriesImpl below shares self's Storage directly (a raw
+  // shared_ptr<byte> copy), bypassing self.raw_data()'s own accessor -- the
+  // one place that would otherwise trigger an MPS host/device sync. The MPS
+  // buffer-dirty cache (BufferCache.mm) is keyed per-SeriesImpl, not per
+  // shared Storage, so a fresh view has no cache entry of its own and a
+  // later sync_host_if_needed() on the view is a silent no-op: without this
+  // call, a still-pending GPU write recorded against self's own SeriesImpl
+  // would never reach the shared host memory this view reads from.
+  if (self.platform() == Platform::MPS) {
+    native::mps::sync_host_if_needed(self);
+  }
+
   // Unlike external interop views, as_strided intentionally permits overlap.
   Series out = ops_internal::SeriesFactoryAccess::wrap(
       pluss::msharp::make_intrusive<SeriesImpl>(
@@ -5557,7 +5864,7 @@ static Series as_strided_impl(
     std::unordered_map<std::int64_t, std::int64_t> parent_alias_count;
     for (const auto offset : parent_offsets) ++parent_alias_count[offset];
 
-    Series grad;
+    Series grad = pluss::series::undefined();
     if (is_complex_dtype(self.scalar_type())) {
       const Series sens = out_sens.to(ScalarType::Complex128).contiguous();
       const auto* values = reinterpret_cast<const Complex128*>(sens.raw_data());
@@ -5739,7 +6046,7 @@ static Series diagonal_scatter_impl(const Series& self, const Series& src, std::
           std::vector<std::int64_t> ids(static_cast<std::size_t>(len));
           std::iota(ids.begin(), ids.end(), static_cast<std::int64_t>(0));
           const Series index = i64_vector(ids).to(src.platform());
-          auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_);
+          auto put_fn = static_cast<Series (Series::*)(const Series&, const Series&, bool)>(&Series::put_raw_);
           flat_grad = (flat_grad.*put_fn)(index, cast_like_(diag_grad, src), /*accumulate=*/false);
         }
         Series g_src = flat_grad.reshape(std::vector<std::int64_t>(src.sizes().begin(), src.sizes().end()));
@@ -6152,7 +6459,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     //      pad_mode="reflect", normalized=false, onesided=true,
     //      return_complex=true)
     PLUSS_CHECK(args.size() == 9, "stft: expected 9 arguments from the typed wrapper");
-    const Series none{};
+    const Series none = pluss::series::undefined();
     const Series& window =
         std::holds_alternative<const Series*>(args[3].v) ? as_series(args[3]) : none;
     return stft_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]), window,
@@ -6164,7 +6471,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     // istft(n_fft, hop_length=-1, win_length=-1, window={}, center=true,
     //       normalized=false, onesided=true, length=-1)
     PLUSS_CHECK(args.size() == 8, "istft: expected 8 arguments from the typed wrapper");
-    const Series none{};
+    const Series none = pluss::series::undefined();
     const Series& window =
         std::holds_alternative<const Series*>(args[3].v) ? as_series(args[3]) : none;
     return istft_impl(self, as_i64(args[0]), as_i64(args[1]), as_i64(args[2]), window,
@@ -6266,10 +6573,19 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
     if (op == "isfinite") return ops_internal::isfinite(self);
     if (op == "invalid") return ops_internal::invalid(self);
     if (op == "invalid_index") return ops_internal::invalid_index(self);
-    if (op == "isposinf") return ops_internal::logical_and(ops_internal::isinf(self), ops_internal::gt(self, scalar_like(self, 0.0)));
-    if (op == "isneginf") return ops_internal::logical_and(ops_internal::isinf(self), ops_internal::lt(self, scalar_like(self, 0.0)));
+    if (op == "isposinf" || op == "isneginf") {
+      PLUSS_CHECK(!is_complex_dtype(self.scalar_type()),
+                  std::string(op) + ": complex input is not supported");
+      const Series infinite = ops_internal::isinf(self);
+      const Series zero = scalar_like(self, 0.0);
+      return op == "isposinf"
+          ? ops_internal::logical_and(infinite, ops_internal::gt(self, zero))
+          : ops_internal::logical_and(infinite, ops_internal::lt(self, zero));
+    }
     if (op == "isreal") {
-      if (!is_complex_dtype(self.scalar_type())) return Series::ones(self.sizes(), ScalarType::Bool);
+      if (!is_complex_dtype(self.scalar_type())) {
+        return Series::ones(self.sizes(), ScalarType::Bool).to(self.platform());
+      }
       auto im = ops_internal::imag(self);
       return ops_internal::eq(im, scalar_like(im, 0.0));
     }
@@ -6481,13 +6797,20 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
             return ops_internal::mul(ops_internal::exp(ops_internal::square(erfcinv_impl(y))),
                                      scalar_like(y, -std::sqrt(kPi) / 2.0));
           }, "erfcinv");
-    if (op == "airy") return airy_impl(self);
+    if (op == "airy")
+      return bind_special_grad_(airy_impl(self), self,
+          [](const Series& x) {
+            return unary_f64_impl(x, [](double v) { return airy_ai_prime_scalar(v); });
+          }, "airy");
     if (op == "zeta") return zeta_impl(self, scalar_like(self, 1.0));
-    if (op == "besselj") return bessel_impl(self, /*order=*/0.0, "j");
-    if (op == "bessely") return bessel_impl(self, /*order=*/0.0, "y");
-    if (op == "besseli") return bessel_impl(self, /*order=*/0.0, "i");
-    if (op == "besselk") return bessel_impl(self, /*order=*/0.0, "k");
-    if (op == "histcounts") return self.histc(/*bins=*/10, /*min=*/0.0, /*max=*/0.0);
+    if (op == "besselj") return bind_special_grad_(bessel_impl(self, 0.0, "j"), self,
+        [](const Series& x) { return bessel_prime_impl(x, 0.0, "j"); }, "besselj");
+    if (op == "bessely") return bind_special_grad_(bessel_impl(self, 0.0, "y"), self,
+        [](const Series& x) { return bessel_prime_impl(x, 0.0, "y"); }, "bessely");
+    if (op == "besseli") return bind_special_grad_(bessel_impl(self, 0.0, "i"), self,
+        [](const Series& x) { return bessel_prime_impl(x, 0.0, "i"); }, "besseli");
+    if (op == "besselk") return bind_special_grad_(bessel_impl(self, 0.0, "k"), self,
+        [](const Series& x) { return bessel_prime_impl(x, 0.0, "k"); }, "besselk");
     if (op == "sinc")
       return bind_special_grad_(sinc_impl(self), self,
           [](const Series& x) { return unary_f64_impl(x, sinc_deriv_scalar); }, "sinc");
@@ -6712,17 +7035,20 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "movstd") return mov_impl(self, (std::int64_t)s, -1, MovKind::Std);
       if (op == "movvar") return mov_impl(self, (std::int64_t)s, -1, MovKind::Var);
       if (op == "unique") return ops_internal::unique(self, (std::int64_t)s, /*sorted=*/true);
-      if (op == "histcounts") return self.histc((std::int64_t)s, 0.0, 0.0);
       if (op == "center") return centered_impl(self, (std::int64_t)s);
       if (op == "standardize") return standardize_impl(self, (std::int64_t)s);
       if (op == "nanvar") return nan_var_impl(self, (std::int64_t)s, /*keepdim=*/false);
       if (op == "nanstd") return nan_std_impl(self, (std::int64_t)s, /*keepdim=*/false);
       if (op == "skewness") return skewness_impl(self, (std::int64_t)s);
       if (op == "kurtosis") return kurtosis_impl(self, (std::int64_t)s);
-      if (op == "besselj") return bessel_impl(self, s, "j");
-      if (op == "bessely") return bessel_impl(self, s, "y");
-      if (op == "besseli") return bessel_impl(self, s, "i");
-      if (op == "besselk") return bessel_impl(self, s, "k");
+      if (op == "besselj") return bind_special_grad_(bessel_impl(self, s, "j"), self,
+          [s](const Series& x) { return bessel_prime_impl(x, s, "j"); }, "besselj");
+      if (op == "bessely") return bind_special_grad_(bessel_impl(self, s, "y"), self,
+          [s](const Series& x) { return bessel_prime_impl(x, s, "y"); }, "bessely");
+      if (op == "besseli") return bind_special_grad_(bessel_impl(self, s, "i"), self,
+          [s](const Series& x) { return bessel_prime_impl(x, s, "i"); }, "besseli");
+      if (op == "besselk") return bind_special_grad_(bessel_impl(self, s, "k"), self,
+          [s](const Series& x) { return bessel_prime_impl(x, s, "k"); }, "besselk");
       if (op == "pdf") return pdf_impl(self, 0.0, s);
       if (op == "logpdf") return logpdf_impl(self, 0.0, s);
       if (op == "logcdf") return logcdf_impl(self, 0.0, s);
@@ -6986,7 +7312,7 @@ Series invoke_any(std::string_view op, const Series& self, const Args& args) {
       if (op == "tensor_split") return split_first_by_boundaries(self, sizes, /*dim=*/0, "tensor_split");
       if (op == "hsplit" || op == "vsplit" || op == "dsplit") return split_family_first(self, op, args[0]);
       if (op == "flip") return flip_impl(self, sizes, "flip");
-      if (op == "repeat" || op == "tile") return repeat_impl(self, sizes);
+      if (op == "repeat") return repeat_impl(self, sizes);
       if (op == "roll") {
         PLUSS_CHECK(sizes.size() == 1,
                     "roll: flattened roll accepts exactly one shift; provide dims for multiple shifts");
@@ -7378,7 +7704,6 @@ if (is_numeric_scalar_arg(args[0]) &&
       const double mn = as_double(args[1]);
       const double mx = as_double(args[2]);
       if (op == "histc") return self.histc(bins, mn, mx);
-      if (op == "histcounts") return self.histc(bins, mn, mx);
       if (op == "nan_to_num") return ops_internal::nan_to_num(self, as_double(args[0]), mn, mx);
     }
 

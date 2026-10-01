@@ -9,6 +9,7 @@
 ```cpp
 Series::gelu() const -> Series
 Series::gelu(bool approximate) const -> Series
+Series& Series::gelu_() const
 ```
 
 ## What It Does
@@ -61,6 +62,28 @@ for moderate positive `x` (the `x * phi(x)` bump), and tends to `1` for large
 positive `x` and `0` for large negative `x`. Unlike `relu()`, the gradient is
 smooth and nonzero for small negative inputs, so `gelu()` units do not
 "die".
+
+## In-Place Form
+
+`gelu_()` is the in-place sibling of [`gelu()`](gelu.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `gelu_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 1.0});
+x.gelu_();
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.15865525, 0, 0.84134475]
+```
 
 ## Examples
 

@@ -14,10 +14,9 @@ Catalog CatalogTimelineAccessor::ceil(std::string_view unit) const
 ## What It Does
 
 Rounds each bound key's timestamp *up* to the nearest `unit` boundary,
-replacing each bound key's values in place (the key stays `Timeline`- or
-`TimeIndex`-kind, whichever it already was).
+replacing each bound key's values in place (the key stays `Timeline`-kind).
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.

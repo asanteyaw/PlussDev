@@ -13,7 +13,7 @@ AtlasTimelineAccessor::date() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with just
+Replaces every `Timeline` feature in **every frame of the stack** with just
 its date portion (time-of-day dropped to midnight), in local wall time — the same
 transform [`DataFrame::tl().date()`](../dataframe-timeline/date.md) applies to a single
 frame, broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
@@ -74,7 +74,7 @@ time-of-day text at all.
 
 - Operates in **local wall time**, per each frame's `Timeline`'s current timezone.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 - Each frame is transformed independently — see

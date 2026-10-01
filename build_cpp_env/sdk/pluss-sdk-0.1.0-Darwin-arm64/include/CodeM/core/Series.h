@@ -1659,7 +1659,7 @@ private:
   Series& extract_put_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) {
     PLUSS_CHECK(defined(), "Series::extract_put_: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
-    std::vector<Series> indices(static_cast<std::size_t>(dim()), Series::undefined());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()), pluss::series::undefined());
     std::vector<Series> defined_raw;
     std::vector<std::int64_t> defined_dims;
     defined_raw.reserve(static_cast<std::size_t>(dim()));
@@ -1727,7 +1727,7 @@ private:
   Series extract_put_copy_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) const {
     PLUSS_CHECK(defined(), "Series::extract_put: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
-    std::vector<Series> indices(static_cast<std::size_t>(dim()), Series::undefined());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()), pluss::series::undefined());
     std::vector<Series> defined_raw;
     std::vector<std::int64_t> defined_dims;
     defined_raw.reserve(static_cast<std::size_t>(dim()));

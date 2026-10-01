@@ -30,7 +30,7 @@ pluss::Series classic::TuneLedger::encoded_params;
 Produced only as [`TuneReport::ledger`](TuneReport.md#state) — every
 [`sweep`](sweep.md) / [`probe`](probe.md) / [`tune`](tune.md) call builds
 one alongside its `trials`. Never constructed directly; a default
-`TuneLedger{}` (every `Series` field `Series::undefined()`, every
+`TuneLedger{}` (every `Series` field `pluss::series::undefined()`, every
 `std::vector` empty) only appears as `TuneReport.ledger` when `trials` is
 itself empty.
 
@@ -73,7 +73,7 @@ same order as `TuneReport.trials`.
 `mean_test_metrics` — `pluss::Series`
 : `Float64`, `[n, metrics.size()]` — a copy of each successful trial's
   `assess.mean_metrics`; a failed trial's row is all `NaN`. Left
-  `Series::undefined()` (not a zero-row `Series`) when `metrics` is empty.
+  `pluss::series::undefined()` (not a zero-row `Series`) when `metrics` is empty.
 
 `std_test_metrics` — `pluss::Series`
 : `Float64`, `[n, metrics.size()]` — the same shape, each successful
@@ -83,14 +83,14 @@ same order as `TuneReport.trials`.
 : `Float64`, `[n, max_folds, metrics.size()]`, where `max_folds` is the
   largest `assess.folds.size()` seen across every successful trial — each
   successful trial's own per-fold metric values, one slab per trial.
-  `Series::undefined()` when no successful trial produced any folds.
+  `pluss::series::undefined()` when no successful trial produced any folds.
 
 `fit_time_seconds` / `score_time_seconds` — `pluss::Series`
 : `Float64`, `[n, max_folds]` — each successful trial's own per-fold
   [`FoldAssessResult::fit_time_seconds` /
   `score_time_seconds`](../metrics/CrossAssessReport.md#state) (real
   wall-clock seconds — varies between runs, never reproducible).
-  `Series::undefined()` under the same condition as `split_test_metrics`.
+  `pluss::series::undefined()` under the same condition as `split_test_metrics`.
 
 `encoded_params` — `pluss::Series`
 : `Float64`, `[n, 40]` — every trial's `spec`, turned into a fixed-width

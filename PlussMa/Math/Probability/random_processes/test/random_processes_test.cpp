@@ -131,7 +131,7 @@ int main() {
     sde::SdeOptions opts;
     opts.steps = 20000;
     opts.seed = 123;
-    const auto fwd = sde::fluctua(mu, sigma, y0, t0, t1, Series{}, opts);
+    const auto fwd = sde::fluctua(mu, sigma, y0, t0, t1, pluss::series::undefined(), opts);
     const double w_T = scalar_f64(fwd.wiener_final);
     const double closed_form = y0v * std::exp((muv - 0.5 * sigmav * sigmav) * (t1 - t0) + sigmav * w_T);
     // At 20000 steps this scheme's realized error against the closed form
@@ -160,7 +160,7 @@ int main() {
     sde::SdeOptions opts;
     opts.steps = 200;
     opts.seed = 99;
-    const auto fwd = sde::fluctua(mu, sigma, y0, t0, t1, Series{}, opts);
+    const auto fwd = sde::fluctua(mu, sigma, y0, t0, t1, pluss::series::undefined(), opts);
 
     const auto vals = vec_f64(fwd.y_final);
     double sum = 0.0, sumsq = 0.0;

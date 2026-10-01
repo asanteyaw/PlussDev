@@ -8,6 +8,7 @@
 
 ```cpp
 Series::tan() const -> Series
+Series& Series::tan_()
 ```
 
 ## What It Does
@@ -50,6 +51,29 @@ So the backward multiplier:
 On the current verified public surface used here, the reverse-mode example
 returns zero sensitivities. So the value transform is verified, but the
 backward path through this method is not yet reliable.
+
+## In-Place Form
+
+`tan_()` is the in-place sibling of [`tan()`](tan.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.tan_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 1.5574077]
+same object: true
+```
 
 ## Examples
 

@@ -63,14 +63,3 @@ Duration(shape=[], dim=0, numel=1)
 - [`floordiv`](floordiv.md): the flooring counterpart, useful when a whole
   number of sub-intervals matters more than the exact fraction.
 - [`mod`](mod.md): remainder after division by a raw nanosecond divisor.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mul.html">
-    <span class="label">Previous</span>
-    <span class="title">mul</span>
-  </a>
-  <a class="next-link" href="floordiv.html">
-    <span class="label">Next</span>
-    <span class="title">floordiv</span>
-  </a>
-</div>

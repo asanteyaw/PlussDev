@@ -16,7 +16,7 @@ Stream StreamTimelineAccessor::leap() const
 Flags whether the bound stream's timestamp's calendar year is a leap year,
 replacing it with a `Bool` `Series` stream.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.
@@ -67,7 +67,7 @@ label        | value
 ## Notes
 
 - See the important callouts above — reflects the row's year, not its exact
-  date, and requires the bound stream to be `Timeline`/`TimeIndex`-kind.
+  date, and requires the bound stream to be `Timeline`-kind.
 - Reads local calendar fields relative to whatever timezone the stream
   currently carries (`"UTC"` unless changed via [`tz()`](tz.md)/
   [`localize()`](localize.md)).

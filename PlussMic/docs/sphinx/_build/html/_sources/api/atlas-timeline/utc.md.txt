@@ -13,7 +13,7 @@ AtlasTimelineAccessor::utc() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature's display timezone in **every frame of
+Replaces every `Timeline` feature's display timezone in **every frame of
 the stack** with `"UTC"` — the same transform
 [`DataFrame::tl().utc()`](../dataframe-timeline/utc.md) applies to a single frame,
 broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
@@ -79,7 +79,7 @@ original values.
 - Purely a display-timezone relabel — the underlying instant is unchanged, so chaining
   `.tl().tz(name).tl().utc()` always round-trips back to the original displayed values.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row stays `NaT`.
 - Each frame is transformed independently — see

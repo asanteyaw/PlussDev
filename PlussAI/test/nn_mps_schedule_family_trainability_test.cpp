@@ -691,65 +691,65 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
   {
     const auto [x, y] = make_fusion_data();
     pluss::nn::Schedule model;
-    model->then("fusion0", pluss::nn::Fusion(2, 8, true, cfg, 11ULL))
-        .then("activation", pluss::nn::Tanh())
-        .then("fusion1", pluss::nn::Fusion(8, 1, true, cfg, 13ULL));
+    model->append("fusion0", pluss::nn::Fusion(2, 8, true, cfg, 11ULL))
+        .append("activation", pluss::nn::Tanh())
+        .append("fusion1", pluss::nn::Fusion(8, 1, true, cfg, 13ULL));
     if (!train_schedule_case("Schedule<Fusion>", model, x, y, 12, 2e-2, err)) return false;
   }
 
   {
     const auto [x, y] = make_embedding_data();
     pluss::nn::Schedule model;
-    model->then("embedding", EmbeddingProjector(cfg));
+    model->append("embedding", EmbeddingProjector(cfg));
     if (!train_schedule_case("Schedule<Embedding>", model, x, y, 12, 3e-2, err)) return false;
   }
 
   {
     const auto [x, y] = make_sequence_data();
     pluss::nn::Schedule model;
-    model->then("rnn", RNNProjector(cfg));
+    model->append("rnn", RNNProjector(cfg));
     if (!train_schedule_case("Schedule<RNN>", model, x, y, 12, 4e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_sequence_data();
     pluss::nn::Schedule model;
-    model->then("stacked_bidirectional_rnn", StackedBidirectionalRNNProjector(cfg));
+    model->append("stacked_bidirectional_rnn", StackedBidirectionalRNNProjector(cfg));
     if (!train_schedule_case("Schedule<StackedBidirectionalRNN>", model, x, y, 10, 3e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_sequence_data();
     pluss::nn::Schedule model;
-    model->then("gru", GRUProjector(cfg));
+    model->append("gru", GRUProjector(cfg));
     if (!train_schedule_case("Schedule<GRU>", model, x, y, 12, 4e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_sequence_data();
     pluss::nn::Schedule model;
-    model->then("stacked_bidirectional_gru", StackedBidirectionalGRUProjector(cfg));
+    model->append("stacked_bidirectional_gru", StackedBidirectionalGRUProjector(cfg));
     if (!train_schedule_case("Schedule<StackedBidirectionalGRU>", model, x, y, 10, 3e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_sequence_data();
     pluss::nn::Schedule model;
-    model->then("lstm", LSTMProjector(cfg));
+    model->append("lstm", LSTMProjector(cfg));
     if (!train_schedule_case("Schedule<LSTM>", model, x, y, 12, 2e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_sequence_data();
     pluss::nn::Schedule model;
-    model->then("stacked_bidirectional_lstm", StackedBidirectionalLSTMProjector(cfg));
+    model->append("stacked_bidirectional_lstm", StackedBidirectionalLSTMProjector(cfg));
     if (!train_schedule_case("Schedule<StackedBidirectionalLSTM>", model, x, y, 10, 2e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_conv_data();
     pluss::nn::Schedule model;
-    model->then("conv", pluss::nn::Conv1d(pluss::nn::Conv1dOptions{
+    model->append("conv", pluss::nn::Conv1d(pluss::nn::Conv1dOptions{
                             .in_channels = 1,
                             .out_channels = 1,
                             .kernel_size = 3,
@@ -767,7 +767,7 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
   {
     const auto [x, y] = make_grouped_conv1d_data();
     pluss::nn::Schedule model;
-    model->then("grouped_conv1d", pluss::nn::Conv1d(pluss::nn::Conv1dOptions{
+    model->append("grouped_conv1d", pluss::nn::Conv1d(pluss::nn::Conv1dOptions{
                                     .in_channels = 4,
                                     .out_channels = 4,
                                     .kernel_size = 3,
@@ -785,7 +785,7 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
   {
     const auto [x, y] = make_causal_conv1d_data();
     pluss::nn::Schedule model;
-    model->then("causal_conv1d", pluss::nn::Conv1d(pluss::nn::Conv1dOptions{
+    model->append("causal_conv1d", pluss::nn::Conv1d(pluss::nn::Conv1dOptions{
                                    .in_channels = 1,
                                    .out_channels = 1,
                                    .kernel_size = 3,
@@ -804,7 +804,7 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
   {
     const auto [x, y] = make_conv2d_data();
     pluss::nn::Schedule model;
-    model->then("conv2d", pluss::nn::Conv(pluss::nn::ConvOptions{
+    model->append("conv2d", pluss::nn::Conv(pluss::nn::ConvOptions{
                               .in_channels = 1,
                               .out_channels = 1,
                               .kernel_size = {3, 3},
@@ -822,7 +822,7 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
   {
     const auto [x, y] = make_depthwise_conv2d_data();
     pluss::nn::Schedule model;
-    model->then("depthwise_conv2d", pluss::nn::Conv(pluss::nn::ConvOptions{
+    model->append("depthwise_conv2d", pluss::nn::Conv(pluss::nn::ConvOptions{
                                         .in_channels = 3,
                                         .out_channels = 3,
                                         .kernel_size = {3, 3},
@@ -841,7 +841,7 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
     const auto [x, y] = make_conv3d_data();
     pluss::nn::Schedule model;
     const std::uint64_t native_before = pluss::ai::kernels::mps::conv3d_native_call_count();
-    model->then("conv3d", pluss::nn::Conv3d(pluss::nn::Conv3dOptions{
+    model->append("conv3d", pluss::nn::Conv3d(pluss::nn::Conv3dOptions{
                                       .in_channels = 2,
                                       .out_channels = 2,
                                       .kernel_size = {3, 3, 3},
@@ -863,23 +863,23 @@ bool run_mps_schedule_family_trainability(std::ostream* err = nullptr) {
   {
     const auto [x, y] = make_transformer_data();
     pluss::nn::Schedule model;
-    model->then("transformer", TransformerAutoencoder(cfg));
+    model->append("transformer", TransformerAutoencoder(cfg));
     if (!train_schedule_case("Schedule<Transformer>", model, x, y, 8, 3e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_transformer_data();
     pluss::nn::Schedule model;
-    model->then("masked_transformer", MaskedTransformerAutoencoder(cfg));
+    model->append("masked_transformer", MaskedTransformerAutoencoder(cfg));
     if (!train_schedule_case("Schedule<MaskedTransformer>", model, x, y, 6, 2e-3, err)) return false;
   }
 
   {
     const auto [x, y] = make_fusion_data();
     pluss::nn::Schedule model;
-    model->then("stress_fusion0", pluss::nn::Fusion(2, 10, true, cfg, 191ULL))
-        .then("stress_activation", pluss::nn::Tanh())
-        .then("stress_fusion1", pluss::nn::Fusion(10, 1, true, cfg, 193ULL));
+    model->append("stress_fusion0", pluss::nn::Fusion(2, 10, true, cfg, 191ULL))
+        .append("stress_activation", pluss::nn::Tanh())
+        .append("stress_fusion1", pluss::nn::Fusion(10, 1, true, cfg, 193ULL));
     if (!train_schedule_case("Schedule<FusionStress64>", model, x, y, 64, 8e-3, err)) return false;
   }
 

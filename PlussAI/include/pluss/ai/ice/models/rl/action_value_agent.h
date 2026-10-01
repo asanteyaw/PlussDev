@@ -36,11 +36,11 @@ struct ActionValueTrainOptions {
 };
 
 struct ActionValueBatch {
-  Series observation = Series::undefined();
-  Series action = Series::undefined();
-  Series reward = Series::undefined();
-  Series next_observation = Series::undefined();
-  Series done = Series::undefined();
+  Series observation = pluss::series::undefined();
+  Series action = pluss::series::undefined();
+  Series reward = pluss::series::undefined();
+  Series next_observation = pluss::series::undefined();
+  Series done = pluss::series::undefined();
 };
 
 struct ActionValueReport {

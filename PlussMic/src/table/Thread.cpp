@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cctype>
 #include <cmath>
 #include <concepts>
@@ -29,7 +30,6 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeN/core/OpsInternal.h"
-#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "scribble/Slot.h"
 #include "kindle/Stream.h"
@@ -40,6 +40,7 @@ namespace pluss::table {
 
 #include "table/ops/thread/ThreadInternals.inc"
 #include "table/ops/shared/GroupInternals.inc"
+#include "table/ops/shared/TimeAxis.inc"
 #include "table/ops/thread/ThreadAlignment.inc"
 #include "table/ops/thread/ThreadCoreOps.inc"
 #include "table/ops/thread/ThreadGroup.inc"

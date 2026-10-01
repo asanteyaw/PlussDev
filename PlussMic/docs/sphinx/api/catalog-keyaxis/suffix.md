@@ -87,8 +87,4 @@ user_id                  | Series       | Series[float64]  | 2       | [3, 4]
     <span class="label">Previous</span>
     <span class="title">series</span>
   </a>
-  <a class="next-link" href="timeindex.html">
-    <span class="label">Next</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

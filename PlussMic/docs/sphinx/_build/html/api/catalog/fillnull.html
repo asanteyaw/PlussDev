@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0af463f0b327 -->
+<!-- pluss-signature-hash: 3b90e7494017 -->
 <section id="catalog-fillnull">
 <h1>Catalog::fillnull<a class="headerlink" href="#catalog-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
@@ -47,7 +47,7 @@
 <span class="n">Catalog</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
 <span class="n">Catalog</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
 <span class="n">Catalog</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
-<span class="n">Catalog</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
+<span class="n">Catalog</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Catalog</span>
 </pre></div>
 </div>
 </section>
@@ -63,8 +63,8 @@ the numeric streams, in one call, without first selecting them by name.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull(double)</span></code> fills only <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind streams.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull(std::string_view)</span></code> fills only <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind streams.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(const</span> <span class="pre">pluss::Timeline&amp;)</span></code> fills <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-<strong>and</strong>-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind streams.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(const</span> <span class="pre">pluss::TimeIndex&amp;)</span></code> fills only <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind streams.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(const</span> <span class="pre">pluss::Timeline&amp;)</span></code> fills only <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind streams.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(const</span> <span class="pre">pluss::Duration&amp;)</span></code> fills only <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind streams.</p></li>
 </ul>
 <p>Streams of every other kind are returned exactly as they were — not skipped with a
 warning, not thrown on, just left alone. This silent skip is specific to calling
@@ -76,7 +76,7 @@ stream whose kind does not match <code class="docutils literal notranslate"><spa
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code> /
-<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span></code>)
+<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Duration&amp;</span></code>)
 The fill value. Its C++ type selects both the overload and which streams are eligible
 to be filled — see the important callout above.</p>
 </section>

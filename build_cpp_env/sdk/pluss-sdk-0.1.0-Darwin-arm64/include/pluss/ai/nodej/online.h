@@ -36,7 +36,7 @@ private:
   std::int64_t seen_samples_{0};
   std::int64_t feature_count_{0};
   std::int64_t updates_{0};
-  Series weights_ = Series::undefined();
+  Series weights_ = pluss::series::undefined();
   double negative_label_{0.0};
   double positive_label_{1.0};
   ScalarType label_dtype_{ScalarType::Float64};
@@ -61,7 +61,7 @@ private:
   std::int64_t seen_samples_{0};
   std::int64_t feature_count_{0};
   std::int64_t updates_{0};
-  Series weights_ = Series::undefined();
+  Series weights_ = pluss::series::undefined();
 };
 
 StatusOr<OnlineLinearClassifier> make_online_linear_classifier(const OnlineLinearOptions& options = {});

@@ -27,14 +27,14 @@ struct MultiheadOptions {
 };
 
 struct MultiheadWeights {
-  Series q_weight{};
-  Series k_weight{};
-  Series v_weight{};
-  Series out_weight{};
-  Series q_bias{};
-  Series k_bias{};
-  Series v_bias{};
-  Series out_bias{};
+  Series q_weight = pluss::series::undefined();
+  Series k_weight = pluss::series::undefined();
+  Series v_weight = pluss::series::undefined();
+  Series out_weight = pluss::series::undefined();
+  Series q_bias = pluss::series::undefined();
+  Series k_bias = pluss::series::undefined();
+  Series v_bias = pluss::series::undefined();
+  Series out_bias = pluss::series::undefined();
 };
 
 inline Series causal_attention_mask(
@@ -135,7 +135,7 @@ inline Series normalize_attn_mask_(
     std::int64_t target_len,
     std::int64_t source_len,
     const Series& like) {
-  if (!attn_mask.defined()) return Series();
+  if (!attn_mask.defined()) return pluss::series::undefined();
 
   Series mask = attn_mask.to(like.platform(), attn_mask.scalar_type());
   if (mask.dim() == 2) {
@@ -171,7 +171,7 @@ inline Series normalize_key_padding_mask_(
     std::int64_t batch,
     std::int64_t source_len,
     const Series& like) {
-  if (!key_padding_mask.defined()) return Series();
+  if (!key_padding_mask.defined()) return pluss::series::undefined();
   Series mask = key_padding_mask.to(like.platform(), ScalarType::Bool);
   if (mask.dim() == 1) {
     PLUSS_CHECK(
@@ -206,7 +206,7 @@ inline std::tuple<Series, Series> scaled_attention(
     const Series& query,
     const Series& key,
     const Series& value,
-    const Series& attn_mask = Series(),
+    const Series& attn_mask = pluss::series::undefined(),
     AttentionOptions options = {}) {
   detail::attn::require_qkv_shapes_(query, key, value, "scaled_attention");
   PLUSS_CHECK(options.dropout >= 0.0 && options.dropout <= 1.0, "pluss::ai::scaled_attention: dropout must be in [0, 1]");
@@ -231,7 +231,7 @@ inline std::tuple<Series, Series> scaled_attention(
   const bool require_backward =
       ::pluss::codem::series_tape::recording_enabled() &&
       (query.tracks_slope() || key.tracks_slope() || value.tracks_slope());
-  Series weights;
+  Series weights = pluss::series::undefined();
   if (auto cudnn_weights = ::pluss::ai::kernels::cudnn::try_scaled_attention_softmax(logits, require_backward);
       cudnn_weights.has_value()) {
     weights = std::move(*cudnn_weights);
@@ -251,8 +251,8 @@ inline std::tuple<Series, Series> multihead_attention(
     const Series& value,
     const MultiheadWeights& weights,
     MultiheadOptions options = {},
-    const Series& attn_mask = Series(),
-    const Series& key_padding_mask = Series()) {
+    const Series& attn_mask = pluss::series::undefined(),
+    const Series& key_padding_mask = pluss::series::undefined()) {
   PLUSS_CHECK(options.num_heads > 0, "pluss::ai::multihead_attention: num_heads must be > 0");
 
   const bool unbatched_input = query.dim() == 2;

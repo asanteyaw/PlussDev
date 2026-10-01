@@ -22,6 +22,15 @@ straight from raw features instead of a pre-transformed batch.
     const classic::AssessOptions& options = {}) const;
 ```
 
+## What It Does
+
+Runs `batch`'s features through every fitted stage, feeds the transformed
+result into the attached model's prediction step, then scores those
+predictions against `batch`'s own target -- the same predict-then-score
+sequence [`EstimatorBase::assess`](../../estimators/EstimatorBase/assess.md)
+performs on a single estimator, reachable here straight from raw features
+rather than a pre-transformed batch.
+
 ## Parameters
 
 `batch` — `LabeledBatch`

@@ -1,0 +1,19 @@
+<!-- pluss-hand-authored -->
+
+# Series::histcounts
+
+[Back to Series API Reference](../../series_api_reference)
+
+:::{admonition} Teaching in progress
+:class: warning
+
+This public operation is present in the API inventory, but its verified,
+handwritten teaching chapter is still being prepared. The final page will
+document every overload, shape and dtype rule, autodiff behavior, ownership
+effect, edge case, failure mode, and executable-derived example required by
+the API Documentation Authoring Standard.
+:::
+
+Do not infer a contract from this placeholder. It exists so the public method
+cannot disappear from the landing page or browser sidebar while its complete
+chapter is being verified.

@@ -8,6 +8,8 @@
 
 ```cpp
 Series::mul(const Series& rhs) const -> Series
+Series& Series::mul_(const Series& rhs)
+Series& Series::mul_(double rhs)
 ```
 
 ## What It Does
@@ -47,6 +49,43 @@ For differentiable dtypes:
 
 That simple exchange makes `mul()` one of the easiest elementwise nonlinear
 surfaces to reason about in reverse mode.
+
+## In-Place Form
+
+`mul_()` is the in-place sibling of [`mul()`](mul.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({2.0, 3.0, 4.0}, {3});
+auto y = pluss::make_series({5.0, 5.0, 5.0}, {3});
+
+auto& ref = x.mul_(y);
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[10, 15, 20]
+same object: true
+```
+
+```cpp
+auto x = pluss::make_series({2.0, 3.0, 4.0}, {3});
+x.mul_(10.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[20, 30, 40]
+```
 
 ## Examples
 
@@ -177,6 +216,13 @@ Think of `mul()` as the simplest broadcast-aware scale-and-combine primitive on
 `Series`. It is ideal for explicit feature scaling, elementwise gating, and
 many reverse-mode sanity checks because the backward rule is easy to verify by
 eye.
+
+## Aliases
+
+**`multiply()`** / **`multiply_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `mul()` / `mul_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

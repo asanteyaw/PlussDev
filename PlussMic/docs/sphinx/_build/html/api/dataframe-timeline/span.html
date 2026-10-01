@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every selected <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature with the elapsed
+<p>Replaces every selected <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature with the elapsed
 distance between it and <code class="docutils literal notranslate"><span class="pre">other</span></code>, in <code class="docutils literal notranslate"><span class="pre">options.unit</span></code> (or plain <code class="docutils literal notranslate"><span class="pre">unit</span></code>) — same
 feature name, now a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>. <code class="docutils literal notranslate"><span class="pre">other</span></code> can be another <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
 (paired feature-by-feature, by matching name), a bare <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, or a
@@ -489,7 +489,7 @@ and <code class="docutils literal notranslate"><span class="pre">nyse(...)</span
 <li><p><code class="docutils literal notranslate"><span class="pre">signed_result</span> <span class="pre">=</span> <span class="pre">false</span></code> returns the absolute magnitude instead of a
 direction-sensitive (possibly negative) value.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">DataFrame::tl()</span></code> requires <strong>every</strong> feature on the calling frame to already
-be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind — narrow with
+be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — narrow with
 <a class="reference internal" href="../dataframe/features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first if needed.</p></li>
 <li><p>If either side is <code class="docutils literal notranslate"><span class="pre">NaT</span></code> for a row, that row’s span displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>.</p></li>
 </ul>

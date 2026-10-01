@@ -92,16 +92,10 @@ moment: failed to parse datetime
 
 ## See Also
 
-- [`RegistryCastAccessor::timeindex`](timeindex.md): the related cast target,
-  with the same parse-failure throwing behavior.
 - [`RegistryCastAccessor::series`](series.md): the numeric cast target, with a
   different (silent-null) failure mode for unparseable input.
 - [`Registry::cast`](../registry/cast.md): the entry point this accessor is
   reached from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

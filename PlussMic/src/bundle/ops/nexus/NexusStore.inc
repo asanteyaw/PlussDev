@@ -738,6 +738,8 @@ bool bool_cell(const pluss::table::DataFrame& frame, std::string_view feature, s
     }
     case pluss::table::ThreadValue::HostAny::Kind::Time:
       PLUSS_FAIL("Nexus::load: time snapshots cannot be decoded as boolean");
+    case pluss::table::ThreadValue::HostAny::Kind::Duration:
+      PLUSS_FAIL("Nexus::load: duration snapshots cannot be decoded as boolean");
   }
   PLUSS_FAIL("Nexus::load: unsupported boolean snapshot scalar kind");
 }

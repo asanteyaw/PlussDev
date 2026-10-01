@@ -24,8 +24,6 @@ The key contrast with [`repeat_interleave()`](repeat_interleave.md): `repeat()`
 tiles the *block* (`ABAB...`), while `repeat_interleave()` repeats each *element*
 in place (`AABB...`).
 
-`tile()` is an alias for `repeat()`.
-
 ## Parameters
 
 **reps** (`pluss::RangeView::Int`)
@@ -82,22 +80,7 @@ data=[[1, 2, 1, 2],
 
 The `2 x 2` block is tiled twice down and twice across.
 
-Example 3. `tile()` is the same call.
-
-```cpp
-pluss::series::print(
-    std::cout,
-    pluss::make_series({7.0, 8.0}).tile({3}));
-```
-
-### Output
-
-```text
-Series(shape=[6], strides=[1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=[7.0000, 8.0000, 7.0000, 8.0000, 7.0000, 8.0000]
-```
-
-Example 4. The backward sums each source element's gradient over all its
+Example 3. The backward sums each source element's gradient over all its
 copies. Here `reps = {2, 2}` makes four copies of every element.
 
 ```cpp
@@ -130,13 +113,12 @@ data=[4, 4]
 `repeat(reps)` tiles the whole series and materializes the result:
 
 - axis `i` becomes `size(i) * reps[i]`; extra leading entries add tiled axes
-- always contiguous; `tile()` is an alias
+- always contiguous
 - differentiable, backward sums each source element's gradient over its
   `prod(reps)` copies
 
 ## See Also
 
-- [`Series::tile`](tile.md): the alias.
 - [`Series::repeat_interleave`](repeat_interleave.md): repeat each element in
   place rather than tiling the block.
 - [`Series::expand`](expand.md): a zero-copy broadcast instead of a copy.

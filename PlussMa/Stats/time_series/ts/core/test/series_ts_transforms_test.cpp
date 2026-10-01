@@ -166,16 +166,15 @@ void test_fill_gaps_and_resample() {
   const auto t = pluss::codeh::ops_internal::timeline_from_utf8(
       std::span<const std::string_view>(iso.data(), iso.size()),
       std::span<const std::int64_t>(shape.data(), shape.size()));
-  const auto ti = t.to_timeindex(false);
   const auto values = pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0});
-  const auto out_mean = pluss::subsp::stats::ts::resample(ti, values, "D", ResampleOp::Mean, 1);
+  const auto out_mean = pluss::subsp::stats::ts::resample(t, values, "D", ResampleOp::Mean, 1);
   expect(out_mean.labels.has_value(), "resample mean should produce labels");
   const auto mean_vals = to_f64(out_mean.values);
   expect(mean_vals.size() == 2, "resample mean bin count");
   expect_close(mean_vals[0], 2.0, 1e-12, "resample mean day1");
   expect_close(mean_vals[1], 3.0, 1e-12, "resample mean day2");
 
-  const auto out_count = pluss::subsp::stats::ts::resample(ti, values, "D", ResampleOp::Count, 1);
+  const auto out_count = pluss::subsp::stats::ts::resample(t, values, "D", ResampleOp::Count, 1);
   expect(out_count.labels.has_value(), "resample count should produce labels");
   const auto count_vals = to_f64(out_count.values);
   expect(count_vals.size() == 2, "resample count bin count");

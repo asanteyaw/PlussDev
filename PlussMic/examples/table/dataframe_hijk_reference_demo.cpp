@@ -48,10 +48,10 @@ int main() {
   std::cout << "HEAD\n" << sales.head(2, false).to_string() << "\n\n";
   std::cout << "HEIGHT\n" << sales.height() << "\n\n";
   std::cout << "IAT\n";
-  std::cout << "sales.case_study(Case::at(1), Feat::at(3)):\n"
-            << sales.case_study(DataFrame::Case::at(1), DataFrame::Feat::at(3)).to_string() << "\n";
-  std::cout << "sales.case_study(Case::at(2), Feat::at(0)):\n"
-            << sales.case_study(DataFrame::Case::at(2), DataFrame::Feat::at(0)).to_string() << "\n\n";
+  std::cout << "sales.case_study().at(1).features({\"score\"}):\n"
+            << sales.case_study().at(1).features({sales.features()[3]}).to_string() << "\n";
+  std::cout << "sales.case_study().at(2).features({\"student\"}):\n"
+            << sales.case_study().at(2).features({sales.features()[0]}).to_string() << "\n\n";
 
   std::cout << "INFO_STRING\n" << sales.info_string() << "\n\n";
 

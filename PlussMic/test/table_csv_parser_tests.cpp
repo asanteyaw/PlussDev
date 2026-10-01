@@ -28,7 +28,6 @@
 #include "pluss/coden/coden.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/codeh.h"
-#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/mic.h"
 #include "pluss/tils.h"
@@ -1767,7 +1766,7 @@ void test_versatile_dataframe_families() {
           "2024-01-02T00:00:00Z",
           "2024-01-01T00:00:00Z",
       }))},
-      {"idx_col", pluss::table::Thread(pluss::make_timeindex({
+      {"idx_col", pluss::table::Thread(pluss::make_timeline({
           "2024-02-01T00:00:00Z",
           "2024-02-01T00:00:00Z",
           "2024-02-02T00:00:00Z",
@@ -1780,15 +1779,7 @@ void test_versatile_dataframe_families() {
   expect(typed.filter(typed.features("entered") == pluss::make_timeline("2024-01-01T00:00:00Z")).ncases() == 2,
          "filter(Thread == scalar Timeline) should broadcast the scalar timeline value");
   expect(typed.filter(typed.features("idx_col") == pluss::make_timeline("2024-02-01T00:00:00Z")).ncases() == 2,
-         "filter(TimeIndex Thread == scalar Timeline) should broadcast the scalar timeline value");
-  bool one_row_timeindex_payload_threw = false;
-  try {
-    (void)(typed.features("idx_col") == pluss::make_timeindex("2024-02-01T00:00:00Z"));
-  } catch (const std::exception&) {
-    one_row_timeindex_payload_threw = true;
-  }
-  expect(one_row_timeindex_payload_threw,
-         "Thread == one-row TimeIndex payload should not broadcast or align by default");
+         "filter(Timeline Thread == scalar Timeline) should broadcast the scalar timeline value");
   bool note_one_row_thread_threw = false;
   try {
     (void)(typed.features("name") ==
@@ -1816,15 +1807,6 @@ void test_versatile_dataframe_families() {
   }
   expect(timeline_one_row_thread_threw,
          "Thread == one-row Timeline Thread should not broadcast or align by default");
-  bool timeindex_one_row_thread_threw = false;
-  try {
-    (void)(typed.features("idx_col") ==
-           pluss::table::Thread(pluss::make_timeindex(std::vector<std::string>{"2024-02-01T00:00:00Z"})));
-  } catch (const std::exception&) {
-    timeindex_one_row_thread_threw = true;
-  }
-  expect(timeindex_one_row_thread_threw,
-         "Thread == one-row TimeIndex Thread should not broadcast or align by default");
   const auto masked_scalar = pluss::table::Thread(
       pluss::make_series(std::vector<std::int64_t>{20}),
       pluss::make_series(std::vector<bool>{false}));
@@ -1836,45 +1818,43 @@ void test_versatile_dataframe_families() {
   }
   expect(masked_one_row_thread_threw,
          "masked one-row Thread comparison should not broadcast or align by default");
-  const auto one_case = df.case_study(DataFrame::Case::at(0));
+  const auto one_case = df.case_study().at(0);
   expect(one_case.ncases() == 1, "case_study(pos(row)) should return exactly one case");
-  const auto row_span = df.case_study(DataFrame::Case::slice(2, 7));
+  const auto row_span = df.case_study().slice(2, 7);
   expect(row_span.ncases() == 5, "case_study(pos(start, stop)) should return half-open row slice");
-  const auto pos_list = df.case_study(DataFrame::Case::take({4, 1, 3}));
+  const auto pos_list = df.case_study().take({4, 1, 3});
   expect(pos_list.ncases() == 3, "case_study(pos({..})) should keep one row per requested position");
   expect(std::string(pos_list.features("job").as_note().at(1)) == std::string(df.features("job").as_note().at(1)),
          "case_study(pos({..})) should preserve requested positional order");
 
-  const auto one_column = df.case_study(DataFrame::Case::at(0), DataFrame::Feat::name("job"));
+  const auto one_column = df.case_study().at(0).features({"job"});
   expect(one_column.ncases() == 1 && one_column.nfeatures() == 1,
          "case_study(row, feature(name)) should return a 1x1 frame");
 
-  const auto one_column_by_pos = df.case_study(DataFrame::Case::at(0), DataFrame::Feat::at(1));
+  const auto one_column_by_pos = df.case_study().at(0).features({df.features()[1]});
   expect(one_column_by_pos.nfeatures() == 1, "case_study(row, feature(pos)) should project one feature");
-  auto labeled_source = df.case_study(DataFrame::Case::slice(0, 8));
+  auto labeled_source = df.case_study().slice(0, 8);
   auto labeled = labeled_source.label().set(
       pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs1", "cs3", "cs4", "cs5", "cs6", "cs7"})));
-  const auto label_match = labeled.case_study(DataFrame::Case::label("cs1"));
-  expect(label_match.ncases() == 2, "case_study(label(...)) should return every matching case label");
+  const auto label_match = labeled.case_study().labels("cs1");
+  expect(label_match.ncases() == 2, "case_study(labels(...)) should return every matching case label");
 
-  const auto label_list = labeled.case_study(DataFrame::Case::labels({"cs4", "cs1"}),
-                                             DataFrame::Feat::names({"job", "age"}));
+  const auto label_list = labeled.case_study().labels({"cs4", "cs1"}).features({"job", "age"});
   expect(label_list.ncases() == 3 && label_list.nfeatures() == 2,
          "case_study(labels({...}), features({...})) should preserve label order and selected features");
 
-  const auto label_window = labeled.case_study(DataFrame::Case::span("cs1", "cs4"));
+  const auto label_window = labeled.case_study().span("cs1", "cs4");
   expect(label_window.ncases() == 4, "case_study(label_range(...)) should include both label endpoints");
-  const auto masked_rows = df.case_study(DataFrame::Case::where(df.features("age") > 30.0),
-                                         DataFrame::Feat::names({"age", "job"}));
+  const auto masked_rows = df.case_study().where(df.features("age") > 30.0).features({"age", "job"});
   expect(masked_rows.nfeatures() == 2, "case_study(mask(...), features({...})) should keep requested feature subset");
   expect(masked_rows.ncases() == df.filter(df.features("age") > 30.0).ncases(),
          "case_study(mask(...)) should match ordinary boolean row filtering");
 
-  const auto feature_span = df.case_study(DataFrame::Case::slice(0, 2), DataFrame::Feat::slice(0, 2));
+  const auto feature_span = df.case_study().slice(0, 2).features({df.features()[0], df.features()[1]});
   expect(feature_span.ncases() == 2 && feature_span.nfeatures() == 2,
          "case_study(..., features(start, stop)) should use half-open positional feature slices");
 
-  const auto feature_window = df.case_study(DataFrame::Case::slice(0, 2), DataFrame::Feat::span("age", "job"));
+  const auto feature_window = df.case_study().slice(0, 2).features({"age", "job"});
   expect(feature_window.nfeatures() == 2, "case_study(..., feature_range(...)) should use inclusive feature-name slices");
 
   expect(df.get("job").has_value() && !df.get("not_a_feature").has_value(),
@@ -2646,10 +2626,10 @@ void test_versatile_dataframe_families() {
          "timeline_features() should retain Timeline features after cast(Timeline)");
   expect(tdf.features("start").as_timeline().numel() == 2, "as_timeline should expose Timeline payload");
   auto tdf_timeindex = tdf;
-  tdf_timeindex.set("start") = tdf.features("start").cast().timeindex();
+  tdf_timeindex.set("start") = tdf.features("start").cast().timeline();
   expect(tdf_timeindex.feataxis().timeline().nfeatures() == 2 && tdf_timeindex.get("start").has_value()
              && tdf_timeindex.get("end").has_value(),
-         "timeline_features() should retain Timeline/TimeIndex-backed features");
+         "timeline_features() should retain Timeline-backed features");
   const auto shifted_tdf = tdf.features({"start"}).tl().shift(1, "D");
   expect(shifted_tdf.ncases() == tdf.ncases() && shifted_tdf.get("start").has_value(),
          "shift_time should preserve shape and update selected temporal feature");
@@ -3100,7 +3080,7 @@ void test_versatile_dataframe_families() {
                  }),
                  validity)},
       {"ti", pluss::table::Thread(
-                 pluss::make_timeindex({
+                 pluss::make_timeline({
                      "2024-01-01T00:00:00Z",
                      "2024-01-02T00:00:00Z",
                      "2024-01-03T00:00:00Z",
@@ -3118,16 +3098,16 @@ void test_versatile_dataframe_families() {
   expect(!pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ts")),
          "fillnull(Timeline, features) should clear Timeline validity mask when all nulls are filled");
   expect(pluss::table::detail::has_validity_mask(mixed_ts_filled.features("ti")),
-         "fillnull(Timeline, features) should not mutate unselected TimeIndex features");
+         "fillnull(Timeline, features) should not mutate unselected Timeline features");
 
-  const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
+  const auto ti_fill = pluss::make_timeline("2024-02-01T00:00:00Z");
   const auto mixed_ti_filled = mixed_missing.fillnull(ti_fill, {"ti"});
-  const auto ti_ticks = mixed_ti_filled.features("ti").as_timeindex().timeline().ticks();
-  const auto ti_fill_tick = ti_fill.timeline().ticks()[0];
+  const auto ti_ticks = mixed_ti_filled.features("ti").as_timeline().ticks();
+  const auto ti_fill_tick = ti_fill.ticks()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
-         "fillnull(TimeIndex, features) should replace null TimeIndex values");
+         "fillnull(Timeline, features) should replace null Timeline values");
   expect(!pluss::table::detail::has_validity_mask(mixed_ti_filled.features("ti")),
-         "fillnull(TimeIndex, features) should clear TimeIndex validity mask when all nulls are filled");
+         "fillnull(Timeline, features) should clear Timeline validity mask when all nulls are filled");
 
   const auto miss_ffill = miss.ffill();
   expect(miss_ffill.features("score").as_series().to_vec<std::int64_t>(1) == 10,
@@ -3496,8 +3476,8 @@ void test_thread_bucketize_correctness() {
          "DataFrame::bucketize should preserve out-of-range values as null");
   expect((df_bucketed.features("bonus") == 1.0).count().as_series().item<std::int64_t>() == 1,
          "DataFrame::bucketize should bucketize every selected numeric feature independently");
-  expect(df_bucketed.features("city").as_note().vector() == scores.features("city").as_note().vector(),
-         "DataFrame::bucketize should leave unselected features unchanged");
+  expect(df_bucketed.nfeatures() == 2 && !df_bucketed.get("city").has_value(),
+         "bucketizing a feature projection should preserve the projected schema");
 
   const auto auto_bucketed = scores.bucketize(
       {0.0, 1.5, 3.0, 4.5, 6.0, std::numeric_limits<double>::infinity()},
@@ -3506,6 +3486,8 @@ void test_thread_bucketize_correctness() {
          "DataFrame::bucketize(all) should auto-select numeric Series features");
   expect(auto_bucketed.features("bonus").as_series().scalar_type() == pluss::codem::ScalarType::Int64,
          "DataFrame::bucketize(all) should bucketize every numeric Series feature");
+  expect(auto_bucketed.features("city").as_note().vector() == scores.features("city").as_note().vector(),
+         "DataFrame::bucketize(all) should preserve nonnumeric features");
 }
 
 void test_replace_exact_and_null_overloads() {
@@ -3635,7 +3617,7 @@ void test_replace_exact_and_null_overloads() {
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",
   });
-  const auto indexed_times = pluss::make_timeindex({
+  const auto indexed_times = pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",
@@ -3651,11 +3633,11 @@ void test_replace_exact_and_null_overloads() {
   const auto expected_tick = new_time.ticks()[0];
   expect(temporal_replaced.features("event").as_timeline().ticks()[1] == expected_tick,
          "DataFrame::replace(Timeline, Timeline) should update Timeline columns");
-  expect(temporal_replaced.features("indexed").as_timeindex().timeline().ticks()[1]
+  expect(temporal_replaced.features("indexed").as_timeline().ticks()[1]
              == expected_tick,
-         "DataFrame::replace(Timeline, Timeline) should update TimeIndex columns");
+         "DataFrame::replace(Timeline, Timeline) should update indexed Timeline columns");
   expect(temporal_replaced.features("event").kind() == ThreadKind::Timeline
-             && temporal_replaced.features("indexed").kind() == ThreadKind::TimeIndex,
+             && temporal_replaced.features("indexed").kind() == ThreadKind::Timeline,
          "DataFrame::replace should preserve temporal payload kinds");
   expect(temporal_replaced.title() == "temporal",
          "DataFrame temporal replacement should preserve the DataFrame title");
@@ -3664,16 +3646,6 @@ void test_replace_exact_and_null_overloads() {
   expect(!pluss::table::detail::validity_mask(temporal_nulled.features("event"))->to_vec<bool>(1)
              && !pluss::table::detail::validity_mask(temporal_nulled.features("indexed"))->to_vec<bool>(1),
          "DataFrame::replace(Timeline, null) should nullify matching temporal values");
-
-  const auto old_index = pluss::make_timeindex("2024-01-01T00:00:00Z");
-  const auto new_index = pluss::make_timeindex("2024-01-08T00:00:00Z");
-  const auto index_replaced = temporal.replace(old_index, new_index);
-  expect(index_replaced.features("indexed").as_timeindex().timeline().ticks()[0]
-             == new_index.timeline().ticks()[0],
-         "DataFrame::replace(TimeIndex, TimeIndex) should update TimeIndex columns");
-  expect(index_replaced.features("event").as_timeline().ticks()
-             == temporal.features("event").as_timeline().ticks(),
-         "DataFrame::replace(TimeIndex, TimeIndex) should preserve Timeline columns");
 
   expect_throw([&]() { (void)gradebook.replace(1.0, 2.0, {"missing"}); },
                "DataFrame::replace should reject unknown selected features");
@@ -3865,7 +3837,7 @@ void test_dataframe_shownull_and_zoom() {
   const auto null_rows_all = row_source.shownull(Axis::Case, true);
   expect(null_rows_all.ncases() == 1,
          "DataFrame::shownull(Axis::Case, all=true) should keep only rows whose selected cells are all null");
-  expect(null_rows_all.isnull().all(Axis::Case).as_series().to_vec<bool>() == std::vector<bool>({true}),
+  expect(null_rows_all.isnull().all(Axis::Feature).as_series().to_vec<bool>() == std::vector<bool>({true}),
          "DataFrame::shownull(Axis::Case, all=true) should keep the fully-null row");
 
   const auto feature_source = DataFrame({
@@ -4648,6 +4620,9 @@ void test_nexus_pull_surface() {
          "Nexus::pull should aggregate one-to-many related rows back to root grain, including dotted feature names and explicit root-relative windows");
 
   auto chained_pull = nx.pull("customers");
+  expect(chained_pull.root() == "customers" &&
+             chained_pull.specs().empty(),
+         "Nexus::pull(root) should start as an empty fluent builder anchored on the requested root table");
   const auto built = chained_pull
                          .take("customer_id")
                          .take("regions", {{"zone", "zone"}})
@@ -4675,9 +4650,6 @@ void test_nexus_pull_surface() {
              built.get("var_spend").has_value() &&
              built.get("recent_spend").has_value(),
          "Nexus::pull(root).take(...).sum(...).collect() should assemble typed root-grain features without per-field namespace repetition");
-  expect(chained_pull.root() == "customers" &&
-             chained_pull.specs().empty(),
-         "Nexus::pull(root) should start as an empty fluent builder anchored on the requested root table");
   expect(built.features("zone").as_note().at(0) == "west" &&
              built.features("event_count").as_series().to_vec<std::int64_t>()
                  == std::vector<std::int64_t>({2, 3, 0}) &&

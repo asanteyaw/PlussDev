@@ -199,8 +199,8 @@ and `5`, so those are exactly the source positions that receive gradient.
     <span class="label">Previous</span>
     <span class="title">repeat_interleave</span>
   </a>
-  <a class="next-link" href="retain_grad.html">
+  <a class="next-link" href="resize.html">
     <span class="label">Next</span>
-    <span class="title">retain_grad</span>
+    <span class="title">resize</span>
   </a>
 </div>

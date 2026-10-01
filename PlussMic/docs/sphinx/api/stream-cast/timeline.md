@@ -81,8 +81,6 @@ moment: failed to parse datetime
 
 ## See Also
 
-- [`StreamCastAccessor::timeindex`](timeindex.md): the related cast target,
-  with the same parse-failure throwing behavior.
 - [`StreamCastAccessor::series`](series.md): the numeric cast target, with a
   different (silent-null) failure mode for unparseable input.
 - [`Stream::cast`](../stream/cast.md): the direct-target overload of casting,
@@ -91,8 +89,4 @@ moment: failed to parse datetime
   whole-catalog equivalent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

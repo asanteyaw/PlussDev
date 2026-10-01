@@ -14,6 +14,15 @@ classic::StatusOr<classic::online::OnlineLinearClassifier> classic::online::make
     const classic::online::OnlineLinearOptions& options = {});
 ```
 
+## What It Does
+
+Validates every field of `options` against the constraints its objective
+and regularization kind impose, then constructs an
+[`OnlineLinearClassifier`](OnlineLinearClassifier.md) only once validation
+passes -- an invalid option combination is rejected here, at construction
+time, rather than surfacing later as an obscure failure the first time
+[`learn`](OnlineLinearClassifier.md#methods) is called.
+
 ## Parameters
 
 `options` (`OnlineLinearOptions`, default `{}`)

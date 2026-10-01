@@ -27,6 +27,10 @@ using ArgView = pluss::msharp::RangeView::Of<Arg>;
 Series invoke(std::string_view op, const Series& self, ArgView args = {});
 Series& invoke_(std::string_view op, Series& self, ArgView args = {});
 Series& invoke_(std::string_view op, const Series& self, ArgView args = {});
+std::pair<Series, Series> sort_pair(
+    const Series& self, std::int64_t dim, bool descending, bool stable);
+std::pair<Series, Series> topk_pair(
+    const Series& self, std::int64_t k, std::int64_t dim, bool largest, bool sorted);
 
 // Strict-unrouted mode. When enabled, a call that reaches the generic
 // "unrouted op" backstop on CPU throws instead of logging a warning and

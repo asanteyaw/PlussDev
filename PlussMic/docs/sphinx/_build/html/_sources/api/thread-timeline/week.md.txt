@@ -58,7 +58,7 @@ ptype: Series
   late December or very early January can report a week number that belongs
   to the neighboring calendar year — `week()` alone doesn't disambiguate which
   ISO year that week number belongs to.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`.

@@ -16,6 +16,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/axel-fieldaxis/duration
 api/axel-fieldaxis/empty
 api/axel-fieldaxis/kind
 api/axel-fieldaxis/like
@@ -26,6 +27,5 @@ api/axel-fieldaxis/nulls
 api/axel-fieldaxis/prefix
 api/axel-fieldaxis/series
 api/axel-fieldaxis/suffix
-api/axel-fieldaxis/timeindex
 api/axel-fieldaxis/timeline
 ```

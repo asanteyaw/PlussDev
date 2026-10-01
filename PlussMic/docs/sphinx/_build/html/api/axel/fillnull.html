@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e8d6e5372185 -->
+<!-- pluss-signature-hash: 22a41f195cf6 -->
 <section id="axel-fillnull">
 <h1>Axel::fillnull<a class="headerlink" href="#axel-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../axel_api_reference.html"><span class="doc std std-doc">Back to Axel API Reference</span></a></p>
@@ -47,7 +47,6 @@
 <span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
-<span class="n">Axel</span><span class="w"> </span><span class="n">Axel</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -57,7 +56,14 @@
 <a class="reference internal" href="../registry/fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Registry::fillnull(value)</span></code></span></a> to <strong>every</strong>
 frame via <a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a> — one overload per fill-value kind
 (<code class="docutils literal notranslate"><span class="pre">double</span></code> for numeric fields, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for text
-fields, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> for datetime fields).</p>
+fields, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> for datetime fields).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>No Duration overload here
+Unlike <code class="docutils literal notranslate"><span class="pre">Registry::fillnull</span></code>, <code class="docutils literal notranslate"><span class="pre">Axel::fillnull</span></code> does not have a <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code>
+overload. Fill a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> field by narrowing with <a class="reference internal" href="fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fields()</span></code></span></a>
+first and calling <a class="reference internal" href="../slot/fillnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slot::fillnull</span></code></span></a> on it directly.</p>
+</div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Every field in every frame is filled, and every field’s kind must match
@@ -73,7 +79,7 @@ for a mixed-kind axel, narrow with <a class="reference internal" href="fields.ht
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::TimeIndex&amp;</span></code>)
+<p><strong>value</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Timeline&amp;</span></code>)
 The replacement for null values, in the kind matching the overload
 selected.</p>
 </section>

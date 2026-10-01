@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="PlussMic scribble" href="../plussmic_scribble.html" />
+    <link rel="next" title="NexusQueryPrepared::execute" href="prepared-execute.html" />
     <link rel="prev" title="NexusQuery::execute" href="execute.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -48,12 +48,34 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Builds a reusable prepared workspace query from a SQL statement template. The
-returned <code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared</span></code> can later be executed with runtime SQL parameter
-bindings.</p>
+<p>Builds a reusable prepared workspace query from a SQL statement template,
+returned as a <code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared</span></code>. The statement is parsed once; its own
+<a class="reference internal" href="prepared-execute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code></span></a> overloads then bind runtime values
+(and, separately, runtime identifiers) into the same template on every
+call, instead of re-interpolating a new statement string by hand each time
+— see <a class="reference internal" href="prepared-execute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared::execute</span></code></span></a> for the full
+placeholder grammar (<code class="docutils literal notranslate"><span class="pre">{name}</span></code> value placeholders, <code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> identifier
+placeholders, <code class="docutils literal notranslate"><span class="pre">{{</span></code> for a literal brace).</p>
+<p><code class="docutils literal notranslate"><span class="pre">prepare()</span></code> itself does not touch the workspace or validate the statement
+against it — statement text and brace-balance are checked here, but
+whether a named table/column actually exists is only checked once
+<code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code> runs.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>statement</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A SQL statement template, with <code class="docutils literal notranslate"><span class="pre">{name}</span></code>/<code class="docutils literal notranslate"><span class="pre">{&#64;name}</span></code> placeholders anywhere
+a bound value or identifier belongs.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared</span></code>
+A reusable prepared query bound to this workspace and statement
+template.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Prepare once, then execute with a bound threshold.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
@@ -62,8 +84,8 @@ bindings.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
 <span class="p">});</span>
-
 <span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">}});</span>
+
 <span class="k">auto</span><span class="w"> </span><span class="n">stmt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">prepare</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;SELECT orders.amount &quot;</span>
 <span class="w">    </span><span class="s">&quot;FROM orders &quot;</span>
@@ -76,16 +98,46 @@ bindings.</p>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span> shape: (2, 1)
-┌────────┐
-│ amount │
-├────────┤
-│ 75     │
-│ 50     │
-└────────┘
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>     | orders.amount
+--------------------
+0    | 75
+1    | 50
+--------------------
+[2 cs x 1 feat]
 </pre></div>
 </div>
 </section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prepare()</span></code> is cheap and side-effect-free relative to <code class="docutils literal notranslate"><span class="pre">.execute(...)</span></code>:
+build the <code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared</span></code> once, near where the statement text is
+authored, and keep it around for as long as you intend to bind and
+re-execute it.</p></li>
+<li><p>See <a class="reference internal" href="prepared-execute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared::execute</span></code></span></a> for the full
+placeholder grammar and worked examples of both value and identifier
+binding.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="prepared-execute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQueryPrepared::execute</span></code></span></a>: run the prepared
+statement, with or without bound parameters.</p></li>
+<li><p><a class="reference internal" href="execute.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery::execute</span></code></span></a>: the one-shot equivalent, for a
+statement that only runs once.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="execute.html">
+    <span class="label">Previous</span>
+    <span class="title">execute</span>
+  </a>
+  <a class="next-link" href="prepared-execute.html">
+    <span class="label">Next</span>
+    <span class="title">prepared-execute</span>
+  </a>
+</div>
 </section>
 </section>
 
@@ -142,7 +194,7 @@ bindings.</p>
   <li><a href="../plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
   <li><a href="../../nexus_query_api_reference.html">NexusQuery API Reference</a><ul>
       <li>Previous: <a href="execute.html" title="previous chapter">NexusQuery::execute</a></li>
-      <li>Next: <a href="../plussmic_scribble.html" title="next chapter">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a></li>
+      <li>Next: <a href="prepared-execute.html" title="next chapter">NexusQueryPrepared::execute</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

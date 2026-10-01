@@ -78,7 +78,7 @@ public:
     std::uint8_t defined = 0;
     if (!pod(defined)) return false;
     if (!defined) {
-      value = Series::undefined();
+      value = pluss::series::undefined();
       return true;
     }
     std::int64_t rank = 0;
@@ -238,10 +238,14 @@ void write_series_vector(BinaryWriter& w, const std::vector<Series>& values) {
 bool read_series_vector(BinaryReader& r, std::vector<Series>& values) {
   std::uint64_t n = 0;
   if (!r.pod(n)) return false;
-  values.resize(static_cast<std::size_t>(n));
-  for (std::size_t i = 0; i < values.size(); ++i) {
-    if (!r.series(values[i])) return false;
+  std::vector<Series> decoded;
+  decoded.reserve(static_cast<std::size_t>(n));
+  for (std::uint64_t i = 0; i < n; ++i) {
+    Series value = pluss::series::undefined();
+    if (!r.series(value)) return false;
+    decoded.push_back(std::move(value));
   }
+  values = std::move(decoded);
   return true;
 }
 

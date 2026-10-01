@@ -240,15 +240,15 @@ Use `to()` when representation needs to change.
   does not change.
 - [`Series::contiguous`](contiguous.md): normalize layout without changing dtype
   or platform.
-- [`Series::trace`](trace.md): the next A-Z root page.
+- [`Series::topk`](topk.md): select a ranked subset after conversion.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tile.html">
+  <a class="prev-link" href="threshold_.html">
     <span class="label">Previous</span>
-    <span class="title">tile</span>
+    <span class="title">threshold_</span>
   </a>
-  <a class="next-link" href="trace.html">
+  <a class="next-link" href="topk.html">
     <span class="label">Next</span>
-    <span class="title">trace</span>
+    <span class="title">topk</span>
   </a>
 </div>

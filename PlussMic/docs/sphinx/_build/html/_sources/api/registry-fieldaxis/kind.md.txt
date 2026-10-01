@@ -16,7 +16,7 @@ Registry RegistryFieldAxisAccessor::kind(SlotKind kind) const
 Returns a new registry containing only the fields whose `Slot::kind()` equals
 `kind`. This is the general form behind the seven named shorthand methods
 ([`series()`](series.md), [`note()`](note.md), [`timeline()`](timeline.md),
-[`timeindex()`](timeindex.md), [`mixed()`](mixed.md), [`nulls()`](nulls.md),
+[`mixed()`](mixed.md), [`nulls()`](nulls.md),
 [`empty()`](empty.md)) — each is a one-line wrapper calling `kind()` with a
 fixed `SlotKind` value.
 
@@ -65,7 +65,7 @@ id user_id
 ## See Also
 
 - [`RegistryFieldAxisAccessor::series`](series.md) / [`note`](note.md) /
-  [`timeline`](timeline.md) / [`timeindex`](timeindex.md) /
+  [`timeline`](timeline.md) / /
   [`mixed`](mixed.md) / [`nulls`](nulls.md) / [`empty`](empty.md): the seven
   named shorthands for this method.
 

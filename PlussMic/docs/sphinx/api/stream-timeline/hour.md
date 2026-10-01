@@ -16,7 +16,7 @@ Stream StreamTimelineAccessor::hour() const
 Extracts the hour-of-day (`0`-`23`) of the bound stream's timestamp,
 replacing it with an `Int32` `Series` stream.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.
@@ -78,8 +78,8 @@ label        | value
     <span class="label">Previous</span>
     <span class="title">fmt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="isnat.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">isnat</span>
   </a>
 </div>

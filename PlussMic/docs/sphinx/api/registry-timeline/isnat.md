@@ -19,7 +19,7 @@ replacing each `Timeline` field with a `Bool` `Series` field.
 ```{important} RegistryTimelineAccessor requires every bound field to be Timeline-kind
 Every method on this accessor — not just `isnat()` — routes through
 `Slot::tl()` for each bound field. If any bound field isn't `Timeline`-kind
-(`Series`, `Note`, `TimeIndex`, `Mixed`, `Null`, or `Empty`), the call throws
+(`Series`, `Note`, `Mixed`, `Null`, or `Empty`), the call throws
 `"Slot::tl: slot kind must be Timeline"`. Since [`Registry::tl()`](../registry/tl.md)
 binds *every* field of the registry by default, project down to just the
 timestamp fields first with [`fields(keys)`](../registry/fields.md) before
@@ -101,9 +101,9 @@ Slot::tl: slot kind must be Timeline
   fields before calling `.tl()`, per the important callout above.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

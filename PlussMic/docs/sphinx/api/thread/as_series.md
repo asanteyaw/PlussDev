@@ -85,8 +85,7 @@ Thread: payload is not Series
 
 ## See Also
 
-- [`Thread::as_note`](as_note.md) / [`as_timeline`](as_timeline.md) /
-  [`as_timeindex`](as_timeindex.md): the equivalent escape hatch for the other three
+- [`Thread::as_note`](as_note.md) / [`as_timeline`](as_timeline.md): the equivalent escape hatch for the other three
   payload kinds.
 - [`Thread::astype`](astype.md): stay on the `Thread` surface for a plain scalar-dtype
   conversion, instead of dropping to `Series` directly.
@@ -97,9 +96,5 @@ Thread: payload is not Series
   <a class="prev-link" href="as_note.html">
     <span class="label">Previous</span>
     <span class="title">as_note</span>
-  </a>
-  <a class="next-link" href="as_timeindex.html">
-    <span class="label">Next</span>
-    <span class="title">as_timeindex</span>
   </a>
 </div>

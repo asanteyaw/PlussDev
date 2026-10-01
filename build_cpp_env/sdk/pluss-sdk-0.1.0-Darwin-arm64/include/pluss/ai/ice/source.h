@@ -60,8 +60,8 @@ protected:
   [[nodiscard]] Batch do_transfer_batch(const data::Batch& batch, const SourceContext& ctx) const override;
 
 private:
-  Series x_train_ = Series::undefined();
-  Series y_train_ = Series::undefined();
+  Series x_train_ = pluss::series::undefined();
+  Series y_train_ = pluss::series::undefined();
   std::optional<Series> x_valid_ = std::nullopt;
   std::optional<Series> y_valid_ = std::nullopt;
   std::optional<Series> x_test_ = std::nullopt;

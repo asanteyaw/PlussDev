@@ -97,12 +97,12 @@ data=
 - [`TimeIndex::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="resample_agg.html">
+  <a class="prev-link" href="resample_min.html">
     <span class="label">Previous</span>
-    <span class="title">resample_agg</span>
+    <span class="title">resample_min</span>
   </a>
-  <a class="next-link" href="rolling_count.html">
+  <a class="next-link" href="resample_sum.html">
     <span class="label">Next</span>
-    <span class="title">rolling_count</span>
+    <span class="title">resample_sum</span>
   </a>
 </div>

@@ -8,6 +8,7 @@
 
 ```cpp
 Series::swapaxes(std::int64_t axis0, std::int64_t axis1) const -> Series
+Series& Series::swapaxes_(std::int64_t dim0, std::int64_t dim1) const
 ```
 
 [`swapdims()`](swapdims.md) is an exact alias. Both are spellings of
@@ -47,6 +48,30 @@ The other axis. Negative counts from the end.
 
 `swapaxes()` is differentiable. A swap is its own inverse, so the backward
 applies the same swap to the upstream gradient. Values pass through unchanged.
+
+## In-Place Form
+
+`swapaxes_()` is the in-place sibling of [`swapaxes()`](swapaxes.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `swapaxes_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
+x.swapaxes_(0, 1);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,2], strides=[1,3], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=[[1, 4],
+  [2, 5],
+  [3, 6]]
+```
 
 ## Examples
 

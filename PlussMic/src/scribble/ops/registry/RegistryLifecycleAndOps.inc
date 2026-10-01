@@ -607,8 +607,12 @@ Registry Registry::fillnull(const pluss::Timeline& value) const {
   return map([&](const Slot& s) { return s.fillnull(value); });
 }
 
-Registry Registry::fillnull(const pluss::TimeIndex& value) const {
-  return map([&](const Slot& s) { return s.fillnull(value); });
+Registry Registry::fillnull(const pluss::Duration& value) const {
+  return map([&](const Slot& slot) {
+    return slot.kind() == SlotKind::Duration || slot.kind() == SlotKind::Null
+               ? slot.fillnull(value)
+               : slot;
+  });
 }
 
 Registry Registry::dropnull() const {

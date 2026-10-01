@@ -8,6 +8,8 @@
 
 ```cpp
 Series::div(const Series& rhs) const -> Series
+Series& Series::div_(const Series& rhs)
+Series& Series::div_(double rhs)
 ```
 
 ## What It Does
@@ -48,6 +50,43 @@ For differentiable dtypes, the local derivatives are:
 
 That makes `div()` a good method for showing why denominator values influence
 both forward scale and backward sensitivity.
+
+## In-Place Form
+
+`div_()` is the in-place sibling of [`div()`](div.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({10.0, 20.0, 30.0}, {3});
+auto y = pluss::make_series({2.0, 4.0, 5.0}, {3});
+
+auto& ref = x.div_(y);
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 5, 6]
+same object: true
+```
+
+```cpp
+auto x = pluss::make_series({10.0, 20.0, 30.0}, {3});
+x.div_(2.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 10, 15]
+```
 
 ## Examples
 
@@ -173,6 +212,13 @@ Use `div()` when you want broadcast-aware elementwise quotients, but keep your
 eyes on two things: output dtype and denominator edge cases. Those two details
 are the difference between "obvious arithmetic" and "a bug that quietly moved
 into production."
+
+## Aliases
+
+**`divide()`** / **`divide_()`**; **`true_divide()`** / **`true_divide_()`** — spellinges are kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `div()` / `div_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

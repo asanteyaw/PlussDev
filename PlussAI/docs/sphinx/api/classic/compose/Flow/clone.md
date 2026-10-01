@@ -18,6 +18,16 @@ two different downstream tweaks, for instance).
 [[nodiscard]] classic::StatusOr<classic::Flow> classic::Flow::clone() const;
 ```
 
+## What It Does
+
+Rebuilds every stage from its own `TransformSpec` and the model from its
+own `ModelSpec`, then -- if this `Flow` is already trained -- copies every
+fitted parameter across too, producing a fully independent `Flow` that
+shares no state with the original and is immediately usable without a
+second `learn`. This exists specifically because `Flow` is move-only:
+`clone` is the explicit way to get a genuine second copy (to branch a
+fitted pipeline and try two different downstream tweaks, for instance).
+
 ## Parameters
 
 None.

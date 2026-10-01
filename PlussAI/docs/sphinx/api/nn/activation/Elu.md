@@ -11,13 +11,21 @@ computation without constructing a `Module`.
 ## Signature
 
 ```cpp
-explicit nn::Elu::Elu(nn::EluOptions options = {});
+explicit nn::Elu::Elu(nn::EluOptions options);
+explicit nn::Elu::Elu(double alpha = 1.0);
 ```
 
 ## Construction
 
-Default-construct for `alpha=1.0`, or pass an [`EluOptions`](EluOptions.md)
-to change it.
+Two equivalent forms: pass an [`EluOptions`](EluOptions.md) directly, or
+spell out `alpha` as a positional argument (which defaults to `1.0`, so
+`nn::Elu elu;` alone works):
+
+```cpp
+nn::Elu a(nn::EluOptions{0.5});  // alpha=0.5
+nn::Elu b(0.5);                  // equivalent positional form
+nn::Elu c;                       // alpha=1.0 (default)
+```
 
 ## State
 
@@ -146,6 +154,10 @@ same values: true
 
 - **0.1** — the exponential linear unit, `alpha` option, plus the
   stateless [`elu`](../functional/elu.md) function form.
+- **0.2** — added the positional `Elu(alpha)` constructor alongside the
+  `EluOptions` form (previously, a bare numeric argument silently bound
+  to the inherited `Module(bool training)` constructor instead of
+  `alpha`, since no positional form existed to compete with it).
 
 ## See Also
 

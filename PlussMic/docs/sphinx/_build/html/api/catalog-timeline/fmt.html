@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,10 +50,10 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Renders each bound key’s timestamp as custom text built from <code class="docutils literal notranslate"><span class="pre">pattern</span></code>,
-replacing each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text) key.</p>
+replacing each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text) key.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+<p>CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor::isnat</span></code></span></a>’s own important callout for the full
 explanation and the exact throw message.</p>
@@ -99,31 +99,6 @@ ts                       | Note         | Note             | 2       | [31 Jan 2
 ========================================================================================================================
 </pre></div>
 </div>
-<p>Example 2. <code class="docutils literal notranslate"><span class="pre">fmt()</span></code> also works on an already-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind key (produced by
-<a class="reference internal" href="index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index()</span></code></span></a>), formatting each row the same way.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="o">::</span><span class="nn">literals</span><span class="p">;</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">ct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;ts&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2024-01-31T09:15:30Z&quot;</span><span class="p">})),</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">ti</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ct</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">index</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ti</span><span class="p">.</span><span class="n">tl</span><span class="p">().</span><span class="n">fmt</span><span class="p">(</span><span class="s">&quot;%Y&quot;</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>========================================================================================================================
-kindle::Catalog  keys=1
-keys: [ts]
-------------------------------------------------------------------------------------------------------------------------
-key                      | kind         | dtype            | cs      | preview                                          
-------------------------------------------------------------------------------------------------------------------------
-ts                       | Note         | Note             | 1       | [2024]                                          
-========================================================================================================================
-</pre></div>
-</div>
 </section>
 </section>
 <section id="notes">
@@ -132,7 +107,7 @@ ts                       | Note         | Note             | 1       | [2024]
 <li><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> cannot be empty — an empty pattern throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">%f</span></code> always emits all 9 nanosecond digits, zero-padded; <code class="docutils literal notranslate"><span class="pre">%z</span></code> always renders as
 a signed <code class="docutils literal notranslate"><span class="pre">HH:MM</span></code> offset, never a bare <code class="docutils literal notranslate"><span class="pre">&quot;Z&quot;</span></code>.</p></li>
-<li><p>Changes each bound key’s kind from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> to <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
+<li><p>Changes each bound key’s kind from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> to <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
 <li><p>See the important callout above.</p></li>
 </ul>
 </section>

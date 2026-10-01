@@ -210,9 +210,9 @@ or [`index()`](index.md).
   scalar cell.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="polygamma.html">
+  <a class="prev-link" href="positive.html">
     <span class="label">Previous</span>
-    <span class="title">polygamma</span>
+    <span class="title">positive</span>
   </a>
   <a class="next-link" href="pow.html">
     <span class="label">Next</span>

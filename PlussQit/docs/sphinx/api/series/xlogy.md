@@ -9,6 +9,8 @@
 ```cpp
 Series::xlogy(const Series& other) const -> Series
 Series& Series::xlogy_(const Series& other)
+Series& Series::xlogy_(const Series& rhs) const
+Series& Series::xlogy_(double rhs) const
 ```
 
 ## What It Does
@@ -54,6 +56,43 @@ d/db xlogy(a, b) = a / b
 Because the `a == 0` result is pinned to the constant `0`, the gradient through
 those positions is `0` for both operands — it does not carry the `log(b)` term
 there. Everywhere else the rule is the ordinary product rule.
+
+## In-Place Form
+
+`xlogy_()` is the in-place sibling of [`xlogy()`](xlogy.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `xlogy_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0, 2.0}, {3});
+auto y = pluss::make_series({1.0, 1.0, 1.0}, {3});
+
+x.xlogy_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0, 0]
+```
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0, 2.0}, {3});
+x.xlogy_(1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0, 0]
+```
 
 ## Examples
 
@@ -159,8 +198,8 @@ data=[0.5, 0.6]
     <span class="label">Previous</span>
     <span class="title">where_</span>
   </a>
-  <a class="next-link" href="zeta.html">
+  <a class="next-link" href="zero.html">
     <span class="label">Next</span>
-    <span class="title">zeta</span>
+    <span class="title">zero</span>
   </a>
 </div>

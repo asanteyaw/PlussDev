@@ -121,12 +121,39 @@ one. Use `keep_extension=true` or narrower `load`/`ignore` filters when you need
 
 ## Examples
 
+Every example below writes its own real files to a scratch directory first
+(via `DataFrame::save_csv`/`save_json`/`save_parquet`), so each one is a
+complete, self-contained, copy-pasteable teaching unit rather than assuming
+files already exist somewhere. Each example uses its own directory, so
+running them in any order (or more than once) never leaves stale files from
+one example interfering with another.
+
 Example 1. Load every supported top-level file.
 
 ```cpp
+using namespace pluss::table;
 using namespace pluss::bundle;
 
-auto nx = Nexus::load("/tmp/bank_raw");
+std::filesystem::remove_all("/tmp/pluss_nexus_load_ex1");
+std::filesystem::create_directories("/tmp/pluss_nexus_load_ex1");
+
+DataFrame({
+    {"account_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"balance",    Thread(pluss::make_series({100.0, 250.0, 75.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex1/account.csv");
+
+DataFrame({
+    {"district_id", Thread(pluss::make_series({10.0, 20.0}))},
+    {"name",        Thread(pluss::make_note({"North", "South"}))},
+}).save_json("/tmp/pluss_nexus_load_ex1/district.json");
+
+DataFrame({
+    {"trans_id",   Thread(pluss::make_series({1000.0, 1001.0}))},
+    {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"amount",     Thread(pluss::make_series({50.0, -20.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex1/trans.csv");
+
+auto nx = Nexus::load("/tmp/pluss_nexus_load_ex1");
 std::cout << nx.ntables() << "\n";
 std::cout << std::boolalpha << nx.has("account") << " "
           << nx.has("district") << " "
@@ -140,34 +167,72 @@ std::cout << std::boolalpha << nx.has("account") << " "
 true true true
 ```
 
-Example 2. Load only the files you name.
+Example 2. Load only the files you name. `options.load` entries can name
+either the resulting table key (`"account"`) or the literal file name
+(`"loan.json"`) — both spellings are checked when matching a discovered
+file.
 
 ```cpp
-using namespace pluss::bundle;
+std::filesystem::remove_all("/tmp/pluss_nexus_load_ex2");
+std::filesystem::create_directories("/tmp/pluss_nexus_load_ex2");
+
+DataFrame({
+    {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex2/account.csv");
+
+DataFrame({
+    {"district_id", Thread(pluss::make_series({10.0}))},
+}).save_json("/tmp/pluss_nexus_load_ex2/district.json");
+
+DataFrame({
+    {"loan_id",    Thread(pluss::make_series({500.0}))},
+    {"account_id", Thread(pluss::make_series({1.0}))},
+}).save_json("/tmp/pluss_nexus_load_ex2/loan.json");
 
 LoadOptions options;
 options.load = {"account", "loan.json"};
 options.formats = {"csv", "json"};
 
-auto nx = Nexus::load("/tmp/bank_raw", options);
+auto nx = Nexus::load("/tmp/pluss_nexus_load_ex2", options);
+std::cout << nx.ntables() << "\n";
 std::cout << nx.keys().at(0) << " " << nx.keys().at(1) << "\n";
 ```
 
 ### Output
 
 ```text
+2
 account loan
 ```
 
-Example 3. Ignore a few heavy tables but load the rest.
+`district.json` is discovered (it matches `options.formats`) but excluded, since
+neither `"account"` nor `"loan.json"` matches it. Table keys come back sorted
+alphabetically, so `"account"` precedes `"loan"` regardless of the files'
+directory-listing order.
+
+Example 3. Ignore a few tables but load the rest.
 
 ```cpp
-using namespace pluss::bundle;
+std::filesystem::remove_all("/tmp/pluss_nexus_load_ex3");
+std::filesystem::create_directories("/tmp/pluss_nexus_load_ex3");
+
+DataFrame({
+    {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex3/account.csv");
+
+DataFrame({
+    {"trans_id", Thread(pluss::make_series({1.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex3/trans.csv");
+
+DataFrame({
+    {"order_id", Thread(pluss::make_series({1.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex3/order.csv");
 
 LoadOptions options;
 options.ignore = {"trans", "order"};
 
-auto nx = Nexus::load("/tmp/bank_raw", options);
+auto nx = Nexus::load("/tmp/pluss_nexus_load_ex3", options);
+std::cout << nx.ntables() << "\n";
 std::cout << std::boolalpha << nx.has("trans") << " "
           << nx.has("account") << "\n";
 ```
@@ -175,47 +240,78 @@ std::cout << std::boolalpha << nx.has("trans") << " "
 ### Output
 
 ```text
+1
 false true
 ```
 
-Example 4. Recursive scan plus stable file-name keys.
+Example 4. Recursive scan plus stable file-name keys. The files live one
+level down, in a `raw/` subdirectory — `options.recursive = true` is what
+makes them discoverable at all; without it, only the top-level directory
+(empty here) would be scanned.
 
 ```cpp
-using namespace pluss::bundle;
+std::filesystem::remove_all("/tmp/pluss_nexus_load_ex4");
+std::filesystem::create_directories("/tmp/pluss_nexus_load_ex4/raw");
+
+DataFrame({
+    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"name",        Thread(pluss::make_note({"Ada", "Ben"}))},
+}).save_csv("/tmp/pluss_nexus_load_ex4/raw/customers.csv");
+
+DataFrame({
+    {"event_id",    Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
+}).save_parquet("/tmp/pluss_nexus_load_ex4/raw/events.parquet");
 
 LoadOptions options;
 options.recursive = true;
 options.keep_extension = true;
 
-auto nx = Nexus::load("/tmp/project_tables", options);
-std::cout << nx.has("customers.csv") << " "
+auto nx = Nexus::load("/tmp/pluss_nexus_load_ex4", options);
+std::cout << std::boolalpha << nx.has("customers.csv") << " "
           << nx.has("events.parquet") << "\n";
 ```
 
 ### Output
 
 ```text
-1 1
+true true
 ```
+
+`keep_extension = true` is what makes `"customers.csv"`/`"events.parquet"`
+the table keys here — without it, they'd collapse to `"customers"`/`"events"`
+the same as every other example on this page.
 
 Example 5. Invalid mixed selection mode.
 
 ```cpp
-using namespace pluss::bundle;
+std::filesystem::remove_all("/tmp/pluss_nexus_load_ex5");
+std::filesystem::create_directories("/tmp/pluss_nexus_load_ex5");
+DataFrame({
+    {"account_id", Thread(pluss::make_series({1.0}))},
+}).save_csv("/tmp/pluss_nexus_load_ex5/account.csv");
 
 LoadOptions options;
 options.load = {"account"};
 options.ignore = {"loan"};
 
-// throws
-auto nx = Nexus::load("/tmp/bank_raw", options);
+try {
+  auto nx = Nexus::load("/tmp/pluss_nexus_load_ex5", options);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
 ```
 
 ### Output
 
 ```text
-runtime error: Nexus::load: choose either LoadOptions.load or LoadOptions.ignore, not both
+Nexus::load: choose either LoadOptions.load or LoadOptions.ignore, not both
 ```
+
+This check runs after confirming `directory` exists and is actually a
+directory, but before any file inside it is scanned or parsed — so a
+mixed `load`/`ignore` request fails fast once the directory itself is
+valid, regardless of what files it actually contains.
 
 ## Notes
 
@@ -225,6 +321,12 @@ runtime error: Nexus::load: choose either LoadOptions.load or LoadOptions.ignore
   “parallel parsing inside one csv file”.
 - Actual per-file parsing still remains delegated to `DataFrame::load(...)`.
 - The `config` field lets you stay format-flexible without teaching Nexus parser-specific knobs.
+- Validation order: `directory` must exist and be an actual directory first;
+  only then is the `load`/`ignore` mutual-exclusivity check applied; only
+  after both pass does the directory actually get scanned.
+- Discovered candidates are sorted by resulting table key before loading, so
+  the final `Nexus`'s table order is always alphabetical by key — never
+  directory-listing order, which the OS/filesystem doesn't guarantee.
 
 ## See Also
 

@@ -132,7 +132,7 @@ TEST_CASE("CUDA strict native parity covers expanded family matrix", "[cuda][par
     auto put_cuda = put_cpu.to(pluss::pCUDA);
     const auto src_cpu = pluss::make_series(srcdata, {4});
     const auto src_cuda = src_cpu.to(pluss::pCUDA);
-    auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
+    auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
     put_cpu = (put_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
     put_cuda = (put_cuda.*put_fn)(idx_cuda, src_cuda, /*accumulate=*/false);
     require_close_(put_cuda.to(pluss::pCPU).to_vec<float>(), put_cpu.to_vec<float>());

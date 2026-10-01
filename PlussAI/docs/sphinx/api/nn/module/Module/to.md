@@ -13,6 +13,20 @@ Module& nn::Module::to(ScalarType dtype);
 Module& nn::Module::to(Platform platform, ScalarType dtype);
 ```
 
+## What It Does
+
+Moves and/or converts every parameter and buffer this module owns --
+recursively, through every registered child -- to a new platform, a new
+dtype, or both in one call. This is how a whole network built from
+[`Schedule`](../Schedule.md) moves to MPS or drops to a lower-precision
+dtype: call `to` once on the root and the walk reaches every leaf layer's
+`weight`/`bias`/other registered state. Layers whose behavior depends on
+`Config` (for example [`PReLU`](../../activation/PReLU.md)'s `options().cfg`
+or [`LayerNorm`](../../normalization/LayerNormOptions.md)'s) keep that
+options state in sync automatically via their own
+`on_platform_changed_`/`on_dtype_changed_` overrides, called after the
+parameter/buffer walk completes.
+
 ## Parameters
 
 `Platform platform`
@@ -104,8 +118,8 @@ int main() {
   using pluss::ScalarType;
 
   nn::Schedule net;
-  net.then("a", nn::Fusion(3, 4));
-  net.then("b", nn::Fusion(4, 2));
+  net.append("a", nn::Fusion(3, 4));
+  net.append("b", nn::Fusion(4, 2));
 
   net.to(ScalarType::Float64);
   for (auto& named : net.named_parameters()) {

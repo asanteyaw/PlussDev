@@ -84,7 +84,7 @@ class Payload final {
     // the later .label(...) call always wins and has_label() /
     // has_label_feature() stay mutually exclusive.
     options_.label_feature = std::move(feature_name);
-    label_ = Series::undefined();
+    label_ = pluss::series::undefined();
     return *this;
   }
 
@@ -200,10 +200,10 @@ class Payload final {
   std::optional<FeatureBatch> features_{};
   std::optional<LabeledBatch> labeled_{};
   DataFrameBatchOptions options_{};
-  Series label_ = Series::undefined();
-  Series weights_ = Series::undefined();
-  Series groups_ = Series::undefined();
-  Series time_ = Series::undefined();
+  Series label_ = pluss::series::undefined();
+  Series weights_ = pluss::series::undefined();
+  Series groups_ = pluss::series::undefined();
+  Series time_ = pluss::series::undefined();
   std::string time_feature_{};
   std::optional<TimeOptions> time_options_{};
 

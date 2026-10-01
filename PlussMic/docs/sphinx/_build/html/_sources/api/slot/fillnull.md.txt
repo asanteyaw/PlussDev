@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1a666b51e359 -->
+<!-- pluss-signature-hash: b96ab464616b -->
 
 # Slot::fillnull
 
@@ -12,15 +12,15 @@ Slot Slot::fillnull(double value) const
 Slot Slot::fillnull(std::string_view value) const
 Slot Slot::fillnull(const char* value) const
 Slot Slot::fillnull(const pluss::Timeline& value) const
-Slot Slot::fillnull(const pluss::TimeIndex& value) const
+Slot Slot::fillnull(const pluss::Duration& value) const
 ```
 
 ## What It Does
 
 Returns a new slot with every null (`std::monostate`) value replaced by
 `value` — one overload per fill-value kind: `double` for numeric slots,
-`std::string_view`/`const char*` for text slots, `Timeline`/`TimeIndex`
-for datetime slots.
+`std::string_view`/`const char*` for text slots, `Timeline` for datetime
+slots, `Duration` for duration slots.
 
 ```{important} Every non-null value must already match the fill kind
 `fillnull()` isn't purely additive — it requires every existing, non-null
@@ -33,7 +33,7 @@ that matches the slot's actual [`kind()`](kind.md).
 
 ## Parameters
 
-**value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` / `const pluss::TimeIndex&`)
+**value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` / `const pluss::Duration&`)
     The replacement for null values, in the kind matching the overload
     selected.
 

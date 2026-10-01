@@ -17,7 +17,7 @@ Returns a new axel where every registry frame is narrowed to only the
 fields whose `Slot::kind()` equals `kind`. This is the general form
 behind the seven named shorthand methods
 ([`series()`](series.md), [`note()`](note.md), [`timeline()`](timeline.md),
-[`timeindex()`](timeindex.md), [`mixed()`](mixed.md), [`nulls()`](nulls.md),
+[`mixed()`](mixed.md), [`nulls()`](nulls.md),
 [`empty()`](empty.md)) — each is a one-line wrapper calling `kind()`
 with a fixed `SlotKind` value. Applies
 [`RegistryFieldAxisAccessor::kind`](../registry-fieldaxis/kind.md) to
@@ -71,7 +71,7 @@ id user_id
 ## See Also
 
 - [`AxelFieldAxisAccessor::series`](series.md) / [`note`](note.md) /
-  [`timeline`](timeline.md) / [`timeindex`](timeindex.md) /
+  [`timeline`](timeline.md) / /
   [`mixed`](mixed.md) / [`nulls`](nulls.md) / [`empty`](empty.md): the
   seven named shorthands for this method.
 - [`RegistryFieldAxisAccessor::kind`](../registry-fieldaxis/kind.md):

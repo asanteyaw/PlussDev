@@ -24,6 +24,16 @@ classic::StatusOr<pluss::Series> classic::resolve_training_weights(
     const classic::TrainOptions& options);
 ```
 
+## What It Does
+
+Combines every source of per-row weighting -- a batch's own
+`sample_weights`, `TrainOptions`' class-weighting fields, and the class
+distribution `class_mix` computes from `labels` -- into one final,
+mean-normalized weight vector, one entry per row. `resolve_weight_plan`
+hands back every intermediate quantity that went into that computation, for
+inspection or debugging; `resolve_training_weights` skips straight to the
+final vector when the intermediates aren't needed.
+
 ## Parameters
 
 `labels`
@@ -33,7 +43,7 @@ classic::StatusOr<pluss::Series> classic::resolve_training_weights(
 `batch_sample_weights`
 : Optional, `[n_samples]` — typically a
   [`LabeledBatch::sample_weights`](../data/LabeledBatch.md) field.
-  `Series::undefined()` (the common case) means every row starts at
+  `pluss::series::undefined()` (the common case) means every row starts at
   weight `1.0` before anything else is applied. If defined: length must
   match `labels`, every value finite and strictly positive.
 
@@ -116,7 +126,7 @@ int main() {
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series labels = pluss::make_series({0.0, 0.0, 1.0, 1.0}, {4}, f64);
-  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::Series::undefined(), cls::TrainOptions{}).value();
+  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::series::undefined(), cls::TrainOptions{}).value();
   std::cout << "weights = " << plan.weights << "\n";
   std::cout << "class_weights = " << plan.class_weights << "\n";
   std::cout << "mean_weight = " << plan.mean_weight << "\n";
@@ -157,7 +167,7 @@ int main() {
 
   cls::TrainOptions options{};
   options.class_weight = cls::ClassWeightMode::Balanced;
-  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::Series::undefined(), options).value();
+  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::series::undefined(), options).value();
   std::cout << "class_weights = " << plan.class_weights << "\n";
   std::cout << "mix.inverse_frequency (expect identical) = " << plan.mix.inverse_frequency << "\n";
   std::cout << "weights (minority rows weigh more) = " << plan.weights << "\n";
@@ -198,7 +208,7 @@ int main() {
   cls::TrainOptions options{};
   options.class_weight = cls::ClassWeightMode::Custom;
   options.class_weights = pluss::make_series({1.0, 5.0}, {2}, f64);  // class 0 -> 1.0, class 1 -> 5.0
-  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::Series::undefined(), options).value();
+  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::series::undefined(), options).value();
   std::cout << "weights (final, mean-normalized -- raw ratios were [1,1,5,5]) = " << plan.weights << "\n";
 
   return 0;
@@ -267,8 +277,8 @@ int main() {
   cls::TrainOptions options{};
   options.class_weight = cls::ClassWeightMode::Balanced;
 
-  const pluss::Series via_plan = cls::resolve_weight_plan(labels, pluss::Series::undefined(), options).value().weights;
-  const pluss::Series via_narrow = cls::resolve_training_weights(labels, pluss::Series::undefined(), options).value();
+  const pluss::Series via_plan = cls::resolve_weight_plan(labels, pluss::series::undefined(), options).value().weights;
+  const pluss::Series via_narrow = cls::resolve_training_weights(labels, pluss::series::undefined(), options).value();
   const double diff = (via_plan - via_narrow).abs().amax(0, false).item<double>();
   std::cout << "max abs diff = " << diff << "\n";
 
@@ -305,7 +315,7 @@ int main() {
   options.class_weight = cls::ClassWeightMode::Custom;
   options.class_weights = pluss::make_series({1.0, 20.0}, {2}, f64);
 
-  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::Series::undefined(), options).value();
+  const cls::WeightPlan plan = cls::resolve_weight_plan(labels, pluss::series::undefined(), options).value();
   std::cout << "mean_weight (pre-normalization mean) = " << plan.mean_weight << "\n";
   std::cout << "weights.mean() (always 1.0) = " << plan.weights.mean().item<double>() << "\n";
 
@@ -347,18 +357,18 @@ int main() {
   cls::TrainOptions zero_weight{};
   zero_weight.sample_weights = pluss::make_series({1.0, 0.0, 1.0, 1.0}, {4}, f64);
   std::cout << "non-positive options.sample_weights ok = "
-            << cls::resolve_weight_plan(labels, pluss::Series::undefined(), zero_weight).ok() << "\n";
+            << cls::resolve_weight_plan(labels, pluss::series::undefined(), zero_weight).ok() << "\n";
 
   cls::TrainOptions missing_custom{};
   missing_custom.class_weight = cls::ClassWeightMode::Custom;
   std::cout << "Custom with class_weights undefined ok = "
-            << cls::resolve_weight_plan(labels, pluss::Series::undefined(), missing_custom).ok() << "\n";
+            << cls::resolve_weight_plan(labels, pluss::series::undefined(), missing_custom).ok() << "\n";
 
   cls::TrainOptions wrong_custom_length{};
   wrong_custom_length.class_weight = cls::ClassWeightMode::Custom;
   wrong_custom_length.class_weights = pluss::make_series({1.0, 2.0, 3.0}, {3}, f64);
   std::cout << "Custom class_weights length mismatch ok = "
-            << cls::resolve_weight_plan(labels, pluss::Series::undefined(), wrong_custom_length).ok() << "\n";
+            << cls::resolve_weight_plan(labels, pluss::series::undefined(), wrong_custom_length).ok() << "\n";
 
   return 0;
 }

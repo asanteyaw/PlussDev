@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::isreal &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::istft" href="istft.html" />
+    <link rel="prev" title="Series::isposinf" href="isposinf.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-isreal">
+<h1>Series::isreal<a class="headerlink" href="#series-isreal" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">isreal</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-answers">
+<h2>What It Answers<a class="headerlink" href="#what-it-answers" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">isreal()</span></code> classifies every element independently and returns a Boolean
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> with exactly the receiver’s shape. A non-complex element is always
+real. A complex element is real precisely when its imaginary component
+compares equal to zero; the real component may have any finite or infinite
+value.</p>
+<p>This is a value predicate, not a dtype query. Use <code class="docutils literal notranslate"><span class="pre">is_complex()</span></code> when the
+question is whether the storage dtype can represent imaginary components. Use
+<code class="docutils literal notranslate"><span class="pre">isreal()</span></code> when a complex-valued computation has already happened and the
+question is which resulting lanes actually lie on the real axis.</p>
+<p>The distinction matters because one complex <code class="docutils literal notranslate"><span class="pre">Series</span></code> can contain both kinds of
+lanes. A value such as <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">-</span> <span class="pre">0i</span></code> is real, including when the imaginary zero is
+negative. A value with an imaginary NaN is not real because NaN does not equal
+zero.</p>
+</section>
+<section id="result-contract">
+<h2>Result Contract<a class="headerlink" href="#result-contract" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The result has dtype <code class="docutils literal notranslate"><span class="pre">bool</span></code>, the same rank and extents as the receiver, and
+lives on the same platform.</p></li>
+<li><p>Real, integer, and Boolean receivers produce <code class="docutils literal notranslate"><span class="pre">true</span></code> in every lane.</p></li>
+<li><p>Complex receivers compare only the imaginary component with zero. The real
+component does not affect classification.</p></li>
+<li><p>The operation allocates a new Boolean result and does not mutate the
+receiver.</p></li>
+<li><p>The predicate is discrete and does not create a reverse-mode derivative.
+Apply it as a mask; do not expect sensitivity to pass through the decision.</p></li>
+<li><p>Empty inputs produce empty Boolean results with the same shape.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="a-real-valued-matrix-is-real-in-every-lane">
+<h3>1. A real-valued matrix is real in every lane<a class="headerlink" href="#a-real-valued-matrix-is-real-in-every-lane" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">isreal</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h4>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡ true true ⎤
+⎣ true true ⎦
+</pre></div>
+</div>
+<p>The method does not ask whether the values are positive, finite, or nonzero.
+All native real-valued lanes satisfy the predicate.</p>
+</section>
+</section>
+<section id="a-complex-matrix-is-classified-lane-by-lane">
+<h3>2. A complex matrix is classified lane by lane<a class="headerlink" href="#a-complex-matrix-is-classified-lane-by-lane" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">Complex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">{{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.0</span><span class="p">},</span>
+<span class="w">                         </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">}},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="p">.</span><span class="n">isreal</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=bool, platform=cpu, numel=4, contiguous=true)
+data=
+⎡  true  true ⎤
+⎣ false false ⎦
+</pre></div>
+</div>
+<p>Both positive and negative zero imaginary components compare equal to zero.
+The final two values have nonzero imaginary components and therefore produce
+<code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</section>
+</section>
+<section id="scalar-rank-is-preserved">
+<h3>3. Scalar rank is preserved<a class="headerlink" href="#scalar-rank-is-preserved" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">scalar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">4.5</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">scalar</span><span class="p">.</span><span class="n">isreal</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[], strides=[], dtype=bool, platform=cpu, numel=1, contiguous=true)
+data=true
+</pre></div>
+</div>
+<p>The result is still rank zero. <code class="docutils literal notranslate"><span class="pre">isreal()</span></code> never adds, removes, or flattens an
+axis.</p>
+</section>
+</section>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h2>
+<p>The operation is linear in <code class="docutils literal notranslate"><span class="pre">numel()</span></code>. Non-complex inputs use an all-true fast
+path; complex inputs inspect one imaginary component per lane. The result is a
+new contiguous Boolean allocation, so retain it when the same mask will be
+reused by several later operations.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="real.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">real()</span></code></span></a> extracts real components as numeric values.</p></li>
+<li><p><a class="reference internal" href="imag.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">imag()</span></code></span></a> extracts the component tested by this predicate.</p></li>
+<li><p><a class="reference internal" href="is_complex.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_complex()</span></code></span></a> queries storage capability rather than lane
+values.</p></li>
+<li><p><a class="reference internal" href="isfinite.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isfinite()</span></code></span></a> classifies finite numeric values.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="isposinf.html" title="previous chapter">Series::isposinf</a></li>
+      <li>Next: <a href="istft.html" title="next chapter">Series::istft</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/isreal.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

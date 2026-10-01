@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::isnat() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a boolean `Series`
+Replaces every selected `Timeline` feature with a boolean `Series`
 flagging whether the row is `NaT` (missing timestamp) — same feature name,
 same row order.
 
@@ -83,7 +83,7 @@ here.
   every other `.tl()` method (the calendar-field extractors, `fmt()`,
   `epoch()`, and so on) instead shows `"NULL"` for a `NaT` row.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 
 ## See Also
@@ -92,9 +92,9 @@ here.
   the same never-`NULL` behavior).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

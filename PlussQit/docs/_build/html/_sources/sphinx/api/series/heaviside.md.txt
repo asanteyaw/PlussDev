@@ -11,6 +11,8 @@ Series Series::heaviside(const Series& values) const
 Series Series::heaviside(double value) const
 Series& Series::heaviside_(const Series& values)
 Series& Series::heaviside_(double value)
+Series& Series::heaviside_(const Series& values) const
+Series& Series::heaviside_(double value) const
 ```
 
 ## A Step With An Explicit Boundary Value
@@ -29,6 +31,43 @@ the receiver's shape, dtype, and storage.
 
 `heaviside()` is non-differentiable: it is constant away from zero and jumps
 at zero. Use [`sigmoid()`](sigmoid.md) for a smooth trainable transition.
+
+## In-Place Form
+
+`heaviside_()` is the in-place sibling of [`heaviside()`](heaviside.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `heaviside_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 1.0}, {3});
+auto y = pluss::make_series({0.5, 0.5, 0.5}, {3});
+
+x.heaviside_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0.5, 1]
+```
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 1.0}, {3});
+x.heaviside_(0.5);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0.5, 1]
+```
 
 ## Examples
 

@@ -8,6 +8,7 @@
 
 ```cpp
 Series::expm1() const -> Series
+Series& Series::expm1_()
 ```
 
 ## What It Does
@@ -37,6 +38,29 @@ If `y = e^x - 1`, then:
 
 So when the objective is `L = sum(y)`, each lane contributes its own
 `e^{x_i}` as the local backward multiplier.
+
+## In-Place Form
+
+`expm1_()` is the in-place sibling of [`expm1()`](expm1.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.expm1_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 1.7182818]
+same object: true
+```
 
 ## Examples
 

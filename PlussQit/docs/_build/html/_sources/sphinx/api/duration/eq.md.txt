@@ -72,14 +72,3 @@ data=false
   comparisons.
 - [`abs`](abs.md): magnitude and sign, relevant when comparing durations that
   may be negative.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="mod.html">
-    <span class="label">Previous</span>
-    <span class="title">mod</span>
-  </a>
-  <a class="next-link" href="ne.html">
-    <span class="label">Next</span>
-    <span class="title">ne</span>
-  </a>
-</div>

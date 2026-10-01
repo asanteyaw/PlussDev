@@ -48,7 +48,7 @@ Which conversion path runs is decided once, up front, by the stream's own
     `pluss::timeline::from_epoch`, using the source timeline's own timezone.
 
 **`StreamKind::TimeIndex`**
-    Each position becomes a single-element `TimeIndex` (`pluss::make_timeindex`,
+    Each position becomes a single-element `TimeIndex` (`pluss::timeindex::make`,
     non-sorted), built the same way as the `Timeline` case, from the index's own
     underlying timeline and timezone.
 

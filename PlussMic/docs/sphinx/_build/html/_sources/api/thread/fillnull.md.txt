@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 659443fa590b -->
+<!-- pluss-signature-hash: a64e967e4269 -->
 
 # Thread::fillnull
 
@@ -11,26 +11,29 @@
 Thread::fillnull(double value) const -> Thread
 Thread::fillnull(std::string_view value) const -> Thread
 Thread::fillnull(const pluss::Timeline& value) const -> Thread
-Thread::fillnull(const pluss::TimeIndex& value) const -> Thread
+Thread::fillnull(const pluss::Duration& value) const -> Thread
 ```
 
 ## What It Does
 
 Replaces every `NULL` cell with `value`, leaving already-valid cells untouched. The
 overload selects which payload kind is required: `double` requires a `Series`-kind
-thread, `std::string_view` requires `Note`-kind, and the `Timeline`/`TimeIndex`
-overloads both accept either a `Timeline`- or `TimeIndex`-kind calling thread
-symmetrically. This is the same operation [`replace(null_t, to)`](replace.md)
-delegates to internally when `from` is `pluss::series::null`.
+thread, `std::string_view` requires `Note`-kind, `pluss::Timeline` requires
+`Timeline`-kind, and `pluss::Duration` requires `Duration`-kind. Unlike the other
+overloads, the `Duration` overload also clears any intrinsic `NaT` lanes (not just
+lanes flagged by a validity mask) via `fill_nat`, since `Duration`'s own payload can
+carry a sentinel-missing value independent of the thread's validity mask. This is the
+same operation [`replace(null_t, to)`](replace.md) delegates to internally when `from`
+is `pluss::series::null`.
 
 ## Parameters
 
 **value**
     The replacement for `NULL` cells. Its C++ type selects the overload — `double`
-    for `Series`, `std::string_view`/`const char*` for `Note`, `pluss::Timeline` or
-    `pluss::TimeIndex` for `Timeline`/`TimeIndex`-kind threads (either scalar type
-    works against either temporal thread kind). The `Timeline`/`TimeIndex` overloads
-    require a scalar value (`numel() == 1` / `size() == 1`).
+    for `Series`, `std::string_view`/`const char*` for `Note`, `pluss::Timeline` for
+    `Timeline`-kind threads, `pluss::Duration` for `Duration`-kind threads. The
+    `Timeline` overload requires a scalar value (`numel() == 1`); the `Duration`
+    overload requires exactly one value and that value must not itself be `NaT`.
 
 ## Returns
 
@@ -100,27 +103,21 @@ std::cout << out3;
 ptype: Timeline
 ```
 
-Example 4. The `TimeIndex` overload works against a `Timeline`-kind thread too — the
-two temporal overloads are interchangeable regardless of which temporal kind is
-calling.
+Example 4. Fill a `Duration`-kind thread. `fillnull(Duration)` clears intrinsic `NaT`
+lanes in addition to any validity-mask-flagged ones.
 
 ```cpp
-auto out3b = events.fillnull(pluss::make_timeindex({"2000-01-01T00:00:00Z"}));
-std::cout << out3b;
+auto gaps = Thread(pluss::duration::nanos({1'000'000'000LL, pluss::Duration::kNaT,
+                                           -2'000'000'000LL}));
+auto out4 = gaps.fillnull(pluss::duration::nanos(9));
+assert(out4.as_duration().host() ==
+       std::vector<std::int64_t>({1'000'000'000LL, 9, -2'000'000'000LL}));
+assert(!pluss::table::detail::has_validity_mask(out4));
 ```
 
-### Output
-
-```text
-0  2024-01-01
-1  2000-01-01
-2  2024-03-01
-
-ptype: Timeline
-```
-
-Identical result to Example 3 — `events` is `Timeline`-kind, and the `TimeIndex`
-overload fills it just as readily as the `Timeline` overload did.
+The middle lane was `NaT` (not mask-flagged), yet it was still replaced, and the
+result carries no validity mask once every absent lane has been filled — pinned by
+`PlussMic/test/temporal_core_migration_tests.cpp:198-203`.
 
 Example 5. Value-kind mismatches throw.
 
@@ -146,12 +143,16 @@ Thread::fillnull(string) is only valid for Note payload
   valid for Series payload"`.
 - `fillnull(string_view)` requires `Note`; message: `"Thread::fillnull(string) is
   only valid for Note payload"`.
-- `fillnull(Timeline)` and `fillnull(TimeIndex)` both accept either a `Timeline`- or
-  `TimeIndex`-kind calling thread; messages: `"Thread::fillnull(Timeline) is only
-  valid for Timeline/TimeIndex payload"` and `"Thread::fillnull(TimeIndex) is only
-  valid for Timeline/TimeIndex payload"`, respectively.
-- The `Timeline`/`TimeIndex` overloads require a scalar (single-element) replacement
-  value, or throw `"...replacement value must be scalar"`.
+- `fillnull(Timeline)` requires `Timeline`; message: `"Thread::fillnull(Timeline) is
+  only valid for Timeline payload"`. It requires a scalar (single-element)
+  replacement value, or throws `"Thread::fillnull(Timeline): replacement value must
+  be scalar (numel == 1)"`.
+- `fillnull(Duration)` requires `Duration`; message: `"Thread::fillnull(Duration) is
+  only valid for Duration payload"`. It requires exactly one replacement value
+  (`"Thread::fillnull(Duration): replacement must contain exactly one value"`), and
+  that value cannot itself be `NaT` (`"Thread::fillnull(Duration): replacement cannot
+  be NaT"`). Unlike the other overloads, it clears intrinsic `NaT` lanes even when
+  the thread carries no validity mask at all.
 - A mutating sibling, [`fillnull_()`](fillnull_.md), applies the same fill in place.
 
 ## See Also

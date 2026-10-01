@@ -14,14 +14,14 @@ Archive ArchiveTimelineAccessor::fmt(std::string_view pattern) const
 ## What It Does
 
 Renders each bound key's timestamp as custom text built from `pattern`,
-replacing each `Timeline`- or `TimeIndex`-kind key with a `Note` (text) key. Applied to **every catalog** in the stack, by delegating to that catalog's own
+replacing each `Timeline`-kind key with a `Note` (text) key. Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::fmt`](../catalog-timeline/fmt.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 

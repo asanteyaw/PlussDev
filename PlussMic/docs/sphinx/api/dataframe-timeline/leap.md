@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::leap() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a boolean `Series`
+Replaces every selected `Timeline` feature with a boolean `Series`
 flagging whether the row's calendar year is a leap year — same feature name,
 same row order.
 
@@ -83,7 +83,7 @@ Every 2024 row flags `true`; the 2023 row flags `false`.
   29th — a `"2024-06-15"` row also flags `true`, since 2024 as a whole is a
   leap year.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`, not `false`.

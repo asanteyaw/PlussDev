@@ -75,7 +75,7 @@ bool run_dropout_parity_checks(std::ostream* err = nullptr) {
       x,
       x,
       x,
-      pluss::Series(),
+      pluss::series::undefined(),
       pluss::nn::AttentionOptions{.dropout = 1.0, .training = true, .causal = false, .scale = 0.0, .seed = 11});
   if (!all_zero(attn_out) || !all_zero(attn_w)) {
     if (err) *err << "scaled_attention dropout p=1 should zero weights and output\n";

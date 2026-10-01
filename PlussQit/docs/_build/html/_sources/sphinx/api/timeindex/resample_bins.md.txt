@@ -171,9 +171,9 @@ std::cout << pluss::series::print(bins.bin_id) << "\n";
   operation name.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="asof.html">
+  <a class="prev-link" href="resample_agg.html">
     <span class="label">Previous</span>
-    <span class="title">asof</span>
+    <span class="title">resample_agg</span>
   </a>
   <a class="next-link" href="resample_count.html">
     <span class="label">Next</span>

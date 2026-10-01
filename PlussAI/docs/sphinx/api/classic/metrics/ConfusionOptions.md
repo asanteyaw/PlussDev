@@ -24,7 +24,7 @@ How to scale the raw counts:
 
 ### `label_order`
 
-`pluss::Series label_order = Series::undefined()`
+`pluss::Series label_order = pluss::series::undefined()`
 
 The class values, and the row/column order they appear in. Undefined (the
 default) uses the sorted union of every value seen in `truth_labels` and
@@ -36,7 +36,7 @@ duplicates when supplied.
 
 ### `sample_weights`
 
-`pluss::Series sample_weights = Series::undefined()`
+`pluss::Series sample_weights = pluss::series::undefined()`
 
 Per-row weights contributing to the counts — a weighted confusion matrix
 instead of a plain tally. Undefined (the default) weights every row `1`.

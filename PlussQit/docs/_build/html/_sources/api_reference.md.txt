@@ -35,15 +35,17 @@ notes. This page is the curated entry point into them.
   per-method reference for `Duration` — the elapsed-time counterpart to
   `Timeline`, for `Timeline - Timeline` results and `Timeline ± Duration`
   arithmetic.
-- [TimeIndex API Reference](sphinx/timeindex_api_reference.md): the handwritten
-  per-method reference for `TimeIndex` — the 1D temporal axis object for search,
+- [Duration Factory API Reference](sphinx/duration_factory_api_reference.md):
+  exact unit construction, progressions, shape-first allocation, sampling, and
+  rendering in `pluss::duration`.
+- [Timeline Index Accessor API Reference](sphinx/timeline_index_accessor_api_reference.md):
+  the ordered-axis methods entered through `Timeline::index()` for search,
   slicing, resampling, rolling windows, and alignment.
-- [Series Methods](Series_Methods.md): the naming-philosophy note (method-first vs.
-  free functions, `pile`/`unite` naming deviations).
+- [TimeIndex Factory API Reference](sphinx/timeindex_factory_api_reference.md):
+  ordered-axis construction, regular ranges, buffer ownership, and rendering
+  in `pluss::timeindex`.
 - [Method Index](coden_method_index.md): a flat cross-referenced index of the whole
   surface, documented and not-yet-documented alike.
-- [Reductions](Reductions.md): sum/mean/min/max/std and related reduction behavior.
-- [Statistics](Stats.md): statistical operations available on `Series`.
 
 ```{toctree}
 :hidden:
@@ -57,43 +59,14 @@ sphinx/tokenbatch_api_reference
 sphinx/timeline_api_reference
 sphinx/timeline_factory_api_reference
 sphinx/duration_api_reference
-sphinx/timeindex_api_reference
+sphinx/duration_factory_api_reference
+sphinx/timeline_index_accessor_api_reference
+sphinx/timeindex_factory_api_reference
 ```
 
-## Type system and semantics
-
-- [API Philosophy](API_Philosophy.md): the design principles the whole surface follows.
-- [Type Promotion](TypePromotion.md): how mixed-dtype operations resolve a result type.
-- [Broadcasting](Broadcasting.md): shape-compatibility rules for elementwise operations.
-- [NaN / Inf](NaN_Inf.md): how missing and non-finite values are represented and handled.
-- [Complex](Complex.md), [Float8](Float8.md): specialized scalar type support.
-
-## Indexing and shape
-
-- [Indexing Parity](IndexingParity.md), [Indexing / Scatter](Indexing_Scatter.md): how
-  element access and scatter-style writes behave.
-- [Reshape and Views](ReshapeAndViews.md), [View Invariants](View_Invariants.md): what a
-  reshape or view does and does not guarantee.
-- [Scatter](Scatter.md), [Scatter/Reduce](ScatterReduce.md): scatter-with-reduction
-  operations.
-
-## Construction and configuration
-
-- [Factories](Factories.md), [Factories / Config](Factories_Config.md): how `Series` and
-  related objects are constructed.
-- [Config](Config.md): library-wide configuration knobs.
-- [Ownership](Ownership.md): value/reference ownership semantics.
-
-## Errors
-
-- [Error Handling](ErrorHandling.md): the exception and error-reporting model.
-- [Errors / Stack Trace](Errors_StackTrace.md): diagnostic context attached to errors.
-
-## Everything else
-
-Every other `.md` file in this folder (design notes, patch logs, roadmap tracking) is
-still reachable from the [documentation map](index.md) and searchable from this site's
-search box, even though it isn't singled out above.
+The family references are the public documentation. Historical omnibus pages,
+code-generation notes, patch logs, and authoring standards remain in the source tree
+for maintainers but are intentionally excluded from the published site.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="index.html">

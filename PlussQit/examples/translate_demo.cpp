@@ -60,18 +60,16 @@ int main() {
       1);
   print_vector("Timeline row hour totals", row_hour_totals);
 
-  auto idx = pluss::timeindex::make(
-      pluss::timeline::make({
+  auto idx = pluss::timeline::make({
           "2024-01-01T00:00:00Z",
           "2024-01-02T00:00:00Z",
           "2024-01-03T00:00:00Z",
-      }),
-      true);
+      }).index(true);
   const auto index_cardinality = pluss::tils::transform_axis(
       [](const pluss::codeh::Timeline& as_timeline) {
         return as_timeline.numel();
       },
-      idx,
+      idx.timeline(),
       0);
   std::cout << "TimeIndex cardinality via transform_axis: " << index_cardinality << "\n";
 

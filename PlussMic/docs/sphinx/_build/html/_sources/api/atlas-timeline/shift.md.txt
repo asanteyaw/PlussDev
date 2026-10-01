@@ -13,7 +13,7 @@ AtlasTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const 
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with each
+Replaces every `Timeline` feature in **every frame of the stack** with each
 row shifted forward (or backward, if `periods` is negative) by `periods * freq` — the
 same transform [`DataFrame::tl().shift()`](../dataframe-timeline/shift.md) applies to a
 single frame, broadcast across the whole `Atlas` via
@@ -90,7 +90,7 @@ overflowing into March.
 - `freq` cannot be empty, and an unrecognized string throws
   `"Timeline::shift: unsupported frequency"`.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row stays `NaT` regardless of `periods`/`freq`.
 - Each frame is transformed independently — see

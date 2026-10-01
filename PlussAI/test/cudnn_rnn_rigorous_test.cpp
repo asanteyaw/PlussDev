@@ -136,10 +136,10 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(const RnnCase& tc, const plu
       out.push_back(pluss::ai::rnn::NetWeight{
           .weight_ih = pluss::series::rand({gates * tc.hidden_size, layer_input}, cfg, seed + 1ULL),
           .weight_hh = pluss::series::rand({gates * tc.hidden_size, hidden_out}, cfg, seed + 2ULL),
-          .bias = (tc.use_bias && !tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_ih = (tc.use_bias && tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_hh = (tc.use_bias && tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
-          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, tc.hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
+          .bias = (tc.use_bias && !tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::series::undefined(),
+          .bias_ih = (tc.use_bias && tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 3ULL) : pluss::series::undefined(),
+          .bias_hh = (tc.use_bias && tc.split_bias) ? pluss::series::rand({gates * tc.hidden_size}, cfg, seed + 4ULL) : pluss::series::undefined(),
+          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, tc.hidden_size}, cfg, seed + 5ULL) : pluss::series::undefined(),
       });
     }
   }
@@ -153,10 +153,10 @@ std::vector<pluss::ai::rnn::NetWeight> to_cuda_weights(const std::vector<pluss::
     out.push_back(pluss::ai::rnn::NetWeight{
         .weight_ih = w.weight_ih.to(pluss::pCUDA),
         .weight_hh = w.weight_hh.to(pluss::pCUDA),
-        .bias = w.bias.defined() ? w.bias.to(pluss::pCUDA) : pluss::Series(),
-        .bias_ih = w.bias_ih.defined() ? w.bias_ih.to(pluss::pCUDA) : pluss::Series(),
-        .bias_hh = w.bias_hh.defined() ? w.bias_hh.to(pluss::pCUDA) : pluss::Series(),
-        .weight_hr = w.weight_hr.defined() ? w.weight_hr.to(pluss::pCUDA) : pluss::Series(),
+        .bias = w.bias.defined() ? w.bias.to(pluss::pCUDA) : pluss::series::undefined(),
+        .bias_ih = w.bias_ih.defined() ? w.bias_ih.to(pluss::pCUDA) : pluss::series::undefined(),
+        .bias_hh = w.bias_hh.defined() ? w.bias_hh.to(pluss::pCUDA) : pluss::series::undefined(),
+        .weight_hr = w.weight_hr.defined() ? w.weight_hr.to(pluss::pCUDA) : pluss::series::undefined(),
     });
   }
   return out;

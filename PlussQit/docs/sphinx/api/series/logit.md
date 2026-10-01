@@ -9,6 +9,7 @@
 ```cpp
 Series::logit(double eps) const -> Series
 Series& Series::logit_(double eps)
+Series& Series::logit_(double eps) const
 ```
 
 ## What It Does
@@ -52,6 +53,28 @@ d/dp logit(p) = 1 / (p * (1 - p))
 The derivative is smallest (`4`) at `p = 0.5` and grows without bound as `p`
 approaches either end. A tracked `logit()` on probabilities near `0` or `1`
 therefore produces very large sensitivities.
+
+## In-Place Form
+
+`logit_()` is the in-place sibling of [`logit()`](logit.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `logit_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 0.5, 1.0}, {3});
+x.logit_(1e-6);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-13.81551, 0, 13.81551]
+```
 
 ## Examples
 

@@ -9,6 +9,7 @@
 ```cpp
 Series::silu() const -> Series
 Series& Series::silu_()
+Series& Series::silu_() const
 ```
 
 ## What It Does
@@ -52,6 +53,31 @@ d/dx silu(x) = s + x * s * (1 - s) = s * (1 + x * (1 - s))
 It equals `0.5` at `x = 0`, goes slightly negative in the same region where the
 forward value dips, and tends to `1` for large positive `x` and `0` for large
 negative `x`.
+
+## In-Place Form
+
+`silu_()` is the in-place sibling of [`silu()`](silu.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `silu_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.silu_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 0.73105858]
+same object: true
+```
 
 ## Examples
 

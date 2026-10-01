@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -48,15 +48,37 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Executes a SQL query against the tables loaded into the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> workspace and
-returns the materialized result as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">FROM</span></code> clause must name real workspace tables such as <code class="docutils literal notranslate"><span class="pre">customers</span></code>,
-<code class="docutils literal notranslate"><span class="pre">orders</span></code>, or <code class="docutils literal notranslate"><span class="pre">trans</span></code>, but there is no longer a special root-table requirement.
-Any Nexus table can appear in <code class="docutils literal notranslate"><span class="pre">FROM</span></code>, <code class="docutils literal notranslate"><span class="pre">JOIN</span></code>, a common table expression, or a
-subquery.</p>
+<p>Executes one SQL statement against the tables loaded into the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>
+workspace and returns the materialized result as a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. This is the
+one-shot entry point — for a statement that runs more than once with
+different bound values, <a class="reference internal" href="prepare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.prepare(statement)</span></code></span></a> is the better
+fit, since it parses the statement once and lets later calls only supply
+new parameter values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">FROM</span></code>/<code class="docutils literal notranslate"><span class="pre">JOIN</span></code> must name real workspace tables (<code class="docutils literal notranslate"><span class="pre">customers</span></code>, <code class="docutils literal notranslate"><span class="pre">orders</span></code>, and so
+on, matching whatever names the <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> was constructed with), but there is
+no special root-table requirement the way <a class="reference internal" href="../nexus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pull()</span></code></span></a>’s
+root-preserving path rule has — any workspace table can appear in <code class="docutils literal notranslate"><span class="pre">FROM</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">JOIN</span></code>, a common table expression, or a subquery, and ordinary grouped
+queries, CTEs, and multi-way joins are valid as long as the statement
+produces a result set.</p>
 </section>
-<section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>statement</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+A SQL <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> statement (or a statement shape that produces a result
+set, such as a <code class="docutils literal notranslate"><span class="pre">WITH</span> <span class="pre">...</span> <span class="pre">SELECT</span></code>). Table names inside it refer to the
+workspace’s own table names.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+One row per matched record, one column per selected expression. A
+qualified <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">table.feature</span></code> keeps the <code class="docutils literal notranslate"><span class="pre">table.feature</span></code> spelling as
+the output column name — see Example 1.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A join across two workspace tables.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
 
@@ -64,17 +86,12 @@ subquery.</p>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Bola&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chen&quot;</span><span class="p">})},</span>
 <span class="p">});</span>
-
 <span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">})},</span>
 <span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
-<span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">}});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span>
 <span class="w">    </span><span class="s">&quot;SELECT customers.customer_id, orders.amount &quot;</span>
@@ -87,17 +104,75 @@ subquery.</p>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span> shape: (3, 2)
-┌─────────────┬────────┐
-│ customer_id │ amount │
-├─────────────┼────────┤
-│ 2           │ 75     │
-│ 1           │ 50     │
-│ 2           │ 20     │
-└─────────────┴────────┘
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>     | customers.customer_id  orders.amount
+-------------------------------------------
+0    | 2                      75
+1    | 1                      50
+2    | 2                      20
+-------------------------------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Example 2. A statement that matches nothing still returns a defined,
+zero-row <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> rather than throwing.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELECT customer_id FROM customers WHERE customer_id &gt; 100&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">ncases</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; rows&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0 rows
+</pre></div>
+</div>
+<p>Example 3. Malformed SQL throws with the underlying SQLite error message.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">query</span><span class="p">().</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;SELEKT customer_id FROM customers&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::sql().execute: sqlite prepare failed: near &quot;SELEKT&quot;: syntax error
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">execute()</span></code> parses and runs <code class="docutils literal notranslate"><span class="pre">statement</span></code> fresh every call — for a
+statement reused with different bound values, prefer
+<a class="reference internal" href="prepare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.prepare(statement)</span></code></span></a> once and call <code class="docutils literal notranslate"><span class="pre">.execute(params)</span></code> on
+the result, rather than re-interpolating a new statement string by hand
+on every call.</p></li>
+<li><p>Column names in the result mirror the statement’s own <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> list
+verbatim — alias with <code class="docutils literal notranslate"><span class="pre">AS</span></code> in the statement if a table-qualified name
+like <code class="docutils literal notranslate"><span class="pre">customers.customer_id</span></code> isn’t the column name you want.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="prepare.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusQuery::prepare</span></code></span></a>: build a reusable statement template
+instead of executing once.</p></li>
+<li><p><a class="reference internal" href="#../nexus_api_reference.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Nexus::query</span></code></span></a>: the entry point that returns
+this <code class="docutils literal notranslate"><span class="pre">NexusQuery</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../nexus_query_api_reference.html">
+    <span class="label">Previous</span>
+    <span class="title">NexusQuery API Reference</span>
+  </a>
+  <a class="next-link" href="prepare.html">
+    <span class="label">Next</span>
+    <span class="title">prepare</span>
+  </a>
+</div>
 </section>
 </section>
 

@@ -48,6 +48,14 @@ class StackArray;
 }
 
 namespace pluss::codem {
+class Series;
+}
+
+namespace pluss::series {
+CODEM_API codem::Series undefined();
+}
+
+namespace pluss::codem {
 
 namespace ops_internal {
 struct SeriesFactoryAccess;
@@ -937,7 +945,6 @@ public:
   };
 
   // Factory helpers (Torch-style free-functions live elsewhere; keep these for convenience).
-  static Series undefined();
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st);
   static Series empty(pluss::msharp::RangeView::Int sizes, ScalarType st, Platform platform);
   static Series zeros(pluss::msharp::RangeView::Int sizes, ScalarType st);
@@ -960,7 +967,8 @@ public:
                              std::int64_t storage_offset,
                              const std::vector<std::int64_t>& sizes,
                              const std::vector<std::int64_t>& strides,
-                             ScalarType dtype);
+                             ScalarType dtype,
+                             Platform platform = Platform::CPU);
 
   // Core view/cast helpers used across the library.
   Series contiguous() const;
@@ -1000,7 +1008,11 @@ public:
   Series scatter_reduce_sum(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
   Series scatter_reduce_amax(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
   Series scatter_reduce_amin(std::int64_t dim, const Series& index, const Series& src, bool include_self, double initial_scalar) const;
-  Series put_(const Series& index, const Series& source, bool accumulate=false);
+  // Internal write kernel behind the autodiff-safe `put_()`/`index_put_()`
+  // surface (see Invoke.cpp's put_dispatch_*). Not the public in-place API --
+  // that's the generated `Series& put_(...) const` wrapper. Kept as its own
+  // non-const, by-value-returning overload so it never shadows the public one.
+  Series put_raw_(const Series& index, const Series& source, bool accumulate=false);
   Series nonzero() const;
   Series unique(bool sorted) const;
   Series isin(const Series& test_elements) const;
@@ -1205,8 +1217,6 @@ public:
   Series& clamp_max_(const Series& max);
   // Query current backend (Torch-like tensor.device() analog at Platform granularity).
   Platform platform() const noexcept { return SeriesBase::platform(); }
-  // Request transfer to another backend.
-  Series platform(Platform target) const;
   TernaryCompareBuilder tri() const noexcept;
   Series grouped_count(const Series& group_ids,
                        std::int64_t group_count) const;
@@ -1411,6 +1421,10 @@ public:
                                       bool largest=true,
                                       bool sorted=true) const;
 
+  // Log beta with a Series-valued second argument. The scalar overload is
+  // generated alongside the rest of the special-function surface.
+  Series betaln(const Series& other) const;
+
   // Decompose each element x into (mantissa, exponent) with
   // x == mantissa * 2**exponent and 0.5 <= |mantissa| < 1 (both 0 when x == 0).
   // Fixed arity of 2, so a pair; the exponent piece is int32 and never carries
@@ -1480,7 +1494,7 @@ public:
     return pluss::codem::_compat::invoke("has_sensitivity", *this).item<bool>();
   }
   Series sensitivity() const { return pluss::codem::_compat::invoke("sensitivity", *this); }
-  void clear_sensitivity() const { (void)pluss::codem::_compat::invoke_("clear_sensitivity", *this); }
+  void clear() const { (void)pluss::codem::_compat::invoke_("clear_sensitivity", *this); }
   std::int64_t storage_version() const {
     return pluss::codem::_compat::invoke("_version", *this).item<std::int64_t>();
   }
@@ -1627,7 +1641,7 @@ private:
                 "Series::extract: invalid internal spec kind");
     PLUSS_CHECK(spec.advanced_impl,
                 "Series::extract: advanced index Series is undefined");
-    Series idx_series;
+    Series idx_series = pluss::series::undefined();
     idx_series.impl_ = spec.advanced_impl;
 
     const Series idx_cpu = idx_series.to(Platform::CPU);
@@ -1780,7 +1794,7 @@ private:
   Series& extract_put_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) {
     PLUSS_CHECK(defined(), "Series::extract_put_: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
-    std::vector<Series> indices(static_cast<std::size_t>(dim()), Series::undefined());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()), pluss::series::undefined());
     std::vector<Series> defined_raw;
     std::vector<std::int64_t> defined_dims;
     defined_raw.reserve(static_cast<std::size_t>(dim()));
@@ -1848,7 +1862,7 @@ private:
   Series extract_put_copy_from_specs_(const std::vector<ExtractSpec_>& specs, const Series& values) const {
     PLUSS_CHECK(defined(), "Series::extract_put: undefined Series");
     const auto normalized = normalize_extract_specs_(specs, dim());
-    std::vector<Series> indices(static_cast<std::size_t>(dim()), Series::undefined());
+    std::vector<Series> indices(static_cast<std::size_t>(dim()), pluss::series::undefined());
     std::vector<Series> defined_raw;
     std::vector<std::int64_t> defined_dims;
     defined_raw.reserve(static_cast<std::size_t>(dim()));
@@ -2103,6 +2117,8 @@ public:
   // - with explicit `on` selector: `s.traverse(specs).find_ge(...)`
   SeriesTraverseAccessor traverse;
 
+  // An empty handle, equivalent to pluss::series::undefined(). Defined Series
+  // values remain constructible only through the public factory functions.
   Series() : SeriesBase(), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
   Series(const Series& other)
       : SeriesBase(other), stat(*this), linearalg(*this), antidiff(*this), traverse(*this) {}
@@ -2275,8 +2291,8 @@ private:
     }
   }
 
-  // Internal-only ctor: Series objects are created via factories and internal
-  // kernels (ops_internal), not by end users.
+  // Internal-only defined-state ctor. End users create defined Series values
+  // through factories; public default construction creates no payload.
   explicit Series(pluss::msharp::intrusive_ptr<SeriesImpl> impl)
       : SeriesBase(std::move(impl)), stat(*this), linearalg(*this), traverse(*this) {}
 

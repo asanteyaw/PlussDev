@@ -108,8 +108,4 @@ std::cout << out.to_json();
     <span class="label">Previous</span>
     <span class="title">note</span>
   </a>
-  <a class="next-link" href="timeindex.html">
-    <span class="label">Next</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

@@ -8,6 +8,7 @@
 
 ```cpp
 Series::trunc() const -> Series
+Series& Series::trunc_()
 ```
 
 ## What It Does
@@ -30,6 +31,29 @@ So `trunc()` behaves like "keep the integer part with the original sign."
 
 Away from discontinuity points, `trunc()` is locally constant, so reverse-mode
 sensitivity is `0` through the rounded output in the ordinary case.
+
+## In-Place Form
+
+`trunc_()` is the in-place sibling of [`trunc()`](trunc.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.7, -1.7});
+
+auto& ref = x.trunc_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1, -1]
+same object: true
+```
 
 ## Examples
 

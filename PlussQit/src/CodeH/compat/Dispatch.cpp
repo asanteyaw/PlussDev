@@ -144,8 +144,8 @@ Duration call_duration(std::string_view op, const Duration& self, const Args& ar
   if (op == "floor") return deets::impl_round(self, "floor", arg_sv(args, 0));
   if (op == "ceil") return deets::impl_round(self, "ceil", arg_sv(args, 0));
   if (op == "round") return deets::impl_round(self, "round", arg_sv(args, 0));
-  if (op == "min") return deets::impl_min_duration(self);
-  if (op == "max") return deets::impl_max_duration(self);
+  if (op == "min") return deets::impl_min_duration(self, arg_bool(args, 0));
+  if (op == "max") return deets::impl_max_duration(self, arg_bool(args, 0));
   if (op == "sort") return deets::impl_sort_duration(self);
   if (op == "unique") return deets::impl_unique_duration(self);
   CODEM_FAIL("CodeH invoke: unknown Duration op");
@@ -166,7 +166,7 @@ pluss::codem::Series call_series_duration(std::string_view op, const Duration& s
 pluss::coden::Note call_note_duration(std::string_view op, const Duration& self, const Args& args) {
   if (op == "to_note") return deets::impl_duration_to_note(self, "full");
   if (op == "to_note_compact") return deets::impl_duration_to_note(self, "compact");
-  if (op == "to_note_iso") return deets::impl_duration_to_note(self, "compact");
+  if (op == "to_note_iso") return deets::impl_duration_to_note(self, "iso");
   (void)args;
   CODEM_FAIL("CodeH invoke: unknown Duration->Note op");
 }

@@ -17,7 +17,7 @@ nn::Identity::Identity();
 
 `Identity` takes no options -- default-construct it and use it directly, or
 add it straight into a [`Schedule`](../module/Schedule.md) with
-[`then`](../module/Schedule/then.md).
+[`append`](../module/Schedule/append.md).
 
 ## State
 
@@ -81,11 +81,11 @@ namespace nn = pluss::ai::nn;
 
 nn::Schedule make_block(nn::Fusion fc, bool use_relu) {
   nn::Schedule block;
-  block.then("fc", fc);
+  block.append("fc", fc);
   if (use_relu) {
-    block.then("act", nn::ReLU());
+    block.append("act", nn::ReLU());
   } else {
-    block.then("act", nn::Identity());
+    block.append("act", nn::Identity());
   }
   return block;
 }

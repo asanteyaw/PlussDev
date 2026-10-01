@@ -13,7 +13,7 @@ ThreadTimelineAccessor::ceil(std::string_view unit) const -> Thread
 ## What It Does
 
 Rounds every row of the bound thread *up* to the nearest `unit` boundary, in
-local wall time — same length, still `Timeline`/`TimeIndex`-kind.
+local wall time — same length, still `Timeline`-kind.
 
 ## Parameters
 
@@ -26,7 +26,7 @@ empty.
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind thread, same length as the bound thread,
     ceiled to `unit`.
 
 ## Examples
@@ -97,7 +97,7 @@ Timeline: unsupported unit (expected S/min/H/D)
 - Ceiling happens in **local wall time** (per the thread's current timezone),
   then maps back.
 - `unit` cannot be empty, and only accepts the fixed clock units listed above.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`) regardless of `unit`.
 

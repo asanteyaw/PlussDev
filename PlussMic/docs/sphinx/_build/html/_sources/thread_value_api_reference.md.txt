@@ -11,6 +11,50 @@ This page documents the public scalar-like `ThreadValue` wrapper returned by thr
 
 ## A
 
+### `as_duration`
+
+#### Signature
+
+```cpp
+ThreadValue::as_duration() -> pluss::Duration
+```
+
+#### What It Does
+
+Converts or reinterprets the current payload as another public Pluss type so downstream operations route through the right text, numeric, or temporal surface.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`pluss::Duration`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Convert the current object into the `duration` representation before continuing with another type-specific workflow.
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0}));
+auto value = thread.value();
+
+auto out = value.as_duration();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="#as_note">
+    <span class="label">Next</span>
+    <span class="title">as_note</span>
+  </a>
+</div>
+
 ### `as_note`
 
 #### Signature
@@ -49,6 +93,10 @@ auto out = value.as_note();
 ["Accra"]
 ```
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#as_duration">
+    <span class="label">Previous</span>
+    <span class="title">as_duration</span>
+  </a>
   <a class="next-link" href="#as_series">
     <span class="label">Next</span>
     <span class="title">as_series</span>
@@ -97,54 +145,6 @@ auto out = value.as_series();
     <span class="label">Previous</span>
     <span class="title">as_note</span>
   </a>
-  <a class="next-link" href="#as_timeindex">
-    <span class="label">Next</span>
-    <span class="title">as_timeindex</span>
-  </a>
-</div>
-
-### `as_timeindex`
-
-#### Signature
-
-```cpp
-ThreadValue::as_timeindex() -> pluss::TimeIndex
-```
-
-#### What It Does
-
-Converts the wrapped scalar-like value into a `pluss::TimeIndex`.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`pluss::TimeIndex`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Convert the current object into the `timeindex` representation before continuing with another type-specific workflow.
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_timeindex({"2024-01-01T09:10:00Z"}));
-auto value = thread.value();
-
-auto out = value.as_timeindex();
-```
-
-##### Output
-
-```text
-["2024-01-01T09:10:00Z"]
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_series">
-    <span class="label">Previous</span>
-    <span class="title">as_series</span>
-  </a>
   <a class="next-link" href="#as_timeline">
     <span class="label">Next</span>
     <span class="title">as_timeline</span>
@@ -189,9 +189,9 @@ auto out = value.as_timeline();
 ["2024-01-01T09:10:00Z"]
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#as_timeindex">
+  <a class="prev-link" href="#as_series">
     <span class="label">Previous</span>
-    <span class="title">as_timeindex</span>
+    <span class="title">as_series</span>
   </a>
   <a class="next-link" href="#defined">
     <span class="label">Next</span>
@@ -393,6 +393,54 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">kind</span>
   </a>
+  <a class="next-link" href="#pluss::Duration">
+    <span class="label">Next</span>
+    <span class="title">pluss::Duration</span>
+  </a>
+</div>
+
+### `pluss::Duration`
+
+#### Signature
+
+```cpp
+ThreadValue::pluss::Duration() -> operator
+```
+
+#### What It Does
+
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
+
+#### Parameters
+
+`None`
+
+#### Returns
+
+`operator`
+    Value produced by this call.
+
+#### Examples
+
+Example 1. Call the simplest overload.
+
+```cpp
+auto thread = pluss::table::Thread(pluss::make_series({10.0}));
+auto value = thread.value();
+
+auto out = value.pluss::Duration();
+```
+
+##### Output
+
+```text
+The call completes and returns the contract described under Output.
+```
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="#payload">
+    <span class="label">Previous</span>
+    <span class="title">payload</span>
+  </a>
   <a class="next-link" href="#pluss::Note">
     <span class="label">Next</span>
     <span class="title">pluss::Note</span>
@@ -437,9 +485,9 @@ auto out = value.pluss::Note();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#payload">
+  <a class="prev-link" href="#pluss::Duration">
     <span class="label">Previous</span>
-    <span class="title">payload</span>
+    <span class="title">pluss::Duration</span>
   </a>
   <a class="next-link" href="#pluss::Series">
     <span class="label">Next</span>
@@ -489,54 +537,6 @@ The call completes and returns the contract described under Output.
     <span class="label">Previous</span>
     <span class="title">pluss::Note</span>
   </a>
-  <a class="next-link" href="#pluss::TimeIndex">
-    <span class="label">Next</span>
-    <span class="title">pluss::TimeIndex</span>
-  </a>
-</div>
-
-### `pluss::TimeIndex`
-
-#### Signature
-
-```cpp
-ThreadValue::pluss::TimeIndex() -> operator
-```
-
-#### What It Does
-
-Uses the implicit conversion operator to materialize the wrapped value as a `pluss::TimeIndex`.
-
-#### Parameters
-
-`None`
-
-#### Returns
-
-`operator`
-    Value produced by this call.
-
-#### Examples
-
-Example 1. Call the simplest overload.
-
-```cpp
-auto thread = pluss::table::Thread(pluss::make_series({10.0}));
-auto value = thread.value();
-
-auto out = value.pluss::TimeIndex();
-```
-
-##### Output
-
-```text
-The call completes and returns the contract described under Output.
-```
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#pluss::Series">
-    <span class="label">Previous</span>
-    <span class="title">pluss::Series</span>
-  </a>
   <a class="next-link" href="#pluss::Timeline">
     <span class="label">Next</span>
     <span class="title">pluss::Timeline</span>
@@ -581,9 +581,9 @@ auto out = value.pluss::Timeline();
 The call completes and returns the contract described under Output.
 ```
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#pluss::TimeIndex">
+  <a class="prev-link" href="#pluss::Series">
     <span class="label">Previous</span>
-    <span class="title">pluss::TimeIndex</span>
+    <span class="title">pluss::Series</span>
   </a>
   <a class="next-link" href="#thread">
     <span class="label">Next</span>

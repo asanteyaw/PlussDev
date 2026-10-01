@@ -14,15 +14,15 @@ Archive ArchiveTimelineAccessor::valid() const
 ## What It Does
 
 Flags whether each bound key's timestamp is a real, present timestamp (not `NaT`),
-replacing each `Timeline`- or `TimeIndex`-kind key with a `Bool` `Series` key.
+replacing each `Timeline`-kind key with a `Bool` `Series` key.
 Exactly the logical inverse of [`isnat()`](isnat.md). Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::valid`](../catalog-timeline/valid.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 

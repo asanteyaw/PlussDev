@@ -1,10 +1,13 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <chrono>
 #include <cstring>
+#include <deque>
 #include <limits>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "CodeH/core/TimeIndex.h"
@@ -114,18 +117,45 @@ static void check_values_1d_match_(const pluss::codem::Series& v, std::int64_t n
   CODEM_CHECK(v.dim() == 1, "values must be 1D");
   CODEM_CHECK(v.numel() == n, "values length must equal index length");
   CODEM_CHECK(v.scalar_type() != pluss::codem::ScalarType::Bool, "values must be numeric (not bool)");
+  CODEM_CHECK(v.is_cpu(), "TimeIndex resampling currently requires CPU values");
+}
+
+static bool has_empty_bin_(const pluss::codem::Series& bin_id, std::int64_t nbins) {
+  std::vector<std::uint8_t> seen(static_cast<std::size_t>(nbins), 0);
+  const auto* bid = reinterpret_cast<const std::int64_t*>(bin_id.raw_data());
+  for (std::int64_t i = 0; i < bin_id.numel(); ++i) {
+    const auto b = bid[i];
+    CODEM_CHECK(b >= 0 && b < nbins, "TimeIndex resampling produced an invalid bin id");
+    seen[static_cast<std::size_t>(b)] = 1;
+  }
+  return std::find(seen.begin(), seen.end(), std::uint8_t{0}) != seen.end();
 }
 
 struct Access {
   // Create (private) TimeIndex
-  static ::pluss::codeh::TimeIndex make(::pluss::codeh::Timeline t) { return ::pluss::codeh::TimeIndex(std::move(t)); }
+  static ::pluss::codeh::TimeIndex make(::pluss::codeh::Timeline t,
+                                        bool nondecreasing = false) {
+    using State = ::pluss::codeh::TimeIndex::OrderState;
+    return ::pluss::codeh::TimeIndex(
+        std::move(t),
+        nondecreasing ? State::Nondecreasing : State::Unchecked);
+  }
 
   static const ::pluss::codeh::Timeline& timeline(const ::pluss::codeh::TimeIndex& idx) { return idx.t_; }
 
   static bool is_monotonic_increasing(const ::pluss::codeh::TimeIndex& self) {
+    using State = ::pluss::codeh::TimeIndex::OrderState;
+    if (self.order_state_ == State::Nondecreasing) return true;
     const auto* x = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
     for (std::int64_t i = 1; i < self.size(); ++i) if (x[i] < x[i-1]) return false;
+    self.order_state_ = State::Nondecreasing;
     return true;
+  }
+
+  static void require_nondecreasing(const ::pluss::codeh::TimeIndex& self,
+                                    std::string_view where) {
+    CODEM_CHECK(is_monotonic_increasing(self),
+                std::string(where) + " requires a nondecreasing index");
   }
 
   static bool is_monotonic_decreasing(const ::pluss::codeh::TimeIndex& self) {
@@ -136,7 +166,18 @@ struct Access {
 
   static bool is_unique(const ::pluss::codeh::TimeIndex& self) {
     const auto* x = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
-    for (std::int64_t i = 1; i < self.size(); ++i) if (x[i] == x[i-1]) return false;
+    const auto n = self.size();
+    if (is_monotonic_increasing(self) || is_monotonic_decreasing(self)) {
+      for (std::int64_t i = 1; i < n; ++i) {
+        if (x[i] == x[i - 1]) return false;
+      }
+      return true;
+    }
+    std::unordered_set<std::int64_t> seen;
+    seen.reserve(static_cast<std::size_t>(n));
+    for (std::int64_t i = 0; i < n; ++i) {
+      if (!seen.insert(x[i]).second) return false;
+    }
     return true;
   }
 
@@ -148,11 +189,13 @@ struct Access {
   }
 
   static ::pluss::codeh::TimeIndex sort(const ::pluss::codeh::TimeIndex& self) {
-    return make(::pluss::codeh::detail::impl_sort(self.t_));
+    return make(::pluss::codeh::detail::impl_sort(self.t_), true);
   }
 
   static ::pluss::codeh::TimeIndex unique(const ::pluss::codeh::TimeIndex& self) {
-    return make(::pluss::codeh::detail::impl_unique(self.t_));
+    using State = ::pluss::codeh::TimeIndex::OrderState;
+    return make(::pluss::codeh::detail::impl_unique(self.t_),
+                self.order_state_ == State::Nondecreasing);
   }
 
   static pluss::codem::Series argsort(const ::pluss::codeh::TimeIndex& self) {
@@ -186,7 +229,9 @@ struct Access {
     auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
     const auto* x = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
     for (std::int64_t i = 0; i < len; ++i) o[i] = x[start + i];
-    return make(::pluss::codeh::Timeline(std::move(out), std::string(self.t_.tz())));
+    using State = ::pluss::codeh::TimeIndex::OrderState;
+    return make(::pluss::codeh::Timeline(std::move(out), std::string(self.t_.tz())),
+                self.order_state_ == State::Nondecreasing);
   }
 
   static ::pluss::codeh::TimeIndex tail(const ::pluss::codeh::TimeIndex& self, std::int64_t n) {
@@ -198,6 +243,8 @@ struct Access {
 
   static ::pluss::codeh::TimeIndex union_(const ::pluss::codeh::TimeIndex& a, const ::pluss::codeh::TimeIndex& b) {
     // Both must be sorted and same tz.
+    require_nondecreasing(a, "TimeIndex::union");
+    require_nondecreasing(b, "TimeIndex::union");
     CODEM_CHECK(std::string_view(a.t_.tz()) == std::string_view(b.t_.tz()), "TimeIndex::union: tz mismatch");
     const auto* x = reinterpret_cast<const std::int64_t*>(a.t_.ticks_.raw_data());
     const auto* y = reinterpret_cast<const std::int64_t*>(b.t_.ticks_.raw_data());
@@ -213,10 +260,12 @@ struct Access {
     }
     auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
     std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
-    return make(::pluss::codeh::Timeline(std::move(out), std::string(a.t_.tz())));
+    return make(::pluss::codeh::Timeline(std::move(out), std::string(a.t_.tz())), true);
   }
 
   static ::pluss::codeh::TimeIndex intersection(const ::pluss::codeh::TimeIndex& a, const ::pluss::codeh::TimeIndex& b) {
+    require_nondecreasing(a, "TimeIndex::intersection");
+    require_nondecreasing(b, "TimeIndex::intersection");
     CODEM_CHECK(std::string_view(a.t_.tz()) == std::string_view(b.t_.tz()), "TimeIndex::intersection: tz mismatch");
     const auto* x = reinterpret_cast<const std::int64_t*>(a.t_.ticks_.raw_data());
     const auto* y = reinterpret_cast<const std::int64_t*>(b.t_.ticks_.raw_data());
@@ -229,10 +278,12 @@ struct Access {
     }
     auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
     if (!outv.empty()) std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
-    return make(::pluss::codeh::Timeline(std::move(out), std::string(a.t_.tz())));
+    return make(::pluss::codeh::Timeline(std::move(out), std::string(a.t_.tz())), true);
   }
 
   static ::pluss::codeh::TimeIndex difference(const ::pluss::codeh::TimeIndex& a, const ::pluss::codeh::TimeIndex& b) {
+    require_nondecreasing(a, "TimeIndex::difference");
+    require_nondecreasing(b, "TimeIndex::difference");
     CODEM_CHECK(std::string_view(a.t_.tz()) == std::string_view(b.t_.tz()), "TimeIndex::difference: tz mismatch");
     const auto* x = reinterpret_cast<const std::int64_t*>(a.t_.ticks_.raw_data());
     const auto* y = reinterpret_cast<const std::int64_t*>(b.t_.ticks_.raw_data());
@@ -245,12 +296,13 @@ struct Access {
     }
     auto out = pluss::codem::Series::empty({(std::int64_t)outv.size()}, pluss::codem::ScalarType::Int64);
     if (!outv.empty()) std::memcpy(out.raw_data(), outv.data(), outv.size() * sizeof(std::int64_t));
-    return make(::pluss::codeh::Timeline(std::move(out), std::string(a.t_.tz())));
+    return make(::pluss::codeh::Timeline(std::move(out), std::string(a.t_.tz())), true);
   }
 
   static ::pluss::codeh::TimeIndex tz_convert(const ::pluss::codeh::TimeIndex& self, std::string_view tz) {
     auto t = ::pluss::codeh::detail::impl_tz_convert(self.t_, tz);
-    return make(std::move(t));
+    using State = ::pluss::codeh::TimeIndex::OrderState;
+    return make(std::move(t), self.order_state_ == State::Nondecreasing);
   }
 
   static ::pluss::codeh::TimeIndex tz_localize(const ::pluss::codeh::TimeIndex& self, std::string_view tz, int fold, std::string_view nonexistent) {
@@ -295,17 +347,17 @@ struct Access {
                                          const ::pluss::codeh::Duration& window,
                                          std::string_view op) {
     if (op == "sum") return rolling_sum(self, values, window);
-    if (op == "count") return rolling_count(self, window);
-    if (op == "mean") {
-      auto s = rolling_sum(self, values, window);
-      auto c = rolling_count(self, window);
-      // Use CodeM div for numeric Series (routes through CodeM invoke).
-      return s.div(c.to(pluss::codem::ScalarType::Float64));
+    if (op == "count") {
+      check_values_1d_match_(values, self.size());
+      return rolling_count(self, window);
     }
-    // Simple O(n^2) min/max/first/last in UTC ticks; adequate baseline.
+    CODEM_CHECK(op == "mean" || op == "min" || op == "max" ||
+                    op == "first" || op == "last",
+                "rolling_agg: unknown op");
     check_values_1d_match_(values, self.size());
     CODEM_CHECK(values.scalar_type() == pluss::codem::ScalarType::Float64 || values.scalar_type() == pluss::codem::ScalarType::Int64,
                 "rolling_agg: currently supports int64/float64 values");
+    require_nondecreasing(self, "TimeIndex rolling operations");
     const auto n = self.size();
     const auto* t = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
     const auto wflat = ::pluss::codeh::_compat::invoke<std::vector<std::int64_t>>("to_nanos_flat", window);
@@ -313,52 +365,81 @@ struct Access {
     const auto win = wflat[0];
     CODEM_CHECK(win != ::pluss::codeh::Duration::kNaT && win > 0, "rolling_agg: window must be positive");
 
-    auto out = pluss::codem::Series::empty({n}, values.scalar_type());
+    const auto expired = [&](std::int64_t older, std::int64_t current) {
+      return static_cast<std::uint64_t>(current) -
+                 static_cast<std::uint64_t>(older) >
+             static_cast<std::uint64_t>(win);
+    };
+    const auto result_type = op == "mean" ? pluss::codem::ScalarType::Float64
+                                          : values.scalar_type();
+    auto out = pluss::codem::Series::empty({n}, result_type);
     if (values.scalar_type() == pluss::codem::ScalarType::Float64) {
-      const auto* v = reinterpret_cast<const double*>(values.raw_data());
+      const auto packed = values.contiguous();
+      const auto* v = reinterpret_cast<const double*>(packed.raw_data());
       auto* o = reinterpret_cast<double*>(out.raw_data());
+      std::deque<std::int64_t> active;
+      long double sum = 0.0L;
       for (std::int64_t i = 0; i < n; ++i) {
-        const auto left = t[i] - win;
-        double best = 0.0;
-        bool any = false;
-        double first = 0.0, last = 0.0;
-        for (std::int64_t j = i; j >= 0; --j) {
-          if (t[j] < left) break;
-          if (!any) { best = v[j]; first = v[j]; any = true; }
-          last = v[j];
-          if (op == "min") best = std::min(best, v[j]);
-          else if (op == "max") best = std::max(best, v[j]);
+        while (!active.empty() && expired(t[active.front()], t[i])) {
+          if (op == "mean") sum -= static_cast<long double>(v[active.front()]);
+          active.pop_front();
         }
-        if (!any) { o[i] = std::numeric_limits<double>::quiet_NaN(); }
-        else if (op == "first") o[i] = first;
-        else if (op == "last") o[i] = last;
-        else o[i] = best;
+        if (!std::isnan(v[i])) {
+          if (op == "min" || op == "max") {
+            while (!active.empty() &&
+                   (op == "min" ? v[active.back()] >= v[i]
+                                : v[active.back()] <= v[i])) {
+              active.pop_back();
+            }
+          }
+          active.push_back(i);
+          if (op == "mean") sum += static_cast<long double>(v[i]);
+        }
+        if (active.empty()) {
+          o[i] = std::numeric_limits<double>::quiet_NaN();
+        } else if (op == "mean") {
+          o[i] = static_cast<double>(sum / static_cast<long double>(active.size()));
+        } else if (op == "last") {
+          o[i] = v[active.back()];
+        } else {
+          o[i] = v[active.front()];
+        }
       }
     } else {
-      const auto* v = reinterpret_cast<const std::int64_t*>(values.raw_data());
-      auto* o = reinterpret_cast<std::int64_t*>(out.raw_data());
+      const auto packed = values.contiguous();
+      const auto* v = reinterpret_cast<const std::int64_t*>(packed.raw_data());
+      std::deque<std::int64_t> active;
+      long double sum = 0.0L;
       for (std::int64_t i = 0; i < n; ++i) {
-        const auto left = t[i] - win;
-        std::int64_t best = 0;
-        bool any = false;
-        std::int64_t first = 0, last = 0;
-        for (std::int64_t j = i; j >= 0; --j) {
-          if (t[j] < left) break;
-          if (!any) { best = v[j]; first = v[j]; any = true; }
-          last = v[j];
-          if (op == "min") best = std::min(best, v[j]);
-          else if (op == "max") best = std::max(best, v[j]);
+        while (!active.empty() && expired(t[active.front()], t[i])) {
+          if (op == "mean") sum -= static_cast<long double>(v[active.front()]);
+          active.pop_front();
         }
-        if (!any) { o[i] = 0; }
-        else if (op == "first") o[i] = first;
-        else if (op == "last") o[i] = last;
-        else o[i] = best;
+        if (op == "min" || op == "max") {
+          while (!active.empty() &&
+                 (op == "min" ? v[active.back()] >= v[i]
+                              : v[active.back()] <= v[i])) {
+            active.pop_back();
+          }
+        }
+        active.push_back(i);
+        if (op == "mean") sum += static_cast<long double>(v[i]);
+
+        if (op == "mean") {
+          reinterpret_cast<double*>(out.raw_data())[i] =
+              static_cast<double>(sum / static_cast<long double>(active.size()));
+        } else if (op == "last") {
+          reinterpret_cast<std::int64_t*>(out.raw_data())[i] = v[active.back()];
+        } else {
+          reinterpret_cast<std::int64_t*>(out.raw_data())[i] = v[active.front()];
+        }
       }
     }
     return out;
   }
 
   static std::string infer_freq(const ::pluss::codeh::TimeIndex& self) {
+    require_nondecreasing(self, "TimeIndex::freq");
     const auto n = self.size();
     if (n < 3) return std::string();
     const auto* x = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
@@ -409,10 +490,12 @@ struct Access {
         CODEM_CHECK(x[i - 1] <= x[i], "TimeIndex must be sorted (non-decreasing)");
       }
     }
-    return make(::pluss::codeh::Timeline(std::move(ticks), std::string(t.tz())));
+    return make(::pluss::codeh::Timeline(std::move(ticks), std::string(t.tz())),
+                require_sorted);
   }
 
   static std::int64_t searchsorted(const ::pluss::codeh::TimeIndex& self, const ::pluss::codeh::Timeline& key, bool right) {
+    require_nondecreasing(self, "TimeIndex::searchsorted");
     CODEM_CHECK(key.dim() == 0, "TimeIndex::searchsorted expects scalar key");
     const auto k = reinterpret_cast<const std::int64_t*>(key.ticks_.raw_data())[0];
     CODEM_CHECK(k != ::pluss::codeh::Timeline::kNaT, "searchsorted: key cannot be NaT");
@@ -423,6 +506,7 @@ struct Access {
   }
 
   static std::int64_t asof(const ::pluss::codeh::TimeIndex& self, const ::pluss::codeh::Timeline& key) {
+    require_nondecreasing(self, "TimeIndex::asof");
     CODEM_CHECK(key.dim() == 0, "TimeIndex::asof expects scalar key");
     const auto k = reinterpret_cast<const std::int64_t*>(key.ticks_.raw_data())[0];
     CODEM_CHECK(k != ::pluss::codeh::Timeline::kNaT, "asof: key cannot be NaT");
@@ -434,6 +518,7 @@ struct Access {
   }
 
   static pluss::codem::Series slice(const ::pluss::codeh::TimeIndex& self, const ::pluss::codeh::Timeline& start, const ::pluss::codeh::Timeline& end) {
+    require_nondecreasing(self, "TimeIndex::slice");
     CODEM_CHECK(start.dim() == 0 && end.dim() == 0, "TimeIndex::slice expects scalar bounds");
     const auto s = reinterpret_cast<const std::int64_t*>(start.ticks_.raw_data())[0];
     const auto e = reinterpret_cast<const std::int64_t*>(end.ticks_.raw_data())[0];
@@ -459,6 +544,7 @@ struct Access {
       const ::pluss::codeh::TimeIndex& self,
       const ::pluss::codeh::TimeIndex::ResampleOptions& options) {
     using namespace std::chrono;
+    require_nondecreasing(self, "TimeIndex resampling");
     const auto parsed = parse_resample_freq_(options.freq, options.step);
     const auto fixed_span = parsed.unit_nanos * parsed.multiplier;
     const auto* x = reinterpret_cast<const std::int64_t*>(self.t_.ticks_.raw_data());
@@ -677,6 +763,10 @@ struct Access {
     std::vector<std::uint8_t> seen((std::size_t)nbins, 0);
     for (std::int64_t i = 0; i < v.numel(); ++i) {
       const auto b = bid[i];
+      CODEM_CHECK(b >= 0 && b < nbins, "TimeIndex resampling produced an invalid bin id");
+      if constexpr (std::is_floating_point_v<T>) {
+        if (std::isnan(vp[i])) continue;
+      }
       if (!seen[(std::size_t)b]) {
         op[b] = vp[i];
         seen[(std::size_t)b] = 1;
@@ -769,6 +859,11 @@ struct Access {
     check_values_1d_match_(values, self.size());
     auto bins = resample_bins(self, options);
     const auto nb = bins.labels.numel();
+    if (values.scalar_type() == pluss::codem::ScalarType::Int64 &&
+        has_empty_bin_(bins.bin_id, nb)) {
+      return resample_minmax_impl_<double>(
+          values.to(pluss::codem::ScalarType::Float64), bins.bin_id, nb, true);
+    }
     switch (values.scalar_type()) {
       case pluss::codem::ScalarType::Int64: return resample_minmax_impl_<std::int64_t>(values, bins.bin_id, nb, true);
       case pluss::codem::ScalarType::Float64: return resample_minmax_impl_<double>(values, bins.bin_id, nb, true);
@@ -788,6 +883,11 @@ struct Access {
     check_values_1d_match_(values, self.size());
     auto bins = resample_bins(self, options);
     const auto nb = bins.labels.numel();
+    if (values.scalar_type() == pluss::codem::ScalarType::Int64 &&
+        has_empty_bin_(bins.bin_id, nb)) {
+      return resample_minmax_impl_<double>(
+          values.to(pluss::codem::ScalarType::Float64), bins.bin_id, nb, false);
+    }
     switch (values.scalar_type()) {
       case pluss::codem::ScalarType::Int64: return resample_minmax_impl_<std::int64_t>(values, bins.bin_id, nb, false);
       case pluss::codem::ScalarType::Float64: return resample_minmax_impl_<double>(values, bins.bin_id, nb, false);
@@ -808,6 +908,11 @@ struct Access {
     check_values_1d_match_(values, self.size());
     auto bins = resample_bins(self, options);
     const auto nb = bins.labels.numel();
+    if (values.scalar_type() == pluss::codem::ScalarType::Int64 &&
+        has_empty_bin_(bins.bin_id, nb)) {
+      return resample_first_last(
+          self, values.to(pluss::codem::ScalarType::Float64), options, is_first);
+    }
     auto out = pluss::codem::Series::empty({nb}, values.scalar_type());
     auto o = out.contiguous();
     auto v = values.contiguous();
@@ -816,6 +921,15 @@ struct Access {
     // first: forward fill; last: overwrite
     for (std::int64_t i = 0; i < v.numel(); ++i) {
       const auto b = bid[i];
+      CODEM_CHECK(b >= 0 && b < nb, "TimeIndex resampling produced an invalid bin id");
+      if (v.scalar_type() == pluss::codem::ScalarType::Float32 &&
+          std::isnan(reinterpret_cast<const float*>(v.raw_data())[i])) {
+        continue;
+      }
+      if (v.scalar_type() == pluss::codem::ScalarType::Float64 &&
+          std::isnan(reinterpret_cast<const double*>(v.raw_data())[i])) {
+        continue;
+      }
       if (is_first) {
         if (seen[(std::size_t)b]) continue;
         std::memcpy((char*)o.raw_data() + (std::size_t)b * (std::size_t)o.itemsize(),
@@ -891,6 +1005,7 @@ struct Access {
   }
 
   static pluss::codem::Series rolling_count(const ::pluss::codeh::TimeIndex& self, const ::pluss::codeh::Duration& window) {
+    require_nondecreasing(self, "TimeIndex rolling operations");
     CODEM_CHECK(window.dim() == 0, "rolling_count expects scalar window");
     const auto w = reinterpret_cast<const std::int64_t*>(window.nanos_.raw_data())[0];
     CODEM_CHECK(w > 0, "rolling_count: window must be positive");
@@ -910,6 +1025,7 @@ struct Access {
 
   static pluss::codem::Series rolling_sum(const ::pluss::codeh::TimeIndex& self, const pluss::codem::Series& values, const ::pluss::codeh::Duration& window) {
     check_values_1d_match_(values, self.size());
+    require_nondecreasing(self, "TimeIndex rolling operations");
     CODEM_CHECK(window.dim() == 0, "rolling_sum expects scalar window");
     const auto w = reinterpret_cast<const std::int64_t*>(window.nanos_.raw_data())[0];
     CODEM_CHECK(w > 0, "rolling_sum: window must be positive");
@@ -955,6 +1071,8 @@ struct Access {
                                        ::pluss::codeh::TimeIndex::AsofDirection direction,
                                        const ::pluss::codeh::Duration* tolerance,
                                        bool allow_exact_matches) {
+    require_nondecreasing(left, "TimeIndex::join_asof(left)");
+    require_nondecreasing(right, "TimeIndex::join_asof(right)");
     const auto nl = left.size();
     const auto nr = right.size();
     auto out = pluss::codem::Series::empty({nl}, pluss::codem::ScalarType::Int64);
@@ -1004,6 +1122,8 @@ struct Access {
 
   static ::pluss::codeh::TimeIndex::AlignUnion align_union(const ::pluss::codeh::TimeIndex& left,
                                                           const ::pluss::codeh::TimeIndex& right) {
+    require_nondecreasing(left, "TimeIndex::align_union(left)");
+    require_nondecreasing(right, "TimeIndex::align_union(right)");
     const auto nl = left.size();
     const auto nr = right.size();
     const auto* xl = reinterpret_cast<const std::int64_t*>(left.t_.ticks_.raw_data());

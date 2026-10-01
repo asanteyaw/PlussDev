@@ -6,6 +6,12 @@
 using pluss::Series;
 using pluss::make_series;
 
+template <class T>
+concept HasStaticUndefinedFactory = requires { T::undefined(); };
+
+static_assert(!HasStaticUndefinedFactory<Series>,
+              "absence construction belongs to pluss::series, not Series");
+
 // Series::source() -- the public, non-leaking grad_fn equivalent. Wraps
 // pluss::codem::series_tape::source_info() (an internal engine namespace
 // end users shouldn't have to reach into) so `x.source()` is the only thing
@@ -45,7 +51,7 @@ TEST_CASE("Series::source() reports the reverse-mode node, or nullopt", "[autodi
   }
 
   SECTION("undefined Series has no source") {
-    Series undef;
+    Series undef = pluss::series::undefined();
     REQUIRE_FALSE(undef.source().has_value());
   }
 }

@@ -16,7 +16,7 @@ Stream StreamTimelineAccessor::day() const
 Extracts the day-of-month (`1`-`31`) of the bound stream's timestamp,
 replacing it with an `Int32` `Series` stream.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

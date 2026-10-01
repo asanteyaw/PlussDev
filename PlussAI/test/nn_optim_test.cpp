@@ -61,7 +61,7 @@ double nadam_first_step_expected(double parameter, double sensitivity, const plu
 }
 
 struct ScalarModule final : pluss::nn::Module {
-  Series weight;
+  Series weight = pluss::series::undefined();
 
   explicit ScalarModule(const Config& cfg)
       : Module(true), weight(pluss::make_series(1.0, cfg)) {
@@ -1162,7 +1162,7 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   for (int i = 0; i < 120; ++i) {
     auto tx = pluss::subsp::math::diff::trace(minimax_tape_param, true);
     const Series loss = tx.value().sub(minimax_target).square().sum().mul(0.5);
-    tx.clear_sensitivity();
+    tx.clear();
     loss.reverse();
     minimax_tape.step();
   }
@@ -1182,7 +1182,7 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
     staged.select(0, 0).copy_(tx.value().select(0, 0));
     staged.select(0, 1).copy_(tx.value().select(0, 1));
     const Series loss = staged.sub(minimax_target).square().sum().mul(0.5);
-    tx.clear_sensitivity();
+    tx.clear();
     loss.reverse();
     minimax_tape_staged.step();
   }
@@ -1292,7 +1292,7 @@ bool run_nn_optimizer_checks(std::ostream* err = nullptr) {
   Series tape_param = pluss::make_series(2.0, cfg);
   auto tracked = pluss::subsp::math::diff::trace(tape_param, true);
   const Series tape_loss = tracked.value().square();
-  tracked.clear_sensitivity();
+  tracked.clear();
   tape_loss.reverse();
   pluss::nn::optim::SGDOptions tape_opt{};
   tape_opt.learning_rate = 0.25;

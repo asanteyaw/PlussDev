@@ -18,6 +18,14 @@ model attached) uses to produce its output directly.
     const classic::InferOptions& options = {}) const;
 ```
 
+## What It Does
+
+Passes `batch` through every already-fitted transform stage in order,
+each stage's output feeding the next, and returns the fully-transformed
+result -- never consulting the attached model, if any. `infer` calls this
+internally and then hands the result to the model; `map` on its own is
+what a transform-only `Flow` uses to produce its output directly.
+
 ## Parameters
 
 `batch` — `FeatureBatch`

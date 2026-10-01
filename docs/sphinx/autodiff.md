@@ -573,7 +573,7 @@ auto d3_opt = pmo::nth_diff([](const auto& z) { return z * z * z; }, x, 3);
 ```cpp
 x.retain_grad(true);
 x.retains_grad();
-x.clear_sensitivity();
+x.clear();
 ```
 
 ### Explanation
@@ -593,7 +593,7 @@ loss.reverse();
 std::cout << x.retains_grad().item<bool>() << "\n";
 std::cout << x.sensitivity().item<double>() << "\n";
 
-x.clear_sensitivity();
+x.clear();
 std::cout << x.has_sensitivity() << "\n";
 ```
 

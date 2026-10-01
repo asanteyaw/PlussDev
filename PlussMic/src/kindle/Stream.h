@@ -51,7 +51,7 @@ enum class StreamKind : std::uint8_t {
   Series = 0,
   Note = 1,
   Timeline = 2,
-  TimeIndex = 3,
+  Duration = 4,
 };
 
 struct DistinctOptions {
@@ -82,7 +82,7 @@ public:
   Stream(const pluss::Timeline& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
          std::optional<pluss::table::Thread> cases = std::nullopt);
-  Stream(const pluss::TimeIndex& data,
+  Stream(const pluss::Duration& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
          std::optional<pluss::table::Thread> cases = std::nullopt);
   Stream(const Stream& other);
@@ -116,7 +116,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Stream fillnull(const pluss::Timeline& value) const;
-  Stream fillnull(const pluss::TimeIndex& value) const;
+  Stream fillnull(const pluss::Duration& value) const;
   Stream abs() const;
   Stream clip(double min_value, double max_value) const;
   Stream log() const;
@@ -198,7 +198,7 @@ public:
   const pluss::Series& as_series() const;
   const pluss::Note& as_note() const;
   const pluss::Timeline& as_timeline() const;
-  const pluss::TimeIndex& as_timeindex() const;
+  const pluss::Duration& as_duration() const;
 
   std::string to_string() const;
   std::string to_json() const;
@@ -232,7 +232,7 @@ public:
   Stream series() const;
   Stream note() const;
   Stream timeline() const;
-  Stream timeindex() const;
+  Stream duration() const;
 
 private:
   Stream base_{};
@@ -327,7 +327,6 @@ public:
   Stream tz(std::string_view name) const;
   Stream localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Stream utc() const;
-  Stream index(bool require_sorted = true) const;
 
 private:
   Stream base_{};

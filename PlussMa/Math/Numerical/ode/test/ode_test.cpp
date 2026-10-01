@@ -162,7 +162,7 @@ int main() {
     ode::OdeOptions vec_opts;
     vec_opts.steps = 2000;
     const double tf = 1.7;
-    const auto fwd = ode::fluxa(oscillator, y0_vec, 0.0, tf, Series{}, vec_opts);
+    const auto fwd = ode::fluxa(oscillator, y0_vec, 0.0, tf, pluss::series::undefined(), vec_opts);
     const auto v = vec_f64(fwd.y_final);
     expect_near(v[0], std::cos(omega * tf), 1e-6, "fluxa harmonic oscillator x(t1) matches analytic solution",
                &failures);
@@ -189,7 +189,7 @@ int main() {
     const double tf = 1.7;
     // Seed = d(loss)/dy(t1) for loss = x(t1) alone: [1, 0].
     const Series seed = real_series({1.0, 0.0}, {2});
-    const auto adj = ode::fluxa_adjoint(oscillator, y0_vec, 0.0, tf, Series{}, seed, vec_opts);
+    const auto adj = ode::fluxa_adjoint(oscillator, y0_vec, 0.0, tf, pluss::series::undefined(), seed, vec_opts);
     const auto grad = vec_f64(adj.grad_y0);
     expect_near(grad[0], std::cos(omega * tf), 1e-5, "fluxa_adjoint d(x(t1))/dx0 matches state-transition closed form",
                &failures);

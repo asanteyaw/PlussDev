@@ -8,6 +8,7 @@
 
 ```cpp
 Series::transpose(std::int64_t d0, std::int64_t d1) const -> Series
+Series& Series::transpose_(std::int64_t dim0, std::int64_t dim1) const
 ```
 
 ## What It Does
@@ -77,6 +78,30 @@ The return contract is structural:
 Backward is just the inverse axis swap, which for a simple two-axis exchange is
 the same swap again. That is why `transpose()` is safe structural code in
 autodiff pipelines: it is metadata movement, not lossy arithmetic.
+
+## In-Place Form
+
+`transpose_()` is the in-place sibling of [`transpose()`](transpose.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `transpose_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}});
+x.transpose_(0, 1);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3,2], strides=[1,3], dtype=float64, platform=cpu, numel=6, contiguous=false)
+data=[[1, 4],
+  [2, 5],
+  [3, 6]]
+```
 
 ## Verified Examples
 

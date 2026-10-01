@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=c214b90c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="ArchiveKeyAxisAccessor::timeline" href="timeline.html" />
-    <link rel="prev" title="ArchiveKeyAxisAccessor::suffix" href="suffix.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -87,7 +85,7 @@ just the <code class="docutils literal notranslate"><span class="pre">TimeIndex<
 
 <span class="k">auto</span><span class="w"> </span><span class="n">c0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Catalog</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;n&quot;</span><span class="n">_k</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">})),</span>
-<span class="w">    </span><span class="s">&quot;ti&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">})),</span>
+<span class="w">    </span><span class="s">&quot;ti&quot;</span><span class="n">_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">})),</span>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">archive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Archive</span><span class="p">({</span><span class="n">c0</span><span class="p">});</span>
 
@@ -168,11 +166,8 @@ from.</p></li>
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -190,18 +185,6 @@ from.</p></li>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
-  <li><a href="../../archive_api_reference.html">Archive API Reference</a><ul>
-  <li><a href="../../archive_keyaxis_accessor_api_reference.html">ArchiveKeyAxisAccessor API Reference</a><ul>
-      <li>Previous: <a href="suffix.html" title="previous chapter">ArchiveKeyAxisAccessor::suffix</a></li>
-      <li>Next: <a href="timeline.html" title="next chapter">ArchiveKeyAxisAccessor::timeline</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

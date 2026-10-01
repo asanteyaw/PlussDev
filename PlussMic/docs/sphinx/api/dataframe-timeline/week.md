@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::week() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its ISO-8601 week
+Replaces every selected `Timeline` feature with its ISO-8601 week
 number (`1`-`53`), as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -84,7 +84,7 @@ std::cout << out;
   the following ISO year) — `week()` alone doesn't disambiguate which ISO
   year that week number belongs to.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.

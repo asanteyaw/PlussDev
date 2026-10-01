@@ -21,6 +21,7 @@ string(FIND "${_pluss_export_content}" "X11::X11" _pluss_needs_x11)
 string(FIND "${_pluss_export_content}" "Freetype::Freetype" _pluss_needs_freetype)
 string(FIND "${_pluss_export_content}" "fmt::fmt" _pluss_needs_fmt)
 string(FIND "${_pluss_export_content}" "SQLite::SQLite3" _pluss_needs_sqlite3)
+string(FIND "${_pluss_export_content}" "Threads::Threads" _pluss_needs_threads)
 string(FIND "${_pluss_export_content}" "torch_library" _pluss_needs_torch_library)
 string(FIND "${_pluss_export_content}" "torch;" _pluss_needs_torch_target)
 
@@ -64,6 +65,10 @@ endif()
 
 if(NOT _pluss_needs_sqlite3 EQUAL -1)
   find_dependency(SQLite3)
+endif()
+
+if(NOT _pluss_needs_threads EQUAL -1)
+  find_dependency(Threads)
 endif()
 
 if(NOT _pluss_needs_torch_library EQUAL -1 OR NOT _pluss_needs_torch_target EQUAL -1)

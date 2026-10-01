@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::layer_norm &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::lcm" href="lcm.html" />
+    <link rel="prev" title="Series::kurtosis" href="kurtosis.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-layer-norm">
+<h1>Series::layer_norm<a class="headerlink" href="#series-layer-norm" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">layer_norm</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Int</span><span class="w"> </span><span class="n">normalized_shape</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">bias</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-5</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="normalizing-complete-feature-blocks">
+<h2>Normalizing Complete Feature Blocks<a class="headerlink" href="#normalizing-complete-feature-blocks" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">layer_norm()</span></code> standardizes each trailing feature block independently, then
+applies a learned elementwise scale and offset. If <code class="docutils literal notranslate"><span class="pre">normalized_shape</span></code> contains
+<code class="docutils literal notranslate"><span class="pre">k</span></code> extents, the final <code class="docutils literal notranslate"><span class="pre">k</span></code> axes of the receiver form one normalization block;
+all leading axes identify independent observations.</p>
+<p>For a block containing values $x_i$, the method computes</p>
+<p>$$
+\mu = \frac{1}{N}\sum_i x_i, \qquad
+\sigma^2 = \frac{1}{N}\sum_i (x_i-\mu)^2,
+$$</p>
+<p>then returns</p>
+<p>$$
+y_i = \frac{x_i-\mu}{\sqrt{\sigma^2+\varepsilon}},w_i+b_i.
+$$</p>
+<p>The variance is the population variance: its denominator is <code class="docutils literal notranslate"><span class="pre">N</span></code>, not <code class="docutils literal notranslate"><span class="pre">N-1</span></code>.
+This is the appropriate normalization for a complete feature block rather than
+an estimate of a population statistic.</p>
+</section>
+<section id="shape-contract">
+<h2>Shape Contract<a class="headerlink" href="#shape-contract" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">normalized_shape</span></code> is both a declaration and a validation rule. It must be
+nonempty and exactly equal the receiver’s trailing extents. <code class="docutils literal notranslate"><span class="pre">weight</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code>
+must each have that exact shape as well; they are reused across every leading
+observation. They are not arbitrary broadcast operands.</p>
+<p>For an input shaped <code class="docutils literal notranslate"><span class="pre">[batch,</span> <span class="pre">time,</span> <span class="pre">feature]</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{feature}</span></code> normalizes every feature vector independently, producing
+<code class="docutils literal notranslate"><span class="pre">batch</span> <span class="pre">*</span> <span class="pre">time</span></code> normalization blocks;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{time,</span> <span class="pre">feature}</span></code> normalizes one complete time-by-feature block per batch;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{batch,</span> <span class="pre">time,</span> <span class="pre">feature}</span></code> normalizes the entire receiver as one block.</p></li>
+</ul>
+<p>The result always has the same shape, dtype, and platform as the receiver. The
+input, <code class="docutils literal notranslate"><span class="pre">weight</span></code>, and <code class="docutils literal notranslate"><span class="pre">bias</span></code> must be floating-point Series with matching dtype
+and platform. <code class="docutils literal notranslate"><span class="pre">eps</span></code> must be finite and non-negative.</p>
+</section>
+<section id="reverse-mode">
+<h2>Reverse Mode<a class="headerlink" href="#reverse-mode" title="Link to this heading">¶</a></h2>
+<p>The operation records one analytic reverse node. Sensitivity flows to all three
+Series arguments:</p>
+<ul class="simple">
+<li><p>receiver sensitivity accounts for the shared block mean and variance;</p></li>
+<li><p>weight sensitivity sums <code class="docutils literal notranslate"><span class="pre">upstream</span> <span class="pre">*</span> <span class="pre">normalized_input</span></code> across every leading
+axis;</p></li>
+<li><p>bias sensitivity sums the upstream sensitivity across every leading axis.</p></li>
+</ul>
+<p>The reverse formula retains its dependencies for higher-order differentiation.
+The forward implementation avoids recording a chain of disposable mean,
+centering, variance, reciprocal-square-root, multiply, and add nodes.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<section id="normalize-each-row-over-its-final-axis">
+<h3>1. Normalize each row over its final axis<a class="headerlink" href="#normalize-each-row-over-its-final-axis" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">                                   </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">bias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">layer_norm</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="output">
+<h4>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ -1.2247 0.0000 1.2247 ⎤
+⎣ -1.2247 0.0000 1.2247 ⎦
+</pre></div>
+</div>
+<p>Each row has its own mean and variance. Multiplying the second row by two does
+not change its normalized coordinates.</p>
+</section>
+</section>
+<section id="apply-feature-specific-scale-and-bias">
+<h3>2. Apply feature-specific scale and bias<a class="headerlink" href="#apply-feature-specific-scale-and-bias" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">                                   </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">bias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">layer_norm</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ -1.2247 1.0000 -0.3876 ⎤
+⎣ -1.2247 1.0000 -0.3876 ⎦
+</pre></div>
+</div>
+<p>The second normalized coordinate is zero, so its output is exactly its bias,
+<code class="docutils literal notranslate"><span class="pre">1</span></code>. Affine parameters do not participate in the mean or variance calculation;
+they are applied afterward.</p>
+</section>
+</section>
+<section id="normalize-over-two-trailing-axes">
+<h3>3. Normalize over two trailing axes<a class="headerlink" href="#normalize-over-two-trailing-axes" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">blocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}},</span>
+<span class="w">    </span><span class="p">{{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">6.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}},</span>
+<span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">ones</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">bias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">blocks</span><span class="p">.</span><span class="n">layer_norm</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2,2], strides=[4,2,1], dtype=float64, platform=cpu, numel=8, contiguous=true)
+data[0, :, :] =
+⎡ -1.3416 -0.4472 ⎤
+⎣  0.4472  1.3416 ⎦
+
+data[1, :, :] =
+⎡ -1.3416 -0.4472 ⎤
+⎣  0.4472  1.3416 ⎦
+</pre></div>
+</div>
+<p>Here each <code class="docutils literal notranslate"><span class="pre">[2,2]</span></code> slab is one four-value block. The leading extent <code class="docutils literal notranslate"><span class="pre">2</span></code> remains
+the observation axis.</p>
+</section>
+</section>
+<section id="stabilize-a-zero-variance-block-with-eps">
+<h3>4. Stabilize a zero-variance block with <code class="docutils literal notranslate"><span class="pre">eps</span></code><a class="headerlink" href="#stabilize-a-zero-variance-block-with-eps" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">constant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">});</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">bias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">});</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">constant</span><span class="p">.</span><span class="n">layer_norm</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">,</span><span class="w"> </span><span class="mf">1e-3</span><span class="p">));</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[1,3], strides=[3,1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=
+[ 0.0000 0.0000 0.0000 ]
+</pre></div>
+</div>
+<p>The centered numerator is zero. A positive <code class="docutils literal notranslate"><span class="pre">eps</span></code> keeps the reciprocal standard
+deviation finite even when the block variance is exactly zero.</p>
+</section>
+</section>
+<section id="differentiate-the-receiver-weight-and-bias">
+<h3>5. Differentiate the receiver, weight, and bias<a class="headerlink" href="#differentiate-the-receiver-weight-and-bias" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">                             </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">bias</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">weight</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">bias</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="n">x</span><span class="p">.</span><span class="n">layer_norm</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">).</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">weight</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="id4">
+<h4>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ -0.5103 1.0206 -0.5103 ⎤
+⎣ -0.2552 0.5103 -0.2552 ⎦
+
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-2.4495, 0.0000, 2.4495]
+
+Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2.0000, 2.0000, 2.0000]
+</pre></div>
+</div>
+<p>Bias receives one unit from each of the two rows. Weight receives the sum of
+the normalized coordinates. Receiver sensitivity is coupled within each row,
+so it is not merely the elementwise weight.</p>
+</section>
+</section>
+<section id="reject-a-declaration-that-does-not-match-trailing-shape">
+<h3>6. Reject a declaration that does not match trailing shape<a class="headerlink" href="#reject-a-declaration-that-does-not-match-trailing-shape" title="Link to this heading">¶</a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">weight</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">ones</span><span class="p">({</span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">bias</span><span class="w"> </span><span class="o">=</span>
+<span class="w">      </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">);</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">x</span><span class="p">.</span><span class="n">layer_norm</span><span class="p">({</span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="n">bias</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id5">
+<h4>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h4>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>layer_norm: normalized_shape must match the input&#39;s trailing dimensions
+</pre></div>
+</div>
+<p>The final input extent is <code class="docutils literal notranslate"><span class="pre">3</span></code>, not <code class="docutils literal notranslate"><span class="pre">2</span></code>. Validation occurs before normalization
+so an accidentally broadcastable affine tensor cannot conceal the mistake.</p>
+</section>
+</section>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h2>
+<p>Work and temporary storage are linear in <code class="docutils literal notranslate"><span class="pre">numel()</span></code>. The receiver is
+materialized contiguously for the normalization pass; already contiguous input
+avoids that copy. A fused analytic reverse node reduces tape size compared with
+manually composing the formula. Reuse persistent weight and bias Series rather
+than rebuilding them at every call.</p>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> computes the block center without normalization.</p></li>
+<li><p><a class="reference internal" href="standardize.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standardize()</span></code></span></a> provides statistical standardization
+without learned affine parameters.</p></li>
+<li><p><a class="reference internal" href="reshape.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reshape()</span></code></span></a> can arrange feature axes before normalization.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="kurtosis.html" title="previous chapter">Series::kurtosis</a></li>
+      <li>Next: <a href="lcm.html" title="next chapter">Series::lcm</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/layer_norm.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

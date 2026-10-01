@@ -25,7 +25,7 @@ Config f64() {
 
 struct Frame {
   DataFrame x;
-  Series y;
+  Series y = pluss::series::undefined();
 };
 
 Frame make_frame() {

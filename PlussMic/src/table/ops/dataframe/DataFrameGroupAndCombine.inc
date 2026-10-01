@@ -92,7 +92,7 @@ std::string contingency_column_name_(std::span<const std::string> names,
 struct ContingencyTensor_ {
   std::vector<std::string> dims{};
   std::vector<Thread> levels{};
-  pluss::Series counts{};
+  pluss::Series counts = pluss::series::undefined();
 };
 
 std::vector<std::string> contingency_names_(
@@ -645,6 +645,34 @@ Thread pivot_fill_note_column_(const Thread& source, const ThreadValue::HostAny&
   return pivot_make_note_thread_(values, valid);
 }
 
+Thread pivot_make_duration_thread_(const std::vector<std::int64_t>& values,
+                                   const std::vector<bool>& valid) {
+  const auto duration =
+      pluss::duration::nanos(values, {static_cast<std::int64_t>(values.size())});
+  const bool all_valid =
+      std::all_of(valid.begin(), valid.end(), [](const bool value) { return value; });
+  return all_valid ? Thread(duration) : Thread(duration, bool_series_from_keep(valid));
+}
+
+Thread pivot_fill_duration_column_(
+    const Thread& source,
+    const ThreadValue::HostAny& fill_value) {
+  PLUSS_CHECK(fill_value.kind() == ThreadValue::HostAny::Kind::Duration,
+              "DataFrame::pivot_table: Duration output requires a Duration fill_value");
+  const auto fill = fill_value.to_int();
+  PLUSS_CHECK(fill != pluss::Duration::kNaT,
+              "DataFrame::pivot_table: Duration fill_value cannot be NaT");
+  auto values = source.as_duration().host();
+  auto valid = detail::validity_mask(source)->to_vec<bool>();
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    if (!valid[i]) {
+      values[i] = fill;
+      valid[i] = true;
+    }
+  }
+  return pivot_make_duration_thread_(values, valid);
+}
+
 Thread pivot_apply_fill_(const Thread& source,
                          const std::optional<ThreadValue::HostAny>& fill_value,
                          bool integral_fill) {
@@ -657,8 +685,9 @@ Thread pivot_apply_fill_(const Thread& source,
     case ThreadKind::Note:
       return pivot_fill_note_column_(source, *fill_value);
     case ThreadKind::Timeline:
-    case ThreadKind::TimeIndex:
       PLUSS_FAIL("DataFrame::pivot_table: fill_value does not support timeline-like pivot outputs");
+    case ThreadKind::Duration:
+      return pivot_fill_duration_column_(source, *fill_value);
   }
   PLUSS_FAIL("DataFrame::pivot_table: unsupported pivot fill dispatch");
 }
@@ -1034,6 +1063,50 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         out_cols.emplace_back(
             output_name,
             pivot_apply_fill_(pivot_make_note_thread_(values, valid), options.fill_value, false));
+      } else if (source.kind() == ThreadKind::Duration) {
+        std::vector<std::int64_t> values(final_rows, 0);
+        std::vector<bool> valid(final_rows, false);
+        const auto source_values = source.as_duration().host();
+        for (std::int64_t row = 0; row < grouped.ncases(); ++row) {
+          if (col_positions[static_cast<std::size_t>(row)] != combo ||
+              !detail::valid_at(source, row)) {
+            continue;
+          }
+          const auto value = source_values[static_cast<std::size_t>(row)];
+          if (value == pluss::Duration::kNaT) {
+            continue;
+          }
+          const auto out_row = row_positions[static_cast<std::size_t>(row)];
+          values[out_row] = value;
+          valid[out_row] = true;
+        }
+        if (add_margin_row) {
+          const auto total_source = plan.columns.empty()
+                                        ? grand_totals->features(spec.group_output)
+                                        : col_totals->features(spec.group_output);
+          std::optional<std::int64_t> total_row;
+          if (plan.columns.empty()) {
+            if (grand_totals->ncases() > 0) {
+              total_row = 0;
+            }
+          } else if (const auto it = col_total_source_row.find(col_combo_keys[combo]);
+                     it != col_total_source_row.end()) {
+            total_row = it->second;
+          }
+          if (total_row.has_value() && detail::valid_at(total_source, *total_row)) {
+            const auto value = total_source.as_duration().host()[
+                static_cast<std::size_t>(*total_row)];
+            if (value != pluss::Duration::kNaT) {
+              values[out_rows] = value;
+              valid[out_rows] = true;
+            }
+          }
+        }
+        out_cols.emplace_back(
+            output_name,
+            pivot_apply_fill_(pivot_make_duration_thread_(values, valid),
+                              options.fill_value,
+                              false));
       } else if (integral_output) {
         std::vector<std::int64_t> values(final_rows, 0);
         std::vector<bool> valid(final_rows, false);
@@ -1130,6 +1203,38 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
         out_cols.emplace_back(
             output_name,
             pivot_apply_fill_(pivot_make_note_thread_(values, valid), options.fill_value, false));
+      } else if (total_source.kind() == ThreadKind::Duration) {
+        std::vector<std::int64_t> values(final_rows, 0);
+        std::vector<bool> valid(final_rows, false);
+        const auto total_values = total_source.as_duration().host();
+        for (std::size_t row_idx = 0; row_idx < out_rows; ++row_idx) {
+          const auto it = row_total_source_row.find(row_combo_keys[row_idx]);
+          if (it == row_total_source_row.end() ||
+              !detail::valid_at(total_source, it->second)) {
+            continue;
+          }
+          const auto value = total_values[static_cast<std::size_t>(it->second)];
+          if (value == pluss::Duration::kNaT) {
+            continue;
+          }
+          values[row_idx] = value;
+          valid[row_idx] = true;
+        }
+        if (add_margin_row && grand_totals->ncases() > 0) {
+          const auto total = grand_totals->features(spec.group_output);
+          if (detail::valid_at(total, 0)) {
+            const auto value = total.as_duration().host().front();
+            if (value != pluss::Duration::kNaT) {
+              values[out_rows] = value;
+              valid[out_rows] = true;
+            }
+          }
+        }
+        out_cols.emplace_back(
+            output_name,
+            pivot_apply_fill_(pivot_make_duration_thread_(values, valid),
+                              options.fill_value,
+                              false));
       } else if (integral_output) {
         std::vector<std::int64_t> values(final_rows, 0);
         std::vector<bool> valid(final_rows, false);
@@ -1381,7 +1486,7 @@ ContingencyTable ContingencyTable::slice_at_(std::size_t dim_index, std::int64_t
 
 pluss::Series ContingencyTable::materialized_values_() const {
   if (!counts_.defined()) {
-    return {};
+    return pluss::series::undefined();
   }
   if (normalize_ == Normalize::None) {
     return counts_;

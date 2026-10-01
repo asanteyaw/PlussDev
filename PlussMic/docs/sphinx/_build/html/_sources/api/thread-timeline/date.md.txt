@@ -13,7 +13,7 @@ ThreadTimelineAccessor::date() const -> Thread
 ## What It Does
 
 Replaces the bound thread with just its date portion (time-of-day dropped to
-midnight), in local wall time — same length, still `Timeline`/`TimeIndex`-kind.
+midnight), in local wall time — same length, still `Timeline`-kind.
 Equivalent to [`floor("D")`](floor.md).
 
 ## Parameters
@@ -23,7 +23,7 @@ Equivalent to [`floor("D")`](floor.md).
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind thread, same length as the bound thread,
     with its clock-time portion zeroed out.
 
 ## Examples
@@ -58,7 +58,7 @@ without any time-of-day text at all.
 ## Notes
 
 - Operates in **local wall time**, per the thread's current timezone.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

@@ -35,7 +35,7 @@ struct TTestResult : TestDecision {
   double mean = 0.0;
   double null_mean = 0.0;
   double stderr = 0.0;
-  pluss::codem::Series ci = pluss::codem::Series::undefined(); // [2]
+  pluss::codem::Series ci = pluss::series::undefined(); // [2]
   std::int64_t effective_n = 0;
 };
 
@@ -45,7 +45,7 @@ struct TTest2Result : TestDecision {
   double mean_y = 0.0;
   double stderr = 0.0;
   bool equal_variance = true;
-  pluss::codem::Series ci = pluss::codem::Series::undefined(); // [2], CI of mean_x - mean_y
+  pluss::codem::Series ci = pluss::series::undefined(); // [2], CI of mean_x - mean_y
   std::int64_t effective_nx = 0;
   std::int64_t effective_ny = 0;
 };
@@ -55,7 +55,7 @@ struct ZTestResult : TestDecision {
   double null_mean = 0.0;
   double sigma = 1.0;
   double stderr = 0.0;
-  pluss::codem::Series ci = pluss::codem::Series::undefined(); // [2]
+  pluss::codem::Series ci = pluss::series::undefined(); // [2]
   std::int64_t effective_n = 0;
 };
 
@@ -63,7 +63,7 @@ struct VarTestResult : TestDecision {
   double dof = 0.0;
   double sample_variance = 0.0;
   double null_variance = 0.0;
-  pluss::codem::Series ci = pluss::codem::Series::undefined(); // [2], CI of variance
+  pluss::codem::Series ci = pluss::series::undefined(); // [2], CI of variance
   std::int64_t effective_n = 0;
 };
 
@@ -72,7 +72,7 @@ struct VarTest2Result : TestDecision {
   double dof2 = 0.0;
   double var_x = 0.0;
   double var_y = 0.0;
-  pluss::codem::Series ci = pluss::codem::Series::undefined(); // [2], CI of var_x / var_y
+  pluss::codem::Series ci = pluss::series::undefined(); // [2], CI of var_x / var_y
   std::int64_t effective_nx = 0;
   std::int64_t effective_ny = 0;
 };
@@ -131,8 +131,8 @@ struct Anova1WResult : TestDecision {
   double ms_within = 0.0;
   std::int64_t groups = 0;
   std::int64_t effective_n = 0;
-  pluss::codem::Series group_means = pluss::codem::Series::undefined(); // [k]
-  pluss::codem::Series group_counts = pluss::codem::Series::undefined(); // [k]
+  pluss::codem::Series group_means = pluss::series::undefined(); // [k]
+  pluss::codem::Series group_counts = pluss::series::undefined(); // [k]
 };
 
 struct ChiGofOptions {
@@ -145,14 +145,14 @@ struct ChiGofResult : TestDecision {
   double dof = 0.0;
   double total_count = 0.0;
   std::int64_t bins = 0;
-  pluss::codem::Series expected = pluss::codem::Series::undefined(); // [k]
+  pluss::codem::Series expected = pluss::series::undefined(); // [k]
 };
 
 struct ChiIndepResult : TestDecision {
   double dof = 0.0;
   std::int64_t rows = 0;
   std::int64_t cols = 0;
-  pluss::codem::Series expected = pluss::codem::Series::undefined(); // [r,c]
+  pluss::codem::Series expected = pluss::series::undefined(); // [r,c]
 };
 
 using ArchLmOptions = ::pluss::subsp::stats::ts::ArchLmOptions;
@@ -269,7 +269,7 @@ CODEM_API VarTest2Result f_ratio(const pluss::codem::Series& x,
                                  pluss::codem::Config cfg = {});
 
 CODEM_API ChiGofResult chisq_gof(const pluss::codem::Series& observed,
-                                 const pluss::codem::Series& expected = pluss::codem::Series::undefined(),
+                                 const pluss::codem::Series& expected = pluss::series::undefined(),
                                  const ChiGofOptions& options = {},
                                  pluss::codem::Config cfg = {});
 

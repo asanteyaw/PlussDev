@@ -86,7 +86,7 @@ struct TinyForecastImpl final : pluss::nn::Module {
   pluss::nn::Fusion fc1;
   pluss::nn::Softplus softplus;
   pluss::nn::Fusion fc2;
-  pluss::Series running_mean;
+  pluss::Series running_mean = pluss::series::undefined();
 
   explicit TinyForecastImpl(const Config& cfg)
       : Module(true),
@@ -232,16 +232,16 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     return false;
   }
   pluss::nn::Schedule named_schedule;
-  named_schedule->then("encoder", pluss::nn::Fusion(2, 2, true, cfg, 57ULL));
-  named_schedule->then("act", pluss::nn::ReLU());
-  named_schedule->then("head", pluss::nn::Fusion(2, 1, true, cfg, 59ULL));
+  named_schedule->append("encoder", pluss::nn::Fusion(2, 2, true, cfg, 57ULL));
+  named_schedule->append("act", pluss::nn::ReLU());
+  named_schedule->append("head", pluss::nn::Fusion(2, 1, true, cfg, 59ULL));
   const auto named_schedule_modules = named_schedule->named_modules();
   if (named_schedule_modules.size() != 4 ||
       named_schedule_modules[0].name != "" ||
       named_schedule_modules[1].name != "encoder" ||
       named_schedule_modules[2].name != "act" ||
       named_schedule_modules[3].name != "head") {
-    if (err) *err << "Schedule then(name, layer) naming mismatch\n";
+    if (err) *err << "Schedule append(name, layer) naming mismatch\n";
     return false;
   }
 
@@ -275,8 +275,8 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
   const auto gru_split_params = make_gru_params();
   pluss::ai::rnn::NetWeight gru_unified_params = gru_split_params;
   gru_unified_params.bias = gru_split_params.bias_ih.add(gru_split_params.bias_hh);
-  gru_unified_params.bias_ih = Series();
-  gru_unified_params.bias_hh = Series();
+  gru_unified_params.bias_ih = pluss::series::undefined();
+  gru_unified_params.bias_hh = pluss::series::undefined();
   const Series gru_x = pluss::make_series(std::vector<double>{0.4, -0.2}, {1, 2}, cfg);
   const Series gru_h = pluss::make_series(std::vector<double>{0.3}, {1, 1}, cfg);
   const Series gru_split = pluss::ai::rnn::gru_impl(gru_x, gru_h, gru_split_params, true);
@@ -468,7 +468,7 @@ bool run_rnn_fusion_checks(std::ostream* err = nullptr) {
     bd_bwd.bias_hh = pluss::make_series(std::vector<double>{-0.05, 0.1, 0.0, 0.0, 0.1, 0.05, -0.05, -0.1}, {4 * bd_hidden}, cfg);
 
     const auto [bd_out, bd_state] = pluss::nn::lstm(
-        bd_x, Series(), Series(), std::vector<pluss::ai::rnn::NetWeight>{bd_fwd, bd_bwd},
+        bd_x, pluss::series::undefined(), pluss::series::undefined(), std::vector<pluss::ai::rnn::NetWeight>{bd_fwd, bd_bwd},
         pluss::ai::rnn::NetConfig{
             .training = false,
             .batch_first = false,

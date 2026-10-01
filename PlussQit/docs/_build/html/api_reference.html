@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=4d54f33d"></script>
+    <script src="_static/api_nav.js?v=d45ea178"></script>
     <script src="_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -71,61 +71,23 @@ construction, ranges, sampling, selection, and rendering in <code class="docutil
 per-method reference for <code class="docutils literal notranslate"><span class="pre">Duration</span></code> — the elapsed-time counterpart to
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, for <code class="docutils literal notranslate"><span class="pre">Timeline</span> <span class="pre">-</span> <span class="pre">Timeline</span></code> results and <code class="docutils literal notranslate"><span class="pre">Timeline</span> <span class="pre">±</span> <span class="pre">Duration</span></code>
 arithmetic.</p></li>
-<li><p><a class="reference internal" href="sphinx/timeindex_api_reference.html"><span class="std std-doc">TimeIndex API Reference</span></a>: the handwritten
-per-method reference for <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> — the 1D temporal axis object for search,
+<li><p><a class="reference internal" href="sphinx/duration_factory_api_reference.html"><span class="std std-doc">Duration Factory API Reference</span></a>:
+exact unit construction, progressions, shape-first allocation, sampling, and
+rendering in <code class="docutils literal notranslate"><span class="pre">pluss::duration</span></code>.</p></li>
+<li><p><a class="reference internal" href="sphinx/timeline_index_accessor_api_reference.html"><span class="std std-doc">Timeline Index Accessor API Reference</span></a>:
+the ordered-axis methods entered through <code class="docutils literal notranslate"><span class="pre">Timeline::index()</span></code> for search,
 slicing, resampling, rolling windows, and alignment.</p></li>
-<li><p><a class="reference internal" href="Series_Methods.html"><span class="std std-doc">Series Methods</span></a>: the naming-philosophy note (method-first vs.
-free functions, <code class="docutils literal notranslate"><span class="pre">pile</span></code>/<code class="docutils literal notranslate"><span class="pre">unite</span></code> naming deviations).</p></li>
+<li><p><a class="reference internal" href="sphinx/timeindex_factory_api_reference.html"><span class="std std-doc">TimeIndex Factory API Reference</span></a>:
+ordered-axis construction, regular ranges, buffer ownership, and rendering
+in <code class="docutils literal notranslate"><span class="pre">pluss::timeindex</span></code>.</p></li>
 <li><p><a class="reference internal" href="coden_method_index.html"><span class="std std-doc">Method Index</span></a>: a flat cross-referenced index of the whole
 surface, documented and not-yet-documented alike.</p></li>
-<li><p><a class="reference internal" href="Reductions.html"><span class="std std-doc">Reductions</span></a>: sum/mean/min/max/std and related reduction behavior.</p></li>
-<li><p><a class="reference internal" href="Stats.html"><span class="std std-doc">Statistics</span></a>: statistical operations available on <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
 </ul>
 <div class="toctree-wrapper compound">
 </div>
-</section>
-<section id="type-system-and-semantics">
-<h2>Type system and semantics<a class="headerlink" href="#type-system-and-semantics" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="API_Philosophy.html"><span class="std std-doc">API Philosophy</span></a>: the design principles the whole surface follows.</p></li>
-<li><p><a class="reference internal" href="TypePromotion.html"><span class="std std-doc">Type Promotion</span></a>: how mixed-dtype operations resolve a result type.</p></li>
-<li><p><a class="reference internal" href="Broadcasting.html"><span class="std std-doc">Broadcasting</span></a>: shape-compatibility rules for elementwise operations.</p></li>
-<li><p><a class="reference internal" href="NaN_Inf.html"><span class="std std-doc">NaN / Inf</span></a>: how missing and non-finite values are represented and handled.</p></li>
-<li><p><a class="reference internal" href="Complex.html"><span class="std std-doc">Complex</span></a>, <a class="reference internal" href="Float8.html"><span class="std std-doc">Float8</span></a>: specialized scalar type support.</p></li>
-</ul>
-</section>
-<section id="indexing-and-shape">
-<h2>Indexing and shape<a class="headerlink" href="#indexing-and-shape" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="IndexingParity.html"><span class="std std-doc">Indexing Parity</span></a>, <a class="reference internal" href="Indexing_Scatter.html"><span class="std std-doc">Indexing / Scatter</span></a>: how
-element access and scatter-style writes behave.</p></li>
-<li><p><a class="reference internal" href="ReshapeAndViews.html"><span class="std std-doc">Reshape and Views</span></a>, <a class="reference internal" href="View_Invariants.html"><span class="std std-doc">View Invariants</span></a>: what a
-reshape or view does and does not guarantee.</p></li>
-<li><p><a class="reference internal" href="Scatter.html"><span class="std std-doc">Scatter</span></a>, <a class="reference internal" href="ScatterReduce.html"><span class="std std-doc">Scatter/Reduce</span></a>: scatter-with-reduction
-operations.</p></li>
-</ul>
-</section>
-<section id="construction-and-configuration">
-<h2>Construction and configuration<a class="headerlink" href="#construction-and-configuration" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="Factories.html"><span class="std std-doc">Factories</span></a>, <a class="reference internal" href="Factories_Config.html"><span class="std std-doc">Factories / Config</span></a>: how <code class="docutils literal notranslate"><span class="pre">Series</span></code> and
-related objects are constructed.</p></li>
-<li><p><a class="reference internal" href="Config.html"><span class="std std-doc">Config</span></a>: library-wide configuration knobs.</p></li>
-<li><p><a class="reference internal" href="Ownership.html"><span class="std std-doc">Ownership</span></a>: value/reference ownership semantics.</p></li>
-</ul>
-</section>
-<section id="errors">
-<h2>Errors<a class="headerlink" href="#errors" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="ErrorHandling.html"><span class="std std-doc">Error Handling</span></a>: the exception and error-reporting model.</p></li>
-<li><p><a class="reference internal" href="Errors_StackTrace.html"><span class="std std-doc">Errors / Stack Trace</span></a>: diagnostic context attached to errors.</p></li>
-</ul>
-</section>
-<section id="everything-else">
-<h2>Everything else<a class="headerlink" href="#everything-else" title="Link to this heading">¶</a></h2>
-<p>Every other <code class="docutils literal notranslate"><span class="pre">.md</span></code> file in this folder (design notes, patch logs, roadmap tracking) is
-still reachable from the <a class="reference internal" href="index.html"><span class="std std-doc">documentation map</span></a> and searchable from this site’s
-search box, even though it isn’t singled out above.</p>
+<p>The family references are the public documentation. Historical omnibus pages,
+code-generation notes, patch logs, and authoring standards remain in the source tree
+for maintainers but are intentionally excluded from the published site.</p>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="index.html">
     <span class="label">Previous</span>
@@ -164,54 +126,13 @@ search box, even though it isn’t singled out above.</p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">PlussQit API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">PlussQit API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>

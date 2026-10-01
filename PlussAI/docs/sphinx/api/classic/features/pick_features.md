@@ -17,6 +17,15 @@ classic::StatusOr<classic::FeaturePickResult> classic::pick_features(
     const classic::FeaturePickOptions& options = {});
 ```
 
+## What It Does
+
+Scores and ranks `batch`'s features exactly the way
+[`rank_features`](rank_features.md) does, then reduces `batch` itself down
+to just the top-`k` (or top-fraction) columns and hands back the resulting
+[`FeatureBatch`](../data/FeatureBatch.md) -- the one call to reach for when
+the goal is a smaller, ready-to-use batch rather than the ranking
+indices/scores alone.
+
 ## Parameters
 
 `batch`

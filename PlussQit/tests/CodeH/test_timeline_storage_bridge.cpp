@@ -111,15 +111,15 @@ TEST_CASE("Timeline promotion to TimeIndex enforces the requested invariant",
   const auto sorted = pluss::timeline::make({
       "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z",
   });
-  REQUIRE(sorted.to_timeindex().size() == 2);
+  REQUIRE(sorted.index().size() == 2);
 
   const auto unsorted = pluss::timeline::make({
       "2024-01-01T01:00:00Z", "2024-01-01T00:00:00Z",
   });
-  REQUIRE_THROWS(unsorted.to_timeindex());
-  REQUIRE(unsorted.to_timeindex(false).size() == 2);
-  REQUIRE_THROWS(pluss::timeline::make({""}).to_timeindex());
-  REQUIRE_THROWS(pluss::timeline::make("2024-01-01T00:00:00Z").to_timeindex());
+  REQUIRE_THROWS(unsorted.index());
+  REQUIRE(unsorted.index(false).size() == 2);
+  REQUIRE_THROWS(pluss::timeline::make({""}).index());
+  REQUIRE_THROWS(pluss::timeline::make("2024-01-01T00:00:00Z").index());
 }
 
 TEST_CASE("Timeline operators preserve temporal types and elementwise comparison semantics",
@@ -130,7 +130,7 @@ TEST_CASE("Timeline operators preserve temporal types and elementwise comparison
 
   REQUIRE((base + delta).ticks() ==
           (delta + base).ticks());
-  REQUIRE(((base + delta) - base).to_nanos_flat() == delta.to_nanos_flat());
+  REQUIRE(((base + delta) - base).host() == delta.host());
 
   auto changed = base;
   changed += pluss::duration::hours(1);

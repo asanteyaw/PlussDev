@@ -79,14 +79,14 @@ struct PolyOptions {
 };
 
 struct CODEM_API OLSFitResult {
-  pluss::codem::Series coefficients = pluss::codem::Series::undefined();   // [k]
-  pluss::codem::Series std_errors = pluss::codem::Series::undefined();     // [k]
-  pluss::codem::Series t_values = pluss::codem::Series::undefined();       // [k]
-  pluss::codem::Series p_values = pluss::codem::Series::undefined();       // [k]
-  pluss::codem::Series conf_int = pluss::codem::Series::undefined();       // [k,2]
-  pluss::codem::Series covariance = pluss::codem::Series::undefined();     // [k,k]
-  pluss::codem::Series fitted_values = pluss::codem::Series::undefined();  // [n]
-  pluss::codem::Series residuals = pluss::codem::Series::undefined();      // [n]
+  pluss::codem::Series coefficients = pluss::series::undefined();   // [k]
+  pluss::codem::Series std_errors = pluss::series::undefined();     // [k]
+  pluss::codem::Series t_values = pluss::series::undefined();       // [k]
+  pluss::codem::Series p_values = pluss::series::undefined();       // [k]
+  pluss::codem::Series conf_int = pluss::series::undefined();       // [k,2]
+  pluss::codem::Series covariance = pluss::series::undefined();     // [k,k]
+  pluss::codem::Series fitted_values = pluss::series::undefined();  // [n]
+  pluss::codem::Series residuals = pluss::series::undefined();      // [n]
 
   std::int64_t nobs = 0;
   std::int64_t rank = 0;
@@ -127,15 +127,15 @@ struct CODEM_API OLSFitResult {
 };
 
 struct CODEM_API GLMFitResult {
-  pluss::codem::Series coefficients = pluss::codem::Series::undefined();   // [k]
-  pluss::codem::Series std_errors = pluss::codem::Series::undefined();     // [k]
-  pluss::codem::Series z_values = pluss::codem::Series::undefined();       // [k]
-  pluss::codem::Series p_values = pluss::codem::Series::undefined();       // [k]
-  pluss::codem::Series conf_int = pluss::codem::Series::undefined();       // [k,2]
-  pluss::codem::Series covariance = pluss::codem::Series::undefined();     // [k,k]
-  pluss::codem::Series fitted_values = pluss::codem::Series::undefined();  // [n]
-  pluss::codem::Series linear_predictor = pluss::codem::Series::undefined(); // [n]
-  pluss::codem::Series residuals = pluss::codem::Series::undefined();      // [n]
+  pluss::codem::Series coefficients = pluss::series::undefined();   // [k]
+  pluss::codem::Series std_errors = pluss::series::undefined();     // [k]
+  pluss::codem::Series z_values = pluss::series::undefined();       // [k]
+  pluss::codem::Series p_values = pluss::series::undefined();       // [k]
+  pluss::codem::Series conf_int = pluss::series::undefined();       // [k,2]
+  pluss::codem::Series covariance = pluss::series::undefined();     // [k,k]
+  pluss::codem::Series fitted_values = pluss::series::undefined();  // [n]
+  pluss::codem::Series linear_predictor = pluss::series::undefined(); // [n]
+  pluss::codem::Series residuals = pluss::series::undefined();      // [n]
 
   std::int64_t nobs = 0;
   std::int64_t rank = 0;
@@ -166,14 +166,14 @@ struct CODEM_API GLMFitResult {
 };
 
 struct CODEM_API QuantileFitResult {
-  pluss::codem::Series coefficients = pluss::codem::Series::undefined();   // [k]
-  pluss::codem::Series std_errors = pluss::codem::Series::undefined();     // [k]
-  pluss::codem::Series t_values = pluss::codem::Series::undefined();       // [k]
-  pluss::codem::Series p_values = pluss::codem::Series::undefined();       // [k]
-  pluss::codem::Series conf_int = pluss::codem::Series::undefined();       // [k,2]
-  pluss::codem::Series covariance = pluss::codem::Series::undefined();     // [k,k]
-  pluss::codem::Series fitted_values = pluss::codem::Series::undefined();  // [n]
-  pluss::codem::Series residuals = pluss::codem::Series::undefined();      // [n]
+  pluss::codem::Series coefficients = pluss::series::undefined();   // [k]
+  pluss::codem::Series std_errors = pluss::series::undefined();     // [k]
+  pluss::codem::Series t_values = pluss::series::undefined();       // [k]
+  pluss::codem::Series p_values = pluss::series::undefined();       // [k]
+  pluss::codem::Series conf_int = pluss::series::undefined();       // [k,2]
+  pluss::codem::Series covariance = pluss::series::undefined();     // [k,k]
+  pluss::codem::Series fitted_values = pluss::series::undefined();  // [n]
+  pluss::codem::Series residuals = pluss::series::undefined();      // [n]
 
   std::int64_t nobs = 0;
   std::int64_t rank = 0;

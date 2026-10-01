@@ -59,7 +59,7 @@ city
 - [`AxelFieldAxisAccessor::kind`](kind.md): the general form this
   method is a fixed shorthand for.
 - [`AxelFieldAxisAccessor::series`](series.md) /
-  [`timeline`](timeline.md) / [`timeindex`](timeindex.md): the
+  [`timeline`](timeline.md) / : the
   shorthands for the other value kinds.
 
 <div class="pluss-inline-prev-next">

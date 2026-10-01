@@ -17,9 +17,7 @@ compiled-and-run examples under every code block.
   section for anything differentiable, verified output under every example, and
   working previous/next navigation.
 - This landing page stays intentionally short so the content panel is not one giant
-  scroll of every method. Use the left sidebar as the primary lookup index, and
-  see [`Series_Methods`](../Series_Methods.md) for the broader method
-  naming-and-organization note.
+  scroll of every method. Use the left sidebar as the primary lookup index.
 
 ## Coverage
 
@@ -45,7 +43,7 @@ The current handwritten shape and slice/indexing cluster now covers:
 - activations II: `gelu`, `silu`, `softplus`, `leaky_relu`, `prelu`, `logit`,
   `hardshrink`
 - probability normalization: `softmax`, `log_softmax`
-- broadcast & tiling: `broadcast_to`, `expand`, `expand_as`, `repeat`, `tile`,
+- broadcast and repetition: `broadcast_to`, `expand`, `expand_as`, `repeat`,
   `repeat_interleave`
 - windowed / gather / difference: `unfold`, `take_along_dim`, `narrow_copy`,
   `diff`, `ravel`
@@ -118,7 +116,7 @@ The current handwritten shape and slice/indexing cluster now covers:
   `argmin`, `amax`, `amin`, `norm`, `cumsum`, `cumprod`
 - autodiff and state controls: `tracks_slope`, `tracks_slope_`, `reverse`,
   `detach`, `detach_`, `retain_grad`, `retains_grad`, `has_sensitivity`,
-  `sensitivity`, `clear_sensitivity`, `storage_version`
+  `sensitivity`, `clear`, `storage_version`
 - accessors: `stat`
 - linear-algebra accessor entrypoint: `linearalg`, with its complete product,
   determinant, transformation, factorization, norm, and solver surface
@@ -160,17 +158,23 @@ matched values, and flat offsets of every position that satisfies it.
 :hidden:
 :maxdepth: 1
 
+series_stat_accessor_api_reference
+series_linearalg_accessor_api_reference
+series_traverse_accessor_api_reference
+series_antidiff_accessor_api_reference
 api/series/abs
 api/series/abs2
 api/series/acos
 api/series/acosh
 api/series/add
+api/series/addbmm
 api/series/addcdiv
 api/series/addcmul
 api/series/addmm
 api/series/addmv
 api/series/addr
 api/series/adjoint
+api/series/airy
 api/series/all
 api/series/allclose
 api/series/amax
@@ -182,49 +186,62 @@ api/series/any
 api/series/argmax
 api/series/argmin
 api/series/argsort
+api/series/as_strided
 api/series/asin
 api/series/asinh
 api/series/atan
 api/series/atan2
 api/series/atanh
 api/series/baddbmm
-api/series/beta
 api/series/bernoulli
 api/series/bernoulli_
+api/series/besseli
+api/series/besselj
+api/series/besselk
+api/series/bessely
+api/series/beta
+api/series/betaln
 api/series/bincount
 api/series/bitwise_and
+api/series/bitwise_left_shift
 api/series/bitwise_not
 api/series/bitwise_or
+api/series/bitwise_right_shift
 api/series/bitwise_xor
 api/series/block
 api/series/bmm
 api/series/broadcast_to
 api/series/cartprod
-api/series/cbrt
 api/series/cauchy_
+api/series/cbrt
 api/series/ceil
+api/series/celu
 api/series/center
 api/series/chunk
+api/series/clamp
 api/series/clamp_max
 api/series/clamp_min
-api/series/clear_sensitivity
+api/series/clear
 api/series/clone
 api/series/comp
 api/series/conj
+api/series/conj_physical
 api/series/contiguous
 api/series/copy_
 api/series/copysign
 api/series/corrcoef
-api/series/count
-api/series/count_nonzero
 api/series/cos
 api/series/cosh
+api/series/count
+api/series/count_nonzero
 api/series/cov
+api/series/cplxpair
 api/series/cross
 api/series/cummax
 api/series/cummin
 api/series/cumprod
 api/series/cumsum
+api/series/dct
 api/series/deg2rad
 api/series/detach
 api/series/detach_
@@ -239,7 +256,10 @@ api/series/dim
 api/series/dist
 api/series/div
 api/series/dsplit
+api/series/dst
 api/series/dtype
+api/series/ediff1d
+api/series/elu
 api/series/eq
 api/series/equal
 api/series/erf
@@ -250,13 +270,16 @@ api/series/exp
 api/series/exp2
 api/series/expand
 api/series/expand_as
-api/series/exponential_
 api/series/expm1
+api/series/exponential_
 api/series/extract
 api/series/extract_put
 api/series/extract_put_
 api/series/factor
 api/series/factorial
+api/series/fftshift
+api/series/fill
+api/series/fill_diagonal
 api/series/flatten
 api/series/flip
 api/series/fliplr
@@ -272,9 +295,9 @@ api/series/frexp
 api/series/gather
 api/series/gcd
 api/series/ge
+api/series/gelu
 api/series/geometric_
 api/series/ger
-api/series/gelu
 api/series/grouped_count
 api/series/grouped_max
 api/series/grouped_mean
@@ -286,13 +309,19 @@ api/series/grouped_sum
 api/series/grouped_var
 api/series/gt
 api/series/hardshrink
+api/series/hardsigmoid
+api/series/hardswish
 api/series/has_sensitivity
 api/series/heaviside
+api/series/hilbert
 api/series/histc
 api/series/histogram
 api/series/hsplit
 api/series/hypot
 api/series/i0
+api/series/idct
+api/series/idst
+api/series/ifftshift
 api/series/igamma
 api/series/igammac
 api/series/imag
@@ -328,9 +357,15 @@ api/series/isfinite
 api/series/isin
 api/series/isinf
 api/series/isnan
+api/series/isneginf
+api/series/isposinf
+api/series/isreal
+api/series/istft
+api/series/item
 api/series/kron
 api/series/kthvalue
 api/series/kurtosis
+api/series/layer_norm
 api/series/lcm
 api/series/ldexp
 api/series/le
@@ -338,12 +373,12 @@ api/series/leaky_relu
 api/series/lerp
 api/series/lgamma
 api/series/linearalg
-api/series/log_normal_
 api/series/log
-api/series/log_softmax
 api/series/log10
 api/series/log1p
 api/series/log2
+api/series/log_normal_
+api/series/log_softmax
 api/series/logaddexp
 api/series/logaddexp2
 api/series/logcumsumexp
@@ -355,16 +390,20 @@ api/series/logical_xor
 api/series/logit
 api/series/logsumexp
 api/series/lt
+api/series/mT
 api/series/masked_fill
 api/series/masked_scatter
 api/series/masked_scatter_
 api/series/masked_select
 api/series/max
+api/series/max_pair
 api/series/maximum
 api/series/mean
 api/series/median
 api/series/min
+api/series/min_pair
 api/series/minimum
+api/series/mish
 api/series/mode
 api/series/moveaxis
 api/series/movedim
@@ -390,7 +429,9 @@ api/series/numel
 api/series/outer
 api/series/permute
 api/series/pile
+api/series/platform
 api/series/polygamma
+api/series/positive
 api/series/pos
 api/series/pow
 api/series/prelu
@@ -398,23 +439,27 @@ api/series/prime
 api/series/prod
 api/series/put_
 api/series/quantile
-api/series/random_
 api/series/rad2deg
+api/series/random_
 api/series/ravel
 api/series/real
 api/series/reciprocal
 api/series/relu
 api/series/remainder
+api/series/rename
 api/series/renorm
 api/series/repeat
 api/series/repeat_interleave
 api/series/reshape
+api/series/resize
+api/series/resize_as
 api/series/retain_grad
 api/series/retains_grad
 api/series/reverse
 api/series/roll
-api/series/round
 api/series/rot90
+api/series/round
+api/series/rrelu
 api/series/rsqrt
 api/series/scatter
 api/series/scatter_
@@ -427,7 +472,9 @@ api/series/scatter_reduce_amin
 api/series/scatter_reduce_sum
 api/series/select
 api/series/select_scatter
+api/series/selu
 api/series/sensitivity
+api/series/set
 api/series/setdiff1d
 api/series/setdiff_along
 api/series/setxor1d
@@ -448,17 +495,23 @@ api/series/slice_scatter
 api/series/softmax
 api/series/softplus
 api/series/sort
+api/series/sort_pair
 api/series/split
+api/series/split_with_sizes
+api/series/sparse_resize
 api/series/sqrt
 api/series/square
 api/series/squeeze
 api/series/standardize
 api/series/stat
 api/series/std
+api/series/stft
 api/series/storage_version
 api/series/stride
+api/series/strides
 api/series/sub
 api/series/sum
+api/series/sum_to_size
 api/series/swapaxes
 api/series/swapdims
 api/series/t
@@ -468,9 +521,11 @@ api/series/tan
 api/series/tanh
 api/series/tensor
 api/series/tensor_split
-api/series/tile
+api/series/threshold
+api/series/threshold_
 api/series/to
 api/series/topk
+api/series/topk_pair
 api/series/trace
 api/series/tracks_slope
 api/series/tracks_slope_
@@ -485,25 +540,24 @@ api/series/triu
 api/series/triu_
 api/series/trunc
 api/series/unbind
+api/series/unflatten
 api/series/unfold
-api/series/unique
+api/series/uniform_
 api/series/union1d
 api/series/unionize
 api/series/unionize_along
-api/series/uniform_
+api/series/unique
 api/series/unite
 api/series/unsqueeze
+api/series/unwrap
 api/series/var
 api/series/view
 api/series/vsplit
 api/series/where
 api/series/where_
 api/series/xlogy
+api/series/zero
 api/series/zeta
-series_stat_accessor_api_reference
-series_linearalg_accessor_api_reference
-series_traverse_accessor_api_reference
-series_antidiff_accessor_api_reference
 ```
 
 <div class="pluss-inline-prev-next">

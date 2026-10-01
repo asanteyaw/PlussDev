@@ -15,6 +15,14 @@ classic::StatusOr<pluss::Series> classic::regression_metrics(
     const std::vector<classic::MetricKind>& metrics = {});
 ```
 
+## What It Does
+
+Computes the requested regression `metrics` -- Mse, Rmse, Mae, and/or R2 --
+directly from a truth vector and a prediction vector, with no model or
+batch involved. Reach for this when predictions came from somewhere other
+than a direct `RegressorBase::infer` call, such as after inverse-
+transforming predictions back out of a rescaled label space.
+
 ## Parameters
 
 `truth` / `prediction`

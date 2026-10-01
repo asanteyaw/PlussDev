@@ -9,6 +9,7 @@
 ```cpp
 Series::log2() const -> Series
 Series& Series::log2_()
+Series& Series::log2_() const
 ```
 
 ## What It Does
@@ -49,6 +50,31 @@ d/dx log2(x) = 1 / (x * ln 2)
 
 That is the natural-log derivative `1/x` scaled by `1 / ln 2` (about `1.4427`).
 The gradient is large near `x = 0` and shrinks as `x` grows.
+
+## In-Place Form
+
+`log2_()` is the in-place sibling of [`log2()`](log2.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `log2_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 8.0});
+
+auto& ref = x.log2_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1, 3]
+same object: true
+```
 
 ## Examples
 

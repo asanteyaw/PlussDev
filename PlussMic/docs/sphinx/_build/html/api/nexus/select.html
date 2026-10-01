@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,6 +43,9 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Nexus</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">Nexus</span><span class="o">::</span><span class="n">select</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">keys</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Nexus</span>
 </pre></div>
 </div>
 </section>
@@ -66,70 +69,84 @@ valid on the selected key set.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>keys</strong> (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>)</p>
-<p>The table names to keep.</p>
+<p><strong>keys</strong> (a range of <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> — a brace literal, a named
+container such as <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>,
+or any other range whose elements convert to <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The table names to keep, in iteration order.</p>
 <ul class="simple">
 <li><p>Each key must be non-empty.</p></li>
 <li><p>Each key must be unique within the request itself.</p></li>
 <li><p>Each key must already exist in the source workspace.</p></li>
-<li><p>Request order becomes output order.</p></li>
+<li><p><strong>Iteration order becomes output order</strong> — not necessarily <em>your</em> intended
+order. A brace literal or <code class="docutils literal notranslate"><span class="pre">std::vector</span></code> iterates in the order you wrote it;
+an <em>ordered</em> container like <code class="docutils literal notranslate"><span class="pre">std::set</span></code> iterates in <em>its own</em> sorted order
+regardless of how you inserted into it — see Example 4.</p></li>
 </ul>
-<p>An empty list is allowed and produces a defined but empty workspace.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Nexus</span></code>
-A new workspace containing exactly the requested tables, in request order.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>The source `Nexus` is unchanged.
-</pre></div>
-</div>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Keep two named tables and reorder them deliberately.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<p>An empty range is allowed and produces a defined but empty workspace.</p>
+<p>```{note} <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView</span></code> is never spelled out in these examples
+<code class="docutils literal notranslate"><span class="pre">RangeView::Of&lt;std::string_view&gt;</span></code> has implicit constructors from a brace
+list, a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code>, and other contiguous containers, so
+passing any of those at a call site works without ever naming <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>
+yourself. Example 1 below uses a brace literal (the dedicated
+<code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> overload exists specifically to keep that call
+unambiguous); Examples 2 and 3 pass a named container instead, to exercise
+the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> and templated overloads respectively without naming either.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Returns
 
-<span class="k">auto</span><span class="w"> </span><span class="n">print_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">Nexus</span><span class="o">&amp;</span><span class="w"> </span><span class="n">nx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">ntables</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">      </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">keys</span><span class="p">()[</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)];</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="p">};</span>
+`Nexus`
+    A new workspace containing exactly the requested tables, in request order.
 
-<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
+    The source `Nexus` is unchanged.
 
-<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
-<span class="p">});</span>
+## Examples
 
-<span class="k">auto</span><span class="w"> </span><span class="n">payments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;payment_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">9001.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9002.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">}))},</span>
-<span class="p">});</span>
+Example 1. Keep two named tables and reorder them deliberately.
 
-<span class="k">auto</span><span class="w"> </span><span class="n">refunds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;refund_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">77.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">102.0</span><span class="p">}))},</span>
-<span class="p">});</span>
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
 
-<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;payments&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">payments</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;refunds&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">refunds</span><span class="p">},</span>
-<span class="p">});</span>
+auto print_keys = [](const Nexus&amp; nx) {
+  for (std::int64_t i = 0; i &lt; nx.ntables(); ++i) {
+    if (i &gt; 0) {
+      std::cout &lt;&lt; &quot;, &quot;;
+    }
+    std::cout &lt;&lt; nx.keys()[static_cast&lt;std::size_t&gt;(i)];
+  }
+  std::cout &lt;&lt; &quot;\n&quot;;
+};
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">({</span><span class="s">&quot;payments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">});</span>
-<span class="n">print_keys</span><span class="p">(</span><span class="n">out</span><span class="p">);</span>
-<span class="n">print_keys</span><span class="p">(</span><span class="n">biz</span><span class="p">);</span>
+auto customers = DataFrame({
+    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {&quot;name&quot;,        Thread(pluss::make_note({&quot;Ada&quot;, &quot;Ben&quot;, &quot;Cy&quot;}))},
+});
+
+auto orders = DataFrame({
+    {&quot;order_id&quot;,    Thread(pluss::make_series({101.0, 102.0}))},
+    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0}))},
+});
+
+auto payments = DataFrame({
+    {&quot;payment_id&quot;, Thread(pluss::make_series({9001.0, 9002.0}))},
+    {&quot;order_id&quot;,   Thread(pluss::make_series({101.0, 102.0}))},
+});
+
+auto refunds = DataFrame({
+    {&quot;refund_id&quot;, Thread(pluss::make_series({77.0}))},
+    {&quot;order_id&quot;,  Thread(pluss::make_series({102.0}))},
+});
+
+auto biz = Nexus({
+    {&quot;customers&quot;, customers},
+    {&quot;orders&quot;, orders},
+    {&quot;payments&quot;, payments},
+    {&quot;refunds&quot;, refunds},
+});
+
+auto out = biz.select({&quot;payments&quot;, &quot;customers&quot;});
+print_keys(out);
+print_keys(biz);
 </pre></div>
 </div>
 <section id="output">
@@ -138,18 +155,72 @@ A new workspace containing exactly the requested tables, in request order.</p>
 customers, orders, payments, refunds
 </pre></div>
 </div>
-<p>Example 2. Continuing from Example 1, selecting an empty key list produces an
-empty but still defined workspace.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">({}).</span><span class="n">ntables</span><span class="p">();</span>
+<p>Example 2. Continuing from Example 1: the same request via a named
+<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code> — the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload, reached without
+naming <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> anywhere.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;payments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">keep</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">ntables</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">()[</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)];</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>payments, customers
+</pre></div>
+</div>
+<p>Example 3. Continuing from Example 1: a named <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>
+(owning strings, not views) reaches the templated overload instead, since
+<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>’s vector constructor requires the exact element type
+<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> — <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> doesn’t match it, but does
+satisfy the broader <code class="docutils literal notranslate"><span class="pre">StringViewNameRange</span></code> concept. Same result either way.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;payments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">keep</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">ntables</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">()[</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>payments, customers
+</pre></div>
+</div>
+<p>Example 4. The iteration-order gotcha: a <code class="docutils literal notranslate"><span class="pre">std::set&lt;std::string_view&gt;</span></code> also
+reaches the templated overload, but a <code class="docutils literal notranslate"><span class="pre">std::set</span></code> iterates in <em>sorted</em> order —
+not insertion order — so the request <code class="docutils literal notranslate"><span class="pre">{&quot;payments&quot;,</span> <span class="pre">&quot;customers&quot;}</span></code> produces
+<code class="docutils literal notranslate"><span class="pre">customers,</span> <span class="pre">payments</span></code>, not <code class="docutils literal notranslate"><span class="pre">payments,</span> <span class="pre">customers</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">keep</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;payments&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">keep</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">ntables</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">keys</span><span class="p">()[</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>customers, payments
+</pre></div>
+</div>
+<p>Example 5. Continuing from Example 1, selecting an empty key list produces an
+empty but still defined workspace.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">({}).</span><span class="n">ntables</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0
 </pre></div>
 </div>
-<p>Example 3. Continuing from Example 1, validation is strict: empty request keys,
+<p>Example 6. Continuing from Example 1, validation is strict: empty request keys,
 duplicate request keys, and unknown keys all throw.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">select</span><span class="p">({</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">});</span>
@@ -174,8 +245,8 @@ duplicate request keys, and unknown keys all throw.</p>
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::select: key cannot be empty
 Nexus::select: duplicate key &#39;orders&#39;
 Nexus::select: unknown key &#39;missing&#39;

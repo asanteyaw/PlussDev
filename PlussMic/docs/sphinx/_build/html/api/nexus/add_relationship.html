@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -221,6 +221,20 @@ Nexus::add_relationship: relationship keys cannot be empty
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
 </pre></div>
 </div>
+<p>Example 6. <code class="docutils literal notranslate"><span class="pre">add_relationships_</span></code> mutates the current handle in place with the
+same batch semantics.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mutable_biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">;</span>
+<span class="n">mutable_biz</span><span class="p">.</span><span class="n">add_relationships_</span><span class="p">({</span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">second</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">nrelationships</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mutable_biz</span><span class="p">.</span><span class="n">nrelationships</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0 2
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">
@@ -248,6 +262,10 @@ them by hand.</p></li>
 relationship actually holds against the current data.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
+  <a class="prev-link" href="../../nexus_api_reference.html">
+    <span class="label">Previous</span>
+    <span class="title">Nexus API Reference</span>
+  </a>
   <a class="next-link" href="apply.html">
     <span class="label">Next</span>
     <span class="title">apply</span>

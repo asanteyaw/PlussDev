@@ -9,6 +9,7 @@
 ```cpp
 Series::atan2(const Series& other) const -> Series
 Series& Series::atan2_(const Series& other)
+Series& Series::atan2_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -60,6 +61,30 @@ That gradient is the same as the tangential unit vector scaled by `1 / r`: a
 small change in the point perpendicular to the radius changes the angle, a
 change along the radius does not. The derivative blows up as `(x, y)`
 approaches the origin, where the angle is genuinely ill-defined.
+
+## In-Place Form
+
+`atan2_()` is the in-place sibling of [`atan2()`](atan2.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `atan2_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 1.0}, {2});
+auto y = pluss::make_series({1.0, -1.0}, {2});
+
+x.atan2_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.78539816, 2.3561945]
+```
 
 ## Examples
 
@@ -154,6 +179,13 @@ data=[0.7854, -0.7854]
 - range `(-pi, pi]`; `atan2(0, 0) = 0`
 - the angular half of polar form, paired with [`hypot()`](hypot.md)
 - differentiable, gradient `(x / r2, -y / r2)` with `r2 = x^2 + y^2`
+
+## Aliases
+
+**`arctan2()`** / **`arctan2_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `atan2()` / `atan2_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

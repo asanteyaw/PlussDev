@@ -13,7 +13,7 @@ AtlasTimelineAccessor::weekday_name() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with its
+Replaces every `Timeline` feature in **every frame of the stack** with its
 full English weekday name, as a `Note` (text) `Series` — the same transform
 [`DataFrame::tl().weekday_name()`](../dataframe-timeline/weekday_name.md) applies to a
 single frame, broadcast across the whole `Atlas` via
@@ -74,7 +74,7 @@ std::cout << out.frame(0) << "\n" << out.frame(1);
 - Always the full English name (`"Monday"`, not `"Mon"`); use [`fmt("%a")`](fmt.md) for
   the abbreviated three-letter form.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row displays as `"NULL"` in the output, same as on a single frame — see
   [`AtlasTimelineAccessor::isnat`](isnat.md).

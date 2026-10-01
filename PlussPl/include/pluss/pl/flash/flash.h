@@ -102,10 +102,6 @@ template <ArithmeticRange Range>
   return timeline.epoch_nanos().to(ScalarType::Float64).reshape({timeline.numel()});
 }
 
-[[nodiscard]] inline Series to_series(const TimeIndex& index) {
-  return index.timeline().epoch_nanos().to(ScalarType::Float64).reshape({index.size()});
-}
-
 inline void require_rank_at_most(const Series& values, std::int64_t max_rank, std::string_view where) {
   PLUSS_CHECK(
       values.dim() <= max_rank,
@@ -912,7 +908,7 @@ inline void downsample_columns(
 
 [[nodiscard]] inline Series matrix_from_columns(pluss::msharp::RangeView::Series columns, std::int64_t rows) {
   if (columns.empty()) {
-    return {};
+    return pluss::series::undefined();
   }
   std::vector<Series> normalized;
   normalized.reserve(columns.size());
@@ -1004,7 +1000,7 @@ inline void downsample_columns(
 struct FieldmapGrid {
   std::vector<double> x{};
   std::vector<double> y{};
-  Series z{};
+  Series z = pluss::series::undefined();
 };
 
 [[nodiscard]] inline Series apply_heatmap_limits_and_mask(

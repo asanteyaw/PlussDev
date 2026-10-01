@@ -64,7 +64,7 @@ id                       | Series       | Series[float64]  | 2       | [1, 2]
 ## See Also
 
 - [`CatalogKeyAxisAccessor::note`](note.md) / [`timeline()`](timeline.md) /
-  [`timeindex()`](timeindex.md): the shorthands for the other scalar kinds.
+  : the shorthands for the other scalar kinds.
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
   is reached from.
 - [`RegistryFieldAxisAccessor::series`](../registry-fieldaxis/series.md): the

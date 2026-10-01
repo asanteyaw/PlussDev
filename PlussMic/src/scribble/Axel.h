@@ -85,7 +85,6 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Axel fillnull(const pluss::Timeline& value) const;
-  Axel fillnull(const pluss::TimeIndex& value) const;
   Axel dropnull() const;
   Axel distinct(pluss::kindle::DistinctOptions options = {}) const;
   Axel freq(pluss::kindle::FreqOptions options = {}) const;
@@ -118,7 +117,7 @@ public:
   Axel series() const;
   Axel note() const;
   Axel timeline() const;
-  Axel timeindex() const;
+  Axel duration() const;
   Axel mixed() const;
   Axel nulls() const;
   Axel empty() const;
@@ -136,7 +135,7 @@ public:
   Axel series() const;
   Axel note() const;
   Axel timeline() const;
-  Axel timeindex() const;
+  Axel duration() const;
 
 private:
   Axel base_{};
@@ -221,7 +220,6 @@ public:
   Axel tz(std::string_view name) const;
   Axel localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Axel utc() const;
-  Axel index(bool require_sorted = true) const;
 
 private:
   Axel base_{};

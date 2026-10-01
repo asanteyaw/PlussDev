@@ -71,6 +71,10 @@ TEST_CASE("interior-point exact curvature converges on nonlinear barrier objecti
   CAPTURE(result.output.detail_message);
   CAPTURE(result.evaluation.max_constraint_violation);
   CAPTURE(result.output.complementarity);
+  CAPTURE(result.output.first_order_optimality);
+  CAPTURE(result.evaluation.first_order_opt);
+  CAPTURE(result.evaluation.gradient.at("x0").item<double>());
+  CAPTURE(result.evaluation.gradient.at("x1").item<double>());
   CAPTURE(result.evaluation.value.item<double>());
   CAPTURE(result.params.at("x0").item<double>());
   CAPTURE(result.params.at("x1").item<double>());

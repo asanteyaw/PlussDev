@@ -37,7 +37,7 @@ enum class ResampleOp : std::uint8_t {
 
 struct ResampleResult {
   std::optional<pluss::Timeline> labels{};
-  pluss::codem::Series values = pluss::codem::Series::undefined();
+  pluss::codem::Series values = pluss::series::undefined();
 };
 
 CODEM_API pluss::codem::Series returns(const pluss::codem::Series& x, std::int64_t periods = 1);
@@ -80,7 +80,7 @@ CODEM_API pluss::codem::Series zscore_rolling(const pluss::codem::Series& x,
 CODEM_API pluss::codem::Series fill_gaps(const pluss::codem::Series& x,
                                          GapFillMode mode = GapFillMode::Forward,
                                          std::optional<double> constant = std::nullopt);
-CODEM_API ResampleResult resample(const pluss::TimeIndex& index,
+CODEM_API ResampleResult resample(const pluss::Timeline& timeline,
                                   const pluss::codem::Series& values,
                                   std::string_view freq,
                                   ResampleOp op = ResampleOp::Mean,
@@ -195,7 +195,7 @@ struct LagPlan {
   std::vector<std::int64_t> leading_predictor_indices{};
   std::vector<std::vector<std::int64_t>> predictor_lags{};
   std::vector<std::vector<std::int64_t>> leading_unique_lags{};
-  pluss::codem::Series prepared_predictors_per_horizon = pluss::codem::Series::undefined();
+  pluss::codem::Series prepared_predictors_per_horizon = pluss::series::undefined();
   std::int64_t max_lag = 0;
   std::int64_t max_lead = 0;
   std::int64_t feature_count = 0;
@@ -229,8 +229,8 @@ struct DirectForecasterOptions {
 struct DirectStepModel {
   std::int64_t horizon = 1;
   std::vector<std::int64_t> active_columns{};
-  pluss::codem::Series active_columns_index = pluss::codem::Series::undefined();
-  pluss::codem::Series beta = pluss::codem::Series::undefined();
+  pluss::codem::Series active_columns_index = pluss::series::undefined();
+  pluss::codem::Series beta = pluss::series::undefined();
 };
 
 class CODEM_API DirectForecaster {
@@ -335,10 +335,10 @@ struct LjungBoxOptions {
 };
 
 struct LjungBoxResult {
-  pluss::codem::Series lags = pluss::codem::Series::undefined();
-  pluss::codem::Series stat = pluss::codem::Series::undefined();
-  pluss::codem::Series pvalue = pluss::codem::Series::undefined();
-  pluss::codem::Series dof = pluss::codem::Series::undefined();
+  pluss::codem::Series lags = pluss::series::undefined();
+  pluss::codem::Series stat = pluss::series::undefined();
+  pluss::codem::Series pvalue = pluss::series::undefined();
+  pluss::codem::Series dof = pluss::series::undefined();
 };
 
 CODEM_API pluss::codem::Series acf(const pluss::codem::Series& x,
@@ -469,8 +469,8 @@ struct CorrPlotOptions {
 };
 
 struct CorrPlotPayload {
-  pluss::codem::Series lags = pluss::codem::Series::undefined();
-  pluss::codem::Series values = pluss::codem::Series::undefined();
+  pluss::codem::Series lags = pluss::series::undefined();
+  pluss::codem::Series values = pluss::series::undefined();
   double conf_low = 0.0;
   double conf_high = 0.0;
 };
@@ -481,8 +481,8 @@ struct ResidualPlotOptions {
 };
 
 struct ResidualPlotPayload {
-  pluss::codem::Series index = pluss::codem::Series::undefined();
-  pluss::codem::Series residuals = pluss::codem::Series::undefined();
+  pluss::codem::Series index = pluss::series::undefined();
+  pluss::codem::Series residuals = pluss::series::undefined();
 };
 
 CODEM_API CorrPlotPayload acf_payload(const pluss::codem::Series& x,
@@ -709,8 +709,8 @@ struct MvGarchOptions {
 
 struct MvGarchFit {
   std::vector<GarchFit> marginals{};
-  pluss::codem::Series mean = pluss::codem::Series::undefined();
-  pluss::codem::Series corr = pluss::codem::Series::undefined();
+  pluss::codem::Series mean = pluss::series::undefined();
+  pluss::codem::Series corr = pluss::series::undefined();
 
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
   [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
@@ -735,8 +735,8 @@ struct MvEgarchOptions {
 
 struct MvEgarchFit {
   std::vector<EgarchFit> marginals{};
-  pluss::codem::Series mean = pluss::codem::Series::undefined();
-  pluss::codem::Series corr = pluss::codem::Series::undefined();
+  pluss::codem::Series mean = pluss::series::undefined();
+  pluss::codem::Series corr = pluss::series::undefined();
 
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
   [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
@@ -761,8 +761,8 @@ struct MvGjrOptions {
 
 struct MvGjrFit {
   std::vector<GjrFit> marginals{};
-  pluss::codem::Series mean = pluss::codem::Series::undefined();
-  pluss::codem::Series corr = pluss::codem::Series::undefined();
+  pluss::codem::Series mean = pluss::series::undefined();
+  pluss::codem::Series corr = pluss::series::undefined();
 
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
   [[nodiscard]] double loglik(const pluss::codem::Series& y) const;
@@ -942,12 +942,12 @@ class CODEM_API Sarima {
 };
 
 struct SsmModel {
-  pluss::codem::Series transition = pluss::codem::Series::undefined();        // A: [m,m]
-  pluss::codem::Series state_loading = pluss::codem::Series::undefined();     // B: [m,k]
-  pluss::codem::Series observation = pluss::codem::Series::undefined();       // C: [n,m]
-  pluss::codem::Series innovation_loading = pluss::codem::Series::undefined(); // D: [n,h]
-  pluss::codem::Series mean0 = pluss::codem::Series::undefined();             // [m] or [m,1]
-  pluss::codem::Series cov0 = pluss::codem::Series::undefined();              // [m,m]
+  pluss::codem::Series transition = pluss::series::undefined();        // A: [m,m]
+  pluss::codem::Series state_loading = pluss::series::undefined();     // B: [m,k]
+  pluss::codem::Series observation = pluss::series::undefined();       // C: [n,m]
+  pluss::codem::Series innovation_loading = pluss::series::undefined(); // D: [n,h]
+  pluss::codem::Series mean0 = pluss::series::undefined();             // [m] or [m,1]
+  pluss::codem::Series cov0 = pluss::series::undefined();              // [m,m]
 };
 
 struct SsmOptions {
@@ -955,37 +955,37 @@ struct SsmOptions {
 };
 
 struct SsmFilterResult {
-  pluss::codem::Series filtered_states = pluss::codem::Series::undefined();      // [T,m]
-  pluss::codem::Series filtered_states_cov = pluss::codem::Series::undefined();  // [T,m,m]
-  pluss::codem::Series forecasted_states = pluss::codem::Series::undefined();    // [T,m]
-  pluss::codem::Series forecasted_states_cov = pluss::codem::Series::undefined(); // [T,m,m]
-  pluss::codem::Series forecasted_obs = pluss::codem::Series::undefined();       // [T,n]
-  pluss::codem::Series forecasted_obs_cov = pluss::codem::Series::undefined();   // [T,n,n]
-  pluss::codem::Series forecast_obs_error = pluss::codem::Series::undefined();   // [T,n]
-  pluss::codem::Series kalman_gain = pluss::codem::Series::undefined();          // [T,m,n]
-  pluss::codem::Series data_used = pluss::codem::Series::undefined();            // [T,n], 1 if used else 0
-  pluss::codem::Series loglik_per_obs = pluss::codem::Series::undefined();       // [T]
+  pluss::codem::Series filtered_states = pluss::series::undefined();      // [T,m]
+  pluss::codem::Series filtered_states_cov = pluss::series::undefined();  // [T,m,m]
+  pluss::codem::Series forecasted_states = pluss::series::undefined();    // [T,m]
+  pluss::codem::Series forecasted_states_cov = pluss::series::undefined(); // [T,m,m]
+  pluss::codem::Series forecasted_obs = pluss::series::undefined();       // [T,n]
+  pluss::codem::Series forecasted_obs_cov = pluss::series::undefined();   // [T,n,n]
+  pluss::codem::Series forecast_obs_error = pluss::series::undefined();   // [T,n]
+  pluss::codem::Series kalman_gain = pluss::series::undefined();          // [T,m,n]
+  pluss::codem::Series data_used = pluss::series::undefined();            // [T,n], 1 if used else 0
+  pluss::codem::Series loglik_per_obs = pluss::series::undefined();       // [T]
   double loglik = 0.0;
 };
 
 struct SsmSmoothResult {
   SsmFilterResult filter{};
-  pluss::codem::Series smoothed_states = pluss::codem::Series::undefined();      // [T,m]
-  pluss::codem::Series smoothed_states_cov = pluss::codem::Series::undefined();  // [T,m,m]
+  pluss::codem::Series smoothed_states = pluss::series::undefined();      // [T,m]
+  pluss::codem::Series smoothed_states_cov = pluss::series::undefined();  // [T,m,m]
 };
 
 struct SsmForecastResult {
-  pluss::codem::Series observations = pluss::codem::Series::undefined();        // [H,n]
-  pluss::codem::Series observations_cov = pluss::codem::Series::undefined();    // [H,n,n]
-  pluss::codem::Series states = pluss::codem::Series::undefined();              // [H,m]
-  pluss::codem::Series states_cov = pluss::codem::Series::undefined();          // [H,m,m]
+  pluss::codem::Series observations = pluss::series::undefined();        // [H,n]
+  pluss::codem::Series observations_cov = pluss::series::undefined();    // [H,n,n]
+  pluss::codem::Series states = pluss::series::undefined();              // [H,m]
+  pluss::codem::Series states_cov = pluss::series::undefined();          // [H,m,m]
 };
 
 struct SsmSimResult {
-  pluss::codem::Series observations = pluss::codem::Series::undefined();       // [T,n] or [P,T,n]
-  pluss::codem::Series states = pluss::codem::Series::undefined();             // [T,m] or [P,T,m]
-  pluss::codem::Series state_disturbance = pluss::codem::Series::undefined();  // [T,k] or [P,T,k]
-  pluss::codem::Series obs_innovation = pluss::codem::Series::undefined();     // [T,h] or [P,T,h]
+  pluss::codem::Series observations = pluss::series::undefined();       // [T,n] or [P,T,n]
+  pluss::codem::Series states = pluss::series::undefined();             // [T,m] or [P,T,m]
+  pluss::codem::Series state_disturbance = pluss::series::undefined();  // [T,k] or [P,T,k]
+  pluss::codem::Series obs_innovation = pluss::series::undefined();     // [T,h] or [P,T,h]
 };
 
 class CODEM_API Ssm {
@@ -1060,25 +1060,25 @@ struct GrangerOptions {
 };
 
 struct GrangerResult {
-  pluss::codem::Series cause = pluss::codem::Series::undefined();
-  pluss::codem::Series effect = pluss::codem::Series::undefined();
-  pluss::codem::Series stat = pluss::codem::Series::undefined();
-  pluss::codem::Series pvalue = pluss::codem::Series::undefined();
-  pluss::codem::Series critical = pluss::codem::Series::undefined();
-  pluss::codem::Series dof1 = pluss::codem::Series::undefined();
-  pluss::codem::Series dof2 = pluss::codem::Series::undefined();
-  pluss::codem::Series reject = pluss::codem::Series::undefined();
+  pluss::codem::Series cause = pluss::series::undefined();
+  pluss::codem::Series effect = pluss::series::undefined();
+  pluss::codem::Series stat = pluss::series::undefined();
+  pluss::codem::Series pvalue = pluss::series::undefined();
+  pluss::codem::Series critical = pluss::series::undefined();
+  pluss::codem::Series dof1 = pluss::series::undefined();
+  pluss::codem::Series dof2 = pluss::series::undefined();
+  pluss::codem::Series reject = pluss::series::undefined();
 };
 
 struct VarFit {
   std::int64_t lag_order = 1;
   bool include_intercept = true;
   bool include_trend = false;
-  pluss::codem::Series constant = pluss::codem::Series::undefined();
-  pluss::codem::Series trend = pluss::codem::Series::undefined();
-  pluss::codem::Series ar = pluss::codem::Series::undefined();
-  pluss::codem::Series beta = pluss::codem::Series::undefined();
-  pluss::codem::Series covariance = pluss::codem::Series::undefined();
+  pluss::codem::Series constant = pluss::series::undefined();
+  pluss::codem::Series trend = pluss::series::undefined();
+  pluss::codem::Series ar = pluss::series::undefined();
+  pluss::codem::Series beta = pluss::series::undefined();
+  pluss::codem::Series covariance = pluss::series::undefined();
   std::int64_t sample_size = 0;
 
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y, pluss::codem::Config cfg = {}) const;
@@ -1143,14 +1143,14 @@ struct JohansenOptions {
 };
 
 struct JohansenResult {
-  pluss::codem::Series eigenvalues = pluss::codem::Series::undefined();
-  pluss::codem::Series stat = pluss::codem::Series::undefined();
-  pluss::codem::Series pvalue = pluss::codem::Series::undefined();
-  pluss::codem::Series critical = pluss::codem::Series::undefined();
-  pluss::codem::Series reject = pluss::codem::Series::undefined();
-  pluss::codem::Series dof = pluss::codem::Series::undefined();
-  pluss::codem::Series alpha = pluss::codem::Series::undefined();
-  pluss::codem::Series beta = pluss::codem::Series::undefined();
+  pluss::codem::Series eigenvalues = pluss::series::undefined();
+  pluss::codem::Series stat = pluss::series::undefined();
+  pluss::codem::Series pvalue = pluss::series::undefined();
+  pluss::codem::Series critical = pluss::series::undefined();
+  pluss::codem::Series reject = pluss::series::undefined();
+  pluss::codem::Series dof = pluss::series::undefined();
+  pluss::codem::Series alpha = pluss::series::undefined();
+  pluss::codem::Series beta = pluss::series::undefined();
   std::int64_t selected_rank = 0;
 };
 
@@ -1173,13 +1173,13 @@ struct VecmFit {
   std::int64_t rank = 0;
   bool include_intercept = true;
   bool include_trend = false;
-  pluss::codem::Series alpha = pluss::codem::Series::undefined();
-  pluss::codem::Series beta = pluss::codem::Series::undefined();
-  pluss::codem::Series impact = pluss::codem::Series::undefined();
-  pluss::codem::Series gamma = pluss::codem::Series::undefined();
-  pluss::codem::Series constant = pluss::codem::Series::undefined();
-  pluss::codem::Series trend = pluss::codem::Series::undefined();
-  pluss::codem::Series covariance = pluss::codem::Series::undefined();
+  pluss::codem::Series alpha = pluss::series::undefined();
+  pluss::codem::Series beta = pluss::series::undefined();
+  pluss::codem::Series impact = pluss::series::undefined();
+  pluss::codem::Series gamma = pluss::series::undefined();
+  pluss::codem::Series constant = pluss::series::undefined();
+  pluss::codem::Series trend = pluss::series::undefined();
+  pluss::codem::Series covariance = pluss::series::undefined();
   std::int64_t sample_size = 0;
 
   [[nodiscard]] pluss::codem::Series infer(const pluss::codem::Series& y,

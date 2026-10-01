@@ -11,6 +11,14 @@ classic::StatusOr<std::unique_ptr<classic::RegressorBase>> classic::make_regress
     const classic::ModelSpec& spec);
 ```
 
+## What It Does
+
+The regression counterpart to [`make_classifier`](make_classifier.md):
+reads `spec.family` and dispatches to that family's concrete regressor
+implementation, constructing it with the matching `*FamilyOptions`
+alternative. The returned object is untrained -- meaningful predictions
+require [`learn`](EstimatorBase/learn.md) first.
+
 ## Parameters
 
 `spec` — `ModelSpec`

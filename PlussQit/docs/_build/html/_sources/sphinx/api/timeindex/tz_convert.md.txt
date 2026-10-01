@@ -5,16 +5,13 @@
 ## Signatures
 
 ```cpp
-TimeIndex::tz_convert(std::string_view tz_name) const -> TimeIndex
-TimeIndex::to_utc() const -> TimeIndex
+TimeIndex TimeIndex::tz_convert(std::string_view tz_name) const
 ```
 
 ## What It Does
 
 Converts the axis into a different timezone representation while preserving the
 underlying instant in time.
-
-`to_utc()` is the dedicated convenience case for conversion back to UTC.
 
 So the moment stays the same while the wall-clock rendering changes.
 
@@ -60,7 +57,7 @@ Timeline(shape=[2], tz=America/New_York)
 Example 2. Dedicated conversion back to UTC.
 
 ```cpp
-auto out = utc_midday.to_utc();
+auto out = utc_midday.tz_convert("UTC");
 std::cout << pluss::timeindex::print(out) << "\n";
 ```
 

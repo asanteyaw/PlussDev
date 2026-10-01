@@ -16,8 +16,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/archive-cast/duration
 api/archive-cast/note
 api/archive-cast/series
-api/archive-cast/timeindex
 api/archive-cast/timeline
 ```

@@ -104,7 +104,7 @@ DataFrame make_base_frame() {
       "2024-01-04T00:00:00Z",
       "2024-01-05T00:00:00Z",
   });
-  const auto timeindex = pluss::make_timeindex({
+  const auto indexed_timeline = pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",
@@ -120,7 +120,7 @@ DataFrame make_base_frame() {
                        {"city", pluss::table::Thread(city)},
                        {"text", pluss::table::Thread(text)},
                        {"timestamp", pluss::table::Thread(timeline)},
-                       {"time_index", pluss::table::Thread(timeindex)},
+                       {"time_index", pluss::table::Thread(indexed_timeline)},
                    },
                    cases);
 }
@@ -690,8 +690,8 @@ void test_catalog_construction_and_selection() {
 
   expect(base.keyaxis().series().nkeys() == 2, "series projection mismatch");
   expect(base.keyaxis().note().nkeys() == 2, "note projection mismatch");
-  expect(base.keyaxis().timeline().nkeys() == 2, "timeline projection should include Timeline + TimeIndex");
-  expect(base.keyaxis().timeindex().nkeys() == 1, "timeindex projection mismatch");
+  expect(base.keyaxis().timeline().nkeys() == 2,
+         "timeline projection should include every canonical temporal stream");
   expect(base.keyaxis().like("time").nkeys() == 2, "keyaxis().like should select matching keys");
   expect(base.keyaxis().match("time_index").nkeys() == 1 && base.keyaxis().match("time_index").has("time_index"),
          "keyaxis().match should regex-select keys");
@@ -847,7 +847,7 @@ void test_catalog_sort_group_missing() {
               }),
               bool_mask({true, false, true, false}))},
       {"ti_col",
-       Stream(pluss::make_timeindex({
+       Stream(pluss::make_timeline({
                   "2024-01-01T00:00:00Z",
                   "2024-01-02T00:00:00Z",
                   "2024-01-03T00:00:00Z",
@@ -879,27 +879,25 @@ void test_catalog_sort_group_missing() {
   expect(pluss::kindle::detail::has_validity_mask(ts_untouched_by_string.keys("ts_col")),
          "Catalog::fillnull(string, keys) should skip Timeline streams instead of throwing");
 
-  const auto ti_fill = pluss::make_timeindex("2024-02-01T00:00:00Z", false);
+  const auto ti_fill = pluss::make_timeline("2024-02-01T00:00:00Z");
   const auto ti_filled = mixed_missing.keys({"ti_col"}).fillnull(ti_fill);
-  const auto ti_ticks = ti_filled.keys("ti_col").as_timeindex().timeline().ticks();
-  const auto ti_fill_tick = ti_fill.timeline().ticks()[0];
+  const auto ti_ticks = ti_filled.keys("ti_col").as_timeline().ticks();
+  const auto ti_fill_tick = ti_fill.ticks()[0];
   expect(ti_ticks[1] == ti_fill_tick && ti_ticks[3] == ti_fill_tick,
-         "Catalog::fillnull(TimeIndex, keys) should replace null TimeIndex values");
+         "Catalog::fillnull(Timeline, keys) should replace null Timeline values");
   expect(!pluss::kindle::detail::has_validity_mask(ti_filled.keys("ti_col")),
-         "Catalog::fillnull(TimeIndex, keys) should clear TimeIndex mask when fully resolved");
+         "Catalog::fillnull(Timeline, keys) should clear Timeline mask when fully resolved");
   const auto ti_filled_by_timeline = mixed_missing.keys({"ti_col"}).fillnull(ts_fill);
-  const auto ti_from_timeline_ticks = ti_filled_by_timeline.keys("ti_col").as_timeindex().timeline().ticks();
+  const auto ti_from_timeline_ticks = ti_filled_by_timeline.keys("ti_col").as_timeline().ticks();
   expect(ti_from_timeline_ticks[1] == ts_fill_tick && ti_from_timeline_ticks[3] == ts_fill_tick,
-         "Catalog::fillnull(Timeline, keys) should also fill TimeIndex streams");
+         "Catalog::fillnull(Timeline, keys) should fill selected Timeline streams");
 
   const auto id_as_note = base.keys({"id"}).cast().note();
   const auto ts_as_series = base.keys({"timestamp"}).cast(
       pluss::table::ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
-  const auto ts_as_ti = base.keys({"timestamp"}).cast().timeindex();
   const auto id_as_f64 = base.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
   expect(id_as_note.keys("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
   expect(ts_as_series.keys("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
-  expect(ts_as_ti.keys("timestamp").kind() == StreamKind::TimeIndex, "cast(TimeIndex) timestamp kind mismatch");
   expect(id_as_f64.keys("id").as_series().scalar_type() == pluss::codem::ScalarType::Float64,
          "astype(id,float64) scalar type mismatch");
 

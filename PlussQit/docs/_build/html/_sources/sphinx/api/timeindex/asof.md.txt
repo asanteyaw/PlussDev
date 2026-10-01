@@ -79,12 +79,12 @@ pos = -1
 - [`TimeIndex::searchsorted`](searchsorted.md): raw insertion lookup.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice_time.html">
+  <a class="prev-link" href="argsort.html">
     <span class="label">Previous</span>
-    <span class="title">slice_time</span>
+    <span class="title">argsort</span>
   </a>
-  <a class="next-link" href="resample_bins.html">
+  <a class="next-link" href="ceil.html">
     <span class="label">Next</span>
-    <span class="title">resample_bins</span>
+    <span class="title">ceil</span>
   </a>
 </div>

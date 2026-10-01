@@ -29,7 +29,6 @@ namespace pluss::codev {
 // - Series
 // - Note
 // - Timeline
-// - TimeIndex
 // - Duration
 //
 // Use invoke("method", args...) to route MATLAB-style method-name dispatch
@@ -40,12 +39,10 @@ public:
     Series,
     Note,
     Timeline,
-    TimeIndex,
     Duration
   };
 
   using timeline_type = ::pluss::codeh::Timeline;
-  using timeindex_type = ::pluss::codeh::TimeIndex;
   using duration_type = ::pluss::codeh::Duration;
 
   class Arg {
@@ -59,7 +56,6 @@ public:
         ::pluss::Series,
         ::pluss::Note,
         timeline_type,
-        timeindex_type,
         duration_type>;
 
     Arg(std::int64_t v) : v_(v) {}
@@ -75,7 +71,6 @@ public:
     Arg(const ::pluss::Series& v) : v_(v) {}
     Arg(const ::pluss::Note& v) : v_(v) {}
     Arg(const timeline_type& v) : v_(v) {}
-    Arg(const timeindex_type& v) : v_(v) {}
     Arg(const duration_type& v) : v_(v) {}
 
     const storage_type& storage() const noexcept { return v_; }
@@ -88,7 +83,6 @@ public:
       ::pluss::Series,
       ::pluss::Note,
       timeline_type,
-      timeindex_type,
       duration_type>;
 
   Queue(const ::pluss::Series& v) : value_(v) {}
@@ -97,8 +91,6 @@ public:
   Queue(::pluss::Note&& v) : value_(std::move(v)) {}
   Queue(const timeline_type& v) : value_(v) {}
   Queue(timeline_type&& v) : value_(std::move(v)) {}
-  Queue(const timeindex_type& v) : value_(v) {}
-  Queue(timeindex_type&& v) : value_(std::move(v)) {}
   Queue(const duration_type& v) : value_(v) {}
   Queue(duration_type&& v) : value_(std::move(v)) {}
 
@@ -106,14 +98,12 @@ public:
     if (std::holds_alternative<::pluss::Series>(value_)) return Kind::Series;
     if (std::holds_alternative<::pluss::Note>(value_)) return Kind::Note;
     if (std::holds_alternative<timeline_type>(value_)) return Kind::Timeline;
-    if (std::holds_alternative<duration_type>(value_)) return Kind::Duration;
-    return Kind::TimeIndex;
+    return Kind::Duration;
   }
 
   bool is_series() const noexcept { return kind() == Kind::Series; }
   bool is_note() const noexcept { return kind() == Kind::Note; }
   bool is_timeline() const noexcept { return kind() == Kind::Timeline; }
-  bool is_timeindex() const noexcept { return kind() == Kind::TimeIndex; }
   bool is_duration() const noexcept { return kind() == Kind::Duration; }
 
   std::string_view kind_name() const noexcept { return kind_name(kind()); }
@@ -125,42 +115,19 @@ public:
   ::pluss::Note& note() { return as_note(); }
   const timeline_type& timeline() const { return as_timeline(); }
   timeline_type& timeline() { return as_timeline(); }
-  const timeindex_type& timeindex() const { return as_timeindex(); }
-  timeindex_type& timeindex() { return as_timeindex(); }
   const duration_type& duration() const { return as_duration(); }
   duration_type& duration() { return as_duration(); }
 
   bool defined() const noexcept {
-    return std::visit([](const auto& v) -> bool {
-      using T = std::decay_t<decltype(v)>;
-      if constexpr (std::is_same_v<T, timeindex_type>) {
-        return v.timeline().defined();
-      } else {
-        return v.defined();
-      }
-    }, value_);
+    return std::visit([](const auto& v) { return v.defined(); }, value_);
   }
 
   std::int64_t dim() const {
-    return std::visit([](const auto& v) -> std::int64_t {
-      using T = std::decay_t<decltype(v)>;
-      if constexpr (std::is_same_v<T, timeindex_type>) {
-        return 1;
-      } else {
-        return v.dim();
-      }
-    }, value_);
+    return std::visit([](const auto& v) { return v.dim(); }, value_);
   }
 
   std::int64_t numel() const {
-    return std::visit([](const auto& v) -> std::int64_t {
-      using T = std::decay_t<decltype(v)>;
-      if constexpr (std::is_same_v<T, timeindex_type>) {
-        return v.size();
-      } else {
-        return v.numel();
-      }
-    }, value_);
+    return std::visit([](const auto& v) { return v.numel(); }, value_);
   }
 
   template <class T>
@@ -198,8 +165,6 @@ public:
         return Queue(::pluss::coden::_compat::call_note(method, self, to_coden_args(args)));
       } else if constexpr (std::is_same_v<T, timeline_type>) {
         return invoke_timeline(method, self, args);
-      } else if constexpr (std::is_same_v<T, timeindex_type>) {
-        return invoke_timeindex(method, self, args);
       } else {
         return invoke_duration(method, self, args);
       }
@@ -269,8 +234,6 @@ public:
           return x.invoke("where", {condition.as_series(), y.as_duration()});
         case Kind::Note:
           PLUSS_FAIL("Queue::where: Note ternary selection is not supported");
-        case Kind::TimeIndex:
-          PLUSS_FAIL("Queue::where: TimeIndex ternary selection is not supported");
       }
       PLUSS_FAIL("Queue::where: unknown payload kind");
     } catch (const std::exception& e) {
@@ -287,8 +250,6 @@ private:
         return "Note";
       case Kind::Timeline:
         return "Timeline";
-      case Kind::TimeIndex:
-        return "TimeIndex";
       case Kind::Duration:
         return "Duration";
     }
@@ -331,18 +292,6 @@ private:
     return std::get<timeline_type>(value_);
   }
 
-  const timeindex_type& as_timeindex() const {
-    PLUSS_CHECK(is<timeindex_type>(),
-                std::string("Queue.as_timeindex(): payload kind is ") + std::string(kind_name(kind())));
-    return std::get<timeindex_type>(value_);
-  }
-
-  timeindex_type& as_timeindex() {
-    PLUSS_CHECK(is<timeindex_type>(),
-                std::string("Queue.as_timeindex(): payload kind is ") + std::string(kind_name(kind())));
-    return std::get<timeindex_type>(value_);
-  }
-
   const duration_type& as_duration() const {
     PLUSS_CHECK(is<duration_type>(),
                 std::string("Queue.as_duration(): payload kind is ") + std::string(kind_name(kind())));
@@ -382,8 +331,6 @@ private:
                      + ": unsupported for Note payloads");
         case Kind::Timeline:
           return invoke(op_name, {rhs.as_timeline()});
-        case Kind::TimeIndex:
-          return invoke(op_name, {rhs.as_timeindex()});
         case Kind::Duration:
           return invoke(op_name, {rhs.as_duration()});
       }
@@ -412,8 +359,6 @@ private:
         }
         case Kind::Timeline:
           return invoke(op_name, {rhs.as_timeline()});
-        case Kind::TimeIndex:
-          return invoke(op_name, {rhs.as_timeindex()});
         case Kind::Duration:
           return invoke(op_name, {rhs.as_duration()});
       }
@@ -480,7 +425,6 @@ private:
             std::is_same_v<A, std::string> ||
             std::is_same_v<A, ::pluss::Series> ||
             std::is_same_v<A, timeline_type> ||
-            std::is_same_v<A, timeindex_type> ||
             std::is_same_v<A, duration_type>) {
           out.xs.emplace_back(::pluss::codeh::_compat::Arg(v));
         } else {
@@ -504,8 +448,6 @@ private:
   }
 
   static std::string_view normalize_timeline_op(std::string_view op) {
-    if (op == "to_timeindex") return "make_timeindex";
-
     if (op == "year") return "dt_year";
     if (op == "month") return "dt_month";
     if (op == "day") return "dt_day";
@@ -520,12 +462,6 @@ private:
     return op;
   }
 
-  static std::string_view normalize_timeindex_op(std::string_view op) {
-    if (op == "sort_values") return "sort";
-    if (op == "freq") return "infer_freq";
-    return op;
-  }
-
 #if defined(CODEH_ENABLE_TIMELINE_SURFACE) || defined(CODEH_BUILD_MAIN_LIB)
   static Queue invoke_timeline(std::string_view method,
                                const timeline_type& self,
@@ -537,9 +473,6 @@ private:
     if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_timeline(op, self, hargs); }, errors)) {
       return *out;
     }
-    if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_timeindex_from_timeline(op, self, hargs); }, errors)) {
-      return *out;
-    }
     if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_series_timeline(op, self, hargs); }, errors)) {
       return *out;
     }
@@ -548,29 +481,6 @@ private:
     }
 
     PLUSS_FAIL(errors.empty() ? std::string("Queue.invoke(Timeline): unsupported method") : errors);
-  }
-
-  static Queue invoke_timeindex(std::string_view method,
-                                const timeindex_type& self,
-                                std::span<const Arg> args) {
-    const auto op = normalize_timeindex_op(method);
-    const auto hargs = to_codeh_args(args);
-    std::string errors;
-
-    if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_timeindex(op, self, hargs); }, errors)) {
-      return *out;
-    }
-    if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_timeline_from_timeindex(op, self, hargs); }, errors)) {
-      return *out;
-    }
-    if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_series_timeindex(op, self, hargs); }, errors)) {
-      return *out;
-    }
-    if (auto out = try_queue_call([&]() { return ::pluss::codeh::_compat::call_note_timeindex(op, self, hargs); }, errors)) {
-      return *out;
-    }
-
-    PLUSS_FAIL(errors.empty() ? std::string("Queue.invoke(TimeIndex): unsupported method") : errors);
   }
 
   static Queue invoke_duration(std::string_view method,
@@ -596,12 +506,6 @@ private:
                                const timeline_type&,
                                std::span<const Arg>) {
     PLUSS_FAIL("Queue.invoke(Timeline): CodeH dispatch is unavailable in this build. Link with PlussQit::CodeH.");
-  }
-
-  static Queue invoke_timeindex(std::string_view,
-                                const timeindex_type&,
-                                std::span<const Arg>) {
-    PLUSS_FAIL("Queue.invoke(TimeIndex): CodeH dispatch is unavailable in this build. Link with PlussQit::CodeH.");
   }
 
   static Queue invoke_duration(std::string_view,
@@ -634,9 +538,6 @@ inline std::ostream& operator<<(std::ostream& os, const Queue& q) {
       break;
     case Queue::Kind::Timeline:
       write_wrapped("Timeline", "Timeline", q.timeline());
-      break;
-    case Queue::Kind::TimeIndex:
-      os << "Queue<TimeIndex>(size=" << q.timeindex().size() << ", timeline=" << q.timeindex().timeline() << ")";
       break;
     case Queue::Kind::Duration:
       write_wrapped("Duration", "Duration", q.duration());

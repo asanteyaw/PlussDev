@@ -419,7 +419,7 @@ inline void write_series_payload_(
 
 inline pluss::Series read_series_payload_(BinaryReader& reader, const LoadOptions& options) {
   const bool defined = reader.read_u8("series.defined") != 0;
-  if (!defined) return pluss::Series::undefined();
+  if (!defined) return pluss::series::undefined();
 
   const auto saved_platform = decode_platform_(reader.read_u8("series.saved_platform"), "series.saved_platform");
   const auto stored_platform = decode_platform_(reader.read_u8("series.stored_platform"), "series.stored_platform");
@@ -457,7 +457,7 @@ inline pluss::Series read_series_payload_(BinaryReader& reader, const LoadOption
   };
 
   const auto strides = contiguous_strides_(sizes);
-  pluss::Series out = pluss::Series::undefined();
+  pluss::Series out = pluss::series::undefined();
   try {
     out = pluss::series::from_host(raw, sizes, strides, deleter, dtype);
   } catch (...) {

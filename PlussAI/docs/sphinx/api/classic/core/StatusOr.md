@@ -13,7 +13,7 @@ default-constructed when there is no value to supply. This is the detail that
 makes `StatusOr` sharper than it looks: **`.value()` never checks anything.**
 It is not a `std::optional`-style accessor that throws or asserts on an empty
 state — it unconditionally returns whatever `T` the object is holding, which on
-a failure is a *default-constructed* `T` (`0` for `int`, `Series::undefined()`
+a failure is a *default-constructed* `T` (`0` for `int`, `pluss::series::undefined()`
 for `Series`, an empty vector, …), not a sentinel that flags itself as invalid.
 Reading `.value()` without checking `.ok()` first compiles, runs, and hands you
 a silently wrong answer instead of a crash. The only correct pattern is:

@@ -23,7 +23,6 @@ api/thread-timeline/epoch
 api/thread-timeline/floor
 api/thread-timeline/fmt
 api/thread-timeline/hour
-api/thread-timeline/index
 api/thread-timeline/isnat
 api/thread-timeline/iso
 api/thread-timeline/leap

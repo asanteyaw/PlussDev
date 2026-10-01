@@ -11,7 +11,7 @@ int main() {
   const pluss::Series rows = pluss::make_series({0.0, 0.0, 1.0, 1.0}, {4}, f64).reshape({2, 2});
   const cls::SpatialIndex index = cls::SpatialIndex::build(rows).value();
 
-  std::cout << "undefined query_rows ok = " << std::boolalpha << index.query_k(pluss::Series::undefined(), 1).ok() << "\n";
+  std::cout << "undefined query_rows ok = " << std::boolalpha << index.query_k(pluss::series::undefined(), 1).ok() << "\n";
 
   const pluss::Series wrong_dim = pluss::make_series({0.0, 0.0, 0.0}, {3}, f64).reshape({1, 3});
   std::cout << "dim mismatch ok = " << index.query_k(wrong_dim, 1).ok() << "\n";

@@ -9,6 +9,7 @@
 ```cpp
 Series::erfc() const -> Series
 Series& Series::erfc_()
+Series& Series::erfc_()
 ```
 
 ## What It Does
@@ -76,6 +77,29 @@ The constant `2 / sqrt(pi)` is `1.1283791670955126`. The backward multiplier is
 therefore most negative at `x = 0` and decays like a Gaussian in both
 directions. As with `erf()`, a saturated `erfc()` in either tail passes almost
 no sensitivity back to its input.
+
+## In-Place Form
+
+`erfc_()` is the in-place sibling of [`erfc()`](erfc.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.erfc_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[1, 0.15729921]
+same object: true
+```
 
 ## Examples
 

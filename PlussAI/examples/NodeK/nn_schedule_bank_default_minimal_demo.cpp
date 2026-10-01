@@ -97,7 +97,7 @@ int main() {
       });
 
   for (int epoch = 1; epoch <= 120; ++epoch) {
-    pluss::Series loss{};
+    pluss::Series loss = pluss::series::undefined();
     for (const auto batch : train_loader) {
       const auto logits = model->forward(batch.x());
       loss = pluss::nn::losses::BCEWithLogits(logits, batch.y());

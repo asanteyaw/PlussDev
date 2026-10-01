@@ -44,7 +44,7 @@ int main() {
   for (int iter = 1; iter <= 60; ++iter) {
     auto tracked = pluss::subsp::math::diff::trace(params_tape, true);
     const Series loss = tracked.value().sub(target).square().sum().mul(0.5);
-    tracked.clear_sensitivity();
+    tracked.clear();
     loss.reverse();
 
     const Series grad = params_tape.sensitivity();

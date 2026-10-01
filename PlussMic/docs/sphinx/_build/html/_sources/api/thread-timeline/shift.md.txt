@@ -13,7 +13,7 @@ ThreadTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const
 ## What It Does
 
 Shifts every row of the bound thread forward (or backward, if `periods` is
-negative) by `periods * freq` — same length, still `Timeline`/`TimeIndex`-kind.
+negative) by `periods * freq` — same length, still `Timeline`-kind.
 Month/year shifts are calendar-aware: a day-of-month that doesn't exist in the
 target month is clamped down to that month's last valid day (never rolls over
 into the next month).
@@ -35,7 +35,7 @@ One of `"y"`/`"yr"`/`"year"`/`"years"`/`"annual"`,
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind thread, same length as the bound thread,
     shifted by `periods * freq`.
 
 ## Examples
@@ -144,7 +144,7 @@ Timeline::shift: unsupported frequency
   overflowing into a later month; fixed-unit shifts (`days` and finer) are
   exact elapsed-time arithmetic with no clamping concern.
 - `freq` cannot be empty, and an unrecognized string throws.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` regardless of `periods`/`freq`.
 

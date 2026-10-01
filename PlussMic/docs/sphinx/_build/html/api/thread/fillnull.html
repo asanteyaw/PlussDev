@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 659443fa590b -->
+<!-- pluss-signature-hash: a64e967e4269 -->
 <section id="thread-fillnull">
 <h1>Thread::fillnull<a class="headerlink" href="#thread-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../thread_api_reference.html"><span class="doc std std-doc">Back to Thread API Reference</span></a></p>
@@ -46,7 +46,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">Thread</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">Thread</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-<span class="n">Thread</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">Thread</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
@@ -54,19 +54,22 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Replaces every <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell with <code class="docutils literal notranslate"><span class="pre">value</span></code>, leaving already-valid cells untouched. The
 overload selects which payload kind is required: <code class="docutils literal notranslate"><span class="pre">double</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
-thread, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, and the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
-overloads both accept either a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind calling thread
-symmetrically. This is the same operation <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace(null_t,</span> <span class="pre">to)</span></code></span></a>
-delegates to internally when <code class="docutils literal notranslate"><span class="pre">from</span></code> is <code class="docutils literal notranslate"><span class="pre">pluss::series::null</span></code>.</p>
+thread, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> requires
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, and <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> requires <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind. Unlike the other
+overloads, the <code class="docutils literal notranslate"><span class="pre">Duration</span></code> overload also clears any intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes (not just
+lanes flagged by a validity mask) via <code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>, since <code class="docutils literal notranslate"><span class="pre">Duration</span></code>’s own payload can
+carry a sentinel-missing value independent of the thread’s validity mask. This is the
+same operation <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace(null_t,</span> <span class="pre">to)</span></code></span></a> delegates to internally when <code class="docutils literal notranslate"><span class="pre">from</span></code>
+is <code class="docutils literal notranslate"><span class="pre">pluss::series::null</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>value</strong>
 The replacement for <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells. Its C++ type selects the overload — <code class="docutils literal notranslate"><span class="pre">double</span></code>
-for <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> or
-<code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code> for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind threads (either scalar type
-works against either temporal thread kind). The <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> overloads
-require a scalar value (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code> / <code class="docutils literal notranslate"><span class="pre">size()</span> <span class="pre">==</span> <span class="pre">1</span></code>).</p>
+for <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> for
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind threads, <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> for <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind threads. The
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> overload requires a scalar value (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code>); the <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+overload requires exactly one value and that value must not itself be <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -129,25 +132,19 @@ ptype: Note
 ptype: Timeline
 </pre></div>
 </div>
-<p>Example 4. The <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> overload works against a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread too — the
-two temporal overloads are interchangeable regardless of which temporal kind is
-calling.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out3b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span><span class="s">&quot;2000-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3b</span><span class="p">;</span>
+<p>Example 4. Fill a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind thread. <code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code>
+lanes in addition to any validity-mask-flagged ones.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">gaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">({</span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">::</span><span class="n">kNaT</span><span class="p">,</span>
+<span class="w">                                           </span><span class="mi">-2&#39;000&#39;000&#39;000LL</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gaps</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">(</span><span class="mi">9</span><span class="p">));</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">out4</span><span class="p">.</span><span class="n">as_duration</span><span class="p">().</span><span class="n">host</span><span class="p">()</span><span class="w"> </span><span class="o">==</span>
+<span class="w">       </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">({</span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">-2&#39;000&#39;000&#39;000LL</span><span class="p">}));</span>
+<span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">has_validity_mask</span><span class="p">(</span><span class="n">out4</span><span class="p">));</span>
 </pre></div>
 </div>
-</section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2024-01-01
-1  2000-01-01
-2  2024-03-01
-
-ptype: Timeline
-</pre></div>
-</div>
-<p>Identical result to Example 3 — <code class="docutils literal notranslate"><span class="pre">events</span></code> is <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, and the <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>
-overload fills it just as readily as the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> overload did.</p>
+<p>The middle lane was <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (not mask-flagged), yet it was still replaced, and the
+result carries no validity mask once every absent lane has been filled — pinned by
+<code class="docutils literal notranslate"><span class="pre">PlussMic/test/temporal_core_migration_tests.cpp:198-203</span></code>.</p>
 <p>Example 5. Value-kind mismatches throw.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="s">&quot;not a number&quot;</span><span class="p">);</span>
@@ -157,8 +154,8 @@ overload fills it just as readily as the <code class="docutils literal notransla
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::fillnull(string) is only valid for Note payload
 </pre></div>
 </div>
@@ -171,10 +168,12 @@ overload fills it just as readily as the <code class="docutils literal notransla
 required payload kind.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull(double)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Series</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(double)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull(string_view)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(string)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(Timeline)</span></code> and <code class="docutils literal notranslate"><span class="pre">fillnull(TimeIndex)</span></code> both accept either a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind calling thread; messages: <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(Timeline)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Timeline/TimeIndex</span> <span class="pre">payload&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(TimeIndex)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Timeline/TimeIndex</span> <span class="pre">payload&quot;</span></code>, respectively.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> overloads require a scalar (single-element) replacement
-value, or throw <code class="docutils literal notranslate"><span class="pre">&quot;...replacement</span> <span class="pre">value</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">scalar&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(Timeline)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(Timeline)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Timeline</span> <span class="pre">payload&quot;</span></code>. It requires a scalar (single-element)
+replacement value, or throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(Timeline):</span> <span class="pre">replacement</span> <span class="pre">value</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">scalar</span> <span class="pre">(numel</span> <span class="pre">==</span> <span class="pre">1)&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Duration</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(Duration)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Duration</span> <span class="pre">payload&quot;</span></code>. It requires exactly one replacement value
+(<code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(Duration):</span> <span class="pre">replacement</span> <span class="pre">must</span> <span class="pre">contain</span> <span class="pre">exactly</span> <span class="pre">one</span> <span class="pre">value&quot;</span></code>), and
+that value cannot itself be <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;Thread::fillnull(Duration):</span> <span class="pre">replacement</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">NaT&quot;</span></code>). Unlike the other overloads, it clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes even when
+the thread carries no validity mask at all.</p></li>
 <li><p>A mutating sibling, <a class="reference internal" href="fillnull_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code></span></a>, applies the same fill in place.</p></li>
 </ul>
 </section>

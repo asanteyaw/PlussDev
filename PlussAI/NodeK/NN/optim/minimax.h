@@ -514,8 +514,12 @@ private:
     upper_multipliers_.clear();
 
     const auto& params = parameters();
-    lower_multipliers_.resize(params.size());
-    upper_multipliers_.resize(params.size());
+    lower_multipliers_.reserve(params.size());
+    upper_multipliers_.reserve(params.size());
+    for (std::size_t i = 0; i < params.size(); ++i) {
+      lower_multipliers_.push_back(pluss::series::undefined());
+      upper_multipliers_.push_back(pluss::series::undefined());
+    }
 
     for (std::size_t i = 0; i < params.size(); ++i) {
       if (!constraints_.lower_bounds.empty() && constraints_.lower_bounds[i].defined()) {

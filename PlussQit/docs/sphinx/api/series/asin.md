@@ -8,6 +8,7 @@
 
 ```cpp
 Series::asin() const -> Series
+Series& Series::asin_()
 ```
 
 ## What It Does
@@ -47,6 +48,29 @@ That means:
 On the current verified public surface used here, the reverse-mode example
 returns zero sensitivities. So the forward values are correct, but you should
 not yet rely on this method path for backward propagation.
+
+## In-Place Form
+
+`asin_()` is the in-place sibling of [`asin()`](asin.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({-0.5, 0.0, 0.5});
+
+auto& ref = x.asin_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.52359878, 0, 0.52359878]
+same object: true
+```
 
 ## Examples
 
@@ -133,6 +157,13 @@ data=[nan, -1.5707963, 0, 1.5707963, nan]
 Use `asin()` when the data already represents sine-like values in `[-1, 1]`
 and you need principal angles back. The two practical checks are domain safety
 and whether your workflow needs verified gradient propagation.
+
+## Aliases
+
+**`arcsin()`** / **`arcsin_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `asin()` / `asin_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

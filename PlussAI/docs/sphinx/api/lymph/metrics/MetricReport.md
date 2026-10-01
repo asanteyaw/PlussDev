@@ -30,7 +30,7 @@ type; use `reports::Metric` in cross-family code.
 `roc_auc` · `logloss` · `mcc` · `cohen_kappa` · `gini` · `average_precision` ·
 `brier`
 : Classification slots. Each is a **1-element `Series`** slice of `values` when
-  that metric was requested, and `Series::undefined()` otherwise.
+  that metric was requested, and `pluss::series::undefined()` otherwise.
 
 `Series mse` · `rmse` · `mae` · `r2` · `quantile_loss`
 : Regression slots, same rule.

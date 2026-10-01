@@ -13,11 +13,11 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="AtlasTimelineAccessor::index" href="index.html" />
+    <link rel="next" title="AtlasTimelineAccessor::isnat" href="isnat.html" />
     <link rel="prev" title="AtlasTimelineAccessor::fmt" href="fmt.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -49,7 +49,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Replaces every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature in <strong>every frame of the stack</strong> with its
+<p>Replaces every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature in <strong>every frame of the stack</strong> with its
 hour-of-day (<code class="docutils literal notranslate"><span class="pre">0</span></code>-<code class="docutils literal notranslate"><span class="pre">23</span></code>), as a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — the same transform
 <a class="reference internal" href="../dataframe-timeline/hour.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl().hour()</span></code></span></a> applies to a single frame,
 broadcast across the whole <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> via <a class="reference internal" href="../atlas/map_frames.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map_frames()</span></code></span></a>.</p>
@@ -105,7 +105,7 @@ feature replaced by its <code class="docutils literal notranslate"><span class="
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Atlas::tl()</span></code> requires <strong>every</strong> feature on each stacked frame to already be
-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, checked lazily per frame the first time a method like this
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, checked lazily per frame the first time a method like this
 one is actually called — see <a class="reference internal" href="../atlas/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::tl</span></code></span></a>.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code> in the output, same as on a single frame — see
 <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasTimelineAccessor::isnat</span></code></span></a>.</p></li>
@@ -128,9 +128,9 @@ the finer-grained time-of-day components.</p></li>
     <span class="label">Previous</span>
     <span class="title">fmt</span>
   </a>
-  <a class="next-link" href="index.html">
+  <a class="next-link" href="isnat.html">
     <span class="label">Next</span>
-    <span class="title">index</span>
+    <span class="title">isnat</span>
   </a>
 </div>
 </section>
@@ -190,7 +190,7 @@ the finer-grained time-of-day components.</p></li>
   <li><a href="../../atlas_api_reference.html">Atlas API Reference</a><ul>
   <li><a href="../../atlas_timeline_accessor_api_reference.html">AtlasTimelineAccessor API Reference</a><ul>
       <li>Previous: <a href="fmt.html" title="previous chapter">AtlasTimelineAccessor::fmt</a></li>
-      <li>Next: <a href="index.html" title="next chapter">AtlasTimelineAccessor::index</a></li>
+      <li>Next: <a href="isnat.html" title="next chapter">AtlasTimelineAccessor::isnat</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -130,12 +130,14 @@ The following still need deliberate discussion before implementation grows
 around them:
 
 - ~~how much browser export should be present in the first usable release~~
-  — resolved: browser hosting is the default runtime (decision #4); the
-  remaining open question is how much *live, in-browser* interactivity
-  (real filter re-querying without a C++ round trip, an embedded HTTP/JSON
-  API) belongs in this phase versus a later one — the current browser tab
-  is a fully rendered, real dashboard, but its filter controls still
-  require calling back into C++ and reopening the tab to update.
+  — resolved: browser hosting is the default runtime (decision #4).
+- ~~how much *live, in-browser* interactivity belongs in this phase~~ —
+  resolved: `Studio::serve()` (Phase 2, `include/pluss/bi/serve.h`) now
+  embeds a real HTTP server so filter controls re-query and redraw via
+  `POST /api/filter` without a new C++-side call or tab reopen. `Studio::
+  show()`/`export_html()` remain the static-snapshot path, deliberately
+  unchanged — `serve()` is the explicit opt-in for a live session, not a
+  new default, since it blocks the calling thread until interrupted.
 - whether a SQL front-end over `Nexus` should be implemented immediately after
   the fluent planner matures, or deferred until the planner and dashboard
   runtime are hardened
@@ -554,11 +556,55 @@ Needed pieces, in rough build order:
 
 - ✅ static dashboard HTML/SVG generation (`detail::dashboard_html_`)
 - ✅ cross-platform "open a real browser tab" launcher (`BI_tools`)
-- an embedded HTTP + JSON query API so a filter control re-queries the live
-  `Studio`/`Session` instead of requiring a new C++-side `show()` call
-- client-side JS that calls that API and swaps in the redrawn SVG in place,
-  replacing today's inert `plussBiSyncSelect`/`plussBiSyncRange` chip-label
-  stubs
+- ✅ dashboard chrome, selectable per render via `DashboardChrome` (`show()`/
+  `export_html()`/`serve()`'s trailing `chrome` parameter, default
+  `Sidebar`): `Sidebar` is a fixed, non-scrolling top navbar (`.bi-topbar`)
+  and a fixed, non-scrolling left sidebar (`.bi-sidebar`, one tab per
+  `Board`), matching how this repo's own Sphinx API-reference site renders
+  — only `.bi-content` scrolls, and the sidebar collapses to a horizontal
+  strip under a responsive breakpoint. `None` is PlussBI's original plain
+  scrolling single-column document (boards simply stack, nothing pinned)
+  for dashboards that don't want navigation chrome at all — a small
+  embedded report, or a single-board view.
+- ✅ an embedded HTTP + JSON query API (`Studio::serve()`,
+  `include/pluss/bi/serve.h`, vendored `third_party/httplib`) so a filter
+  control re-queries the live `Studio`/`Session` via `POST /api/filter`
+  instead of requiring a new C++-side `show()` call — guarded by a
+  `std::mutex` since httplib dispatches on multiple threads
+- ✅ client-side JS (`plussBiApplyFilter`/`plussBiShowBoard`) that calls
+  that API via `fetch()` and swaps `#bi-content`/`#bi-session-chips` in
+  place, replacing the old inert `plussBiSyncSelect`/`plussBiSyncRange`
+  chip-label stubs; falls back to a "Static preview" status label when no
+  live server answers (e.g. a plain `export_html()` file opened directly)
+
+`serve.h` is deliberately **not** included by `pluss/bi/bi.h` (and so not by
+the umbrella `pluss/tils.h`): it is the only place that needs the vendored
+`httplib.h`, and most `Studio` consumers never call `serve()`. Only code
+that actually starts a live server includes `pluss/bi/serve.h` directly
+(see `PlussMic/examples/table/bi_demo_suite.cpp`'s `serve` mode).
+
+**The dashboard's CSS/JS/HTML shell are real, modular source files, not
+C++ string literals.** `detail::dashboard_html_` used to build the whole
+document (including a ~150-line CSS block and a ~50-line JS block) inline
+inside a C++ `ostringstream`, which is unpleasant to edit and gets no
+CSS/JS tooling. They now live as genuine files under
+`src/PlussBI/frontend/` — `static/css/dashboard.css`, `js/dashboard.js`,
+`html/dashboard_shell.html` — and are embedded byte-for-byte into a
+generated header (`include/pluss/bi/dashboard_assets.h`, gitignored) at
+CMake configure time (`src/PlussBI/CMakeLists.txt`, `CMAKE_CONFIGURE_DEPENDS`
+watches the three source files so editing one triggers regeneration). The
+handful of values that legitimately vary per render (max dashboard width, a
+plot's minimum height) are threaded through as CSS custom properties set
+inline on the root wrapper, never by rewriting the stylesheet's text, so
+the embedded CSS stays byte-identical regardless of render parameters.
+`dashboard_html_` assembles the final document with a single-pass
+`{{PLUSSBI_TITLE}}`/`{{PLUSSBI_STYLE_TAG}}`/`{{PLUSSBI_SCRIPT_TAG}}`/
+`{{PLUSSBI_BODY}}` token substitution into the shell template — no template
+engine, no recursive substitution risk (each token appears exactly once).
+`show()`/`export_html()` inline the CSS/JS (`inline_assets=true`) to keep
+the exported document a single portable file; `serve()` instead serves them
+as genuinely separate, cacheable `GET /assets/dashboard.css`/`.js` routes
+(`inline_assets=false`), the more idiomatic modular-web-app shape.
 
 ### Native Host (fallback)
 
@@ -578,6 +624,62 @@ Needed pieces:
 
 Both hosts render the exact same generated document — there is one
 dashboard artifact, not a native definition and a separate browser export.
+
+### Live Server Hardening (Phase 3)
+
+Phase 2 shipped the live server; Phase 3 made it safe to actually run
+unattended and gave it real automated coverage (previously `serve()` had
+none — only manual browser verification). Landed:
+
+- ✅ **`ServeHandle` / `Studio::start_serving()`.** `serve()`'s own doc
+  comment used to promise a "returned handle" that didn't exist — `serve()`
+  returned `void` and blocked forever, stoppable only by killing the
+  process. `start_serving()` is now the real non-blocking primitive: it
+  returns a move-only `ServeHandle` immediately (`.stop()` from any thread,
+  `.wait()` to block, `.running()`/`.port()`/`.url()` to inspect), and
+  `serve()` is a two-line wrapper (`start_serving(...).wait()`) kept purely
+  for the common blocking-CLI-call case. A handle's destructor stops and
+  joins automatically, so a `ServeHandle` going out of scope can never leak
+  a background thread or a bound socket. Every request handler now captures
+  a heap-allocated, `shared_ptr`-owned `detail::ServeContext` by value
+  (never `[&]` over `start_serving()`'s own stack frame, which is gone by
+  the time the caller gets the handle back) — the earlier Phase 2 draft of
+  this function captured stack locals by reference and would have been a
+  use-after-free the moment it was made non-blocking.
+- ✅ **A 1 MiB cap on `/api/filter` request bodies**
+  (`detail::kMaxFilterPayloadBytes`, via httplib's `set_payload_max_length`)
+  — the wire format is a handful of short string fields, so anything
+  actually needing more is hostile or broken, not a real client. httplib
+  answers an oversized body with `413 Payload Too Large` rather than
+  dropping the connection.
+- ✅ **Audited input handling** end to end: filter values round-trip
+  through the existing `escape_html_` calls already present at every render
+  site (confirmed safe, not a gap); every `PLUSS_CHECK`/`PLUSS_FAIL` in the
+  request path throws `pluss::Error : std::runtime_error`, caught by
+  `POST /api/filter`'s existing `catch (const std::exception&)`; malformed
+  JSON, an unknown control id, and a filter kind that doesn't match the
+  target control's `ControlKind` all resolve to a clean `400`, verified
+  by a real HTTP client hitting a real running server, not just as static
+  code review. The one real gap the audit found — an unparseable temporal
+  bound (`pluss::make_timeline` on garbage text) wasn't wrapped in a
+  try/catch — is fixed in `apply_filter_payload_`.
+- ✅ **A real automated test suite**
+  (`PlussMic/test/pluss_bi_serve_test.cpp`, target
+  `plussmic_bi_serve_tests`), using `httplib::Client` against a real
+  `start_serving()`-started server on an ephemeral port: `GET /` in both
+  chrome modes, `GET /assets/dashboard.{css,js}` byte-matching the embedded
+  constants, `POST /api/filter` for all three control kinds (category,
+  numeric-range, temporal-range) actually mutating `Studio` state (verified
+  via a follow-up `GET /`, not just the response echo), every adversarial
+  payload above returning 400/413 without crashing the server, a 12-way
+  concurrent-request smoke test, and both `ServeHandle` shutdown paths
+  (explicit `.stop()`+`.wait()`, and destructor-on-scope-exit) actually
+  closing the socket (a follow-up connection attempt fails to connect).
+
+Deliberately **out of scope**: authentication, CORS, non-localhost binding,
+rate limiting. None of that is warranted for a dev-tool that only ever
+binds to `127.0.0.1`; adding it now would be hardening against a threat
+model this server doesn't have.
 
 ## Caching and Performance
 
@@ -744,10 +846,18 @@ Suggested file grouping:
     by `src/PlussBI/CMakeLists.txt` as the real `PlussBI` static library
     target (previously this whole directory was an unwired stub)
 - `src/PlussBI/frontend/`
-  - static host assets only
+  - ✅ implemented: `static/css/dashboard.css`, `js/dashboard.js`,
+    `html/dashboard_shell.html` — the dashboard's real, hand-edited
+    CSS/JS/HTML source, embedded into `include/pluss/bi/dashboard_assets.h`
+    at CMake configure time (see "Rendering Layers" above; previously this
+    whole directory was an unwired, empty stub)
 - `src/PlussBI/backend/`
-  - transport / session plumbing only (the HTTP + JSON query API from
-    "Rendering Layers" above belongs here once built)
+  - ✅ implemented as header-only instead of this directory: the live HTTP
+    + JSON query API from "Rendering Layers" above is `Studio::serve()` in
+    `include/pluss/bi/serve.h`, matching the header-only style of the rest
+    of `include/pluss/bi/`. `include/BI_tools/json_lite.h` (a deliberately
+    minimal flat-JSON encode/decode, not a general JSON library) and the
+    vendored `third_party/httplib/httplib.h` (cpp-httplib, MIT) back it.
 
 Public headers should eventually mirror that shape under `include/pluss/bi/`.
 `BrowserExport`'s public header lives under `include/BI_tools/` instead,

@@ -145,7 +145,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
         {2, 2, 6}, cfg);
     const Series mc_weight = pluss::make_series(
         std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8}, {2, 2, 2}, cfg);
-    const Series mc_out = pluss::nn::conv1d(mc_input, mc_weight, Series(), 1, 0, 1, 1);
+    const Series mc_out = pluss::nn::conv1d(mc_input, mc_weight, pluss::series::undefined(), 1, 0, 1, 1);
     const std::vector<double> mc_expected{
         1.48, 1.58, 1.68, 1.78, 1.88,
         3.64, 3.90, 4.16, 4.42, 4.68,
@@ -186,7 +186,7 @@ bool run_conv_checks(std::ostream* err = nullptr) {
   const Series causal_input = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {1, 1, 4}, cfg);
   const Series causal_weight = pluss::make_series(std::vector<double>{0.0, 0.0, 1.0}, {1, 1, 3}, cfg);
   const auto causal_pad = pluss::nn::causal_padding1d(3, 1);
-  const Series causal_out = pluss::nn::conv1d(causal_input, causal_weight, Series(), causal_pad, 1, 1, 1);
+  const Series causal_out = pluss::nn::conv1d(causal_input, causal_weight, pluss::series::undefined(), causal_pad, 1, 1, 1);
   if (!approx_vec(vec_f64(causal_out), std::vector<double>{1.0, 2.0, 3.0, 4.0})) {
     if (err) *err << "conv1d causal output mismatch\n";
     return false;
@@ -214,8 +214,8 @@ bool run_conv_checks(std::ostream* err = nullptr) {
   const Series tcn_signal = pluss::make_series(std::vector<double>{0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, -1.0}, {1, 1, 8}, cfg);
   const Series tcn_k1 = pluss::make_series(std::vector<double>{0.25, 0.5, 0.25}, {1, 1, 3}, cfg);
   const Series tcn_k2 = pluss::make_series(std::vector<double>{1.0, 0.0, -1.0}, {1, 1, 3}, cfg);
-  const Series stage1 = pluss::nn::conv1d(tcn_signal, tcn_k1, Series(), pluss::nn::causal_padding1d(3, 1), 1, 1, 1).relu();
-  const Series stage2_func = pluss::nn::conv1d(stage1, tcn_k2, Series(), pluss::nn::causal_padding1d(3, 2), 1, 2, 1);
+  const Series stage1 = pluss::nn::conv1d(tcn_signal, tcn_k1, pluss::series::undefined(), pluss::nn::causal_padding1d(3, 1), 1, 1, 1).relu();
+  const Series stage2_func = pluss::nn::conv1d(stage1, tcn_k2, pluss::series::undefined(), pluss::nn::causal_padding1d(3, 2), 1, 2, 1);
 
   pluss::nn::Conv1d tcn_layer1(pluss::nn::Conv1dOptions{
       .in_channels = 1,

@@ -15,6 +15,15 @@ classic::StatusOr<pluss::Series> classic::EstimatorBase::assess(
     const classic::AssessOptions& options = {}) const;
 ```
 
+## What It Does
+
+Predicts from `batch`'s features (internally, `infer` or `infer_scores`,
+whichever a requested metric needs) and immediately scores those
+predictions against `batch`'s own ground-truth labels, returning the
+requested metric values directly -- the whole predict-then-score sequence
+in one call, so no intermediate prediction `Series` needs to be threaded
+through by hand.
+
 ## Parameters
 
 `batch` — `LabeledBatch`

@@ -23,7 +23,6 @@ api/stream-timeline/epoch
 api/stream-timeline/floor
 api/stream-timeline/fmt
 api/stream-timeline/hour
-api/stream-timeline/index
 api/stream-timeline/isnat
 api/stream-timeline/iso
 api/stream-timeline/leap

@@ -104,8 +104,8 @@ std::string kind_name(StreamKind kind) {
       return "Note";
     case StreamKind::Timeline:
       return "Timeline";
-    case StreamKind::TimeIndex:
-      return "TimeIndex";
+    case StreamKind::Duration:
+      return "Duration";
   }
   return "Unknown";
 }

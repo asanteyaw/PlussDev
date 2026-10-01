@@ -24,9 +24,9 @@ nn::LayerNormOptions opts{};
 opts.normalized_size = 128;  // must match the width of the axis being normalized
 
 nn::Schedule net;
-net.then("fc1", nn::Fusion(784, 128));
-net.then("norm1", nn::LayerNorm(opts));
-net.then("act1", nn::ReLU());
+net.append("fc1", nn::Fusion(784, 128));
+net.append("norm1", nn::LayerNorm(opts));
+net.append("act1", nn::ReLU());
 
 const Series y = net.forward(x);
 ```

@@ -53,6 +53,16 @@ Each of the three also has a second overload taking
 common case when candidates are spelled directly as a braced `{...}` list at
 the call site; it simply forwards to the first overload.
 
+## What It Does
+
+Runs [`cross_assess_sparse_*`](cross_assess_sparse.md) once for every
+candidate in `candidates`, against the same `x`/`y`, and ranks the results
+into one [`SparseTuneReport`](SparseTuneReport.md) by `objective_metric` --
+identifying which `LinearFamilyOptions` combination scores best, without a
+manual loop. Every candidate is always evaluated in full; there is no
+budgeted or early-stopping search here the way dense
+[`tune`](../tune/tune.md) offers.
+
 ## Parameters
 
 `candidates`

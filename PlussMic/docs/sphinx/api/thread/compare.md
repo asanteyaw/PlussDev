@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 308b27aafe5c -->
+<!-- pluss-signature-hash: 91a2796c8105 -->
 
 # Thread::compare
 
@@ -14,7 +14,7 @@ Thread::compare(const char* other, ThreadBinaryCompareOp op) const -> Thread
 Thread::compare(const pluss::Series& other, ThreadBinaryCompareOp op) const -> Thread
 Thread::compare(const pluss::Note& other, ThreadBinaryCompareOp op) const -> Thread
 Thread::compare(const pluss::Timeline& other, ThreadBinaryCompareOp op) const -> Thread
-Thread::compare(const pluss::TimeIndex& other, ThreadBinaryCompareOp op) const -> Thread
+Thread::compare(const pluss::Duration& other, ThreadBinaryCompareOp op) const -> Thread
 Thread::compare(const Thread& other, ThreadBinaryCompareOp op) const -> Thread
 ```
 
@@ -40,13 +40,13 @@ enum class ThreadBinaryCompareOp : std::uint8_t {
 ```
 
 The right-hand side can be a numeric scalar, a text scalar, one of the four native pluss
-payload types (`Series`, `Note`, `Timeline`, `TimeIndex`), or another `Thread` — every
+payload types (`Series`, `Note`, `Timeline`, `Duration`), or another `Thread` — every
 overload converges on the same row-by-row boolean result.
 
-```{important} A text literal against a Timeline/TimeIndex thread is parsed as a date, not compared as text
-Calling the `std::string_view` overload on a `Timeline`- or `TimeIndex`-kind thread does
-**not** perform a lexical string comparison — the literal is parsed as a timestamp first
-(via `pluss::make_timeline`), then compared temporally. Only `Note`-kind threads (and, as a
+```{important} A text literal against a Timeline thread is parsed as a date, not compared as text
+Calling the `std::string_view` overload on a `Timeline`-kind thread does **not** perform
+a lexical string comparison — the literal is parsed as a timestamp first (via
+`pluss::make_timeline`), then compared temporally. Only `Note`-kind threads (and, as a
 fallback, everything else) compare the literal as plain text. See Example 4.
 ```
 
@@ -54,7 +54,7 @@ fallback, everything else) compare the literal as plain text. See Example 4.
 
 **other**
     The right-hand comparison target — a numeric scalar (`double`), a text scalar
-    (`std::string_view`/`const char*`), one of `Series`/`Note`/`Timeline`/`TimeIndex`, or
+    (`std::string_view`/`const char*`), one of `Series`/`Note`/`Timeline`/`Duration`, or
     another `Thread`. Non-`Thread` payloads that carry more than one row are compared
     positionally and must match `size()`; a single-element (`dim() == 0`) payload
     broadcasts across every row instead.

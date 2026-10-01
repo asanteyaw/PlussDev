@@ -93,7 +93,7 @@ definition) or any other `plan` value, and no effect at all when calling a
 
 ### `groups`
 
-`pluss::Series groups = Series::undefined()`
+`pluss::Series groups = pluss::series::undefined()`
 
 Only consulted by [`metrics::cross_assess`](../metrics.md) when `plan =
 GroupCrossVal` — forwarded as the `groups` argument to

@@ -18,19 +18,19 @@
 namespace pluss::subsp::math::linalg {
 
 struct QRResult {
-  Series Q;
-  Series R;
+  Series Q = pluss::series::undefined();
+  Series R = pluss::series::undefined();
 };
 
 struct SVDResult {
-  Series U;
-  Series S;
-  Series Vh;
+  Series U = pluss::series::undefined();
+  Series S = pluss::series::undefined();
+  Series Vh = pluss::series::undefined();
 };
 
 struct EighResult {
-  Series eigenvalues;   // ascending, shape (n,)
-  Series eigenvectors;  // columns are eigenvectors, shape (n,n)
+  Series eigenvalues = pluss::series::undefined();   // ascending, shape (n,)
+  Series eigenvectors = pluss::series::undefined();  // columns are eigenvectors, shape (n,n)
 };
 
 inline SVDResult svd(const Series& a, bool full_matrices);

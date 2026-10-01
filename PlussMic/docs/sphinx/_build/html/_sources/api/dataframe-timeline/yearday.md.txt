@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::yearday() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its 1-based
+Replaces every selected `Timeline` feature with its 1-based
 day-of-year (`1`-`366`), as a numeric `Series` — same feature name, same row
 order.
 
@@ -83,7 +83,7 @@ relative to a non-leap year, so early-March dates coincide numerically.
 
 - 1-based: January 1st is day `1`, never `0`.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.

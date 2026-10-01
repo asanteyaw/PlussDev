@@ -54,14 +54,3 @@ Round-trips back to `90`, confirming the construction and conversion agree.
 
 - [`total().seconds()`](total_seconds.md): the finer unit this divides.
 - [`total().hours()`](total_hours.md): the next unit up.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="total_seconds.html">
-    <span class="label">Previous</span>
-    <span class="title">total_seconds</span>
-  </a>
-  <a class="next-link" href="total_hours.html">
-    <span class="label">Next</span>
-    <span class="title">total_hours</span>
-  </a>
-</div>

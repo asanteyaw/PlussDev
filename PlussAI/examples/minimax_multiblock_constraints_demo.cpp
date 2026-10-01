@@ -40,7 +40,7 @@ int main() {
   pluss::nn::optim::MinimaxConstraints constraints{};
   constraints.lower_bounds = {
       pluss::make_series(std::vector<float>{0.0f, 0.0f}, {2}, cfg),
-      Series::undefined(),
+      pluss::series::undefined(),
   };
   constraints.inequalities = [](const std::vector<Series>& p) {
     // Nonlinear inequality: ||w||^2 - 5 <= 0.
@@ -94,8 +94,8 @@ int main() {
     auto tw = pluss::subsp::math::diff::trace(w_tape, true);
     auto tb = pluss::subsp::math::diff::trace(b_tape, true);
     const Series loss = tw.value().sub(w_target).square().sum().add(tb.value().sub(b_target).square().sum()).mul(0.5);
-    tw.clear_sensitivity();
-    tb.clear_sensitivity();
+    tw.clear();
+    tb.clear();
     loss.reverse();
     minimax_tape.step();
     if (iter % 50 == 0) {

@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const -> DataF
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its Unix epoch
+Replaces every selected `Timeline` feature with its Unix epoch
 value in `unit`, as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -234,7 +234,7 @@ outright — see [`span()`](span.md) for the method that does accept it.
   those units only make sense as a calendar-relative distance between two
   timestamps — see [`span()`](span.md) for that.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`, not a sentinel epoch value.

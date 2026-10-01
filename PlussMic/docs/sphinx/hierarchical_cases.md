@@ -23,7 +23,7 @@ look like joined strings, but operations use the structured case-label payloads.
 
 `DataFrame::label().part(position: int64) -> Thread`
 
-`DataFrame::case_study(pick: CasePick) -> DataFrame`
+`DataFrameCaseStudyAccessor::pick(const CasePick& pick) const -> DataFrame`
 
 `DataFrame::label().sort(options: SortLabelOptions) -> DataFrame`
 
@@ -88,7 +88,7 @@ look like joined strings, but operations use the structured case-label payloads.
 
 - A hierarchical case axis is typed. Numeric case labels remain numeric, text case labels remain `Note`, and timeline case labels remain temporal.
 - `features(...)`, `select(...)`, `drop(...)`, transforms, and feature reordering preserve case-label metadata.
-- `case_study(CasePick)` supports partial-label and full-key lookup.
+- `case_study().pick(CasePick)` supports partial-label and full-key lookup.
 - `group().by(LabelGroup{...}).agg(...)` groups by case labels without requiring those labels to exist as ordinary features.
 - `unstack(...)` rejects duplicate output cells. Aggregate first when multiple rows map to the same output cell.
 - `stack(...)` moves feature names into the case hierarchy and preserves homogeneous typed values.
@@ -115,8 +115,8 @@ Expected output:
 ### Example 2: select by a partial case label
 
 ```cpp
-auto west = indexed.case_study(DataFrame::CasePick{
-    .caselbl = "region",
+auto west = indexed.case_study().pick(DataFrame::CasePick{
+    .label = "region",
     .value = "West",
 });
 ```
@@ -130,7 +130,7 @@ Expected output:
 ### Example 3: select by full structured key
 
 ```cpp
-auto row = indexed.case_study(DataFrame::CasePick{
+auto row = indexed.case_study().pick(DataFrame::CasePick{
     .key = {"East", "201", "Q2"},
 });
 ```

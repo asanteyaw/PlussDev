@@ -71,7 +71,7 @@ public:
     this->module_record("norm", norm_);
   }
 
-  [[nodiscard]] Series forward(const Series& a, const Series& context = Series()) const {
+  [[nodiscard]] Series forward(const Series& a, const Series& context = pluss::series::undefined()) const {
     Series pre_elu = fc1_->forward(a);
     if (options_.context_size > 0 && context.defined()) {
       pre_elu = pre_elu.add(fc_context_->forward(context));
@@ -82,7 +82,7 @@ public:
     const Series skip = (options_.input_size == options_.output_size) ? a : skip_->forward(a);
     return norm_->forward(skip.add(glu_out));
   }
-  Series operator()(const Series& a, const Series& context = Series()) const { return forward(a, context); }
+  Series operator()(const Series& a, const Series& context = pluss::series::undefined()) const { return forward(a, context); }
 
   [[nodiscard]] const GatedResidualNetworkOptions& options() const noexcept { return options_; }
 
@@ -222,7 +222,7 @@ public:
   // `flat_vars`: [..., num_vars]. `context`: [..., context_size] or
   // undefined when options.context_size == 0. Returns (combined [...,
   // hidden_size], weights [..., num_vars]).
-  [[nodiscard]] std::pair<Series, Series> forward(const Series& flat_vars, const Series& context = Series()) const {
+  [[nodiscard]] std::pair<Series, Series> forward(const Series& flat_vars, const Series& context = pluss::series::undefined()) const {
     const std::int64_t last_dim = flat_vars.sizes().size() - 1;
 
     std::vector<Series> processed{};

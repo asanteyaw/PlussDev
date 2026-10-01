@@ -11,7 +11,7 @@ int main() {
   cls::FeatureBatch batch{};
   batch.x = pluss::make_series({1.0, 2.0}, {2}, f64).reshape({2, 1});
 
-  const cls::StatusOr<cls::FeatureBatch> sliced = cls::slice_feature_batch(batch, pluss::Series::undefined());
+  const cls::StatusOr<cls::FeatureBatch> sliced = cls::slice_feature_batch(batch, pluss::series::undefined());
   std::cout << "ok = " << std::boolalpha << sliced.ok() << "\n";
   std::cout << "message = \"" << sliced.status().message << "\"\n";
 

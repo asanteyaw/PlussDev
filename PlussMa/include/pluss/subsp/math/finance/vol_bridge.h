@@ -51,8 +51,8 @@ struct JointLikelihoodWeights {
 
 struct ReturnsMetrics {
   double loglik = std::numeric_limits<double>::quiet_NaN();
-  pluss::codem::Series loglik_per_obs = pluss::codem::Series::undefined();
-  pluss::codem::Series variance = pluss::codem::Series::undefined();
+  pluss::codem::Series loglik_per_obs = pluss::series::undefined();
+  pluss::codem::Series variance = pluss::series::undefined();
 };
 
 CODEM_API ReturnsMetrics returns_metrics(const pluss::codem::Series& returns,
@@ -96,10 +96,10 @@ namespace pricing {
 
 struct OptionVolMetrics {
   double loglik = std::numeric_limits<double>::quiet_NaN();
-  pluss::codem::Series loglik_per_obs = pluss::codem::Series::undefined();
-  pluss::codem::Series variance = pluss::codem::Series::undefined();
-  pluss::codem::Series mean = pluss::codem::Series::undefined();
-  pluss::codem::Series standardized_innovation = pluss::codem::Series::undefined();
+  pluss::codem::Series loglik_per_obs = pluss::series::undefined();
+  pluss::codem::Series variance = pluss::series::undefined();
+  pluss::codem::Series mean = pluss::series::undefined();
+  pluss::codem::Series standardized_innovation = pluss::series::undefined();
 };
 
 CODEM_API OptionVolMetrics pricing_metrics(const pluss::codem::Series& returns,

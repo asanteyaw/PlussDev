@@ -14,7 +14,7 @@ ThreadTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) co
 
 Reinterprets the bound thread's *current* clock reading as a naive local
 wall-clock time in `options.tz`, and converts it to the true UTC instant that
-local reading corresponds to — same length, still `Timeline`/`TimeIndex`-kind.
+local reading corresponds to — same length, still `Timeline`-kind.
 **This changes the underlying instant** (unlike [`tz()`](tz.md), which only
 relabels display). The result is then displayed under `options.tz`, so its
 wall-clock text looks unchanged even though the instant it now represents has
@@ -36,7 +36,7 @@ a wall-clock reading that never actually occurred).
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound thread,
+    A new `Timeline`-kind thread, same length as the bound thread,
     with its underlying instant recomputed as if its prior reading were local
     time in `options.tz`.
 
@@ -192,7 +192,7 @@ tz_localize: nonexistent local time (DST spring-forward gap)
 - `nonexistent` only recognizes `"shift_forward"` as an actual handling
   strategy; every other value (default `"raise"` included) throws for a
   spring-forward-gap reading.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` regardless of `options`.
 

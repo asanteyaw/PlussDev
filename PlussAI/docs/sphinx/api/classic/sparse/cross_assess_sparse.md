@@ -45,6 +45,16 @@ Each of the three takes only the `SparseTripletMatrix` form — there is no
 `SparseCsrMatrix` overload here (the matrix is converted once internally via
 [`sparse_triplet_to_csr`](make_sparse_triplet.md), then sliced per fold).
 
+## What It Does
+
+Splits `x`/`y` into folds per `split`, and for each fold fits a fresh
+sparse linear learner (binary, regression, or multiclass, matching which
+function was called) on the fold's training rows, then scores it on
+**both** the training and held-out rows of that fold -- unlike the dense
+[`cross_assess`](../metrics/cross_assess.md), which records only the
+held-out side. The train-side numbers exist specifically to reveal
+overfitting a test-only view would miss.
+
 ## Parameters
 
 `x`

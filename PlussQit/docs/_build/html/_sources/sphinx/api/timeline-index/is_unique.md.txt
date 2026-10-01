@@ -1,0 +1,129 @@
+<!-- pluss-hand-authored -->
+
+# TimelineIndexAccessor::is_unique
+
+[Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
+
+## Signature
+
+```cpp
+bool TimelineIndexAccessor::is_unique() const
+```
+
+## Whether Every Instant Appears Once
+
+`is_unique()` returns `true` when no stored instant occurs more than once.
+It compares epoch-nanosecond identity, so two textual timestamps that denote
+the same instant are duplicates even if their offsets were written
+differently.
+
+Uniqueness and ordering answer separate questions. A monotonic axis may contain
+ties and therefore be non-unique; an unordered axis may still contain only
+distinct instants. Use this query before operations whose meaning assumes one
+case per timestamp. Use [`unique()`](unique.md) only when a new axis with
+duplicates removed is actually required.
+
+To ask the inverse question without adding a duplicate public method, write
+`!index.is_unique()`.
+
+## Trivial And Unordered Axes
+
+Empty and one-element indices are unique because neither can contain a repeated
+pair. The result does not depend on timezone presentation or sort direction.
+For monotonic axes the implementation compares neighbors with constant memory.
+For an unordered axis it tracks observed nanosecond values in a hash set so
+duplicates separated by other timestamps are still detected.
+
+## Examples
+
+Example 1. A normal ordered axis is unique.
+
+```cpp
+auto index = pluss::timeindex::make({
+    "2024-11-01T00:00:00Z",
+    "2024-11-01T00:20:00Z",
+    "2024-11-01T00:40:00Z",
+});
+std::cout << std::boolalpha << index.is_unique() << "\n";
+```
+
+### Output
+
+```text
+true
+```
+
+Example 2. Equal neighboring instants make a monotonic axis non-unique.
+
+```cpp
+auto tied = pluss::timeindex::make({
+    "2025-01-01T00:00:00Z",
+    "2025-01-01T00:00:00+00:00",
+    "2025-01-01T01:00:00Z",
+});
+std::cout << std::boolalpha << tied.is_unique() << "\n";
+```
+
+### Output
+
+```text
+false
+```
+
+Example 3. Separated duplicates are detected on a deliberately unordered axis.
+
+```cpp
+auto separated = pluss::timeindex::make({
+    "2025-01-01T02:00:00Z",
+    "2025-01-01T00:00:00Z",
+    "2025-01-01T01:00:00Z",
+    "2025-01-01T02:00:00Z",
+}, false);
+std::cout << std::boolalpha << separated.is_unique() << "\n";
+```
+
+### Output
+
+```text
+false
+```
+
+Example 4. Empty and singleton axes satisfy the predicate.
+
+```cpp
+auto empty = pluss::timeindex::make(std::vector<std::int64_t>{});
+auto one = pluss::timeindex::make("2025-01-01T00:00:00Z");
+std::cout << std::boolalpha
+          << "empty=" << empty.is_unique() << "\n"
+          << "one=" << one.is_unique() << "\n";
+```
+
+### Output
+
+```text
+empty=true
+one=true
+```
+
+## Cost And Allocation
+
+The result is a native C++ `bool`. Monotonic input is checked in `O(n)` time
+with `O(1)` auxiliary memory. Unordered input remains `O(n)` expected time but
+may allocate `O(n)` hash storage. The TimelineIndexAccessor itself is not modified.
+
+## See Also
+
+- [`TimelineIndexAccessor::unique`](unique.md)
+- [`TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md)
+- [`TimelineIndexAccessor::sort`](sort.md)
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="is_monotonic_increasing.html">
+    <span class="label">Previous</span>
+    <span class="title">is_monotonic_increasing</span>
+  </a>
+  <a class="next-link" href="join_asof.html">
+    <span class="label">Next</span>
+    <span class="title">join_asof</span>
+  </a>
+</div>

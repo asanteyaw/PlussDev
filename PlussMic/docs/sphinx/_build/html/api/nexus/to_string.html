@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -112,6 +112,11 @@ orders -&gt; [3 cs x 2 feat]
 <a class="reference internal" href="schema.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">schema()</span></code></span></a>/<a class="reference internal" href="graph.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">graph()</span></code></span></a> for those.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">std::cout</span> <span class="pre">&lt;&lt;</span> <span class="pre">nexus</span></code> (via <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>) and <a class="reference internal" href="show.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">show()</span></code></span></a> both produce exactly
 this same text.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::bundle::output_render(std::ostream&amp;</span> <span class="pre">os,</span> <span class="pre">const</span> <span class="pre">Nexus&amp;</span> <span class="pre">nexus)</span></code> is a third,
+free-function spelling of the exact same one-line forward — <code class="docutils literal notranslate"><span class="pre">output_render(os,</span> <span class="pre">nexus)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">os</span> <span class="pre">&lt;&lt;</span> <span class="pre">nexus</span></code>, and <code class="docutils literal notranslate"><span class="pre">nexus.show(os)</span></code> are all interchangeable. <code class="docutils literal notranslate"><span class="pre">output_render</span></code> exists to
+satisfy generic/templated printing code that looks for an <code class="docutils literal notranslate"><span class="pre">output_render(stream,</span> <span class="pre">value)</span></code>
+customization point rather than assuming <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code> is available.</p></li>
 </ul>
 </section>
 <section id="see-also">

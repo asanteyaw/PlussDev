@@ -66,14 +66,3 @@ nanoseconds," not "days mod 3 days."
 
 - [`floordiv`](floordiv.md): the quotient complementary to this remainder.
 - [`div`](div.md): exact division by a plain count.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="floordiv.html">
-    <span class="label">Previous</span>
-    <span class="title">floordiv</span>
-  </a>
-  <a class="next-link" href="eq.html">
-    <span class="label">Next</span>
-    <span class="title">eq</span>
-  </a>
-</div>

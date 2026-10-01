@@ -12,6 +12,17 @@ std::vector<Module::ParameterRef> nn::Module::named_parameters();
 std::vector<Module::ConstParameterRef> nn::Module::named_parameters() const;
 ```
 
+## What It Does
+
+The same recursive parameter walk as [`parameters`](parameters.md), but
+each result carries its dotted registration name alongside the pointer --
+what you want when identifying, logging, or selectively touching specific
+weights (a per-layer learning rate, a checkpoint diff) rather than treating
+every parameter identically. Names compose through nesting: a `Schedule`
+prefixes each stage's own parameter names with that stage's registration
+name and a dot, so a deeply nested weight's name reflects its full path
+from the root.
+
 ## Parameters
 
 None.
@@ -46,8 +57,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2, /*bias=*/false));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2, /*bias=*/false));
 
   for (auto& named : net.named_parameters()) {
     std::cout << "'" << named.name << "' defined=" << std::boolalpha << named.series->defined() << "\n";
@@ -108,10 +119,10 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule inner;
-  inner.then("proj", nn::Fusion(4, 4));
+  inner.append("proj", nn::Fusion(4, 4));
 
   nn::Schedule outer;
-  outer.then("block", inner);
+  outer.append("block", inner);
 
   for (auto& named : outer.named_parameters()) {
     std::cout << "'" << named.name << "'\n";

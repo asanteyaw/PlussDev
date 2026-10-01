@@ -9,6 +9,7 @@
 ```cpp
 Series Series::polygamma(std::int64_t n) const
 Series& Series::polygamma_(std::int64_t n)
+Series& Series::polygamma_(std::int64_t n) const
 ```
 
 ## What It Does
@@ -80,6 +81,28 @@ The backward pass evaluates that higher order the same way the forward pass
 does. `n` is a structural integer argument and carries no gradient. At a pole,
 the value or sensitivity can be infinite; near a pole, expect very large
 magnitudes.
+
+## In-Place Form
+
+`polygamma_()` is the in-place sibling of [`polygamma()`](polygamma.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `polygamma_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0});
+x.polygamma_(0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-0.57721566, 0.42278434]
+```
 
 ## Examples
 
@@ -230,12 +253,12 @@ polygamma: n must be >= 0
   derivative.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pile.html">
+  <a class="prev-link" href="platform.html">
     <span class="label">Previous</span>
-    <span class="title">pile</span>
+    <span class="title">platform</span>
   </a>
-  <a class="next-link" href="pos.html">
+  <a class="next-link" href="positive.html">
     <span class="label">Next</span>
-    <span class="title">pos</span>
+    <span class="title">positive</span>
   </a>
 </div>

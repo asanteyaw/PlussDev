@@ -47,7 +47,7 @@ using FeatureTransformer = ::pluss::ai::nodej::prep::FeatureTransformer;
 
 struct HoldoutSplitOptions {
   double test_size = 0.2;
-  Series stratify = Series::undefined();
+  Series stratify = pluss::series::undefined();
   std::string stratify_feature{};
   std::uint64_t random_state = 0;
   bool deterministic = true;
@@ -189,11 +189,10 @@ struct TimeSeriesSplit {
   if (!axis.has_value()) {
     ::pluss::throw_error("prep::timeseries_split(frame,time_feature): missing time feature \"" + std::string(time_feature) + "\".");
   }
-  if (axis->kind() != pluss::table::ThreadKind::Timeline &&
-      axis->kind() != pluss::table::ThreadKind::TimeIndex) {
+  if (axis->kind() != pluss::table::ThreadKind::Timeline) {
     ::pluss::throw_error(
         "prep::timeseries_split(frame,time_feature): time feature \"" + std::string(time_feature) +
-        "\" must be timeline/timeindex. Cast it first.");
+        "\" must be timeline. Cast it first.");
   }
   const pluss::table::DataFrame ordered = frame.arrange(std::array<std::string_view, 1>{time_feature}, true, true);
   return timeseries_split(ordered, options);
@@ -264,13 +263,13 @@ struct SimpleImputerSummary {
   double constant_value = 0.0;
   double empty_feature_fallback = 0.0;
   std::vector<std::string> feature_names{};
-  Series statistics = Series::undefined();
+  Series statistics = pluss::series::undefined();
 };
 
 struct StandardScalerSummary {
   std::vector<std::string> feature_names{};
-  Series mean = Series::undefined();
-  Series scale = Series::undefined();
+  Series mean = pluss::series::undefined();
+  Series scale = pluss::series::undefined();
 };
 
 struct TransformerSummary {
@@ -471,7 +470,7 @@ public:
   [[nodiscard]] bool learned() const noexcept { return learned_; }
   SimpleImputerOptions options_{};
   std::vector<std::string> feature_names_{};
-  Series statistics_ = Series::undefined();
+  Series statistics_ = pluss::series::undefined();
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;
@@ -522,8 +521,8 @@ public:
   [[nodiscard]] bool learned() const noexcept { return learned_; }
   StandardScalerOptions options_{};
   std::vector<std::string> feature_names_{};
-  Series mean_ = Series::undefined();
-  Series scale_ = Series::undefined();
+  Series mean_ = pluss::series::undefined();
+  Series scale_ = pluss::series::undefined();
 
 private:
   [[nodiscard]] std::vector<std::string> resolved_feature_names_(const pluss::table::DataFrame& frame, const char* where) const;

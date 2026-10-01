@@ -16,7 +16,7 @@ AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with the
+Replaces every `Timeline` feature in **every frame of the stack** with the
 elapsed distance between it and `other`, in `options.unit` (or plain `unit`) — the same
 transform [`DataFrame::tl().span()`](../dataframe-timeline/span.md) applies to a single
 frame, broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
@@ -102,7 +102,7 @@ measured against both frames.
 - Calendar units and `BusinessDays` require `*this` and `other` to share the same
   timezone — mismatched timezones throw; convert with [`tz()`](tz.md) first.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - If either side is `NaT` for a row, that row's span displays as `"NULL"`.
 - Each frame is transformed independently against the same `other` — see the important

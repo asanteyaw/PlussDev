@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Duration::add" href="add.html" />
-    <link rel="prev" title="Duration API Reference" href="../../duration_api_reference.html" />
+    <link rel="next" title="Duration::days" href="days.html" />
+    <link rel="prev" title="Duration::clip" href="clip.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -45,20 +45,17 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">NestedInt64Literal</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nested</span><span class="p">);</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::nanos</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">);</span>
-<span class="c1">// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the same three overloads as nanos above.</span>
-
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::microseconds</span><span class="p">()</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">milliseconds</span><span class="p">();</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::seconds</span><span class="p">();</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::minutes</span><span class="p">();</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::hours</span><span class="p">();</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::days</span><span class="p">();</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::weeks</span><span class="p">()</span>
+<span class="c1">// microseconds, milliseconds, seconds, minutes, hours, days, and weeks</span>
+<span class="c1">// each provide the same scalar, nested-literal, and flat-plus-shape forms.</span>
 
 <span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Nanos</span><span class="p">,</span><span class="w"> </span><span class="n">Microseconds</span><span class="p">,</span><span class="w"> </span><span class="n">Milliseconds</span><span class="p">,</span><span class="w"> </span><span class="n">Seconds</span><span class="p">,</span><span class="w"> </span><span class="n">Minutes</span><span class="p">,</span><span class="w"> </span><span class="n">Hours</span><span class="p">,</span><span class="w"> </span><span class="n">Days</span><span class="p">,</span><span class="w"> </span><span class="n">Weeks</span><span class="w"> </span><span class="p">};</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">NestedInt64Literal</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nested</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::make</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::make_duration</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::make_duration</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">NestedInt64Literal</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nested</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::make_duration</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flat</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">RangeView</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sizes</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="w"> </span><span class="n">unit</span><span class="p">);</span>
 
 <span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="w"> </span><span class="nf">pluss::duration::range</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">end</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">step</span><span class="p">);</span>
 </pre></div>
@@ -90,9 +87,13 @@ explicit <code class="docutils literal notranslate"><span class="pre">RangeView<
 generalized to take the unit as a runtime <code class="docutils literal notranslate"><span class="pre">Unit</span></code> value instead of picking a
 function by name — for call sites where the unit isn’t known until runtime
 (read from config, chosen generically). See Example 4.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pluss::duration::range(start,</span> <span class="pre">end,</span> <span class="pre">step)</span></code>: a pandas-<code class="docutils literal notranslate"><span class="pre">timedelta_range</span></code>-style
-constructor that always builds a 1D array, regardless of how <code class="docutils literal notranslate"><span class="pre">start</span></code>/<code class="docutils literal notranslate"><span class="pre">end</span></code>/
-<code class="docutils literal notranslate"><span class="pre">step</span></code> themselves were built.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::make_duration(values,</span> <span class="pre">unit)</span></code>: the intentional flat factory spelling.
+It forwards to <code class="docutils literal notranslate"><span class="pre">pluss::duration::make</span></code> and exists alongside the other
+root-level <code class="docutils literal notranslate"><span class="pre">make_*</span></code> factories. It does not define different conversion or
+shape semantics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pluss::duration::range(start,</span> <span class="pre">end,</span> <span class="pre">step)</span></code>: a half-open regular-sequence
+constructor that always builds a 1D array, regardless of how <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">step</span></code> themselves were built.</p></li>
 </ul>
 </section>
 <section id="parameters">
@@ -112,10 +113,10 @@ from <code class="docutils literal notranslate"><span class="pre">std::initializ
 <p><strong>unit</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::duration::Unit</span></code>, <code class="docutils literal notranslate"><span class="pre">make</span></code> only)</p>
 <p>Which unit <code class="docutils literal notranslate"><span class="pre">count</span></code>/<code class="docutils literal notranslate"><span class="pre">nested</span></code>/<code class="docutils literal notranslate"><span class="pre">flat</span></code> are expressed in.</p>
 <p><strong>start</strong>, <strong>end</strong>, <strong>step</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Duration&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">range</span></code> only)</p>
-<p>Inclusive start, exclusive-past-end stop, and step size, exactly like
-<code class="docutils literal notranslate"><span class="pre">pluss::timeline::date_range</span></code> for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or Python’s <code class="docutils literal notranslate"><span class="pre">range()</span></code>. All three are
-themselves <code class="docutils literal notranslate"><span class="pre">Duration</span></code> values (typically scalar, built from one of the unit
-factories above), not raw integers.</p>
+<p>Inclusive start, exclusive stop, and step size, following the same half-open
+interval rule as <code class="docutils literal notranslate"><span class="pre">pluss::timeline::date_range</span></code>. All three are themselves
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> values (typically scalar, built from one of the unit factories
+above), not raw integers.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -199,6 +200,23 @@ data=3.0000
 data=[1.0000, 2.0000, 3.0000]
 </pre></div>
 </div>
+<p>The root-level convenience spelling forwards to the same factory. It is useful
+when generic construction code uses the <code class="docutils literal notranslate"><span class="pre">make_*</span></code> family:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">make</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">convenient</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_duration</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">Unit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;same_shape=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">canonical</span><span class="p">.</span><span class="n">sizes</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">convenient</span><span class="p">.</span><span class="n">sizes</span><span class="p">())</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; same_values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">canonical</span><span class="p">.</span><span class="n">eq</span><span class="p">(</span><span class="n">convenient</span><span class="p">).</span><span class="n">all</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>same_shape=true same_values=true
+</pre></div>
+</div>
 <p>Example 5. <code class="docutils literal notranslate"><span class="pre">pluss::duration::range</span></code> builds a real 1D array with no <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
 involved.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">range</span><span class="p">(</span>
@@ -208,8 +226,8 @@ involved.</p>
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dim=1 numel=6
 Duration(shape=[6], dim=1, numel=6)
 [ 0 days 00:00:00.000000000, 2 days 00:00:00.000000000, 4 days 00:00:00.000000000, 6 days 00:00:00.000000000, 8 days 00:00:00.000000000, 10 days 00:00:00.000000000 ]
@@ -248,16 +266,6 @@ plain <code class="docutils literal notranslate"><span class="pre">Series</span>
 <li><p><a class="reference internal" href="../timeline/diff.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::diff</span></code></span></a>: the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-side source of a
 <code class="docutils literal notranslate"><span class="pre">Duration</span></code>.</p></li>
 </ul>
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../duration_api_reference.html">
-    <span class="label">Previous</span>
-    <span class="title">Duration API Reference</span>
-  </a>
-  <a class="next-link" href="add.html">
-    <span class="label">Next</span>
-    <span class="title">add</span>
-  </a>
-</div>
 </section>
 </section>
 
@@ -290,54 +298,13 @@ plain <code class="docutils literal notranslate"><span class="pre">Series</span>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
@@ -354,8 +321,8 @@ plain <code class="docutils literal notranslate"><span class="pre">Series</span>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../duration_api_reference.html">Duration API Reference</a><ul>
-      <li>Previous: <a href="../../duration_api_reference.html" title="previous chapter">Duration API Reference</a></li>
-      <li>Next: <a href="add.html" title="next chapter">Duration::add</a></li>
+      <li>Previous: <a href="clip.html" title="previous chapter">Duration::clip</a></li>
+      <li>Next: <a href="days.html" title="next chapter">Duration::days</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

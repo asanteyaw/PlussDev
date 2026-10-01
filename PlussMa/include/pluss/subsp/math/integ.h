@@ -287,7 +287,7 @@ struct QuadraOptions {
 };
 
 struct QuadraResult {
-  Series value{};
+  Series value = pluss::series::undefined();
   double error_estimate{std::numeric_limits<double>::infinity()};
   std::int64_t evaluations{0};
   std::int64_t refinements{0};
@@ -626,7 +626,7 @@ struct QuadraNdOptions {
 };
 
 struct QuadraNdResult {
-  Series value{};
+  Series value = pluss::series::undefined();
   std::int64_t dimensions{0};
   std::int64_t evaluations{0};
 };
@@ -873,7 +873,7 @@ struct AleatoriaOptions {
 };
 
 struct AleatoriaResult {
-  Series value{};
+  Series value = pluss::series::undefined();
   double standard_error{0.0};
   std::int64_t samples{0};
 };
@@ -1174,7 +1174,7 @@ struct IntegraOptions {
 };
 
 struct IntegraResult {
-  Series value{};
+  Series value = pluss::series::undefined();
   double error_estimate{0.0};
   std::int64_t evaluations{0};
   IntegraStrategy strategy_used{IntegraStrategy::Quadrature};

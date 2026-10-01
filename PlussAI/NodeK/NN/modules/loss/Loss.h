@@ -43,14 +43,14 @@ struct SmoothL1Options {
 
 struct BCEWithLogitsOptions {
   LossReduction reduction{LossReduction::Mean};
-  Series weight{};
-  Series positive_class_weight{};
+  Series weight = pluss::series::undefined();
+  Series positive_class_weight = pluss::series::undefined();
 };
 
 struct NLLOptions {
   LossReduction reduction{LossReduction::Mean};
   std::int64_t class_dim{-1};
-  Series class_weight{};
+  Series class_weight = pluss::series::undefined();
   bool use_ignore_index{false};
   std::int64_t ignore_index{-100};
 };
@@ -59,7 +59,7 @@ struct CrossEntropyOptions {
   LossReduction reduction{LossReduction::Mean};
   std::int64_t class_dim{-1};
   double label_smoothing{0.0};
-  Series class_weight{};
+  Series class_weight = pluss::series::undefined();
   bool use_ignore_index{false};
   std::int64_t ignore_index{-100};
 };
@@ -311,7 +311,7 @@ inline Series NLL(const Series& log_probs, const Series& target, const NLLOption
   detail::require_class_weight_(options.class_weight, log_probs, class_dim, "nn::losses::NLL");
 
   const Series target_i64 = target.to(ScalarType::Int64);
-  Series active_mask{};
+  Series active_mask = pluss::series::undefined();
   Series safe_target = target_i64;
   if (options.use_ignore_index) {
     active_mask = target_i64.ne(options.ignore_index);
@@ -325,7 +325,7 @@ inline Series NLL(const Series& log_probs, const Series& target, const NLLOption
   Series class_scale = detail::class_weight_for_index_target_(class_weight, safe_target, log_probs);
   per = per.mul(class_scale);
 
-  Series denom{};
+  Series denom = pluss::series::undefined();
   if (options.class_weight.defined()) {
     denom = class_scale.sum();
   } else {
@@ -396,7 +396,7 @@ inline Series CrossEntropy(const Series& logits, const Series& target, const Cro
 
   detail::require_target_matches_logits_except_class_(target, logits, class_dim, "nn::losses::CrossEntropy");
   const Series target_i64 = target.to(ScalarType::Int64);
-  Series active_mask{};
+  Series active_mask = pluss::series::undefined();
   Series safe_target = target_i64;
   if (options.use_ignore_index) {
     active_mask = target_i64.ne(options.ignore_index);
@@ -410,7 +410,7 @@ inline Series CrossEntropy(const Series& logits, const Series& target, const Cro
   Series class_scale = detail::class_weight_for_index_target_(class_weight, safe_target, log_probs);
   nll_per = nll_per.mul(class_scale);
 
-  Series smooth_per{};
+  Series smooth_per = pluss::series::undefined();
   if (class_weight.defined()) {
     const Series cw_norm = class_weight.div(class_weight.sum().clamp_min(1e-12));
     smooth_per = log_probs.mul(detail::class_weight_view_(cw_norm, logits, class_dim)).sum(class_dim).neg();

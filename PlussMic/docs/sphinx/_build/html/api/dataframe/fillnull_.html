@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 00615aa9f037 -->
+<!-- pluss-signature-hash: c3243745ae01 -->
 <section id="dataframe-fillnull">
 <h1>DataFrame::fillnull_<a class="headerlink" href="#dataframe-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
@@ -47,7 +47,7 @@
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">fillnull_</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span>
 </pre></div>
 </div>
 </section>
@@ -74,7 +74,7 @@ directly (<code class="docutils literal notranslate"><span class="pre">df.featur
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(double)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Series</span></code> feature.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(std::string_view)</span></code> / <code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">char*)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Note</span></code> feature.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">pluss::Timeline&amp;)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> feature.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">pluss::TimeIndex&amp;)</span></code>: every <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull_(const</span> <span class="pre">pluss::Duration&amp;)</span></code>: every <code class="docutils literal notranslate"><span class="pre">Duration</span></code> feature.</p></li>
 </ul>
 <p>A feature of a <em>different</em> kind than the overload you called is left completely
 untouched — calling <code class="docutils literal notranslate"><span class="pre">fillnull_(0.0)</span></code> never affects a <code class="docutils literal notranslate"><span class="pre">Note</span></code> column, even if that
@@ -84,9 +84,9 @@ column also has missing values.</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>value</strong></p>
 <p>The replacement value, in whichever type matches the overload: a <code class="docutils literal notranslate"><span class="pre">double</span></code> for numeric
-<code class="docutils literal notranslate"><span class="pre">Series</span></code> features, a string for <code class="docutils literal notranslate"><span class="pre">Note</span></code> features, or a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> / <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> scalar
-for those respective feature kinds. The same <code class="docutils literal notranslate"><span class="pre">value</span></code> is used for every matching
-feature on the frame — there is no per-feature value list.</p>
+<code class="docutils literal notranslate"><span class="pre">Series</span></code> features, a string for <code class="docutils literal notranslate"><span class="pre">Note</span></code> features, a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> scalar for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
+features, or a <code class="docutils literal notranslate"><span class="pre">Duration</span></code> scalar for <code class="docutils literal notranslate"><span class="pre">Duration</span></code> features. The same <code class="docutils literal notranslate"><span class="pre">value</span></code> is used for
+every matching feature on the frame — there is no per-feature value list.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -197,9 +197,9 @@ fill strategies.</p></li>
 applies to every feature of the matching kind.</p></li>
 <li><p>A feature whose kind doesn’t match the overload called is left completely alone, even
 if it has nulls of its own — call the matching overload for each kind you need filled.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> and <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code> overloads follow the exact same
+<li><p>The <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> and <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> overloads follow the exact same
 kind-scoped, whole-frame, mutating pattern as the <code class="docutils literal notranslate"><span class="pre">double</span></code> and <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>
-overloads shown above, filling every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> feature’s nulls with
+overloads shown above, filling every <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">Duration</span></code> feature’s nulls with
 the given scalar.</p></li>
 </ul>
 </section>

@@ -48,7 +48,7 @@ plain value type — copy or store it freely.
 `synthetic_base_indices` / `synthetic_neighbor_indices` / `synthetic_steps` / `synthetic_labels`
 : Set only when `uses_synthesis` is `true` (`growth = BlendNeighbors`
   actually produced at least one synthetic row) — all four
-  `Series::undefined()` otherwise. Together they describe every
+  `pluss::series::undefined()` otherwise. Together they describe every
   synthetic row without yet computing it:
   `base + step * (neighbor - base)`, where `base`/`neighbor` index into
   the **original** feature rows and `step` is the interpolation
@@ -57,7 +57,7 @@ plain value type — copy or store it freely.
 
 `removed_indices` — `pluss::Series`
 : Set only when `uses_cleaning` is `true` (`target.clean != None`) —
-  `Series::undefined()` otherwise, even if cleaning ran and happened to
+  `pluss::series::undefined()` otherwise, even if cleaning ran and happened to
   remove nothing. The original row indices cleaning discarded, before
   any resampling or synthesis ran.
 

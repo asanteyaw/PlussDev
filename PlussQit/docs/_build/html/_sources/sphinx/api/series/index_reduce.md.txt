@@ -11,6 +11,7 @@ Series Series::index_reduce(std::int64_t dim, const Series& index, const Series&
 Series Series::index_reduce(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce, bool include_self) const
 Series& Series::index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce) const
 Series& Series::index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce, bool include_self) const
+Series& Series::index_reduce_(std::int64_t dim, const Series& index, const Series& source, const std::string& reduce) const
 ```
 
 ## What It Does
@@ -98,6 +99,31 @@ Differentiable in both `self` and `source`, with a rule specific to each
   zero.
 
 The integer `index` and the string `reduce` are non-differentiable.
+
+## In-Place Form
+
+`index_reduce_()` is the in-place sibling of [`index_reduce()`](index_reduce.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `index_reduce_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 1.0, 1.0}, {3});
+auto idx = pluss::series::arange(0, 3, 2, pluss::ScalarType::Int64);
+auto src = pluss::make_series({5.0, 7.0}, {2});
+
+x.index_reduce_(0, idx, src, "prod");
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 1, 7]
+```
 
 ## Examples
 

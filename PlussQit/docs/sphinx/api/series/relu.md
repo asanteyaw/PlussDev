@@ -8,6 +8,7 @@
 
 ```cpp
 Series::relu() const -> Series
+Series& Series::relu_()
 ```
 
 ## What It Does
@@ -39,6 +40,29 @@ For `y = relu(x)`, the local slope is piecewise:
 
 At `x = 0`, the current verified surface also uses `0`. That convention is
 visible directly in the example below.
+
+## In-Place Form
+
+`relu_()` is the in-place sibling of [`relu()`](relu.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 2.0});
+
+auto& ref = x.relu_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 0, 2]
+same object: true
+```
 
 ## Examples
 

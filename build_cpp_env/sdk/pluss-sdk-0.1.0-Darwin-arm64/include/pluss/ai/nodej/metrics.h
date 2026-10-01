@@ -11,16 +11,16 @@
 namespace pluss::ai::nodej {
 
 struct FoldAssessResult {
-  Series metrics = Series::undefined();
-  Series train_indices = Series::undefined();
-  Series test_indices = Series::undefined();
+  Series metrics = pluss::series::undefined();
+  Series train_indices = pluss::series::undefined();
+  Series test_indices = pluss::series::undefined();
 };
 
 struct CrossAssessReport {
   std::vector<FoldAssessResult> folds{};
   std::vector<MetricKind> metrics{};
-  Series mean_metrics = Series::undefined();
-  Series std_metrics = Series::undefined();
+  Series mean_metrics = pluss::series::undefined();
+  Series std_metrics = pluss::series::undefined();
 };
 
 StatusOr<CrossAssessReport> cross_assess(const ModelSpec& spec,
@@ -52,44 +52,44 @@ enum class ConfusionNormalize : std::uint8_t {
 
 struct ConfusionOptions {
   ConfusionNormalize normalize = ConfusionNormalize::None;
-  Series label_order = Series::undefined();
-  Series sample_weights = Series::undefined();
+  Series label_order = pluss::series::undefined();
+  Series sample_weights = pluss::series::undefined();
 };
 
 struct ConfusionTable {
-  Series labels = Series::undefined();
-  Series counts = Series::undefined();
+  Series labels = pluss::series::undefined();
+  Series counts = pluss::series::undefined();
   ConfusionNormalize normalize = ConfusionNormalize::None;
 };
 
 struct ClassReportOptions {
-  Series label_order = Series::undefined();
+  Series label_order = pluss::series::undefined();
   // Fallback value when precision/recall denominators are zero.
   // Keep in [0, 1] for reference-style behavior.
   double zero_division = 0.0;
-  Series sample_weights = Series::undefined();
+  Series sample_weights = pluss::series::undefined();
   double balance_quality_alpha = 0.1;
   bool square_balance_quality = true;
 };
 
 struct ClassReport {
-  Series labels = Series::undefined();
-  Series support = Series::undefined();
-  Series precision = Series::undefined();
-  Series recall = Series::undefined();
-  Series f1 = Series::undefined();
-  Series specificity = Series::undefined();
-  Series geometric_mean = Series::undefined();
-  Series balance_quality = Series::undefined();
-  Series accuracy = Series::undefined();         // shape [1]
-  Series mcc = Series::undefined();              // shape [1] -- Matthews correlation coefficient
-  Series cohen_kappa = Series::undefined();      // shape [1] -- unweighted Cohen's kappa
-  Series micro_average = Series::undefined();    // shape [3] -> [precision, recall, f1]
-  Series macro_average = Series::undefined();    // shape [3] -> [precision, recall, f1]
-  Series weighted_average = Series::undefined(); // shape [3] -> [precision, recall, f1]
-  Series micro_balance = Series::undefined();     // shape [3] -> [specificity, geometric_mean, balance_quality]
-  Series macro_balance = Series::undefined();     // shape [3] -> [specificity, geometric_mean, balance_quality]
-  Series weighted_balance = Series::undefined();  // shape [3] -> [specificity, geometric_mean, balance_quality]
+  Series labels = pluss::series::undefined();
+  Series support = pluss::series::undefined();
+  Series precision = pluss::series::undefined();
+  Series recall = pluss::series::undefined();
+  Series f1 = pluss::series::undefined();
+  Series specificity = pluss::series::undefined();
+  Series geometric_mean = pluss::series::undefined();
+  Series balance_quality = pluss::series::undefined();
+  Series accuracy = pluss::series::undefined();         // shape [1]
+  Series mcc = pluss::series::undefined();              // shape [1] -- Matthews correlation coefficient
+  Series cohen_kappa = pluss::series::undefined();      // shape [1] -- unweighted Cohen's kappa
+  Series micro_average = pluss::series::undefined();    // shape [3] -> [precision, recall, f1]
+  Series macro_average = pluss::series::undefined();    // shape [3] -> [precision, recall, f1]
+  Series weighted_average = pluss::series::undefined(); // shape [3] -> [precision, recall, f1]
+  Series micro_balance = pluss::series::undefined();     // shape [3] -> [specificity, geometric_mean, balance_quality]
+  Series macro_balance = pluss::series::undefined();     // shape [3] -> [specificity, geometric_mean, balance_quality]
+  Series weighted_balance = pluss::series::undefined();  // shape [3] -> [specificity, geometric_mean, balance_quality]
 };
 
 StatusOr<ConfusionTable> confusion_table(const Series& truth_labels,
@@ -166,12 +166,12 @@ namespace detail {
 // and its ovr_auc_binary01 helper). threshold_curve() below is a third
 // consumer, not a fourth copy.
 struct BinaryScoreCurve {
-  Series score_sorted = Series::undefined();          // descending, stable order
-  Series true_positive_cumulative = Series::undefined();
-  Series false_positive_cumulative = Series::undefined();
-  Series is_threshold_boundary = Series::undefined();  // last position of each distinct score
-  Series positive_count = Series::undefined();         // shape [1]
-  Series negative_count = Series::undefined();         // shape [1]
+  Series score_sorted = pluss::series::undefined();          // descending, stable order
+  Series true_positive_cumulative = pluss::series::undefined();
+  Series false_positive_cumulative = pluss::series::undefined();
+  Series is_threshold_boundary = pluss::series::undefined();  // last position of each distinct score
+  Series positive_count = pluss::series::undefined();         // shape [1]
+  Series negative_count = pluss::series::undefined();         // shape [1]
 };
 
 StatusOr<BinaryScoreCurve> binary_score_curve(const Series& scores, const Series& labels01);
@@ -179,10 +179,10 @@ StatusOr<BinaryScoreCurve> binary_score_curve(const Series& scores, const Series
 } // namespace detail
 
 struct ThresholdCurve {
-  Series thresholds = Series::undefined();  // every achievable decision threshold, descending
-  Series precision = Series::undefined();
-  Series recall = Series::undefined();
-  Series f1 = Series::undefined();
+  Series thresholds = pluss::series::undefined();  // every achievable decision threshold, descending
+  Series precision = pluss::series::undefined();
+  Series recall = pluss::series::undefined();
+  Series f1 = pluss::series::undefined();
 };
 
 // One sort + two cumulative sums computes precision/recall/F1 at every

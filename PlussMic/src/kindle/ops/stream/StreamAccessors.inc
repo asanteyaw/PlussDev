@@ -17,8 +17,8 @@ Stream Stream::cast(pluss::table::ThreadCastTarget target,
         return t.cast(options).note();
       case pluss::table::ThreadCastTarget::Timeline:
         return t.cast(options).timeline();
-      case pluss::table::ThreadCastTarget::TimeIndex:
-        return t.cast(options).timeindex();
+      case pluss::table::ThreadCastTarget::Duration:
+        return t.cast(options).duration();
     }
     return t;
   });
@@ -68,8 +68,8 @@ Stream StreamCastAccessor::timeline() const {
   return base_.cast(pluss::table::ThreadCastTarget::Timeline, options_);
 }
 
-Stream StreamCastAccessor::timeindex() const {
-  return base_.cast(pluss::table::ThreadCastTarget::TimeIndex, options_);
+Stream StreamCastAccessor::duration() const {
+  return base_.cast(pluss::table::ThreadCastTarget::Duration, options_);
 }
 
 StreamNoteAccessor::StreamNoteAccessor(Stream base) : base_(std::move(base)) {}
@@ -280,10 +280,6 @@ Stream StreamTimelineAccessor::tz(std::string_view name) const {
 
 Stream StreamTimelineAccessor::localize(const pluss::table::TimelineLocalizeOptions& options) const {
   return thread_accessor_stream_result(base_, [&](const pluss::table::Thread& t) { return t.tl().localize(options); });
-}
-
-Stream StreamTimelineAccessor::index(bool require_sorted) const {
-  return thread_accessor_stream_result(base_, [&](const pluss::table::Thread& t) { return t.tl().index(require_sorted); });
 }
 
 StreamTimeSeriesAccessor::StreamTimeSeriesAccessor(Stream base) : base_(std::move(base)) {}

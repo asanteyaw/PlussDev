@@ -72,9 +72,9 @@ SIG_BODY_MARKERS = ("class ", "struct ", "public:", "private:", "namespace ")
 
 # "*" prefix = required. Order is canonical; extra sections may only trail.
 SECTIONS: dict[str, list[str]] = {
-    "method": ["*Signature", "Parameters", "Returns", "Errors",
+    "method": ["*Signature", "*What It Does", "Parameters", "Returns", "Errors",
                "*Practical Examples", "See Also"],
-    "function": ["*Signature", "Parameters", "Returns", "Errors",
+    "function": ["*Signature", "*What It Does", "Parameters", "Returns", "Errors",
                  "*Practical Examples", "See Also"],
     # A class landing page hosts the ## Methods table + toctree; the object's
     # role prose lives on its Introduction child page, checked separately.
@@ -139,7 +139,7 @@ class Manifest:
     fw_title: str
     fw_summary: str
     fw_include: str
-    fw_header: str
+    fw_header: str | list[str]
     families: list[Family]
     symbols: list[Symbol]
 
@@ -268,16 +268,26 @@ def sig_hash(text: str) -> str:
 
 
 def read_header_surface(m: Manifest) -> str | None:
-    """`header` may point at a single file or a directory of headers."""
-    if not m.fw_header:
+    """`header` may be a single path or a list of paths; each may point at a
+    single file or a directory of headers. A framework whose public surface
+    is genuinely assembled from more than one top-level library (e.g. `nn`
+    re-exporting PlussTils's DataLoader stack through its own umbrella
+    header) lists every directory that surface actually spans, so the
+    presence check below verifies against the real declarations rather than
+    approximating with just one library's tree."""
+    paths = m.fw_header if isinstance(m.fw_header, list) else [m.fw_header]
+    paths = [p for p in paths if p]
+    if not paths:
         return None
-    target = REPO_ROOT / m.fw_header
-    if target.is_dir():
-        return "\n".join(p.read_text(encoding="utf-8", errors="ignore")
-                         for p in sorted(target.rglob("*.h")))
-    if target.is_file():
-        return target.read_text(encoding="utf-8", errors="ignore")
-    return None
+    chunks: list[str] = []
+    for raw in paths:
+        target = REPO_ROOT / raw
+        if target.is_dir():
+            chunks += [p.read_text(encoding="utf-8", errors="ignore")
+                       for p in sorted(target.rglob("*.h"))]
+        elif target.is_file():
+            chunks.append(target.read_text(encoding="utf-8", errors="ignore"))
+    return "\n".join(chunks) if chunks else None
 
 
 # --------------------------------------------------------------------------- #
@@ -413,6 +423,11 @@ def method_skeleton(sym: Symbol, method: str) -> str:
          "## Signature", "", "```cpp",
          "// public callable declarations only -- all overloads, incl. the `_` in-place",
          "// form when this method has one; full parameter types and defaults.", "```", "",
+         "## What It Does", "",
+         "<!-- prose: what the call actually does, its effect or the value it produces,",
+         "     how it fits into the surrounding API -- everything a reader needs before",
+         "     the parameter-level detail makes sense. Not a parameter-by-parameter",
+         "     breakdown; that belongs in ## Parameters below. -->", "",
          "## Parameters", "",
          "<!-- deflist: for each parameter, what it controls, its default, and the",
          "     behaviour or interpretation consequence of changing it. -->",
@@ -471,6 +486,11 @@ def function_skeleton(sym: Symbol) -> str:
          sym.summary or "<!-- one or two sentences: what this function does -->", "",
          "## Signature", "", "```cpp",
          "// public callable declarations only -- every overload, full types + defaults", "```", "",
+         "## What It Does", "",
+         "<!-- prose: what the call actually does, its effect or the value it produces,",
+         "     how it fits into the surrounding API -- everything a reader needs before",
+         "     the parameter-level detail makes sense. Not a parameter-by-parameter",
+         "     breakdown; that belongs in ## Parameters below. -->", "",
          "## Parameters", "",
          "`<Type name>`", ": <!-- what it controls, default, effect of changing it -->", "",
          "## Returns", "", "<!-- the returned object and how to read it -->", "",
@@ -598,13 +618,13 @@ def cmd_wire(args: argparse.Namespace) -> int:
         if s.methods and (DOCS / f"{stem}/Introduction.md").exists():
             seq.append("Introduction")
         seq += sorted(s.methods)
-        # Owned options pages nest under the object. They live beside the object
-        # page (api/.../scaling/StandardScalerOptions.md), so their toctree ref
-        # is a bare sibling stem, not a `{name}/...` child path.
-        owned_opts = sorted(o.name for o in m.symbols
-                            if o.kind == "options" and o.owner == s.qualname)
+        # Owned pages (options, or any other symbol with owner = this one, e.g.
+        # a per-group options carrier) nest under the object. They live beside
+        # the object page (api/.../scaling/StandardScalerOptions.md), so their
+        # toctree ref is a bare sibling stem, not a `{name}/...` child path.
+        owned = sorted(o.name for o in m.symbols if o.owner == s.qualname)
         if page.exists():
-            refs = [f"{s.name}/{child}" for child in seq] + owned_opts
+            refs = [f"{s.name}/{child}" for child in seq] + owned
             body = _toctree(refs, 1, hidden=True) if refs else ""
             apply(page, _replace_block(page.read_text(encoding="utf-8"),
                                        TOC_START, TOC_END, body), s.page)
@@ -674,13 +694,13 @@ def build_nav(m: Manifest) -> dict:
         for mth in sorted(s.methods):
             kids.append({"type": "method", "label": mth,
                          "page": _href(f"{stem}/{mth}")})
-        # Owned options pages sit under the object they configure. The
-        # indentation carries the "these options belong to this object"
+        # Owned pages sit under the object they belong to -- options structs,
+        # or any other symbol with owner = this one (e.g. a per-group options
+        # carrier). The indentation carries the "this belongs to this object"
         # relationship the flat family listing could not show.
-        for o in sorted((x for x in m.symbols
-                         if x.kind == "options" and x.owner == s.qualname),
+        for o in sorted((x for x in m.symbols if x.owner == s.qualname),
                         key=lambda x: x.name):
-            kids.append({"type": "options", "label": o.name,
+            kids.append({"type": o.kind, "label": o.name,
                          "page": _href(o.page)})
         if kids:
             node["children"] = kids

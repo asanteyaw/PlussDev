@@ -13,7 +13,7 @@ AtlasTimelineAccessor::leap() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with a
+Replaces every `Timeline` feature in **every frame of the stack** with a
 boolean `Series` flagging whether the row's calendar year is a leap year — the same
 transform [`DataFrame::tl().leap()`](../dataframe-timeline/leap.md) applies to a single
 frame, broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_frames.md).
@@ -74,7 +74,7 @@ Every `2024`-dated row flags `true`; `frame(1)`'s `"2023-03-01"` row flags `fals
 - Reflects the *row's year*, not whether the row's exact date is February 29th — any
   `2024`-dated row flags `true`, since 2024 as a whole is a leap year.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row displays as `"NULL"` in the output, same as on a single frame — see
   [`AtlasTimelineAccessor::isnat`](isnat.md).

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NexusPull API Reference &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="_static/api_ref.css?v=15722e59" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/api_nav.js?v=af5a0516"></script>
+    <script src="_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PlussMic scribble" href="api/plussmic_scribble.html" />
+    <link rel="prev" title="NexusQueryPrepared::execute" href="api/nexus-sql/prepared-execute.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="nexuspull-api-reference">
+<h1>NexusPull API Reference<a class="headerlink" href="#nexuspull-api-reference" title="Link to this heading">¶</a></h1>
+<p>This page documents the public <code class="docutils literal notranslate"><span class="pre">NexusPull</span></code> and <code class="docutils literal notranslate"><span class="pre">NexusPullAgg</span></code> surface — the
+fluent root-grain feature builder returned by
+<a class="reference internal" href="nexus_api_reference.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::pull(root)</span></code></span></a>, and its scoped
+per-table reducer sub-builder returned by <code class="docutils literal notranslate"><span class="pre">NexusPull::agg(table)</span></code>.</p>
+<p>Both types live in <code class="docutils literal notranslate"><span class="pre">pluss::bundle</span></code> beside <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>. They are two different
+public spellings of the exact same execution path
+<a class="reference internal" href="api/nexus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::pull()</span></code></span></a> documents in full: the string-grammar
+overloads (<code class="docutils literal notranslate"><span class="pre">pull(root,</span> <span class="pre">{&quot;orders.amount.sum&quot;})</span></code>) and the fluent builder below
+both bottom out in the same <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> list and the same pull engine. Nothing
+here changes <em>what</em> a pull can express — only how ergonomic it is to build
+that request in real feature-engineering code.</p>
+<section id="what-it-is">
+<h2>What It Is<a class="headerlink" href="#what-it-is" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">nx.pull(&quot;customers&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusPull</span></code> anchored at <code class="docutils literal notranslate"><span class="pre">&quot;customers&quot;</span></code>. From
+there:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.take(...)</span></code> requests plain (non-aggregate) fields — either from the root
+table itself, or from a related table by naming it explicitly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.count(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.sum(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.mean(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.median(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.min(...)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.max(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.std(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.var(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.ndistinct(...)</span></code> request an
+aggregate field directly, given an already-qualified <code class="docutils literal notranslate"><span class="pre">&quot;table.feature&quot;</span></code>
+source string.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.agg(table)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">NexusPullAgg</span></code> scoped to one related table, so
+several reducers on that table can be written without repeating the table
+name in every call — <code class="docutils literal notranslate"><span class="pre">.agg(&quot;events&quot;).count(...).sum(...).end()</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">.count(&quot;events.event_id&quot;,</span> <span class="pre">...).sum(&quot;events.spend&quot;,</span> <span class="pre">...)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.add(spec)</span></code> / <code class="docutils literal notranslate"><span class="pre">.add({specs...})</span></code> accepts a pre-built <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> directly —
+the only way to reach <code class="docutils literal notranslate"><span class="pre">.windowed(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.root_windowed(...)</span></code>, since those
+live on <code class="docutils literal notranslate"><span class="pre">PullSpec</span></code> itself, not on the builder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.root()</span></code> / <code class="docutils literal notranslate"><span class="pre">.specs()</span></code> inspect the builder’s accumulated state without
+executing anything.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.collect()</span></code> executes the accumulated spec list and returns the pulled
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> — the only method that touches the workspace.</p></li>
+</ul>
+<p>Every builder method except <code class="docutils literal notranslate"><span class="pre">.collect()</span></code>, <code class="docutils literal notranslate"><span class="pre">.root()</span></code>, and <code class="docutils literal notranslate"><span class="pre">.specs()</span></code> returns a
+reference back to the same builder (<code class="docutils literal notranslate"><span class="pre">NexusPull&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">NexusPullAgg&amp;</span></code>), so
+calls chain in place; there is no hidden copying the way <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>’s own
+COW value methods work.</p>
+<p>```{note} <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView</span></code> is never spelled out in these examples
+Several <code class="docutils literal notranslate"><span class="pre">take</span></code>/reducer overloads accept a <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView::Of&lt;T&gt;</span></code> —
+a lightweight non-owning view type, not something user code is meant to name
+directly. It has implicit constructors from a brace list, a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;T&gt;</span></code>,
+a <code class="docutils literal notranslate"><span class="pre">std::array&lt;T,</span> <span class="pre">N&gt;</span></code>, and a <code class="docutils literal notranslate"><span class="pre">std::span&lt;const</span> <span class="pre">T&gt;</span></code>, so passing any of those at
+a call site works without ever writing <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> yourself. Wherever an
+overload set also includes a same-shaped <code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;T&gt;</span></code> overload
+(added specifically to keep plain <code class="docutils literal notranslate"><span class="pre">{...}</span></code> brace calls unambiguous), these
+pages call that one “the brace-literal form” and show it with plain <code class="docutils literal notranslate"><span class="pre">{...}</span></code>;
+the <code class="docutils literal notranslate"><span class="pre">RangeView::Of&lt;T&gt;</span></code> overload is exercised by passing an existing <strong>named</strong>
+container variable instead.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Using This Reference
+
+- Use the left sidebar to open one method page at a time.
+- Each method page contains its own signatures, parameter details, notes, and
+  verified outputs.
+- See [`Nexus::pull`](api/nexus/pull.md) for the field-expression grammar,
+  aliasing rules, and windowed-aggregate semantics shared by every spelling
+  of a pull.
+
+## Method Pages
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+api/nexus-pull/add
+api/nexus-pull/take
+api/nexus-pull/count
+api/nexus-pull/ndistinct
+api/nexus-pull/sum
+api/nexus-pull/mean
+api/nexus-pull/median
+api/nexus-pull/min
+api/nexus-pull/max
+api/nexus-pull/std
+api/nexus-pull/var
+api/nexus-pull/agg
+api/nexus-pull/root
+api/nexus-pull/specs
+api/nexus-pull/collect
+api/nexus-pull/agg-count
+api/nexus-pull/agg-ndistinct
+api/nexus-pull/agg-sum
+api/nexus-pull/agg-mean
+api/nexus-pull/agg-median
+api/nexus-pull/agg-min
+api/nexus-pull/agg-max
+api/nexus-pull/agg-std
+api/nexus-pull/agg-var
+api/nexus-pull/end
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="api/plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+  <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="api/plussmic_bundle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">bundle</span></code></a><ul>
+      <li>Previous: <a href="api/nexus-sql/prepared-execute.html" title="previous chapter">NexusQueryPrepared::execute</a></li>
+      <li>Next: <a href="api/plussmic_scribble.html" title="next chapter">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/nexus_pull_api_reference.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

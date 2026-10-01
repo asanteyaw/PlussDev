@@ -12,6 +12,17 @@ std::vector<Series*> nn::Module::buffers();
 std::vector<const Series*> nn::Module::buffers() const;
 ```
 
+## What It Does
+
+Walks this module's registration tree and collects every `Series`
+registered as a **buffer** (`buffer_record`) rather than a parameter --
+state a layer needs to carry (a running statistic, a fixed mask) but that
+an optimizer should never step. No type in this reference currently
+registers a buffer, so this always returns empty today; it exists so a
+future layer that needs non-trainable persistent state (and
+[`snapshot`](snapshot.md)/[`restore`](restore.md), which round-trip
+buffers alongside parameters) has somewhere to register it.
+
 ## Parameters
 
 None.

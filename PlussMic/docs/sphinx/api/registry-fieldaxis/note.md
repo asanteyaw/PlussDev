@@ -56,7 +56,7 @@ city
 - [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
   wraps.
 - [`RegistryFieldAxisAccessor::series`](series.md) / [`timeline`](timeline.md) /
-  [`timeindex`](timeindex.md): the shorthands for the other scalar kinds.
+  : the shorthands for the other scalar kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mixed.html">

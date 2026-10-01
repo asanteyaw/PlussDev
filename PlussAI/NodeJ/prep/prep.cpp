@@ -288,7 +288,7 @@ struct DenseMatrix {
     return StatusOr<FeatureBatch>(Status::shape_mismatch(std::string(where) + " requires at least one row."));
   }
 
-  Series feature = Series::undefined();
+  Series feature = pluss::series::undefined();
   switch (thread.kind()) {
     case pluss::table::ThreadKind::Series: {
       feature = thread.as_series().to(ScalarType::Float64);
@@ -312,15 +312,14 @@ struct DenseMatrix {
       feature = pluss::make_series(std::move(hashed), {rows}, prep_work_config());
       break;
     }
-    case pluss::table::ThreadKind::Timeline:
-    case pluss::table::ThreadKind::TimeIndex: {
+    case pluss::table::ThreadKind::Timeline: {
       const pluss::table::Thread casted = thread.cast().series();
       feature = casted.as_series().to(ScalarType::Float64);
       break;
     }
     default: {
       return StatusOr<FeatureBatch>(
-          Status::invalid_argument(std::string(where) + " supports only Series/Note/Timeline/TimeIndex Thread kinds."));
+          Status::invalid_argument(std::string(where) + " supports only Series/Note/Timeline Thread kinds."));
     }
   }
 

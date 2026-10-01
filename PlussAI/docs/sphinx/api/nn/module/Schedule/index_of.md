@@ -13,6 +13,14 @@ Only reachable via `->` (`net->index_of(name)`).
 std::size_t nn::Schedule::Impl::index_of(std::string_view name) const;
 ```
 
+## What It Does
+
+Resolves a stage's name to its current position in the chain -- the index
+[`module_at`](module_at.md)/[`stage_info`](stage_info.md)/other
+position-based accessors need. Throws on a name that doesn't exist, unlike
+[`contains`](contains.md), which is the check to run first when the name
+might legitimately be missing.
+
 ## Parameters
 
 `std::string_view name`
@@ -45,8 +53,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   std::cout << "index_of('out')=" << net->index_of("out") << "\n";
 
@@ -83,7 +91,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
+  net.append("in", nn::Fusion(3, 4));
 
   std::cout << "contains('missing')=" << std::boolalpha << net->contains("missing") << " (no throw)\n";
 
@@ -119,8 +127,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   // index_of and name_at are inverses of each other.
   const std::size_t i = net->index_of("out");

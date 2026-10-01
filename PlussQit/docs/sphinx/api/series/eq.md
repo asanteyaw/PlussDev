@@ -9,6 +9,7 @@
 ```cpp
 Series::eq(const Series& rhs) const -> Series
 Series::eq(double rhs) const -> Series
+Series& Series::eq_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -66,6 +67,30 @@ When `rhs` is a scalar, that scalar is compared against every element of
 differentiable transform. In practice, you use it as control logic:
 build a boolean mask, then feed that mask into selection, replacement, or
 filtering operations.
+
+## In-Place Form
+
+`eq_()` is the in-place sibling of [`eq()`](eq.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `eq_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({1.0, 5.0, 3.0}, {3});
+
+x.eq_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, true]
+```
 
 ## Examples
 

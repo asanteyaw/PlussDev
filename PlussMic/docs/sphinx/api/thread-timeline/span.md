@@ -295,7 +295,7 @@ on, as in Example 1) have no such requirement.
   `.tl().epoch(TimeUnit::Days)`), not epoch nanoseconds.
 - `signed_result = false` returns the absolute magnitude instead of a
   direction-sensitive (possibly negative) value.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - If either side is `NaT` for a row, that row's span displays as `"NULL"`.
 

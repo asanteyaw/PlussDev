@@ -124,7 +124,7 @@ void test_error_paths() {
 
   threw = false;
   try {
-    (void)model.predict(x, Series::undefined(), cfg);
+    (void)model.predict(x, pluss::series::undefined(), cfg);
   } catch (...) {
     threw = true;
   }

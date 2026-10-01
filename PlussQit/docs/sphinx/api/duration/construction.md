@@ -10,20 +10,17 @@
 pluss::Duration pluss::duration::nanos(std::int64_t count);
 pluss::Duration pluss::duration::nanos(std::initializer_list<NestedInt64Literal> nested);
 pluss::Duration pluss::duration::nanos(pluss::RangeView<std::int64_t> flat, pluss::RangeView<std::int64_t> sizes);
-// microseconds/milliseconds/seconds/minutes/hours/days/weeks each have the same three overloads as nanos above.
-
-pluss::Duration pluss::duration::microseconds()
-pluss::Duration pluss::duration::milliseconds();
-pluss::Duration pluss::duration::seconds();
-pluss::Duration pluss::duration::minutes();
-pluss::Duration pluss::duration::hours();
-pluss::Duration pluss::duration::days();
-pluss::Duration pluss::duration::weeks()
+// microseconds, milliseconds, seconds, minutes, hours, days, and weeks
+// each provide the same scalar, nested-literal, and flat-plus-shape forms.
 
 enum class pluss::duration::Unit { Nanos, Microseconds, Milliseconds, Seconds, Minutes, Hours, Days, Weeks };
 pluss::Duration pluss::duration::make(std::int64_t count, Unit unit);
 pluss::Duration pluss::duration::make(std::initializer_list<NestedInt64Literal> nested, Unit unit);
 pluss::Duration pluss::duration::make(pluss::RangeView<std::int64_t> flat, pluss::RangeView<std::int64_t> sizes, Unit unit);
+
+pluss::Duration pluss::make_duration(std::int64_t count, pluss::duration::Unit unit);
+pluss::Duration pluss::make_duration(std::initializer_list<NestedInt64Literal> nested, pluss::duration::Unit unit);
+pluss::Duration pluss::make_duration(pluss::RangeView<std::int64_t> flat, pluss::RangeView<std::int64_t> sizes, pluss::duration::Unit unit);
 
 pluss::Duration pluss::duration::range(const Duration& start, const Duration& end, const Duration& step);
 ```
@@ -55,9 +52,13 @@ from `Timeline` itself:
   generalized to take the unit as a runtime `Unit` value instead of picking a
   function by name — for call sites where the unit isn't known until runtime
   (read from config, chosen generically). See Example 4.
-- `pluss::duration::range(start, end, step)`: a pandas-`timedelta_range`-style
-  constructor that always builds a 1D array, regardless of how `start`/`end`/
-  `step` themselves were built.
+- `pluss::make_duration(values, unit)`: the intentional flat factory spelling.
+  It forwards to `pluss::duration::make` and exists alongside the other
+  root-level `make_*` factories. It does not define different conversion or
+  shape semantics.
+- `pluss::duration::range(start, end, step)`: a half-open regular-sequence
+  constructor that always builds a 1D array, regardless of how `start`, `end`,
+  and `step` themselves were built.
 
 ## Parameters
 
@@ -85,10 +86,10 @@ Which unit `count`/`nested`/`flat` are expressed in.
 
 **start**, **end**, **step** (`const Duration&`, `range` only)
 
-Inclusive start, exclusive-past-end stop, and step size, exactly like
-`pluss::timeline::date_range` for `Timeline` or Python's `range()`. All three are
-themselves `Duration` values (typically scalar, built from one of the unit
-factories above), not raw integers.
+Inclusive start, exclusive stop, and step size, following the same half-open
+interval rule as `pluss::timeline::date_range`. All three are themselves
+`Duration` values (typically scalar, built from one of the unit factories
+above), not raw integers.
 
 ## Returns
 
@@ -183,6 +184,25 @@ data=3.0000
 data=[1.0000, 2.0000, 3.0000]
 ```
 
+The root-level convenience spelling forwards to the same factory. It is useful
+when generic construction code uses the `make_*` family:
+
+```cpp
+const auto canonical =
+    pluss::duration::make({1, 2, 3, 4}, {2, 2}, pluss::duration::Unit::Seconds);
+const auto convenient =
+    pluss::make_duration({1, 2, 3, 4}, {2, 2}, pluss::duration::Unit::Seconds);
+std::cout << std::boolalpha
+          << "same_shape=" << (canonical.sizes() == convenient.sizes())
+          << " same_values=" << canonical.eq(convenient).all().item<bool>() << "\n";
+```
+
+### Output
+
+```text
+same_shape=true same_values=true
+```
+
 Example 5. `pluss::duration::range` builds a real 1D array with no `Timeline`
 involved.
 
@@ -229,14 +249,3 @@ half-open range convention as `pluss::timeline::date_range`.
   plain `Series` in a chosen unit.
 - [`Timeline::diff`](../timeline/diff.md): the `Timeline`-side source of a
   `Duration`.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../duration_api_reference.html">
-    <span class="label">Previous</span>
-    <span class="title">Duration API Reference</span>
-  </a>
-  <a class="next-link" href="add.html">
-    <span class="label">Next</span>
-    <span class="title">add</span>
-  </a>
-</div>

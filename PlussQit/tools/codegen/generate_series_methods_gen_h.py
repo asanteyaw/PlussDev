@@ -31,7 +31,7 @@ CPP_KEYWORDS = {
 
 EXTRA_METHOD_NAMES = {
     # Extensions maintained by PlussQit.
-    "dct", "idct", "dst", "idst", "hilbert", "histcounts",
+    "dct", "idct", "dst", "idst", "hilbert",
     "skewness", "kurtosis", "nanvar", "nanstd", "ediff1d",
     "movsum", "movmean", "movmax", "movmin", "movstd", "movvar",
     "pdist2", "cdist", "normr", "normc", "standardize", "center",

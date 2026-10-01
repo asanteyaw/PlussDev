@@ -120,7 +120,7 @@ const auto& names = df.features();
 Use this language when reading APIs:
 
 - `features(...)` selects or returns columns.
-- `case_study(...)`, `observe(...)`, `slice(...)`, and `take(...)` operate in row space.
+- `case_study().*()`, `observe(...)`, `slice(...)`, and `take(...)` operate in row space.
 - `label().set(...)`, `relabel().set(...)`, and `align_cases(...)` manage the case axis.
 
 ## Functional style

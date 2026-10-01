@@ -81,8 +81,7 @@ Stream payload is not Seri
 
 ## See Also
 
-- [`Stream::as_note`](as_note.md) / [`Stream::as_timeline`](as_timeline.md) /
-  [`Stream::as_timeindex`](as_timeindex.md): the equivalent escape hatch for the other
+- [`Stream::as_note`](as_note.md) / [`Stream::as_timeline`](as_timeline.md): the equivalent escape hatch for the other
   three payload kinds.
 - [`Stream::to_thread`](to_thread.md): converts to a `Thread` instead of exposing the raw
   tensor-level payload.
@@ -92,9 +91,5 @@ Stream payload is not Seri
   <a class="prev-link" href="as_note.html">
     <span class="label">Previous</span>
     <span class="title">as_note</span>
-  </a>
-  <a class="next-link" href="as_timeindex.html">
-    <span class="label">Next</span>
-    <span class="title">as_timeindex</span>
   </a>
 </div>

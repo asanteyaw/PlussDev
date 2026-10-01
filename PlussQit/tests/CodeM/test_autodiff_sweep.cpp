@@ -441,7 +441,7 @@ TEST_CASE("autodiff sweep: second order", "[autodiff-sweep]") {
     Series g = x.sensitivity();
     INFO(name << ": first backward grad must itself be taped for higher order");
     REQUIRE(tape::tracks_slope(g));
-    tape::clear_sensitivity(x);
+    x.clear();
     g.sum().reverse();
     REQUIRE(x.has_sensitivity());
     const auto got = x.sensitivity().to(ScalarType::Float64).to_vec<double>();

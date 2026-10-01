@@ -9,6 +9,7 @@
 ```cpp
 Series::addcdiv(const Series& tensor1, const Series& tensor2,
                 double value = 1.0) const -> Series
+Series& Series::addcdiv_(const Series& tensor1, const Series& tensor2, double value=1.0) const
 ```
 
 ## What It Does
@@ -53,6 +54,31 @@ Differentiable in all three tensors:
 d/d(input)   = g
 d/d(tensor1) = value * g / tensor2
 d/d(tensor2) = -value * g * tensor1 / tensor2^2
+```
+
+## In-Place Form
+
+`addcdiv_()` is the in-place sibling of [`addcdiv()`](addcdiv.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `addcdiv_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 1.0, 1.0});
+auto t1 = pluss::make_series({2.0, 3.0, 4.0});
+auto t2 = pluss::make_series({2.0, 3.0, 4.0});
+
+x.addcdiv_(t1, t2, 1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, 2, 2]
 ```
 
 ## Example
@@ -111,9 +137,9 @@ column gives the displayed matrix.
 - [`Series::div`](div.md): the bare elementwise quotient.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="add.html">
+  <a class="prev-link" href="addbmm.html">
     <span class="label">Previous</span>
-    <span class="title">add</span>
+    <span class="title">addbmm</span>
   </a>
   <a class="next-link" href="addcmul.html">
     <span class="label">Next</span>

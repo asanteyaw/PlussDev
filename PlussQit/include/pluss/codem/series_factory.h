@@ -939,37 +939,37 @@ namespace pluss::series {
   template <class... Args>
   inline Series sparse_coo_tensor(Args&&...) {
     pluss::codem::throw_error("sparse_coo_tensor: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   template <class... Args>
   inline Series sparse_csr_tensor(Args&&...) {
     pluss::codem::throw_error("sparse_csr_tensor: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   template <class... Args>
   inline Series sparse_csc_tensor(Args&&...) {
     pluss::codem::throw_error("sparse_csc_tensor: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   template <class... Args>
   inline Series sparse_bsr_tensor(Args&&...) {
     pluss::codem::throw_error("sparse_bsr_tensor: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   template <class... Args>
   inline Series sparse_bsc_tensor(Args&&...) {
     pluss::codem::throw_error("sparse_bsc_tensor: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   template <class... Args>
   inline Series quantize_per_tensor(Args&&...) {
     pluss::codem::throw_error("quantize_per_tensor: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   template <class... Args>
   inline Series quantize_per_channel(Args&&...) {
     pluss::codem::throw_error("quantize_per_channel: not implemented yet for CPU");
-    return Series::undefined();
+    return pluss::series::undefined();
   }
 
 // interop with other libraries (e.g., Torch)

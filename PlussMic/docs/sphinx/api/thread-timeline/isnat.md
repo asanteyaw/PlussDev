@@ -57,7 +57,7 @@ Row `1` — the missing timestamp — flags `true` here.
   row missing," so the row that *is* `NaT` shows `true`, not `NULL`. Nearly
   every other `.tl()` method (the calendar-field extractors, `fmt()`,
   `epoch()`, and so on) instead shows `"NULL"` for a `NaT` row.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 
 ## See Also
@@ -66,9 +66,9 @@ Row `1` — the missing timestamp — flags `true` here.
   same never-`NULL` behavior).
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

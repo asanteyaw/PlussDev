@@ -44,8 +44,8 @@ source rather than documented as a workaround: seven internal TeX-generation
 helpers (backing `vector_norm`, `matrix_norm`,
 `int_norm`, `prime_norm`, `simplify_fractions`,
 `simplify_roots`, and the `mode >= 1` `\sqrt(...)` path of `to_latex`,
-reference page not yet written) inserted a doubled
-backslash into their output — `\\vec{v}` instead of `\vec{v}` — which real
+inserted a doubled backslash into their output — `\\vec{v}` instead of
+`\vec{v}` — which real
 LaTeX reads as a forced linebreak followed by literal text, not the intended
 command. Every affected method now emits the single, TeX-correct backslash;
 the fix carries no behavioral change beyond removing the extra character.

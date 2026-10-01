@@ -6,8 +6,8 @@ std::string_view thread_kind_name(ThreadKind k) noexcept {
       return "Note";
     case ThreadKind::Timeline:
       return "Timeline";
-    case ThreadKind::TimeIndex:
-      return "TimeIndex";
+    case ThreadKind::Duration:
+      return "Duration";
     default:
       return "Unknown";
   }
@@ -157,11 +157,7 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
   const auto& right = rhs;
   const auto lk = left.kind();
   const auto rk = right.kind();
-  const bool temporal_pair =
-      (lk == ThreadKind::Timeline && rk == ThreadKind::Timeline) ||
-      (lk == ThreadKind::TimeIndex && rk == ThreadKind::TimeIndex) ||
-      (lk == ThreadKind::Timeline && rk == ThreadKind::TimeIndex) ||
-      (lk == ThreadKind::TimeIndex && rk == ThreadKind::Timeline);
+  const bool temporal_pair = lk == ThreadKind::Timeline && rk == ThreadKind::Timeline;
 
   if (left.kind() == ThreadKind::Series && right.kind() == ThreadKind::Series) {
     ensure_numeric_thread_for_math(left, where);
@@ -184,10 +180,8 @@ Thread binary_math_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryMathOp
     return carry_case_labels_(
         invoke_underlying(
             [&] {
-              const auto left_tl = (lk == ThreadKind::Timeline) ? left.as_timeline()
-                                                                : left.as_timeindex().timeline();
-              const auto right_tl = (rk == ThreadKind::Timeline) ? right.as_timeline()
-                                                                 : right.as_timeindex().timeline();
+              const auto left_tl = left.as_timeline();
+              const auto right_tl = right.as_timeline();
               TimelineSpanOptions options;
               options.unit = TimeUnit::Nanos;
               options.signed_result = true;
@@ -221,11 +215,7 @@ Thread compare_pair(const Thread& lhs, const Thread& rhs, ThreadBinaryCompareOp 
 
   const auto lk = left.kind();
   const auto rk = right.kind();
-  const bool temporal_compare =
-      (lk == ThreadKind::Timeline && rk == ThreadKind::Timeline) ||
-      (lk == ThreadKind::TimeIndex && rk == ThreadKind::TimeIndex) ||
-      (lk == ThreadKind::Timeline && rk == ThreadKind::TimeIndex) ||
-      (lk == ThreadKind::TimeIndex && rk == ThreadKind::Timeline);
+  const bool temporal_compare = lk == ThreadKind::Timeline && rk == ThreadKind::Timeline;
 
   if (lk == ThreadKind::Series && rk == ThreadKind::Series) {
     return carry_case_labels_(
@@ -263,7 +253,7 @@ Thread logical_pair(const Thread& lhs,
   ensure_bool_series_thread_for_logic(rhs, where);
   return invoke_underlying(
       [&] {
-        pluss::Series values;
+        pluss::Series values = pluss::series::undefined();
         if (op_name == "and") {
           values = lhs.as_series().logical_and(rhs.as_series());
         } else if (op_name == "or") {
@@ -454,9 +444,6 @@ Thread operator==(const Thread& lhs, const pluss::Timeline& rhs) {
   return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
 }
 
-Thread operator==(const Thread& lhs, const pluss::TimeIndex& rhs) {
-  return lhs.compare(rhs, ThreadBinaryCompareOp::Eq);
-}
 
 Thread operator==(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Eq, "Thread::operator==(Thread,Thread)");
@@ -498,9 +485,6 @@ Thread operator!=(const Thread& lhs, const pluss::Timeline& rhs) {
   return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
 }
 
-Thread operator!=(const Thread& lhs, const pluss::TimeIndex& rhs) {
-  return lhs.compare(rhs, ThreadBinaryCompareOp::Ne);
-}
 
 Thread operator!=(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Ne, "Thread::operator!=(Thread,Thread)");
@@ -542,9 +526,6 @@ Thread operator<(const Thread& lhs, const pluss::Timeline& rhs) {
   return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
 }
 
-Thread operator<(const Thread& lhs, const pluss::TimeIndex& rhs) {
-  return lhs.compare(rhs, ThreadBinaryCompareOp::Lt);
-}
 
 Thread operator<(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Lt, "Thread::operator<(Thread,Thread)");
@@ -586,9 +567,6 @@ Thread operator<=(const Thread& lhs, const pluss::Timeline& rhs) {
   return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
 }
 
-Thread operator<=(const Thread& lhs, const pluss::TimeIndex& rhs) {
-  return lhs.compare(rhs, ThreadBinaryCompareOp::Le);
-}
 
 Thread operator<=(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Le, "Thread::operator<=(Thread,Thread)");
@@ -630,9 +608,6 @@ Thread operator>(const Thread& lhs, const pluss::Timeline& rhs) {
   return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
 }
 
-Thread operator>(const Thread& lhs, const pluss::TimeIndex& rhs) {
-  return lhs.compare(rhs, ThreadBinaryCompareOp::Gt);
-}
 
 Thread operator>(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Gt, "Thread::operator>(Thread,Thread)");
@@ -674,9 +649,6 @@ Thread operator>=(const Thread& lhs, const pluss::Timeline& rhs) {
   return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
 }
 
-Thread operator>=(const Thread& lhs, const pluss::TimeIndex& rhs) {
-  return lhs.compare(rhs, ThreadBinaryCompareOp::Ge);
-}
 
 Thread operator>=(const Thread& lhs, const Thread& rhs) {
   return compare_pair(lhs, rhs, ThreadBinaryCompareOp::Ge, "Thread::operator>=(Thread,Thread)");
@@ -697,9 +669,9 @@ const pluss::Timeline& Thread::as_timeline() const {
   return std::get<pluss::Timeline>(impl_ref_().payload_);
 }
 
-const pluss::TimeIndex& Thread::as_timeindex() const {
-  PLUSS_CHECK(kind() == ThreadKind::TimeIndex, "Thread: payload is not TimeIndex");
-  return std::get<pluss::TimeIndex>(impl_ref_().payload_);
+const pluss::Duration& Thread::as_duration() const {
+  PLUSS_CHECK(kind() == ThreadKind::Duration, "Thread: payload is not Duration");
+  return std::get<pluss::Duration>(impl_ref_().payload_);
 }
 
 namespace {
@@ -740,11 +712,11 @@ std::int64_t scalar_timeline_nanos(const pluss::Timeline& timeline,
   return values.front();
 }
 
-std::int64_t scalar_timeindex_nanos(const pluss::TimeIndex& timeindex,
-                                    std::string_view where) {
-  const auto values = timeindex.host();
+std::int64_t scalar_duration_nanos(const pluss::Duration& duration,
+                                   std::string_view where) {
+  const auto values = duration.host();
   PLUSS_CHECK(values.size() == 1,
-              std::string(where) + ": TimeIndex payload must contain exactly one value");
+              std::string(where) + ": Duration payload must contain exactly one value");
   return values.front();
 }
 
@@ -794,6 +766,15 @@ ThreadValue::HostAny ThreadValue::HostAny::time(std::int64_t epoch_nanos,
   return out;
 }
 
+ThreadValue::HostAny ThreadValue::HostAny::duration(std::int64_t nanos,
+                                                    std::string text) {
+  HostAny out;
+  out.kind_ = Kind::Duration;
+  out.storage_ = nanos;
+  out.display_ = std::move(text);
+  return out;
+}
+
 ThreadValue::HostAny::Kind ThreadValue::HostAny::kind() const noexcept {
   return kind_;
 }
@@ -816,6 +797,8 @@ double ThreadValue::HostAny::to_dbl() const {
       PLUSS_FAIL("ThreadValue::host().to_dbl: Note values are not numeric");
     case Kind::Time:
       PLUSS_FAIL("ThreadValue::host().to_dbl: time values do not convert to double; use to_int() for epoch nanoseconds");
+    case Kind::Duration:
+      PLUSS_FAIL("ThreadValue::host().to_dbl: duration values do not convert to double; use to_int() for nanoseconds");
     default:
       PLUSS_FAIL("ThreadValue::host().to_dbl: unsupported scalar kind");
   }
@@ -843,6 +826,8 @@ std::int64_t ThreadValue::HostAny::to_int() const {
     }
     case Kind::Time:
       return std::get<std::int64_t>(storage_);
+    case Kind::Duration:
+      return std::get<std::int64_t>(storage_);
     case Kind::String:
       PLUSS_FAIL("ThreadValue::host().to_int: Note values are not integral");
     default:
@@ -867,6 +852,8 @@ std::string ThreadValue::HostAny::to_str() const {
       return std::get<std::string>(storage_);
     case Kind::Time:
       return display_.empty() ? std::to_string(std::get<std::int64_t>(storage_)) : display_;
+    case Kind::Duration:
+      return display_.empty() ? std::to_string(std::get<std::int64_t>(storage_)) : display_;
     default:
       PLUSS_FAIL("ThreadValue::host().to_str: unsupported scalar kind");
   }
@@ -885,8 +872,8 @@ ThreadValue::Payload ThreadValue::payload() const {
       return as_note();
     case ThreadKind::Timeline:
       return as_timeline();
-    case ThreadKind::TimeIndex:
-      return as_timeindex();
+    case ThreadKind::Duration:
+      return as_duration();
     default:
       PLUSS_FAIL("ThreadValue::payload: unsupported ThreadKind");
   }
@@ -895,7 +882,7 @@ ThreadValue::Payload ThreadValue::payload() const {
 pluss::Series ThreadValue::as_series() const { return thread_.as_series(); }
 pluss::Note ThreadValue::as_note() const { return thread_.as_note(); }
 pluss::Timeline ThreadValue::as_timeline() const { return thread_.as_timeline(); }
-pluss::TimeIndex ThreadValue::as_timeindex() const { return thread_.as_timeindex(); }
+pluss::Duration ThreadValue::as_duration() const { return thread_.as_duration(); }
 
 ThreadValue::HostAny ThreadValue::host() const {
   PLUSS_CHECK(defined(), "ThreadValue::host: ThreadValue is undefined");
@@ -914,9 +901,10 @@ ThreadValue::HostAny ThreadValue::host() const {
       const auto nanos = scalar_timeline_nanos(as_timeline(), "ThreadValue::host");
       return HostAny::time(nanos, scalar_time_iso(nanos));
     }
-    case ThreadKind::TimeIndex: {
-      const auto nanos = scalar_timeindex_nanos(as_timeindex(), "ThreadValue::host");
-      return HostAny::time(nanos, scalar_time_iso(nanos));
+    case ThreadKind::Duration: {
+      const auto duration = as_duration();
+      const auto nanos = scalar_duration_nanos(duration, "ThreadValue::host");
+      return HostAny::duration(nanos, std::string(duration.to_note_iso().scalar()));
     }
     default:
       PLUSS_FAIL("ThreadValue::host: unsupported ThreadKind");
@@ -930,7 +918,7 @@ std::string ThreadValue::to_str() const { return host().to_str(); }
 ThreadValue::operator pluss::Series() const { return as_series(); }
 ThreadValue::operator pluss::Note() const { return as_note(); }
 ThreadValue::operator pluss::Timeline() const { return as_timeline(); }
-ThreadValue::operator pluss::TimeIndex() const { return as_timeindex(); }
+ThreadValue::operator pluss::Duration() const { return as_duration(); }
 
 std::ostream& operator<<(std::ostream& os, const ThreadValue::HostAny& value) {
   os << value.to_str();

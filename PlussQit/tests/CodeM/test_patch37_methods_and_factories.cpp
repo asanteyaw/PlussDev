@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <pluss/pluss.h>
 
 using pluss::codem::Series;
@@ -93,4 +94,56 @@ TEST_CASE("sort_pair and topk_pair return values+indices", "[methods][list]") {
   auto topk_out = x.topk_pair(/*k=*/2, /*dim=*/1, /*largest=*/true, /*sorted=*/true);
   REQUIRE(topk_out.first.to_vec<double>() == std::vector<double>{5.0, 2.0, 6.0, 4.0});
   REQUIRE(topk_out.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{1, 2, 2, 1});
+
+  auto unordered = x.topk_pair(/*k=*/2, /*dim=*/1, /*largest=*/false, /*sorted=*/false);
+  REQUIRE(unordered.first.sizes() == std::vector<std::int64_t>{2, 2});
+  const auto unordered_values = unordered.first.to_vec<double>();
+  const auto unordered_indices = unordered.second.to_vec<std::int64_t>();
+  const auto input_values = x.to_vec<double>();
+  for (std::int64_t row = 0; row < 2; ++row) {
+    for (std::int64_t col = 0; col < 2; ++col) {
+      const auto output_offset = row * 2 + col;
+      const auto index = unordered_indices[static_cast<std::size_t>(output_offset)];
+      REQUIRE(unordered_values[static_cast<std::size_t>(output_offset)] ==
+              input_values[static_cast<std::size_t>(row * 3 + index)]);
+    }
+  }
+  REQUIRE_THROWS_WITH(x.topk_pair(4, 1),
+                      Catch::Matchers::ContainsSubstring("k must be <= size(dim)"));
+}
+
+TEST_CASE("extrema pairs keep values, indices, and reverse routing aligned", "[methods][reduction][autodiff]") {
+  auto x = pluss::make_series({{4.0, 4.0, 1.0}, {2.0, -3.0, -3.0}});
+  x.tracks_slope_(true);
+
+  auto maxima = x.max_pair(-1, true);
+  REQUIRE(maxima.first.sizes() == std::vector<std::int64_t>{2, 1});
+  REQUIRE(maxima.second.sizes() == std::vector<std::int64_t>{2, 1});
+  REQUIRE(maxima.first.to_vec<double>() == std::vector<double>{4.0, 2.0});
+  REQUIRE(maxima.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{0, 0});
+
+  maxima.first.sum().reverse();
+  REQUIRE(x.sensitivity().to_vec<double>() ==
+          std::vector<double>{1.0, 0.0, 0.0, 1.0, 0.0, 0.0});
+
+  auto minima = x.min_pair(1, false);
+  REQUIRE(minima.first.sizes() == std::vector<std::int64_t>{2});
+  REQUIRE(minima.first.to_vec<double>() == std::vector<double>{1.0, -3.0});
+  REQUIRE(minima.second.to_vec<std::int64_t>() == std::vector<std::int64_t>{2, 1});
+}
+
+TEST_CASE("extrema pairs validate scalar and empty-axis contracts", "[methods][reduction][errors]") {
+  const auto scalar = pluss::make_series(7.0);
+  const auto scalar_pair = scalar.max_pair(0);
+  REQUIRE(scalar_pair.first.sizes().empty());
+  REQUIRE(scalar_pair.first.item<double>() == 7.0);
+  REQUIRE(scalar_pair.second.item<std::int64_t>() == 0);
+
+  REQUIRE_THROWS_WITH(scalar.max_pair(1), Catch::Matchers::ContainsSubstring("dim out of range"));
+
+  const auto empty = pluss::Series::empty({2, 0}, pluss::ScalarType::Float64);
+  REQUIRE_THROWS_WITH(empty.max_pair(1),
+                      Catch::Matchers::ContainsSubstring("cannot reduce an empty dimension"));
+  REQUIRE_THROWS_WITH(empty.min_pair(-1),
+                      Catch::Matchers::ContainsSubstring("cannot reduce an empty dimension"));
 }

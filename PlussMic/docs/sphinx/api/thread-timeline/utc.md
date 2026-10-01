@@ -13,7 +13,7 @@ ThreadTimelineAccessor::utc() const -> Thread
 ## What It Does
 
 Replaces the bound thread's display timezone with `"UTC"` — same length,
-still `Timeline`/`TimeIndex`-kind. Exactly equivalent to [`tz("UTC")`](tz.md);
+still `Timeline`-kind. Exactly equivalent to [`tz("UTC")`](tz.md);
 like `tz()`, the underlying instant never changes, only the timezone used to
 display it and compute local calendar fields.
 
@@ -24,7 +24,7 @@ display it and compute local calendar fields.
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound
+    A new `Timeline`-kind thread, same length as the bound
     thread, with its display timezone switched to `"UTC"`.
 
 ## Examples
@@ -72,7 +72,7 @@ same instants throughout, only the display timezone changes back.
 - Purely a display-timezone relabel — the underlying instant is unchanged, so
   chaining `.tz(name).utc()` always round-trips back to the original
   displayed values.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT`.
 

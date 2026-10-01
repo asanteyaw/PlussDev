@@ -9,6 +9,7 @@
 ```cpp
 Series::gt(const Series& rhs) const -> Series
 Series::gt(double rhs) const -> Series
+Series& Series::gt_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -57,6 +58,30 @@ The scalar overload reuses one threshold across every element in `self`.
 
 `gt()` produces boolean control information. It is not the kind of surface you
 use to propagate smooth numeric sensitivity.
+
+## In-Place Form
+
+`gt_()` is the in-place sibling of [`gt()`](gt.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `gt_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({0.0, 2.0, 5.0}, {3});
+
+x.gt_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, false]
+```
 
 ## Examples
 
@@ -166,6 +191,13 @@ broadcast: incompatible shapes
 
 Use `gt()` for exclusive lower bounds. When the equality case must pass too,
 reach for [`Series::ge`](ge.md).
+
+## Aliases
+
+**`greater()`** / **`greater_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `gt()` / `gt_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

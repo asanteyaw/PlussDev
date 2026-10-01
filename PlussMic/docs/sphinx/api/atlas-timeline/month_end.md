@@ -13,7 +13,7 @@ AtlasTimelineAccessor::month_end() const -> Atlas
 
 ## What It Does
 
-Replaces every `Timeline`/`TimeIndex` feature in **every frame of the stack** with a
+Replaces every `Timeline` feature in **every frame of the stack** with a
 boolean `Series` flagging whether the row falls on the last day of its month — the same
 transform [`DataFrame::tl().month_end()`](../dataframe-timeline/month_end.md) applies to
 a single frame, broadcast across the whole `Atlas` via
@@ -78,7 +78,7 @@ Both `frame(0)` rows flag `true`: `"2024-01-31"` is January's last day, and
   `true` here because 2024 is a leap year; `"2023-02-28"` would flag `true` in a
   non-leap year instead.
 - `Atlas::tl()` requires **every** feature on each stacked frame to already be
-  `Timeline`/`TimeIndex`-kind, checked lazily per frame the first time a method like this
+  `Timeline`-kind, checked lazily per frame the first time a method like this
   one is actually called — see [`Atlas::tl`](../atlas/tl.md).
 - A `NaT` row displays as `"NULL"` in the output, same as on a single frame — see
   [`AtlasTimelineAccessor::isnat`](isnat.md).

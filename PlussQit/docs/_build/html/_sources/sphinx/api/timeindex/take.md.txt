@@ -62,12 +62,12 @@ std::cout << pluss::timeindex::print(sorted) << "\n";
 - [`TimeIndex::slice_index`](slice_index.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="argsort.html">
+  <a class="prev-link" href="tail.html">
     <span class="label">Previous</span>
-    <span class="title">argsort</span>
+    <span class="title">tail</span>
   </a>
-  <a class="next-link" href="slice_index.html">
+  <a class="next-link" href="timeline.html">
     <span class="label">Next</span>
-    <span class="title">slice_index</span>
+    <span class="title">timeline</span>
   </a>
 </div>

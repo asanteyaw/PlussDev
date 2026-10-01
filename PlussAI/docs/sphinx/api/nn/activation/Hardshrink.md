@@ -10,13 +10,22 @@ everywhere except at the two threshold points.
 ## Signature
 
 ```cpp
-explicit nn::Hardshrink::Hardshrink(nn::HardshrinkOptions options = {});
+explicit nn::Hardshrink::Hardshrink(nn::HardshrinkOptions options);
+explicit nn::Hardshrink::Hardshrink(double lambd = 0.5);
 ```
 
 ## Construction
 
-Default-construct for `lambd=0.5`, or pass a
-[`HardshrinkOptions`](HardshrinkOptions.md) to change the threshold.
+Two equivalent forms: pass a
+[`HardshrinkOptions`](HardshrinkOptions.md) directly, or spell out
+`lambd` as a positional argument (which defaults to `0.5`, so
+`nn::Hardshrink hs;` alone works):
+
+```cpp
+nn::Hardshrink a(nn::HardshrinkOptions{1.0});  // lambd=1.0
+nn::Hardshrink b(1.0);                          // equivalent positional form
+nn::Hardshrink c;                               // lambd=0.5 (default)
+```
 
 ## State
 
@@ -146,6 +155,11 @@ hardshrink on MPS: OK, platform=2
 ## Changelog
 
 - **0.1** — the hard shrinkage function, `lambd` option.
+- **0.2** — added the positional `Hardshrink(lambd)` constructor
+  alongside the `HardshrinkOptions` form (previously, a bare numeric
+  argument silently bound to the inherited `Module(bool training)`
+  constructor instead of `lambd`, since no positional form existed to
+  compete with it).
 
 ## See Also
 

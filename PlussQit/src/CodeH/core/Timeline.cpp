@@ -2341,7 +2341,7 @@ Timeline TimelineBase::period_start(std::string_view unit) const {
       std::move(out), std::string(self.tz()));
 }
 
-TimeIndex TimelineBase::to_timeindex(bool require_sorted) const {
+TimelineIndexAccessor TimelineBase::index(bool require_sorted) const {
   return ::pluss::codeh::_compat::invoke<TimeIndex>("make_timeindex",
                                                      as_timeline(*this),
                                                      {require_sorted});

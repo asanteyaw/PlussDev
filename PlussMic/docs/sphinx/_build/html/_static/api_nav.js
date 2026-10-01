@@ -190,6 +190,20 @@ window.PLUSS_API_NAV = {
       "zoom"
     ]
   },
+  "DataFrameCaseStudyAccessor": {
+    "title": "DataFrameCaseStudyAccessor",
+    "slug": "dataframe-case-study",
+    "landing": "dataframe_case_study_accessor_api_reference.html",
+    "methods": [
+      "at",
+      "labels",
+      "pick",
+      "slice",
+      "span",
+      "take",
+      "where"
+    ]
+  },
   "DataFramePlotAccessor": {
     "title": "DataFramePlotAccessor",
     "slug": "dataframe-plot",
@@ -263,7 +277,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -335,6 +348,7 @@ window.PLUSS_API_NAV = {
     "slug": "dataframe-feataxis",
     "landing": "dataframe_feataxis_accessor_api_reference.html",
     "methods": [
+      "duration",
       "like",
       "match",
       "note",
@@ -431,9 +445,9 @@ window.PLUSS_API_NAV = {
     "slug": "dataframe-cast",
     "landing": "dataframe_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -508,9 +522,9 @@ window.PLUSS_API_NAV = {
       "any",
       "append",
       "arrange",
+      "as_duration",
       "as_note",
       "as_series",
-      "as_timeindex",
       "as_timeline",
       "astype",
       "between",
@@ -788,7 +802,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -932,9 +945,9 @@ window.PLUSS_API_NAV = {
     "landing": "stream_api_reference.html",
     "methods": [
       "abs",
+      "as_duration",
       "as_note",
       "as_series",
-      "as_timeindex",
       "as_timeline",
       "astype",
       "bfill",
@@ -1320,9 +1333,9 @@ window.PLUSS_API_NAV = {
     "slug": "slot-cast",
     "landing": "slot_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1368,7 +1381,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -1400,6 +1412,7 @@ window.PLUSS_API_NAV = {
     "slug": "registry-fieldaxis",
     "landing": "registry_fieldaxis_accessor_api_reference.html",
     "methods": [
+      "duration",
       "empty",
       "kind",
       "like",
@@ -1410,7 +1423,6 @@ window.PLUSS_API_NAV = {
       "prefix",
       "series",
       "suffix",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1419,9 +1431,9 @@ window.PLUSS_API_NAV = {
     "slug": "registry-cast",
     "landing": "registry_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1463,7 +1475,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -1495,6 +1506,7 @@ window.PLUSS_API_NAV = {
     "slug": "axel-fieldaxis",
     "landing": "axel_fieldaxis_accessor_api_reference.html",
     "methods": [
+      "duration",
       "empty",
       "kind",
       "like",
@@ -1505,7 +1517,6 @@ window.PLUSS_API_NAV = {
       "prefix",
       "series",
       "suffix",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1514,9 +1525,9 @@ window.PLUSS_API_NAV = {
     "slug": "axel-cast",
     "landing": "axel_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1558,7 +1569,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -1627,7 +1637,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -1672,9 +1681,9 @@ window.PLUSS_API_NAV = {
     "slug": "catalog-cast",
     "landing": "catalog_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1683,13 +1692,13 @@ window.PLUSS_API_NAV = {
     "slug": "catalog-keyaxis",
     "landing": "catalog_keyaxis_accessor_api_reference.html",
     "methods": [
+      "duration",
       "like",
       "match",
       "note",
       "prefix",
       "series",
       "suffix",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1698,9 +1707,9 @@ window.PLUSS_API_NAV = {
     "slug": "stream-cast",
     "landing": "stream_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1746,7 +1755,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -1828,13 +1836,13 @@ window.PLUSS_API_NAV = {
     "slug": "archive-keyaxis",
     "landing": "archive_keyaxis_accessor_api_reference.html",
     "methods": [
+      "duration",
       "like",
       "match",
       "note",
       "prefix",
       "series",
       "suffix",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1843,9 +1851,9 @@ window.PLUSS_API_NAV = {
     "slug": "archive-cast",
     "landing": "archive_cast_accessor_api_reference.html",
     "methods": [
+      "duration",
       "note",
       "series",
-      "timeindex",
       "timeline"
     ]
   },
@@ -1861,7 +1869,6 @@ window.PLUSS_API_NAV = {
       "floor",
       "fmt",
       "hour",
-      "index",
       "isnat",
       "iso",
       "leap",
@@ -1994,7 +2001,8 @@ window.PLUSS_API_NAV = {
     "landing": "nexus_query_api_reference.html",
     "methods": [
       "execute",
-      "prepare"
+      "prepare",
+      "prepared-execute"
     ]
   }
 };

@@ -8,6 +8,7 @@
 
 ```cpp
 Series::atanh() const -> Series
+Series& Series::atanh_()
 ```
 
 ## What It Does
@@ -51,6 +52,29 @@ d atanh(x) / dx = 1 / (1 - x^2)
 
 The derivative is positive, equals one at zero, and diverges at both domain
 boundaries. Values close to `+-1` can therefore create very large sensitivities.
+
+## In-Place Form
+
+`atanh_()` is the in-place sibling of [`atanh()`](atanh.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({-0.5, 0.0, 0.5});
+
+auto& ref = x.atanh_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.54930614, 0, 0.54930614]
+same object: true
+```
 
 ## Examples
 
@@ -112,6 +136,13 @@ data=[1.3333333, 1, 1.3333333]
 
 Use `atanh()` to lift bounded values from `(-1,1)` onto the real line. Treat
 the endpoints as singular boundaries in both forward and reverse computations.
+
+## Aliases
+
+**`arctanh()`** / **`arctanh_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `atanh()` / `atanh_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

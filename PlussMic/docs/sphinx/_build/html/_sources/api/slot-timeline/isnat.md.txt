@@ -19,7 +19,7 @@ Time"), replacing each `Timeline` value with a `Bool` `Series`.
 ```{important} SlotTimelineAccessor requires the bound slot to be Timeline-kind
 Every method on this accessor — not just `isnat()` — routes through
 `Slot::tl()`. If the slot isn't `Timeline`-kind (`Series`, `Note`,
-`TimeIndex`, `Mixed`, `Null`, or `Empty`), the call throws
+`Mixed`, `Null`, or `Empty`), the call throws
 `"Slot::tl: slot kind must be Timeline"`.
 ```
 
@@ -88,9 +88,9 @@ Slot::tl: slot kind must be Timeline
   from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

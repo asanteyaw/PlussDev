@@ -13,7 +13,7 @@ struct CrossValOptions {
   std::int64_t time_test_size = 0;
   std::int64_t time_max_train_size = 0;
   bool stratified = false;
-  Series groups = Series::undefined();
+  Series groups = pluss::series::undefined();
   bool reliability_defaults = true;
   bool shuffle = true;
   std::int64_t max_parallel = 0;

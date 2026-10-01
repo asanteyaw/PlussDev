@@ -9,6 +9,7 @@
 ```cpp
 Series::addmm(const Series& mat1, const Series& mat2,
               double beta = 1.0, double alpha = 1.0) const -> Series
+Series& Series::addmm_(const Series& mat1, const Series& mat2, double beta=1.0, double alpha=1.0) const
 ```
 
 ## What It Does
@@ -85,6 +86,32 @@ original shape. For a row bias `[n]` used against an `[m,n]` result, that means
 summing the `m` output-row sensitivities. Setting `beta=0` removes the receiver
 from both the forward value and its sensitivity and suppresses any `NaN` or
 infinity stored there.
+
+## In-Place Form
+
+`addmm_()` is the in-place sibling of [`addmm()`](addmm.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `addmm_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{0.0, 0.0}, {0.0, 0.0}});
+auto mat1 = pluss::make_series({{1.0, 0.0}, {0.0, 1.0}});
+auto mat2 = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
+
+x.addmm_(mat1, mat2, 1.0, 1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[1, 2],
+  [3, 4]]
+```
 
 ## Examples
 

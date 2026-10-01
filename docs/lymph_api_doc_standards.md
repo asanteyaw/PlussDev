@@ -182,6 +182,13 @@ pluss::Series lymph::selection::Plan::scores(...) const;
 
 ## Page Structure
 
+- Every method/function page has a required `## What It Does` section,
+  immediately after `## Signature` (and any signature-note prose) and
+  immediately before `## Parameters`. It is prose, not a parameter-by-
+  parameter breakdown: what the call actually does, its effect or the
+  value it produces, how it fits into the surrounding API, and anything a
+  reader needs before the parameter-level detail makes sense. Parameter
+  meaning still belongs in `## Parameters`, not duplicated here.
 - Rich prose is required.
 - Explain what each parameter or toggle changes in behavior.
 - Explain defaults, constraints, tradeoffs, and failure modes where relevant.

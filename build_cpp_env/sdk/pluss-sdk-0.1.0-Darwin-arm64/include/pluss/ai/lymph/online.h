@@ -148,7 +148,7 @@ private:
     LabeledBatch batch{
         .features = x_batch,
         .y = y.to(x_batch.x.platform(), ScalarType::Float64).reshape({x_batch.sample_count()}),
-        .sample_weights = Series::undefined(),
+        .sample_weights = pluss::series::undefined(),
     };
     resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
     return batch;
@@ -290,7 +290,7 @@ private:
     LabeledBatch batch{
         .features = x_batch,
         .y = y.to(x_batch.x.platform(), ScalarType::Float64).reshape({x_batch.sample_count()}),
-        .sample_weights = Series::undefined(),
+        .sample_weights = pluss::series::undefined(),
     };
     resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
     return batch;

@@ -620,10 +620,13 @@ std::string series_scalar_text(const pluss::Series& s, std::int64_t row) {
 }
 
 bool row_is_valid(const Thread& thread, std::int64_t row) {
-  if (!detail::has_validity_mask(thread)) {
-    return true;
+  if (detail::has_validity_mask(thread) &&
+      !detail::validity_mask(thread)->to_vec<bool>()[static_cast<std::size_t>(row)]) {
+    return false;
   }
-  return detail::validity_mask(thread)->to_vec<bool>()[static_cast<std::size_t>(row)];
+  return thread.kind() != ThreadKind::Duration ||
+         thread.as_duration().host()[static_cast<std::size_t>(row)] !=
+             pluss::Duration::kNaT;
 }
 
 void bind_sqlite_null(sqlite3_stmt* stmt, const int index) {
@@ -719,17 +722,14 @@ void bind_thread_value(sqlite3_stmt* stmt, const int index, const Thread& thread
                       == SQLITE_OK,
                   "DataFrame::sql().execute: sqlite bind timeline failed");
       return;
-    case ThreadKind::TimeIndex:
+    case ThreadKind::Duration:
       PLUSS_CHECK(sqlite3_bind_int64(
                       stmt,
                       index,
                       static_cast<sqlite3_int64>(
-                          thread.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]))
+                          thread.as_duration().host()[static_cast<std::size_t>(row)]))
                       == SQLITE_OK,
-                  "DataFrame::sql().execute: sqlite bind timeindex failed");
-      return;
-    default:
-      bind_sqlite_null(stmt, index);
+                  "DataFrame::sql().execute: sqlite bind duration failed");
       return;
   }
 }
@@ -747,10 +747,9 @@ std::string sqlite_declared_type(const Thread& thread) {
       return "TEXT";
     }
     case ThreadKind::Timeline:
-    case ThreadKind::TimeIndex:
+    case ThreadKind::Duration:
       return "INTEGER";
     case ThreadKind::Note:
-    default:
       return "TEXT";
   }
 }
@@ -973,11 +972,9 @@ void load_source(sqlite3* db,
         case ThreadKind::Timeline:
           case_text = fmt::format("{}", labels.as_timeline().ticks()[static_cast<std::size_t>(row)]);
           break;
-        case ThreadKind::TimeIndex:
-          case_text = fmt::format("{}",
-                                  labels.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
-          break;
-        default:
+        case ThreadKind::Duration:
+          case_text = fmt::format(
+              "{}", labels.as_duration().host()[static_cast<std::size_t>(row)]);
           break;
       }
     }

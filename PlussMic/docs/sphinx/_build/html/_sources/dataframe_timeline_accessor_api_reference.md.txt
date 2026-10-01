@@ -23,7 +23,6 @@ api/dataframe-timeline/epoch
 api/dataframe-timeline/floor
 api/dataframe-timeline/fmt
 api/dataframe-timeline/hour
-api/dataframe-timeline/index
 api/dataframe-timeline/isnat
 api/dataframe-timeline/iso
 api/dataframe-timeline/leap

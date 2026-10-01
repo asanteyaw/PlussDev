@@ -14,6 +14,15 @@ classic::StatusOr<classic::VariancePruneResult> classic::variance_prune(
     double variance_floor = 1e-12);
 ```
 
+## What It Does
+
+Computes each feature column's population variance and drops every column
+whose variance does not strictly exceed `variance_floor` -- a
+near-constant column carries almost no information for a model to learn
+from, so removing it before training shrinks the feature space without a
+meaningful cost. Unlike every other function in this family, no labels are
+involved at all; this is purely a property of `batch.x` on its own.
+
 ## Parameters
 
 `batch`

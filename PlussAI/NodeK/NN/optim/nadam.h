@@ -135,9 +135,9 @@ private:
     std::vector<std::size_t> indices{};
     NAdamOptions options{};
     double mu_product{1.0};
-    Series mu_product_scalar{};
-    Series beta2_power{};
-    Series decay_power{};
+    Series mu_product_scalar = pluss::series::undefined();
+    Series beta2_power = pluss::series::undefined();
+    Series decay_power = pluss::series::undefined();
   };
 
   void apply_step_(pluss::msharp::RangeView::Series gradients) override {
@@ -214,11 +214,11 @@ private:
   }
 
   struct CapturableTerms {
-    Series mu_t{};
-    Series mu_t_next{};
-    Series one_minus_mu_prod{};
-    Series one_minus_mu_prod_next{};
-    Series one_minus_beta2_pow{};
+    Series mu_t = pluss::series::undefined();
+    Series mu_t_next = pluss::series::undefined();
+    Series one_minus_mu_prod = pluss::series::undefined();
+    Series one_minus_mu_prod_next = pluss::series::undefined();
+    Series one_minus_beta2_pow = pluss::series::undefined();
   };
 
   CapturableTerms advance_capturable_terms_(GroupState& group) {
@@ -651,9 +651,9 @@ private:
     const auto& params = parameters();
     for (auto& group : groups_) {
       group.mu_product = 1.0;
-      group.mu_product_scalar = Series{};
-      group.beta2_power = Series{};
-      group.decay_power = Series{};
+      group.mu_product_scalar = pluss::series::undefined();
+      group.beta2_power = pluss::series::undefined();
+      group.decay_power = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

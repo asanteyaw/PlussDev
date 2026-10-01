@@ -9,6 +9,7 @@
 ```cpp
 Series::hypot(const Series& other) const -> Series
 Series& Series::hypot_(const Series& other)
+Series& Series::hypot_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -61,6 +62,30 @@ d/db hypot(a, b) = b / h
 which are just the components of the unit vector pointing from the origin to
 `(a, b)`. At `a = b = 0` the derivative is defined here as `0` rather than
 `0/0`.
+
+## In-Place Form
+
+`hypot_()` is the in-place sibling of [`hypot()`](hypot.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `hypot_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({3.0, 3.0}, {2});
+auto y = pluss::make_series({4.0, 4.0}, {2});
+
+x.hypot_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[5, 5]
+```
 
 ## Examples
 

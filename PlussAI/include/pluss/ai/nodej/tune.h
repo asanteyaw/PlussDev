@@ -27,17 +27,17 @@ struct TuneTrialResult {
 struct TuneLedger {
   std::vector<MetricKind> metrics{};
   std::vector<std::string> encoded_param_feature_names{};
-  Series objective = Series::undefined();
-  Series objective_rank = Series::undefined();
-  Series stage = Series::undefined();
-  Series status_code = Series::undefined();
-  Series is_success = Series::undefined();
-  Series mean_test_metrics = Series::undefined();
-  Series std_test_metrics = Series::undefined();
-  Series split_test_metrics = Series::undefined();
-  Series fit_time_seconds = Series::undefined();
-  Series score_time_seconds = Series::undefined();
-  Series encoded_params = Series::undefined();
+  Series objective = pluss::series::undefined();
+  Series objective_rank = pluss::series::undefined();
+  Series stage = pluss::series::undefined();
+  Series status_code = pluss::series::undefined();
+  Series is_success = pluss::series::undefined();
+  Series mean_test_metrics = pluss::series::undefined();
+  Series std_test_metrics = pluss::series::undefined();
+  Series split_test_metrics = pluss::series::undefined();
+  Series fit_time_seconds = pluss::series::undefined();
+  Series score_time_seconds = pluss::series::undefined();
+  Series encoded_params = pluss::series::undefined();
 };
 
 struct TuneReport {

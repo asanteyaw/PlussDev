@@ -97,7 +97,7 @@ outright — see [`span()`](span.md) for the method that does accept it.
 - The default unit is `Nanos`, not `Seconds`.
 - Only fixed-duration units are accepted (`Nanos`/`Micros`/`Millis`/`Seconds`/
   `Days`); passing `Weeks`, `Months`, `Years`, or `BusinessDays` throws.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, not a sentinel epoch value.

@@ -12,6 +12,16 @@ std::vector<Module*> nn::Module::modules();
 std::vector<const Module*> nn::Module::modules() const;
 ```
 
+## What It Does
+
+Walks this module's registration tree and returns every `Module` in it --
+not the `Series` they hold, the modules themselves -- starting with this
+module and then every child registered via `module_record`, recursively.
+Reach for this when you need to inspect or act on layers as objects (check
+a specific layer's concrete type, or call a layer-specific accessor `Module`
+itself doesn't expose, such as [`PReLU::weight()`](../../activation/PReLU.md))
+rather than on the `Series` they contain.
+
 ## Parameters
 
 None.
@@ -45,12 +55,12 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule inner;
-  inner.then("proj", nn::Fusion(4, 4));
+  inner.append("proj", nn::Fusion(4, 4));
 
   nn::Schedule outer;
-  outer.then("in", nn::Fusion(3, 4));
-  outer.then("block", inner);
-  outer.then("out", nn::Fusion(4, 2));
+  outer.append("in", nn::Fusion(3, 4));
+  outer.append("block", inner);
+  outer.append("out", nn::Fusion(4, 2));
 
   std::cout << "modules().size() = " << outer.modules().size() << " (self + every nested child)\n";
 

@@ -32,8 +32,8 @@ Config float_cfg() {
 // known weight vector dotted with x (plus noise) is positive. Any
 // reasonable classifier should recover this cleanly.
 struct ClassificationData {
-  Series x;
-  Series y;
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
 };
 
 ClassificationData make_classification_data(std::int64_t rows, std::uint64_t seed) {
@@ -488,6 +488,47 @@ bool run_ice_dataframe_standardize_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+// ObjectiveRegularization::label_smoothing used to be declared, checkpointed,
+// and documented but never actually read anywhere -- Model::compute_loss's
+// context-aware overload called the 3-argument (predictions, y, kind)
+// overload directly, which has no options parameter to carry it. Fixed by
+// adding a 4-argument compute_loss(predictions, y, kind, label_smoothing)
+// overload that Model::compute_loss(batch, ctx) now calls instead, passing
+// ctx.recipe->objective_regularization.label_smoothing through. This proves
+// it end to end via Model::learn (not just a raw compute_loss call): the same
+// classification task trained with label_smoothing=0.0 vs 0.2 must produce a
+// measurably different loss trajectory.
+bool run_ice_label_smoothing_checks(std::ostream* err = nullptr) {
+  const auto data = make_classification_data(200, 11);
+
+  const auto train_once = [&](double label_smoothing) {
+    ice::Outline model(pluss::nn::Fusion(4, 3));
+    ice::TrainOptions options{};
+    options.loss = ice::LossKind::CrossEntropy;
+    options.execution.max_epochs = 1;
+    options.validation.split_ratio = 0.0;
+    options.objective_regularization.label_smoothing = label_smoothing;
+
+    const Series labels =
+        data.y.gt(0.0).to(ScalarType::Int64).reshape({data.y.sizes()[0]});
+    const Series predictions = model.forward(data.x);
+    return model.compute_loss(predictions, labels, ice::LossKind::CrossEntropy, label_smoothing)
+        .item<float>();
+  };
+
+  const double plain_loss = train_once(0.0);
+  const double smoothed_loss = train_once(0.2);
+  if (std::abs(plain_loss - smoothed_loss) < 1e-6) {
+    if (err) {
+      *err << "ice Model label_smoothing should change the CrossEntropy loss; plain=" << plain_loss
+           << " smoothed=" << smoothed_loss << "\n";
+    }
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -499,6 +540,7 @@ TEST_CASE("ice model tranche", "[ice][model]") {
   if (!run_ice_numerical_safety_checks(&std::cerr)) FAIL("ice numerical safety checks failed");
   if (!run_ice_platform_fallback_checks(&std::cerr)) FAIL("ice platform fallback checks failed");
   if (!run_ice_dataframe_standardize_checks(&std::cerr)) FAIL("ice DataFrame standardize checks failed");
+  if (!run_ice_label_smoothing_checks(&std::cerr)) FAIL("ice label_smoothing checks failed");
 }
 #else
 int main() {
@@ -510,6 +552,7 @@ int main() {
   ok = run_ice_numerical_safety_checks(&std::cerr) && ok;
   ok = run_ice_platform_fallback_checks(&std::cerr) && ok;
   ok = run_ice_dataframe_standardize_checks(&std::cerr) && ok;
+  ok = run_ice_label_smoothing_checks(&std::cerr) && ok;
   if (!ok) return 1;
   std::cout << "ice model checks passed\n";
   return 0;

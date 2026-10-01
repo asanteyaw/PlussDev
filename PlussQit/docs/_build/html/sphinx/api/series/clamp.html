@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::clamp &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::clamp_max" href="clamp_max.html" />
+    <link rel="prev" title="Series::chunk" href="chunk.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-clamp">
+<h1>Series::clamp<a class="headerlink" href="#series-clamp" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">clamp</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">min_v</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">max_v</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">clamp_</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">min_v</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">max_v</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Applies a two-sided bound to every element in one call.</p>
+<p>Conceptually, for each position <code class="docutils literal notranslate"><span class="pre">i</span></code>:</p>
+<ul class="simple">
+<li><p>if <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">&lt;</span> <span class="pre">min_v</span></code>, the result is <code class="docutils literal notranslate"><span class="pre">min_v</span></code></p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">&gt;</span> <span class="pre">max_v</span></code>, the result is <code class="docutils literal notranslate"><span class="pre">max_v</span></code></p></li>
+<li><p>otherwise, the result is <code class="docutils literal notranslate"><span class="pre">self[i]</span></code> unchanged</p></li>
+</ul>
+<p>This is the combined form of <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code></span></a> followed by
+<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max()</span></code></span></a> — <code class="docutils literal notranslate"><span class="pre">x.clamp(lo,</span> <span class="pre">hi)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">x.clamp_min(lo).clamp_max(hi)</span></code> produce the identical result, in one call
+instead of two. <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> returns a new series; <code class="docutils literal notranslate"><span class="pre">clamp_()</span></code> mutates the
+current series in place and returns <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>min_v must not exceed max_v
+<code class="docutils literal notranslate"><span class="pre">min_v</span> <span class="pre">&gt;</span> <span class="pre">max_v</span></code> throws immediately, before any element is touched — there is
+no implicit swap or silent reinterpretation of the bounds. See Example 4.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>min_v</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>)</p>
+<p>The lower bound. Any element below this is replaced by <code class="docutils literal notranslate"><span class="pre">min_v</span></code>.</p>
+<p><strong>max_v</strong> (<code class="docutils literal notranslate"><span class="pre">double</span></code>)</p>
+<p>The upper bound. Any element above this is replaced by <code class="docutils literal notranslate"><span class="pre">max_v</span></code>. Must be
+<code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">min_v</span></code>.</p>
+<p>Both overloads take the bounds as plain scalars only — unlike
+<a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code></span></a>/<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> does
+not currently have a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-bound (per-element/broadcast bound) overload.
+When each element needs its own lower and upper bound, compose
+<code class="docutils literal notranslate"><span class="pre">clamp_min(lo_series).clamp_max(hi_series)</span></code> instead.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Series</span></code> or <code class="docutils literal notranslate"><span class="pre">Series&amp;</span></code>
+The bounded result, either as a fresh value (<code class="docutils literal notranslate"><span class="pre">clamp()</span></code>) or as the
+mutated current series (<code class="docutils literal notranslate"><span class="pre">clamp_()</span></code>).</p>
+</section>
+<section id="gradient">
+<h2>Gradient<a class="headerlink" href="#gradient" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">clamp()</span></code> is differentiable. Gradient flows to <code class="docutils literal notranslate"><span class="pre">self</span></code> only where the element
+was left unchanged by the bound — that is, where <code class="docutils literal notranslate"><span class="pre">min_v</span> <span class="pre">&lt;=</span> <span class="pre">self[i]</span> <span class="pre">&lt;=</span> <span class="pre">max_v</span></code>
+— and is zero everywhere the element was actually clamped.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Inclusive boundaries on both sides
+At <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">min_v</span></code> or <code class="docutils literal notranslate"><span class="pre">self[i]</span> <span class="pre">==</span> <span class="pre">max_v</span></code>, the derivative with respect to
+<code class="docutils literal notranslate"><span class="pre">self[i]</span></code> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, not <code class="docutils literal notranslate"><span class="pre">0</span></code> — both boundaries are treated as “inside” the
+unclamped region. This matches <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code></span></a>’s and
+<a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max()</span></code></span></a>’s own inclusive-boundary convention exactly,
+which is expected since <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> is defined in terms of them. See Example 2.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">clamp_()</span></code> is a storage mutation, not a differentiable node — use the
+out-of-place <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> when the bound itself needs to sit on the
+differentiable path.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A two-sided bound in one call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1, -1, 0, 2, 2]
+</pre></div>
+</div>
+<p>The two strictly-outside values (<code class="docutils literal notranslate"><span class="pre">-3</span></code> and <code class="docutils literal notranslate"><span class="pre">5</span></code>) get pulled to the nearest
+bound; everything already inside <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">2]</span></code> (including the boundary value
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> itself) passes through unchanged.</p>
+<p>Example 2. Both boundaries keep gradient <code class="docutils literal notranslate"><span class="pre">1</span></code>; only the strictly-clamped
+positions get gradient <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+<span class="n">y</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;y=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1, -1, 0, 2, 2]
+dx=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[0, 1, 1, 1, 0]
+</pre></div>
+</div>
+<p>Position <code class="docutils literal notranslate"><span class="pre">1</span></code> sits exactly at <code class="docutils literal notranslate"><span class="pre">min_v</span></code> and position <code class="docutils literal notranslate"><span class="pre">3</span></code> sits exactly at
+<code class="docutils literal notranslate"><span class="pre">max_v</span></code> — both keep derivative <code class="docutils literal notranslate"><span class="pre">1</span></code>. Only positions <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">4</span></code>, strictly
+outside the bounds, get derivative <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">clamp_()</span></code> mutates the current handle in place.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+<span class="n">line</span><span class="p">.</span><span class="n">clamp_</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">line</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1, -1, 0, 2, 2]
+</pre></div>
+</div>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">min_v</span> <span class="pre">&gt;</span> <span class="pre">max_v</span></code> throws instead of silently swapping the bounds.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>clamp_: min must be &lt;= max
+</pre></div>
+</div>
+<p>The error is reported under the <code class="docutils literal notranslate"><span class="pre">clamp_</span></code> name even when called through the
+out-of-place <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> entry point — both overloads share the same bound
+validation.</p>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">clamp(lo,</span> <span class="pre">hi)</span></code> and the composed <code class="docutils literal notranslate"><span class="pre">clamp_min(lo).clamp_max(hi)</span></code>
+form agree exactly.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">-3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">5</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">composed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">).</span><span class="n">clamp_max</span><span class="p">(</span><span class="mf">2.0</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">line</span><span class="p">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;composed=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">composed</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;direct=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">direct</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>composed=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1, -1, 0, 2, 2]
+direct=pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
+data=[-1, -1, 0, 2, 2]
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">clamp()</span></code> is the two-sided combination of <a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code></span></a>
+and <a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clamp_max()</span></code></span></a> — reach for the one-sided methods
+directly when only one bound applies, and for <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> when both do.</p></li>
+<li><p>Unlike <code class="docutils literal notranslate"><span class="pre">clamp_min()</span></code>/<code class="docutils literal notranslate"><span class="pre">clamp_max()</span></code>, there is currently no <code class="docutils literal notranslate"><span class="pre">Series</span></code>-bound
+(per-element) overload of <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> itself; compose the two one-sided
+methods for that case.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_v</span> <span class="pre">&gt;</span> <span class="pre">max_v</span></code> throws rather than silently producing an empty or
+inverted range — validate bounds before calling if they come from
+untrusted input.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">clamp_()</span></code> when storage mutation is the goal; use <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> when the
+bound itself needs to participate in a differentiable computation.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="clamp_min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_min</span></code></span></a>: the one-sided floor, with a
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-bound (broadcastable) overload <code class="docutils literal notranslate"><span class="pre">clamp()</span></code> doesn’t have.</p></li>
+<li><p><a class="reference internal" href="clamp_max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::clamp_max</span></code></span></a>: the one-sided ceiling, with the same
+broadcastable overload.</p></li>
+<li><p><a class="reference internal" href="minimum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::minimum</span></code></span></a> / <a class="reference internal" href="maximum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::maximum</span></code></span></a>:
+the underlying elementwise comparisons <code class="docutils literal notranslate"><span class="pre">clamp_min</span></code>/<code class="docutils literal notranslate"><span class="pre">clamp_max</span></code> are built
+from.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="chunk.html">
+    <span class="label">Previous</span>
+    <span class="title">chunk</span>
+  </a>
+  <a class="next-link" href="clamp_max.html">
+    <span class="label">Next</span>
+    <span class="title">clamp_max</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="chunk.html" title="previous chapter">Series::chunk</a></li>
+      <li>Next: <a href="clamp_max.html" title="next chapter">Series::clamp_max</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/clamp.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

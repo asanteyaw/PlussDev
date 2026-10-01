@@ -207,7 +207,7 @@ bool series_all_zero_i64(const pluss::Series& s) {
 }
 
 Thread temporal_thread_to_display_note(const Thread& t) {
-  const auto timeline = (t.kind() == ThreadKind::Timeline) ? t.as_timeline() : t.as_timeindex().timeline();
+  const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64(timeline.second())
                               || !series_all_zero_i64(timeline.minute())
@@ -222,8 +222,11 @@ Thread temporal_thread_to_display_note(const Thread& t) {
 }
 
 Thread display_thread(const Thread& t) {
-  if (t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex) {
+  if (t.kind() == ThreadKind::Timeline) {
     return temporal_thread_to_display_note(t);
+  }
+  if (t.kind() == ThreadKind::Duration) {
+    return t.cast().note();
   }
   return t;
 }
@@ -240,14 +243,24 @@ std::string thread_value_at(const Thread& t, std::int64_t row) {
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:
       return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case ThreadKind::TimeIndex:
-      return fmt::format("{}", t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
-    default:
-      return "<?>";
+    case ThreadKind::Duration:
+      return std::string(t.as_duration().to_note_iso().at(row));
   }
+  return "<?>";
 }
 
 std::int64_t non_null_count(const Thread& t) {
+  if (t.kind() == ThreadKind::Duration) {
+    const auto values = t.as_duration().host();
+    const auto valid = detail::has_validity_mask(t)
+                           ? detail::validity_mask(t)->to_vec<bool>()
+                           : std::vector<bool>(values.size(), true);
+    std::int64_t count = 0;
+    for (std::size_t i = 0; i < values.size(); ++i) {
+      count += valid[i] && values[i] != pluss::Duration::kNaT ? 1 : 0;
+    }
+    return count;
+  }
   if (!detail::has_validity_mask(t)) {
     return t.size();
   }
@@ -260,7 +273,7 @@ std::uint64_t estimate_bytes(const Thread& t) {
   if (t.kind() == ThreadKind::Series) {
     const auto item = t.as_series().dtype().itemsize;
     bytes += static_cast<std::uint64_t>(item) * static_cast<std::uint64_t>(t.size());
-  } else if (t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex) {
+  } else if (t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::Duration) {
     bytes += static_cast<std::uint64_t>(8) * static_cast<std::uint64_t>(t.size());
   } else if (t.kind() == ThreadKind::Note) {
     const auto& n = t.as_note();
@@ -732,11 +745,10 @@ std::string logical_dtype(const Thread& t) {
       return "Note";
     case ThreadKind::Timeline:
       return "Timeline";
-    case ThreadKind::TimeIndex:
-      return "TimeIndex";
-    default:
-      return "Unknown";
+    case ThreadKind::Duration:
+      return "Duration";
   }
+  return "Unknown";
 }
 
 std::string render_thread_series_like_(const Thread& thread,

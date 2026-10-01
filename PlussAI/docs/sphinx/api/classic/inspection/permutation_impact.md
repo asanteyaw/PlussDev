@@ -20,6 +20,17 @@ classic::StatusOr<classic::PermuteImpactReport> classic::permutation_impact(
     classic::RandomState random = {});
 ```
 
+## What It Does
+
+Fits a model from `spec` on `train`, records its baseline `metric` on
+`eval`, then for each feature in turn, shuffles just that feature's column
+in `eval` (`repeats` times, re-scoring after each shuffle) and measures how
+much `metric` degrades relative to the baseline. A feature whose shuffled
+column tanks the score is one the fitted model actually relies on; a
+feature whose shuffling barely moves the score is one the model
+effectively ignores -- an after-the-fact, model-specific importance signal,
+not a pre-training statistical one.
+
 ## Parameters
 
 `spec`

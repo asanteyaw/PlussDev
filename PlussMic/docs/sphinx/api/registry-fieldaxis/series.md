@@ -60,7 +60,7 @@ id
 - [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
   wraps.
 - [`RegistryFieldAxisAccessor::note`](note.md) / [`timeline`](timeline.md) /
-  [`timeindex`](timeindex.md): the shorthands for the other scalar kinds.
+  : the shorthands for the other scalar kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="prefix.html">

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::idst &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::ifftshift" href="ifftshift.html" />
+    <link rel="prev" title="Series::idct" href="idct.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-idst">
+<h1>Series::idst<a class="headerlink" href="#series-idst" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">idst</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">idst</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="reconstruct-samples-from-sine-coefficients">
+<h2>Reconstruct Samples From Sine Coefficients<a class="headerlink" href="#reconstruct-samples-from-sine-coefficients" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">idst()</span></code> is the normalization-matched inverse of <a class="reference internal" href="dst.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dst()</span></code></span></a>. It maps
+type-II discrete sine coefficients back to samples along one axis. For a
+length-<code class="docutils literal notranslate"><span class="pre">N</span></code> coefficient vector, the inverse uses the sine basis</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>sin(pi * (t + 1) * (k + 1/2) / N)
+</pre></div>
+</div>
+<p>with scale <code class="docutils literal notranslate"><span class="pre">2/N</span></code> for ordinary coefficient rows and <code class="docutils literal notranslate"><span class="pre">1/N</span></code> for the final row.
+That last coefficient has twice the squared norm of the others. Its half
+weight is part of the inverse contract for both odd and even lengths; callers
+must not special-case or pre-scale it.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">idst()</span></code> when coefficients describe an odd boundary continuation and must
+return to sample space. Use <a class="reference internal" href="idct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">idct()</span></code></span></a> for an even continuation and a
+cosine basis. This method is real-valued and rejects complex coefficients.</p>
+<p>The no-argument form reconstructs the last axis. The <code class="docutils literal notranslate"><span class="pre">dim</span></code> overload accepts
+positive or negative axes and reconstructs every independent slice across the
+other dimensions. Shape and rank do not change.</p>
+<p>Integral and Boolean input promote to <code class="docutils literal notranslate"><span class="pre">float64</span></code>; real floating input is
+computed as <code class="docutils literal notranslate"><span class="pre">float64</span></code> on CPU. The newly allocated contiguous result returns to
+the receiver’s platform. Transform-friendly lengths use the fast kernel, while
+other lengths use the same normalized formula through a direct batched path.</p>
+</section>
+<section id="reverse-mode">
+<h2>Reverse Mode<a class="headerlink" href="#reverse-mode" title="Link to this heading">¶</a></h2>
+<p>The inverse sine transform is linear. Its reverse rule applies the transpose
+of the normalized inverse matrix to incoming sensitivity. Consequently the
+final source coefficient retains its distinct <code class="docutils literal notranslate"><span class="pre">1/N</span></code> weighting in reverse mode;
+the rule is not an unscaled call to the public <code class="docutils literal notranslate"><span class="pre">dst()</span></code> method.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A coefficient vector produced by <code class="docutils literal notranslate"><span class="pre">dst()</span></code> reconstructs the source
+samples.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">6.532815</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.828427</span><span class="p">,</span><span class="w"> </span><span class="mf">2.705981</span><span class="p">,</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">}).</span><span class="n">idst</span><span class="p">());</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 4.0000]
+</pre></div>
+</div>
+<p>Example 2. By default, each row of a matrix is an independent coefficient
+vector.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">idst</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 2.4880 -0.3333 0.1786 ⎤
+⎣ 6.2201  0.6667 0.4466 ⎦
+</pre></div>
+</div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">dim=0</span></code> reconstructs each column instead.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">idst</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡  2.7071  3.9142  5.1213 ⎤
+⎣ -1.2929 -1.0858 -0.8787 ⎦
+</pre></div>
+</div>
+<p>Example 4. The matching pair round-trips an even transformed axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">dst</span><span class="p">().</span><span class="n">idst</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1.0000, 2.0000, 3.0000, 4.0000]
+</pre></div>
+</div>
+<p>Example 5. The final-coefficient normalization also reconstructs odd lengths.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">}});</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">dst</span><span class="p">().</span><span class="n">idst</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=
+⎡ 1.0000 2.0000 3.0000 ⎤
+⎣ 4.0000 5.0000 6.0000 ⎦
+</pre></div>
+</div>
+<p>Example 6. Integer coefficients produce floating reconstruction values.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">}).</span><span class="n">idst</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dtype=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">scalar_type</span><span class="p">()</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; dim=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">dim</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; shape=[&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;]&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1.2225, 2.8049, 0.8907, 0.3083]
+dtype=float64 dim=1 shape=[4]
+</pre></div>
+</div>
+<p>Example 7. Reverse mode preserves the inverse matrix’s asymmetric final-row
+normalization.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">});</span>
+<span class="n">x</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+<span class="n">x</span><span class="p">.</span><span class="n">idst</span><span class="p">()</span>
+<span class="w"> </span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))</span>
+<span class="w"> </span><span class="p">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="w"> </span><span class="p">.</span><span class="n">reverse</span><span class="p">();</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[1.1209e-01, -2.2204e-16, 1.5772e+00, -5.0000e-01]
+</pre></div>
+</div>
+<p>Example 8. Invalid axes and complex coefficients are rejected.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}}).</span><span class="n">idst</span><span class="p">(</span><span class="mi">-3</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">using</span><span class="w"> </span><span class="n">Complex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">complex</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Complex</span><span class="o">&gt;</span><span class="p">{{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">}).</span><span class="n">idst</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dct/idct/dst/idst: dim out of range
+dct/idct/dst/idst: complex input is not supported
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dst.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dst()</span></code></span></a> produces the coefficients consumed here.</p></li>
+<li><p><a class="reference internal" href="idct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">idct()</span></code></span></a> reconstructs an even-boundary cosine representation.</p></li>
+<li><p><a class="reference internal" href="ifftshift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ifftshift()</span></code></span></a> reorders frequency bins without applying an inverse transform.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="idct.html" title="previous chapter">Series::idct</a></li>
+      <li>Next: <a href="ifftshift.html" title="next chapter">Series::ifftshift</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/idst.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

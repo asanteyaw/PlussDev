@@ -52,7 +52,7 @@ int main() {
   for (int iter = 1; iter <= 120; ++iter) {
     auto tx = pluss::subsp::math::diff::trace(params_tape, true);
     const Series loss = tx.value().sub(target).square().sum().mul(0.5);
-    tx.clear_sensitivity();
+    tx.clear();
     loss.reverse();
     minimax_tape.step();
     if (iter % 30 == 0) {

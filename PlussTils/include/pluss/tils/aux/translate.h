@@ -226,17 +226,4 @@ auto transform_axis(F&& fn,
   return detail::translate_slices(std::forward<F>(fn), layout.nslices, make_slice, opts);
 }
 
-// TimeIndex is 1D by design. axis must be 0 or -1.
-template <class F>
-auto transform_axis(F&& fn,
-                    const pluss::codeh::TimeIndex& x,
-                    std::int64_t axis = 0,
-                    transform_axis_options opts = {}) {
-  (void)opts;
-  const auto d = detail::wrap_axis(axis, 1, "transform_axis(TimeIndex)");
-  (void)d;
-  const auto t = x.timeline();
-  return detail::invoke_with_optional_index(std::forward<F>(fn), t, 0);
-}
-
 } // namespace pluss::tils

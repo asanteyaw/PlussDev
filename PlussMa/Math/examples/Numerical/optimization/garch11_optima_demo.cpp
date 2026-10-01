@@ -15,9 +15,9 @@ using pluss::Series;
 namespace dfo = pluss::subsp::math::optimization;
 
 struct Garch11Params {
-  Series omega{Series::undefined()};
-  Series alpha{Series::undefined()};
-  Series beta{Series::undefined()};
+  Series omega{pluss::series::undefined()};
+  Series alpha{pluss::series::undefined()};
+  Series beta{pluss::series::undefined()};
 };
 
 Series scalar(double v, const pluss::Config& cfg) {

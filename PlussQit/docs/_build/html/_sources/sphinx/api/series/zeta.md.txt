@@ -207,8 +207,8 @@ from `self` and the offset `q` from the argument:
 - [`Series::lgamma`](lgamma.md): the other core gamma-family special function.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="xlogy.html">
+  <a class="prev-link" href="zero.html">
     <span class="label">Previous</span>
-    <span class="title">xlogy</span>
+    <span class="title">zero</span>
   </a>
 </div>

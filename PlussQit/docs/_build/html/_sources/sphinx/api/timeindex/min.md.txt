@@ -48,12 +48,12 @@ auto hi = idx.max();
 - [`TimeIndex::max`](max.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="is_unique.html">
+  <a class="prev-link" href="max.html">
     <span class="label">Previous</span>
-    <span class="title">is_unique</span>
-  </a>
-  <a class="next-link" href="max.html">
-    <span class="label">Next</span>
     <span class="title">max</span>
+  </a>
+  <a class="next-link" href="operators.html">
+    <span class="label">Next</span>
+    <span class="title">operators</span>
   </a>
 </div>

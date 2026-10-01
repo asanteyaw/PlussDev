@@ -92,8 +92,8 @@ data=[5]
     <span class="label">Previous</span>
     <span class="title">resample_bins</span>
   </a>
-  <a class="next-link" href="resample_sum.html">
+  <a class="next-link" href="resample_first.html">
     <span class="label">Next</span>
-    <span class="title">resample_sum</span>
+    <span class="title">resample_first</span>
   </a>
 </div>

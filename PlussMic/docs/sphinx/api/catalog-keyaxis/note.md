@@ -64,7 +64,7 @@ city                     | Note         | Note             | 2       | [Accra, T
 ## See Also
 
 - [`CatalogKeyAxisAccessor::series`](series.md) / [`timeline()`](timeline.md) /
-  [`timeindex()`](timeindex.md): the shorthands for the other scalar kinds.
+  : the shorthands for the other scalar kinds.
 - [`Catalog::keyaxis`](../catalog/keyaxis.md): the entry point this accessor
   is reached from.
 - [`RegistryFieldAxisAccessor::note`](../registry-fieldaxis/note.md): the

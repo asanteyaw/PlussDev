@@ -8,6 +8,7 @@
 
 ```cpp
 Series::tanh() const -> Series
+Series& Series::tanh_()
 ```
 
 ## What It Does
@@ -47,6 +48,29 @@ So:
 
 The verified reverse-mode example below reflects that behavior on the current
 surface.
+
+## In-Place Form
+
+`tanh_()` is the in-place sibling of [`tanh()`](tanh.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.tanh_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 0.76159416]
+same object: true
+```
 
 ## Examples
 

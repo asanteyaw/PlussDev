@@ -18,6 +18,16 @@ classic::StatusOr<classic::LabeledBatch> classic::slice_labeled_batch(
     const classic::LabeledBatch& in, const pluss::Series& indices);
 ```
 
+## What It Does
+
+Selects the rows named by `indices`, in the order given, out of an actual
+batch -- the step that turns the row-index output of
+[`holdout_split`](holdout.md)/[`crossval_plan`](crossval_plan.md) into a
+real, usable subset of data. `slice_feature_batch` selects along `in.x`'s
+sample axis; `slice_labeled_batch` does the same plus selects `in.y` (and
+`in.sample_weights`, when defined) by the same indices, keeping every row
+aligned across features, label, and weight.
+
 ## Parameters
 
 `in`
@@ -163,7 +173,7 @@ int main() {
   cls::FeatureBatch batch{};
   batch.x = pluss::make_series({1.0, 2.0}, {2}, f64).reshape({2, 1});
 
-  const cls::StatusOr<cls::FeatureBatch> sliced = cls::slice_feature_batch(batch, pluss::Series::undefined());
+  const cls::StatusOr<cls::FeatureBatch> sliced = cls::slice_feature_batch(batch, pluss::series::undefined());
   std::cout << "ok = " << std::boolalpha << sliced.ok() << "\n";
   std::cout << "message = \"" << sliced.status().message << "\"\n";
 

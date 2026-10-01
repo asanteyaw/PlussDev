@@ -11,7 +11,7 @@ TEST_CASE("autodiff recording guards are public pluss types", "[public-api][no-g
   auto x = pluss::make_series({2.0});
   x.tracks_slope_(true);
 
-  pluss::Series untracked;
+  auto untracked = pluss::series::undefined();
   {
     pluss::NoGradGuard guard;
     untracked = x.square();

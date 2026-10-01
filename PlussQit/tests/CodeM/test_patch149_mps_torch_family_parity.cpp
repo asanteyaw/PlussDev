@@ -120,7 +120,7 @@ TEST_CASE("MPS parity covers torch-like core families", "[mps][parity][torch]") 
   auto put_mps = put_cpu.to(pluss::pMPS);
   const auto src_cpu = pluss::make_series(std::vector<float>{9.f, 8.f, 7.f, 6.f}, {4});
   const auto src_mps = src_cpu.to(pluss::pMPS);
-  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
+  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
   put_cpu = (put_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   put_mps = (put_mps.*put_fn)(idx_mps, src_mps, /*accumulate=*/false);
   require_close_(put_mps.to(pluss::pCPU).to_vec<float>(), put_cpu.to_vec<float>(), "put");
@@ -240,7 +240,7 @@ TEST_CASE("MPS autodiff one-shot reverse fails loudly after graph release", "[mp
   const pluss::Series loss = x.square().sum();
 
   loss.reverse(/*keep_graph=*/false);
-  x.clear_sensitivity();
+  x.clear();
   REQUIRE_THROWS_WITH(
       loss.reverse(),
       Catch::Matchers::ContainsSubstring("one-shot reverse pass"));

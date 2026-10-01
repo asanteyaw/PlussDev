@@ -13,6 +13,14 @@ Only reachable via `->` (`net->input_type_at(index)`).
 const std::type_info& nn::Schedule::Impl::input_type_at(std::size_t index) const;
 ```
 
+## What It Does
+
+Exposes the type-checking machinery `append`/`insert`'s neighbor checks are
+built on: reports what type a given stage declared as its input at the
+time it was added. Useful for diagnosing a `Schedule` built elsewhere (by
+another function, or programmatically) without reading the code that built
+it -- inspect the declared types directly instead.
+
 ## Parameters
 
 `std::size_t index`
@@ -21,8 +29,8 @@ const std::type_info& nn::Schedule::Impl::input_type_at(std::size_t index) const
 ## Returns
 
 `const std::type_info&` -- the type that stage declared as its input when
-added (via [`then`](then.md)'s implicit `Series`, or
-[`then_as`](then_as.md)'s explicit `In`). Compare with `==`/`!=` against
+added (via [`append`](append.md)'s implicit `Series`, or
+[`append_as`](append_as.md)'s explicit `In`). Compare with `==`/`!=` against
 `typeid(SomeType)`; `.name()` gives a raw, platform-specific mangled string,
 not meant to be read directly.
 
@@ -33,7 +41,7 @@ not meant to be read directly.
 ## Practical Examples
 
 Three examples: confirming every stage in an ordinary chain declares
-`Series`, the adjacency invariant `then`/`insert` themselves enforce, and a
+`Series`, the adjacency invariant `append`/`insert` themselves enforce, and a
 stage whose declared type is not `Series` at all.
 
 ### Example 1
@@ -48,8 +56,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   for (std::size_t i = 0; i < net->size(); ++i) {
     std::cout << "stage " << i << " input_type_at==typeid(Series): " << std::boolalpha
@@ -69,7 +77,7 @@ stage 1 input_type_at==typeid(Series): true
 
 ### Example 2
 
-This is the exact invariant `then`/`insert` enforce every time a stage is
+This is the exact invariant `append`/`insert` enforce every time a stage is
 added: one stage's declared output type must equal the next stage's
 declared input type.
 
@@ -83,8 +91,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   for (std::size_t i = 0; i + 1 < net->size(); ++i) {
     std::cout << "output_type_at(" << i << ") == input_type_at(" << (i + 1) << "): " << std::boolalpha
@@ -103,7 +111,7 @@ output_type_at(0) == input_type_at(1): true
 
 ### Example 3
 
-An `RNN` stage, registered via [`then_as`](then_as.md), declares its input
+An `RNN` stage, registered via [`append_as`](append_as.md), declares its input
 as plain `Series` even though its **output** is a tuple -- only `Out` needs
 to be stated explicitly when `In` is still `Series`.
 
@@ -119,7 +127,7 @@ int main() {
   using pluss::Series;
 
   nn::Schedule net;
-  net.then_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(3, 4));
+  net.append_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(3, 4));
 
   std::cout << "'rnn' input_type is Series: " << std::boolalpha
             << (net->input_type_at(0) == typeid(Series)) << "\n";

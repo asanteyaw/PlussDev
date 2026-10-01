@@ -11,6 +11,18 @@
 Module::Snapshot nn::Module::snapshot() const;
 ```
 
+## What It Does
+
+Captures a deep-copied, point-in-time record of this module's entire
+trainable state -- every named parameter, every named buffer, and the
+current training/eval mode -- that [`restore`](restore.md) can later write
+back. This is the primitive checkpointing is built from: save a snapshot
+before an experimental change, keep the best snapshot seen during training,
+or hold a copy aside to compare two training runs, all without touching
+disk. Because every value is cloned rather than referenced, nothing that
+happens to the module afterward (including further training) can change an
+already-taken snapshot.
+
 ## Parameters
 
 None.
@@ -111,8 +123,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2, /*bias=*/false));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2, /*bias=*/false));
 
   auto snap = net.snapshot();
   for (auto& entry : snap.parameters) {

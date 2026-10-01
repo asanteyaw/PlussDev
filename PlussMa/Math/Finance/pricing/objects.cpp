@@ -330,7 +330,7 @@ PriceResult bs_price_mc_(const Vanilla& inst,
   const Series call_mask_row = is_call_mask.reshape({1, n});
   const Series put_mask_row = is_put_mask.reshape({1, n});
 
-  Series price_vec;
+  Series price_vec = pluss::series::undefined();
   if (!eng.options.antithetic) {
     const Series z = pluss::series::randn({eng.options.paths, n}, out_cfg, eng.options.seed);
     const Series terminal = drift.add(volsqrt.mul(z)).exp().mul(s0);

@@ -559,7 +559,7 @@ class ScopedSeriesVectorCache {
   if (series_is_vector(values) && values.numel() == rows) {
     const Series col_vec = values.reshape({rows, 1});
     const std::array<std::int64_t, 2> tile_dims{1, cols};
-    return col_vec.tile(std::span<const std::int64_t>(tile_dims.data(), tile_dims.size()));
+    return col_vec.repeat(std::span<const std::int64_t>(tile_dims.data(), tile_dims.size()));
   }
   if (values.dim() == 2 && values.sizes()[0] == rows && values.sizes()[1] == cols) {
     return values;
@@ -1729,8 +1729,8 @@ struct ViolinHalfWidths {
     const std::array<std::int64_t, 2> x_tile{rows, 1};
     const std::array<std::int64_t, 2> y_tile{1, cols};
     return std::pair<Series, Series>{
-        x_row.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size())),
-        y_col.tile(std::span<const std::int64_t>(y_tile.data(), y_tile.size())),
+        x_row.repeat(std::span<const std::int64_t>(x_tile.data(), x_tile.size())),
+        y_col.repeat(std::span<const std::int64_t>(y_tile.data(), y_tile.size())),
     };
   }
 

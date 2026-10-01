@@ -17,7 +17,7 @@ Flags whether the bound stream's timestamp is a real, present timestamp (not
 `NaT`), replacing it with a `Bool` `Series` stream. Exactly the logical
 inverse of [`isnat()`](isnat.md).
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

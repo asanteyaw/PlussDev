@@ -5,8 +5,7 @@
 ## Signatures
 
 ```cpp
-TimeIndex::union_(const TimeIndex& other) const -> TimeIndex
-TimeIndex::unionIndex(const TimeIndex& other) const -> TimeIndex
+TimeIndex TimeIndex::union_(const TimeIndex& other) const
 ```
 
 ## What It Does
@@ -62,12 +61,12 @@ std::cout << pluss::timeindex::print(shared_clock) << "\n";
 - [`TimeIndex::difference`](difference.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tail.html">
+  <a class="prev-link" href="tz_localize.html">
     <span class="label">Previous</span>
-    <span class="title">tail</span>
+    <span class="title">tz_localize</span>
   </a>
-  <a class="next-link" href="intersection.html">
+  <a class="next-link" href="unique.html">
     <span class="label">Next</span>
-    <span class="title">intersection</span>
+    <span class="title">unique</span>
   </a>
 </div>

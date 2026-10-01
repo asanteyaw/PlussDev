@@ -154,7 +154,7 @@ TEST_CASE("MPS strict int32 indexing/compose lanes match CPU", "[mps][strict][in
       x_cpu.reshape({x_cpu.numel()}).to(pluss::pMPS).take(idx_flat_cpu.to(pluss::pMPS)).to(pluss::pCPU).to_vec<std::int32_t>(),
       x_cpu.reshape({x_cpu.numel()}).take(idx_flat_cpu).to_vec<std::int32_t>());
 
-  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_);
+  auto put_fn = static_cast<pluss::Series (pluss::Series::*)(const pluss::Series&, const pluss::Series&, bool)>(&pluss::Series::put_raw_);
   auto base_put_cpu = pluss::Series::zeros({6}, pluss::ScalarType::Int32);
   auto base_put_mps = base_put_cpu.to(pluss::pMPS);
   const auto put_src_cpu = pluss::make_series(std::vector<std::int32_t>{7, 8, 9, 10}, {4});

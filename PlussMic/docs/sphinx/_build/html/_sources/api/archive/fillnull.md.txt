@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1059f32eeb75 -->
+<!-- pluss-signature-hash: 82544779068b -->
 
 # Archive::fillnull
 
@@ -12,7 +12,7 @@ Archive::fillnull(double value) const -> Archive
 Archive::fillnull(std::string_view value) const -> Archive
 Archive::fillnull(const char* value) const -> Archive
 Archive::fillnull(const pluss::Timeline& value) const -> Archive
-Archive::fillnull(const pluss::TimeIndex& value) const -> Archive
+Archive::fillnull(const pluss::Duration& value) const -> Archive
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ are returned exactly as they were.
 ## Parameters
 
 **value** (`double` / `std::string_view` / `const char*` / `const pluss::Timeline&` /
-`const pluss::TimeIndex&`)
+`const pluss::Duration&`)
     The fill value. Its C++ type selects both the overload and which streams are eligible
     to be filled — see the important callout above.
 

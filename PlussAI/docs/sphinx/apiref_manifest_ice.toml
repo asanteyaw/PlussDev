@@ -1,0 +1,684 @@
+# apiref_manifest_ice.toml -- the `pluss::ai::ice` public framework.
+# `ice` is PlussAI's convenience/training layer over `nn` (NodeK) -- see
+# PlussAI/Ice/ICE_BLUEPRINT.md for the full design rationale. It plays two
+# roles: a PyTorch-Lightning-shaped trainer (Model/Outline/Coach/Recipe --
+# public alias TrainOptions -- remove the hand-written optimizer-wiring/
+# training-loop/checkpointing boilerplate) and a PyTorch-Forecasting-shaped
+# catalog of ready-made "nice, niche" architectures (models/ts, models/nlp,
+# models/rl) that `nn` itself deliberately does not provide.
+# Drive the toolchain at this file with
+#   python3 apiref.py <cmd> --manifest apiref_manifest_ice.toml
+#
+# Organized by category (platform/options/step/model/outline/optim/no_grad/
+# callback/coach/source/io/data/models_ts/models_nlp/models_rl), not by
+# family, matching nn's own precedent (ice is not family-based like classic).
+# Locked order rationale: platform/options/step come first because every
+# later category's signatures reference TrainPlatform/TrainOptions/Batch;
+# model -> outline -> optim -> no_grad -> callback -> coach -> source -> io
+# follows the dependency order a reader actually needs (the core abstract
+# base, then its thin convenience wrapper, then the two escape hatches, then
+# the extensibility/orchestration/data-feeding/persistence layers built on
+# top of it); data comes before models_* because every model catalog entry's
+# *Batch type is constructed from data::Batch/data::TimeSeriesBatch; models_ts
+# before models_nlp before models_rl matches the blueprint's own Phase 4/5
+# build order (ts was the first "nice/niche" entry built).
+#
+# Two things worth flagging up front:
+#   - There are TWO distinct `Batch` types: `pluss::ai::ice::Batch` (step.h,
+#     a flat field-list the training loop feeds to Model::forward/
+#     compute_loss) and `pluss::ai::ice::data::Batch` (data/dataset.h, has a
+#     Layout + per-field CategoricalVariables, what a Source's
+#     learn_batches()/etc. vectors hold and what every model catalog's own
+#     *Batch type -- TFTBatch, AutoregressiveBatch, TimeSeriesBatch itself --
+#     converts from). Every page reachable from one is cross-linked to the
+#     other, and prose always says "core Batch" vs "data::Batch" rather than
+#     just "Batch" wherever the two could be confused.
+#   - Several `*TrainOptions` structs across `options` and every models_*
+#     family reuse the SAME shared sub-options (ValidationPolicy,
+#     ArchitectureRegularization, ObjectiveRegularization, LoopRegularization,
+#     CheckpointPolicy, ExecutionPolicy) -- exactly like nn/optim's
+#     GradientClipOptions/ExecutionOptions being shared across all 7
+#     optimizers -- so none of them get `owner=`; they stay siblings at
+#     `ice/options` family level and every model's own *TrainOptions page
+#     cross-links back to them instead of re-explaining each field.
+#   - `AutoregressiveForecaster`/`TemporalFusionTransformer::save`/`load` and
+#     `TextJudge`/`ActionValueAgent`'s own save/load all build on the same
+#     shared primitives: the text key=value artifact helpers in
+#     `pluss/ai/ice/io/kv_artifact.h` (`io::detail::write_num_line`/
+#     `require_i64`/etc. -- previously duplicated per-model, now shared) for
+#     each model's own flat Options fields, plus the already-generic
+#     `ice::io::save_parameters`/`load_parameters` for the tensor weights.
+#     `TextJudge` additionally persists a label vocabulary (non-tensor
+#     state no other catalog entry has).
+
+[framework.ice]
+title = "ice"
+summary = "PlussAI training/runtime orchestration framework over nn."
+include = "<pluss/ai/ice.h>"
+header = "PlussAI"
+
+# ===========================================================================
+#  FAMILIES
+# ===========================================================================
+
+[[family]]
+path = "ice/platform"
+page = "api/ice/platform.md"
+title = "platform"
+maxdepth = 2
+children = ["platform/Introduction", "platform/resolve_platform"]
+
+[[family]]
+path = "ice/options"
+page = "api/ice/options.md"
+title = "options"
+maxdepth = 2
+children = ["options/Introduction", "options/TrainOptions", "options/ValidationPolicy", "options/ArchitectureRegularization", "options/ObjectiveRegularization", "options/LoopRegularization", "options/CheckpointPolicy", "options/ExecutionPolicy", "options/AssessReport"]
+
+[[family]]
+path = "ice/step"
+page = "api/ice/step.md"
+title = "step"
+maxdepth = 2
+children = ["step/Introduction", "step/Batch", "step/StepContext", "step/StepResult"]
+
+[[family]]
+path = "ice/model"
+page = "api/ice/model.md"
+title = "model"
+maxdepth = 2
+children = ["model/Introduction", "model/Model"]
+
+[[family]]
+path = "ice/outline"
+page = "api/ice/outline.md"
+title = "outline"
+maxdepth = 2
+children = ["outline/Introduction", "outline/Outline"]
+
+[[family]]
+path = "ice/optim"
+page = "api/ice/optim.md"
+title = "optim"
+maxdepth = 2
+children = ["optim/Introduction", "optim/make_optimizer"]
+
+[[family]]
+path = "ice/no_grad"
+page = "api/ice/no_grad.md"
+title = "no_grad"
+maxdepth = 2
+children = ["no_grad/Introduction", "no_grad/NoGradGuard"]
+
+[[family]]
+path = "ice/callback"
+page = "api/ice/callback.md"
+title = "callback"
+maxdepth = 2
+children = ["callback/Introduction", "callback/RunState", "callback/Callback", "callback/CallbackChain", "callback/EarlyStopCallback"]
+
+[[family]]
+path = "ice/coach"
+page = "api/ice/coach.md"
+title = "coach"
+maxdepth = 2
+children = ["coach/Introduction", "coach/Coach"]
+
+[[family]]
+path = "ice/source"
+page = "api/ice/source.md"
+title = "source"
+maxdepth = 2
+children = ["source/Introduction", "source/BatchPlan", "source/SourceContext", "source/Source", "source/TensorSource", "source/DataSetSource"]
+
+[[family]]
+path = "ice/io"
+page = "api/ice/io.md"
+title = "io"
+maxdepth = 2
+children = ["io/Introduction", "io/save_parameters", "io/load_parameters", "io/CheckpointState", "io/save_checkpoint", "io/load_checkpoint"]
+
+[[family]]
+path = "ice/data"
+page = "api/ice/data.md"
+title = "data"
+maxdepth = 2
+children = ["data/Introduction", "data/FieldSpec", "data/WindowSpec", "data/CategoricalVariable", "data/CategoricalVocabulary", "data/Batch", "data/DataSpec", "data/DataSet", "data/TimeSeriesBatch", "data/TimeSeriesDataSetOptions", "data/TimeSeriesDataSet"]
+
+[[family]]
+path = "ice/models_ts"
+page = "api/ice/models_ts.md"
+title = "models_ts"
+maxdepth = 2
+children = ["models_ts/Introduction", "models_ts/AutoregressiveForecasterOptions", "models_ts/AutoregressiveBatch", "models_ts/AutoregressiveTrainOptions", "models_ts/GaussianForecast", "models_ts/AutoregressiveForecaster", "models_ts/TFTOptions", "models_ts/TFTBatch", "models_ts/TFTTrainOptions", "models_ts/TFTForecast", "models_ts/TemporalFusionTransformer"]
+
+[[family]]
+path = "ice/models_nlp"
+page = "api/ice/models_nlp.md"
+title = "models_nlp"
+maxdepth = 2
+children = ["models_nlp/Introduction", "models_nlp/TextJudgeOptions", "models_nlp/TextJudgeTrainOptions", "models_nlp/TextJudgePrediction", "models_nlp/TextJudgeReport", "models_nlp/TextJudge"]
+
+[[family]]
+path = "ice/models_rl"
+page = "api/ice/models_rl.md"
+title = "models_rl"
+maxdepth = 2
+children = ["models_rl/Introduction", "models_rl/ActionValueAgentOptions", "models_rl/ActionValueTrainOptions", "models_rl/ActionValueBatch", "models_rl/ActionValueReport", "models_rl/ActionValueAgent"]
+
+# ===========================================================================
+#  SYMBOLS
+# ===========================================================================
+
+# --- platform ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::resolve_platform"
+kind = "function"
+family = "ice/platform"
+page = "api/ice/platform/resolve_platform.md"
+summary = "Resolves a TrainPlatform request (CPU/GPU/Auto) against a real runtime device query, warning and falling back to CPU for GPU when none is present."
+overloads = 1
+
+# --- options -----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::TrainOptions"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/TrainOptions.md"
+summary = "Central training configuration: batch size, learning rate, optimizer/loss kind, shuffle/seed, standardize, and the five nested policy structs (validation, regularization x3, checkpoint, execution)."
+fields = ["batch_size", "learning_rate", "optimizer", "loss", "shuffle", "seed", "standardize", "validation", "architecture_regularization", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::ValidationPolicy"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/ValidationPolicy.md"
+summary = "Validation split ratio, evaluation cadence, and the monitored metric name/direction for early stopping and best-checkpoint tracking. Shared across TrainOptions and every models_* TrainOptions."
+fields = ["split_ratio", "every_n_epochs", "start_from_epoch", "monitor", "direction"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::ArchitectureRegularization"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/ArchitectureRegularization.md"
+summary = "Dropout strength. Shared across TrainOptions and TextJudgeTrainOptions (the other models_* catalog entries bake dropout directly into their own model-construction Options instead)."
+fields = ["dropout"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::ObjectiveRegularization"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/ObjectiveRegularization.md"
+summary = "Weight decay (coupled or decoupled), L1/L2 penalties, and label smoothing applied to the training objective. Shared across TrainOptions and every models_* TrainOptions."
+fields = ["weight_decay", "decoupled_weight_decay", "l1_penalty", "l2_penalty", "label_smoothing"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::LoopRegularization"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/LoopRegularization.md"
+summary = "Early stopping, patience, minimum-delta, and best-weight restoration. Shared across TrainOptions and every models_* TrainOptions."
+fields = ["early_stopping", "patience", "min_delta", "restore_best_weights"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::CheckpointPolicy"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/CheckpointPolicy.md"
+summary = "Whether/when to write checkpoints during training, where, and how to resume. Shared across TrainOptions and models_ts's two TrainOptions (models_nlp/models_rl do not use it)."
+fields = ["enabled", "save_last", "save_best", "save_weights_only", "save_on_exception", "every_n_epochs", "dirpath", "filename", "resume_from"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::ExecutionPolicy"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/ExecutionPolicy.md"
+summary = "Gradient clipping, epoch/accumulation/dev-batch limits, non-finite failure, determinism, precision, and platform. Reuses pluss::nn::optim's own GradientClipOptions directly. Shared across TrainOptions and every models_* TrainOptions."
+fields = ["grad_clip", "max_epochs", "accumulation_steps", "fast_dev_batches", "max_train_batches", "max_valid_batches", "fail_on_non_finite", "deterministic", "precision", "platform"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::AssessReport"
+kind = "class"
+family = "ice/options"
+page = "api/ice/options/AssessReport.md"
+summary = "The loss and a loss-appropriate metric (accuracy for classification losses, RMSE for MSE) returned by Model::assess/Coach::assess."
+methods = []
+
+# --- step ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::Batch"
+kind = "class"
+family = "ice/step"
+page = "api/ice/step/Batch.md"
+summary = "The flat, named-field batch Model::forward/compute_loss operate on -- the training loop's own Batch, distinct from data::Batch (see the framework-level note in this manifest's header)."
+methods = ["has", "field", "fields", "set", "has_inputs", "inputs", "set_inputs", "has_targets", "targets", "set_targets"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::StepContext"
+kind = "class"
+family = "ice/step"
+page = "api/ice/step/StepContext.md"
+summary = "Read-only per-step bookkeeping (recipe, loss kind, stage, epoch, batch index) the training loop passes into Model's step methods."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::StepResult"
+kind = "class"
+family = "ice/step"
+page = "api/ice/step/StepResult.md"
+summary = "The predictions and/or loss a Model step method returns -- either may be left undefined depending on the stage."
+methods = ["has_predictions", "has_loss"]
+
+# --- model ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::Model"
+kind = "class"
+family = "ice/model"
+page = "api/ice/model/Model.md"
+summary = "The generic escape hatch: define parameters plus forward/compute_loss, get learn/infer/assess/save/load, gradient clipping, and non-finite diagnostics for free."
+methods = ["forward", "compute_loss", "learn_step", "valid_step", "test_step", "infer_step", "learn", "infer", "assess", "save", "load", "ready", "is_training", "train", "eval", "to"]
+
+# --- outline ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::Outline"
+kind = "class"
+family = "ice/outline"
+page = "api/ice/outline/Outline.md"
+summary = "Ice's nn::Schedule/nn.Sequential-equivalent: compose existing layers into a trainable Model in one line."
+methods = ["forward", "schedule"]
+
+# --- optim ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::make_optimizer"
+kind = "function"
+family = "ice/optim"
+page = "api/ice/optim/make_optimizer.md"
+summary = "Standalone optimizer construction (with clip/regularization pre-wired from TrainOptions) for custom training loops that do not fit Model's generic forward/loss shape."
+overloads = 1
+
+# --- no_grad ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::NoGradGuard"
+kind = "class"
+family = "ice/no_grad"
+page = "api/ice/no_grad/NoGradGuard.md"
+summary = "RAII no-grad scope; a thin, source-compatible ice-local name delegating to pluss::ai::nn::NoGradGuard. Wired into Model::infer/assess."
+methods = []
+
+# --- callback ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::RunState"
+kind = "class"
+family = "ice/callback"
+page = "api/ice/callback/RunState.md"
+summary = "Mutable run-wide state a Callback's hooks read and write: model pointer, stage, platform, epoch/step counters, a named metrics map, checkpoint paths, and stop-request/exception bookkeeping."
+methods = ["metric", "put_metric"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::Callback"
+kind = "class"
+family = "ice/callback"
+page = "api/ice/callback/Callback.md"
+summary = "The training-loop observer/hook base class -- run/epoch/batch/backward/step/checkpoint/exception hooks, plus opt-in state persistence."
+methods = ["on_run_begin", "on_run_end", "on_epoch_begin", "on_epoch_end", "on_batch_begin", "on_batch_end", "on_before_backward", "on_after_backward", "on_before_step", "on_checkpoint_save", "on_checkpoint_load", "on_exception", "state_key", "save_state", "load_state"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::CallbackChain"
+kind = "class"
+family = "ice/callback"
+page = "api/ice/callback/CallbackChain.md"
+summary = "A Callback that fans every hook out to an ordered list of other callbacks."
+methods = ["add", "callbacks"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::EarlyStopCallback"
+kind = "class"
+family = "ice/callback"
+page = "api/ice/callback/EarlyStopCallback.md"
+summary = "The built-in early-stopping Callback, driven by ValidationPolicy/LoopRegularization -- tracks the best monitored metric and requests a stop once patience is exhausted."
+methods = ["monitor", "best_value", "best_epoch", "stopped_epoch", "wait_count"]
+
+# --- coach ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::Coach"
+kind = "class"
+family = "ice/coach"
+page = "api/ice/coach/Coach.md"
+summary = "An alternative, model-external entry point for learn/infer/assess orchestration -- the same operations Model's own convenience methods run internally, callable against any Model plus explicit callbacks."
+methods = ["options", "callbacks", "add_callback", "learn", "infer", "assess"]
+
+# --- source ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::BatchPlan"
+kind = "options"
+family = "ice/source"
+page = "api/ice/source/BatchPlan.md"
+summary = "Batch size, shuffle, and seed for a Source's own batch materialization -- distinct from TrainOptions.batch_size/shuffle/seed, which govern the model-facing loop instead."
+fields = ["batch_size", "shuffle", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::SourceContext"
+kind = "class"
+family = "ice/source"
+page = "api/ice/source/SourceContext.md"
+summary = "Read-only context (recipe, stage, target platform/dtype) the framework passes into a Source's transfer_batch/do_transfer_batch."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::Source"
+kind = "class"
+family = "ice/source"
+page = "api/ice/source/Source.md"
+summary = "The pluggable train/valid/test/infer batch-feeding abstraction Model/Coach iterate over -- prepare() once, then the four *_batches() accessors and transfer_batch() to device-resident core Batch."
+methods = ["prepare", "learn_batches", "valid_batches", "test_batches", "infer_batches", "transfer_batch"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::TensorSource"
+kind = "class"
+family = "ice/source"
+page = "api/ice/source/TensorSource.md"
+summary = "A Source over raw train/val, infer-only, or test-only Series tensor pairs."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::DataSetSource"
+kind = "class"
+family = "ice/source"
+page = "api/ice/source/DataSetSource.md"
+summary = "A Source over data::DataSet train/valid/test/infer parts, with separate BatchPlans for the learn loop and evaluation."
+methods = []
+
+# --- io ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::io::save_parameters"
+kind = "function"
+family = "ice/io"
+page = "api/ice/io/save_parameters.md"
+summary = "Writes a generic, versioned, checksummed parameter-list artifact -- a fixed-order dump of shape + values for any vector<Series*>."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::ice::io::load_parameters"
+kind = "function"
+family = "ice/io"
+page = "api/ice/io/load_parameters.md"
+summary = "Restores values written by save_parameters into an already-constructed, identically-shaped parameter list."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::ice::io::CheckpointState"
+kind = "class"
+family = "ice/io"
+page = "api/ice/io/CheckpointState.md"
+summary = "The recipe, epoch/step counters, best-metric bookkeeping, RNG state, and per-callback state map a full training-resumable checkpoint carries -- built by the caller for save_checkpoint, returned by load_checkpoint."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::io::save_checkpoint"
+kind = "function"
+family = "ice/io"
+page = "api/ice/io/save_checkpoint.md"
+summary = "Writes a full training-resumable checkpoint: model parameters, optimizer state, CheckpointState, and every callback's own saved state."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::ice::io::load_checkpoint"
+kind = "function"
+family = "ice/io"
+page = "api/ice/io/load_checkpoint.md"
+summary = "Restores a full training-resumable checkpoint into an already-constructed model/optimizer/callback set, returning the CheckpointState to resume the training loop from."
+overloads = 1
+
+# --- data ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::data::FieldSpec"
+kind = "options"
+family = "ice/data"
+page = "api/ice/data/FieldSpec.md"
+summary = "A named variable's Role (static/known/observed/feature x continuous/categorical) within a DataSpec's field list -- also reachable as the VariableSpec alias in TimeSeriesDataSetOptions.variables."
+fields = ["name", "role"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::WindowSpec"
+kind = "options"
+family = "ice/data"
+page = "api/ice/data/WindowSpec.md"
+summary = "The lookback and horizon lengths for a windowed (TimeSeries/Sequence/Trajectory-layout) DataSpec."
+fields = ["lookback", "horizon"]
+owner = "pluss::ai::ice::data::DataSpec"
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::CategoricalVariable"
+kind = "options"
+family = "ice/data"
+page = "api/ice/data/CategoricalVariable.md"
+summary = "Marks one 0-based variable slot within a covariate group as categorical, and how many distinct category values it has. Shared across data::Batch::categoricals, every models_ts *Options' *_categoricals fields, and TimeSeriesBatch."
+fields = ["variable_index", "cardinality"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::CategoricalVocabulary"
+kind = "class"
+family = "ice/data"
+page = "api/ice/data/CategoricalVocabulary.md"
+summary = "A fitted variable-name-to-category-strings mapping, including a trailing unknown-category slot -- returned by DataSet::vocabularies()/TimeSeriesDataSet::vocabularies(), never hand-constructed."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::Batch"
+kind = "class"
+family = "ice/data"
+page = "api/ice/data/Batch.md"
+summary = "The Layout-tagged, categorical-aware batch DataSet/TimeSeriesDataSet materialize and Source vectors hold -- distinct from the core ice::Batch (see the framework-level note in this manifest's header)."
+methods = ["layout", "has", "field", "categoricals", "fields", "target", "size", "feature_width", "set", "set_target"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::DataSpec"
+kind = "options"
+family = "ice/data"
+page = "api/ice/data/DataSpec.md"
+summary = "Layout, time/group keys, target column, field roles, and window sizing for DataSet::from_frame."
+fields = ["layout", "time_key", "group_keys", "target", "fields", "window", "cfg"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::DataSet"
+kind = "class"
+family = "ice/data"
+page = "api/ice/data/DataSet.md"
+summary = "The generic tabular/panel dataset abstraction: built from a DataFrame + DataSpec (or an existing Batch), materializes a data::Batch once, and hands out a Source for training."
+methods = ["from_frame", "from_batch", "batch", "size", "source", "vocabularies"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::TimeSeriesBatch"
+kind = "class"
+family = "ice/data"
+page = "api/ice/data/TimeSeriesBatch.md"
+summary = "The static/encoder/decoder-shaped batch every models_ts entry's own *Batch type converts from -- constructible from a data::Batch, convertible back via to_batch()."
+methods = ["to_batch"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::TimeSeriesDataSetOptions"
+kind = "options"
+family = "ice/data"
+page = "api/ice/data/TimeSeriesDataSetOptions.md"
+summary = "Time index, group keys, target, per-variable roles (VariableSpec), and encoder/decoder window lengths for TimeSeriesDataSet::from_dataframe."
+fields = ["time_idx", "group_ids", "target", "variables", "encoder_length", "decoder_length", "cfg"]
+owner = "pluss::ai::ice::data::TimeSeriesDataSet"
+
+[[symbol]]
+qualname = "pluss::ai::ice::data::TimeSeriesDataSet"
+kind = "class"
+family = "ice/data"
+page = "api/ice/data/TimeSeriesDataSet.md"
+summary = "Time-series-shaped convenience layer over DataSet: sorted windowing, gap detection, and categorical vocabulary fit/reuse, feeding models_ts entries directly."
+methods = ["from_dataframe", "from_series", "batch", "data", "size", "source", "vocabularies"]
+
+# --- models_ts ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::models::AutoregressiveForecasterOptions"
+kind = "options"
+family = "ice/models_ts"
+page = "api/ice/models_ts/AutoregressiveForecasterOptions.md"
+summary = "Static/encoder/decoder widths and lengths, hidden size, RNN layer count, dropout, and categorical variable slots for AutoregressiveForecaster -- with from_data/from_dataset factories that size it automatically from a data::DataSet/TimeSeriesDataSet."
+fields = ["static_size", "encoder_size", "decoder_size", "encoder_length", "decoder_length", "hidden_size", "rnn_layers", "dropout", "static_categoricals", "encoder_categoricals", "decoder_categoricals", "cfg", "seed"]
+owner = "pluss::ai::ice::models::AutoregressiveForecaster"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::AutoregressiveBatch"
+kind = "class"
+family = "ice/models_ts"
+page = "api/ice/models_ts/AutoregressiveBatch.md"
+summary = "AutoregressiveForecaster's own batch shape -- constructible from a data::Batch or a data::TimeSeriesBatch, or built directly."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::AutoregressiveTrainOptions"
+kind = "options"
+family = "ice/models_ts"
+page = "api/ice/models_ts/AutoregressiveTrainOptions.md"
+summary = "Batch size, learning rate, optimizer, shuffle/seed, and the shared validation/regularization/checkpoint/execution policies for AutoregressiveForecaster::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "validation", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
+owner = "pluss::ai::ice::models::AutoregressiveForecaster"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::GaussianForecast"
+kind = "class"
+family = "ice/models_ts"
+page = "api/ice/models_ts/GaussianForecast.md"
+summary = "The per-horizon-step Gaussian mean/scale AutoregressiveForecaster::predict returns -- DeepAR-style probabilistic, not a point forecast."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::AutoregressiveForecaster"
+kind = "class"
+family = "ice/models_ts"
+page = "api/ice/models_ts/AutoregressiveForecaster.md"
+summary = "A DeepAR-style probabilistic autoregressive forecaster: static covariates, an encoder/decoder RNN, and a Gaussian output head."
+methods = ["learn", "predict", "assess", "save", "load", "ready", "to"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TFTOptions"
+kind = "options"
+family = "ice/models_ts"
+page = "api/ice/models_ts/TFTOptions.md"
+summary = "Static/encoder/decoder widths and lengths, hidden size, LSTM layers, attention heads, dropout, forecast quantiles, and categorical variable slots for TemporalFusionTransformer -- with from_data/from_dataset factories."
+fields = ["static_size", "encoder_size", "decoder_size", "encoder_length", "decoder_length", "hidden_size", "lstm_layers", "attention_heads", "dropout", "quantiles", "static_categoricals", "encoder_categoricals", "decoder_categoricals", "cfg", "seed"]
+owner = "pluss::ai::ice::models::TemporalFusionTransformer"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TFTBatch"
+kind = "class"
+family = "ice/models_ts"
+page = "api/ice/models_ts/TFTBatch.md"
+summary = "TemporalFusionTransformer's own batch shape -- constructible from a data::Batch or a data::TimeSeriesBatch, or built directly."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TFTTrainOptions"
+kind = "options"
+family = "ice/models_ts"
+page = "api/ice/models_ts/TFTTrainOptions.md"
+summary = "Batch size, learning rate, optimizer, shuffle/seed, and the shared validation/regularization/checkpoint/execution policies for TemporalFusionTransformer::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "validation", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
+owner = "pluss::ai::ice::models::TemporalFusionTransformer"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TFTForecast"
+kind = "class"
+family = "ice/models_ts"
+page = "api/ice/models_ts/TFTForecast.md"
+summary = "The per-quantile forecast plus interpretable attention weights TemporalFusionTransformer::predict returns."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TemporalFusionTransformer"
+kind = "class"
+family = "ice/models_ts"
+page = "api/ice/models_ts/TemporalFusionTransformer.md"
+summary = "Multi-horizon quantile forecasting per Lim et al. 2019: variable selection networks, gated residual networks, an LSTM encoder/decoder, interpretable causal self-attention."
+methods = ["learn", "predict", "assess", "save", "load", "ready", "to"]
+
+# --- models_nlp ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::models::TextJudgeOptions"
+kind = "options"
+family = "ice/models_nlp"
+page = "api/ice/models_nlp/TextJudgeOptions.md"
+summary = "Hidden width, dropout, and tokenization toggles (lemmas/punctuation/casing) for TextJudge."
+fields = ["width", "dropout", "use_lemmas", "skip_punct", "lowercase", "cfg", "seed"]
+owner = "pluss::ai::ice::models::TextJudge"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TextJudgeTrainOptions"
+kind = "options"
+family = "ice/models_nlp"
+page = "api/ice/models_nlp/TextJudgeTrainOptions.md"
+summary = "Batch size, learning rate, optimizer, shuffle/seed, and the shared validation/architecture-and-objective-regularization/execution policies for TextJudge::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "validation", "architecture_regularization", "objective_regularization", "loop_regularization", "execution"]
+owner = "pluss::ai::ice::models::TextJudge"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TextJudgePrediction"
+kind = "class"
+family = "ice/models_nlp"
+page = "api/ice/models_nlp/TextJudgePrediction.md"
+summary = "One predicted label plus its confidence, returned per input by TextJudge::predict."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TextJudgeReport"
+kind = "class"
+family = "ice/models_nlp"
+page = "api/ice/models_nlp/TextJudgeReport.md"
+summary = "The loss, accuracy, and example count TextJudge::assess returns."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::TextJudge"
+kind = "class"
+family = "ice/models_nlp"
+page = "api/ice/models_nlp/TextJudge.md"
+summary = "A text classifier built on nlp Docs/msharp ranges -- the heaviest input-type polymorphism in the catalog (Doc/text_view/string/Note overloads throughout learn/predict/assess)."
+methods = ["learn", "predict", "assess", "save", "load", "labels", "ready", "to"]
+
+# --- models_rl ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::ice::models::ActionValueAgentOptions"
+kind = "options"
+family = "ice/models_rl"
+page = "api/ice/models_rl/ActionValueAgentOptions.md"
+summary = "Observation/action sizing, hidden width/depth, discount factor, double-Q estimation, and target-network sync cadence for ActionValueAgent."
+fields = ["observation_size", "action_count", "hidden_size", "hidden_layers", "discount", "double_estimate", "target_sync_every", "cfg", "seed"]
+owner = "pluss::ai::ice::models::ActionValueAgent"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::ActionValueTrainOptions"
+kind = "options"
+family = "ice/models_rl"
+page = "api/ice/models_rl/ActionValueTrainOptions.md"
+summary = "Batch size, learning rate, optimizer, shuffle/seed, the Huber-vs-MSE TD-error loss toggle, and the shared validation/regularization/execution policies for ActionValueAgent::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "use_huber", "seed", "validation", "objective_regularization", "loop_regularization", "execution"]
+owner = "pluss::ai::ice::models::ActionValueAgent"
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::ActionValueBatch"
+kind = "class"
+family = "ice/models_rl"
+page = "api/ice/models_rl/ActionValueBatch.md"
+summary = "One batch of transitions (observation, action, reward, next_observation, done) for ActionValueAgent::learn/assess."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::ActionValueReport"
+kind = "class"
+family = "ice/models_rl"
+page = "api/ice/models_rl/ActionValueReport.md"
+summary = "The TD loss, mean Q-value, and transition count ActionValueAgent::assess returns."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::models::ActionValueAgent"
+kind = "class"
+family = "ice/models_rl"
+page = "api/ice/models_rl/ActionValueAgent.md"
+summary = "A double-DQN-style discrete action-value agent: learn from transitions, predict Q-values, or act with epsilon-greedy exploration."
+methods = ["learn", "predict", "act", "assess", "save", "load", "ready", "to"]

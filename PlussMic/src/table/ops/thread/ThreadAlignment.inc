@@ -77,8 +77,7 @@ pluss::codem::Platform thread_payload_platform_(const Thread& thread) {
       return thread.as_series().platform();
     case ThreadKind::Timeline:
       return thread.as_timeline().epoch_nanos().platform();
-    case ThreadKind::TimeIndex:
-      return thread.as_timeindex().timeline().epoch_nanos().platform();
+    case ThreadKind::Duration:
     case ThreadKind::Note:
       return pluss::codem::Platform::CPU;
   }
@@ -204,9 +203,9 @@ Thread null_thread_like_for_alignment_(const Thread& like,
       out = Thread(pluss::make_timeline(std::vector<std::string>(
           static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
       break;
-    case ThreadKind::TimeIndex:
-      out = Thread(pluss::make_timeindex(std::vector<std::string>(
-          static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
+    case ThreadKind::Duration:
+      out = Thread(pluss::duration::nanos(
+          std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
       break;
   }
   return with_alignment_labels_(
@@ -584,16 +583,27 @@ Thread aligned_compare_(const Thread& left,
         lhs);
   }
 
-  if ((lk == ThreadKind::Timeline || lk == ThreadKind::TimeIndex) &&
-      (rk == ThreadKind::Timeline || rk == ThreadKind::TimeIndex)) {
-    const auto lt = lk == ThreadKind::Timeline ? lhs.as_timeline()
-                                               : lhs.as_timeindex().timeline();
-    const auto rt = rk == ThreadKind::Timeline ? rhs.as_timeline()
-                                               : rhs.as_timeindex().timeline();
+  if (lk == ThreadKind::Timeline && rk == ThreadKind::Timeline) {
     return carry_case_labels_for_alignment_(
-        Thread(apply_compare_timeline_timeline(lt, rt, op),
+        Thread(apply_compare_timeline_timeline(lhs.as_timeline(), rhs.as_timeline(), op),
                combine_validity_masks(lhs, rhs)),
         lhs);
+  }
+
+  if (lk == ThreadKind::Duration && rk == ThreadKind::Duration) {
+    const auto& ld = lhs.as_duration();
+    const auto& rd = rhs.as_duration();
+    pluss::Series raw;
+    switch (op) {
+      case ThreadBinaryCompareOp::Eq: raw = ld.eq(rd); break;
+      case ThreadBinaryCompareOp::Ne: raw = ld.ne(rd); break;
+      case ThreadBinaryCompareOp::Lt: raw = ld.lt(rd); break;
+      case ThreadBinaryCompareOp::Le: raw = ld.le(rd); break;
+      case ThreadBinaryCompareOp::Gt: raw = ld.gt(rd); break;
+      case ThreadBinaryCompareOp::Ge: raw = ld.ge(rd); break;
+    }
+    return carry_case_labels_for_alignment_(
+        Thread(raw, combine_validity_masks(lhs, rhs)), lhs);
   }
 
   PLUSS_FAIL(std::string(where) + ": unsupported payload combination for aligned compare");

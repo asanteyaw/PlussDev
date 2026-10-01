@@ -79,12 +79,12 @@ std::cout << pluss::timeline::print(local_axis) << "\n";
   dropping down to `Timeline`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../timeindex_api_reference.html">
+  <a class="prev-link" href="take.html">
     <span class="label">Previous</span>
-    <span class="title">TimeIndex API Reference</span>
+    <span class="title">take</span>
   </a>
-  <a class="next-link" href="size.html">
+  <a class="next-link" href="to_note_iso.html">
     <span class="label">Next</span>
-    <span class="title">size</span>
+    <span class="title">to_note_iso</span>
   </a>
 </div>

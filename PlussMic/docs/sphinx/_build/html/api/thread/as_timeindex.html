@@ -13,12 +13,10 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=c214b90c"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Thread::as_timeline" href="as_timeline.html" />
-    <link rel="prev" title="Thread::as_series" href="as_series.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -76,7 +74,7 @@ itself stays alive.</p>
 a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">ticks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeindex</span><span class="p">({</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">ticks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-01-01T00:10:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-01-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-01-01T01:10:00Z&quot;</span><span class="p">,</span>
@@ -119,7 +117,7 @@ plain <code class="docutils literal notranslate"><span class="pre">Timeline</spa
 <ul class="simple">
 <li><p>Returns a reference into the thread’s own storage — no copy, no allocation.</p></li>
 <li><p>Requires <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind specifically; a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread does <strong>not</strong>
-satisfy this — construct with <code class="docutils literal notranslate"><span class="pre">pluss::make_timeindex(...)</span></code> (or cast via
+satisfy this — construct with <code class="docutils literal notranslate"><span class="pre">pluss::timeindex::make(...)</span></code> (or cast via
 <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a><code class="docutils literal notranslate"><span class="pre">.timeindex()</span></code>) to get a <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread.</p></li>
 <li><p>The result does not automatically become a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> again — wrap it explicitly with
 <code class="docutils literal notranslate"><span class="pre">Thread(...)</span></code> when a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-only API needs it back.</p></li>
@@ -176,11 +174,8 @@ resampling an entire <code class="docutils literal notranslate"><span class="pre
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
@@ -198,16 +193,6 @@ resampling an entire <code class="docutils literal notranslate"><span class="pre
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../../api_reference.html">API Reference</a><ul>
-  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
-  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
-  <li><a href="../../thread_api_reference.html">Thread API Reference</a><ul>
-      <li>Previous: <a href="as_series.html" title="previous chapter">Thread::as_series</a></li>
-      <li>Next: <a href="as_timeline.html" title="next chapter">Thread::as_timeline</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>

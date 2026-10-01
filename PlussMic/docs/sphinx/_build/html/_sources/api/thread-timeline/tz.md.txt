@@ -13,7 +13,7 @@ ThreadTimelineAccessor::tz(std::string_view name) const -> Thread
 ## What It Does
 
 Replaces the bound thread's *display* timezone with `name` — same length,
-still `Timeline`/`TimeIndex`-kind. **The underlying instant is unchanged** —
+still `Timeline`-kind. **The underlying instant is unchanged** —
 only the timezone used to compute local calendar fields (year/month/day/hour,
 and box-table display) shifts.
 
@@ -28,7 +28,7 @@ recognized (case-insensitive); any other name throws.
 ## Returns
 
 `Thread`
-    A new `Timeline`/`TimeIndex`-kind thread, same length as the bound
+    A new `Timeline`-kind thread, same length as the bound
     thread, with its display timezone switched to `name`.
 
 ## Examples
@@ -110,7 +110,7 @@ backing it.
   [`hour()`](hour.md)/[`year()`](year.md)). Use [`localize()`](localize.md) if
   the data is naive local wall-clock text that needs to be *anchored* to a
   real instant for the first time.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row stays `NaT` regardless of `name`.
 

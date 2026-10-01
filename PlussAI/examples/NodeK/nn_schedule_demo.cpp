@@ -11,9 +11,9 @@ int main() {
   const Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
 
   nn::Schedule model;
-  model.then("encoder", nn::Fusion(2, 8, false, cfg, 11ULL))
+  model.append("encoder", nn::Fusion(2, 8, false, cfg, 11ULL))
       .insert(1, "activation", nn::Tanh())
-      .then("head", nn::Fusion(8, 1, false, cfg, 13ULL));
+      .append("head", nn::Fusion(8, 1, false, cfg, 13ULL));
 
   const Series x = make_series(
       std::vector<float>{
@@ -37,10 +37,10 @@ int main() {
   const double final_loss = nn::losses::MSE(y_final, y_target).to(pluss::pCPU, ScalarType::Float64).item<double>();
 
   nn::Schedule typed;
-  typed.then_as<std::tuple<int, int>, int>("sum", [](std::tuple<int, int> pair) {
+  typed.append_as<std::tuple<int, int>, int>("sum", [](std::tuple<int, int> pair) {
     return std::get<0>(pair) + std::get<1>(pair);
   });
-  typed.then_as<int, int>("double", [](int v) { return 2 * v; });
+  typed.append_as<int, int>("double", [](int v) { return 2 * v; });
   const int typed_out = typed.run<int>(7, 5);
 
   std::cout << "nn_schedule_demo\n";

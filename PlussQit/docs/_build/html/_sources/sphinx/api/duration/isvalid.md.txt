@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-Series Duration::isvalid() const;
-Series Duration::isfinite() const;  // alias for isvalid()
+Series Duration::isvalid() const
 ```
 
 ## What It Does
@@ -50,22 +49,9 @@ data=false
 
 - `isvalid()` is always the elementwise negation of `isnat()` — there is no
   case where they disagree.
-- `isfinite()` is a pure alias for `isvalid()` — provided for readers coming
-  from a floating-point-NaN background, not a separate concept.
 
 ## See Also
 
 - [`isnat`](isnat.md): the comparison this negates.
 - [`fill_nat`](fill_nat.md): replacing missing positions with a real value.
 - [`where`](where.md): conditional selection, another mask-driven operation.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isnat.html">
-    <span class="label">Previous</span>
-    <span class="title">isnat</span>
-  </a>
-  <a class="next-link" href="fill_nat.html">
-    <span class="label">Next</span>
-    <span class="title">fill_nat</span>
-  </a>
-</div>

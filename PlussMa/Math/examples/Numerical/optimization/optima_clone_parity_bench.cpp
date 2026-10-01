@@ -33,9 +33,9 @@ using pluss::subsp::math::optimization::differential_evolution_prmm_minimizer;
 using pluss::subsp::math::optimization::nelder_mead_minimizer;
 
 struct Garch11Params {
-  Series omega{Series::undefined()};
-  Series alpha{Series::undefined()};
-  Series beta{Series::undefined()};
+  Series omega{pluss::series::undefined()};
+  Series alpha{pluss::series::undefined()};
+  Series beta{pluss::series::undefined()};
 };
 
 struct BenchmarkRow {

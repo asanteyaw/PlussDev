@@ -128,8 +128,14 @@ bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t 
       return true;
     }
   }
-  return t.kind() == pluss::table::ThreadKind::Series
-         && series_value_is_nan_for_io(t.as_series(), row);
+  if (t.kind() == pluss::table::ThreadKind::Series) {
+    return series_value_is_nan_for_io(t.as_series(), row);
+  }
+  if (t.kind() == pluss::table::ThreadKind::Duration) {
+    return t.as_duration().host()[static_cast<std::size_t>(row)] ==
+           pluss::Duration::kNaT;
+  }
+  return false;
 }
 
 bool series_all_zero_i64_for_io(const pluss::Series& s) {
@@ -138,9 +144,7 @@ bool series_all_zero_i64_for_io(const pluss::Series& s) {
 }
 
 pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
-  const auto timeline = (t.kind() == pluss::table::ThreadKind::Timeline)
-                            ? t.as_timeline()
-                            : t.as_timeindex().timeline();
+  const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
                               || !series_all_zero_i64_for_io(timeline.minute())
@@ -155,7 +159,7 @@ pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
 }
 
 pluss::table::Thread thread_for_csv_io(const pluss::table::Thread& t) {
-  if (t.kind() == pluss::table::ThreadKind::Timeline || t.kind() == pluss::table::ThreadKind::TimeIndex) {
+  if (t.kind() == pluss::table::ThreadKind::Timeline) {
     return temporal_thread_for_io(t);
   }
   return t;
@@ -483,12 +487,10 @@ std::string thread_value_for_csv(const pluss::table::Thread& t, std::int64_t row
       return std::string(t.as_note().at(row));
     case pluss::table::ThreadKind::Timeline:
       return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case pluss::table::ThreadKind::TimeIndex:
-      return fmt::format("{}",
-                         t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
-    default:
-      return "";
+    case pluss::table::ThreadKind::Duration:
+      return fmt::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
+  PLUSS_FAIL("write_csv: unsupported Thread kind");
 }
 
 std::string escape_csv_cell(std::string_view value, const WriteCsvOptions& options) {
@@ -1431,8 +1433,8 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
         case pluss::table::ThreadKind::Timeline:
           target = pluss::table::ThreadCastTarget::Timeline;
           break;
-        case pluss::table::ThreadKind::TimeIndex:
-          target = pluss::table::ThreadCastTarget::TimeIndex;
+        case pluss::table::ThreadKind::Duration:
+          target = pluss::table::ThreadCastTarget::Duration;
           break;
       }
       const auto converted = [&]() {
@@ -1443,10 +1445,10 @@ bool CsvCaseReader::next(pluss::table::DataFrame& output) {
             return column.cast().note();
           case pluss::table::ThreadCastTarget::Timeline:
             return column.cast().timeline();
-          case pluss::table::ThreadCastTarget::TimeIndex:
-            return column.cast().timeindex();
+          case pluss::table::ThreadCastTarget::Duration:
+            return column.cast().duration();
         }
-        return column;
+        PLUSS_FAIL("CsvCaseReader::next: unsupported schema kind");
       }();
       auto lost_observation =
           column.notnull().as_series().logical_and(

@@ -47,12 +47,12 @@ auto hi = idx.max();
 - [`TimeIndex::min`](min.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="min.html">
+  <a class="prev-link" href="join_asof.html">
     <span class="label">Previous</span>
-    <span class="title">min</span>
+    <span class="title">join_asof</span>
   </a>
-  <a class="next-link" href="sort.html">
+  <a class="next-link" href="min.html">
     <span class="label">Next</span>
-    <span class="title">sort</span>
+    <span class="title">min</span>
   </a>
 </div>

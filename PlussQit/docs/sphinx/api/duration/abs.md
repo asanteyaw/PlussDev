@@ -55,14 +55,3 @@ Duration(shape=[], dim=0, numel=1)
   `abs` discards.
 - [`clip`](clip.md): bounding into a range, another unary transform.
 - [`neg`](neg.md): unary negation.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ge.html">
-    <span class="label">Previous</span>
-    <span class="title">ge</span>
-  </a>
-  <a class="next-link" href="sign.html">
-    <span class="label">Next</span>
-    <span class="title">sign</span>
-  </a>
-</div>

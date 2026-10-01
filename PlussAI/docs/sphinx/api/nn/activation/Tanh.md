@@ -17,7 +17,7 @@ nn::Tanh::Tanh();
 
 `Tanh` takes no options -- default-construct it and use it directly, or add
 it straight into a [`Schedule`](../module/Schedule.md) with
-[`then`](../module/Schedule/then.md).
+[`append`](../module/Schedule/append.md).
 
 ## State
 

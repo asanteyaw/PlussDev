@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -43,6 +43,9 @@
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">NexusTraverse</span><span class="o">::</span><span class="n">drop</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusTraverse</span>
+<span class="n">NexusTraverse</span><span class="o">::</span><span class="n">drop</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusTraverse</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">NexusTraverse</span><span class="o">::</span><span class="n">drop</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">features</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">NexusTraverse</span>
 </pre></div>
 </div>
 </section>
@@ -55,50 +58,58 @@ with it.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>features</strong> (<code class="docutils literal notranslate"><span class="pre">std::initializer_list&lt;std::string_view&gt;</span></code>)
+<p><strong>features</strong> (a range of <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> — a brace literal, a named
+container such as <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>,
+or any other range whose elements convert to <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
 The feature names to remove from the final result. Same validation as
 <a class="reference internal" href="pick.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.pick()</span></code></span></a>: each name must be non-empty and unique within the request.
 Existence is checked when <a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.collect()</span></code></span></a> runs.</p>
-</section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">NexusTraverse</span></code>
-A new query with the drop list set (or replaced). The original query is unchanged.</p>
-</section>
-<section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Drop the redundant join key after joining.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<p>```{note} <code class="docutils literal notranslate"><span class="pre">pluss::msharp::RangeView</span></code> is never spelled out in these examples
+See <a class="reference internal" href="../nexus/select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Nexus::select</span></code></span></a>’s own note on this — the same
+three-overload pattern (brace literal / named <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>-convertible
+container / any other qualifying range) applies here identically.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+## Returns
 
-<span class="k">auto</span><span class="w"> </span><span class="n">customers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cy&quot;</span><span class="p">}))},</span>
-<span class="p">});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">101.0</span><span class="p">,</span><span class="w"> </span><span class="mf">102.0</span><span class="p">,</span><span class="w"> </span><span class="mf">103.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">50.0</span><span class="p">,</span><span class="w"> </span><span class="mf">75.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">}))},</span>
-<span class="p">});</span>
+`NexusTraverse`
+    A new query with the drop list set (or replaced). The original query is unchanged.
 
-<span class="k">auto</span><span class="w"> </span><span class="n">biz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customers&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">customers</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;orders&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">orders</span><span class="p">},</span>
-<span class="p">});</span>
+## Examples
 
-<span class="n">Relationship</span><span class="w"> </span><span class="n">rel</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders_to_customers&quot;</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">left_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;orders&quot;</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">right_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;customers&quot;</span><span class="p">;</span>
-<span class="n">rel</span><span class="p">.</span><span class="n">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;customer_id&quot;</span><span class="p">}};</span>
+Example 1. Drop the redundant join key after joining.
 
-<span class="k">auto</span><span class="w"> </span><span class="n">linked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">biz</span><span class="p">.</span><span class="n">add_relationship</span><span class="p">(</span><span class="n">rel</span><span class="p">);</span>
+```cpp
+using namespace pluss::table;
+using namespace pluss::bundle;
 
-<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">drop</span><span class="p">({</span><span class="s">&quot;customer_id&quot;</span><span class="p">}).</span><span class="n">collect</span><span class="p">();</span>
+auto customers = DataFrame({
+    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {&quot;name&quot;,        Thread(pluss::make_note({&quot;Ada&quot;, &quot;Ben&quot;, &quot;Cy&quot;}))},
+});
+auto orders = DataFrame({
+    {&quot;order_id&quot;,    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
+    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0, 2.0}))},
+    {&quot;amount&quot;,      Thread(pluss::make_series({50.0, 75.0, 20.0}))},
+});
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">features</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
-<span class="p">}</span>
+auto biz = Nexus({
+    {&quot;customers&quot;, customers},
+    {&quot;orders&quot;, orders},
+});
+
+Relationship rel;
+rel.name = &quot;orders_to_customers&quot;;
+rel.left_table = &quot;orders&quot;;
+rel.right_table = &quot;customers&quot;;
+rel.keys = {{&quot;customer_id&quot;, &quot;customer_id&quot;}};
+
+auto linked = biz.add_relationship(rel);
+
+auto result = linked.from(&quot;orders&quot;).join(&quot;customers&quot;).drop({&quot;customer_id&quot;}).collect();
+
+for (const auto&amp; f : result.features()) {
+  std::cout &lt;&lt; f &lt;&lt; &quot; &quot;;
+}
 </pre></div>
 </div>
 <section id="output">
@@ -108,6 +119,27 @@ A new query with the drop list set (or replaced). The original query is unchange
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">customer_id</span></code> (the join key, now redundant once the frames are joined) is gone;
 <code class="docutils literal notranslate"><span class="pre">order_id</span></code>, <code class="docutils literal notranslate"><span class="pre">amount</span></code>, and <code class="docutils literal notranslate"><span class="pre">name</span></code> all survive, in the joined frame’s own original order.</p>
+<p>Example 2. Continuing from Example 1: the same drop list via named
+containers — a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string_view&gt;</span></code> (the <code class="docutils literal notranslate"><span class="pre">RangeView</span></code> overload)
+and a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code> (the templated overload).</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">as_owned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">};</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">r1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">drop</span><span class="p">(</span><span class="n">as_view</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">r2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">linked</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="s">&quot;orders&quot;</span><span class="p">).</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">).</span><span class="n">drop</span><span class="p">(</span><span class="n">as_owned</span><span class="p">).</span><span class="n">collect</span><span class="p">();</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">r1</span><span class="p">.</span><span class="n">features</span><span class="p">())</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">r2</span><span class="p">.</span><span class="n">features</span><span class="p">())</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>order_id amount name
+order_id amount name
+</pre></div>
+</div>
 </section>
 </section>
 <section id="notes">

@@ -8,6 +8,9 @@
 
 ```cpp
 NexusTraverse::pick(std::initializer_list<std::string_view> features) const -> NexusTraverse
+NexusTraverse::pick(pluss::msharp::RangeView::Of<std::string_view> features) const -> NexusTraverse
+template <detail::StringViewNameRange NameRange>
+NexusTraverse::pick(const NameRange& features) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -19,12 +22,20 @@ replaces it entirely; it doesn't intersect or extend the previous list.
 
 ## Parameters
 
-**features** (`std::initializer_list<std::string_view>`)
-    The feature names to keep in the final result, in the order they should appear.
+**features** (a range of `std::string_view` — a brace literal, a named
+container such as `std::vector<std::string_view>`/`std::vector<std::string>`,
+or any other range whose elements convert to `std::string_view`)
+    The feature names to keep in the final result, in iteration order.
     Validated the same way as other name lists on this class (`Nexus::select()`'s keys,
     for example): each name must be non-empty and unique within the request. Feature
     existence itself is checked only when [`.collect()`](collect.md) actually runs and
     tries to select them from the materialized frame.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+See [`Nexus::select`](../nexus/select.md)'s own note on this — the same
+three-overload pattern (brace literal / named `RangeView`-convertible
+container / any other qualifying range) applies here identically.
+```
 
 ## Returns
 
@@ -72,6 +83,29 @@ for (const auto& f : result.features()) {
 ### Output
 
 ```text
+order_id name
+```
+
+Example 2. Continuing from Example 1: the same pick list via named
+containers — a `std::vector<std::string_view>` (the `RangeView` overload)
+and a `std::vector<std::string>` (the templated overload).
+
+```cpp
+std::vector<std::string_view> as_view = {"order_id", "name"};
+std::vector<std::string> as_owned = {"order_id", "name"};
+
+auto r1 = linked.from("orders").join("customers").pick(as_view).collect();
+auto r2 = linked.from("orders").join("customers").pick(as_owned).collect();
+
+for (const auto& f : r1.features()) std::cout << f << " ";
+std::cout << "\n";
+for (const auto& f : r2.features()) std::cout << f << " ";
+```
+
+### Output
+
+```text
+order_id name
 order_id name
 ```
 

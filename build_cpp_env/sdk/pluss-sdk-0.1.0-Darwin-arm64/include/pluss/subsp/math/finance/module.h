@@ -48,11 +48,11 @@ struct Controls {
 };
 
 struct Paths {
-  pluss::codem::Series asset = pluss::codem::Series::undefined();
-  pluss::codem::Series vol = pluss::codem::Series::undefined();
-  pluss::codem::Series variance = pluss::codem::Series::undefined();
-  pluss::codem::Series asset_shocks = pluss::codem::Series::undefined();
-  pluss::codem::Series vol_shocks = pluss::codem::Series::undefined();
+  pluss::codem::Series asset = pluss::series::undefined();
+  pluss::codem::Series vol = pluss::series::undefined();
+  pluss::codem::Series variance = pluss::series::undefined();
+  pluss::codem::Series asset_shocks = pluss::series::undefined();
+  pluss::codem::Series vol_shocks = pluss::series::undefined();
 };
 
 using ModelVariant = std::variant<model::Heston,

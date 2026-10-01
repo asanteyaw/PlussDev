@@ -14,15 +14,15 @@ Archive ArchiveTimelineAccessor::weekday() const
 ## What It Does
 
 Extracts the weekday number (`0` = Monday through `6` = Sunday) of each bound
-key's timestamp, replacing each `Timeline`- or `TimeIndex`-kind key with an
+key's timestamp, replacing each `Timeline`-kind key with an
 `Int32` `Series` key. Applied to **every catalog** in the stack, by delegating to that catalog's own
 [`CatalogTimelineAccessor::weekday`](../catalog-timeline/weekday.md).
 
 ```{important} Binding and kind-check rules are inherited from Archive::tl()
-This method's key-binding (from `catalog(0)`) and lazy Timeline/TimeIndex-kind check
+This method's key-binding (from `catalog(0)`) and lazy Timeline-kind check
 follow exactly the rules documented on [`Archive::tl`](../archive/tl.md) — see that
 page's two important callouts for the full explanation. `ArchiveTimelineAccessor`
-requires every bound key to be `Timeline`- or `TimeIndex`-kind, checked the moment any
+requires every bound key to be `Timeline`-kind, checked the moment any
 method (including this one) is called.
 ```
 

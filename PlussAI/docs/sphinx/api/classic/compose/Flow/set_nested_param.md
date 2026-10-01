@@ -15,6 +15,15 @@ type ahead of time.
 classic::Status classic::Flow::set_nested_param(std::string_view path, double value);
 ```
 
+## What It Does
+
+Resolves `path` to a specific stage or model field, converts `value` back
+to that field's real underlying type, and writes it -- the generic,
+type-erased write half of [`nested_param`](nested_param.md). This is the
+mechanism a generic hyperparameter search uses to mutate an arbitrary
+`Flow` (a stage's option, or the model's) without knowing its concrete
+family or stage type ahead of time.
+
 ## Parameters
 
 `path` — `std::string_view`

@@ -12,8 +12,8 @@ A stage does not have to be an `nn::Module`. Anything exposing
 a free function object, or a `Module`/`ModuleHolder` type. Non-`Module`
 stages contribute no parameters and are skipped by `module_at`, but
 otherwise participate in the chain exactly like a layer does. Most chains
-are `Series -> Series` throughout (the common case `then` assumes by
-default), but `Schedule` is not limited to that: `then_as<In, Out>` lets a
+are `Series -> Series` throughout (the common case `append` assumes by
+default), but `Schedule` is not limited to that: `append_as<In, Out>` lets a
 stage declare any input/output type, including `std::tuple<...>` --
 `RNN`/`GRU`/`LSTM`'s own `forward` returns a tuple, and a `Schedule` can
 chain directly into and out of one.
@@ -26,8 +26,8 @@ template <class... Layers> explicit nn::Schedule::Schedule(Layers&&... layers);
 ```
 
 The variadic constructor calls `reserve(sizeof...(layers))` once, then
-`then(...)` on each argument in order -- equivalent to default-constructing
-and calling `then` repeatedly, in one expression.
+`append(...)` on each argument in order -- equivalent to default-constructing
+and calling `append` repeatedly, in one expression.
 
 ## Construction
 
@@ -36,10 +36,14 @@ nn::Schedule empty;                                   // no stages
 nn::Schedule net(nn::Fusion(3, 4), nn::Fusion(4, 2));  // two stages, auto-named "0" and "1"
 ```
 
-Stages are then added or removed with [`then`](Schedule/then.md) /
-[`then_as`](Schedule/then_as.md) / [`insert`](Schedule/insert.md) /
+Stages are then added or removed with [`append`](Schedule/append.md) /
+[`append_as`](Schedule/append_as.md) / [`insert`](Schedule/insert.md) /
 [`insert_as`](Schedule/insert_as.md) / [`extend`](Schedule/extend.md) /
-[`erase`](Schedule/erase.md).
+[`erase`](Schedule/erase.md). `append` alone additionally takes a same-typed
+list in one call -- `net.append({Fusion(...), Fusion(...)})` -- for a run
+of identical layer types, so building a deep stack does not need one
+`.append(...)` per layer. See [`append`](Schedule/append.md) for the full
+set of overloads.
 
 ## State
 
@@ -56,8 +60,8 @@ declared types and whether it is a `Module`.
 
 | Method | Returns | Covered on |
 | --- | --- | --- |
-| `then(layer)` / `then(name, layer)` | `Schedule&` | [`then`](Schedule/then.md) |
-| `then_as<In, Out>(layer)` / `then_as<In, Out>(name, layer)` | `Schedule&` | [`then_as`](Schedule/then_as.md) |
+| `append(layer)` / `append(name, layer)` / `append(list)` | `Schedule&` | [`append`](Schedule/append.md) |
+| `append_as<In, Out>(layer)` / `append_as<In, Out>(name, layer)` | `Schedule&` | [`append_as`](Schedule/append_as.md) |
 | `insert(index, layer)` / `insert(index, name, layer)` | `Schedule&` | [`insert`](Schedule/insert.md) |
 | `insert_as<In, Out>(index, layer)` / `insert_as<In, Out>(index, name, layer)` | `Schedule&` | [`insert_as`](Schedule/insert_as.md) |
 | `extend(other)` / `extend(container)` | `Schedule&` | [`extend`](Schedule/extend.md) |
@@ -103,6 +107,8 @@ contract, documented there, not repeated here.
 :hidden:
 
 Schedule/Introduction
+Schedule/append
+Schedule/append_as
 Schedule/clear
 Schedule/contains
 Schedule/empty
@@ -121,7 +127,5 @@ Schedule/run
 Schedule/size
 Schedule/stage_info
 Schedule/stage_manifest
-Schedule/then
-Schedule/then_as
 ```
 <!-- apiref:toctree:end -->

@@ -233,8 +233,8 @@ Series scalar_series_(double value, Config cfg) {
 }
 
 struct ComplexSeries_ {
-  Series re;
-  Series im;
+  Series re = pluss::series::undefined();
+  Series im = pluss::series::undefined();
 };
 
 ComplexSeries_ c_make_(const Series& re, const Series& im) {
@@ -326,8 +326,8 @@ ComplexSeries_ heston_logspot_cf_series_(const Series& u,
 }
 
 struct CosSeriesInterval_ {
-  Series a;
-  Series b;
+  Series a = pluss::series::undefined();
+  Series b = pluss::series::undefined();
 };
 
 CosSeriesInterval_ heston_cos_interval_series_(const Series& spot,

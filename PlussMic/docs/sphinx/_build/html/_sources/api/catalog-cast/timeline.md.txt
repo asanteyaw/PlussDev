@@ -93,8 +93,6 @@ moment: failed to parse datetime
 
 ## See Also
 
-- [`CatalogCastAccessor::timeindex`](timeindex.md): the related cast target,
-  with the same parse-failure throwing behavior.
 - [`CatalogCastAccessor::series`](series.md): the numeric cast target, with a
   different (silent-null) failure mode for unparseable input.
 - [`Catalog::cast`](../catalog/cast.md): the entry point this accessor is
@@ -103,8 +101,4 @@ moment: failed to parse datetime
   scribble-model equivalent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

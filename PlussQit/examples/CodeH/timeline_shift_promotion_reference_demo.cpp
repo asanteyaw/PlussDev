@@ -50,21 +50,21 @@ int main() {
   const auto sorted = pluss::timeline::make({
       "2024-01-01T00:00:00Z", "2024-01-01T00:00:00Z",
       "2024-01-03T00:00:00Z"});
-  const auto index = sorted.to_timeindex();
+  const auto index = sorted.index();
   std::cout << "\n=== timeindex_sorted_duplicates ===\n"
             << "size=" << index.size()
             << " increasing=" << std::boolalpha << index.is_monotonic_increasing()
             << " unique=" << index.is_unique() << '\n';
 
-  const auto empty = pluss::timeline::epoch({0}).to_timeindex();
+  const auto empty = pluss::timeline::epoch({0}).index();
   std::cout << "\n=== timeindex_empty ===\n"
             << "size=" << empty.size()
             << " increasing=" << empty.is_monotonic_increasing() << '\n';
 
   const auto unsorted = pluss::timeline::make({
       "2024-01-03T00:00:00Z", "2024-01-01T00:00:00Z"});
-  show_rejection("timeindex_unsorted_default", [&] { (void)unsorted.to_timeindex(); });
-  const auto unchecked = unsorted.to_timeindex(false);
+  show_rejection("timeindex_unsorted_default", [&] { (void)unsorted.index(); });
+  const auto unchecked = unsorted.index(false);
   std::cout << "\n=== timeindex_unsorted_allowed ===\n"
             << "increasing=" << unchecked.is_monotonic_increasing() << '\n';
 
@@ -76,17 +76,17 @@ int main() {
   const std::array<std::int64_t, 1> strides{2};
   const auto strided = pluss::Timeline::from_buffer(
       backing.data(), shape, strides, {}, "America/Edmonton");
-  show("timeindex_strided_round_trip", strided.to_timeindex().timeline());
+  show("timeindex_strided_round_trip", strided.index().timeline());
 
   show_rejection("timeindex_nat", [&] {
-    (void)pluss::timeline::make({"2024-01-01", ""}).to_timeindex(false);
+    (void)pluss::timeline::make({"2024-01-01", ""}).index(false);
   });
   show_rejection("timeindex_scalar", [&] {
-    (void)pluss::timeline::date("2024-01-01").to_timeindex();
+    (void)pluss::timeline::date("2024-01-01").index();
   });
   show_rejection("timeindex_matrix", [&] {
     (void)pluss::timeline::date(
         std::vector<std::string>{"2024-01-01"}, {1, 1})
-        .to_timeindex();
+        .index();
   });
 }

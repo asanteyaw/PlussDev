@@ -18,6 +18,9 @@ exclude_patterns = [
     'Codegen.md', 'Codegen_MethodSurface.md', 'CodeM_MethodRoutingPlan.md',
     'Torch90_TrancheCycle.md',
     'Patch*.md',
+    # Internal authoring and contract records are not end-user pages.
+    'API_Doc_Authoring_Standard.md', 'Series_Doc_Authoring_Standard.md',
+    'NOTE_CLOSED_TYPE_CONTRACT.md', 'README.md',
 ]
 
 html_theme = 'alabaster'

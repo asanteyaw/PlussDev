@@ -13,7 +13,7 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=76d8b11c"></script>
+    <script src="_static/api_nav.js?v=af5a0516"></script>
     <script src="_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -52,7 +52,7 @@ look like joined strings, but operations use the structured case-label payloads.
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().names()</span> <span class="pre">-&gt;</span> <span class="pre">vector&lt;string&gt;</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(name:</span> <span class="pre">string_view)</span> <span class="pre">-&gt;</span> <span class="pre">Thread</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(position:</span> <span class="pre">int64)</span> <span class="pre">-&gt;</span> <span class="pre">Thread</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::case_study(pick:</span> <span class="pre">CasePick)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrameCaseStudyAccessor::pick(const</span> <span class="pre">CasePick&amp;</span> <span class="pre">pick)</span> <span class="pre">const</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().sort(options:</span> <span class="pre">SortLabelOptions)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::group().by(keys:</span> <span class="pre">LabelGroup).agg(specs)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().rename(renames:</span> <span class="pre">RangeView&lt;LabelRename&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
@@ -110,7 +110,7 @@ look like joined strings, but operations use the structured case-label payloads.
 <ul class="simple">
 <li><p>A hierarchical case axis is typed. Numeric case labels remain numeric, text case labels remain <code class="docutils literal notranslate"><span class="pre">Note</span></code>, and timeline case labels remain temporal.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">features(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">select(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">drop(...)</span></code>, transforms, and feature reordering preserve case-label metadata.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">case_study(CasePick)</span></code> supports partial-label and full-key lookup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">case_study().pick(CasePick)</span></code> supports partial-label and full-key lookup.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">group().by(LabelGroup{...}).agg(...)</span></code> groups by case labels without requiring those labels to exist as ordinary features.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">unstack(...)</span></code> rejects duplicate output cells. Aggregate first when multiple rows map to the same output cell.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stack(...)</span></code> moves feature names into the case hierarchy and preserves homogeneous typed values.</p></li>
@@ -137,8 +137,8 @@ look like joined strings, but operations use the structured case-label payloads.
 </section>
 <section id="example-2-select-by-a-partial-case-label">
 <h3>Example 2: select by a partial case label<a class="headerlink" href="#example-2-select-by-a-partial-case-label" title="Link to this heading">¶</a></h3>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">west</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{</span>
-<span class="w">    </span><span class="p">.</span><span class="n">caselbl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">west</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">pick</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;region&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;West&quot;</span><span class="p">,</span>
 <span class="p">});</span>
 </pre></div>
@@ -152,7 +152,7 @@ look like joined strings, but operations use the structured case-label payloads.
 </section>
 <section id="example-3-select-by-full-structured-key">
 <h3>Example 3: select by full structured key<a class="headerlink" href="#example-3-select-by-full-structured-key" title="Link to this heading">¶</a></h3>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">case_study</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">indexed</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">pick</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CasePick</span><span class="p">{</span>
 <span class="w">    </span><span class="p">.</span><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;East&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;201&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">},</span>
 <span class="p">});</span>
 </pre></div>

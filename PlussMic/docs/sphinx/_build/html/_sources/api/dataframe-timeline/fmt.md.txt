@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::fmt(std::string_view pattern) const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a custom text
+Replaces every selected `Timeline` feature with a custom text
 representation built from `pattern`, as a `Note` `Series` — same feature
 name, same row order.
 
@@ -161,7 +161,7 @@ outright rather than silently producing an empty string for every row.
 - `%z` always renders as a signed `HH:MM` offset (e.g. `"+00:00"`), never the
   bare `"Z"` suffix some ISO-8601 tooling uses for UTC.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`, regardless of `pattern`.

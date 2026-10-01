@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
   add_case("dst", [&]{ return x.dst(); });
   add_case("idst", [&]{ return x.dst().idst(); });
   add_case("hilbert", [&]{ return x.hilbert(); });
-  add_case("histcounts", [&]{ return pos.histcounts(5, 0.0, 5.0); });
+  add_case("histc", [&]{ return pos.histc(5, 0.0, 5.0); });
   add_case("skewness", [&]{ return x.stat.skewness(); });
   add_case("kurtosis", [&]{ return x.stat.kurtosis(); });
   add_case("nanvar", [&]{ return x.nanvar(); });

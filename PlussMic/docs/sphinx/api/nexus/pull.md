@@ -9,6 +9,9 @@
 ```cpp
 Nexus::pull(std::string_view root) const -> NexusPull
 Nexus::pull(std::string_view root, std::initializer_list<std::string_view> fields) const -> DataFrame
+Nexus::pull(std::string_view root, pluss::msharp::RangeView::Of<std::string_view> fields) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+Nexus::pull(std::string_view root, const NameRange& fields) const -> DataFrame
 Nexus::pull(std::string_view root, std::initializer_list<PullSpec> fields) const -> DataFrame
 Nexus::pull(std::string_view root, const std::vector<PullSpec>& fields) const -> DataFrame
 ```
@@ -225,7 +228,10 @@ auto pulled = nx.pull("customers")
     .add({sum("events.spend", "recent_spend").windowed(30, "d")})
     .collect();
 
-std::cout << pulled.features();
+for (std::size_t i = 0; i < pulled.features().size(); ++i) {
+  if (i > 0) std::cout << " ";
+  std::cout << pulled.features()[i];
+}
 ```
 
 ### Output
@@ -318,7 +324,10 @@ auto pulled = nx.pull("customers")
     .end()
     .collect();
 
-std::cout << pulled.features();
+for (std::size_t i = 0; i < pulled.features().size(); ++i) {
+  if (i > 0) std::cout << " ";
+  std::cout << pulled.features()[i];
+}
 ```
 
 ### Output
@@ -367,7 +376,10 @@ auto pulled = nx.pull("customers")
     .take("regions", {{"zone", "zone"}})
     .collect();
 
-std::cout << pulled.features();
+for (std::size_t i = 0; i < pulled.features().size(); ++i) {
+  if (i > 0) std::cout << " ";
+  std::cout << pulled.features()[i];
+}
 ```
 
 ### Output
@@ -673,6 +685,46 @@ Nexus::pull: no metadata declared for table 'orders'
 
 `orders` (used as `root` here) never had `TableMeta` declared at all in this session, so
 the aggregate field's primary-key requirement fails immediately.
+
+Example 11. Continuing from Example 1's `linked` workspace: the same
+`pull(root, fields)` request via named containers instead of a brace
+literal — a `std::vector<std::string_view>` (the `RangeView` overload) and a
+`std::vector<std::string>` (the templated overload, reached because owning
+`std::string` doesn't match `RangeView`'s same-element-type vector
+constructor but does satisfy the broader `StringViewNameRange` concept).
+
+```cpp
+std::vector<std::string_view> as_view = {"name"};
+std::vector<std::string> as_owned = {"name"};
+
+auto p_view = linked.pull("customers", as_view);
+auto p_owned = linked.pull("customers", as_owned);
+
+for (std::size_t i = 0; i < p_view.features().size(); ++i) {
+  if (i > 0) std::cout << " ";
+  std::cout << p_view.features()[i];
+}
+std::cout << "\n";
+for (std::size_t i = 0; i < p_owned.features().size(); ++i) {
+  if (i > 0) std::cout << " ";
+  std::cout << p_owned.features()[i];
+}
+```
+
+### Output
+
+```text
+name
+name
+```
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+See [`Nexus::select`](select.md)'s own note on this — the same
+three-overload pattern (brace literal / named `RangeView`-convertible
+container / any other qualifying range) applies to every `fields`
+parameter on this page, including the fluent [`NexusPull::take`](../nexus-pull/take.md)
+examples above.
+```
 
 ## Notes
 

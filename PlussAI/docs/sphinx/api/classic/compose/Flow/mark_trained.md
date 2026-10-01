@@ -17,6 +17,17 @@ to reflect that.
 void classic::Flow::mark_trained(bool trained) noexcept;
 ```
 
+## What It Does
+
+Writes `trained` directly into `trained()`'s underlying flag, with no
+validation of whether the stages or model are actually in a state
+consistent with that value -- bypassing `learn`/`learn_map` entirely.
+Exists for exactly one situation: after restoring every stage and the
+model from persisted state via
+[`load_transform_states`](load_transform_states.md)/
+[`load_model_state`](load_model_state.md), where the fitted parameters are
+already in place and only the `trained()` flag itself needs updating.
+
 ## Parameters
 
 `trained` — `bool`

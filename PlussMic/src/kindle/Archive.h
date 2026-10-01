@@ -97,7 +97,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Archive fillnull(const pluss::Timeline& value) const;
-  Archive fillnull(const pluss::TimeIndex& value) const;
+  Archive fillnull(const pluss::Duration& value) const;
   Archive dropnull() const;
   Archive ffill() const;
   Archive bfill() const;
@@ -159,7 +159,7 @@ public:
   Archive series() const;
   Archive note() const;
   Archive timeline() const;
-  Archive timeindex() const;
+  Archive duration() const;
   Archive prefix(std::string_view prefix) const;
   Archive suffix(std::string_view suffix) const;
 
@@ -179,7 +179,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Archive fillnull(const pluss::Timeline& value) const;
-  Archive fillnull(const pluss::TimeIndex& value) const;
+  Archive fillnull(const pluss::Duration& value) const;
   Archive dropnull() const;
   Archive ffill() const;
   Archive bfill() const;
@@ -212,7 +212,7 @@ public:
   Archive series() const;
   Archive note() const;
   Archive timeline() const;
-  Archive timeindex() const;
+  Archive duration() const;
 
 private:
   ArchiveKeyAccessor keysel_;
@@ -254,7 +254,6 @@ public:
   Archive tz(std::string_view name) const;
   Archive localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Archive utc() const;
-  Archive index(bool require_sorted = true) const;
 
 private:
   ArchiveKeyAccessor keysel_;

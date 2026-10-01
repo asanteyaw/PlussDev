@@ -153,6 +153,13 @@ TEST_CASE("optima uses normalization to solve ill-scaled sqp and interior-point 
                                     {"x1", scalar(0.8)},
                                 }),
                                 ip_options);
+  CAPTURE(static_cast<int>(ip_result.exit_flag), ip_result.message,
+          ip_result.evaluation.value.item<double>(),
+          ip_result.params.at("x0").item<double>(),
+          ip_result.params.at("x1").item<double>(),
+          ip_result.output.first_order_optimality,
+          ip_result.evaluation.gradient.at("x0").item<double>(),
+          ip_result.evaluation.gradient.at("x1").item<double>());
 
   REQUIRE(ip_result.evaluation.max_constraint_violation <= 1e-5);
   REQUIRE(ip_result.params.at("x0").item<double>() == Approx(0.5).margin(1e-2));

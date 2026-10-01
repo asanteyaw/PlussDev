@@ -143,9 +143,9 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     q_cpu_g.tracks_slope_(true);
     k_cpu_g.tracks_slope_(true);
     v_cpu_g.tracks_slope_(true);
-    q_cpu_g.clear_sensitivity();
-    k_cpu_g.clear_sensitivity();
-    v_cpu_g.clear_sensitivity();
+    q_cpu_g.clear();
+    k_cpu_g.clear();
+    v_cpu_g.clear();
     std::get<0>(pluss::nn::scaled_attention(q_cpu_g, k_cpu_g, v_cpu_g, mask)).sum().reverse();
     const auto gq_cpu = as_f32_vec(q_cpu_g.sensitivity());
     const auto gk_cpu = as_f32_vec(k_cpu_g.sensitivity());
@@ -157,9 +157,9 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     q_gpu_g.tracks_slope_(true);
     k_gpu_g.tracks_slope_(true);
     v_gpu_g.tracks_slope_(true);
-    q_gpu_g.clear_sensitivity();
-    k_gpu_g.clear_sensitivity();
-    v_gpu_g.clear_sensitivity();
+    q_gpu_g.clear();
+    k_gpu_g.clear();
+    v_gpu_g.clear();
     std::get<0>(pluss::nn::scaled_attention(q_gpu_g, k_gpu_g, v_gpu_g, mask.to(pluss::pCUDA))).sum().reverse();
     const auto gq_gpu = as_f32_vec(q_gpu_g.sensitivity());
     const auto gk_gpu = as_f32_vec(k_gpu_g.sensitivity());
@@ -231,17 +231,17 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     auto tgt_cpu_g = tgt.clone();
     src_cpu_g.tracks_slope_(true);
     tgt_cpu_g.tracks_slope_(true);
-    src_cpu_g.clear_sensitivity();
-    tgt_cpu_g.clear_sensitivity();
+    src_cpu_g.clear();
+    tgt_cpu_g.clear();
     const pluss::Series out_cpu = cpu_model->forward(
         src_cpu_g,
         tgt_cpu_g,
-        pluss::Series(),
+        pluss::series::undefined(),
         tgt_mask,
-        pluss::Series(),
-        pluss::Series(),
-        pluss::Series(),
-        pluss::Series(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
         false,
         true,
         false);
@@ -253,17 +253,17 @@ bool run_rigorous_cudnn_transformer_parity(std::ostream* err = nullptr) {
     auto tgt_gpu_g = tgt.to(pluss::pCUDA);
     src_gpu_g.tracks_slope_(true);
     tgt_gpu_g.tracks_slope_(true);
-    src_gpu_g.clear_sensitivity();
-    tgt_gpu_g.clear_sensitivity();
+    src_gpu_g.clear();
+    tgt_gpu_g.clear();
     const pluss::Series out_gpu = gpu_model->forward(
         src_gpu_g,
         tgt_gpu_g,
-        pluss::Series(),
+        pluss::series::undefined(),
         tgt_mask.to(pluss::pCUDA),
-        pluss::Series(),
-        pluss::Series(),
-        pluss::Series(),
-        pluss::Series(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
+        pluss::series::undefined(),
         false,
         true,
         false);

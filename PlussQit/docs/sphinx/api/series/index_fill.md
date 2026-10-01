@@ -9,6 +9,7 @@
 ```cpp
 Series Series::index_fill(std::int64_t dim, const Series& index, double value) const
 Series& Series::index_fill_(std::int64_t dim, const Series& index, double value) const
+Series& Series::index_fill_(std::int64_t dim, const Series& index, double value) const
 ```
 
 ## What It Does
@@ -68,6 +69,30 @@ dL/dself                          = dL/dresult   (everywhere else)
 `value` is a plain C++ `double` on this overload, not a tracked `Series`, so
 it has no sensitivity of its own to receive. The integer `index` is likewise
 non-differentiable.
+
+## In-Place Form
+
+`index_fill_()` is the in-place sibling of [`index_fill()`](index_fill.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `index_fill_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto idx = pluss::series::arange(0, 3, 2, pluss::ScalarType::Int64);
+
+x.index_fill_(0, idx, 9.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[9, 2, 9]
+```
 
 ## Examples
 

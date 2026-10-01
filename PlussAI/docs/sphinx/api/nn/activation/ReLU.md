@@ -19,7 +19,7 @@ nn::ReLU::ReLU();
 
 `ReLU` takes no options -- default-construct it and use it directly, or add
 it straight into a [`Schedule`](../module/Schedule.md) with
-[`then`](../module/Schedule/then.md).
+[`append`](../module/Schedule/append.md).
 
 ## State
 
@@ -91,8 +91,8 @@ int main() {
   fc->weight().copy_(w);
 
   nn::Schedule net;
-  net.then("fc", fc);
-  net.then("act", nn::ReLU());
+  net.append("fc", fc);
+  net.append("act", nn::ReLU());
 
   const pluss::Series x = pluss::make_series({2.0, 1.0}, {1, 2}, f64);
   std::cout << "fc(x) (pre-activation) = " << fc.forward(x) << "\n";

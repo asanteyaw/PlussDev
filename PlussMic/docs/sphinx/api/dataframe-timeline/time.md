@@ -13,10 +13,10 @@ DataFrameTimelineAccessor::time() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with just its
+Replaces every selected `Timeline` feature with just its
 time-of-day portion — the date is reset to the Unix epoch day
 (`1970-01-01`), and the clock time is kept, in local wall time — same
-feature name, still `Timeline`/`TimeIndex`-kind, same row order.
+feature name, still `Timeline`-kind, same row order.
 
 ## Parameters
 
@@ -81,13 +81,13 @@ Every row's date is now `1970-01-01`; the original time-of-day (`09:15:30`,
 
 ## Notes
 
-- The result is still a `Timeline`/`TimeIndex` (not a plain string or
+- The result is still a `Timeline` (not a plain string or
   numeric type) with a fixed date component — it's meant for comparing or
   grouping by time-of-day, not as a display format. Use
   [`fmt("%H:%M:%S")`](fmt.md) if you want a bare text time.
 - Operates in **local wall time**, per the `Timeline`'s current timezone.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

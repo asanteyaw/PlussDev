@@ -136,10 +136,10 @@ struct RoughBergomiParams {
 };
 
 struct StochVolPaths {
-  pluss::codem::Series spot = pluss::codem::Series::undefined();
-  pluss::codem::Series variance = pluss::codem::Series::undefined();
-  pluss::codem::Series innovation_spot = pluss::codem::Series::undefined();
-  pluss::codem::Series innovation_var = pluss::codem::Series::undefined();
+  pluss::codem::Series spot = pluss::series::undefined();
+  pluss::codem::Series variance = pluss::series::undefined();
+  pluss::codem::Series innovation_spot = pluss::series::undefined();
+  pluss::codem::Series innovation_var = pluss::series::undefined();
 };
 
 CODEM_API StochVolPaths gbm_paths(std::int64_t steps,

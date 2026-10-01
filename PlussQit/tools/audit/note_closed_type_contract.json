@@ -25,7 +25,7 @@
     "Note:Float64": 14,
     "Note:Int64": 6,
     "Note:Text": 5,
-    "Note:Text/Bytes/preserve": 194,
+    "Note:Text/Bytes/preserve": 195,
     "Note:preserve": 3,
     "Note:untyped": 1,
     "NoteDType:metadata": 1,
@@ -2636,6 +2636,18 @@
       "target_dtype": "Bool",
       "contract": "shape-preserving predicate",
       "migration": "complete"
+    },
+    {
+      "source": "src/CodeN/core/NoteRegex.h",
+      "scope": "NoteRegexAccessor",
+      "line": 23,
+      "name": "replace",
+      "signature": "Note NoteRegexAccessor::replace(::std::string_view pattern, ::std::string_view replacement, ::std::int64_t flags = 0) const",
+      "current_return": "Note",
+      "target_return": "Note",
+      "target_dtype": "Text/Bytes/preserve",
+      "contract": "closed Note transformation",
+      "migration": "none-or-validation"
     },
     {
       "source": "src/CodeN/core/NoteRegex.h",

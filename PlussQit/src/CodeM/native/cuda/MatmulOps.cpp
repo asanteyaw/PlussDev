@@ -505,7 +505,7 @@ std::optional<Series> try_cublas_matmul(const Series& a, const Series& b) {
   }
 
 #if PLUSS_CODEM_HAS_CUBLAS_MATMUL && PLUSS_CODEM_HAS_DLOPEN
-  Series out;
+  Series out = pluss::series::undefined();
   if (!run_cublas_2d_gemm_(a_in, b_in, &out, &reason)) {
     if (cublas_matmul_strict()) {
       PLUSS_FAIL(std::string("matmul: strict cuBLAS forward failed: ") + reason);

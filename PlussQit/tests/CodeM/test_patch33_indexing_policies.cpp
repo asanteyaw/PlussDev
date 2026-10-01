@@ -14,7 +14,7 @@ TEST_CASE("index_put_ non-leading + mixed bool/int", "[indexing]") {
   pluss::Series j = pluss::series::full({1}, 1, pluss::ScalarType::Int64);
 
   // indices: [slice, boolmask, int]
-  std::vector<pluss::Series> idx = { pluss::Series{}, m, j };
+  std::vector<pluss::Series> idx = {pluss::series::undefined(), m, j};
   pluss::Series v = pluss::series::full({2,2,4}, 100, pluss::ScalarType::Int64); // broadcasted head_total=2 (mask nnz) and j has shape [1]
   // use free function wrapper: index_put (generated) should call internal
   pluss::Series out = pluss::index_put(a, idx, v, false);

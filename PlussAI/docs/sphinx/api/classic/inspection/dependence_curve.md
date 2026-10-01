@@ -21,6 +21,15 @@ classic::StatusOr<classic::DependenceCurve> classic::dependence_curve(
     std::int64_t grid_points = 32);
 ```
 
+## What It Does
+
+Fits a model from `spec` on `train`, then for each of `grid_points`
+evenly-spaced values of one feature, sets that feature to the grid value
+across every row of `eval` (leaving every other feature at its own real
+value), re-predicts, and averages the result -- tracing out how the
+model's prediction moves as that one feature changes, independent of
+everything else in the row.
+
 ## Parameters
 
 `spec`

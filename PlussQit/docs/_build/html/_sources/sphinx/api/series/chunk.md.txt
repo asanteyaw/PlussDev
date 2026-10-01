@@ -210,8 +210,8 @@ pieces:
     <span class="label">Previous</span>
     <span class="title">ceil</span>
   </a>
-  <a class="next-link" href="clamp_max.html">
+  <a class="next-link" href="clamp.html">
     <span class="label">Next</span>
-    <span class="title">clamp_max</span>
+    <span class="title">clamp</span>
   </a>
 </div>

@@ -13,6 +13,14 @@ for `RegressorBase`: attaches an already-built regressor directly, bypassing
 classic::Status classic::Flow::set_regressor(std::unique_ptr<classic::RegressorBase> model);
 ```
 
+## What It Does
+
+Takes ownership of an already-built `RegressorBase` and attaches it
+directly as this `Flow`'s model, replacing any existing classifier or
+regressor -- the exact `RegressorBase` counterpart to
+[`set_classifier`](set_classifier.md), bypassing
+`ModelSpec`/`make_regressor` the same way.
+
 ## Parameters
 
 `model` — `std::unique_ptr<RegressorBase>`

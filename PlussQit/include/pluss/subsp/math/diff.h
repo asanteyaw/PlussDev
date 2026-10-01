@@ -369,8 +369,8 @@ public:
     if (defined()) value_->retain_grad(keep);
   }
 
-  void clear_sensitivity() {
-    if (defined()) value_->clear_sensitivity();
+  void clear() {
+    if (defined()) value_->clear();
   }
 
   Trace separate() const {
@@ -1562,7 +1562,7 @@ inline DualTrace matrix_power(const DualTrace& x, std::int64_t n) {
   const Series base = neg ? pluss::subsp::linearalg::inverse(x.value()) : x.value();
   const Series dbase = neg ? base.matmul(x.tangent()).matmul(base).neg() : x.tangent();
   const std::int64_t k = neg ? -n : n;
-  Series acc;
+  Series acc = pluss::series::undefined();
   for (std::int64_t i = 0; i < k; ++i) {
     const Series left_pow = pluss::subsp::linearalg::matrix_power(base, i);
     const Series right_pow = pluss::subsp::linearalg::matrix_power(base, k - 1 - i);
@@ -1687,7 +1687,7 @@ inline DualTrace operator-(const DualTrace& x) { return neg(x); }
 
 inline void clear_sensitivities(std::vector<Trace>& params) {
   for (auto& p : params) {
-    p.clear_sensitivity();
+    p.clear();
   }
 }
 
@@ -1816,7 +1816,7 @@ std::pair<Series, std::vector<Series>> value_and_grad(
         disconnected_warned = true;
       }
       if (policy.disconnected_sensitivity == DisconnectedSensitivity::Undefined) {
-        grads.emplace_back();
+        grads.push_back(pluss::series::undefined());
         continue;
       }
       grads.push_back(detail::zeros_like_(v.value()));
@@ -1913,7 +1913,7 @@ std::pair<Series, std::vector<Series>> jvp_lanes(
     const std::vector<std::vector<Series>>& tangent_lanes) {
   std::vector<Series> lanes;
   lanes.reserve(tangent_lanes.size());
-  Series value;
+  Series value = pluss::series::undefined();
   bool value_set = false;
 
   for (const auto& lane : tangent_lanes) {
@@ -2054,7 +2054,7 @@ std::pair<Series, std::function<std::vector<Series>(const Series&)>> vjp(
           disconnected_warned = true;
         }
         if (policy.disconnected_sensitivity == DisconnectedSensitivity::Undefined) {
-          grads.emplace_back();
+          grads.push_back(pluss::series::undefined());
           continue;
         }
         grads.push_back(detail::zeros_like_(v.value()));
@@ -2410,7 +2410,7 @@ std::pair<Series, std::vector<Series>> hvp(Fn&& fn,
           disconnected_warned = true;
         }
         if (policy.disconnected_sensitivity == DisconnectedSensitivity::Undefined) {
-          hv.emplace_back();
+          hv.push_back(pluss::series::undefined());
           continue;
         }
         hv.push_back(detail::zeros_like_(leaf));
@@ -2480,7 +2480,7 @@ std::pair<Series, std::vector<std::vector<Series>>> hvp_lanes(
 
   std::vector<std::vector<Series>> lanes;
   lanes.reserve(tangent_lanes.size());
-  Series value;
+  Series value = pluss::series::undefined();
   bool value_set = false;
 
   for (const auto& lane : tangent_lanes) {
@@ -2873,7 +2873,9 @@ std::pair<Series, std::vector<std::vector<Series>>> hessian(
     }
   }
 
-  std::vector<std::vector<Series>> blocks(params.size(), std::vector<Series>(params.size()));
+  std::vector<std::vector<Series>> blocks(
+      params.size(),
+      std::vector<Series>(params.size(), pluss::series::undefined()));
   for (std::size_t i = 0; i < params.size(); ++i) {
     for (std::size_t j = 0; j < params.size(); ++j) {
       blocks[i][j] = detail::stack_cols_(
@@ -2892,7 +2894,7 @@ std::pair<Series, Series> hessian(Fn&& fn,
                                   const HessianOptions& opt = {}) {
   using FnType = std::decay_t<Fn>;
   FnType fn_copy(std::forward<Fn>(fn));
-  std::pair<Series, std::vector<std::vector<Series>>> out;
+  std::pair<Series, std::vector<std::vector<Series>>> out{pluss::series::undefined(), {}};
   if constexpr (std::is_invocable_v<FnType&, const DualTrace&>) {
     out = hessian(
         [&](const std::vector<DualTrace>& xs) -> DualTrace {
@@ -3012,7 +3014,7 @@ Series nth_diff(Fn&& fn,
               "(set strict_dependency=true to fail loud).");
         }
         if (policy.disconnected_sensitivity == DisconnectedSensitivity::Undefined) {
-          return Series();
+          return pluss::series::undefined();
         }
         return detail::zeros_like_(leaf);
       }

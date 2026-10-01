@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 7a6612d8b3c8 -->
+<!-- pluss-signature-hash: 57352e14f3ff -->
 
 # DataFrameTsAccessor::resample
 
@@ -9,13 +9,13 @@
 
 ```cpp
 DataFrameTsAccessor::resample(std::string_view freq, std::int64_t step = 1) const -> DataFrameTsResampler
-DataFrameTsAccessor::resample(const pluss::TimeIndex::ResampleOptions& options) const -> DataFrameTsResampler
+DataFrameTsAccessor::resample(const pluss::Timeline::ResampleOptions& options) const -> DataFrameTsResampler
 DataFrameTsAccessor::resample(std::string_view freq, pluss::subsp::stats::ts::ResampleOp op, std::int64_t step = 1) const -> DataFrame
-DataFrameTsAccessor::resample(const pluss::TimeIndex::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const -> DataFrame
+DataFrameTsAccessor::resample(const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const -> DataFrame
 DataFrameTsAccessor::resample(std::string_view time_feature, std::string_view freq, std::int64_t step = 1) const -> DataFrameTsResampler
-DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::TimeIndex::ResampleOptions& options) const -> DataFrameTsResampler
+DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options) const -> DataFrameTsResampler
 DataFrameTsAccessor::resample(std::string_view time_feature, std::string_view freq, pluss::subsp::stats::ts::ResampleOp op, std::int64_t step = 1) const -> DataFrame
-DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::TimeIndex::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const -> DataFrame
+DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const -> DataFrame
 ```
 
 ## What It Does
@@ -37,7 +37,7 @@ back as `NULL` (for `Mean`/`Min`/`Max`/`First`/`Last`) or `0` (for `Sum`/`Count`
 
 ## Parameters
 
-**freq** (`std::string_view`) / **options** (`const pluss::TimeIndex::ResampleOptions&`)
+**freq** (`std::string_view`) / **options** (`const pluss::Timeline::ResampleOptions&`)
 
 The bucket frequency. `options` additionally exposes `step`, `closed`
 (`Left`/`Right`), `label` (`Left`/`Right`), `origin`
@@ -203,9 +203,9 @@ Example 1.
   StartDay` — the first bucket starts at midnight (in the axis's own time zone) on
   the day of the earliest observation, and each period is `[start, start + freq)`.
 - `DataFrame::ts()`/`ts(options)` auto-bind only the numeric `Series` columns on
-  the calling frame; a named `Timeline`/`TimeIndex` column meant for
-  `time_feature` is simply skipped rather than rejected, so a frame can carry
-  both value features and a named time-axis column at once (Example 3).
+  the calling frame; a named `Timeline` column meant for `time_feature` is simply
+  skipped rather than rejected, so a frame can carry both value features and a
+  named time-axis column at once (Example 3).
 - The `time_feature` overloads consume that column purely as an alignment key —
   it does not appear in the output, which instead takes the resample bucket
   labels as its new case labels.

@@ -10,6 +10,9 @@
 Nexus::duplicates(std::string_view table) const -> DataFrame
 
 Nexus::duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const -> DataFrame
+Nexus::duplicates(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const -> DataFrame
+template <detail::StringViewNameRange NameRange>
+Nexus::duplicates(std::string_view table, const NameRange& keys) const -> DataFrame
 ```
 
 ## What It Does
@@ -43,6 +46,23 @@ auto biz = Nexus({{"customers", customers}});
 
 auto dups = biz.duplicates("customers", {"customer_id"});
 std::cout << dups.ncases();
+```
+
+### Output
+
+```text
+2
+```
+
+Example 2. The named-container forms alias through identically too — see
+[`detect_duplicates()`](detect_duplicates.md#examples)'s own Example 3 for
+why a `std::vector<std::string_view>` and a `std::vector<std::string>` reach
+different overloads (`RangeView` vs. the templated form) but produce the
+same result.
+
+```cpp
+std::vector<std::string_view> as_view = {"customer_id"};
+std::cout << biz.duplicates("customers", as_view).ncases();
 ```
 
 ### Output

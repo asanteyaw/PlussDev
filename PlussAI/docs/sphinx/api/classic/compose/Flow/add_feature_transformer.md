@@ -22,6 +22,16 @@ batch (`Flow`'s own `feature_route` does not apply to it), and adding one sets
 classic::Status classic::Flow::add_feature_transformer(classic::prep::FeatureTransformer transformer);
 ```
 
+## What It Does
+
+Moves an already-built `prep::FeatureTransformer` -- itself a small,
+routed sub-pipeline with its own internal stages and remainder policy --
+into the `Flow` as a single opaque stage. The `Flow` never inspects or
+re-routes what happens inside `transformer`; it just runs the whole batch
+through it. This is how several columns get independent, differently-
+routed treatment as one logical unit, instead of several separate
+`add_stage`/`add_named_transform` calls at the `Flow` level.
+
 ## Parameters
 
 `transformer` — `prep::FeatureTransformer`, by value (moved in)

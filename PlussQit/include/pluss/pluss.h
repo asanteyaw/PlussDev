@@ -18,13 +18,11 @@
 // - pluss::make_note(...) / pluss::make_note(...)
 //
 // For CodeH (time API), this exports:
-// - pluss::Timeline / Duration / TimeIndex
+// - pluss::Timeline / Duration
 // - pluss::timeline::make(...) / from_epoch(...) / date_range(...) / print(...)
 // - pluss::duration::{nanos,seconds,...,make,range,print}(...)
-// - pluss::timeindex::make(...) / date_range(...) / print(...)
 // - pluss::make_timeline(...) as the permanent flat shortcut for
 //   pluss::timeline::make(...)
-// - pluss::make_timeindex(...) for TimeIndex construction
 //
 // Unified serialization (core types + supported STL containers):
 // - pluss::io::save(...) / pluss::io::load<...>(...)
@@ -34,14 +32,14 @@
 // - pluss::validate::check(...) / warn(...) / fail(...) / inspect(...) / check_eq(...)
 //
 // Dynamic union holder:
-// - pluss::Type (Series/Note/Timeline/TimeIndex)
+// - pluss::Type (Series/Note/Timeline/Duration)
 // - pluss::Type::invoke("method", args...) for dynamic method-name dispatch on Type
-// - pluss::Queue (Series/Note/Timeline/TimeIndex/Duration)
+// - pluss::Queue (Series/Note/Timeline/Duration)
 // - pluss::Queue::invoke("method", args...) for dynamic method-name dispatch on Queue
 // - pluss::dispense<R>(obj, "method", args...) typed dynamic dispatch
 // - pluss::dispense_any(obj, "method", args...) runtime variant dispatch
 //
-// Core pluss surface (Series/Note/Timeline/TimeIndex + Type/Dispense) lives in PlussQit.
+// Core pluss surface (Series/Note/Timeline/Duration + Type/Dispense) lives in PlussQit.
 #include "pluss/core.h"
 
 // PlussAI is intentionally opt-in:

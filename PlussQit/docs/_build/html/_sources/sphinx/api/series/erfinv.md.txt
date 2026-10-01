@@ -9,6 +9,7 @@
 ```cpp
 Series Series::erfinv() const
 Series& Series::erfinv_()
+Series& Series::erfinv_() const
 ```
 
 ## What It Does
@@ -70,6 +71,31 @@ d/dx erfinv(x) = sqrt(pi)/2 * exp( erfinv(x)^2 )
 The derivative is `sqrt(pi)/2 = 0.8862` at `x = 0` and grows without bound
 toward the endpoints. At `x = +/-1` the forward value is infinite and the
 sensitivity is `+inf`; for `|x| > 1` both are `NaN`.
+
+## In-Place Form
+
+`erfinv_()` is the in-place sibling of [`erfinv()`](erfinv.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `erfinv_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 0.5});
+
+auto& ref = x.erfinv_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 0.47693628]
+same object: true
+```
 
 ## Examples
 

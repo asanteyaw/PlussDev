@@ -8,6 +8,7 @@
 
 ```cpp
 Series::ceil() const -> Series
+Series& Series::ceil_()
 ```
 
 ## What It Does
@@ -37,6 +38,29 @@ is `0`.
 That is the right mental model for reverse-mode too: once a scalar objective
 passes through `ceil()`, small perturbations to the input do not change the
 rounded value until an integer boundary is crossed.
+
+## In-Place Form
+
+`ceil_()` is the in-place sibling of [`ceil()`](ceil.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.2, -1.2, 2.0});
+
+auto& ref = x.ceil_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2, -1, 2]
+same object: true
+```
 
 ## Examples
 

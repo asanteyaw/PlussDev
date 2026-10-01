@@ -13,6 +13,14 @@ for `ClassWeightMode::Balanced`; [`plan_balance`](plan_balance.md) reads
 classic::StatusOr<classic::ClassMix> classic::class_mix(const pluss::Series& labels);
 ```
 
+## What It Does
+
+Scans `labels` once and produces a complete statistical picture of its
+class distribution -- how many rows belong to each distinct class, what
+fraction of the total each class is, an inverse-frequency weight per class,
+and one overall imbalance ratio. Nothing here is approximate or sampled;
+every class in `labels` is counted exactly.
+
 ## Parameters
 
 `labels`
@@ -174,7 +182,7 @@ int main() {
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  std::cout << "undefined labels ok = " << std::boolalpha << cls::class_mix(pluss::Series::undefined()).ok() << "\n";
+  std::cout << "undefined labels ok = " << std::boolalpha << cls::class_mix(pluss::series::undefined()).ok() << "\n";
 
   const pluss::Series empty = pluss::make_series(std::vector<double>{}, {0}, f64);
   std::cout << "empty labels ok = " << cls::class_mix(empty).ok() << "\n";

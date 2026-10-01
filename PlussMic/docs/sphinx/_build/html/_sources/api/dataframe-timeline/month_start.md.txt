@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::month_start() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a boolean `Series`
+Replaces every selected `Timeline` feature with a boolean `Series`
 flagging whether the row falls on the first day of its month — same feature
 name, same row order.
 
@@ -82,7 +82,7 @@ Only `"2023-03-01"` falls on the first of its month.
 - Only checks day-of-month `== 1` — the time-of-day portion (if any) doesn't
   affect the result.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`, not `false`.

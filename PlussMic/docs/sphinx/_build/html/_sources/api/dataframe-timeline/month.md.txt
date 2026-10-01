@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::month() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with its calendar month
+Replaces every selected `Timeline` feature with its calendar month
 (`1`-`12`), as a numeric `Series` — same feature name, same row order.
 
 ## Parameters
@@ -79,7 +79,7 @@ calendar month.
 ## Notes
 
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first
   (`df.features({"ts"}).tl().month()`) if the source frame has other kinds
   mixed in.

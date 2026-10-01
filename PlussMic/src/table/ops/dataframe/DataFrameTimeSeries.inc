@@ -47,7 +47,7 @@ std::vector<std::string> normalize_ts_features_(const DataFrame& frame,
     for (const auto& name : names) {
       const auto value = frame.features(name);
       // Auto-detection binds only the numeric Series columns as ts() value
-      // features. Non-numeric columns (Note/Timeline/TimeIndex/Bool) are
+      // features. Non-numeric columns (Note/Timeline/Bool) are
       // silently excluded rather than rejected, since a column like this is
       // typically meant to serve as a `time_feature`-by-name axis argument
       // (see DataFrameTsAccessor::calendar/resample/asfreq/align_to), not as
@@ -78,45 +78,41 @@ std::vector<std::string> normalize_ts_features_(const DataFrame& frame,
   return out;
 }
 
-pluss::TimeIndex time_axis_to_index_(const Thread& axis, std::string_view where) {
-  if (axis.kind() == ThreadKind::TimeIndex) {
-    return axis.as_timeindex();
-  }
+TimeAxis time_axis_to_index_(const Thread& axis, std::string_view where) {
   PLUSS_CHECK(axis.kind() == ThreadKind::Timeline,
-              std::string(where) + ": axis feature must be Timeline/TimeIndex");
-  return axis.as_timeline().to_timeindex(false);
+              std::string(where) + ": axis feature must be Timeline");
+  return TimeAxis(axis);
 }
 
-pluss::TimeIndex require_time_axis_index_(const DataFrame& frame, std::string_view time_feature, std::string_view where) {
+TimeAxis require_time_axis_index_(const DataFrame& frame, std::string_view time_feature, std::string_view where) {
   PLUSS_CHECK(frame.get(time_feature).has_value(), std::string(where) + ": unknown time feature '" + std::string(time_feature) + "'");
   return time_axis_to_index_(frame.features(time_feature), where);
 }
 
-pluss::TimeIndex require_case_time_axis_index_(const DataFrame& frame, std::string_view where) {
+TimeAxis require_case_time_axis_index_(const DataFrame& frame, std::string_view where) {
   const auto axis = frame.label().values();
   PLUSS_CHECK(axis.defined(), std::string(where) + ": cases are undefined");
-  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
-              std::string(where) + ": cases must be Timeline/TimeIndex. Use df.label().set(\"date\") first");
-  return axis.kind() == ThreadKind::TimeIndex ? axis.as_timeindex() : axis.as_timeline().to_timeindex(false);
+  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline,
+              std::string(where) + ": cases must be Timeline. Use df.label().set(\"date\") first");
+  return TimeAxis(axis);
 }
 
 Thread require_time_axis_thread_(const Thread& axis, std::string_view where) {
   PLUSS_CHECK(axis.defined(), std::string(where) + ": target axis is undefined");
-  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
-              std::string(where) + ": target axis must be Timeline or TimeIndex");
+  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline,
+              std::string(where) + ": target axis must be Timeline");
   return axis;
 }
 
 Thread require_timed_axis_thread_(const Thread& axis, std::string_view where) {
   PLUSS_CHECK(axis.defined(), std::string(where) + ": target axis is undefined");
-  const bool is_temporal =
-      axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex;
+  const bool is_temporal = axis.kind() == ThreadKind::Timeline;
   const bool is_nanos_series =
       axis.kind() == ThreadKind::Series &&
       axis.as_series().scalar_type() == pluss::codem::ScalarType::Int64;
   PLUSS_CHECK(is_temporal || is_nanos_series,
               std::string(where) +
-                  ": target axis must be Timeline, TimeIndex, or Int64 nanoseconds");
+                  ": target axis must be Timeline or Int64 nanoseconds");
   return axis;
 }
 
@@ -195,17 +191,11 @@ Thread ts_timed_axis_(const DataFrame& frame, const TsOptions& options, std::str
   return ts_source_axis_(frame, options, where);
 }
 
-pluss::TimeIndex thread_to_timeindex_(const Thread& axis, std::string_view where) {
-  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
-              std::string(where) + ": axis must be Timeline or TimeIndex");
-  return axis.kind() == ThreadKind::TimeIndex ? axis.as_timeindex() : axis.as_timeline().to_timeindex(false);
-}
-
 Thread resample_target_axis_(const Thread& source_axis,
-                             const pluss::TimeIndex::ResampleOptions& options,
+                             const pluss::Timeline::ResampleOptions& options,
                              std::string_view where) {
-  const auto source_ti = thread_to_timeindex_(source_axis, where);
-  const auto bins = source_ti.resample_bins(options);
+  const auto source_ta = time_axis_to_index_(source_axis, where);
+  const auto bins = source_ta.ordered().resample_bins(options);
   return Thread(bins.labels);
 }
 
@@ -242,106 +232,26 @@ std::string_view resample_op_key_(pluss::subsp::stats::ts::ResampleOp op) {
   PLUSS_FAIL("DataFrameTsAccessor::resample: unsupported ResampleOp");
 }
 
-Thread ts_resample_thread_(const Thread& values,
-                           const Thread& axis,
-                           const pluss::TimeIndex::ResampleOptions& options,
-                           pluss::subsp::stats::ts::ResampleOp op) {
-  const auto resampler = values.ts().resample(axis, options);
-  using ResampleOp = pluss::subsp::stats::ts::ResampleOp;
-  switch (op) {
-    case ResampleOp::Mean:
-      return resampler.mean();
-    case ResampleOp::Sum:
-      return resampler.sum();
-    case ResampleOp::Min:
-      return resampler.min();
-    case ResampleOp::Max:
-      return resampler.max();
-    case ResampleOp::First:
-      return resampler.first();
-    case ResampleOp::Last:
-      return resampler.last();
-    case ResampleOp::Count:
-      return resampler.count();
-  }
-  PLUSS_FAIL("DataFrameTsAccessor::resample: unsupported ResampleOp");
-}
-
-DataFrame ts_binary_frame_(const DataFrame& left,
-                           const DataFrame& right,
-                           const std::vector<std::string>& features,
-                           const Thread& explicit_left_axis,
-                           TsAlignMode mode,
-                           int op) {
-  const auto left_axis = explicit_left_axis.defined() ? explicit_left_axis : left.label().values();
-  const auto right_axis = right.label().values();
-  (void)time_axis_to_index_(left_axis, "DataFrameTsAccessor::binary");
-  (void)time_axis_to_index_(right_axis, "DataFrameTsAccessor::binary");
-
-  std::vector<std::pair<std::string, Thread>> out;
-  out.reserve(features.size());
-  for (const auto& name : features) {
-    PLUSS_CHECK(right.get(name).has_value(), "DataFrameTsAccessor::binary: right frame is missing feature '" + name + "'");
-    const auto lhs = left.features(name);
-    const auto rhs = right.features(name);
-    switch (op) {
-      case 0:
-        out.emplace_back(name, lhs.ts().add(rhs, left_axis, right_axis, mode));
-        break;
-      case 1:
-        out.emplace_back(name, lhs.ts().sub(rhs, left_axis, right_axis, mode));
-        break;
-      case 2:
-        out.emplace_back(name, lhs.ts().mul(rhs, left_axis, right_axis, mode));
-        break;
-      case 3:
-        out.emplace_back(name, lhs.ts().div(rhs, left_axis, right_axis, mode));
-        break;
-      case 4:
-        out.emplace_back(name, lhs.ts().eq(rhs, left_axis, right_axis, mode));
-        break;
-      case 5:
-        out.emplace_back(name, lhs.ts().ne(rhs, left_axis, right_axis, mode));
-        break;
-      case 6:
-        out.emplace_back(name, lhs.ts().lt(rhs, left_axis, right_axis, mode));
-        break;
-      case 7:
-        out.emplace_back(name, lhs.ts().le(rhs, left_axis, right_axis, mode));
-        break;
-      case 8:
-        out.emplace_back(name, lhs.ts().gt(rhs, left_axis, right_axis, mode));
-        break;
-      case 9:
-        out.emplace_back(name, lhs.ts().ge(rhs, left_axis, right_axis, mode));
-        break;
-      default:
-        PLUSS_FAIL("DataFrameTsAccessor: unsupported binary operation");
-    }
-  }
-  return make_frame_from_columns_(std::move(out), left_axis);
-}
-
 Thread resample_target_axis_(const DataFrame& frame,
                              std::string_view time_feature,
                              std::string_view freq,
                              std::int64_t step,
                              std::string_view where) {
-  const auto source_ti = time_feature.empty()
+  const auto source_ta = time_feature.empty()
                              ? require_case_time_axis_index_(frame, where)
                              : require_time_axis_index_(frame, time_feature, where);
-  const auto bins = source_ti.resample_bins(freq, step);
+  const auto bins = source_ta.ordered().resample_bins(freq, step);
   return Thread(bins.labels);
 }
 
 Thread resample_target_axis_(const DataFrame& frame,
                              std::string_view time_feature,
-                             const pluss::TimeIndex::ResampleOptions& options,
+                             const pluss::Timeline::ResampleOptions& options,
                              std::string_view where) {
-  const auto source_ti = time_feature.empty()
+  const auto source_ta = time_feature.empty()
                              ? require_case_time_axis_index_(frame, where)
                              : require_time_axis_index_(frame, time_feature, where);
-  const auto bins = source_ti.resample_bins(options);
+  const auto bins = source_ta.ordered().resample_bins(options);
   return Thread(bins.labels);
 }
 
@@ -461,6 +371,74 @@ DataFrame grouped_window_aggregate_(const DataFrame& frame,
 }
 
 } // namespace
+
+DataFrame DataFrameTsAccessor::binary_(const DataFrame& left,
+                                       const DataFrame& right,
+                                       const std::vector<std::string>& features,
+                                       const Thread& explicit_left_axis,
+                                       TsAlignMode mode,
+                                       int op) {
+  const auto left_axis = explicit_left_axis.defined() ? explicit_left_axis : left.label().values();
+  const auto right_axis = right.label().values();
+  const auto left_axis_ta = time_axis_to_index_(left_axis, "DataFrameTsAccessor::binary");
+  const auto right_axis_ta = time_axis_to_index_(right_axis, "DataFrameTsAccessor::binary");
+  const pluss::Timeline::TimelineIndexAccessor* left_index = nullptr;
+  const pluss::Timeline::TimelineIndexAccessor* right_index = nullptr;
+  if (mode == TsAlignMode::Exact) {
+    // Exact joins need valid temporal lanes, but not ordered axes.
+    (void)left_axis_ta.index();
+    (void)right_axis_ta.index();
+  } else {
+    left_index = &left_axis_ta.ordered();
+    right_index = &right_axis_ta.ordered();
+  }
+
+  std::vector<std::pair<std::string, Thread>> out;
+  out.reserve(features.size());
+  for (const auto& name : features) {
+    PLUSS_CHECK(right.get(name).has_value(),
+                "DataFrameTsAccessor::binary: right frame is missing feature '" + name + "'");
+    const auto lhs = left.features(name);
+    const auto rhs = right.features(name);
+    const auto aligned = lhs.ts().align_index_(rhs, left_axis, right_axis, mode,
+                                               left_index, right_index);
+    switch (op) {
+      case 0:
+        out.emplace_back(name, lhs.add(aligned));
+        break;
+      case 1:
+        out.emplace_back(name, lhs.sub(aligned));
+        break;
+      case 2:
+        out.emplace_back(name, lhs.mul(aligned));
+        break;
+      case 3:
+        out.emplace_back(name, lhs.div(aligned));
+        break;
+      case 4:
+        out.emplace_back(name, lhs.eq(aligned));
+        break;
+      case 5:
+        out.emplace_back(name, lhs.ne(aligned));
+        break;
+      case 6:
+        out.emplace_back(name, lhs.lt(aligned));
+        break;
+      case 7:
+        out.emplace_back(name, lhs.le(aligned));
+        break;
+      case 8:
+        out.emplace_back(name, lhs.gt(aligned));
+        break;
+      case 9:
+        out.emplace_back(name, lhs.ge(aligned));
+        break;
+      default:
+        PLUSS_FAIL("DataFrameTsAccessor: unsupported binary operation");
+    }
+  }
+  return make_frame_from_columns_(std::move(out), left_axis);
+}
 
 DataFrameTsAccessor::DataFrameTsAccessor(DataFrame frame, std::vector<std::string> features, TsOptions options)
     : frame_(std::move(frame)), features_(std::move(features)), options_(std::move(options)) {
@@ -815,22 +793,22 @@ DataFrame DataFrameTsWindowAccessor::count(std::string_view value_feature) const
 DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view time_feature,
                                                    std::string_view freq,
                                                    std::int64_t step) const {
-  return resample(time_feature, pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step});
+  return resample(time_feature, pluss::Timeline::ResampleOptions{.freq = std::string(freq), .step = step});
 }
 
 DataFrameTsResampler DataFrameTsAccessor::resample(
     std::string_view time_feature,
-    const pluss::TimeIndex::ResampleOptions& options) const {
+    const pluss::Timeline::ResampleOptions& options) const {
   return DataFrameTsResampler(frame_, features_, owned_name(time_feature), options, options_);
 }
 
 DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view freq,
                                                    std::int64_t step) const {
-  return resample(pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step});
+  return resample(pluss::Timeline::ResampleOptions{.freq = std::string(freq), .step = step});
 }
 
 DataFrameTsResampler DataFrameTsAccessor::resample(
-    const pluss::TimeIndex::ResampleOptions& options) const {
+    const pluss::Timeline::ResampleOptions& options) const {
   return DataFrameTsResampler(frame_, features_, std::string{}, options, options_);
 }
 
@@ -838,25 +816,27 @@ DataFrame DataFrameTsAccessor::resample(std::string_view time_feature,
                                         std::string_view freq,
                                         pluss::subsp::stats::ts::ResampleOp op,
                                         std::int64_t step) const {
-  return resample(time_feature, pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, op);
+  return resample(time_feature, pluss::Timeline::ResampleOptions{.freq = std::string(freq), .step = step}, op);
 }
 
 DataFrame DataFrameTsAccessor::resample(
     std::string_view time_feature,
-    const pluss::TimeIndex::ResampleOptions& options,
+    const pluss::Timeline::ResampleOptions& options,
     pluss::subsp::stats::ts::ResampleOp op) const {
   if (time_feature.empty()) {
     return resample(options, op);
   }
   PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::resample: expected at least one feature");
   const auto axis_feature = owned_name(time_feature);
-  (void)require_time_axis_index_(frame_, axis_feature, "DataFrameTsAccessor::resample");
-  const auto axis = frame_.features(axis_feature);
+  const auto axis_ta = require_time_axis_index_(
+      frame_, axis_feature, "DataFrameTsAccessor::resample");
+  const auto& index = axis_ta.ordered();
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
   Thread out_cases;
   for (const auto& name : features_) {
-    auto sampled = ts_resample_thread_(frame_.features(name), axis, options, op);
+    auto result = frame_.features(name).ts().resample_index_(index, options, op);
+    auto sampled = result.values.label().set(result.labels);
     if (!out_cases.defined()) {
       out_cases = sampled.label().values();
     }
@@ -868,19 +848,22 @@ DataFrame DataFrameTsAccessor::resample(
 DataFrame DataFrameTsAccessor::resample(std::string_view freq,
                                         pluss::subsp::stats::ts::ResampleOp op,
                                         std::int64_t step) const {
-  return resample(pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, op);
+  return resample(pluss::Timeline::ResampleOptions{.freq = std::string(freq), .step = step}, op);
 }
 
 DataFrame DataFrameTsAccessor::resample(
-    const pluss::TimeIndex::ResampleOptions& options,
+    const pluss::Timeline::ResampleOptions& options,
     pluss::subsp::stats::ts::ResampleOp op) const {
   PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::resample: expected at least one feature");
   const auto axis = ts_source_axis_(frame_, options_, "DataFrameTsAccessor::resample");
+  const auto axis_ta = time_axis_to_index_(axis, "DataFrameTsAccessor::resample");
+  const auto& index = axis_ta.ordered();
   std::vector<std::pair<std::string, Thread>> out;
   out.reserve(features_.size());
   Thread out_cases;
   for (const auto& name : features_) {
-    auto sampled = ts_resample_thread_(frame_.features(name), axis, options, op);
+    auto result = frame_.features(name).ts().resample_index_(index, options, op);
+    auto sampled = result.values.label().set(result.labels);
     if (!out_cases.defined()) {
       out_cases = sampled.label().values();
     }
@@ -895,12 +878,12 @@ DataFrame DataFrameTsAccessor::asfreq(std::string_view time_feature,
                                       pluss::subsp::stats::ts::GapFillMode fill_mode,
                                       std::optional<double> constant,
                                       pluss::subsp::stats::ts::ResampleOp op) const {
-  return asfreq(time_feature, pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, fill_mode, constant, op);
+  return asfreq(time_feature, pluss::Timeline::ResampleOptions{.freq = std::string(freq), .step = step}, fill_mode, constant, op);
 }
 
 DataFrame DataFrameTsAccessor::asfreq(
     std::string_view time_feature,
-    const pluss::TimeIndex::ResampleOptions& options,
+    const pluss::Timeline::ResampleOptions& options,
     pluss::subsp::stats::ts::GapFillMode fill_mode,
     std::optional<double> constant,
     pluss::subsp::stats::ts::ResampleOp op) const {
@@ -919,11 +902,11 @@ DataFrame DataFrameTsAccessor::asfreq(std::string_view freq,
                                       pluss::subsp::stats::ts::GapFillMode fill_mode,
                                       std::optional<double> constant,
                                       pluss::subsp::stats::ts::ResampleOp op) const {
-  return asfreq(pluss::TimeIndex::ResampleOptions{.freq = std::string(freq), .step = step}, fill_mode, constant, op);
+  return asfreq(pluss::Timeline::ResampleOptions{.freq = std::string(freq), .step = step}, fill_mode, constant, op);
 }
 
 DataFrame DataFrameTsAccessor::asfreq(
-    const pluss::TimeIndex::ResampleOptions& options,
+    const pluss::Timeline::ResampleOptions& options,
     pluss::subsp::stats::ts::GapFillMode fill_mode,
     std::optional<double> constant,
     pluss::subsp::stats::ts::ResampleOp op) const {
@@ -982,14 +965,14 @@ DataFrameTsResampler::DataFrameTsResampler(DataFrame frame,
     : DataFrameTsResampler(std::move(frame),
                            std::move(features),
                            std::move(time_feature),
-                           pluss::TimeIndex::ResampleOptions{.freq = std::move(freq), .step = step},
+                           pluss::Timeline::ResampleOptions{.freq = std::move(freq), .step = step},
                            std::move(options)) {}
 
 DataFrameTsResampler::DataFrameTsResampler(
     DataFrame frame,
     std::vector<std::string> features,
     std::string time_feature,
-    pluss::TimeIndex::ResampleOptions options,
+    pluss::Timeline::ResampleOptions options,
     TsOptions ts_options)
     : frame_(std::move(frame)),
       features_(std::move(features)),
@@ -1177,50 +1160,50 @@ DataFrame DataFrameTsAccessor::align_to(const Thread& target_axis,
 }
 
 DataFrame DataFrameTsAccessor::add(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 0);
+  return binary_(frame_, other, features_, options_.axis, mode, 0);
 }
 
 DataFrame DataFrameTsAccessor::sub(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 1);
+  return binary_(frame_, other, features_, options_.axis, mode, 1);
 }
 
 DataFrame DataFrameTsAccessor::mul(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 2);
+  return binary_(frame_, other, features_, options_.axis, mode, 2);
 }
 
 DataFrame DataFrameTsAccessor::div(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 3);
+  return binary_(frame_, other, features_, options_.axis, mode, 3);
 }
 
 DataFrame DataFrameTsAccessor::eq(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 4);
+  return binary_(frame_, other, features_, options_.axis, mode, 4);
 }
 
 DataFrame DataFrameTsAccessor::ne(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 5);
+  return binary_(frame_, other, features_, options_.axis, mode, 5);
 }
 
 DataFrame DataFrameTsAccessor::lt(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 6);
+  return binary_(frame_, other, features_, options_.axis, mode, 6);
 }
 
 DataFrame DataFrameTsAccessor::le(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 7);
+  return binary_(frame_, other, features_, options_.axis, mode, 7);
 }
 
 DataFrame DataFrameTsAccessor::gt(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 8);
+  return binary_(frame_, other, features_, options_.axis, mode, 8);
 }
 
 DataFrame DataFrameTsAccessor::ge(const DataFrame& other, TsAlignMode mode) const {
-  return ts_binary_frame_(frame_, other, features_, options_.axis, mode, 9);
+  return binary_(frame_, other, features_, options_.axis, mode, 9);
 }
 
 DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const {
   PLUSS_CHECK(frame_.get(time_feature).has_value(), "DataFrameTsAccessor::calendar: unknown time feature");
   const auto axis = frame_.features(time_feature);
-  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline || axis.kind() == ThreadKind::TimeIndex,
-              "DataFrameTsAccessor::calendar: time feature must be Timeline/TimeIndex");
+  PLUSS_CHECK(axis.kind() == ThreadKind::Timeline,
+              "DataFrameTsAccessor::calendar: time feature must be Timeline");
   PLUSS_CHECK(!features_.empty(), "DataFrameTsAccessor::calendar: expected at least one bound feature");
   const auto calendar = frame_.features(features_.front()).ts().calendar(axis);
   std::vector<std::pair<std::string, Thread>> out;

@@ -64,16 +64,10 @@ std::cout << out.registry(0).fields("ts").to_json();
 
 ## See Also
 
-- [`AxelCastAccessor::timeindex`](timeindex.md): the related cast
-  target requiring sorted, index-usable values.
 - [`Axel::cast`](../axel/cast.md): the entry point this accessor is
   reached from.
 - [`RegistryCastAccessor::timeline`](../registry-cast/timeline.md): the
   single-frame operation this method broadcasts.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

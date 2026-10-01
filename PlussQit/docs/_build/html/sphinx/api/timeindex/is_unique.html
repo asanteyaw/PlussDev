@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=009ae0e8"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimeIndex::min" href="min.html" />
+    <link rel="next" title="TimeIndex::join_asof" href="join_asof.html" />
     <link rel="prev" title="TimeIndex::is_monotonic_increasing" href="is_monotonic_increasing.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -36,94 +36,123 @@
 
           <div class="body" role="main">
             
-  <section id="timeindex-is-unique">
+  <!-- pluss-hand-authored -->
+<section id="timeindex-is-unique">
 <h1>TimeIndex::is_unique<a class="headerlink" href="#timeindex-is-unique" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeindex_api_reference.html"><span class="doc std std-doc">Back to TimeIndex API Reference</span></a></p>
-<section id="signatures">
-<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimeIndex</span><span class="o">::</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
-<span class="n">TimeIndex</span><span class="o">::</span><span class="n">has_duplicates</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="kt">bool</span>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">TimeIndex</span><span class="o">::</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
-<section id="what-it-does">
-<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Reports whether the index has duplicate timestamps.</p>
-<p><code class="docutils literal notranslate"><span class="pre">has_duplicates()</span></code> is the inverse convenience surface.</p>
-<p>This is the first question to ask when exact one-timestamp-per-case semantics
-matter.</p>
+<section id="whether-every-instant-appears-once">
+<h2>Whether Every Instant Appears Once<a class="headerlink" href="#whether-every-instant-appears-once" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is_unique()</span></code> returns <code class="docutils literal notranslate"><span class="pre">true</span></code> when no stored instant occurs more than once.
+It compares epoch-nanosecond identity, so two textual timestamps that denote
+the same instant are duplicates even if their offsets were written
+differently.</p>
+<p>Uniqueness and ordering answer separate questions. A monotonic axis may contain
+ties and therefore be non-unique; an unordered axis may still contain only
+distinct instants. Use this query before operations whose meaning assumes one
+case per timestamp. Use <a class="reference internal" href="unique.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">unique()</span></code></span></a> only when a new axis with
+duplicates removed is actually required.</p>
+<p>To ask the inverse question without adding a duplicate public method, write
+<code class="docutils literal notranslate"><span class="pre">!index.is_unique()</span></code>.</p>
 </section>
-<section id="returns">
-<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>
-<code class="docutils literal notranslate"><span class="pre">true</span></code> if the uniqueness predicate holds for the chosen method.</p>
+<section id="trivial-and-unordered-axes">
+<h2>Trivial And Unordered Axes<a class="headerlink" href="#trivial-and-unordered-axes" title="Link to this heading">¶</a></h2>
+<p>Empty and one-element indices are unique because neither can contain a repeated
+pair. The result does not depend on timezone presentation or sort direction.
+For monotonic axes the implementation compares neighbors with constant memory.
+For an unordered axis it tracks observed nanosecond values in a hash set so
+duplicates separated by other timestamps are still detected.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. A standard ordered axis with no repeated timestamps.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<p>Example 1. A normal ordered axis is unique.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
 <span class="p">});</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;idx.is_unique() = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">idx</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;idx.has_duplicates() = &quot;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">idx</span><span class="p">.</span><span class="n">has_duplicates</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">index</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>idx.is_unique() = true
-idx.has_duplicates() = false
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true
 </pre></div>
 </div>
-<p>Example 2. Detect duplicates in an intentionally permissive unsorted index.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">dup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
-<span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dup.is_unique() = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">dup</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dup.has_duplicates() = &quot;</span>
-<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">dup</span><span class="p">.</span><span class="n">has_duplicates</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<p>Example 2. Equal neighboring instants make a monotonic axis non-unique.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T00:00:00+00:00&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T01:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tied</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dup.is_unique() = false
-dup.has_duplicates() = true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p>Example 3. Separated duplicates are detected on a deliberately unordered axis.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">separated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T02:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T00:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T01:00:00Z&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s">&quot;2025-01-01T02:00:00Z&quot;</span><span class="p">,</span>
+<span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">separated</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p>Example 4. Empty and singleton axes satisfy the predicate.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">empty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">{});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;2025-01-01T00:00:00Z&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;empty=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">empty</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;one=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">one</span><span class="p">.</span><span class="n">is_unique</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>empty=true
+one=true
+</pre></div>
+</div>
+</section>
+</section>
+<section id="cost-and-allocation">
+<h2>Cost And Allocation<a class="headerlink" href="#cost-and-allocation" title="Link to this heading">¶</a></h2>
+<p>The result is a native C++ <code class="docutils literal notranslate"><span class="pre">bool</span></code>. Monotonic input is checked in <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> time
+with <code class="docutils literal notranslate"><span class="pre">O(1)</span></code> auxiliary memory. Unordered input remains <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> expected time but
+may allocate <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> hash storage. The TimeIndex itself is not modified.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="unique.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::unique</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="is_monotonic_increasing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::is_monotonic_increasing</span></code></span></a></p></li>
 <li><p><a class="reference internal" href="sort.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeIndex::sort</span></code></span></a></p></li>
-</ul>
-</section>
-<section id="notes">
-<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Uniqueness and monotonicity are different checks. An index can be monotonic
-and still contain duplicates.</p></li>
-<li><p>Duplicates are not inherently wrong, but they change how you should think
-about exact lookup and regrouping.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="is_monotonic_increasing.html">
     <span class="label">Previous</span>
     <span class="title">is_monotonic_increasing</span>
   </a>
-  <a class="next-link" href="min.html">
+  <a class="next-link" href="join_asof.html">
     <span class="label">Next</span>
-    <span class="title">min</span>
+    <span class="title">join_asof</span>
   </a>
 </div>
 </section>
@@ -158,54 +187,13 @@ about exact lookup and regrouping.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
@@ -223,7 +211,7 @@ about exact lookup and regrouping.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeindex_api_reference.html">TimeIndex API Reference</a><ul>
       <li>Previous: <a href="is_monotonic_increasing.html" title="previous chapter">TimeIndex::is_monotonic_increasing</a></li>
-      <li>Next: <a href="min.html" title="next chapter">TimeIndex::min</a></li>
+      <li>Next: <a href="join_asof.html" title="next chapter">TimeIndex::join_asof</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

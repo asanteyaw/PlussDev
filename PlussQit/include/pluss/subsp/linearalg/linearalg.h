@@ -11,9 +11,9 @@
 namespace pluss::subsp::linearalg {
 
 struct SvdDecomposition {
-  Series u;
-  Series s;
-  Series vh;
+  Series u = pluss::series::undefined();
+  Series s = pluss::series::undefined();
+  Series vh = pluss::series::undefined();
 };
 
 inline Series call(

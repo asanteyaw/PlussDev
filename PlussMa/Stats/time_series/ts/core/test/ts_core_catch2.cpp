@@ -175,7 +175,7 @@ TEST_CASE("ts lag stress and crash resilience", "[ts][lag][stress][crash]") {
   // Crash tests: invalid plan usage should throw cleanly.
   REQUIRE_THROWS(build_lag_plan(-1, stress_opts));
   REQUIRE_THROWS(build_lagged_predictors(x, pluss::series::rand({n + 1}, cfg, 11ULL), plan, cfg));
-  REQUIRE_THROWS(build_lagged_predictors(Series::undefined(), y, plan, cfg));
+  REQUIRE_THROWS(build_lagged_predictors(pluss::series::undefined(), y, plan, cfg));
 }
 
 TEST_CASE("ts partition masks match index outputs", "[ts][partition][mask]") {

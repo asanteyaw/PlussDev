@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 659443fa590b -->
+<!-- pluss-signature-hash: 4194293fc150 -->
 <section id="dataframelabelaccessor-fillnull">
 <h1>DataFrameLabelAccessor::fillnull<a class="headerlink" href="#dataframelabelaccessor-fillnull" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_label_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameLabelAccessor API Reference</span></a></p>
@@ -47,7 +47,6 @@
 <span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 <span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
-<span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimeIndex</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
 </pre></div>
 </div>
 </section>
@@ -58,8 +57,8 @@
 To actually change the frame’s case labels, pass the result to
 <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>.</p>
 <p>Pick the overload matching the case labels’ own kind: <code class="docutils literal notranslate"><span class="pre">double</span></code> for a numeric
-(<code class="docutils literal notranslate"><span class="pre">Series</span></code>) axis, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> for their respective temporal kinds.</p>
+(<code class="docutils literal notranslate"><span class="pre">Series</span></code>) axis, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> for a
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> axis.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -164,9 +163,6 @@ compile.</p></li>
 Example 1’s <code class="docutils literal notranslate"><span class="pre">double</span></code> overload, just for a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind axis instead of a
 numeric one — pass the replacement text directly, e.g.
 <code class="docutils literal notranslate"><span class="pre">readings.label().fillnull(&quot;unknown&quot;)</span></code>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">pluss::TimeIndex</span></code> overload behaves identically to Example 2’s
-<code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> overload — the same fill mechanics apply to either
-temporal kind.</p></li>
 </ul>
 </section>
 <section id="see-also">

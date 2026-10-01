@@ -10,6 +10,9 @@
 Nexus::validate_keys(std::string_view table) const -> bool
 
 Nexus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const -> bool
+Nexus::validate_keys(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const -> bool
+template <detail::StringViewNameRange NameRange>
+Nexus::validate_keys(std::string_view table, const NameRange& keys) const -> bool
 ```
 
 ## What It Does
@@ -33,9 +36,22 @@ Two overloads, differing in where the key set comes from:
 **table** (`std::string_view`)
     The table to check. Must already exist in the workspace.
 
-**keys** (`std::initializer_list<std::string_view>`, two-argument overload)
+**keys** (a range of `std::string_view` — a brace literal, a named container
+such as `std::vector<std::string_view>`/`std::vector<std::string>`, or any
+other range whose elements convert to `std::string_view`; two-argument
+overload only)
     The candidate key features to check for completeness and uniqueness. Each name must be
     non-empty, unique within the request, and must name a real feature on `table`.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+`RangeView::Of<std::string_view>` has implicit constructors from a brace
+list, a `std::vector<std::string_view>`, and other contiguous containers, so
+passing any of those at a call site works without ever naming `RangeView`
+yourself. Example 3 below uses a brace literal (the dedicated
+`initializer_list` overload exists specifically to keep that call
+unambiguous); Example 4 passes named containers instead, to exercise the
+`RangeView`/templated overloads without naming either.
+```
 
 ## Returns
 
@@ -112,6 +128,25 @@ true
 
 `orders.order_id` has no duplicates and no missing values, so it validates as a key even
 though `orders` never had `TableMeta` declared at all.
+
+Example 4. Continuing from Example 3: the same explicit-key check via named
+containers — a `std::vector<std::string_view>` (the `RangeView` overload) and
+a `std::vector<std::string>` (the templated overload).
+
+```cpp
+std::vector<std::string_view> as_view = {"order_id"};
+std::vector<std::string> as_owned = {"order_id"};
+
+std::cout << std::boolalpha
+          << with_orders.validate_keys("orders", as_view) << " "
+          << with_orders.validate_keys("orders", as_owned);
+```
+
+### Output
+
+```text
+true true
+```
 
 ## Notes
 

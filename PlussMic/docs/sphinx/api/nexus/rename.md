@@ -124,7 +124,10 @@ auto shipments = DataFrame({
 });
 
 auto out = biz.rename("orders", "table_9").inject(shipments);
-print_keys(out);
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
 ```
 
 ### Output

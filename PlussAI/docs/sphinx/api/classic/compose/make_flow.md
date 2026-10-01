@@ -14,6 +14,16 @@ classic::StatusOr<classic::Flow> classic::make_flow(const classic::ModelSpec& sp
 classic::StatusOr<classic::Workflow> classic::make_workflow(const classic::ModelSpec& spec);
 ```
 
+## What It Does
+
+Constructs a `Flow` whose final model stage is built from `spec` (the same
+family/options resolution [`make_classifier`](../estimators/make_classifier.md)/
+[`make_regressor`](../estimators/make_regressor.md)/
+[`make_transformer`](../estimators/make_transformer.md) perform), with no
+transform stages yet -- the usual starting point for building a pipeline,
+since [`Flow`](Flow.md)'s `add_*` methods then add whatever preprocessing
+is needed before [`learn`](Flow/learn.md).
+
 ## Parameters
 
 `spec` — `ModelSpec`

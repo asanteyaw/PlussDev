@@ -15,6 +15,15 @@ has nothing to dump here; see Returns.
 [[nodiscard]] classic::StatusOr<std::vector<pluss::Series>> classic::Flow::dump_model_state() const;
 ```
 
+## What It Does
+
+Passes straight through to the attached model's own
+[`EstimatorBase::dump_state()`](../../estimators/EstimatorBase/dump_state.md)
+and returns its result unchanged -- the model half of persisting a `Flow`,
+paired with [`load_model_state`](load_model_state.md). A transform-only
+`Flow` with no model attached returns an empty vector rather than an
+error, since there is genuinely nothing to persist.
+
 ## Parameters
 
 None.

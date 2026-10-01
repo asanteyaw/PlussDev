@@ -10,13 +10,22 @@ never recover.
 ## Signature
 
 ```cpp
-explicit nn::LeakyReLU::LeakyReLU(nn::LeakyReLUOptions options = {});
+explicit nn::LeakyReLU::LeakyReLU(nn::LeakyReLUOptions options);
+explicit nn::LeakyReLU::LeakyReLU(double negative_slope = 0.01);
 ```
 
 ## Construction
 
-Default-construct for `negative_slope=0.01`, or pass a
-[`LeakyReLUOptions`](LeakyReLUOptions.md) to change it.
+Two equivalent forms: pass a
+[`LeakyReLUOptions`](LeakyReLUOptions.md) directly, or spell out
+`negative_slope` as a positional argument (which defaults to `0.01`, so
+`nn::LeakyReLU relu;` alone works):
+
+```cpp
+nn::LeakyReLU a(nn::LeakyReLUOptions{0.2});  // negative_slope=0.2
+nn::LeakyReLU b(0.2);                        // equivalent positional form
+nn::LeakyReLU c;                             // negative_slope=0.01 (default)
+```
 
 ## State
 
@@ -143,6 +152,11 @@ data=[-0.04] -- small but nonzero, so gradient still flows
 ## Changelog
 
 - **0.1** — the leaky variant of `ReLU`, `negative_slope` option.
+- **0.2** — added the positional `LeakyReLU(negative_slope)` constructor
+  alongside the `LeakyReLUOptions` form (previously, a bare numeric
+  argument silently bound to the inherited `Module(bool training)`
+  constructor instead of `negative_slope`, since no positional form
+  existed to compete with it).
 
 ## See Also
 

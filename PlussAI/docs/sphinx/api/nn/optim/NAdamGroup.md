@@ -1,29 +1,103 @@
 # `pluss::ai::nn::optim::NAdamGroup`
 
-One per-parameter-group entry: its own parameter list plus its own NAdamOptions.
+One per-parameter-group entry for [`NAdam`](NAdam.md)'s per-group
+constructor: a parameter subset paired with its own
+[`NAdamOptions`](NAdamOptions.md).
 
 ## Signature
 
 ```cpp
-// the public factories / constructors that produce this object
-// e.g. lymph::models::Model lymph::models::logistic_regression(...);
+std::vector<pluss::Series*> parameters;
+nn::optim::NAdamOptions options;
 ```
+
+A plain aggregate -- construct with `{parameters, options}`, or name each
+field.
 
 ## Construction
 
-<!-- how an instance is obtained; delete if the Signature block says it all -->
+```cpp
+nn::optim::NAdamGroup{{&backbone_weight}, nn::optim::NAdamOptions{.learning_rate = 2e-4}};
+nn::optim::NAdamGroup{{&head_weight}, nn::optim::NAdamOptions{.learning_rate = 2e-2}};
+```
+
+A `vector<NAdamGroup>` of these is passed to [`NAdam`](NAdam.md)'s
+per-group constructor overload. Every parameter across every group in the
+list must be unique.
 
 ## State
 
-<!-- the observable fields / accessors and what each means -->
+`parameters` -- `vector<Series*>`
+: This group's own parameter subset.
+
+`options` -- [`NAdamOptions`](NAdamOptions.md)
+: This group's own options, independent of every other group's, including
+  its own moment estimates and momentum-schedule accumulator per
+  parameter.
 
 ## Methods
 
-<!-- one `### <method>` subsection per public method: signature, what it does, parameters, returns, errors, and a verified example -->
+None -- `NAdamGroup` is a plain data aggregate, consumed only by
+[`NAdam`](NAdam.md)'s constructor.
+
+## Practical Examples
+
+One example: two groups with very different learning rates, trained
+together in one `NAdam` instance.
+
+### Example 1
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai.h>
+
+#include <iostream>
+
+int main() {
+  namespace nn = pluss::ai::nn;
+  namespace optim = nn::optim;
+  using pluss::Config;
+  using pluss::ScalarType;
+  using pluss::Series;
+
+  const Config f32 = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
+  const Series target = pluss::make_series(1.0F, f32);
+
+  Series backbone = pluss::make_series(5.0F, f32);
+  Series head = pluss::make_series(5.0F, f32);
+
+  std::vector<optim::NAdamGroup> groups{
+      optim::NAdamGroup{{&backbone}, optim::NAdamOptions{.learning_rate = 2e-4}},
+      optim::NAdamGroup{{&head}, optim::NAdamOptions{.learning_rate = 0.5}},
+  };
+  optim::NAdam optimizer(groups);
+
+  for (int step = 0; step < 3; ++step) {
+    optimizer.step(std::vector<Series>{backbone.sub(target), head.sub(target)});
+  }
+  std::cout << "backbone (lr=2e-4): w = " << backbone.item<float>() << "\n";
+  std::cout << "head (lr=0.5):      w = " << head.item<float>() << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+backbone (lr=2e-4): w = 4.99949
+head (lr=0.5):      w = 3.77764
+```
 
 ## Changelog
 
-- **0.1** — <!-- initial documented surface -->
+- **0.1** — a parameter list paired with its own `NAdamOptions`.
+
+## See Also
+
+- [`NAdam`](NAdam.md) -- the optimizer this configures per group.
+- [`NAdamOptions`](NAdamOptions.md) -- the fields each group's own
+  `options` carries.
 
 <!-- apiref:toctree:start -->
 

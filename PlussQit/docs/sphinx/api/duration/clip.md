@@ -57,14 +57,3 @@ Duration(shape=[6], dim=1, numel=6)
 
 - [`abs`](abs.md): magnitude alone, another unary transform.
 - [`sign`](sign.md): direction alone, another unary transform.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sign.html">
-    <span class="label">Previous</span>
-    <span class="title">sign</span>
-  </a>
-  <a class="next-link" href="total_nanoseconds.html">
-    <span class="label">Next</span>
-    <span class="title">total_nanoseconds</span>
-  </a>
-</div>

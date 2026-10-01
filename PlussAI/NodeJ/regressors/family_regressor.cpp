@@ -127,7 +127,7 @@ bool is_phase0_family(ModelFamily family) {
 }
 
 struct DenseFeatureMatrix {
-  Series x_rows = Series::undefined();
+  Series x_rows = pluss::series::undefined();
   std::int64_t sample_count = 0;
   std::int64_t feature_count = 0;
   Platform original_platform = pluss::pCPU;
@@ -887,7 +887,7 @@ struct LinearPenalty {
   const Series y_train_2d =
       y_train.reshape({1, sample_count}).expand(std::vector<std::int64_t>{query_count, sample_count});
 
-  Series radius_pred = Series::undefined();
+  Series radius_pred = pluss::series::undefined();
   if (distance_weighted) {
     constexpr double eps = 1e-12;
     const Series zero_mask = dist2.le(eps).to(ScalarType::Float64).mul(mask);
@@ -945,8 +945,8 @@ public:
     if (options_.standardize) {
       x_train = standardize_fit_rows(x_train, mean_, scale_);
     } else {
-      mean_ = Series::undefined();
-      scale_ = Series::undefined();
+      mean_ = pluss::series::undefined();
+      scale_ = pluss::series::undefined();
     }
     x_train_ = std::move(x_train);
     y_train_ = y_or.value().reshape({sample_count_});
@@ -974,7 +974,7 @@ public:
       x_query = standardize_apply_rows(x_query, mean_, scale_);
     }
 
-    Series pred = Series::undefined();
+    Series pred = pluss::series::undefined();
     if (query_mode_ == NeighborQueryMode::Radius) {
       pred = radius_predict_series(x_query,
                                    x_train_,
@@ -1097,10 +1097,10 @@ private:
   NeighborQueryMode query_mode_{NeighborQueryMode::KNearest};
   double radius_{1.0};
   std::int64_t radius_fallback_k_{1};
-  Series x_train_ = Series::undefined();
-  Series y_train_ = Series::undefined();
-  Series mean_ = Series::undefined();
-  Series scale_ = Series::undefined();
+  Series x_train_ = pluss::series::undefined();
+  Series y_train_ = pluss::series::undefined();
+  Series mean_ = pluss::series::undefined();
+  Series scale_ = pluss::series::undefined();
 };
 
 class TreeRegressor final : public RegressorBase {
@@ -1726,7 +1726,7 @@ private:
   BayesFamilyOptions options_{};
   bool trained_{false};
   std::int64_t feature_count_{0};
-  Series beta_ = Series::undefined();
+  Series beta_ = pluss::series::undefined();
   double pinv_rcond_{1e-12};
   BayesLikelihood likelihood_{BayesLikelihood::Gaussian};
 };
@@ -2495,7 +2495,7 @@ public:
                                                      options.max_iterations,
                                                      options.tolerance,
                                                      "KernelRegressor::learn");
-    Series alpha = Series::undefined();
+    Series alpha = pluss::series::undefined();
     if (alpha_or.ok()) {
       alpha = alpha_or.move_value();
     } else {
@@ -2526,7 +2526,7 @@ public:
           "KernelRegressor::infer does not support NaN features; apply the fitted imputer used for learn()."));
     }
 
-    Series pred = Series::undefined();
+    Series pred = pluss::series::undefined();
     if (matrix.x_rows.platform() == pluss::pCPU && x_train_.platform() == pluss::pCPU) {
       pred = kernel_predict_cpu(matrix.x_rows, x_train_, alpha_, options_.kernel, gamma_);
     } else {
@@ -2602,8 +2602,8 @@ private:
   std::int64_t feature_count_{0};
   double gamma_{1.0};
   double lambda_{1.0};
-  Series x_train_ = Series::undefined();
-  Series alpha_ = Series::undefined();
+  Series x_train_ = pluss::series::undefined();
+  Series alpha_ = pluss::series::undefined();
 };
 
 class LinearRegressor final : public RegressorBase {
@@ -2751,7 +2751,7 @@ private:
   LinearFamilyOptions options_{};
   bool trained_{false};
   std::int64_t feature_count_{0};
-  Series beta_ = Series::undefined();
+  Series beta_ = pluss::series::undefined();
   double pinv_rcond_{1e-12};
 };
 

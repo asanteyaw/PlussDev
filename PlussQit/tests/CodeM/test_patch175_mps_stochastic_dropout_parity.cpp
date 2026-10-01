@@ -328,7 +328,7 @@ TEST_CASE("MPS reduction and scan backward paths stay device-native under strict
   REQUIRE(x.sensitivity().platform() == pluss::pMPS);
   require_close(vec_f32(x.sensitivity()), {0.0f, 0.5f, 0.5f, 0.5f, 0.0f, 0.5f});
 
-  x.clear_sensitivity();
+  x.clear();
   x.amin(0, false).sum().reverse();
   REQUIRE(x.sensitivity().platform() == pluss::pMPS);
   require_close(vec_f32(x.sensitivity()), {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f});

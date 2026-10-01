@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,15 +50,15 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Renders each bound key’s timestamp as its full English weekday name, replacing
-each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text) key. Applied to <strong>every catalog</strong> in the stack, by delegating to that catalog’s own
+each <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind key with a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (text) key. Applied to <strong>every catalog</strong> in the stack, by delegating to that catalog’s own
 <a class="reference internal" href="../catalog-timeline/weekday_name.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogTimelineAccessor::weekday_name</span></code></span></a>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Binding and kind-check rules are inherited from Archive::tl()
-This method’s key-binding (from <code class="docutils literal notranslate"><span class="pre">catalog(0)</span></code>) and lazy Timeline/TimeIndex-kind check
+This method’s key-binding (from <code class="docutils literal notranslate"><span class="pre">catalog(0)</span></code>) and lazy Timeline-kind check
 follow exactly the rules documented on <a class="reference internal" href="../archive/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Archive::tl</span></code></span></a> — see that
 page’s two important callouts for the full explanation. <code class="docutils literal notranslate"><span class="pre">ArchiveTimelineAccessor</span></code>
-requires every bound key to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>- or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind, checked the moment any
+requires every bound key to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, checked the moment any
 method (including this one) is called.</p>
 </div>
 </section>

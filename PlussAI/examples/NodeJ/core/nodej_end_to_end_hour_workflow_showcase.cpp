@@ -429,12 +429,12 @@ int main(int argc, char** argv) {
   LabeledBatch train_batch{};
   train_batch.features = FeatureBatch{.x = train_standard_scaled, .layout = ObservationLayout::Rows};
   train_batch.y = train_y.to(train_standard_scaled.platform(), ScalarType::Float64).reshape({train_standard_scaled.sizes()[0]});
-  train_batch.sample_weights = Series::undefined();
+  train_batch.sample_weights = pluss::series::undefined();
 
   LabeledBatch test_batch{};
   test_batch.features = FeatureBatch{.x = test_standard_scaled, .layout = ObservationLayout::Rows};
   test_batch.y = test_y.to(test_standard_scaled.platform(), ScalarType::Float64).reshape({test_standard_scaled.sizes()[0]});
-  test_batch.sample_weights = Series::undefined();
+  test_batch.sample_weights = pluss::series::undefined();
 
   Status train_batch_check = validate_labeled(train_batch);
   if (!train_batch_check.ok()) {

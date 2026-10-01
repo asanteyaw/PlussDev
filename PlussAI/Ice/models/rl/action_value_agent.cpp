@@ -1,6 +1,7 @@
 #include "pluss/ai/ice/models/rl/action_value_agent.h"
 
 #include "pluss/ai/ice/io.h"
+#include "pluss/ai/ice/io/kv_artifact.h"
 #include "pluss/ai/ice/no_grad.h"
 #include "pluss/ai/ice/optim.h"
 #include "pluss/ai/fusion.h"
@@ -22,7 +23,6 @@ namespace pluss::ai::ice::models {
 
 namespace {
 
-using StringMap = std::unordered_map<std::string, std::string>;
 
 constexpr std::string_view kMagic = "pluss_ice_action_value_agent";
 constexpr std::int64_t kSchema = 1;
@@ -80,62 +80,16 @@ void append_parameters_(std::vector<Series*>& out, T& module) {
   out.insert(out.end(), more.begin(), more.end());
 }
 
-void write_kv_(std::ostringstream& out, std::string_view key, std::string_view value) {
-  out << key << '=';
-  out << std::quoted(std::string(value)) << '\n';
-}
+using pluss::ai::ice::io::detail::parse_kv_body;
+using pluss::ai::ice::io::detail::require_bool;
+using pluss::ai::ice::io::detail::require_f64;
+using pluss::ai::ice::io::detail::require_field;
+using pluss::ai::ice::io::detail::require_i64;
+using pluss::ai::ice::io::detail::require_u64;
+using pluss::ai::ice::io::detail::write_kv_line;
+using pluss::ai::ice::io::detail::write_num_line;
 
-template <class T>
-void write_num_(std::ostringstream& out, std::string_view key, T value) {
-  out << key << '=' << value << '\n';
-}
-
-[[nodiscard]] StringMap parse_body_(std::string_view body) {
-  StringMap out{};
-  std::istringstream stream{std::string(body)};
-  std::string line{};
-  while (std::getline(stream, line)) {
-    if (line.empty()) continue;
-    const auto eq = line.find('=');
-    PLUSS_CHECK(eq != std::string::npos,
-                "pluss::ai::ice::models::ActionValueAgent::load: malformed metadata line '" + line + "'.");
-    std::string key = line.substr(0, eq);
-    std::string value_text = line.substr(eq + 1);
-    std::string value{};
-    std::istringstream value_stream(value_text);
-    if (!value_text.empty() && value_text.front() == '"') {
-      value_stream >> std::quoted(value);
-    } else {
-      value = value_text;
-    }
-    out.emplace(std::move(key), std::move(value));
-  }
-  return out;
-}
-
-[[nodiscard]] std::string require_(const StringMap& kv, std::string_view key) {
-  const auto it = kv.find(std::string(key));
-  PLUSS_CHECK(it != kv.end(),
-              "pluss::ai::ice::models::ActionValueAgent::load: missing field '" + std::string(key) + "'.");
-  return it->second;
-}
-
-[[nodiscard]] std::int64_t require_i64_(const StringMap& kv, std::string_view key) {
-  return std::stoll(require_(kv, key));
-}
-
-[[nodiscard]] std::uint64_t require_u64_(const StringMap& kv, std::string_view key) {
-  return static_cast<std::uint64_t>(std::stoull(require_(kv, key)));
-}
-
-[[nodiscard]] double require_f64_(const StringMap& kv, std::string_view key) {
-  return std::stod(require_(kv, key));
-}
-
-[[nodiscard]] bool require_bool_(const StringMap& kv, std::string_view key) {
-  const auto value = require_(kv, key);
-  return value == "1" || value == "true";
-}
+constexpr std::string_view kLoadContext = "pluss::ai::ice::models::ActionValueAgent::load";
 
 [[nodiscard]] std::vector<std::int64_t> split_indices_(std::int64_t count,
                                                        double holdout_ratio,
@@ -323,7 +277,7 @@ void sync_target_(DuelingTower& target, DuelingTower& online) {
                                 const ActionValueBatch& batch) {
   ice::NoGradGuard no_grad;
   const auto n = batch.next_observation.sizes()[0];
-  Series next_value = Series::undefined();
+  Series next_value = pluss::series::undefined();
   if (model_options.double_estimate) {
     const Series online_next = online.forward(batch.next_observation);
     const Series best_action = online_next.argmax(1).to(ScalarType::Int64);
@@ -507,11 +461,11 @@ void ActionValueAgent::learn(const ActionValueBatch& train,
   }
   for (auto* parameter : parameters) {
     parameter->tracks_slope_(false);
-    parameter->clear_sensitivity();
+    parameter->clear();
   }
   for (auto* parameter : impl_->target.parameters()) {
     parameter->tracks_slope_(false);
-    parameter->clear_sensitivity();
+    parameter->clear();
   }
   impl_->online.train(false);
   impl_->target.train(false);
@@ -578,20 +532,20 @@ void ActionValueAgent::save(std::string_view filepath) const {
 
   std::ostringstream out{};
   out << kMagic << '\n';
-  write_num_(out, "schema", kSchema);
-  write_num_(out, "observation_size", options_.observation_size);
-  write_num_(out, "action_count", options_.action_count);
-  write_num_(out, "hidden_size", options_.hidden_size);
-  write_num_(out, "hidden_layers", options_.hidden_layers);
-  write_num_(out, "discount", options_.discount);
-  write_num_(out, "double_estimate", options_.double_estimate ? 1 : 0);
-  write_num_(out, "target_sync_every", options_.target_sync_every);
-  write_num_(out, "cfg_dtype", static_cast<int>(options_.cfg.dtype));
-  write_num_(out, "cfg_platform", static_cast<int>(options_.cfg.platform));
-  write_num_(out, "seed", options_.seed);
-  write_num_(out, "update_steps", impl_->update_steps);
-  write_kv_(out, "online_path", online_path);
-  write_kv_(out, "target_path", target_path);
+  write_num_line(out, "schema", kSchema);
+  write_num_line(out, "observation_size", options_.observation_size);
+  write_num_line(out, "action_count", options_.action_count);
+  write_num_line(out, "hidden_size", options_.hidden_size);
+  write_num_line(out, "hidden_layers", options_.hidden_layers);
+  write_num_line(out, "discount", options_.discount);
+  write_num_line(out, "double_estimate", options_.double_estimate ? 1 : 0);
+  write_num_line(out, "target_sync_every", options_.target_sync_every);
+  write_num_line(out, "cfg_dtype", static_cast<int>(options_.cfg.dtype));
+  write_num_line(out, "cfg_platform", static_cast<int>(options_.cfg.platform));
+  write_num_line(out, "seed", options_.seed);
+  write_num_line(out, "update_steps", impl_->update_steps);
+  write_kv_line(out, "online_path", online_path);
+  write_kv_line(out, "target_path", target_path);
 
   std::ofstream file{std::string(filepath)};
   PLUSS_CHECK(file.good(),
@@ -613,35 +567,35 @@ ActionValueAgent ActionValueAgent::load(std::string_view filepath) {
               "pluss::ai::ice::models::ActionValueAgent::load: invalid model artifact header.");
   std::ostringstream body{};
   body << file.rdbuf();
-  const auto kv = parse_body_(body.str());
-  PLUSS_CHECK(require_i64_(kv, "schema") == kSchema,
+  const auto kv = parse_kv_body(body.str(), kLoadContext);
+  PLUSS_CHECK(require_i64(kv, "schema", kLoadContext) == kSchema,
               "pluss::ai::ice::models::ActionValueAgent::load: unsupported schema.");
 
   ActionValueAgentOptions options{};
-  options.observation_size = require_i64_(kv, "observation_size");
-  options.action_count = require_i64_(kv, "action_count");
-  options.hidden_size = require_i64_(kv, "hidden_size");
-  options.hidden_layers = require_i64_(kv, "hidden_layers");
-  options.discount = require_f64_(kv, "discount");
-  options.double_estimate = require_bool_(kv, "double_estimate");
-  options.target_sync_every = require_i64_(kv, "target_sync_every");
+  options.observation_size = require_i64(kv, "observation_size", kLoadContext);
+  options.action_count = require_i64(kv, "action_count", kLoadContext);
+  options.hidden_size = require_i64(kv, "hidden_size", kLoadContext);
+  options.hidden_layers = require_i64(kv, "hidden_layers", kLoadContext);
+  options.discount = require_f64(kv, "discount", kLoadContext);
+  options.double_estimate = require_bool(kv, "double_estimate", kLoadContext);
+  options.target_sync_every = require_i64(kv, "target_sync_every", kLoadContext);
   options.cfg = Config{}
-                    .with_dtype(static_cast<ScalarType>(require_i64_(kv, "cfg_dtype")))
-                    .with_platform(static_cast<Platform>(require_i64_(kv, "cfg_platform")));
-  options.seed = require_u64_(kv, "seed");
+                    .with_dtype(static_cast<ScalarType>(require_i64(kv, "cfg_dtype", kLoadContext)))
+                    .with_platform(static_cast<Platform>(require_i64(kv, "cfg_platform", kLoadContext)));
+  options.seed = require_u64(kv, "seed", kLoadContext);
 
   ActionValueAgent model(options);
-  io::load_parameters(require_(kv, "online_path"), model.impl_->online.parameters());
-  io::load_parameters(require_(kv, "target_path"), model.impl_->target.parameters());
+  io::load_parameters(require_field(kv, "online_path", kLoadContext), model.impl_->online.parameters());
+  io::load_parameters(require_field(kv, "target_path", kLoadContext), model.impl_->target.parameters());
   for (auto* parameter : model.impl_->online.parameters()) {
     parameter->tracks_slope_(false);
-    parameter->clear_sensitivity();
+    parameter->clear();
   }
   for (auto* parameter : model.impl_->target.parameters()) {
     parameter->tracks_slope_(false);
-    parameter->clear_sensitivity();
+    parameter->clear();
   }
-  model.impl_->update_steps = require_i64_(kv, "update_steps");
+  model.impl_->update_steps = require_i64(kv, "update_steps", kLoadContext);
   model.impl_->trained = true;
   model.impl_->online.train(false);
   model.impl_->target.train(false);

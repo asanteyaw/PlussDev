@@ -11,6 +11,7 @@ Series Series::igamma(const Series& other) const
 Series Series::igamma(double other) const
 Series& Series::igamma_(const Series& other)
 Series& Series::igamma_(double other)
+Series& Series::igamma_(const Series& other) const
 ```
 
 ## What It Does
@@ -76,6 +77,30 @@ slope and `x` does not, an objective built only from `igamma` is disconnected
 from its input, and calling [`reverse()`](reverse.md) on it raises. The
 `igamma(double)` overload holds `x` constant, so it is non-differentiable in
 the same way.
+
+## In-Place Form
+
+`igamma_()` is the in-place sibling of [`igamma()`](igamma.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `igamma_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0});
+auto y = pluss::make_series({1.0, 1.0});
+
+x.igamma_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0.63212056, 0.26424112]
+```
 
 ## Examples
 

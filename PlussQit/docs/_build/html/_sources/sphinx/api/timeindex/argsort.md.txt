@@ -64,12 +64,12 @@ std::cout << pluss::timeindex::print(sorted_idx) << "\n";
 - [`TimeIndex::take`](take.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="unique.html">
+  <a class="prev-link" href="align_union.html">
     <span class="label">Previous</span>
-    <span class="title">unique</span>
+    <span class="title">align_union</span>
   </a>
-  <a class="next-link" href="take.html">
+  <a class="next-link" href="asof.html">
     <span class="label">Next</span>
-    <span class="title">take</span>
+    <span class="title">asof</span>
   </a>
 </div>

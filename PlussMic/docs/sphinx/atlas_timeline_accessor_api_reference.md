@@ -23,7 +23,6 @@ api/atlas-timeline/epoch
 api/atlas-timeline/floor
 api/atlas-timeline/fmt
 api/atlas-timeline/hour
-api/atlas-timeline/index
 api/atlas-timeline/isnat
 api/atlas-timeline/iso
 api/atlas-timeline/leap

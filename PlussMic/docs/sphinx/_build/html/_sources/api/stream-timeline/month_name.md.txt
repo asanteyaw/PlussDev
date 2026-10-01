@@ -16,7 +16,7 @@ Stream StreamTimelineAccessor::month_name() const
 Renders the bound stream's timestamp as its full English month name,
 replacing it with a `Note` (text) stream.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.
@@ -60,7 +60,7 @@ label        | value
 
 - Always the full English name (`"January"`, not `"Jan"`); use
   [`fmt("%b")`](fmt.md) for the abbreviated three-letter form.
-- Changes the stream's kind from `Timeline`/`TimeIndex` to `Note`.
+- Changes the stream's kind from `Timeline` to `Note`.
 - See the important callout above.
 
 ## See Also

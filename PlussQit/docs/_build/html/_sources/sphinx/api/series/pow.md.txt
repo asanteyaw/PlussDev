@@ -8,6 +8,8 @@
 
 ```cpp
 Series::pow(const Series& rhs) const -> Series
+Series& Series::pow_(const Series& rhs) const
+Series& Series::pow_(double rhs)
 ```
 
 ## What It Does
@@ -47,6 +49,43 @@ backward rule follows the familiar calculus identity:
 
 That is the main power-law gradient you should keep in mind when reasoning about or
 debugging `pow()`.
+
+## In-Place Form
+
+`pow_()` is the in-place sibling of [`pow()`](pow.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `pow_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({2.0, 3.0, 4.0}, {3});
+auto y = pluss::make_series({2.0, 2.0, 2.0}, {3});
+
+x.pow_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[4, 9, 16]
+```
+
+```cpp
+auto x = pluss::make_series({2.0, 3.0, 4.0}, {3});
+x.pow_(2.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[4, 9, 16]
+```
 
 ## Examples
 

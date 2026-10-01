@@ -148,7 +148,7 @@ public:
     return fillnull(std::string_view{value != nullptr ? value : ""});
   }
   Registry fillnull(const pluss::Timeline& value) const;
-  Registry fillnull(const pluss::TimeIndex& value) const;
+  Registry fillnull(const pluss::Duration& value) const;
   Registry dropnull() const;
   Registry distinct(pluss::kindle::DistinctOptions options = {}) const;
   Registry freq(pluss::kindle::FreqOptions options = {}) const;
@@ -246,7 +246,7 @@ public:
   Registry series() const;
   Registry note() const;
   Registry timeline() const;
-  Registry timeindex() const;
+  Registry duration() const;
   Registry mixed() const;
   Registry nulls() const;
   Registry empty() const;
@@ -264,7 +264,7 @@ public:
   Registry series() const;
   Registry note() const;
   Registry timeline() const;
-  Registry timeindex() const;
+  Registry duration() const;
 
 private:
   Registry base_{};
@@ -349,7 +349,6 @@ public:
   Registry tz(std::string_view name) const;
   Registry localize(const pluss::table::TimelineLocalizeOptions& options = {}) const;
   Registry utc() const;
-  Registry index(bool require_sorted = true) const;
 
 private:
   Registry base_{};

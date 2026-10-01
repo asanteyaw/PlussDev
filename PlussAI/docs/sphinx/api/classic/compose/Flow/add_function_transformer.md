@@ -18,6 +18,14 @@ the whole batch, ignoring `feature_route`), and adding one sets
 classic::Status classic::Flow::add_function_transformer(classic::prep::FunctionTransformer transformer);
 ```
 
+## What It Does
+
+Wraps a plain callable already packaged as a `prep::FunctionTransformer`
+into a `Flow` stage -- for a one-off transform whose logic does not
+justify defining its own `prep` type. The callable itself is stored, not
+invoked, until [`map`](map.md)/[`learn_map`](learn_map.md) actually run
+the `Flow`; adding this stage only records it.
+
 ## Parameters
 
 `transformer` — `prep::FunctionTransformer`, by value (moved in)

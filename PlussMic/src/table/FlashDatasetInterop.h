@@ -268,8 +268,7 @@ namespace detail {
 
 [[nodiscard]] inline bool is_continuous_thread_(const Thread& values) {
   return values.kind() == ThreadKind::Series ||
-         values.kind() == ThreadKind::Timeline ||
-         values.kind() == ThreadKind::TimeIndex;
+         values.kind() == ThreadKind::Timeline;
 }
 
 [[nodiscard]] inline Thread observed_thread_(const Thread& values) {
@@ -287,8 +286,6 @@ namespace detail {
       return observed.as_series();
     case ThreadKind::Timeline:
       return ::pluss::pl::flash::detail::to_series(observed.as_timeline());
-    case ThreadKind::TimeIndex:
-      return ::pluss::pl::flash::detail::to_series(observed.as_timeindex());
     default:
       PLUSS_FAIL(std::string(where) + ": expected a numeric or temporal Thread");
   }
@@ -589,7 +586,7 @@ struct CatFeatureBinding_ {
 
 struct PieBinding_ {
   std::optional<Note> labels{};
-  Series values{};
+  Series values = pluss::series::undefined();
 };
 
 [[nodiscard]] inline PieBinding_ resolve_pie_binding_(
@@ -662,7 +659,7 @@ struct PieBinding_ {
 struct NumericFrameColumns_ {
   std::vector<Series> columns{};
   std::vector<std::string> labels{};
-  Series mask{};
+  Series mask = pluss::series::undefined();
 };
 
 [[nodiscard]] inline NumericFrameColumns_ numeric_series_columns_(
@@ -730,9 +727,9 @@ struct NumericFrameColumns_ {
 }
 
 struct MatrixHeatmapPayload_ {
-  Series x{};
-  Series y{};
-  Series z{};
+  Series x = pluss::series::undefined();
+  Series y = pluss::series::undefined();
+  Series z = pluss::series::undefined();
   std::vector<std::string> x_labels{};
 };
 
@@ -836,15 +833,6 @@ struct HeatmapFeatureBinding_ {
                     "flash::Dataset::from_table: timeline feature '" + name + "' was selected but temporal export is disabled");
         temporal_names.push_back(name);
         out.temporal_values.push_back(column.as_timeline());
-        out.temporal_validity.push_back(mask);
-        feature_order.push_back(name);
-        feature_kinds.emplace_back("temporal");
-        break;
-      case ThreadKind::TimeIndex:
-        PLUSS_CHECK(options.include_timeindex_as_timeline,
-                    "flash::Dataset::from_table: timeindex feature '" + name + "' requires include_timeindex_as_timeline=true");
-        temporal_names.push_back(name);
-        out.temporal_values.push_back(column.as_timeindex().timeline());
         out.temporal_validity.push_back(mask);
         feature_order.push_back(name);
         feature_kinds.emplace_back("temporal");

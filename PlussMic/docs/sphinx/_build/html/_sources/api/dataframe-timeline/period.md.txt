@@ -13,9 +13,9 @@ DataFrameTimelineAccessor::period(std::string_view freq) const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with each row
+Replaces every selected `Timeline` feature with each row
 truncated to the *start* of its enclosing `freq` period — same feature name,
-still `Timeline`/`TimeIndex`-kind, same row order.
+still `Timeline`-kind, same row order.
 
 ## Parameters
 
@@ -213,7 +213,7 @@ period.
   further than `floor()` supports (`floor()` has no calendar-unit option).
 - `freq` cannot be empty, and an unrecognized string throws.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` (displays as `"NULL"`).
 

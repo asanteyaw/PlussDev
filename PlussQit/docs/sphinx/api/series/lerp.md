@@ -9,6 +9,8 @@
 ```cpp
 Series::lerp(const Series& end, const Series& weight) const -> Series
 Series& Series::lerp_(const Series& end, const Series& weight)
+Series& Series::lerp_(const Series& end, double weight) const
+Series& Series::lerp_(const Series& end, const Series& weight) const
 ```
 
 ## What It Does
@@ -57,6 +59,46 @@ d/dweight lerp = end - start
 
 The `start` and `end` gradients are the two interpolation weights and sum to
 `1`; the `weight` gradient is the gap being interpolated across.
+
+## In-Place Form
+
+`lerp_()` is the in-place sibling of [`lerp()`](lerp.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `lerp_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 0.0, 0.0});
+auto end = pluss::make_series({10.0, 10.0, 10.0});
+
+x.lerp_(end, 0.5);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 5, 5]
+```
+
+```cpp
+auto x = pluss::make_series({0.0, 0.0}, {2});
+auto end = pluss::make_series({10.0, 20.0}, {2});
+auto weight = pluss::make_series({0.5, 0.25}, {2});
+
+x.lerp_(end, weight);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[5, 5]
+```
 
 ## Examples
 

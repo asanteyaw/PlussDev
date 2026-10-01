@@ -49,7 +49,11 @@ enum class ViewKind : std::uint8_t {
   Corr = 7,
 };
 
-using FilterScalar = std::variant<double, std::string, pluss::Timeline, pluss::TimeIndex>;
+using FilterScalar = std::variant<
+    double,
+    std::string,
+    pluss::Timeline,
+    pluss::Duration>;
 using FilterSet = std::variant<std::vector<double>, std::vector<std::string>>;
 
 struct FilterRange {
@@ -98,7 +102,7 @@ struct Filter {
     };
   }
 
-  [[nodiscard]] static Filter eq(std::string_view feature, const pluss::TimeIndex& value) {
+  [[nodiscard]] static Filter eq(std::string_view feature, const pluss::Duration& value) {
     return Filter{
         .key = std::string(feature),
         .feature = std::string(feature),
@@ -119,7 +123,19 @@ struct Filter {
     return out;
   }
 
+  [[nodiscard]] static Filter ne(std::string_view feature, const pluss::Duration& value) {
+    auto out = eq(feature, value);
+    out.op = FilterOp::Ne;
+    return out;
+  }
+
   [[nodiscard]] static Filter gt(std::string_view feature, double value) {
+    auto out = eq(feature, value);
+    out.op = FilterOp::Gt;
+    return out;
+  }
+
+  [[nodiscard]] static Filter gt(std::string_view feature, const pluss::Duration& value) {
     auto out = eq(feature, value);
     out.op = FilterOp::Gt;
     return out;
@@ -131,13 +147,31 @@ struct Filter {
     return out;
   }
 
+  [[nodiscard]] static Filter ge(std::string_view feature, const pluss::Duration& value) {
+    auto out = eq(feature, value);
+    out.op = FilterOp::Ge;
+    return out;
+  }
+
   [[nodiscard]] static Filter lt(std::string_view feature, double value) {
     auto out = eq(feature, value);
     out.op = FilterOp::Lt;
     return out;
   }
 
+  [[nodiscard]] static Filter lt(std::string_view feature, const pluss::Duration& value) {
+    auto out = eq(feature, value);
+    out.op = FilterOp::Lt;
+    return out;
+  }
+
   [[nodiscard]] static Filter le(std::string_view feature, double value) {
+    auto out = eq(feature, value);
+    out.op = FilterOp::Le;
+    return out;
+  }
+
+  [[nodiscard]] static Filter le(std::string_view feature, const pluss::Duration& value) {
     auto out = eq(feature, value);
     out.op = FilterOp::Le;
     return out;
@@ -170,10 +204,10 @@ struct Filter {
     };
   }
 
-  [[nodiscard]] static Filter between_time(
+  [[nodiscard]] static Filter between_duration(
       std::string_view feature,
-      const pluss::TimeIndex& low,
-      const pluss::TimeIndex& high) {
+      const pluss::Duration& low,
+      const pluss::Duration& high) {
     return Filter{
         .key = std::string(feature),
         .feature = std::string(feature),
@@ -184,6 +218,7 @@ struct Filter {
         },
     };
   }
+
 
   [[nodiscard]] static Filter in(std::string_view feature, std::vector<double> values) {
     return Filter{

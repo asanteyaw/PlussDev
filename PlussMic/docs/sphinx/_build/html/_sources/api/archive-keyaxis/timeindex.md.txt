@@ -51,7 +51,7 @@ using namespace pluss::kindle::literals;
 
 auto c0 = pluss::kindle::Catalog({
     "n"_k  = pluss::kindle::Stream(pluss::make_series({1.0})),
-    "ti"_k = pluss::kindle::Stream(pluss::make_timeindex({0, 1, 2})),
+    "ti"_k = pluss::kindle::Stream(pluss::timeindex::make({0, 1, 2})),
 });
 auto archive = pluss::kindle::Archive({c0});
 

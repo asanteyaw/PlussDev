@@ -14,6 +14,14 @@ static classic::StatusOr<classic::SpatialIndex> classic::SpatialIndex::build(
     const pluss::Series& rows);
 ```
 
+## What It Does
+
+Copies every point in `rows` into the index's own host-memory storage and
+builds a KD-tree over them once, up front -- the one-time construction cost
+that every later [`query_k`](query_k.md)/[`query_self_k`](query_self_k.md)
+call then amortizes across, rather than scanning `rows` linearly per
+query.
+
 ## Parameters
 
 `rows` — `pluss::Series`
@@ -159,7 +167,7 @@ int main() {
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  std::cout << "undefined ok = " << std::boolalpha << cls::SpatialIndex::build(pluss::Series::undefined()).ok() << "\n";
+  std::cout << "undefined ok = " << std::boolalpha << cls::SpatialIndex::build(pluss::series::undefined()).ok() << "\n";
 
   const pluss::Series rank1 = pluss::make_series({1.0, 2.0, 3.0}, {3}, f64);
   std::cout << "rank-1 ok = " << cls::SpatialIndex::build(rank1).ok() << "\n";

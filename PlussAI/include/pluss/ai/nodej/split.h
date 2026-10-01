@@ -11,8 +11,8 @@
 namespace pluss::ai::nodej {
 
 struct IndexSplit {
-  Series train_indices = Series::undefined();
-  Series test_indices = Series::undefined();
+  Series train_indices = pluss::series::undefined();
+  Series test_indices = pluss::series::undefined();
 };
 
 struct SplitPlan {

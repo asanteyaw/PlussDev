@@ -54,8 +54,7 @@ pluss::codem::Platform reshape_thread_platform(const Thread& thread) {
       return thread.as_series().platform();
     case ThreadKind::Timeline:
       return thread.as_timeline().epoch_nanos().platform();
-    case ThreadKind::TimeIndex:
-      return thread.as_timeindex().timeline().epoch_nanos().platform();
+    case ThreadKind::Duration:
     case ThreadKind::Note:
       return pluss::codem::Platform::CPU;
   }
@@ -135,12 +134,13 @@ Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
       output = Thread(values);
       break;
     }
-    case ThreadKind::TimeIndex: {
-      auto values = blocks.front().as_timeindex().timeline();
-      for (std::size_t i = 1; i < blocks.size(); ++i) {
-        values = values.concat(blocks[i].as_timeindex().timeline());
+    case ThreadKind::Duration: {
+      std::vector<std::int64_t> values;
+      for (const auto& block : blocks) {
+        const auto host = block.as_duration().host();
+        values.insert(values.end(), host.begin(), host.end());
       }
-      output = Thread(values.to_timeindex(false));
+      output = Thread(pluss::duration::nanos(values));
       break;
     }
   }
@@ -197,11 +197,10 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
       return normalize_case_label(std::string(axis.as_note().at(row)));
     case ThreadKind::Timeline:
       return fmt::format("{}", axis.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case ThreadKind::TimeIndex:
-      return fmt::format("{}",
-                         axis.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
+    case ThreadKind::Duration:
+      return fmt::format("{}", axis.as_duration().host()[static_cast<std::size_t>(row)]);
   }
-  return {};
+  PLUSS_FAIL("DataFrame::lengthen: unsupported case-label kind");
 }
 
 Thread null_singleton_like(const Thread& reference) {
@@ -212,8 +211,6 @@ Thread null_singleton_like(const Thread& reference) {
     platform = reference.as_series().platform();
   } else if (reference.kind() == ThreadKind::Timeline) {
     platform = reference.as_timeline().epoch_nanos().platform();
-  } else if (reference.kind() == ThreadKind::TimeIndex) {
-    platform = reference.as_timeindex().timeline().epoch_nanos().platform();
   }
   return detail::with_validity_mask(out, pluss::Series::zeros(
       {1}, pluss::codem::ScalarType::Bool, platform));

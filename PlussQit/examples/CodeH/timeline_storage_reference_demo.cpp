@@ -77,7 +77,7 @@ int main() {
   const auto sorted = pluss::timeline::make({
       "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z",
   });
-  const auto axis = sorted.to_timeindex();
-  std::cout << "\n=== to_timeindex ===\nsize=" << axis.size()
+  const auto axis = sorted.index();
+  std::cout << "\n=== index() ===\nsize=" << axis.size()
             << ", increasing=" << axis.is_monotonic_increasing() << '\n';
 }

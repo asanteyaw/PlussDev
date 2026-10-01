@@ -13,7 +13,7 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
@@ -46,6 +46,7 @@
 <span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">index_reduce</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">reduce</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">include_self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">index_reduce_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">reduce</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">index_reduce_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">reduce</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">include_self</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">index_reduce_</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">reduce</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -129,6 +130,29 @@ zero.</p></li>
 </ul>
 <p>The integer <code class="docutils literal notranslate"><span class="pre">index</span></code> and the string <code class="docutils literal notranslate"><span class="pre">reduce</span></code> are non-differentiable.</p>
 </section>
+<section id="in-place-form">
+<h2>In-Place Form<a class="headerlink" href="#in-place-form" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">index_reduce_()</span></code> is the in-place sibling of <a class="reference internal" href="#"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">index_reduce()</span></code></span></a>: it computes the same
+result and writes it back into <code class="docutils literal notranslate"><span class="pre">self</span></code> directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new <code class="docutils literal notranslate"><span class="pre">Series</span></code> — then
+returns a reference to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>Despite being declared <code class="docutils literal notranslate"><span class="pre">const</span></code> at the call site — a quirk of how this method’s wrapper is generated, not a promise that <code class="docutils literal notranslate"><span class="pre">self</span></code> is left unchanged — <code class="docutils literal notranslate"><span class="pre">index_reduce_()</span></code> genuinely mutates the series it’s called on.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">});</span>
+
+<span class="n">x</span><span class="p">.</span><span class="n">index_reduce_</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">idx</span><span class="p">,</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;prod&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[5, 1, 7]
+</pre></div>
+</div>
+</section>
+</section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. <code class="docutils literal notranslate"><span class="pre">prod</span></code> with and without the receiver in the group.</p>
@@ -140,8 +164,8 @@ zero.</p></li>
 <span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">base</span><span class="p">.</span><span class="n">index_reduce</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;prod&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">));</span>
 </pre></div>
 </div>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[60.0000, 20.0000, 150.0000, 40.0000]
 
@@ -162,8 +186,8 @@ numerator and the count.</p>
 </pre></div>
 </div>
 </section>
-<section id="id1">
-<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[5.0000, 20.0000, 17.5000, 40.0000]
 
@@ -181,8 +205,8 @@ is <code class="docutils literal notranslate"><span class="pre">(2+3)/2</span> <
 </pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[4], strides=[1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=[3.0000, 20.0000, 5.0000, 40.0000]
 
@@ -202,8 +226,8 @@ instead of summed.</p>
 </pre></div>
 </div>
 </section>
-<section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3,2], strides=[2,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
 data=
 ⎡   7.0000   9.0000 ⎤
@@ -222,8 +246,8 @@ were never named and are untouched.</p>
 </pre></div>
 </div>
 </section>
-<section id="id4">
-<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
 data=
 ⎡ 7.0000 100.0000 ⎤
@@ -244,8 +268,8 @@ group.</p>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>dbase = Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
 data=[20.0000, 1.0000]
 dsrc  = Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
@@ -266,8 +290,8 @@ passes the objective’s sensitivity through untouched as <code class="docutils 
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>index_reduce: reduce must be one of &#39;prod&#39;, &#39;mean&#39;, &#39;amax&#39;, or &#39;amin&#39;
 </pre></div>
 </div>
@@ -284,8 +308,8 @@ passes the objective’s sensitivity through untouched as <code class="docutils 
 </pre></div>
 </div>
 </section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>index_reduce: index value out of range
 </pre></div>
 </div>
@@ -296,8 +320,8 @@ passes the objective’s sensitivity through untouched as <code class="docutils 
 </pre></div>
 </div>
 </section>
-<section id="id8">
-<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
 data=[60.0000, 20.0000, 30.0000]
 </pre></div>
@@ -388,54 +412,13 @@ by an explicit group-id tensor rather than a <code class="docutils literal notra
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>

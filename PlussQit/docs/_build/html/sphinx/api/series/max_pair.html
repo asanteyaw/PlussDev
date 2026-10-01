@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Series::max_pair &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
+    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Series::maximum" href="maximum.html" />
+    <link rel="prev" title="Series::max" href="max.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="series-max-pair">
+<h1>Series::max_pair<a class="headerlink" href="#series-max-pair" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">max_pair</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">keepdim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="why-this-method-exists">
+<h2>Why This Method Exists<a class="headerlink" href="#why-this-method-exists" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">max_pair()</span></code> answers two inseparable questions about every lane of an axis:
+what is its largest value, and which source position supplied that value? It
+returns those answers together so the value and its provenance cannot drift
+apart through a second, independently written reduction.</p>
+<p>The first member of the pair contains values. The second contains local
+<code class="docutils literal notranslate"><span class="pre">int64</span></code> indices measured along <code class="docutils literal notranslate"><span class="pre">dim</span></code>. For a rank-2 input reduced across columns,
+for example, each index is a column number within its row; it is not a flat
+offset into storage.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">max_pair()</span></code> when later work needs both channels, such as retaining the
+winning score while gathering an aligned label from the same position. Use
+<a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a> when only values matter, and <a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmax()</span></code></span></a> when only
+positions matter.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dim</span></code></p></td>
+<td><p>Axis whose lanes compete. Negative axes count backward from the final axis.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">keepdim</span></code></p></td>
+<td><p>Keep the reduced axis with extent <code class="docutils literal notranslate"><span class="pre">1</span></code> in both returned Series.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">dim</span></code> names exactly one axis; there is no whole-Series overload. For rank-2
+shape <code class="docutils literal notranslate"><span class="pre">[R,</span> <span class="pre">C]</span></code>, reducing <code class="docutils literal notranslate"><span class="pre">dim=0</span></code> returns one winner per column, while reducing
+<code class="docutils literal notranslate"><span class="pre">dim=1</span></code> or <code class="docutils literal notranslate"><span class="pre">dim=-1</span></code> returns one winner per row.</p>
+</section>
+<section id="return-contract">
+<h2>Return Contract<a class="headerlink" href="#return-contract" title="Link to this heading">¶</a></h2>
+<p>The return value is <code class="docutils literal notranslate"><span class="pre">std::pair&lt;Series,</span> <span class="pre">Series&gt;</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Dtype</p></th>
+<th class="head"><p>Shape</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.first</span></code></p></td>
+<td><p>Source dtype</p></td>
+<td><p>Source shape with <code class="docutils literal notranslate"><span class="pre">dim</span></code> removed, or retained as <code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Winning values</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.second</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int64</span></code></p></td>
+<td><p>Exactly the same shape as <code class="docutils literal notranslate"><span class="pre">.first</span></code></p></td>
+<td><p>Each winner’s local source index along <code class="docutils literal notranslate"><span class="pre">dim</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Both members stay on the source platform. The source is not mutated. A scalar
+source accepts <code class="docutils literal notranslate"><span class="pre">dim=0</span></code> or <code class="docutils literal notranslate"><span class="pre">dim=-1</span></code> and returns scalar value <code class="docutils literal notranslate"><span class="pre">self</span></code> paired with
+scalar index <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</section>
+<section id="ties-nan-and-reverse-mode">
+<h2>Ties, NaN, And Reverse Mode<a class="headerlink" href="#ties-nan-and-reverse-mode" title="Link to this heading">¶</a></h2>
+<p>If several positions contain the same maximum, the pair selects the first
+position along the reduced axis. The value and index are produced from that
+same selection, so they always describe one another.</p>
+<p>That provenance also defines reverse mode. The value member is differentiable,
+and its incoming sensitivity is scattered back only to the reported index.
+The integer index member is discrete and does not carry sensitivity. This is a
+meaningful distinction from value-only <code class="docutils literal notranslate"><span class="pre">max(dim)</span></code>: that reduction has no index
+to privilege and shares sensitivity across equal winners, whereas
+<code class="docutils literal notranslate"><span class="pre">max_pair(dim).first</span></code> follows the one winner named by <code class="docutils literal notranslate"><span class="pre">.second</span></code>.</p>
+<p>NaN participates in the ordered-extremum kernel rather than being silently
+discarded. When NaN wins a lane, the paired index identifies the selected NaN
+position. Use a NaN-specific reduction when omission is the intended policy.</p>
+</section>
+<section id="execution-model">
+<h2>Execution Model<a class="headerlink" href="#execution-model" title="Link to this heading">¶</a></h2>
+<p>The CPU kernel scans each lane once and writes the winning value and its index
+together, matching the two-output reduction model. Reverse mode reuses that
+index as its scatter route rather than searching for the winner again.
+Returned Series own their result buffers; neither is a view of the receiver.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Structured binding gives names to the value and provenance channels.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">6.0</span><span class="p">},</span>
+<span class="p">});</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="n">indices</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">indices</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[7, 7]
+indices=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[1, 1]
+</pre></div>
+</div>
+<p>Each row contributes one winner. The indices are column positions, so both
+rows report <code class="docutils literal notranslate"><span class="pre">1</span></code> even though they occupy different flat storage ranges.</p>
+<p>Example 2. A negative axis is normalized before reduction, and <code class="docutils literal notranslate"><span class="pre">keepdim=true</span></code>
+retains that axis in both members for later broadcasting.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">kept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">kept</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">kept</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values=pluss::Series(shape=[2,1], strides=[1,1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[[7],
+  [7]]
+indices=pluss::Series(shape=[2,1], strides=[1,1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[[1],
+  [1]]
+</pre></div>
+</div>
+<p>Example 3. Ties choose the first position, and reverse mode follows precisely
+the index that the pair reports.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tied</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
+<span class="p">});</span>
+<span class="n">tied</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tied</span><span class="p">.</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">result</span><span class="p">.</span><span class="n">first</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">second</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;dx=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tied</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[5, 4]
+indices=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
+data=[0, 1]
+dx=pluss::Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
+data=[[1, 0, 0],
+  [0, 1, 0]]
+</pre></div>
+</div>
+<p>The second equal maximum in each row receives zero sensitivity because it is
+not the position named by the paired index.</p>
+<p>Example 4. A scalar still has one valid reduction position.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="mf">42.0</span><span class="p">).</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;value=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;index=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>value=pluss::Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=42
+index=pluss::Series(shape=[], strides=[], dtype=int64, platform=cpu, numel=1, contiguous=true)
+data=0
+</pre></div>
+</div>
+<p>Example 5. A lane with no candidates cannot produce either a value or an
+index, so reduction over an empty axis fails before allocating a result.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">zeros</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">}).</span><span class="n">max_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">first</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>max_pair: cannot reduce an empty dimension
+</pre></div>
+</div>
+<p>An undefined receiver, an out-of-range axis, complex ordered input, and an
+empty reduced axis are rejected. Empty non-reduced axes are valid because they
+contain no lanes requiring a winner.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::max</span></code></span></a>: value-only reduction with tie-sharing reverse mode.</p></li>
+<li><p><a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmax</span></code></span></a>: index-only ordered reduction.</p></li>
+<li><p><a class="reference internal" href="min_pair.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min_pair</span></code></span></a>: paired minimum and source position.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="max.html">
+    <span class="label">Previous</span>
+    <span class="title">max</span>
+  </a>
+  <a class="next-link" href="maximum.html">
+    <span class="label">Next</span>
+    <span class="title">maximum</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
+      <li>Previous: <a href="max.html" title="previous chapter">Series::max</a></li>
+      <li>Next: <a href="maximum.html" title="next chapter">Series::maximum</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/series/max_pair.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

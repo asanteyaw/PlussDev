@@ -94,9 +94,11 @@ TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timelin
   REQUIRE(loaded_timeline.ticks() == timeline.ticks());
   REQUIRE(loaded_timeline.tz() == timeline.tz());
 
-  const auto index = pluss::timeindex::make(std::vector<std::int64_t>{3, 1, 2}, false);
+  const auto index =
+      pluss::timeline::from_epoch(std::vector<std::int64_t>{3, 1, 2}).index(false);
   pluss::save(index, timeindex_path.string());
-  const auto loaded_index = pluss::load<pluss::TimeIndex>(timeindex_path.string());
+  const auto loaded_index =
+      pluss::load<pluss::Timeline::TimelineIndexAccessor>(timeindex_path.string());
 
   REQUIRE(loaded_index.size() == index.size());
   REQUIRE(loaded_index.timeline().ticks() == index.timeline().ticks());

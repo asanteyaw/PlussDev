@@ -20,7 +20,7 @@ local reading corresponds to. **This changes the underlying instant** (unlike
 by `localize()` also survives being read back through any further `.tl()` call
 — see Example 1.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -85,7 +85,7 @@ rendered as NY-local wall-clock time.
 
 - **`localize()` changes the underlying instant; [`tz()`](tz.md) never does.**
 - `options.tz` only accepts the same four names as `tz()`, and cannot be empty.
-- Internally, each bound key stores its `Timeline`/`TimeIndex` values
+- Internally, each bound key stores its `Timeline` values
   independently; the resulting per-row tz labels round-trip correctly through
   the `kindle::Stream` boundary every further `.tl()` call goes through. If
   every row does not already share the same display timezone going into a

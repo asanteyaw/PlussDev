@@ -115,7 +115,7 @@ int main() {
   std::cout << "before=" << tf(life.has_sensitivity()) << "\n";
   life.log().sum().reverse();
   std::cout << "after_reverse=" << tf(life.has_sensitivity()) << "\n";
-  life.clear_sensitivity();
+  life.clear();
   std::cout << "after_clear=" << tf(life.has_sensitivity()) << "\n\n";
 
   heading("sensitivity_basic");
@@ -137,26 +137,26 @@ int main() {
   }
   std::cout << "\n\n";
 
-  heading("clear_sensitivity_reuse");
+  heading("clear_reuse");
   auto reuse = pluss::make_series({1.0, 2.0, 3.0});
   reuse.tracks_slope_(true);
   reuse.mul(2.0).sum().reverse();
   std::cout << "first=" << reuse.sensitivity() << "\n";
-  reuse.clear_sensitivity();
+  reuse.clear();
   reuse.mul(5.0).sum().reverse();
   std::cout << "second=" << reuse.sensitivity() << "\n\n";
 
-  heading("clear_sensitivity_keeps_tracking");
+  heading("clear_keeps_tracking");
   auto keep_track = pluss::make_series({9.0, 10.0});
   keep_track.tracks_slope_(true);
   keep_track.mul(4.0).sum().reverse();
-  keep_track.clear_sensitivity();
+  keep_track.clear();
   std::cout << "tracks=" << tf(keep_track.tracks_slope()) << "\n";
   std::cout << "has_dx=" << tf(keep_track.has_sensitivity()) << "\n\n";
 
-  heading("clear_sensitivity_noop");
+  heading("clear_noop");
   auto noop = pluss::make_series({7.0, 8.0});
-  noop.clear_sensitivity();
+  noop.clear();
   std::cout << "has_dx=" << tf(noop.has_sensitivity()) << "\n\n";
 
   heading("detach_preserves_values");

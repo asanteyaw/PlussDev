@@ -117,7 +117,11 @@ Series trig_transform_fallback(const Series& x, std::int64_t dim, TrigTransformK
         if (t == 0) table[(std::size_t)(k * n + t)] = 0.5;
         else table[(std::size_t)(k * n + t)] = std::cos(kPi * td * (kd + 0.5) / static_cast<double>(n));
       } else {
-        table[(std::size_t)(k * n + t)] = std::sin(kPi * (td + 1.0) * (kd + 0.5) / static_cast<double>(n));
+        // The final DST-II basis row has norm N rather than N/2. Its inverse
+        // coefficient therefore carries half the weight of the other rows.
+        const double weight = t == n - 1 ? 0.5 : 1.0;
+        table[(std::size_t)(k * n + t)] =
+            weight * std::sin(kPi * (td + 1.0) * (kd + 0.5) / static_cast<double>(n));
       }
     }
   }

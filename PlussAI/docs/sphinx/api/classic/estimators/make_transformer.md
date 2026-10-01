@@ -11,6 +11,17 @@ classic::StatusOr<std::unique_ptr<classic::TransformerBase>> classic::make_trans
     const classic::ModelSpec& spec);
 ```
 
+## What It Does
+
+The transformer counterpart to
+[`make_classifier`](make_classifier.md)/[`make_regressor`](make_regressor.md):
+reads `spec.family` and dispatches to that family's concrete transformer
+implementation. Only the four families with a genuine transformer form
+(`Cluster`, `Decompose`, `Detect`, one-class `Kernel`) are supported --
+`spec.family` outside that set is rejected rather than silently accepted.
+The returned object is untrained until [`learn`](EstimatorBase/learn.md)
+runs.
+
 ## Parameters
 
 `spec` — `ModelSpec`

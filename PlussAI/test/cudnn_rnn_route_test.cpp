@@ -43,10 +43,10 @@ std::vector<pluss::ai::rnn::NetWeight> make_weights(std::int64_t gates,
       out.push_back(pluss::ai::rnn::NetWeight{
           .weight_ih = pluss::series::rand({gates * hidden_size, layer_input}, cfg, seed + 1ULL),
           .weight_hh = pluss::series::rand({gates * hidden_size, hidden_out}, cfg, seed + 2ULL),
-          .bias = (use_bias && !split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_ih = (use_bias && split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::Series(),
-          .bias_hh = (use_bias && split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 4ULL) : pluss::Series(),
-          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::Series(),
+          .bias = (use_bias && !split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::series::undefined(),
+          .bias_ih = (use_bias && split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 3ULL) : pluss::series::undefined(),
+          .bias_hh = (use_bias && split_bias) ? pluss::series::rand({gates * hidden_size}, cfg, seed + 4ULL) : pluss::series::undefined(),
+          .weight_hr = projected_lstm ? pluss::series::rand({hidden_out, hidden_size}, cfg, seed + 5ULL) : pluss::series::undefined(),
       });
     }
   }

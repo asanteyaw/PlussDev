@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -54,7 +54,7 @@ representation, replacing it with a <code class="docutils literal notranslate"><
 <a class="reference internal" href="fmt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fmt(&quot;%Y-%m-%dT%H:%M:%S.%f%z&quot;)</span></code></span></a>.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+<p>StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 <a class="reference internal" href="isnat.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimelineAccessor::isnat</span></code></span></a>’s own important callout for the
 full explanation and the exact throw message.</p>
@@ -91,7 +91,7 @@ A new <code class="docutils literal notranslate"><span class="pre">Note</span></
 <li><p>Always includes the full 9-digit nanosecond fraction and a signed <code class="docutils literal notranslate"><span class="pre">%z</span></code>
 offset — use <a class="reference internal" href="fmt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fmt()</span></code></span></a> with your own pattern for a more compact
 string.</p></li>
-<li><p>Changes the stream’s kind from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> to <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
+<li><p>Changes the stream’s kind from <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> to <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p></li>
 <li><p>See the important callout above.</p></li>
 </ul>
 </section>

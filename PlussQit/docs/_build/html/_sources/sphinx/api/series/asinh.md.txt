@@ -8,6 +8,7 @@
 
 ```cpp
 Series::asinh() const -> Series
+Series& Series::asinh_()
 ```
 
 ## What It Does
@@ -44,6 +45,29 @@ d asinh(x) / dx = 1 / sqrt(1 + x^2)
 
 The derivative equals one at zero and smoothly decreases toward zero as the
 input magnitude grows. It is finite everywhere on the real line.
+
+## In-Place Form
+
+`asinh_()` is the in-place sibling of [`asinh()`](asinh.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({-1.0, 0.0, 2.0});
+
+auto& ref = x.asinh_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[-0.88137359, 0, 1.4436355]
+same object: true
+```
 
 ## Examples
 
@@ -108,6 +132,13 @@ data=[1, 0.8]
 Use `asinh()` for an invertible, sign-preserving compression of unrestricted
 real values. It is smooth over the complete real line and promotes integral
 input to floating output.
+
+## Aliases
+
+**`arcsinh()`** / **`arcsinh_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `asinh()` / `asinh_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
 
 ## See Also
 

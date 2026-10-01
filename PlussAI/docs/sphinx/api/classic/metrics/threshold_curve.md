@@ -24,6 +24,16 @@ classic::StatusOr<double> classic::average_precision(
     const pluss::Series& scores, const pluss::Series& labels);
 ```
 
+## What It Does
+
+Sorts `scores` once and sweeps every threshold value that could actually
+change a decision, computing precision/recall/F1 at each one in a single
+cumulative pass. `threshold_curve` hands back the whole swept curve;
+`best_threshold` picks the one point on that curve that maximizes
+`objective`; `average_precision` integrates the curve's precision-recall
+trade-off into a single summary number. All three reuse the same sweep, so
+none of them costs more than computing the curve directly would.
+
 ## Parameters
 
 `scores`

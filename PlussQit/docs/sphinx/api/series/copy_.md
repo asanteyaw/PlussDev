@@ -100,7 +100,7 @@ w.copy_(pluss::make_series({
     {4.0, 4.0, 4.0},
     {5.0, 5.0, 5.0},
 }));
-w.clear_sensitivity();
+w.clear();
 
 auto picked_rows = pluss::make_series({0, 2, 4}, {3});
 auto picked = w.index_select(0, picked_rows);

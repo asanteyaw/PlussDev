@@ -8,6 +8,7 @@
 
 ```cpp
 Series::log1p() const -> Series
+Series& Series::log1p_()
 ```
 
 ## What It Does
@@ -38,6 +39,29 @@ If `y = log(1 + x)`, then:
 
 So with the scalar objective `L = sum(y)`, each lane's contribution is the
 reciprocal of `1 + x_i`.
+
+## In-Place Form
+
+`log1p_()` is the in-place sibling of [`log1p()`](log1p.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.0});
+
+auto& ref = x.log1p_();
+std::cout << "x=" << x << "\n";
+std::cout << std::boolalpha << "same object: " << (&ref == &x);
+```
+
+### Output
+
+```text
+x=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[0, 0.69314718]
+same object: true
+```
 
 ## Examples
 

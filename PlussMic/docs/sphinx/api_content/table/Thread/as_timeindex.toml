@@ -28,7 +28,7 @@ title = "Use the TimeIndex payload for daily resample counts and wrap the result
 code = """
 using namespace pluss::table;
 
-auto ticks = Thread(pluss::make_timeindex({
+auto ticks = Thread(pluss::timeindex::make({
     "2024-01-01T00:10:00Z",
     "2024-01-01T00:20:00Z",
     "2024-01-01T01:10:00Z",

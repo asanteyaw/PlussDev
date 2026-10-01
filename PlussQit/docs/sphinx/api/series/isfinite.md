@@ -8,6 +8,7 @@
 
 ```cpp
 Series::isfinite() const -> Series
+Series& Series::isfinite_()
 ```
 
 ## What It Does
@@ -34,6 +35,26 @@ showing unstable numeric output.
 
 `isfinite()` is a boolean classification surface, not a differentiable numeric
 transform.
+
+## In-Place Form
+
+`isfinite_()` is the in-place sibling of [`isfinite()`](isfinite.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()});
+x.isfinite_();
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1, 0, 0]
+```
 
 ## Examples
 

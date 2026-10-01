@@ -76,14 +76,3 @@ data=5.4000e+12
 
 - [`total().microseconds()`](total_microseconds.md): the next unit up.
 - [`construction`](construction.md): the inverse direction.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clip.html">
-    <span class="label">Previous</span>
-    <span class="title">clip</span>
-  </a>
-  <a class="next-link" href="total_microseconds.html">
-    <span class="label">Next</span>
-    <span class="title">total_microseconds</span>
-  </a>
-</div>

@@ -16,6 +16,17 @@ classic::Status classic::Flow::set_stage_remainder(
     std::int64_t stage_index, classic::RouteRemainderPolicy remainder);
 ```
 
+## What It Does
+
+Changes the stage at `stage_index`'s `RouteRemainderPolicy` -- whether
+columns outside that stage's route pass through unchanged or get dropped
+-- after the stage has already been added. This is the one control the
+twenty typed methods under [`add_stage`](add_stage.md) do not expose
+directly, since they always add a stage with `PassThrough`. Because the
+remainder policy changes what the stage's output actually contains,
+setting it resets `trained()`, the same way
+[`set_stage_route`](set_stage_route.md) does.
+
 ## Parameters
 
 `stage_index` — `std::int64_t`, 0-based

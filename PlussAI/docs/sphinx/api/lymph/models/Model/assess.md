@@ -109,7 +109,7 @@ The four `(features, label)` shapes mirror [`learn`](learn.md):
 ## Returns
 
 A `MetricReport`. Only the requested metric fields are defined; the rest remain
-`Series::undefined()`.
+`pluss::series::undefined()`.
 
 ## Errors
 

@@ -665,7 +665,7 @@ std::optional<Series> try_inverse(const Series& a, std::string* reason) {
     *why = "matrix is singular (LU factorization info > 0)";
     return std::nullopt;
   }
-  Series inv{};
+  Series inv = pluss::series::undefined();
   if (!solve_lu_inverse_(a, d_lu, d_ipiv, &inv, why)) return std::nullopt;
   return inv;
 #else

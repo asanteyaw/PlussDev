@@ -160,9 +160,9 @@ expect reverse-mode to mark only the contributing diagonal entries.
 - [`Series::sum`](sum.md): full reduction instead of diagonal-only reduction.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to.html">
+  <a class="prev-link" href="topk_pair.html">
     <span class="label">Previous</span>
-    <span class="title">to</span>
+    <span class="title">topk_pair</span>
   </a>
   <a class="next-link" href="tracks_slope.html">
     <span class="label">Next</span>

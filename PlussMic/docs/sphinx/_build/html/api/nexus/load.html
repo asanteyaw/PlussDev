@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -151,12 +151,39 @@ one. Use `keep_extension=true` or narrower `load`/`ignore` filters when you need
 
 ## Examples
 
+Every example below writes its own real files to a scratch directory first
+(via `DataFrame::save_csv`/`save_json`/`save_parquet`), so each one is a
+complete, self-contained, copy-pasteable teaching unit rather than assuming
+files already exist somewhere. Each example uses its own directory, so
+running them in any order (or more than once) never leaves stale files from
+one example interfering with another.
+
 Example 1. Load every supported top-level file.
 
 ```cpp
+using namespace pluss::table;
 using namespace pluss::bundle;
 
-auto nx = Nexus::load(&quot;/tmp/bank_raw&quot;);
+std::filesystem::remove_all(&quot;/tmp/pluss_nexus_load_ex1&quot;);
+std::filesystem::create_directories(&quot;/tmp/pluss_nexus_load_ex1&quot;);
+
+DataFrame({
+    {&quot;account_id&quot;, Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {&quot;balance&quot;,    Thread(pluss::make_series({100.0, 250.0, 75.0}))},
+}).save_csv(&quot;/tmp/pluss_nexus_load_ex1/account.csv&quot;);
+
+DataFrame({
+    {&quot;district_id&quot;, Thread(pluss::make_series({10.0, 20.0}))},
+    {&quot;name&quot;,        Thread(pluss::make_note({&quot;North&quot;, &quot;South&quot;}))},
+}).save_json(&quot;/tmp/pluss_nexus_load_ex1/district.json&quot;);
+
+DataFrame({
+    {&quot;trans_id&quot;,   Thread(pluss::make_series({1000.0, 1001.0}))},
+    {&quot;account_id&quot;, Thread(pluss::make_series({1.0, 2.0}))},
+    {&quot;amount&quot;,     Thread(pluss::make_series({50.0, -20.0}))},
+}).save_csv(&quot;/tmp/pluss_nexus_load_ex1/trans.csv&quot;);
+
+auto nx = Nexus::load(&quot;/tmp/pluss_nexus_load_ex1&quot;);
 std::cout &lt;&lt; nx.ntables() &lt;&lt; &quot;\n&quot;;
 std::cout &lt;&lt; std::boolalpha &lt;&lt; nx.has(&quot;account&quot;) &lt;&lt; &quot; &quot;
           &lt;&lt; nx.has(&quot;district&quot;) &lt;&lt; &quot; &quot;
@@ -170,30 +197,67 @@ std::cout &lt;&lt; std::boolalpha &lt;&lt; nx.has(&quot;account&quot;) &lt;&lt; 
 true true true
 </pre></div>
 </div>
-<p>Example 2. Load only the files you name.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<p>Example 2. Load only the files you name. <code class="docutils literal notranslate"><span class="pre">options.load</span></code> entries can name
+either the resulting table key (<code class="docutils literal notranslate"><span class="pre">&quot;account&quot;</span></code>) or the literal file name
+(<code class="docutils literal notranslate"><span class="pre">&quot;loan.json&quot;</span></code>) — both spellings are checked when matching a discovered
+file.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2/account.csv&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;district_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2/district.json&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;loan_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">500.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2/loan.json&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;account&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;loan.json&quot;</span><span class="p">};</span>
 <span class="n">options</span><span class="p">.</span><span class="n">formats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;json&quot;</span><span class="p">};</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/bank_raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">ntables</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">keys</span><span class="p">().</span><span class="n">at</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>account loan
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2
+account loan
 </pre></div>
 </div>
-<p>Example 3. Ignore a few heavy tables but load the rest.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<p><code class="docutils literal notranslate"><span class="pre">district.json</span></code> is discovered (it matches <code class="docutils literal notranslate"><span class="pre">options.formats</span></code>) but excluded, since
+neither <code class="docutils literal notranslate"><span class="pre">&quot;account&quot;</span></code> nor <code class="docutils literal notranslate"><span class="pre">&quot;loan.json&quot;</span></code> matches it. Table keys come back sorted
+alphabetically, so <code class="docutils literal notranslate"><span class="pre">&quot;account&quot;</span></code> precedes <code class="docutils literal notranslate"><span class="pre">&quot;loan&quot;</span></code> regardless of the files’
+directory-listing order.</p>
+<p>Example 3. Ignore a few tables but load the rest.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3/account.csv&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;trans_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3/trans.csv&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3/order.csv&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">ignore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;trans&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;order&quot;</span><span class="p">};</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/bank_raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">ntables</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;trans&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;account&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -201,44 +265,73 @@ true true true
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false true
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1
+false true
 </pre></div>
 </div>
-<p>Example 4. Recursive scan plus stable file-name keys.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<p>Example 4. Recursive scan plus stable file-name keys. The files live one
+level down, in a <code class="docutils literal notranslate"><span class="pre">raw/</span></code> subdirectory — <code class="docutils literal notranslate"><span class="pre">options.recursive</span> <span class="pre">=</span> <span class="pre">true</span></code> is what
+makes them discoverable at all; without it, only the top-level directory
+(empty here) would be scanned.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4/raw&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4/raw/customers.csv&quot;</span><span class="p">);</span>
+
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_parquet</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4/raw/events.parquet&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">recursive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">keep_extension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/project_tables&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;customers.csv&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;customers.csv&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; &quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="s">&quot;events.parquet&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>1 1
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>true true
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">keep_extension</span> <span class="pre">=</span> <span class="pre">true</span></code> is what makes <code class="docutils literal notranslate"><span class="pre">&quot;customers.csv&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;events.parquet&quot;</span></code>
+the table keys here — without it, they’d collapse to <code class="docutils literal notranslate"><span class="pre">&quot;customers&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;events&quot;</span></code>
+the same as every other example on this page.</p>
 <p>Example 5. Invalid mixed selection mode.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5&quot;</span><span class="p">);</span>
+<span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5/account.csv&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;account&quot;</span><span class="p">};</span>
 <span class="n">options</span><span class="p">.</span><span class="n">ignore</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;loan&quot;</span><span class="p">};</span>
 
-<span class="c1">// throws</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/bank_raw&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">nx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Nexus</span><span class="o">::</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>
 <section id="id4">
 <h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runtime error: Nexus::load: choose either LoadOptions.load or LoadOptions.ignore, not both
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Nexus::load: choose either LoadOptions.load or LoadOptions.ignore, not both
 </pre></div>
 </div>
+<p>This check runs after confirming <code class="docutils literal notranslate"><span class="pre">directory</span></code> exists and is actually a
+directory, but before any file inside it is scanned or parsed — so a
+mixed <code class="docutils literal notranslate"><span class="pre">load</span></code>/<code class="docutils literal notranslate"><span class="pre">ignore</span></code> request fails fast once the directory itself is
+valid, regardless of what files it actually contains.</p>
 </section>
 </section>
 <section id="notes">
@@ -250,6 +343,12 @@ true true true
 “parallel parsing inside one csv file”.</p></li>
 <li><p>Actual per-file parsing still remains delegated to <code class="docutils literal notranslate"><span class="pre">DataFrame::load(...)</span></code>.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">config</span></code> field lets you stay format-flexible without teaching Nexus parser-specific knobs.</p></li>
+<li><p>Validation order: <code class="docutils literal notranslate"><span class="pre">directory</span></code> must exist and be an actual directory first;
+only then is the <code class="docutils literal notranslate"><span class="pre">load</span></code>/<code class="docutils literal notranslate"><span class="pre">ignore</span></code> mutual-exclusivity check applied; only
+after both pass does the directory actually get scanned.</p></li>
+<li><p>Discovered candidates are sorted by resulting table key before loading, so
+the final <code class="docutils literal notranslate"><span class="pre">Nexus</span></code>’s table order is always alphabetical by key — never
+directory-listing order, which the OS/filesystem doesn’t guarantee.</p></li>
 </ul>
 </section>
 <section id="see-also">

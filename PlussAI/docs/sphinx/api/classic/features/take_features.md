@@ -20,6 +20,15 @@ A second overload accepts `std::initializer_list<std::int64_t>` in place
 of the range — the common case when indices are spelled directly as a
 braced `{...}` list. Both forms are exercised in the examples below.
 
+## What It Does
+
+Builds a new `FeatureBatch` holding exactly the columns named by
+`feature_indices`, in exactly the order given -- no scoring, no filtering
+logic, just direct column selection by index, including repeats. This is
+the low-level primitive every score-based selector in this family
+ultimately calls to materialize its own reduced result once it has decided
+which indices to keep.
+
 ## Parameters
 
 `batch`

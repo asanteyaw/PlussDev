@@ -32,9 +32,9 @@ api/thread/all
 api/thread/any
 api/thread/append
 api/thread/arrange
+api/thread/as_duration
 api/thread/as_note
 api/thread/as_series
-api/thread/as_timeindex
 api/thread/as_timeline
 api/thread/astype
 api/thread/between

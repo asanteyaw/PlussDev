@@ -1,0 +1,90 @@
+# TimelineIndexAccessor::asof
+
+[Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
+
+## Signature
+
+```cpp
+std::int64_t TimelineIndexAccessor::asof(const Timeline& key) const
+```
+
+## What It Does
+
+Returns the position of the last timestamp less than or equal to the key.
+
+This is the classic "what was the most recent observation known at this time?"
+primitive. It is the basis of many event-alignment and nearest-prior lookup
+tasks.
+
+If every timestamp in the index is greater than the key, the method returns
+`-1`.
+
+That return shape is intentional. `asof()` answers a row-location question, not
+the final payload question.
+
+## Parameters
+
+**key**
+
+A scalar `Timeline` timestamp to look up against the index.
+
+## Returns
+
+`std::int64_t`
+    The position of the last value `<= key`, or `-1` if no such value exists.
+
+## Examples
+
+Example 1. Find the most recent available timestamp at or before a query time.
+
+```cpp
+auto key = pluss::timeline::make("2024-11-01T00:55:00Z");
+auto pos = idx.asof(key);
+std::cout << "pos = " << pos << "\n";
+```
+
+### Output
+
+```text
+pos = 2
+```
+
+Example 2. If every index value is greater than the key, the method returns
+`-1`.
+
+```cpp
+auto key = pluss::timeline::make("2024-10-31T23:00:00Z");
+auto pos = idx.asof(key);
+std::cout << "pos = " << pos << "\n";
+```
+
+### Output
+
+```text
+pos = -1
+```
+
+## Notes
+
+- `asof()` is a single-key primitive. For left-versus-right insertion bounds,
+  use [`searchsorted`](searchsorted.md).
+- `asof()` only looks backward in time. If you want forward or nearest behavior
+  against another full time axis, see [`join_asof`](join_asof.md).
+- This is usually the right primitive for "latest known state as of time T."
+
+## See Also
+
+- [`TimelineIndexAccessor::join_asof`](join_asof.md): vectorized as-of matching between two
+  time axes.
+- [`TimelineIndexAccessor::searchsorted`](searchsorted.md): raw insertion lookup.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="argsort.html">
+    <span class="label">Previous</span>
+    <span class="title">argsort</span>
+  </a>
+  <a class="next-link" href="ceil.html">
+    <span class="label">Next</span>
+    <span class="title">ceil</span>
+  </a>
+</div>

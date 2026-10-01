@@ -8,7 +8,7 @@ int main() {
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  std::cout << "undefined ok = " << std::boolalpha << cls::SpatialIndex::build(pluss::Series::undefined()).ok() << "\n";
+  std::cout << "undefined ok = " << std::boolalpha << cls::SpatialIndex::build(pluss::series::undefined()).ok() << "\n";
 
   const pluss::Series rank1 = pluss::make_series({1.0, 2.0, 3.0}, {3}, f64);
   std::cout << "rank-1 ok = " << cls::SpatialIndex::build(rank1).ok() << "\n";

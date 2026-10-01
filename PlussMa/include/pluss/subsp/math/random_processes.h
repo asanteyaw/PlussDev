@@ -132,23 +132,23 @@ struct SdeOptions {
 };
 
 struct SdeResult {
-  Series y_final{};
+  Series y_final = pluss::series::undefined();
   // W(t1) - W(t0), same shape as y0 -- the realized Wiener increment this
   // specific path used, exposed so a caller can cross-check against a
   // closed-form SDE solution (e.g. GBM's) that is a function of the SAME
   // realized path, not just the scheme's numeric output in isolation.
-  Series wiener_final{};
+  Series wiener_final = pluss::series::undefined();
   std::int64_t steps{0};
   bool converged{false};
 };
 
 struct SdeAdjointResult {
-  Series y_final{};
+  Series y_final = pluss::series::undefined();
   // W(t1) - W(t0), same shape as y0 -- mirrors SdeResult::wiener_final,
   // exposed for the same reason (auditing/reusing the realized path).
-  Series wiener_final{};
-  Series grad_y0{};
-  Series grad_theta{};  // undefined if `theta` was undefined
+  Series wiener_final = pluss::series::undefined();
+  Series grad_y0 = pluss::series::undefined();
+  Series grad_theta = pluss::series::undefined();  // undefined if `theta` was undefined
   std::int64_t forward_steps{0};
   std::int64_t backward_steps{0};
 };
@@ -182,7 +182,7 @@ inline Series em_step_(const DriftFn& mu, const DiffusionFn& sigma, double t, co
 }  // namespace detail
 
 inline SdeResult fluctua(const DriftFn& mu, const DiffusionFn& sigma, const Series& y0, double t0, double t1,
-                         const Series& theta = Series{}, const SdeOptions& options = {}) {
+                         const Series& theta = pluss::series::undefined(), const SdeOptions& options = {}) {
   if (!mu) {
     ::pluss::throw_error("subsp::math::sde::fluctua: drift callback is required");
   }
@@ -277,7 +277,7 @@ inline SdeAdjointResult fluctua_adjoint(const DriftFn& mu, const DiffusionFn& si
   // instead of rk4_step_ at each step. `dw_i` is detached/constant, so it
   // never receives or needs a sensitivity of its own.
   Series a = grad_y_final;
-  Series theta_grad;
+  Series theta_grad = pluss::series::undefined();
   double t = t1;
   for (std::int64_t i = options.steps; i > 0; --i) {
     t -= h;
@@ -288,7 +288,7 @@ inline SdeAdjointResult fluctua_adjoint(const DriftFn& mu, const DiffusionFn& si
     auto ty = pluss::subsp::math::diff::trace(y_leaf, /*tracks_slope=*/true);
     const Series y_tracked = ty.value();
 
-    Series theta_tracked;
+    Series theta_tracked = pluss::series::undefined();
     pluss::subsp::math::diff::Trace ttheta;
     if (has_theta) {
       Series theta_leaf = theta.detach();
@@ -367,7 +367,7 @@ using WienerIntegrandFn = std::function<Series(double, const Series&)>;
 struct WienerPath {
   // Shape [steps + 1] + like's shape. w[0] == 0 (W(t0) := 0); w[i] is
   // W(t_i) - W(t0) for t_i = t0 + i*h.
-  Series w{};
+  Series w = pluss::series::undefined();
   std::vector<double> times{};
   double t0{0.0};
   double t1{0.0};
@@ -375,13 +375,13 @@ struct WienerPath {
 };
 
 struct StochasticIntegralResult {
-  Series value{};
+  Series value = pluss::series::undefined();
   // sum_i (W(t_{i+1}) - W(t_i))^2 for the SAME path -- the realized
   // quadratic variation, exposed because it is exactly the quantity that
   // makes the Ito vs Stratonovich difference concrete (their difference
   // equals HALF of this, exactly, for any step count -- see the test
   // file's exact discrete-identity checks).
-  Series realized_quadratic_variation{};
+  Series realized_quadratic_variation = pluss::series::undefined();
 };
 
 inline WienerPath simulate_wiener_path(const Series& like, double t0, double t1, std::int64_t steps,
@@ -422,7 +422,7 @@ inline StochasticIntegralResult ito_integral(const WienerIntegrandFn& f, const W
   if (!f) {
     ::pluss::throw_error("subsp::math::sde::ito_integral: integrand callback is required");
   }
-  Series total;
+  Series total = pluss::series::undefined();
   for (std::int64_t i = 0; i < path.steps; ++i) {
     const Series w_i = path.w.select(0, i);
     const Series dw_i = path.w.select(0, i + 1).sub(w_i);
@@ -444,7 +444,7 @@ inline StochasticIntegralResult stratonovich_integral(const WienerIntegrandFn& f
   if (!f) {
     ::pluss::throw_error("subsp::math::sde::stratonovich_integral: integrand callback is required");
   }
-  Series total;
+  Series total = pluss::series::undefined();
   for (std::int64_t i = 0; i < path.steps; ++i) {
     const Series w_i = path.w.select(0, i);
     const Series w_ip1 = path.w.select(0, i + 1);

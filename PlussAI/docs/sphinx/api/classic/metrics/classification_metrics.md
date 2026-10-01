@@ -25,6 +25,16 @@ classic::StatusOr<pluss::Series> classic::classification_metrics(
     const classic::AssessOptions& options = {});
 ```
 
+## What It Does
+
+Computes the requested `metrics` -- and only those, in the requested order
+-- as one flat numeric `Series`, rather than a full
+[`ClassReport`](ClassReport.md) with every metric this reference knows
+about. Internally this is a thin extraction over
+[`classification_summary`](classification_summary.md)'s complete result,
+narrowed to just the values actually asked for; every multi-form metric
+reports its macro average here specifically.
+
 ## Parameters
 
 `truth_labels` / `predicted_labels` (first overload)

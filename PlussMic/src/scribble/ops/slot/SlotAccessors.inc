@@ -13,8 +13,8 @@ Slot SlotCastAccessor::timeline() const {
   return base_.cast(pluss::table::ThreadCastTarget::Timeline, options_);
 }
 
-Slot SlotCastAccessor::timeindex() const {
-  return base_.cast(pluss::table::ThreadCastTarget::TimeIndex, options_);
+Slot SlotCastAccessor::duration() const {
+  return base_.cast(pluss::table::ThreadCastTarget::Duration, options_);
 }
 
 SlotNoteAccessor::SlotNoteAccessor(Slot base) : base_(std::move(base)) {}
@@ -207,10 +207,6 @@ Slot SlotTimelineAccessor::tz(std::string_view name) const {
 
 Slot SlotTimelineAccessor::localize(const pluss::table::TimelineLocalizeOptions& options) const {
   return PLUSS_SLOT_TL_STREAM().tl().localize(options).scribbelize();
-}
-
-Slot SlotTimelineAccessor::index(bool require_sorted) const {
-  return PLUSS_SLOT_TL_STREAM().tl().index(require_sorted).scribbelize();
 }
 
 #undef PLUSS_SLOT_TL_STREAM

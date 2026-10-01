@@ -120,12 +120,12 @@ std::cout << pluss::series::print(shared.right_indexer) << "\n";
   axis as a temporal payload.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="join_asof.html">
+  <a class="prev-link" href="../../timeindex_api_reference.html">
     <span class="label">Previous</span>
-    <span class="title">join_asof</span>
-  </a>
-  <a class="next-link" href="../../timeindex_api_reference.html">
-    <span class="label">Next</span>
     <span class="title">TimeIndex API Reference</span>
+  </a>
+  <a class="next-link" href="argsort.html">
+    <span class="label">Next</span>
+    <span class="title">argsort</span>
   </a>
 </div>

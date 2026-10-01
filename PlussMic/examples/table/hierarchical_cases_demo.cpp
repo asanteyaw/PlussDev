@@ -27,14 +27,14 @@ int main() {
   }
   std::cout << indexed.features({"sales", "cost"}).head(4) << "\n";
 
-  auto west = indexed.case_study(DataFrame::CasePick{
+  auto west = indexed.case_study().pick(DataFrame::CasePick{
       .label = "region",
       .value = "West",
   });
   std::cout << "Partial level selection: region=West\n";
   std::cout << west.features({"sales", "cost"}).head(4) << "\n";
 
-  auto one_cell = indexed.case_study(DataFrame::CasePick{
+  auto one_cell = indexed.case_study().pick(DataFrame::CasePick{
       .key = {"East", "201", "Q2"},
   });
   std::cout << "Full structured key selection: East / 201 / Q2\n";

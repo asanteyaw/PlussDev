@@ -21,7 +21,7 @@ changing the underlying instant — the same operation as
 The relabeling survives being read back through any further `.tl()` call
 (`fmt()`, `hour()`, another `tz()`, anything) — see Example 1.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.

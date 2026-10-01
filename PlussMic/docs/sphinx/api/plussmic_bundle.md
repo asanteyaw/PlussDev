@@ -8,6 +8,8 @@ The `bundle` model is the multi-table workspace surface.
   join-graph builder returned by `Nexus::from(...)`.
 - Use [`NexusQuery`](../nexus_query_api_reference.md) for SQL-style workspace
   `SELECT` queries returned by `Nexus::query()`.
+- Use [`NexusPull`](../nexus_pull_api_reference.md) for the fluent root-grain
+  feature-table builder returned by `Nexus::pull(root)`.
 
 ```{toctree}
 :maxdepth: 1
@@ -15,4 +17,5 @@ The `bundle` model is the multi-table workspace surface.
 ../nexus_api_reference
 ../nexus_traverse_api_reference
 ../nexus_query_api_reference
+../nexus_pull_api_reference
 ```

@@ -213,7 +213,7 @@ reuse.tracks_slope_(true);
 reuse.mul(2.0).sum().reverse();
 std::cout << "first_dL_dx=" << reuse.sensitivity() << "\n";
 
-reuse.clear_sensitivity();
+reuse.clear();
 reuse.mul(5.0).sum().reverse();
 std::cout << "second_dL_dx=" << reuse.sensitivity() << "\n";
 ```
@@ -670,15 +670,15 @@ tracked leaves such as `x.sensitivity()`, and pairs that read with
 
 - [`Series::has_sensitivity`](has_sensitivity.md): boolean presence test.
 - [`Series::reverse`](reverse.md): populate the stored sensitivity.
-- [`Series::clear_sensitivity`](clear_sensitivity.md): clear the stored value.
+- [`Series::clear`](clear.md): clear the stored value.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="select.html">
     <span class="label">Previous</span>
     <span class="title">select</span>
   </a>
-  <a class="next-link" href="setdiff1d.html">
+  <a class="next-link" href="set.html">
     <span class="label">Next</span>
-    <span class="title">setdiff1d</span>
+    <span class="title">set</span>
   </a>
 </div>

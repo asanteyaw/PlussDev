@@ -13,6 +13,14 @@ Only reachable via `->` (`net->stage_manifest()`).
 std::vector<Schedule::Impl::StageInfo> nn::Schedule::Impl::stage_manifest() const;
 ```
 
+## What It Does
+
+Collects [`stage_info`](stage_info.md) for every stage in the chain, in
+order, into one vector -- the whole `Schedule`'s shape (names, declared
+types, which stages are `nn::Module`s) in a single call, for logging or
+printing an entire network's structure rather than walking `size()`
+positions by hand.
+
 ## Parameters
 
 None.
@@ -45,8 +53,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   const auto manifest = net->stage_manifest();
   for (const auto& info : manifest) {
@@ -81,8 +89,8 @@ int main() {
   auto double_it = [](const pluss::Series& x) { return x.mul(2.0); };
 
   nn::Schedule net;
-  net.then("scale", double_it);    // not an nn::Module
-  net.then("head", nn::Fusion(3, 2));
+  net.append("scale", double_it);    // not an nn::Module
+  net.append("head", nn::Fusion(3, 2));
 
   for (const auto& info : net->stage_manifest()) {
     std::cout << "'" << info.name << "' module_stage=" << std::boolalpha << info.module_stage << "\n";
@@ -136,10 +144,6 @@ stage_manifest().size()=0
   <a class="prev-link" href="stage_info.html">
     <span class="label">Previous</span>
     <span class="title">stage_info</span>
-  </a>
-  <a class="next-link" href="then.html">
-    <span class="label">Next</span>
-    <span class="title">then</span>
   </a>
 </div>
 <!-- apiref:nav:end -->

@@ -34,7 +34,7 @@ Axel AxelFieldAxisAccessor::kind(SlotKind kind_value) const {
 Axel AxelFieldAxisAccessor::series() const { return kind(SlotKind::Series); }
 Axel AxelFieldAxisAccessor::note() const { return kind(SlotKind::Note); }
 Axel AxelFieldAxisAccessor::timeline() const { return kind(SlotKind::Timeline); }
-Axel AxelFieldAxisAccessor::timeindex() const { return kind(SlotKind::TimeIndex); }
+Axel AxelFieldAxisAccessor::duration() const { return kind(SlotKind::Duration); }
 Axel AxelFieldAxisAccessor::mixed() const { return kind(SlotKind::Mixed); }
 Axel AxelFieldAxisAccessor::nulls() const { return kind(SlotKind::Null); }
 Axel AxelFieldAxisAccessor::empty() const { return kind(SlotKind::Empty); }
@@ -62,9 +62,9 @@ Axel AxelCastAccessor::timeline() const {
   });
 }
 
-Axel AxelCastAccessor::timeindex() const {
+Axel AxelCastAccessor::duration() const {
   return base_.map([&](const Registry& reg) {
-    return keys_.empty() ? reg.cast(options_).timeindex() : reg.fields(keys_).cast(options_).timeindex();
+    return keys_.empty() ? reg.cast(options_).duration() : reg.fields(keys_).cast(options_).duration();
   });
 }
 
@@ -228,6 +228,3 @@ Axel AxelTimelineAccessor::localize(const pluss::table::TimelineLocalizeOptions&
   return base_.map([&](const Registry& reg) { return keys_.empty() ? reg.tl().localize(options) : reg.fields(keys_).tl().localize(options); });
 }
 
-Axel AxelTimelineAccessor::index(bool require_sorted) const {
-  return base_.map([&](const Registry& reg) { return keys_.empty() ? reg.tl().index(require_sorted) : reg.fields(keys_).tl().index(require_sorted); });
-}

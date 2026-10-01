@@ -180,10 +180,6 @@ pluss::Series thread_to_plot_numeric_series(const Thread& t) {
       numeric_thread = Thread(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     }
-    case ThreadKind::TimeIndex: {
-      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), detail::validity_mask(t));
-      break;
-    }
     case ThreadKind::Note: {
       numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
       break;
@@ -242,7 +238,7 @@ TemporalLabelKind infer_temporal_label_kind(const pluss::Timeline& timeline) {
 }
 
 std::vector<std::string> temporal_thread_to_plot_labels(const Thread& t, DateTimeLabelView datetime_label_view) {
-  const auto timeline = (t.kind() == ThreadKind::Timeline) ? t.as_timeline() : t.as_timeindex().timeline();
+  const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64(timeline.nanosecond());
   const auto rendered = [&]() -> pluss::Note {
     switch (infer_temporal_label_kind(timeline)) {
@@ -271,7 +267,7 @@ std::vector<std::string> temporal_thread_to_plot_labels(const Thread& t, DateTim
 }
 
 std::vector<std::string> thread_to_plot_labels(const Thread& t, const DataFramePlotOptions& options) {
-  if (t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex) {
+  if (t.kind() == ThreadKind::Timeline) {
     return temporal_thread_to_plot_labels(t, options.datetime_label_view);
   }
   const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast().note();
@@ -301,7 +297,7 @@ void require_plot_size(const std::vector<std::string>& values,
 }
 
 bool thread_prefers_labeled_axis(const Thread& t) {
-  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex;
+  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline;
 }
 
 struct ResolvedPlotAxis {
@@ -441,7 +437,7 @@ bool thread_supports_correlation(const Thread& thread) {
 }
 
 bool thread_supports_hue(const Thread& thread) {
-  return thread.kind() == ThreadKind::Note || thread.kind() == ThreadKind::Timeline || thread.kind() == ThreadKind::TimeIndex;
+  return thread.kind() == ThreadKind::Note || thread.kind() == ThreadKind::Timeline;
 }
 
 std::vector<std::string> numeric_feature_names(const DataFrame& frame,
@@ -1939,7 +1935,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
 struct PivotGrid3D {
   std::vector<double> x_axis{};
   std::vector<double> y_axis{};
-  pluss::Series z{};
+  pluss::Series z = pluss::series::undefined();
   std::int64_t rows{0};
   std::int64_t cols{0};
 };

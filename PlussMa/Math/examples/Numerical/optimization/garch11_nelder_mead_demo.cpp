@@ -11,9 +11,9 @@
 namespace {
 
 struct Garch11Params {
-  pluss::Series omega{pluss::Series::undefined()};
-  pluss::Series alpha{pluss::Series::undefined()};
-  pluss::Series beta{pluss::Series::undefined()};
+  pluss::Series omega{pluss::series::undefined()};
+  pluss::Series alpha{pluss::series::undefined()};
+  pluss::Series beta{pluss::series::undefined()};
 };
 
 pluss::Series scalar(double v, const pluss::Config& cfg) {

@@ -125,9 +125,9 @@ Series sanitize_chain_ladder_cdf_(const Series& cdf_to_ultimate,
 }
 
 struct LatestObservedByOrigin {
-  Series latest_development;
-  Series latest_cumulative;
-  Series has_observation;
+  Series latest_development = pluss::series::undefined();
+  Series latest_cumulative = pluss::series::undefined();
+  Series has_observation = pluss::series::undefined();
 };
 
 LatestObservedByOrigin latest_observed_by_origin_(const Series& cumulative_triangle) {

@@ -465,10 +465,6 @@ methods:
     signature: "Series repeat_like(const Series& like) const"
     forward: "like"
 
-  - name: tile
-    signature: "Series tile(pluss::msharp::RangeView::Int dims) const"
-    forward: "dims"
-
   - name: sum_to_size
     signature: "Series sum_to_size(pluss::msharp::RangeView::Int size) const"
     forward: "size"
@@ -565,6 +561,10 @@ methods:
   - name: fftshift
     signature: "Series fftshift() const"
     forward: ""
+
+  - name: fftshift
+    signature: "Series fftshift(pluss::msharp::RangeView::Int dims) const"
+    forward: "dims"
 
   - name: imag
     signature: "Series imag() const"
@@ -1656,18 +1656,6 @@ methods:
   # (hist, bin_edges). The generated single-Series wrappers dropped the edges
   # entirely. See skip_methods.
 
-  - name: histcounts
-    signature: "Series histcounts() const"
-    forward: ""
-
-  - name: histcounts
-    signature: "Series histcounts(std::int64_t bins) const"
-    forward: "bins"
-
-  - name: histcounts
-    signature: "Series histcounts(std::int64_t bins, double min_v, double max_v) const"
-    forward: "bins, min_v, max_v"
-
   - name: ifftshift
     signature: "Series ifftshift() const"
     forward: ""
@@ -1675,10 +1663,6 @@ methods:
   - name: ifftshift
     signature: "Series ifftshift(pluss::msharp::RangeView::Int dims) const"
     forward: "dims"
-
-  - name: ifftshift
-    signature: "Series ifftshift(pluss::msharp::RangeView::Int dims, std::int64_t dim) const"
-    forward: "dims, dim"
 
   - name: softplus
     signature: "Series softplus() const"
@@ -2123,7 +2107,7 @@ methods:
     forward: ""
 
   - name: threshold_
-    signature: "Series& threshold_(double threshold_val, double value) const"
+    signature: "Series& threshold_(double threshold_val, double value)"
     forward: "threshold_val, value"
 
   - name: rrelu_

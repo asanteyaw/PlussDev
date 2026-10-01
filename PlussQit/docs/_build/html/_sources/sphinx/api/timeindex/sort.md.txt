@@ -5,16 +5,12 @@
 ## Signatures
 
 ```cpp
-TimeIndex::sort() const -> TimeIndex
-TimeIndex::sort_values() const -> TimeIndex
-TimeIndex::sort_index() const -> TimeIndex
+TimeIndex TimeIndex::sort() const
 ```
 
 ## What It Does
 
 Returns the timestamps in ascending order.
-
-`sort_values()` and `sort_index()` are naming aliases for the same operation.
 
 Use this to canonicalize an axis before you rely on ordered semantics such as
 `searchsorted`, `asof`, or downstream alignment.
@@ -70,12 +66,12 @@ std::cout << pluss::timeindex::print(sorted_idx) << "\n";
 - [`TimeIndex::unique`](unique.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="max.html">
+  <a class="prev-link" href="slice_time.html">
     <span class="label">Previous</span>
-    <span class="title">max</span>
+    <span class="title">slice_time</span>
   </a>
-  <a class="next-link" href="unique.html">
+  <a class="next-link" href="tail.html">
     <span class="label">Next</span>
-    <span class="title">unique</span>
+    <span class="title">tail</span>
   </a>
 </div>

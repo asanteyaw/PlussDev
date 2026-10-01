@@ -76,10 +76,10 @@ struct PermutationOptions {
 struct PermutationImportance {
   // Mean / stdev of the per-repeat score drop, one entry per feature (column
   // order of the evaluated FeatureBatch).
-  Series importances_mean = Series::undefined();  // shape [n_features]
-  Series importances_std = Series::undefined();   // shape [n_features]
+  Series importances_mean = pluss::series::undefined();  // shape [n_features]
+  Series importances_std = pluss::series::undefined();   // shape [n_features]
   // Raw per-(repeat, feature) drops, same layout as nodej::PermuteImpactReport.
-  Series importances = Series::undefined();       // shape [n_repeats, n_features]
+  Series importances = pluss::series::undefined();       // shape [n_repeats, n_features]
   std::string objective_name = "accuracy";
 };
 
@@ -121,7 +121,7 @@ namespace detail {
 [[nodiscard]] inline Series permuted_feature_matrix_(const Series& x, std::int64_t feature_index, const Series& perm_idx) {
   const std::int64_t n_features = x.sizes()[1];
   const Series shuffled_col = x.narrow_copy(1, feature_index, 1).index_select(0, perm_idx);
-  Series out = feature_index > 0 ? x.narrow_copy(1, 0, feature_index) : Series::undefined();
+  Series out = feature_index > 0 ? x.narrow_copy(1, 0, feature_index) : pluss::series::undefined();
   out = out.defined() ? out.unite({shuffled_col}, 1) : shuffled_col;
   if (feature_index + 1 < n_features) {
     out = out.unite({x.narrow_copy(1, feature_index + 1, n_features - feature_index - 1)}, 1);

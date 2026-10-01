@@ -16,11 +16,11 @@ Stream StreamTimelineAccessor::isnat() const
 Flags whether the bound stream's timestamp is `NaT` (missing/"Not a Time"),
 replacing it with a `Bool` `Series` stream.
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Every method on this accessor — not just `isnat()` — routes through
-`Thread::tl()` for the bound stream. `tl()` accepts **both** `Timeline`-kind
-and `TimeIndex`-kind streams uniformly; if the stream is neither, the call
-throws `"Thread::tl: expected Timeline or TimeIndex payload"`. Cast first with
+`Thread::tl()` for the bound stream. `tl()` requires the stream to be
+`Timeline`-kind; if it is not, the call throws
+`"Thread::tl: expected Timeline payload"`. Cast first with
 [`Stream::cast(ThreadCastTarget::Timeline)`](../stream/cast.md) if the stream
 isn't already a timestamp.
 ```
@@ -64,7 +64,7 @@ label        | value
 ========================================================================================================================
 ```
 
-Example 2 (edge case). A non-`Timeline`/`TimeIndex` stream throws — see the
+Example 2 (edge case). A non-`Timeline` stream throws — see the
 important callout above.
 
 ```cpp
@@ -80,7 +80,7 @@ try {
 ### Output
 
 ```text
-Thread::tl: expected Timeline or TimeIndex payload
+Thread::tl: expected Timeline payload
 ```
 
 ## Notes
@@ -98,9 +98,9 @@ Thread::tl: expected Timeline or TimeIndex payload
   whole-catalog equivalent.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>

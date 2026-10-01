@@ -17,7 +17,7 @@ Renders the bound stream's timestamp as a fixed ISO-8601-with-offset text
 representation, replacing it with a `Note` (text) stream. Equivalent to
 [`fmt("%Y-%m-%dT%H:%M:%S.%f%z")`](fmt.md).
 
-```{important} StreamTimelineAccessor requires the bound stream to be Timeline- or TimeIndex-kind
+```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`StreamTimelineAccessor::isnat`](isnat.md)'s own important callout for the
 full explanation and the exact throw message.
@@ -54,7 +54,7 @@ std::cout << out.as_note().at(0);
 - Always includes the full 9-digit nanosecond fraction and a signed `%z`
   offset — use [`fmt()`](fmt.md) with your own pattern for a more compact
   string.
-- Changes the stream's kind from `Timeline`/`TimeIndex` to `Note`.
+- Changes the stream's kind from `Timeline` to `Note`.
 - See the important callout above.
 
 ## See Also

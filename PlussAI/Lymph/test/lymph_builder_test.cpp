@@ -31,7 +31,7 @@ models::Model empty_model() {
 // pick *some* finite winner, not any particular one.
 struct Frame {
   DataFrame x;
-  Series y;
+  Series y = pluss::series::undefined();
 };
 
 Frame make_frame() {

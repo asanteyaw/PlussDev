@@ -10,11 +10,6 @@
 Series::split(std::int64_t split_size, std::int64_t dim = 0) const
     -> std::vector<Series>
 
-Series::split(pluss::RangeView::Int split_sizes, std::int64_t dim = 0) const
-    -> std::vector<Series>
-
-Series::split_with_sizes(pluss::RangeView::Int split_sizes, std::int64_t dim = 0) const
-    -> std::vector<Series>
 ```
 
 ## What It Does
@@ -25,9 +20,8 @@ Series::split_with_sizes(pluss::RangeView::Int split_sizes, std::int64_t dim = 0
 - **`split(split_size, dim)`** makes every piece exactly `split_size` long,
   except a possibly shorter final one. A length-10 axis with `split_size = 3`
   gives `3, 3, 3, 1`.
-- **`split(split_sizes, dim)`** — and the identically-behaving
-  **`split_with_sizes(split_sizes, dim)`** — takes an explicit list of piece
-  lengths. The lengths must sum to `size(dim)`.
+For explicit per-piece lengths, use
+[`split_with_sizes()`](split_with_sizes.md).
 
 Where [`chunk()`](chunk.md) fixes the *number* of pieces and lets their size
 fall out, `split()` fixes the *size* (or the exact sizes) and lets the count
@@ -39,11 +33,6 @@ differentiable.
 **split_size** (`std::int64_t`)
 
 The length of each piece (the last may be shorter). Must be `> 0`.
-
-**split_sizes** (`pluss::RangeView::Int`)
-
-An explicit list of piece lengths — a `std::vector<std::int64_t>` or a brace
-list `{2, 3, 5}`. Each must be `>= 0` and they must sum to `size(dim)`.
 
 **dim** (`std::int64_t`, default `0`)
 
@@ -80,31 +69,7 @@ pieces=4
 [0] len=3  [1] len=3  [2] len=3  [3] len=1  
 ```
 
-Example 2. Explicit per-piece lengths.
-
-```cpp
-auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0});
-
-auto parts = x.split_with_sizes({2, 3, 5});
-for (std::size_t i = 0; i < parts.size(); ++i) {
-  std::cout << parts[i];
-}
-```
-
-### Output
-
-```text
-pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[0, 1]
-pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
-data=[2, 3, 4]
-pluss::Series(shape=[5], strides=[1], dtype=float64, platform=cpu, numel=5, contiguous=true)
-data=[5, 6, 7, 8, 9]
-```
-
-`split({2, 3, 5})` is the same call.
-
-Example 3. `split(split_size)` versus [`chunk(n)`](chunk.md) — same number,
+Example 2. `split(split_size)` versus [`chunk(n)`](chunk.md) — same number,
 different meaning.
 
 ```cpp
@@ -130,7 +95,7 @@ chunk(3): 4 4 2
 `chunk(3)` makes exactly three pieces (length `ceil(10/3) = 4`, then the
 remainder).
 
-Example 4. Splitting a chosen axis.
+Example 3. Splitting a chosen axis.
 
 ```cpp
 auto m = pluss::make_series({
@@ -154,24 +119,7 @@ data=[[3, 4],
   [7, 8]]
 ```
 
-Example 5. Explicit sizes that do not sum to the axis length are rejected.
-
-```cpp
-try {
-  pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 5.0}).split_with_sizes({2, 2});
-} catch (const std::exception& e) {
-  std::string msg = e.what();
-  std::cout << msg.substr(0, msg.find('\n'));
-}
-```
-
-### Output
-
-```text
-split_with_sizes: sizes must sum to size(dim) (4 != 6)
-```
-
-Example 6. Gradient reaches only the pieces you reduce.
+Example 4. Gradient reaches only the pieces you reduce.
 
 ```cpp
 auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 5.0});
@@ -195,17 +143,13 @@ data=[1, 1, 0, 0, 0, 0]
 - `split(split_size)` fixes the piece size; the count depends on the axis
   length. For a fixed count use [`chunk()`](chunk.md) or
   [`tensor_split()`](tensor_split.md).
-- `split_with_sizes` requires the sizes to sum to `size(dim)` exactly.
 - Pieces are views over the source storage. Materialize before mutating.
-- `unsafe_split()` / `unsafe_split_with_sizes()` are the same operation here.
 
 ## Summary
 
 `split()` cuts an axis into consecutive view pieces:
 
 - `split(split_size)` — uniform size, short final piece, count derived
-- `split(sizes)` / `split_with_sizes(sizes)` — explicit lengths that must sum to
-  `size(dim)`
 - zero-copy views; differentiable
 - returns a `std::vector<Series>`
 
@@ -218,12 +162,12 @@ data=[1, 1, 0, 0, 0, 0]
 - [`Series::unite`](unite.md): the concatenation that reverses a split.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="sort.html">
+  <a class="prev-link" href="sort_pair.html">
     <span class="label">Previous</span>
-    <span class="title">sort</span>
+    <span class="title">sort_pair</span>
   </a>
-  <a class="next-link" href="sqrt.html">
+  <a class="next-link" href="split_with_sizes.html">
     <span class="label">Next</span>
-    <span class="title">sqrt</span>
+    <span class="title">split_with_sizes</span>
   </a>
 </div>

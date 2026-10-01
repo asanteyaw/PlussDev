@@ -299,7 +299,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
   const bool needs_x = !plan.nonleading_predictor_indices.empty() || !plan.leading_predictor_indices.empty();
   const bool needs_y = !plan.response_lags.empty();
 
-  Series x2 = Series::undefined();
+  Series x2 = pluss::series::undefined();
   if (needs_x) {
     x2 = as_matrix_(x, "build_lagged_predictors");
     PLUSS_CHECK(x2.sizes()[1] > 0, "subsp::stats::ts::build_lagged_predictors: expected X with at least one predictor column");
@@ -313,7 +313,7 @@ Series build_lagged_predictors(const Series& x, const Series& y, const LagPlan& 
                 "subsp::stats::ts::build_lagged_predictors: lag plan references predictor index outside X");
   }
 
-  Series y1 = Series::undefined();
+  Series y1 = pluss::series::undefined();
   if (needs_y) {
     y1 = as_vector_(y, "build_lagged_predictors");
   }

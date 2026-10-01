@@ -8,6 +8,7 @@
 
 ```cpp
 Series::unsqueeze(std::int64_t dim) const -> Series
+Series& Series::unsqueeze_(std::int64_t dim) const
 ```
 
 ## What It Does
@@ -64,6 +65,28 @@ Because this is a view:
 Backward simply removes the inserted axis from the outgoing sensitivity because
 the forward pass never duplicated or destroyed any values. It only changed how
 the same values are indexed.
+
+## In-Place Form
+
+`unsqueeze_()` is the in-place sibling of [`unsqueeze()`](unsqueeze.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `unsqueeze_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+x.unsqueeze_(0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1,3], strides=[3,1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[[1, 2, 3]]
+```
 
 ## Verified Examples
 

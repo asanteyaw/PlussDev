@@ -8,6 +8,7 @@
 
 ```cpp
 Series::isinf() const -> Series
+Series& Series::isinf_()
 ```
 
 ## What It Does
@@ -30,6 +31,26 @@ This is narrower than [`isfinite()`](isfinite.md) and different from
 ## Gradient
 
 `isinf()` is a boolean detector, not a differentiable numeric transform.
+
+## In-Place Form
+
+`isinf_()` is the in-place sibling of [`isinf()`](isinf.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()});
+x.isinf_();
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1, 1]
+```
 
 ## Examples
 

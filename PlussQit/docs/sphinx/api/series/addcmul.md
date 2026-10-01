@@ -9,6 +9,7 @@
 ```cpp
 Series::addcmul(const Series& tensor1, const Series& tensor2,
                 double value = 1.0) const -> Series
+Series& Series::addcmul_(const Series& tensor1, const Series& tensor2, double value=1.0) const
 ```
 
 ## What It Does
@@ -57,6 +58,31 @@ Scalar multiplier on the `tensor1 * tensor2` product.
 d/d(input)   = g
 d/d(tensor1) = value * g * tensor2
 d/d(tensor2) = value * g * tensor1
+```
+
+## In-Place Form
+
+`addcmul_()` is the in-place sibling of [`addcmul()`](addcmul.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `addcmul_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 1.0, 1.0});
+auto t1 = pluss::make_series({2.0, 3.0, 4.0});
+auto t2 = pluss::make_series({1.0, 1.0, 1.0});
+
+x.addcmul_(t1, t2, 1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[3, 4, 5]
 ```
 
 ## Examples

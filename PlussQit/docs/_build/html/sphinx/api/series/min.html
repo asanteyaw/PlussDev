@@ -13,11 +13,11 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=4d54f33d"></script>
+    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
     <script src="../../../_static/layout.js?v=e199898b"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Series::minimum" href="minimum.html" />
+    <link rel="next" title="Series::min_pair" href="min_pair.html" />
     <link rel="prev" title="Series::median" href="median.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
@@ -46,9 +46,6 @@
 <span class="n">Series</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keepdim</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span>
-
-<span class="n">Series</span><span class="o">::</span><span class="n">min_pair</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">dim</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">keepdim</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
-<span class="w">    </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">Series</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 </section>
@@ -149,18 +146,6 @@ comparison overloads.</p>
 </ul>
 <p>So the binary overload is again left-biased at the tie boundary.</p>
 </section>
-</section>
-<section id="paired-value-and-index-min-pair">
-<h2>Paired Value And Index (<code class="docutils literal notranslate"><span class="pre">min_pair</span></code>)<a class="headerlink" href="#paired-value-and-index-min-pair" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">min_pair(dim</span> <span class="pre">[,</span> <span class="pre">keepdim])</span></code> runs the axis reduction and returns <strong>both</strong>
-channels at once: <code class="docutils literal notranslate"><span class="pre">.first</span></code> is the winning values (identical to <code class="docutils literal notranslate"><span class="pre">min(dim,</span> <span class="pre">keepdim)</span></code>), <code class="docutils literal notranslate"><span class="pre">.second</span></code> is the <code class="docutils literal notranslate"><span class="pre">int64</span></code> position each winner held along <code class="docutils literal notranslate"><span class="pre">dim</span></code>
-(identical to <a class="reference internal" href="argmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmin(dim,</span> <span class="pre">keepdim)</span></code></span></a>). The result is a
-<code class="docutils literal notranslate"><span class="pre">std::pair&lt;Series,</span> <span class="pre">Series&gt;</span></code> – <code class="docutils literal notranslate"><span class="pre">result.first</span></code> is the values, <code class="docutils literal notranslate"><span class="pre">result.second</span></code> the indices.</p>
-<p>Use it when you need the smallest value and where it sits without two separate
-scans. There is no whole-series overload — <code class="docutils literal notranslate"><span class="pre">min_pair</span></code> always reduces a named
-axis. On a tie inside a lane the reported index is the <strong>first</strong> occurrence,
-matching <a class="reference internal" href="argmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">argmin()</span></code></span></a>. The value channel is differentiable exactly
-as <code class="docutils literal notranslate"><span class="pre">min(dim)</span></code> is; the index channel never carries gradient.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -360,50 +345,6 @@ main backward quirk to remember for the binary overload.</p>
 </pre></div>
 </div>
 <p>This is the expected failure mode when the dim does not exist.</p>
-<p>Example 12. <code class="docutils literal notranslate"><span class="pre">min_pair(dim)</span></code> returns the smallest values and their positions
-together.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
-<span class="p">});</span>
-
-<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">min_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;values=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">first</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;indices=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">second</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
-<section id="id11">
-<h3>Output<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>values=pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
-data=[1, 1]
-indices=pluss::Series(shape=[2], strides=[1], dtype=int64, platform=cpu, numel=2, contiguous=true)
-data=[1, 0]
-</pre></div>
-</div>
-<p>Row <code class="docutils literal notranslate"><span class="pre">0</span></code>’s smallest value is <code class="docutils literal notranslate"><span class="pre">1</span></code> at column <code class="docutils literal notranslate"><span class="pre">1</span></code>; row <code class="docutils literal notranslate"><span class="pre">1</span></code>’s is <code class="docutils literal notranslate"><span class="pre">1</span></code> at column <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-<p>Example 13. The value channel of <code class="docutils literal notranslate"><span class="pre">min_pair</span></code> is differentiable; the index
-channel is inert.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">9.0</span><span class="p">},</span>
-<span class="p">});</span>
-<span class="n">grid</span><span class="p">.</span><span class="n">tracks_slope_</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
-
-<span class="n">grid</span><span class="p">.</span><span class="n">min_pair</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">first</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">reverse</span><span class="p">();</span>
-
-<span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="p">.</span><span class="n">sensitivity</span><span class="p">());</span>
-</pre></div>
-</div>
-</section>
-<section id="id12">
-<h3>Output<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Series(shape=[2,3], strides=[3,1], dtype=float64, platform=cpu, numel=6, contiguous=true)
-data=
-⎡ 0.0000 1.0000 0.0000 ⎤
-⎣ 1.0000 0.0000 0.0000 ⎦
-</pre></div>
-</div>
 </section>
 </section>
 <section id="gotchas-and-failure-modes">
@@ -419,8 +360,6 @@ win.</p></li>
 gradients to the left operand.</p></li>
 <li><p>Broadcastability matters for <code class="docutils literal notranslate"><span class="pre">min(other)</span></code>.</p></li>
 <li><p>Out-of-range dims throw immediately.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_pair</span></code> has no whole-series overload — it always takes a <code class="docutils literal notranslate"><span class="pre">dim</span></code>. Its index
-channel reports the first tied position and never carries gradient.</p></li>
 </ul>
 </section>
 <section id="summary">
@@ -446,17 +385,19 @@ shape and keeps tie gradients on the left operand.</p>
 <li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::max</span></code></span></a>: upper-bound counterpart with the same overload map.</p></li>
 <li><p><a class="reference internal" href="argmin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmin</span></code></span></a>: returns winning indices instead of winning
 values.</p></li>
+<li><p><a class="reference internal" href="min_pair.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::min_pair</span></code></span></a>: returns one winning value and its selected
+source position together.</p></li>
 <li><p><a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::max</span></code></span></a> / <a class="reference internal" href="argmax.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::argmax</span></code></span></a>: the upper-bound
 counterparts, including <code class="docutils literal notranslate"><span class="pre">max_pair</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="max.html">
+  <a class="prev-link" href="median.html">
     <span class="label">Previous</span>
-    <span class="title">max</span>
+    <span class="title">median</span>
   </a>
-  <a class="next-link" href="argmax.html">
+  <a class="next-link" href="min_pair.html">
     <span class="label">Next</span>
-    <span class="title">argmax</span>
+    <span class="title">min_pair</span>
   </a>
 </div>
 </section>
@@ -491,54 +432,13 @@ counterparts, including <code class="docutils literal notranslate"><span class="
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Doc_Authoring_Standard.html">API Documentation Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../API_Philosophy.html">API Philosophy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Activations.html">Activations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Broadcasting.html">Broadcasting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Complex.html">Complex numbers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Config.html">Config (Series creation options)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Dependencies.html">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ElementwiseExtras.html">Elementwise extras</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ErrorHandling.html">Error handling and stack traces (C++)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Errors_StackTrace.html">Errors and Stack Traces</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories.html">Factories and public surface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Factories_Config.html">Factories and Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Float8.html">Float8 policy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../IndexingParity.html">Indexing parity (Torch-inspired, CPU-only)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Indexing_Scatter.html">Indexing, index_put, scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../MSharp_SnapPtr.html">MSharp SnapPtr (intrusive reference counting)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NOTE_CLOSED_TYPE_CONTRACT.html">Closed Note Type Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../NaN_Inf.html">NaN / Inf behavior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Norms.html">Norms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Ownership.html">Ownership &amp; lifetime</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Performance.html">Performance roadmap (CPU)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../README.html">PlussQit Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Reductions.html">Reductions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ReshapeAndViews.html">Reshaping and views</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Scatter.html">Scatter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../ScatterReduce.html">scatter_reduce policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Doc_Authoring_Standard.html">Series Doc Authoring Standard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Series_Methods.html">Series methods (method-first philosophy)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Softmax.html">Softmax family</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Stats.html">Statistics: var / std</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../TypePromotion.html">Type promotion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../View_Invariants.html">View invariants: non-overlapping &amp; dense</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#type-system-and-semantics">Type system and semantics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#indexing-and-shape">Indexing and shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#construction-and-configuration">Construction and configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#errors">Errors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../api_reference.html#everything-else">Everything else</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
@@ -556,7 +456,7 @@ counterparts, including <code class="docutils literal notranslate"><span class="
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
       <li>Previous: <a href="median.html" title="previous chapter">Series::median</a></li>
-      <li>Next: <a href="minimum.html" title="next chapter">Series::minimum</a></li>
+      <li>Next: <a href="min_pair.html" title="next chapter">Series::min_pair</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

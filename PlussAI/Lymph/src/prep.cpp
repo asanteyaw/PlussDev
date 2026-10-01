@@ -219,7 +219,7 @@ pluss::table::DataFrame prep::SimpleImputer::merge_mapped_(const pluss::table::D
 }
 
 void prep::SimpleImputer::refresh_statistics_() {
-  statistics_ = Series::undefined();
+  statistics_ = pluss::series::undefined();
   if (!learned_) return;
   const auto state = resolve(core_.dump_state(), "prep::SimpleImputer.dump_state");
   if (state.size() >= 2 && state[1].defined()) {
@@ -244,8 +244,8 @@ pluss::table::DataFrame prep::StandardScaler::merge_mapped_(const pluss::table::
 }
 
 void prep::StandardScaler::refresh_statistics_() {
-  mean_ = Series::undefined();
-  scale_ = Series::undefined();
+  mean_ = pluss::series::undefined();
+  scale_ = pluss::series::undefined();
   if (!learned_) return;
   const auto state = resolve(core_.dump_state(), "prep::StandardScaler.dump_state");
   if (state.size() >= 3) {

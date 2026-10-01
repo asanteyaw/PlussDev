@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "CodeM/core/Errors.h"
-#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/coden/note_factory.h"
 
 namespace pluss::table {
@@ -51,8 +50,7 @@ pluss::codem::Platform thread_platform(const Thread& thread) {
       return thread.as_series().platform();
     case ThreadKind::Timeline:
       return thread.as_timeline().epoch_nanos().platform();
-    case ThreadKind::TimeIndex:
-      return thread.as_timeindex().timeline().epoch_nanos().platform();
+    case ThreadKind::Duration:
     case ThreadKind::Note:
       return pluss::codem::Platform::CPU;
   }
@@ -177,12 +175,8 @@ std::vector<std::string> case_keys(const Thread& cases) {
       }
       break;
     }
-    case ThreadKind::Timeline:
-    case ThreadKind::TimeIndex: {
-      const auto ticks =
-          cases.kind() == ThreadKind::Timeline
-              ? cases.as_timeline().epoch_nanos().to_vec<std::int64_t>()
-              : cases.as_timeindex().timeline().epoch_nanos().to_vec<std::int64_t>();
+    case ThreadKind::Timeline: {
+      const auto ticks = cases.as_timeline().epoch_nanos().to_vec<std::int64_t>();
       for (std::size_t i = 0; i < ticks.size(); ++i) {
         if (!valid[i] || ticks[i] == pluss::Timeline::kNaT) {
           keys[i] = std::string(1, '\0');
@@ -192,6 +186,18 @@ std::vector<std::string> case_keys(const Thread& cases) {
             reinterpret_cast<const char*>(&ticks[i]),
             sizeof(std::int64_t));
         keys[i].insert(keys[i].begin(), '\3');
+      }
+      break;
+    }
+    case ThreadKind::Duration: {
+      const auto nanos = cases.as_duration().host();
+      for (std::size_t i = 0; i < nanos.size(); ++i) {
+        if (!valid[i] || nanos[i] == pluss::Duration::kNaT) {
+          keys[i] = std::string(1, '\0');
+          continue;
+        }
+        keys[i].assign(reinterpret_cast<const char*>(&nanos[i]), sizeof(std::int64_t));
+        keys[i].insert(keys[i].begin(), '\4');
       }
       break;
     }
@@ -347,17 +353,13 @@ Thread append_cases(const Thread& left, const Thread& right) {
           values,
           joined_validity(left, right, values.epoch_nanos().platform()));
     }
-    case ThreadKind::TimeIndex: {
-      auto values = left.as_timeindex()
-                        .timeline()
-                        .concat(right.as_timeindex().timeline())
-                        .to_timeindex(false);
+    case ThreadKind::Duration: {
+      auto values = left.as_duration().host();
+      const auto right_values = right.as_duration().host();
+      values.insert(values.end(), right_values.begin(), right_values.end());
       return Thread(
-          values,
-          joined_validity(
-              left,
-              right,
-              values.timeline().epoch_nanos().platform()));
+          pluss::duration::nanos(values),
+          joined_validity(left, right, pluss::codem::Platform::CPU));
     }
   }
   PLUSS_FAIL("DataFrame::match: unsupported case payload kind");
@@ -550,15 +552,10 @@ Thread null_thread_like(const Thread& reference, const std::int64_t size) {
         values = Thread(pluss::timeline::from_epoch(ticks));
         break;
       }
-      case ThreadKind::TimeIndex: {
-        auto ticks = pluss::Series::zeros(
-            {size},
-            pluss::codem::ScalarType::Int64,
-            reference.as_timeindex().timeline().epoch_nanos().platform());
-        values = Thread(
-            pluss::timeline::from_epoch(ticks).to_timeindex(false));
+      case ThreadKind::Duration:
+        values = Thread(pluss::duration::nanos(
+            std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
         break;
-      }
     }
   }
   return detail::with_validity_mask(values, bool_series_on(

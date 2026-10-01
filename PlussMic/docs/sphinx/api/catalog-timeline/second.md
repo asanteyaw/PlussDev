@@ -14,9 +14,9 @@ Catalog CatalogTimelineAccessor::second() const
 ## What It Does
 
 Extracts the second-of-minute (`0`-`59`) of each bound key's timestamp, replacing
-each `Timeline`- or `TimeIndex`-kind key with an `Int32` `Series` key.
+each `Timeline`-kind key with an `Int32` `Series` key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.

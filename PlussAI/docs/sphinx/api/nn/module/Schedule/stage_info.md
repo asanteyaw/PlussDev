@@ -19,6 +19,15 @@ Schedule::Impl::StageInfo nn::Schedule::Impl::at(std::size_t index) const;  // a
 `output_type`, `module_stage`) -- taught field by field under `## Returns`
 below, not pasted here.
 
+## What It Does
+
+Bundles one stage's name, declared input/output types, and whether it is
+an `nn::Module`, into a single struct -- everything
+[`name_at`](name_at.md)/[`input_type_at`](input_type_at.md)/[`output_type_at`](output_type_at.md)
+report individually, gathered in one call. Reach for `stage_info` when
+inspecting or logging a stage's full description at once rather than
+making three separate lookups for the same position.
+
 ## Parameters
 
 `std::size_t index`
@@ -61,7 +70,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("head", nn::Fusion(3, 2));
+  net.append("head", nn::Fusion(3, 2));
 
   const auto info = net->stage_info(0);
   std::cout << "name='" << info.name << "'\n";
@@ -101,8 +110,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   const auto manifest = net->stage_manifest();
   for (const auto& info : manifest) {
@@ -137,8 +146,8 @@ int main() {
   auto double_it = [](const pluss::Series& x) { return x.mul(2.0); };
 
   nn::Schedule net;
-  net.then("scale", double_it);    // not an nn::Module
-  net.then("head", nn::Fusion(3, 2));
+  net.append("scale", double_it);    // not an nn::Module
+  net.append("head", nn::Fusion(3, 2));
 
   for (const auto& info : net->stage_manifest()) {
     std::cout << "'" << info.name << "' module_stage=" << std::boolalpha << info.module_stage << "\n";

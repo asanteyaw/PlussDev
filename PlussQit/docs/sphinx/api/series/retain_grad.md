@@ -224,9 +224,9 @@ sensitivity after reverse so you can inspect it later.
   stored values.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="reshape.html">
+  <a class="prev-link" href="resize_as.html">
     <span class="label">Previous</span>
-    <span class="title">reshape</span>
+    <span class="title">resize_as</span>
   </a>
   <a class="next-link" href="retains_grad.html">
     <span class="label">Next</span>

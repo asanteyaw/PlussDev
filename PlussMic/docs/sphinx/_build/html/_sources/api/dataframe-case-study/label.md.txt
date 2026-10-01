@@ -1,0 +1,150 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 090e6f52b218 -->
+
+# DataFrameCaseStudyAccessor::label
+
+[Back to DataFrameCaseStudyAccessor API Reference](../../dataframe_case_study_accessor_api_reference)
+
+## Signatures
+
+```cpp
+DataFrame DataFrameCaseStudyAccessor::label(std::string_view value) const
+DataFrame DataFrameCaseStudyAccessor::label(std::int64_t value) const
+DataFrame DataFrameCaseStudyAccessor::label(double value) const
+```
+
+## What It Does
+
+Selects every case whose current case-axis value equals `value`. Labels are lookup
+keys, not uniqueness declarations: duplicate labels return every matching row in
+source order. Numeric overloads use the same public label formatting used when
+numeric case axes are rendered, allowing callers to stay in their native scalar
+type. An absent label is an error rather than an empty result, which catches misspelled
+or stale keys early.
+
+Matching is exact after the scalar is converted to the case axis's public label
+representation. It is not a substring search, numeric tolerance comparison, or
+hierarchical level match. Use `pick()` when one named level of a structured case axis
+is the intended key.
+
+## Parameters
+
+**value** (`std::string_view` / `std::int64_t` / any other integral type / `double`)
+    The case-label key to match. Integral types other than `std::int64_t` convert
+    implicitly through a templated overload. Its C++ type does not have to match the
+    case axis's own dtype exactly (a `double` key still matches an `Int64` axis, for
+    example), since comparison happens against the axis's rendered label text.
+
+## Returns
+
+`DataFrame`
+    A new frame containing every case whose label equals `value`, in source order.
+    Feature order, dtypes, title, and case labels are preserved.
+
+## Examples
+
+Example 1. Duplicate labels return every matching row, in source order.
+
+```cpp
+using namespace pluss::table;
+auto frame = DataFrame({{"v", Thread(pluss::make_series({3, 5, 8, 13}))}})
+    .label().set(Thread(pluss::make_note({"A", "B", "B", "D"})));
+
+auto duplicates = frame.case_study().label("B");
+std::cout << duplicates;
+```
+
+### Output
+
+```text
+===========
+     | v   
+-----------
+B    | 5   
+B    | 8   
+-----------
+[2 cs x 1 feat]
+```
+
+Example 2. A numeric case axis accepts a scalar key directly, without first
+converting it to a string.
+
+```cpp
+auto numbered = DataFrame({{"v", Thread(pluss::make_series({4, 9, 16}))}})
+    .label().set(Thread(pluss::make_series({10, 20, 30})));
+auto by_int = numbered.case_study().label(20);
+std::cout << by_int;
+```
+
+### Output
+
+```text
+===========
+     | v   
+-----------
+20   | 9   
+-----------
+[1 cs x 1 feat]
+```
+
+Example 3. Floating-point labels use the same concise, twelve-significant-digit
+rendering as the case axis itself.
+
+```cpp
+auto decimal = DataFrame({{"v", Thread(pluss::make_series({2, 4, 8}))}})
+    .label().set(Thread(pluss::make_series({0.5, 1.25, 2.5})));
+auto by_double = decimal.case_study().label(1.25);
+std::cout << by_double;
+```
+
+### Output
+
+```text
+===========
+     | v   
+-----------
+1.25 | 4   
+-----------
+[1 cs x 1 feat]
+```
+
+Example 4. An absent label is an error, not an empty result.
+
+```cpp
+try {
+  (void)frame.case_study().label("missing");
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+DataFrame::case_study: case label not found 'missing'
+```
+
+## Notes
+
+- Returns always remain a frame, even for a single match; selection allocates only
+  after the label lookup succeeds, so a missing key cannot produce a partially
+  constructed result.
+- An absent label throws `"DataFrame::case_study: case label not found '<value>'"` —
+  it never silently returns zero cases. Use [`labels()`](labels.md) with a known-empty
+  request if a zero-case result is actually wanted.
+- Numeric overloads compare against the case axis's own public rendering, so `20` and
+  `20.0` reach the same row on an `Int64` axis.
+
+## See Also
+
+- [`DataFrameCaseStudyAccessor::labels`](labels.md): several label lookups in one
+  ordered selection.
+- [`DataFrameCaseStudyAccessor::span`](span.md): an inclusive interval between two
+  case-label endpoints.
+- [`DataFrameCaseStudyAccessor::pick`](pick.md): select by one named level of a
+  structured, multi-level case axis.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="at.html"><span class="label">Previous</span><span class="title">at</span></a>
+  <a class="next-link" href="labels.html"><span class="label">Next</span><span class="title">labels</span></a>
+</div>

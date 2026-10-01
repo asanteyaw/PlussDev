@@ -14,6 +14,15 @@ Module* nn::Schedule::Impl::module_at(std::size_t index);
 const Module* nn::Schedule::Impl::module_at(std::size_t index) const;
 ```
 
+## What It Does
+
+Reaches one specific stage's underlying `Module`, by position, when that
+stage's own type-specific accessors are needed rather than the whole
+`Schedule`'s recursive view -- for example calling
+[`train(false)`](../Module/train.md) on a single stage while leaving the
+rest of the chain in training mode. Only works for stages that are
+actually `nn::Module`s; a plain lambda or other bare callable stage throws.
+
 ## Parameters
 
 `std::size_t index`
@@ -52,7 +61,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("head", nn::Fusion(3, 2));
+  net.append("head", nn::Fusion(3, 2));
 
   nn::Module* m = net->module_at(0);
   std::cout << "module_at(0)->is_training()=" << std::boolalpha << m->is_training() << "\n";
@@ -83,7 +92,7 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("head", nn::Fusion(3, 2));
+  net.append("head", nn::Fusion(3, 2));
 
   const nn::Schedule& const_net = net;
   const nn::Module* m = const_net->module_at(0);
@@ -116,7 +125,7 @@ int main() {
   auto double_it = [](const pluss::Series& x) { return x.mul(2.0); };
 
   nn::Schedule net;
-  net.then("scale", double_it);  // not an nn::Module -- no module to fetch
+  net.append("scale", double_it);  // not an nn::Module -- no module to fetch
 
   try {
     net->module_at(0);

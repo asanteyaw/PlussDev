@@ -15,6 +15,14 @@ classic::StatusOr<pluss::Series> classic::EstimatorBase::infer(
     const classic::InferOptions& options = {}) const;
 ```
 
+## What It Does
+
+Runs `batch` through this already-trained estimator's fitted parameters
+and produces one prediction per row, aligned to `batch`'s own row order --
+hard class labels for a classifier, continuous values for a regressor.
+Requires `learn` to have already succeeded; `batch` needs no label column
+at all, since `infer` never reads one.
+
 ## Parameters
 
 `batch` — `FeatureBatch`

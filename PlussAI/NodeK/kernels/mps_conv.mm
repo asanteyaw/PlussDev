@@ -342,7 +342,7 @@ Series run_conv3d_(const Series& input, const Series& weight, const Series& bias
                                                                name:@"pluss_conv3d"];
 
     MPSGraphTensor* bias_t = nil;
-    Series bias_shaped = Series::undefined();
+    Series bias_shaped = pluss::series::undefined();
     MPSShape* bias_shape = nil;
     if (bias.defined()) {
       bias_shaped = bias.reshape({1, bias.sizes()[0], 1, 1, 1}).contiguous();

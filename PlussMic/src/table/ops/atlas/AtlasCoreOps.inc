@@ -461,12 +461,6 @@ Atlas AtlasTimelineAccessor::localize(const TimelineLocalizeOptions& options) co
   }, "Atlas::tl().localize");
 }
 
-Atlas AtlasTimelineAccessor::index(bool require_sorted) const {
-  return map_([this, require_sorted](const DataFrame& frame) {
-    return atlas_frame_tl_(frame, features_).index(require_sorted);
-  }, "Atlas::tl().index");
-}
-
 DataFrame Atlas::loc(std::string_view label) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(src.axis0_labels_.has_value(), "Atlas::loc(string): axis0 labels are not set");

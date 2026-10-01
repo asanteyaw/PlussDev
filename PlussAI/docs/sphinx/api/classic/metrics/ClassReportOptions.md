@@ -8,7 +8,7 @@ balance-quality tuning consumed by
 
 ### `label_order`
 
-`pluss::Series label_order = Series::undefined()`
+`pluss::Series label_order = pluss::series::undefined()`
 
 As [`ConfusionOptions::label_order`](ConfusionOptions.md#label_order) — the
 class set and its order. Undefined (the default) discovers it as the sorted
@@ -27,7 +27,7 @@ worst possible score rather than the best.
 
 ### `sample_weights`
 
-`pluss::Series sample_weights = Series::undefined()`
+`pluss::Series sample_weights = pluss::series::undefined()`
 
 As [`ConfusionOptions::sample_weights`](ConfusionOptions.md#sample_weights) —
 per-row weights feeding the underlying confusion matrix, and therefore

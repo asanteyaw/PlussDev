@@ -58,12 +58,6 @@ ts
 
 - [`AxelFieldAxisAccessor::kind`](kind.md): the general form this
   method is a fixed shorthand for.
-- [`AxelFieldAxisAccessor::timeindex`](timeindex.md): the shorthand for
-  the related `TimeIndex`-kind fields.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

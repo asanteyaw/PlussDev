@@ -27,6 +27,17 @@ classic::StatusOr<classic::TuneReport> classic::probe(
     std::int64_t max_parallel = 0);
 ```
 
+## What It Does
+
+Calls `sampler` once per trial to generate that trial's `ModelSpec`,
+cross-assesses each generated candidate against `batch` the same way
+[`cross_assess`](../metrics/cross_assess.md) does, and ranks all `trials`
+results into one [`TuneReport`](TuneReport.md) by `objective_metric`. This
+is the shape to reach for when candidates come from a generative process
+(drawing a hyperparameter from a distribution each trial) rather than a
+fixed, enumerable list -- see [`sweep`](sweep.md) for the enumerated
+alternative.
+
 ## Parameters
 
 `sampler`

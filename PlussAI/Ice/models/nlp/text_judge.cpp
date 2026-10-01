@@ -1,5 +1,6 @@
 #include "pluss/ai/ice/models/nlp/text_judge.h"
 
+#include "pluss/ai/ice/io/kv_artifact.h"
 #include "pluss/ai/nodeb/tasks.h"
 #include "pluss/ai/nodeb/tokenize.h"
 
@@ -28,7 +29,6 @@ using nodeb::TextCatOptions;
 using nodeb::TextCatStage;
 using nodeb::TrainOptions;
 using nodeb::Workflow;
-using StringMap = std::unordered_map<std::string, std::string>;
 
 constexpr std::string_view kMagic = "pluss_ice_text_judge";
 constexpr std::int64_t kSchema = 3;
@@ -134,76 +134,18 @@ constexpr std::int64_t kSchema = 3;
   PLUSS_FAIL("pluss::ai::ice::models::TextJudge: unreachable monitor direction.");
 }
 
-void write_kv_(std::ostringstream& out, std::string_view key, std::string_view value) {
-  out << key << '=';
-  out << std::quoted(std::string(value)) << '\n';
-}
+using pluss::ai::ice::io::detail::collect_indexed;
+using pluss::ai::ice::io::detail::parse_kv_body;
+using pluss::ai::ice::io::detail::require_bool;
+using pluss::ai::ice::io::detail::require_f64;
+using pluss::ai::ice::io::detail::require_field;
+using pluss::ai::ice::io::detail::require_i64;
+using pluss::ai::ice::io::detail::require_u64;
+using pluss::ai::ice::io::detail::write_bool_line;
+using pluss::ai::ice::io::detail::write_kv_line;
+using pluss::ai::ice::io::detail::write_num_line;
 
-template <class T>
-void write_num_(std::ostringstream& out, std::string_view key, T value) {
-  out << key << '=' << value << '\n';
-}
-
-void write_bool_(std::ostringstream& out, std::string_view key, bool value) {
-  out << key << '=' << (value ? 1 : 0) << '\n';
-}
-
-[[nodiscard]] StringMap parse_body_(std::string_view body) {
-  StringMap out{};
-  std::istringstream stream{std::string(body)};
-  std::string line{};
-  while (std::getline(stream, line)) {
-    if (line.empty()) continue;
-    const auto eq = line.find('=');
-    PLUSS_CHECK(eq != std::string::npos,
-                "pluss::ai::ice::models::TextJudge::load: malformed metadata line '" + line + "'.");
-    std::string key = line.substr(0, eq);
-    std::string value_text = line.substr(eq + 1);
-    std::string value{};
-    std::istringstream value_stream(value_text);
-    if (!value_text.empty() && value_text.front() == '"') {
-      value_stream >> std::quoted(value);
-    } else {
-      value = value_text;
-    }
-    out.emplace(std::move(key), std::move(value));
-  }
-  return out;
-}
-
-[[nodiscard]] std::string require_(const StringMap& kv, std::string_view key) {
-  const auto it = kv.find(std::string(key));
-  PLUSS_CHECK(it != kv.end(),
-              "pluss::ai::ice::models::TextJudge::load: missing field '" + std::string(key) + "'.");
-  return it->second;
-}
-
-[[nodiscard]] std::int64_t require_i64_(const StringMap& kv, std::string_view key) {
-  return std::stoll(require_(kv, key));
-}
-
-[[nodiscard]] std::uint64_t require_u64_(const StringMap& kv, std::string_view key) {
-  return static_cast<std::uint64_t>(std::stoull(require_(kv, key)));
-}
-
-[[nodiscard]] double require_f64_(const StringMap& kv, std::string_view key) {
-  return std::stod(require_(kv, key));
-}
-
-[[nodiscard]] bool require_bool_(const StringMap& kv, std::string_view key) {
-  const auto value = require_(kv, key);
-  return value == "1" || value == "true";
-}
-
-[[nodiscard]] std::vector<std::string> collect_indexed_(const StringMap& kv,
-                                                        std::string_view prefix,
-                                                        std::int64_t count) {
-  std::vector<std::string> out(static_cast<std::size_t>(std::max<std::int64_t>(0, count)));
-  for (std::int64_t i = 0; i < count; ++i) {
-    out[static_cast<std::size_t>(i)] = require_(kv, std::string(prefix) + "." + std::to_string(i));
-  }
-  return out;
-}
+constexpr std::string_view kLoadContext = "pluss::ai::ice::models::TextJudge::load";
 
 void validate_model_options_(const TextJudgeOptions& options) {
   PLUSS_CHECK(options.width > 0,
@@ -540,25 +482,25 @@ void TextJudge::save(std::string_view filepath) const {
 
   std::ostringstream out{};
   out << kMagic << '\n';
-  write_num_(out, "schema", kSchema);
-  write_num_(out, "width", options_.width);
-  write_num_(out, "dropout", options_.dropout);
-  write_bool_(out, "use_lemmas", options_.use_lemmas);
-  write_bool_(out, "skip_punct", options_.skip_punct);
-  write_bool_(out, "lowercase", options_.lowercase);
-  write_num_(out, "cfg_dtype", static_cast<int>(options_.cfg.dtype));
-  write_num_(out, "cfg_platform", static_cast<int>(options_.cfg.platform));
-  write_num_(out, "seed", options_.seed);
+  write_num_line(out, "schema", kSchema);
+  write_num_line(out, "width", options_.width);
+  write_num_line(out, "dropout", options_.dropout);
+  write_bool_line(out, "use_lemmas", options_.use_lemmas);
+  write_bool_line(out, "skip_punct", options_.skip_punct);
+  write_bool_line(out, "lowercase", options_.lowercase);
+  write_num_line(out, "cfg_dtype", static_cast<int>(options_.cfg.dtype));
+  write_num_line(out, "cfg_platform", static_cast<int>(options_.cfg.platform));
+  write_num_line(out, "seed", options_.seed);
 
-  write_num_(out, "label_count", static_cast<std::int64_t>(impl_->label_values.size()));
+  write_num_line(out, "label_count", static_cast<std::int64_t>(impl_->label_values.size()));
   for (std::size_t i = 0; i < impl_->label_values.size(); ++i) {
-    write_kv_(out, "label." + std::to_string(i), impl_->label_values[i]);
+    write_kv_line(out, "label." + std::to_string(i), impl_->label_values[i]);
   }
 
   const auto stage_lines = impl_->stage.dump_state_lines();
-  write_num_(out, "stage_count", static_cast<std::int64_t>(stage_lines.size()));
+  write_num_line(out, "stage_count", static_cast<std::int64_t>(stage_lines.size()));
   for (std::size_t i = 0; i < stage_lines.size(); ++i) {
-    write_kv_(out, "stage." + std::to_string(i), stage_lines[i]);
+    write_kv_line(out, "stage." + std::to_string(i), stage_lines[i]);
   }
 
   std::ofstream file{std::string(filepath)};
@@ -581,31 +523,31 @@ TextJudge TextJudge::load(std::string_view filepath) {
               "pluss::ai::ice::models::TextJudge::load: invalid model artifact header.");
   std::ostringstream body{};
   body << file.rdbuf();
-  const auto kv = parse_body_(body.str());
-  const auto schema = require_i64_(kv, "schema");
+  const auto kv = parse_kv_body(body.str(), kLoadContext);
+  const auto schema = require_i64(kv, "schema", kLoadContext);
   PLUSS_CHECK(schema == 2 || schema == kSchema,
               "pluss::ai::ice::models::TextJudge::load: unsupported schema.");
 
   TextJudgeOptions options{};
-  options.width = require_i64_(kv, "width");
-  options.dropout = require_f64_(kv, "dropout");
-  options.use_lemmas = require_bool_(kv, "use_lemmas");
-  options.skip_punct = require_bool_(kv, "skip_punct");
-  options.lowercase = require_bool_(kv, "lowercase");
+  options.width = require_i64(kv, "width", kLoadContext);
+  options.dropout = require_f64(kv, "dropout", kLoadContext);
+  options.use_lemmas = require_bool(kv, "use_lemmas", kLoadContext);
+  options.skip_punct = require_bool(kv, "skip_punct", kLoadContext);
+  options.lowercase = require_bool(kv, "lowercase", kLoadContext);
   options.cfg = Config{}
-                    .with_dtype(static_cast<ScalarType>(require_i64_(kv, "cfg_dtype")))
-                    .with_platform(static_cast<Platform>(require_i64_(kv, "cfg_platform")));
-  options.seed = require_u64_(kv, "seed");
+                    .with_dtype(static_cast<ScalarType>(require_i64(kv, "cfg_dtype", kLoadContext)))
+                    .with_platform(static_cast<Platform>(require_i64(kv, "cfg_platform", kLoadContext)));
+  options.seed = require_u64(kv, "seed", kLoadContext);
 
   TextJudge model(options);
   auto restored = std::make_shared<Impl>();
   restored->stage = TextCatStage(textcat_options_(options, TextJudgeTrainOptions{}, 1));
-  const auto stage_lines = collect_indexed_(kv, "stage", require_i64_(kv, "stage_count"));
+  const auto stage_lines = collect_indexed(kv, "stage", require_i64(kv, "stage_count", kLoadContext), kLoadContext);
   std::vector<std::string_view> stage_views{};
   stage_views.reserve(stage_lines.size());
   for (const auto& line : stage_lines) stage_views.push_back(line);
   restored->stage.load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(stage_views));
-  restored->label_values = collect_indexed_(kv, "label", require_i64_(kv, "label_count"));
+  restored->label_values = collect_indexed(kv, "label", require_i64(kv, "label_count", kLoadContext), kLoadContext);
   for (std::size_t i = 0; i < restored->label_values.size(); ++i) {
     restored->label_to_index.emplace(restored->label_values[i], static_cast<std::int64_t>(i));
   }

@@ -95,7 +95,7 @@ static std::vector<Series> normalize_indices_to_nd(const std::vector<Series>& in
   std::vector<Series> out;
   out.reserve((std::size_t)nd);
   for (auto& s: indices) out.push_back(s);
-  while ((std::int64_t)out.size() < nd) out.push_back(Series::undefined());
+  while ((std::int64_t)out.size() < nd) out.push_back(pluss::series::undefined());
   return out;
 }
 
@@ -526,7 +526,7 @@ static Series index_torch_like(const Series& a, const std::vector<Series>& indic
   idxp.reserve((std::size_t)nd);
   for (std::int64_t d=0; d<nd; ++d) {
     const auto od = perm[(std::size_t)d];
-    if (!idx[(std::size_t)od].defined()) { idxp.push_back(Series::undefined()); continue; }
+    if (!idx[(std::size_t)od].defined()) { idxp.push_back(pluss::series::undefined()); continue; }
     idxp.push_back(idx[(std::size_t)od]);
   }
 
@@ -614,7 +614,7 @@ static Series index_put_torch_like(const Series& a, const std::vector<Series>& i
   idxp.reserve((std::size_t)nd);
   for (std::int64_t d=0; d<nd; ++d) {
     const auto od = perm[(std::size_t)d];
-    if (!idx[(std::size_t)od].defined()) { idxp.push_back(Series::undefined()); continue; }
+    if (!idx[(std::size_t)od].defined()) { idxp.push_back(pluss::series::undefined()); continue; }
     idxp.push_back(idx[(std::size_t)od]);
   }
 

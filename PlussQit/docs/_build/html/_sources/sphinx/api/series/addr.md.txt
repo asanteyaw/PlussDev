@@ -9,6 +9,7 @@
 ```cpp
 Series::addr(const Series& vec1, const Series& vec2,
              double beta = 1.0, double alpha = 1.0) const -> Series
+Series& Series::addr_(const Series& vec1, const Series& vec2, double beta=1.0, double alpha=1.0) const
 ```
 
 ## What It Does
@@ -48,6 +49,32 @@ matrix, but may be a scalar, row, or column shape that broadcasts to `[m,n]`.
 
 Differentiable in `input`, `vec1`, and `vec2`: `beta * g` to `input`,
 `alpha * (g @ vec2)` to `vec1`, `alpha * (g^T @ vec1)` to `vec2`.
+
+## In-Place Form
+
+`addr_()` is the in-place sibling of [`addr()`](addr.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `addr_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({{0.0, 0.0}, {0.0, 0.0}});
+auto vec1 = pluss::make_series({1.0, 2.0}, {2});
+auto vec2 = pluss::make_series({3.0, 4.0}, {2});
+
+x.addr_(vec1, vec2, 1.0, 1.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2,2], strides=[2,1], dtype=float64, platform=cpu, numel=4, contiguous=true)
+data=[[3, 4],
+  [6, 8]]
+```
 
 ## Examples
 

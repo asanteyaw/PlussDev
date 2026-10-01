@@ -10,34 +10,34 @@ namespace metrics {
 
 struct MetricReport {
   std::vector<MetricKind> requested{};
-  Series values = Series::undefined();
-  Series accuracy = Series::undefined();
-  Series balanced_accuracy = Series::undefined();
-  Series precision = Series::undefined();
-  Series recall = Series::undefined();
-  Series sensitivity = Series::undefined();
-  Series f1 = Series::undefined();
-  Series specificity = Series::undefined();
-  Series geometric_mean = Series::undefined();
-  Series balance_quality = Series::undefined();
-  Series roc_auc = Series::undefined();
-  Series logloss = Series::undefined();
-  Series mcc = Series::undefined();
-  Series cohen_kappa = Series::undefined();
-  Series gini = Series::undefined();
-  Series average_precision = Series::undefined();
-  Series brier = Series::undefined();
-  Series mse = Series::undefined();
-  Series rmse = Series::undefined();
-  Series mae = Series::undefined();
-  Series r2 = Series::undefined();
-  Series quantile_loss = Series::undefined();
+  Series values = pluss::series::undefined();
+  Series accuracy = pluss::series::undefined();
+  Series balanced_accuracy = pluss::series::undefined();
+  Series precision = pluss::series::undefined();
+  Series recall = pluss::series::undefined();
+  Series sensitivity = pluss::series::undefined();
+  Series f1 = pluss::series::undefined();
+  Series specificity = pluss::series::undefined();
+  Series geometric_mean = pluss::series::undefined();
+  Series balance_quality = pluss::series::undefined();
+  Series roc_auc = pluss::series::undefined();
+  Series logloss = pluss::series::undefined();
+  Series mcc = pluss::series::undefined();
+  Series cohen_kappa = pluss::series::undefined();
+  Series gini = pluss::series::undefined();
+  Series average_precision = pluss::series::undefined();
+  Series brier = pluss::series::undefined();
+  Series mse = pluss::series::undefined();
+  Series rmse = pluss::series::undefined();
+  Series mae = pluss::series::undefined();
+  Series r2 = pluss::series::undefined();
+  Series quantile_loss = pluss::series::undefined();
 };
 
 struct SeriesCompareReport {
-  Series abs_error = Series::undefined();
-  Series max_abs_diff = Series::undefined();
-  Series mae = Series::undefined();
+  Series abs_error = pluss::series::undefined();
+  Series max_abs_diff = pluss::series::undefined();
+  Series mae = pluss::series::undefined();
 };
 
 [[nodiscard]] inline SeriesCompareReport compare_series(const Series& lhs, const Series& rhs) {
@@ -59,8 +59,8 @@ struct SeriesCompareReport {
 }
 
 struct LinearParameters {
-  Series coeff = Series::undefined();
-  Series intercept = Series::undefined();
+  Series coeff = pluss::series::undefined();
+  Series intercept = pluss::series::undefined();
   bool fit_intercept = false;
 };
 
@@ -179,7 +179,7 @@ namespace metrics::detail {
 }
 
 [[nodiscard]] inline Series resolve_training_weights(const Series& labels,
-                                                     const Series& batch_sample_weights = Series::undefined(),
+                                                     const Series& batch_sample_weights = pluss::series::undefined(),
                                                      const TrainOptions& options = {}) {
   return resolve(::pluss::ai::nodej::resolve_training_weights(labels, batch_sample_weights, options),
                  "resolve_training_weights");
@@ -438,8 +438,8 @@ class Threshold final {
   }
 
  private:
-  Series scores_ = Series::undefined();
-  Series labels_ = Series::undefined();
+  Series scores_ = pluss::series::undefined();
+  Series labels_ = pluss::series::undefined();
 };
 
 [[nodiscard]] inline Threshold threshold(Series scores, Series labels) {
@@ -553,7 +553,7 @@ namespace regression {
   LabeledBatch batch{
       .features = x_batch,
       .y = y_aligned,
-      .sample_weights = Series::undefined(),
+      .sample_weights = pluss::series::undefined(),
   };
   resolve(validate_labeled(batch), std::string(where) + ".validate_labeled");
   return batch;

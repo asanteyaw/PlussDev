@@ -9,6 +9,7 @@
 #include <cmath>
 #include <limits>
 #include <cstring>
+#include <utility>
 
 namespace pluss::codem::native::cpu {
 
@@ -67,6 +68,105 @@ static void arg_reduce_dim_impl_(
       q[o * inner + i] = arg;
     }
   }
+}
+
+template <class CmpT, class InT, class Load, class Better>
+static void value_index_reduce_dim_impl_(
+    const Series& a,
+    std::int64_t dim,
+    Series& values,
+    Series& indices,
+    Load load,
+    Better better) {
+  const auto nd = a.dim();
+  const auto reduce_n = a.sizes()[static_cast<std::size_t>(dim)];
+  std::int64_t outer = 1;
+  for (std::int64_t i = 0; i < dim; ++i) outer *= a.sizes()[static_cast<std::size_t>(i)];
+  std::int64_t inner = 1;
+  for (std::int64_t i = dim + 1; i < nd; ++i) inner *= a.sizes()[static_cast<std::size_t>(i)];
+
+  const auto* src = reinterpret_cast<const InT*>(a.raw_data());
+  auto* dst = reinterpret_cast<InT*>(values.raw_data());
+  auto* idx = reinterpret_cast<std::int64_t*>(indices.raw_data());
+  for (std::int64_t o = 0; o < outer; ++o) {
+    for (std::int64_t i = 0; i < inner; ++i) {
+      const std::int64_t base = o * reduce_n * inner + i;
+      std::int64_t best_index = 0;
+      CmpT best = static_cast<CmpT>(load(src[base]));
+      for (std::int64_t r = 1; r < reduce_n; ++r) {
+        const CmpT candidate = static_cast<CmpT>(load(src[base + r * inner]));
+        if (better(candidate, best)) {
+          best = candidate;
+          best_index = r;
+        }
+      }
+      const std::int64_t out_index = o * inner + i;
+      dst[out_index] = src[base + best_index * inner];
+      idx[out_index] = best_index;
+    }
+  }
+}
+
+template <bool IsMax>
+static std::pair<Series, Series> extrema_pair_impl_(
+    const Series& a, std::int64_t dim, bool keepdim) {
+  PLUSS_CHECK(a.defined(), IsMax ? "max_pair: undefined" : "min_pair: undefined");
+  Series input = a.contiguous();
+  const auto nd = input.dim();
+  if (dim < 0) dim += nd;
+  PLUSS_CHECK(dim >= 0 && dim < nd,
+              IsMax ? "max_pair: dim out of range" : "min_pair: dim out of range");
+  PLUSS_CHECK(input.sizes()[static_cast<std::size_t>(dim)] != 0,
+              IsMax ? "max_pair: cannot reduce an empty dimension"
+                    : "min_pair: cannot reduce an empty dimension");
+
+  auto out_sizes = std::vector<std::int64_t>(input.sizes().begin(), input.sizes().end());
+  if (keepdim) out_sizes[static_cast<std::size_t>(dim)] = 1;
+  else out_sizes.erase(out_sizes.begin() + dim);
+  Series values = Series::empty(out_sizes, input.scalar_type());
+  Series indices = Series::empty(out_sizes, ScalarType::Int64);
+
+#define PLUSS_EXTREMA_PAIR_CASE(DTYPE, TYPE, CMP, LOAD)                         \
+  case ScalarType::DTYPE:                                                       \
+    value_index_reduce_dim_impl_<CMP, TYPE>(                                    \
+        input, dim, values, indices, LOAD,                                      \
+        [](CMP x, CMP y) {                                                      \
+          if constexpr (std::is_floating_point_v<CMP>) {                       \
+            return IsMax ? arg_better_max<CMP>(x, y) : arg_better_min<CMP>(x, y); \
+          } else {                                                              \
+            return IsMax ? x > y : x < y;                                      \
+          }                                                                     \
+        });                                                                     \
+    break
+  switch (input.scalar_type()) {
+    PLUSS_EXTREMA_PAIR_CASE(Float64, double, double, [](double x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(Float32, float, float, [](float x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(Float16, Float16, float, load_f16_);
+    PLUSS_EXTREMA_PAIR_CASE(BFloat16, BFloat16, float, load_bf16_);
+    PLUSS_EXTREMA_PAIR_CASE(Float8E4M3FN, Float8E4M3FN, float, load_f8e4m3fn_);
+    PLUSS_EXTREMA_PAIR_CASE(Float8E5M2, Float8E5M2, float, load_f8e5m2_);
+    PLUSS_EXTREMA_PAIR_CASE(Bool, std::uint8_t, std::uint8_t, [](std::uint8_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(Int8, std::int8_t, std::int8_t, [](std::int8_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(Int16, std::int16_t, std::int16_t, [](std::int16_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(Int32, std::int32_t, std::int32_t, [](std::int32_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(Int64, std::int64_t, std::int64_t, [](std::int64_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(UInt8, std::uint8_t, std::uint8_t, [](std::uint8_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(UInt16, std::uint16_t, std::uint16_t, [](std::uint16_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(UInt32, std::uint32_t, std::uint32_t, [](std::uint32_t x) { return x; });
+    PLUSS_EXTREMA_PAIR_CASE(UInt64, std::uint64_t, std::uint64_t, [](std::uint64_t x) { return x; });
+    default:
+      PLUSS_FAIL(IsMax ? "max_pair: dtype not implemented" : "min_pair: dtype not implemented");
+  }
+#undef PLUSS_EXTREMA_PAIR_CASE
+  return {std::move(values), std::move(indices)};
+}
+
+std::pair<Series, Series> max_pair(const Series& a, std::int64_t dim, bool keepdim) {
+  return extrema_pair_impl_<true>(a, dim, keepdim);
+}
+
+std::pair<Series, Series> min_pair(const Series& a, std::int64_t dim, bool keepdim) {
+  return extrema_pair_impl_<false>(a, dim, keepdim);
 }
 
 Series mean(const Series& a, std::int64_t dim, bool keepdim) {

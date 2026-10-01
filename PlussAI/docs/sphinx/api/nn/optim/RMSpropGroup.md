@@ -1,29 +1,102 @@
 # `pluss::ai::nn::optim::RMSpropGroup`
 
-One per-parameter-group entry: its own parameter list plus its own RMSpropOptions.
+One per-parameter-group entry for [`RMSprop`](RMSprop.md)'s per-group
+constructor: a parameter subset paired with its own
+[`RMSpropOptions`](RMSpropOptions.md).
 
 ## Signature
 
 ```cpp
-// the public factories / constructors that produce this object
-// e.g. lymph::models::Model lymph::models::logistic_regression(...);
+std::vector<pluss::Series*> parameters;
+nn::optim::RMSpropOptions options;
 ```
+
+A plain aggregate -- construct with `{parameters, options}`, or name each
+field.
 
 ## Construction
 
-<!-- how an instance is obtained; delete if the Signature block says it all -->
+```cpp
+nn::optim::RMSpropGroup{{&backbone_weight}, nn::optim::RMSpropOptions{.learning_rate = 0.01}};
+nn::optim::RMSpropGroup{{&head_weight}, nn::optim::RMSpropOptions{.learning_rate = 0.5}};
+```
+
+A `vector<RMSpropGroup>` of these is passed to [`RMSprop`](RMSprop.md)'s
+per-group constructor overload. Every parameter across every group in the
+list must be unique.
 
 ## State
 
-<!-- the observable fields / accessors and what each means -->
+`parameters` -- `vector<Series*>`
+: This group's own parameter subset.
+
+`options` -- [`RMSpropOptions`](RMSpropOptions.md)
+: This group's own options, independent of every other group's, including
+  its own running averages per parameter.
 
 ## Methods
 
-<!-- one `### <method>` subsection per public method: signature, what it does, parameters, returns, errors, and a verified example -->
+None -- `RMSpropGroup` is a plain data aggregate, consumed only by
+[`RMSprop`](RMSprop.md)'s constructor.
+
+## Practical Examples
+
+One example: two groups with different learning rates, trained together
+in one `RMSprop` instance.
+
+### Example 1
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai.h>
+
+#include <iostream>
+
+int main() {
+  namespace nn = pluss::ai::nn;
+  namespace optim = nn::optim;
+  using pluss::Config;
+  using pluss::ScalarType;
+  using pluss::Series;
+
+  const Config f32 = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
+  const Series target = pluss::make_series(1.0F, f32);
+
+  Series backbone = pluss::make_series(5.0F, f32);
+  Series head = pluss::make_series(5.0F, f32);
+
+  std::vector<optim::RMSpropGroup> groups{
+      optim::RMSpropGroup{{&backbone}, optim::RMSpropOptions{.learning_rate = 0.01}},
+      optim::RMSpropGroup{{&head}, optim::RMSpropOptions{.learning_rate = 0.5}},
+  };
+  optim::RMSprop optimizer(groups);
+
+  for (int step = 0; step < 3; ++step) {
+    optimizer.step(std::vector<Series>{backbone.sub(target), head.sub(target)});
+  }
+  std::cout << "backbone (lr=0.01): w = " << backbone.item<float>() << "\n";
+  std::cout << "head (lr=0.5):      w = " << head.item<float>() << "\n";
+
+  return 0;
+}
+```
+
+Output
+
+```text
+backbone (lr=0.01): w = 4.77317
+head (lr=0.5):      w = 0.951331
+```
 
 ## Changelog
 
-- **0.1** — <!-- initial documented surface -->
+- **0.1** — a parameter list paired with its own `RMSpropOptions`.
+
+## See Also
+
+- [`RMSprop`](RMSprop.md) -- the optimizer this configures per group.
+- [`RMSpropOptions`](RMSpropOptions.md) -- the fields each group's own
+  `options` carries.
 
 <!-- apiref:toctree:start -->
 

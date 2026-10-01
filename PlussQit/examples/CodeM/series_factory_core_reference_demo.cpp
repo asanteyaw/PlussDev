@@ -15,6 +15,25 @@ void heading(const char* label) {
 }  // namespace
 
 int main() {
+  heading("undefined_state");
+  const auto absent = pluss::series::undefined();
+  std::cout << std::boolalpha << "defined=" << absent.defined() << "\n\n";
+
+  heading("undefined_optional_branch");
+  const bool supply_bias = false;
+  const auto bias = supply_bias
+      ? pluss::series::zeros({3}, pluss::ScalarType::Float64)
+      : pluss::series::undefined();
+  std::cout << "bias_defined=" << bias.defined() << "\n\n";
+
+  heading("undefined_rejects_math");
+  try {
+    (void)absent.add(1.0);
+  } catch (const std::exception& e) {
+    std::string msg = e.what();
+    std::cout << msg.substr(0, msg.find('\n')) << "\n\n";
+  }
+
   heading("make_scalar");
   std::cout << pluss::series::make(42.5) << "\n\n";
 

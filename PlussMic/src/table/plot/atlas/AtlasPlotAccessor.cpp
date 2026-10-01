@@ -122,7 +122,7 @@ std::vector<double> positional_axis(std::int64_t n) {
 }
 
 bool thread_prefers_labels(const Thread& t) {
-  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline || t.kind() == ThreadKind::TimeIndex;
+  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline;
 }
 
 std::vector<std::string> thread_to_labels(const Thread& thread) {
@@ -154,9 +154,6 @@ pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, 
       break;
     case ThreadKind::Timeline:
       numeric_thread = Thread(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
-      break;
-    case ThreadKind::TimeIndex:
-      numeric_thread = Thread(t.as_timeindex().timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     case ThreadKind::Note:
       numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
@@ -244,7 +241,7 @@ struct AtlasGrid3D {
   std::vector<std::string> x_labels{};
   std::vector<double> y_axis{};
   std::vector<std::string> y_labels{};
-  pluss::Series z{};
+  pluss::Series z = pluss::series::undefined();
 };
 
 struct DepthAxis2D {

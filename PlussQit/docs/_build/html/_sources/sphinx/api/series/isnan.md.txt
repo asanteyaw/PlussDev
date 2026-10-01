@@ -8,6 +8,7 @@
 
 ```cpp
 Series::isnan() const -> Series
+Series& Series::isnan_()
 ```
 
 ## What It Does
@@ -27,6 +28,26 @@ finite numbers, and it does not match infinities.
 
 `isnan()` is a boolean classification surface, not a differentiable numeric
 transform.
+
+## In-Place Form
+
+`isnan_()` is the in-place sibling of [`isnan()`](isnan.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+```cpp
+auto x = pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 3.0});
+x.isnan_();
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 1, 0]
+```
 
 ## Examples
 

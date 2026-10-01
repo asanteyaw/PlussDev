@@ -243,9 +243,9 @@ bool run_case(const Series& x,
   const std::int64_t dirs = cfg.bidirectional ? 2 : 1;
   cfg.num_layers = static_cast<std::int64_t>(params.size()) / dirs;
 
-  Series ref_y;
-  Series ref_h;
-  Series ref_c;
+  Series ref_y = pluss::series::undefined();
+  Series ref_h = pluss::series::undefined();
+  Series ref_c = pluss::series::undefined();
   {
     ScopedEnvVar route_off("PLUSS_MPS_LSTM_ROUTE", "0");
     auto [y, state] = pluss::ai::rnn::lstm(
@@ -258,9 +258,9 @@ bool run_case(const Series& x,
     ref_c = std::get<1>(state);
   }
 
-  Series got_y;
-  Series got_h;
-  Series got_c;
+  Series got_y = pluss::series::undefined();
+  Series got_h = pluss::series::undefined();
+  Series got_c = pluss::series::undefined();
   {
     ScopedEnvVar route_on("PLUSS_MPS_LSTM_ROUTE", "1");
     ScopedEnvVar strict("PLUSS_MPS_LSTM_ROUTE_STRICT", "1");
@@ -494,8 +494,8 @@ bool run_native_rnn_route_check(std::ostream* err = nullptr) {
     };
   };
 
-  Series ref_y;
-  Series ref_h;
+  Series ref_y = pluss::series::undefined();
+  Series ref_h = pluss::series::undefined();
   {
     ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
     ScopedEnvVar route("PLUSS_MPS_RNN_ROUTE", "0");
@@ -503,8 +503,8 @@ bool run_native_rnn_route_check(std::ostream* err = nullptr) {
     std::tie(ref_y, ref_h) = pluss::ai::rnn::rnn(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
   }
 
-  Series got_y;
-  Series got_h;
+  Series got_y = pluss::series::undefined();
+  Series got_h = pluss::series::undefined();
   {
     ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
     ScopedEnvVar route("PLUSS_MPS_RNN_ROUTE", "1");
@@ -574,8 +574,8 @@ bool run_native_gru_route_check(std::ostream* err = nullptr) {
     };
   };
 
-  Series ref_y;
-  Series ref_h;
+  Series ref_y = pluss::series::undefined();
+  Series ref_h = pluss::series::undefined();
   {
     ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
     ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "0");
@@ -583,8 +583,8 @@ bool run_native_gru_route_check(std::ostream* err = nullptr) {
     std::tie(ref_y, ref_h) = pluss::ai::rnn::gru(x, hx, pluss::msharp::RangeView::Of<pluss::ai::rnn::NetWeight>(params), cfg);
   }
 
-  Series got_y;
-  Series got_h;
+  Series got_y = pluss::series::undefined();
+  Series got_h = pluss::series::undefined();
   {
     ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
     ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "1");
@@ -671,8 +671,8 @@ bool run_native_gru_route_check(std::ostream* err = nullptr) {
   // (today's default) actually uses -- still needs to compute this
   // correctly, since bidirectional+split_bias GRUs are an ordinary,
   // supported configuration; only the NATIVE MPSGraph route rejects it.
-  Series split_ref_y;
-  Series split_ref_h;
+  Series split_ref_y = pluss::series::undefined();
+  Series split_ref_h = pluss::series::undefined();
   {
     ScopedEnvVar fallback("PLUSS_MPS_ALLOW_CPU_FALLBACK", "0");
     ScopedEnvVar route("PLUSS_MPS_GRU_ROUTE", "0");

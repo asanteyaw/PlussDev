@@ -105,9 +105,9 @@ double chisq_quantile_(double prob, std::int64_t dof, Config cfg) {
 }
 
 struct OlsResult {
-  Series coeff = Series::undefined();
-  Series residuals = Series::undefined();
-  Series xtx_inv = Series::undefined();
+  Series coeff = pluss::series::undefined();
+  Series residuals = pluss::series::undefined();
+  Series xtx_inv = pluss::series::undefined();
   std::int64_t n = 0;
   std::int64_t k = 0;
   double mse = 0.0;

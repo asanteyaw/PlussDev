@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -80,7 +80,7 @@ Each position becomes a length-1 <code class="docutils literal notranslate"><spa
 Each position’s epoch-nanosecond value is converted back to a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> via
 <code class="docutils literal notranslate"><span class="pre">pluss::timeline::from_epoch</span></code>, using the source timeline’s own timezone.</p>
 <p><strong><code class="docutils literal notranslate"><span class="pre">StreamKind::TimeIndex</span></code></strong>
-Each position becomes a single-element <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> (<code class="docutils literal notranslate"><span class="pre">pluss::make_timeindex</span></code>,
+Each position becomes a single-element <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> (<code class="docutils literal notranslate"><span class="pre">pluss::timeindex::make</span></code>,
 non-sorted), built the same way as the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> case, from the index’s own
 underlying timeline and timezone.</p>
 </section>

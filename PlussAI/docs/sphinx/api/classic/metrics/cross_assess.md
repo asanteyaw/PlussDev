@@ -37,6 +37,17 @@ classic::StatusOr<double> classic::cross_score(
     const classic::AssessOptions& assess_options = {});
 ```
 
+## What It Does
+
+Splits `batch` into folds according to `split`, then for each fold builds
+a fresh model from `spec`, fits it on that fold's training rows, and
+scores it on that fold's held-out rows -- repeating this once per fold so
+the resulting scores show how consistently the model performs across
+different partitions of the data, not just its performance on one
+particular split. `cross_assess` returns every fold's full report;
+`cross_scores`/`cross_score` narrow that down to one metric's per-fold
+values or their across-fold mean.
+
 ## Parameters
 
 `spec`

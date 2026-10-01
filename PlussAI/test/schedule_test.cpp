@@ -46,9 +46,9 @@ bool run_schedule_checks(std::ostream* err = nullptr) {
   }
 
   pluss::nn::Schedule model;
-  model.then("fc1", pluss::nn::Fusion(2, 2, true, cfg, 11ULL))
-      .then("act", pluss::nn::ReLU())
-      .then("head", pluss::nn::Fusion(2, 1, true, cfg, 13ULL));
+  model.append("fc1", pluss::nn::Fusion(2, 2, true, cfg, 11ULL))
+      .append("act", pluss::nn::ReLU())
+      .append("head", pluss::nn::Fusion(2, 1, true, cfg, 13ULL));
 
   if (model->size() != 3 || model->empty()) {
     if (err) *err << "size/empty mismatch\n";
@@ -64,7 +64,7 @@ bool run_schedule_checks(std::ostream* err = nullptr) {
   }
 
   if (!throws([&] {
-        model.then("act", pluss::nn::Identity());
+        model.append("act", pluss::nn::Identity());
       })) {
     if (err) *err << "duplicate name should fail loudly\n";
     return false;
@@ -111,10 +111,10 @@ bool run_schedule_checks(std::ostream* err = nullptr) {
   }
 
   pluss::nn::Schedule typed;
-  typed.then_as<std::tuple<int, int>, int>("sum", [](std::tuple<int, int> pair) {
+  typed.append_as<std::tuple<int, int>, int>("sum", [](std::tuple<int, int> pair) {
     return std::get<0>(pair) + std::get<1>(pair);
   });
-  typed.then_as<int, int>("double", [](int v) {
+  typed.append_as<int, int>("double", [](int v) {
     return 2 * v;
   });
   if (typed.run<int>(2, 3) != 10) {

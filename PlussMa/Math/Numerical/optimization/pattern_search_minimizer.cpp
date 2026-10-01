@@ -25,13 +25,13 @@ struct CommonSetup {
   std::vector<std::int64_t> original_shape{};
   std::int64_t dimension{0};
   Config work_cfg{};
-  Series flat_initial{Series::undefined()};
+  Series flat_initial{pluss::series::undefined()};
 };
 
 struct BoundsPack {
   bool enabled{false};
-  Series lower{Series::undefined()};
-  Series upper{Series::undefined()};
+  Series lower{pluss::series::undefined()};
+  Series upper{pluss::series::undefined()};
   std::vector<double> lower_host{};
   std::vector<double> upper_host{};
 };

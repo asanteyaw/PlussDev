@@ -68,7 +68,7 @@ Example 2. Calling `as_timeline()` on a non-`Timeline` thread throws — includi
 `TimeIndex`-kind thread.
 
 ```cpp
-auto indexed = Thread(pluss::make_timeindex({"2024-01-01T00:00:00Z"}, true));
+auto indexed = Thread(pluss::timeindex::make({"2024-01-01T00:00:00Z"}, true));
 try {
   const auto& bad = indexed.as_timeline();
 } catch (const std::exception& e) {
@@ -85,16 +85,11 @@ Thread: payload is not Timeline
 ## Notes
 
 - Returns a reference into the thread's own storage — no copy, no allocation.
-- Requires `Timeline`-kind specifically; a `TimeIndex`-kind thread does **not** satisfy
-  this, even though the two payload kinds are closely related — see
-  [`as_timeindex()`](as_timeindex.md) for the indexed counterpart.
 - The result does not automatically become a `Thread` again — wrap it explicitly with
   `Thread(...)` when a `Thread`-only API needs it back.
 
 ## See Also
 
-- [`Thread::as_timeindex`](as_timeindex.md): the escape hatch for the indexed temporal
-  payload kind, which additionally supports resampling.
 - [`Thread::as_series`](as_series.md): the numeric escape hatch, including the full
   reference/no-rewrap explanation.
 - [`Thread::tl`](tl.md): the `Thread`-surface temporal accessor — prefer this in most
@@ -102,10 +97,6 @@ Thread: payload is not Timeline
   `tl()` doesn't re-expose.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="as_timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">as_timeindex</span>
-  </a>
   <a class="next-link" href="astype.html">
     <span class="label">Next</span>
     <span class="title">astype</span>

@@ -82,7 +82,7 @@ Thread: payload is not Note
 
 - [`Thread::as_series`](as_series.md): the same escape hatch for numeric payloads,
   including the full reference/no-rewrap explanation.
-- [`Thread::as_timeline`](as_timeline.md) / [`as_timeindex`](as_timeindex.md): the
+- [`Thread::as_timeline`](as_timeline.md): the
   equivalent accessors for the two temporal payload kinds.
 - [`Thread::nt`](nt.md): the `Thread`-surface text accessor — prefer this in most
   application code; reach for `as_note()` only when you need a `Note`-only method `nt()`

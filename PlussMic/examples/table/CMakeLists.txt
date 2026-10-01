@@ -99,6 +99,77 @@ add_executable(plussmic_flash_dataset_bridge_demo
 add_executable(plussmic_bi_demo_suite
   ${CMAKE_CURRENT_SOURCE_DIR}/bi_demo_suite.cpp
 )
+# Scratch doc-verification target for the Nexus API reference rewrite:
+# not a permanent example, just a compile+run harness for confirming
+# real output before it gets pasted into docs/sphinx/api/nexus*/*.md.
+# Source lives in scratch/nexus_docs/, edited freely, never installed.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/nexus_docs/nexus_docs_verify.cpp")
+  add_executable(nexus_docs_verify
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/nexus_docs/nexus_docs_verify.cpp
+  )
+  target_link_libraries(nexus_docs_verify PRIVATE PlussMic)
+  set_target_properties(nexus_docs_verify PROPERTIES CXX_STANDARD 20)
+endif()
+# Same idea, for the Series API reference gap-filling work (fft,
+# view_as_real, clamp/clamp_, the in-place `_`-suffixed methods): not a
+# permanent example, just a compile+run harness. Source lives in
+# scratch/series_docs_gap/, edited freely, never installed.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/series_docs_verify.cpp")
+  add_executable(series_docs_verify
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/series_docs_verify.cpp
+  )
+  target_link_libraries(series_docs_verify PRIVATE PlussMic)
+  set_target_properties(series_docs_verify PROPERTIES CXX_STANDARD 20)
+endif()
+# Batched verification for the in-place (`_`-suffixed) method sweep: one
+# throwaway harness per batch of methods being folded into their out-of-place
+# counterpart pages. Not permanent examples.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_a.cpp")
+  add_executable(inplace_batch_a
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_a.cpp
+  )
+  target_link_libraries(inplace_batch_a PRIVATE PlussMic)
+  set_target_properties(inplace_batch_a PROPERTIES CXX_STANDARD 20)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_b.cpp")
+  add_executable(inplace_batch_b
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_b.cpp
+  )
+  target_link_libraries(inplace_batch_b PRIVATE PlussMic)
+  set_target_properties(inplace_batch_b PROPERTIES CXX_STANDARD 20)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_c.cpp")
+  add_executable(inplace_batch_c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_c.cpp
+  )
+  # Linked against the lighter PlussQit::CodeM (just the Series engine)
+  # rather than PlussMic, to avoid an unrelated pre-existing PlussMic
+  # compile error in Stream.cpp that
+  # this harness doesn't need to exercise at all.
+  target_link_libraries(inplace_batch_c PRIVATE PlussQit::CodeM)
+  set_target_properties(inplace_batch_c PROPERTIES CXX_STANDARD 20)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_d.cpp")
+  add_executable(inplace_batch_d
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_d.cpp
+  )
+  target_link_libraries(inplace_batch_d PRIVATE PlussQit::CodeM)
+  set_target_properties(inplace_batch_d PROPERTIES CXX_STANDARD 20)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_e.cpp")
+  add_executable(inplace_batch_e
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_e.cpp
+  )
+  target_link_libraries(inplace_batch_e PRIVATE PlussQit::CodeM)
+  set_target_properties(inplace_batch_e PROPERTIES CXX_STANDARD 20)
+endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_f.cpp")
+  add_executable(inplace_batch_f
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../../scratch/series_docs_gap/inplace_batch_f.cpp
+  )
+  target_link_libraries(inplace_batch_f PRIVATE PlussQit::CodeM)
+  set_target_properties(inplace_batch_f PROPERTIES CXX_STANDARD 20)
+endif()
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_ab_reference_demo PRIVATE PlussMic)

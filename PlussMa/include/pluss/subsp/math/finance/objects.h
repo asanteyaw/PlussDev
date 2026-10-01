@@ -13,75 +13,75 @@ namespace pluss::subsp::math::finance::object {
 
 struct Vanilla {
   pricing::OptionType type = pricing::OptionType::Call;
-  pluss::codem::Series is_call = pluss::codem::Series::undefined(); // required when type == OptionType::Auto
-  pluss::codem::Series strike = pluss::codem::Series::undefined();
-  pluss::codem::Series maturity = pluss::codem::Series::undefined();
+  pluss::codem::Series is_call = pluss::series::undefined(); // required when type == OptionType::Auto
+  pluss::codem::Series strike = pluss::series::undefined();
+  pluss::codem::Series maturity = pluss::series::undefined();
 };
 
 struct MarketState {
-  pluss::codem::Series spot = pluss::codem::Series::undefined();
-  pluss::codem::Series rate = pluss::codem::Series::undefined();
-  pluss::codem::Series dividend_yield = pluss::codem::Series::undefined();
+  pluss::codem::Series spot = pluss::series::undefined();
+  pluss::codem::Series rate = pluss::series::undefined();
+  pluss::codem::Series dividend_yield = pluss::series::undefined();
 };
 
 namespace model {
 
 struct BlackScholes {
-  pluss::codem::Series volatility = pluss::codem::Series::undefined();
+  pluss::codem::Series volatility = pluss::series::undefined();
 };
 
 struct Heston {
-  pluss::codem::Series kappa = pluss::codem::Series::undefined();
-  pluss::codem::Series theta = pluss::codem::Series::undefined();
-  pluss::codem::Series sigma = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
-  pluss::codem::Series v0 = pluss::codem::Series::undefined();
-  pluss::codem::Series mu = pluss::codem::Series::undefined();
-  pluss::codem::Series variance_floor = pluss::codem::Series::undefined();
+  pluss::codem::Series kappa = pluss::series::undefined();
+  pluss::codem::Series theta = pluss::series::undefined();
+  pluss::codem::Series sigma = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
+  pluss::codem::Series v0 = pluss::series::undefined();
+  pluss::codem::Series mu = pluss::series::undefined();
+  pluss::codem::Series variance_floor = pluss::series::undefined();
 };
 
 struct Bates {
-  pluss::codem::Series kappa = pluss::codem::Series::undefined();
-  pluss::codem::Series theta = pluss::codem::Series::undefined();
-  pluss::codem::Series sigma = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
-  pluss::codem::Series v0 = pluss::codem::Series::undefined();
-  pluss::codem::Series mu = pluss::codem::Series::undefined();
-  pluss::codem::Series variance_floor = pluss::codem::Series::undefined();
-  pluss::codem::Series jump_intensity = pluss::codem::Series::undefined();
-  pluss::codem::Series jump_mean = pluss::codem::Series::undefined();
-  pluss::codem::Series jump_vol = pluss::codem::Series::undefined();
+  pluss::codem::Series kappa = pluss::series::undefined();
+  pluss::codem::Series theta = pluss::series::undefined();
+  pluss::codem::Series sigma = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
+  pluss::codem::Series v0 = pluss::series::undefined();
+  pluss::codem::Series mu = pluss::series::undefined();
+  pluss::codem::Series variance_floor = pluss::series::undefined();
+  pluss::codem::Series jump_intensity = pluss::series::undefined();
+  pluss::codem::Series jump_mean = pluss::series::undefined();
+  pluss::codem::Series jump_vol = pluss::series::undefined();
 };
 
 struct Sabr {
-  pluss::codem::Series alpha0 = pluss::codem::Series::undefined();
-  pluss::codem::Series beta = pluss::codem::Series::undefined();
-  pluss::codem::Series nu = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
-  pluss::codem::Series mu = pluss::codem::Series::undefined();
-  pluss::codem::Series alpha_floor = pluss::codem::Series::undefined();
+  pluss::codem::Series alpha0 = pluss::series::undefined();
+  pluss::codem::Series beta = pluss::series::undefined();
+  pluss::codem::Series nu = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
+  pluss::codem::Series mu = pluss::series::undefined();
+  pluss::codem::Series alpha_floor = pluss::series::undefined();
   pricing::SabrVolType vol_type = pricing::SabrVolType::Lognormal;
   pricing::SabrApproxOptions approx{};
 };
 
 struct RoughHeston {
-  pluss::codem::Series kappa = pluss::codem::Series::undefined();
-  pluss::codem::Series theta = pluss::codem::Series::undefined();
-  pluss::codem::Series sigma = pluss::codem::Series::undefined();
-  pluss::codem::Series alpha = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
-  pluss::codem::Series v0 = pluss::codem::Series::undefined();
-  pluss::codem::Series mu = pluss::codem::Series::undefined();
-  pluss::codem::Series variance_floor = pluss::codem::Series::undefined();
+  pluss::codem::Series kappa = pluss::series::undefined();
+  pluss::codem::Series theta = pluss::series::undefined();
+  pluss::codem::Series sigma = pluss::series::undefined();
+  pluss::codem::Series alpha = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
+  pluss::codem::Series v0 = pluss::series::undefined();
+  pluss::codem::Series mu = pluss::series::undefined();
+  pluss::codem::Series variance_floor = pluss::series::undefined();
 };
 
 struct RoughBergomi {
-  pluss::codem::Series xi = pluss::codem::Series::undefined();
-  pluss::codem::Series eta = pluss::codem::Series::undefined();
-  pluss::codem::Series alpha = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
-  pluss::codem::Series mu = pluss::codem::Series::undefined();
-  pluss::codem::Series variance_floor = pluss::codem::Series::undefined();
+  pluss::codem::Series xi = pluss::series::undefined();
+  pluss::codem::Series eta = pluss::series::undefined();
+  pluss::codem::Series alpha = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
+  pluss::codem::Series mu = pluss::series::undefined();
+  pluss::codem::Series variance_floor = pluss::series::undefined();
 };
 
 } // namespace model
@@ -108,13 +108,13 @@ struct Cos {
 } // namespace pricer
 
 struct PriceResult {
-  pluss::codem::Series price = pluss::codem::Series::undefined();
-  pluss::codem::Series delta = pluss::codem::Series::undefined();
-  pluss::codem::Series gamma = pluss::codem::Series::undefined();
-  pluss::codem::Series vega = pluss::codem::Series::undefined();
-  pluss::codem::Series theta = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
-  pluss::codem::Series strike_grid = pluss::codem::Series::undefined();
+  pluss::codem::Series price = pluss::series::undefined();
+  pluss::codem::Series delta = pluss::series::undefined();
+  pluss::codem::Series gamma = pluss::series::undefined();
+  pluss::codem::Series vega = pluss::series::undefined();
+  pluss::codem::Series theta = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
+  pluss::codem::Series strike_grid = pluss::series::undefined();
 };
 
 CODEM_API PriceResult price(const Vanilla& inst,
@@ -250,17 +250,17 @@ enum class RiskSpec : std::uint8_t {
 };
 
 struct Greeks {
-  pluss::codem::Series delta = pluss::codem::Series::undefined();
-  pluss::codem::Series gamma = pluss::codem::Series::undefined();
-  pluss::codem::Series vega = pluss::codem::Series::undefined();
-  pluss::codem::Series theta = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
+  pluss::codem::Series delta = pluss::series::undefined();
+  pluss::codem::Series gamma = pluss::series::undefined();
+  pluss::codem::Series vega = pluss::series::undefined();
+  pluss::codem::Series theta = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
 };
 
 struct Result {
-  pluss::codem::Series price = pluss::codem::Series::undefined();
+  pluss::codem::Series price = pluss::series::undefined();
   Greeks greeks{};
-  pluss::codem::Series strike_grid = pluss::codem::Series::undefined();
+  pluss::codem::Series strike_grid = pluss::series::undefined();
 };
 
 struct Analytic {

@@ -319,7 +319,7 @@ RatePaths vasicek_paths(std::int64_t steps,
   for (std::int64_t t = 0; t < steps; ++t) {
     const Series eps = z.select(0, t).reshape({1, paths});
 
-    Series r_next;
+    Series r_next = pluss::series::undefined();
     if (options.scheme == Scheme::Transition) {
       r_next = pluss::series::full({1, paths}, params.theta, out_cfg)
                    .add(rt.sub(params.theta).mul(exp_kdt))
@@ -376,7 +376,7 @@ RatePaths cir_paths(std::int64_t steps,
   for (std::int64_t t = 0; t < steps; ++t) {
     const Series eps = z.select(0, t).reshape({1, paths});
 
-    Series r_next;
+    Series r_next = pluss::series::undefined();
     if (options.scheme == Scheme::Transition) {
       r_next = cir_transition_step_(rt, eps, dt, params, transition_seed, t);
     } else if (options.scheme == Scheme::Milstein) {
@@ -446,7 +446,7 @@ RatePaths hull_white_paths(std::int64_t steps,
     const double time_t = static_cast<double>(t) * dt;
     const double theta_t = params.theta0 + params.theta_slope * time_t;
 
-    Series r_next;
+    Series r_next = pluss::series::undefined();
     if (options.scheme == Scheme::Transition) {
       r_next = pluss::series::full({1, paths}, theta_t, out_cfg)
                    .add(rt.sub(theta_t).mul(exp_kdt))

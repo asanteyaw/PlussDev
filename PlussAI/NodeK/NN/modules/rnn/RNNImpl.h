@@ -85,17 +85,17 @@ public:
         this->options_.hidden_size);
   }
 
-  std::tuple<Series, Series> forward(const Series& input, const Series& hx = Series()) const {
+  std::tuple<Series, Series> forward(const Series& input, const Series& hx = pluss::series::undefined()) const {
     return pluss::ai::rnn::rnn(input, hx, this->params_, detail::as_run_config_(this->options_));
   }
 
-  std::tuple<PackedSequence, Series> forward(const PackedSequence& input, const Series& hx = Series()) const {
+  std::tuple<PackedSequence, Series> forward(const PackedSequence& input, const Series& hx = pluss::series::undefined()) const {
     return this->forward_packed_(input, hx, this->options_.batch_first, [this](const Series& padded, const Series& state) {
       return forward(padded, state);
     });
   }
 
-  auto operator()(const Series& input, const Series& hx = Series()) const { return forward(input, hx); }
+  auto operator()(const Series& input, const Series& hx = pluss::series::undefined()) const { return forward(input, hx); }
   RNNImpl* operator->() noexcept { return this; }
   const RNNImpl* operator->() const noexcept { return this; }
 };

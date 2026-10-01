@@ -9,6 +9,7 @@
 ```cpp
 Series::lt(const Series& rhs) const -> Series
 Series::lt(double rhs) const -> Series
+Series& Series::lt_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -61,6 +62,30 @@ The scalar overload uses the same one-value threshold for every element.
 `lt()` is a boolean comparison surface, not a numeric transform. Treat its
 output as a mask for downstream control flow, not as a value stream you expect
 to differentiate through.
+
+## In-Place Form
+
+`lt_()` is the in-place sibling of [`lt()`](lt.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `lt_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({1.0, 2.0, 3.0}, {3});
+auto y = pluss::make_series({2.0, 2.0, 1.0}, {3});
+
+x.lt_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, false]
+```
 
 ## Examples
 
@@ -172,6 +197,13 @@ broadcast: incompatible shapes
 Use `lt()` for exclusive upper bounds and open intervals. If the equality case
 must count as a match, step to [`Series::le`](le.md) instead.
 
+## Aliases
+
+**`less()`** / **`less_()`** — spelling is kept for torch-style naming familiarity.
+Each resolves to exactly the same dispatch as `lt()` / `lt_()`
+before any computation runs, so behavior, gradient, and failure modes are
+identical; nothing here is a separate implementation to learn.
+
 ## See Also
 
 - [`Series::le`](le.md): inclusive less-than-or-equal.
@@ -183,8 +215,8 @@ must count as a match, step to [`Series::le`](le.md) instead.
     <span class="label">Previous</span>
     <span class="title">logsumexp</span>
   </a>
-  <a class="next-link" href="max.html">
+  <a class="next-link" href="mT.html">
     <span class="label">Next</span>
-    <span class="title">max</span>
+    <span class="title">mT</span>
   </a>
 </div>

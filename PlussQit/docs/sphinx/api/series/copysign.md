@@ -9,6 +9,7 @@
 ```cpp
 Series::copysign(const Series& other) const -> Series
 Series& Series::copysign_(const Series& other)
+Series& Series::copysign_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -53,6 +54,30 @@ The receiver's gradient is `+1` when `a` and `b` already share a sign and `-1`
 when they differ (that is exactly the factor that maps `a` to `|a| * sign(b)`).
 `b` contributes only its sign bit, which carries no usable derivative, so its
 gradient is `0`.
+
+## In-Place Form
+
+`copysign_()` is the in-place sibling of [`copysign()`](copysign.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `copysign_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({3.0, -3.0}, {2});
+auto y = pluss::make_series({-1.0, 1.0}, {2});
+
+x.copysign_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[2], strides=[1], dtype=float64, platform=cpu, numel=2, contiguous=true)
+data=[-3, 3]
+```
 
 ## Examples
 

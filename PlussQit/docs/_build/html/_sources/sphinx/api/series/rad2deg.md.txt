@@ -9,6 +9,7 @@
 ```cpp
 Series::rad2deg() const -> Series
 Series& Series::rad2deg_()
+Series& Series::rad2deg_() const
 ```
 
 ## What It Does
@@ -43,6 +44,28 @@ None.
 
 ```
 d/dx rad2deg(x) = 180 / pi = 57.29578
+```
+
+## In-Place Form
+
+`rad2deg_()` is the in-place sibling of [`rad2deg()`](rad2deg.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `rad2deg_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({0.0, 1.5707963267948966, 3.141592653589793});
+x.rad2deg_();
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[0, 90, 180]
 ```
 
 ## Examples

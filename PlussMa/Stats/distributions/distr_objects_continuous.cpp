@@ -265,7 +265,7 @@ Series cumulant_from_raw_moments_series_(const std::vector<Series>& raw,
   PLUSS_CHECK(!raw.empty(), std::string(op) + ": raw moments must be non-empty");
   PLUSS_CHECK(static_cast<std::size_t>(order) < raw.size(),
               std::string(op) + ": raw moments must include moment of requested order");
-  std::vector<Series> cumulants(static_cast<std::size_t>(order) + 1, Series::undefined());
+  std::vector<Series> cumulants(static_cast<std::size_t>(order) + 1, pluss::series::undefined());
   cumulants[0] = raw[0].mul(0.0);
   for (std::int64_t n = 1; n <= order; ++n) {
     Series value = raw[static_cast<std::size_t>(n)];
@@ -877,7 +877,7 @@ Series Lognormal::cumulant(std::int64_t order) const {
     detail::require_all_true(std_param.ge(0.0), "Lognormal::cumulant: stddev_log_series must be >= 0");
     const Series one = mean_param.mul(0.0).add(1.0);
     const Series sigma2 = std_param.square();
-    std::vector<Series> raw(static_cast<std::size_t>(order) + 1, Series::undefined());
+    std::vector<Series> raw(static_cast<std::size_t>(order) + 1, pluss::series::undefined());
     raw[0] = one;
     for (std::int64_t n = 1; n <= order; ++n) {
       const double nd = static_cast<double>(n);

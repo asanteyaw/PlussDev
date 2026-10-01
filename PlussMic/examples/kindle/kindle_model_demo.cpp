@@ -46,13 +46,7 @@ pluss::table::DataFrame make_base_frame() {
       "2024-01-04T00:00:00Z",
       "2024-01-05T00:00:00Z",
   });
-  const auto time_index = pluss::make_timeindex({
-      "2024-01-01T00:00:00Z",
-      "2024-01-02T00:00:00Z",
-      "2024-01-03T00:00:00Z",
-      "2024-01-04T00:00:00Z",
-      "2024-01-05T00:00:00Z",
-  });
+  const auto duration = pluss::duration::days({1, 2, 3, 4, 5});
 
   const auto metric_mask = make_bool_mask({true, false, true, true, false});
   const auto case_axis = pluss::table::Thread(
@@ -64,7 +58,7 @@ pluss::table::DataFrame make_base_frame() {
                                     {"city", pluss::table::Thread(city)},
                                     {"text", pluss::table::Thread(text)},
                                     {"timestamp", pluss::table::Thread(timestamp)},
-                                    {"time_index", pluss::table::Thread(time_index)},
+                                    {"duration", pluss::table::Thread(duration)},
                                 },
                                 case_axis);
 }
@@ -139,14 +133,14 @@ void demo_catalog_methods(const pluss::kindle::Catalog& base_catalog) {
   const auto s_proj = catalog.keyaxis().series();
   const auto n_proj = catalog.keyaxis().note();
   const auto t_proj = catalog.keyaxis().timeline();
-  const auto x_proj = catalog.keyaxis().timeindex();
-  std::cout << "series/note/timeline/timeindex keys: "
+  const auto d_proj = catalog.keyaxis().duration();
+  std::cout << "series/note/timeline/duration keys: "
             << s_proj.nkeys() << "/" << n_proj.nkeys() << "/"
-            << t_proj.nkeys() << "/" << x_proj.nkeys() << "\n";
+            << t_proj.nkeys() << "/" << d_proj.nkeys() << "\n";
 
   const auto row_mask = make_bool_mask({true, false, true, true, false});
   const auto selected = catalog.keys({"id", "city"});
-  const auto dropped = catalog.drop(std::vector<std::string>{"time_index"});
+  const auto dropped = catalog.drop(std::vector<std::string>{"duration"});
   const auto renamed = catalog.rename({{"metric", "distance"}});
   const auto sorted = catalog.sort("id");
   const auto sorted_by = catalog.sort({"city", "id"}, {true, false});

@@ -205,7 +205,7 @@ ptype: Note
 - [`Thread::astype`](astype.md): the single-argument shorthand for
   `cast(options).series()`.
 - [`Thread::as_series`](as_series.md) / [`as_note`](as_note.md) /
-  [`as_timeline`](as_timeline.md) / [`as_timeindex`](as_timeindex.md): view the current
+  [`as_timeline`](as_timeline.md): view the current
   payload without converting it, throwing if the kind doesn't already match.
 - [`DataFrame::cast`](../dataframe/cast.md): cast several frame features in one call.
 

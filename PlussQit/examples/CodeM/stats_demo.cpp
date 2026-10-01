@@ -16,7 +16,7 @@ int main() {
   std::cout << "std(unbiased=false):\n" << x.std(false) << "\n\n";
   std::cout << "skewness:\n" << x.stat.skewness() << "\n\n";
   std::cout << "kurtosis:\n" << x.stat.kurtosis() << "\n\n";
-  std::cout << "histcounts(8 bins, [-3, 3]):\n" << x.histcounts(8, -3.0, 3.0) << "\n\n";
+  std::cout << "histc(8 bins, [-3, 3]):\n" << x.histc(8, -3.0, 3.0) << "\n\n";
 
   std::cout << "stat.pdf():\n" << x.stat.pdf() << "\n\n";
   std::cout << "stat.logpdf():\n" << x.stat.logpdf() << "\n\n";

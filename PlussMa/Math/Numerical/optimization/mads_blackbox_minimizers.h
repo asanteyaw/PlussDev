@@ -66,25 +66,25 @@ struct BlackboxAdvancedDiagnostics {
 };
 
 struct BlackboxSolverOutcome {
-  Series minimizer{Series::undefined()};
+  Series minimizer{pluss::series::undefined()};
   double minimum{0.0};
   BlackboxSolverStatus status{BlackboxSolverStatus::ReachedIterationBudget};
   BlackboxSolverDiagnostics diagnostics{};
 };
 
 struct BlackboxAdvancedOutcome {
-  Series minimizer{Series::undefined()};
-  Series objective_vector{Series::undefined()};
+  Series minimizer{pluss::series::undefined()};
+  Series objective_vector{pluss::series::undefined()};
   double scalarized_minimum{0.0};
   BlackboxSolverStatus status{BlackboxSolverStatus::ReachedIterationBudget};
   BlackboxAdvancedDiagnostics diagnostics{};
-  Series pareto_points{Series::undefined()};
-  Series pareto_objectives{Series::undefined()};
+  Series pareto_points{pluss::series::undefined()};
+  Series pareto_objectives{pluss::series::undefined()};
 };
 
 struct BlackboxEvaluation {
-  Series objectives{Series::undefined()};
-  Series constraints{Series::undefined()};
+  Series objectives{pluss::series::undefined()};
+  Series constraints{pluss::series::undefined()};
   bool evaluation_ok{true};
   bool count_evaluation{true};
 };
@@ -107,8 +107,8 @@ struct MadsBlackboxConfig {
   bool opportunistic{true};
   MadsPollScheme poll_scheme{MadsPollScheme::Ortho2N};
 
-  Series lower_bounds{Series::undefined()};
-  Series upper_bounds{Series::undefined()};
+  Series lower_bounds{pluss::series::undefined()};
+  Series upper_bounds{pluss::series::undefined()};
 
   std::uint64_t rng_seed{5489ULL};
   bool promote_cpu_to_float64{true};
@@ -122,8 +122,8 @@ struct MadsBlackboxAdvancedConfig : MadsBlackboxConfig {
 
   MultiObjectiveScalarization multiobjective_scalarization{
       MultiObjectiveScalarization::WeightedSum};
-  Series objective_weights{Series::undefined()};
-  Series objective_reference{Series::undefined()};
+  Series objective_weights{pluss::series::undefined()};
+  Series objective_reference{pluss::series::undefined()};
 
   bool enable_cache{true};
   std::int64_t cache_max_entries{200000};

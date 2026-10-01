@@ -85,12 +85,12 @@ configuration, or user-facing text input.
   full range.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="slice.html">
+  <a class="prev-link" href="slice_index.html">
     <span class="label">Previous</span>
-    <span class="title">slice</span>
+    <span class="title">slice_index</span>
   </a>
-  <a class="next-link" href="asof.html">
+  <a class="next-link" href="sort.html">
     <span class="label">Next</span>
-    <span class="title">asof</span>
+    <span class="title">sort</span>
   </a>
 </div>

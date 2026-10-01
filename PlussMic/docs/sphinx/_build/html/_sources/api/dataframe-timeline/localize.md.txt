@@ -13,10 +13,10 @@ DataFrameTimelineAccessor::localize(const TimelineLocalizeOptions& options = {})
 
 ## What It Does
 
-Reinterprets every selected `Timeline`/`TimeIndex` feature's *current* clock
+Reinterprets every selected `Timeline` feature's *current* clock
 reading as a naive local wall-clock time in `options.tz`, and converts it to
 the true UTC instant that local reading corresponds to — same feature name,
-still `Timeline`/`TimeIndex`-kind, same row order. **This changes the
+still `Timeline`-kind, same row order. **This changes the
 underlying instant** (unlike [`tz()`](tz.md), which only relabels display).
 The row is then displayed under `options.tz`, so its wall-clock text looks
 unchanged even though the instant it now represents has shifted.
@@ -305,7 +305,7 @@ offset is positive rather than negative.
   strategy; every other value (default `"raise"` included) throws for a
   spring-forward-gap reading, regardless of what the string itself says.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row stays `NaT` regardless of `options`.
 

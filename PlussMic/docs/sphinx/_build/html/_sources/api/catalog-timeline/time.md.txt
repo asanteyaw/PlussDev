@@ -17,7 +17,7 @@ Keeps only the time-of-day portion of each bound key's timestamp — the date is
 reset to the Unix epoch day (`1970-01-01`) — replacing each bound key's values
 in place.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.
@@ -59,7 +59,7 @@ exactly.
 
 ## Notes
 
-- The result is still `Timeline`/`TimeIndex`-kind with a fixed date component —
+- The result is still `Timeline`-kind with a fixed date component —
   it's meant for comparing or grouping by time-of-day, not as a display format.
   Use [`fmt("%H:%M:%S")`](fmt.md) for a bare text time.
 - See the important callout above.

@@ -423,7 +423,7 @@ std::optional<Series> try_scaled_attention_softmax(
   }
 
 #if PLUSS_AI_HAS_CUDNN_ATTN_KERNELS && PLUSS_AI_HAS_DLOPEN
-  Series out;
+  Series out = pluss::series::undefined();
   if (!cudnn_softmax_forward_(logits, &out, &reason)) {
     if (attention_route_strict()) {
       PLUSS_FAIL(std::string("pluss::ai::scaled_attention: strict cuDNN softmax failed: ") + reason);

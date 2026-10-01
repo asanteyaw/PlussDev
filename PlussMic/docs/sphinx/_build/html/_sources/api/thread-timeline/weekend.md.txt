@@ -58,7 +58,7 @@ Only `"2024-07-06"` (a Saturday) is a weekend row.
 - `true` covers Saturday and Sunday only — there's no way to include Friday or
   exclude one of the two via this method; build a custom mask from
   [`weekday()`](weekday.md) if a different day set is needed.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, not `false`.

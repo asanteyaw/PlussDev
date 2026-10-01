@@ -244,7 +244,7 @@ using pluss::ScalarType;
     const Series y_expand = y.reshape({1, n}).expand(std::vector<std::int64_t>{n, n});
     const Series neighbor_labels = y_expand.gather(1, neighbor_idx).reshape({n, neighbor_count});
     const Series same = neighbor_labels.eq(y.reshape({n, 1})).to(ScalarType::Float64);
-    Series agrees = Series::undefined();
+    Series agrees = pluss::series::undefined();
     if (target.clean_vote == BalanceCleanVote::AnyDisagreement) {
       agrees = same.min(1, false).reshape({n}).gt(0.0);
     } else if (target.clean_vote == BalanceCleanVote::MajorityDisagreement) {
@@ -421,7 +421,7 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
   const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
   const std::uint64_t seed = compose_seed(random);
 
-  Series planned = Series::undefined();
+  Series planned = pluss::series::undefined();
   bool uses_replacement = false;
   for (std::int64_t ci = 0; ci < k; ++ci) {
     StatusOr<Series> class_idx_or = select_class_indices(all_indices, y, before.labels, ci);
@@ -434,7 +434,7 @@ StatusOr<BalancePlan> plan_balance(const Series& labels, const BalanceTarget& ta
       return StatusOr<BalancePlan>(Status::invalid_argument(std::string(where) + " target counts must be positive."));
     }
 
-    Series selected = Series::undefined();
+    Series selected = pluss::series::undefined();
     const std::uint64_t class_seed = splitmix64(seed + static_cast<std::uint64_t>(ci) * 0x9e3779b97f4a7c15ULL);
     if (want < have) {
       const Series perm = pluss::series::randperm(have, i64_on(platform), class_seed).reshape({have});
@@ -515,11 +515,11 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
   const std::vector<double> desired = target_counts.to(pluss::pCPU, ScalarType::Float64).reshape({k}).to_vec<double>();
   const std::uint64_t seed = compose_seed(random);
 
-  Series retained = Series::undefined();
-  Series synth_base = Series::undefined();
-  Series synth_neighbor = Series::undefined();
-  Series synth_steps = Series::undefined();
-  Series synth_labels = Series::undefined();
+  Series retained = pluss::series::undefined();
+  Series synth_base = pluss::series::undefined();
+  Series synth_neighbor = pluss::series::undefined();
+  Series synth_steps = pluss::series::undefined();
+  Series synth_labels = pluss::series::undefined();
   bool uses_replacement = false;
 
   for (std::int64_t ci = 0; ci < k; ++ci) {
@@ -563,7 +563,7 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
     // Bonus: query_self_k excludes each point's own index directly, rather
     // than assuming column 0 of the sorted distance matrix is self (which
     // isn't guaranteed when duplicate points tie at distance 0).
-    Series neighbor_pos = Series::undefined();
+    Series neighbor_pos = pluss::series::undefined();
     if (class_x.platform() == pluss::pCPU) {
       StatusOr<SpatialIndex> index_or = SpatialIndex::build(class_x);
       if (!index_or.ok()) return StatusOr<BalancePlan>(index_or.status());
@@ -614,11 +614,11 @@ StatusOr<BalancePlan> plan_balance(const LabeledBatch& batch, const BalanceTarge
   BalancePlan out{};
   out.indices = retained.to(platform, ScalarType::Int64).reshape({retained.numel()});
   out.target_counts = target_counts.reshape({k});
-  out.synthetic_base_indices = synth_base.defined() ? synth_base.to(platform, ScalarType::Int64).reshape({synth_base.numel()}) : Series::undefined();
+  out.synthetic_base_indices = synth_base.defined() ? synth_base.to(platform, ScalarType::Int64).reshape({synth_base.numel()}) : pluss::series::undefined();
   out.synthetic_neighbor_indices =
-      synth_neighbor.defined() ? synth_neighbor.to(platform, ScalarType::Int64).reshape({synth_neighbor.numel()}) : Series::undefined();
-  out.synthetic_steps = synth_steps.defined() ? synth_steps.to(platform, ScalarType::Float64).reshape({synth_steps.numel()}) : Series::undefined();
-  out.synthetic_labels = synth_labels.defined() ? synth_labels.to(platform, ScalarType::Float64).reshape({synth_labels.numel()}) : Series::undefined();
+      synth_neighbor.defined() ? synth_neighbor.to(platform, ScalarType::Int64).reshape({synth_neighbor.numel()}) : pluss::series::undefined();
+  out.synthetic_steps = synth_steps.defined() ? synth_steps.to(platform, ScalarType::Float64).reshape({synth_steps.numel()}) : pluss::series::undefined();
+  out.synthetic_labels = synth_labels.defined() ? synth_labels.to(platform, ScalarType::Float64).reshape({synth_labels.numel()}) : pluss::series::undefined();
   if (target.clean != BalanceCleanKind::None) {
     const Series all_indices = pluss::series::arange(0, n, i64_on(platform));
     const Series kept_mask = all_indices.reshape({n, 1}).eq(base_indices.reshape({1, base_indices.numel()})).any(1, false);

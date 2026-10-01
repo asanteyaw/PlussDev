@@ -119,23 +119,23 @@ private:
   struct GroupState {
     std::vector<std::size_t> indices{};
     RMSpropOptions options{};
-    Series one_scalar{};
-    Series alpha_scalar{};
-    Series one_minus_alpha_scalar{};
-    Series epsilon_scalar{};
-    Series momentum_scalar{};
-    Series learning_rate_scalar{};
-    Series weight_decay_scalar{};
+    Series one_scalar = pluss::series::undefined();
+    Series alpha_scalar = pluss::series::undefined();
+    Series one_minus_alpha_scalar = pluss::series::undefined();
+    Series epsilon_scalar = pluss::series::undefined();
+    Series momentum_scalar = pluss::series::undefined();
+    Series learning_rate_scalar = pluss::series::undefined();
+    Series weight_decay_scalar = pluss::series::undefined();
   };
 
   struct GroupScalars {
-    Series one{};
-    Series alpha{};
-    Series one_minus_alpha{};
-    Series epsilon{};
-    Series momentum{};
-    Series learning_rate{};
-    Series weight_decay{};
+    Series one = pluss::series::undefined();
+    Series alpha = pluss::series::undefined();
+    Series one_minus_alpha = pluss::series::undefined();
+    Series epsilon = pluss::series::undefined();
+    Series momentum = pluss::series::undefined();
+    Series learning_rate = pluss::series::undefined();
+    Series weight_decay = pluss::series::undefined();
   };
 
   void apply_step_(pluss::msharp::RangeView::Series gradients) override {
@@ -551,13 +551,13 @@ private:
   void initialize_group_capture_state_() {
     const auto& params = parameters();
     for (auto& group : groups_) {
-      group.one_scalar = Series{};
-      group.alpha_scalar = Series{};
-      group.one_minus_alpha_scalar = Series{};
-      group.epsilon_scalar = Series{};
-      group.momentum_scalar = Series{};
-      group.learning_rate_scalar = Series{};
-      group.weight_decay_scalar = Series{};
+      group.one_scalar = pluss::series::undefined();
+      group.alpha_scalar = pluss::series::undefined();
+      group.one_minus_alpha_scalar = pluss::series::undefined();
+      group.epsilon_scalar = pluss::series::undefined();
+      group.momentum_scalar = pluss::series::undefined();
+      group.learning_rate_scalar = pluss::series::undefined();
+      group.weight_decay_scalar = pluss::series::undefined();
       if (!group.options.execution.capturable) continue;
       if (group.indices.empty()) continue;
       const Series* anchor = params[group.indices.front()];

@@ -88,8 +88,4 @@ b_suf                    | Series       | Series[float64]  | 1       | [2]
     <span class="label">Previous</span>
     <span class="title">series</span>
   </a>
-  <a class="next-link" href="timeindex.html">
-    <span class="label">Next</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

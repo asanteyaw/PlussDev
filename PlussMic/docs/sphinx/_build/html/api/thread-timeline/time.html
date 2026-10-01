@@ -13,7 +13,7 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -50,7 +50,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Replaces the bound thread with just its time-of-day portion — the date is
 reset to the Unix epoch day (<code class="docutils literal notranslate"><span class="pre">1970-01-01</span></code>), and the clock time is kept, in
-local wall time — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind.</p>
+local wall time — same length, still <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -59,7 +59,7 @@ local wall time — same length, still <code class="docutils literal notranslate
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind thread, same length as the bound
+A new <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind thread, same length as the bound
 thread, with its date portion reset to <code class="docutils literal notranslate"><span class="pre">1970-01-01</span></code>, keeping only the
 time-of-day.</p>
 </section>
@@ -93,12 +93,12 @@ exactly.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>The result is still a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> (not a plain string or numeric
+<li><p>The result is still a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> (not a plain string or numeric
 type) with a fixed date component — it’s meant for comparing or grouping by
 time-of-day, not as a display format. Use <a class="reference internal" href="fmt.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fmt(&quot;%H:%M:%S&quot;)</span></code></span></a> if a
 bare text time is needed.</p></li>
 <li><p>Operates in <strong>local wall time</strong>, per the thread’s current timezone.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>-kind —
+<li><p><code class="docutils literal notranslate"><span class="pre">.tl()</span></code> requires the bound thread to already be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind —
 the accessor’s constructor throws otherwise.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">NaT</span></code> row stays <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (displays as <code class="docutils literal notranslate"><span class="pre">&quot;NULL&quot;</span></code>).</p></li>
 </ul>

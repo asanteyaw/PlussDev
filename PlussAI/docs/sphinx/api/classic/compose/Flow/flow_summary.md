@@ -17,6 +17,15 @@ remainder policy). Reach for it when you want to print or log a flow's shape
 [[nodiscard]] std::string classic::Flow::flow_summary() const;
 ```
 
+## What It Does
+
+Renders the same structural state [`graph_info()`](graph_info.md) exposes
+as a value type into one human-readable multi-line string instead -- a
+header line (task, stage count, trained, model) followed by one line per
+stage. Reach for this when the goal is printing or logging a `Flow`'s
+shape directly; reach for `graph_info()` when the values themselves need
+to be inspected or compared programmatically.
+
 ## Parameters
 
 None.

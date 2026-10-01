@@ -320,8 +320,8 @@ void test_dataframe_datetime_tranche() {
   expect_eq_vec(rt_us.ticks(), ymdhms.ticks(),
                 "from_epoch_micros roundtrip");
 
-  const auto idx = ymdhms.sort().to_timeindex(true);
-  expect_true(idx.size() == 3, "to_timeindex bridge");
+  const auto idx = ymdhms.sort().index(true);
+  expect_true(idx.size() == 3, "Timeline::index bridge");
   const auto key = pluss::timeline::make("2024-01-03T11:06:09Z");
   const auto pos = idx.searchsorted(key, false);
   expect_true(pos >= 1 && pos <= 2, "TimeIndex searchsorted on Timeline-built index");
@@ -466,12 +466,12 @@ void test_factory_rank_and_printing() {
       [] { (void)pluss::timeline::arange("2024-06-01T00:00:00Z", "2024-06-01T06:00:00Z", 1, true); },
       "timeline::arange datetime/int step requires explicit Duration");
 
-  const auto idx = pluss::timeindex::make({
+  const auto idx = pluss::timeline::make({
       "2024-01-01T00:00:00Z",
       "2024-01-01T01:00:00Z",
       "2024-01-01T02:00:00Z",
-  });
-  expect_true(idx.size() == 3, "make_timeindex 1D literal factory");
+  }).index();
+  expect_true(idx.size() == 3, "Timeline::index 1D literal axis");
 
   bool timeindex_freed = false;
   {
@@ -479,21 +479,23 @@ void test_factory_rank_and_printing() {
     raw[0] = 0;
     raw[1] = 1'000'000'000LL;
     raw[2] = 2'000'000'000LL;
-    const auto idx_buf = pluss::codeh::TimeIndex::from_buffer(
+    const std::array<std::int64_t, 1> sizes{3};
+    const std::array<std::int64_t, 1> strides{1};
+    const auto idx_buf = pluss::Timeline::from_buffer(
         raw,
-        3,
-        1,
+        sizes,
+        strides,
         [&](void* p) {
           timeindex_freed = true;
           std::free(p);
         },
-        true);
-    expect_true(idx_buf.size() == 3, "TimeIndex::from_buffer size");
+        "UTC").index();
+    expect_true(idx_buf.size() == 3, "Timeline::index borrowed-buffer size");
     expect_eq_vec(idx_buf.timeline().ticks(),
                   std::vector<std::int64_t>{0, 1'000'000'000LL, 2'000'000'000LL},
-                  "TimeIndex::from_buffer preserves data");
+                  "Timeline::index preserves borrowed data");
   }
-  expect_true(timeindex_freed, "TimeIndex::from_buffer deleter called");
+  expect_true(timeindex_freed, "timeindex::from_buffer deleter called");
 
   pluss::codeh::TimelinePrintOptions popt;
   popt.max_rows = 4;
@@ -516,12 +518,12 @@ void test_factory_rank_and_printing() {
       "moment 2D rejects ragged input");
   expect_throw(
       [] {
-        (void)pluss::timeindex::make({
+        (void)pluss::timeline::make({
             {"2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z"},
             {"2024-01-02T00:00:00Z", "2024-01-02T01:00:00Z"},
-        });
+        }).index();
       },
-      "make_timeindex rejects 2D nested input");
+      "Timeline::index rejects 2D input");
 }
 
 void test_generated_timeindex_dataframe_family() {
@@ -534,12 +536,12 @@ void test_generated_timeindex_dataframe_family() {
       "2024-01-01T01:00:00Z",
       "2024-01-01T01:30:00Z",
   });
-  const auto idx = t.to_timeindex(true);
+  const auto idx = t.index(true);
 
   expect_true(idx.is_monotonic_increasing(), "generated is_monotonic_increasing");
   expect_true(idx.is_unique(), "generated is_unique");
-  expect_true(!idx.has_duplicates(), "generated has_duplicates");
-  expect_true(idx.freq() == "min", "generated infer_freq alias");
+  expect_true(idx.is_unique(), "generated is_unique");
+  expect_true(idx.freq() == "min", "generated freq method");
 
   const auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4});
   const auto rs = idx.resample_agg(values, "H", "sum", 1);
@@ -551,8 +553,8 @@ void test_generated_timeindex_dataframe_family() {
   expect_eq_vec(roll.to_vec<double>(), std::vector<double>{1.0, 3.0, 6.0, 9.0},
                 "generated rolling_agg(sum)");
 
-  const auto sorted = idx.sort_values();
-  expect_true(sorted.size() == idx.size(), "generated sort_values alias");
+  const auto sorted = idx.sort();
+  expect_true(sorted.size() == idx.size(), "generated sort method");
 
   const auto ticks_with_nat = pluss::make_series(
       std::vector<std::int64_t>{
@@ -657,17 +659,11 @@ void test_queue_dynamic_dispatch() {
   expect_true(qn.kind() == pluss::Type::Kind::Note, "Type strftime returns Note");
   expect_true(qn.as<pluss::Note>().at(0) == "2024-01-15", "Type strftime formatted value");
 
-  pluss::Type qt1d = pluss::timeline::make({
-      "2024-01-15T10:11:12Z",
-      "2024-01-16T10:11:12Z",
-  });
-  const auto qidx = qt1d.invoke("to_timeindex", {true});
-  expect_true(qidx.kind() == pluss::Type::Kind::TimeIndex, "Type to_timeindex returns TimeIndex");
-  expect_true(qidx.as<pluss::codeh::TimeIndex>().size() == 2, "Type to_timeindex size");
-  expect_true(qidx.as_timeindex().size() == 2, "Type.as_timeindex() exposes TimeIndex surface");
-
-  const auto qidx_sorted = qidx.invoke("sort_values");
-  expect_true(qidx_sorted.kind() == pluss::Type::Kind::TimeIndex, "Type TimeIndex sort_values returns TimeIndex");
+  pluss::Type qduration = pluss::duration::hours({1, 2});
+  expect_true(qduration.kind() == pluss::Type::Kind::Duration,
+              "Type stores Duration as a core value type");
+  expect_true(qduration.as_duration().numel() == 2,
+              "Type.as_duration() exposes Duration surface");
 }
 
 void test_dynamic_dispense_utility() {
@@ -680,7 +676,9 @@ void test_dynamic_dispense_utility() {
 
   auto n = pluss::make_note({"apple", "banana", "apricot"});
   const auto starts_with_a = pluss::dispense(n, &pluss::Note::starts_with, std::make_tuple("a"));
-  expect_true(starts_with_a.size() == 3 && starts_with_a[0] == 1 && starts_with_a[1] == 0 && starts_with_a[2] == 1,
+  const auto starts_with_a_values = starts_with_a.bools();
+  expect_true(starts_with_a.numel() == 3 && starts_with_a_values[0] == 1 &&
+                  starts_with_a_values[1] == 0 && starts_with_a_values[2] == 1,
               "dispense(Note,&Note::starts_with)");
 
   auto t = pluss::timeline::make("2024-01-15T10:11:12Z");

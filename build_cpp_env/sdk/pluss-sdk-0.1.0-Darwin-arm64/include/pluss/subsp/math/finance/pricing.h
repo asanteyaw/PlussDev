@@ -59,8 +59,8 @@ struct HestonFftOptions {
 };
 
 struct HestonFftResult {
-  pluss::codem::Series price = pluss::codem::Series::undefined();
-  pluss::codem::Series strike = pluss::codem::Series::undefined();
+  pluss::codem::Series price = pluss::series::undefined();
+  pluss::codem::Series strike = pluss::series::undefined();
 };
 
 struct CosOptions {
@@ -72,8 +72,8 @@ struct CosOptions {
 using CharacteristicFn = std::function<std::complex<double>(std::complex<double>)>;
 
 struct ComplexSeries {
-  pluss::codem::Series real = pluss::codem::Series::undefined();
-  pluss::codem::Series imag = pluss::codem::Series::undefined();
+  pluss::codem::Series real = pluss::series::undefined();
+  pluss::codem::Series imag = pluss::series::undefined();
 };
 
 using CharacteristicSeriesFn = std::function<ComplexSeries(const pluss::codem::Series&)>;
@@ -124,11 +124,11 @@ struct BlackScholesGreeks {
 };
 
 struct BlackScholesSeriesGreeks {
-  pluss::codem::Series delta = pluss::codem::Series::undefined();
-  pluss::codem::Series gamma = pluss::codem::Series::undefined();
-  pluss::codem::Series vega = pluss::codem::Series::undefined();
-  pluss::codem::Series theta = pluss::codem::Series::undefined();
-  pluss::codem::Series rho = pluss::codem::Series::undefined();
+  pluss::codem::Series delta = pluss::series::undefined();
+  pluss::codem::Series gamma = pluss::series::undefined();
+  pluss::codem::Series vega = pluss::series::undefined();
+  pluss::codem::Series theta = pluss::series::undefined();
+  pluss::codem::Series rho = pluss::series::undefined();
 };
 
 CODEM_API double black_scholes_price(OptionType type,

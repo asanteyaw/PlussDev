@@ -10,14 +10,21 @@ amount of accuracy for speed.
 ## Signature
 
 ```cpp
-explicit nn::GELU::GELU(nn::GELUOptions options = {});
+explicit nn::GELU::GELU(nn::GELUOptions options);
+explicit nn::GELU::GELU(bool approximate = false);
 ```
 
 ## Construction
 
-Default-construct for the exact `erf`-based curve (`approximate=false`), or
-pass a [`GELUOptions`](GELUOptions.md) with `approximate=true` for the
-tanh-based approximation.
+Two equivalent forms: pass a [`GELUOptions`](GELUOptions.md) directly, or
+spell out `approximate` as a positional argument (which defaults to
+`false`, so `nn::GELU gelu;` alone works):
+
+```cpp
+nn::GELU a(nn::GELUOptions{true});  // approximate=true
+nn::GELU b(true);                   // equivalent positional form
+nn::GELU c;                         // approximate=false (default, the exact erf-based curve)
+```
 
 ## State
 
@@ -147,6 +154,13 @@ gelu on MPS: OK, platform=2
 ## Changelog
 
 - **0.1** — the Gaussian Error Linear Unit, `approximate` option.
+- **0.2** — added the positional `GELU(approximate)` constructor
+  alongside the `GELUOptions` form (previously, a bare `bool` argument
+  silently bound to the inherited `Module(bool training)` constructor
+  instead of `approximate`, since no positional form existed to compete
+  with it -- an exact-match `bool` overload, not merely an implicit
+  conversion, making this the least visible of this pattern's
+  variants).
 
 ## See Also
 

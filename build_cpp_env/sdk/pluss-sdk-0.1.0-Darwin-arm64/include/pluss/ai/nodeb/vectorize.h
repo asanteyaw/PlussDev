@@ -16,10 +16,10 @@ struct CorpusStats {
   std::int64_t sentence_count = 0;
   std::int64_t phrase_count = 0;
   std::int64_t unique_term_count = 0;
-  Series document_token_counts = Series::undefined();
-  Series document_unique_term_counts = Series::undefined();
+  Series document_token_counts = pluss::series::undefined();
+  Series document_unique_term_counts = pluss::series::undefined();
   Note vocabulary = Note::undefined();
-  Series document_frequency = Series::undefined();
+  Series document_frequency = pluss::series::undefined();
 };
 
 class Mapper {

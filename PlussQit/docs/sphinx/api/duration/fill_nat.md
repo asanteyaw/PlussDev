@@ -57,14 +57,3 @@ Duration(shape=[], dim=0, numel=1)
 - [`isnat`](isnat.md): testing for the missing positions this replaces.
 - [`where`](where.md): the more general conditional-selection operation
   `fill_nat` is a special case of (mask = `isnat()`).
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="isvalid.html">
-    <span class="label">Previous</span>
-    <span class="title">isvalid</span>
-  </a>
-  <a class="next-link" href="where.html">
-    <span class="label">Next</span>
-    <span class="title">where</span>
-  </a>
-</div>

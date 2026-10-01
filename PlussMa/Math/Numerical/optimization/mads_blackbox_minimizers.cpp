@@ -24,15 +24,15 @@ namespace {
 
 struct BoundsPack {
   bool enabled{false};
-  Series lower{Series::undefined()};
-  Series upper{Series::undefined()};
+  Series lower{pluss::series::undefined()};
+  Series upper{pluss::series::undefined()};
 };
 
 struct CommonSetup {
   std::vector<std::int64_t> original_shape{};
   std::int64_t dimension{0};
   Config work_cfg{};
-  Series flat_initial{Series::undefined()};
+  Series flat_initial{pluss::series::undefined()};
 };
 
 struct RngState {
@@ -47,7 +47,7 @@ struct RngState {
 };
 
 struct MadsState {
-  Series incumbent{Series::undefined()};
+  Series incumbent{pluss::series::undefined()};
   double best_value{std::numeric_limits<double>::infinity()};
   std::int64_t iterations{0};
   std::int64_t evaluations{0};
@@ -58,7 +58,7 @@ struct MadsState {
 };
 
 struct CandidateBatchOutcome {
-  Series best_point{Series::undefined()};
+  Series best_point{pluss::series::undefined()};
   double best_value{std::numeric_limits<double>::infinity()};
   std::int64_t evaluations{0};
   bool improved{false};
@@ -431,7 +431,7 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
     }
 
     if (!improved && next.evaluations < max_evaluations) {
-      Series poll_offsets = Series::undefined();
+      Series poll_offsets = pluss::series::undefined();
       if (config.poll_scheme == MadsPollScheme::Ortho2N) {
         poll_offsets = poll_offsets_ortho_2n(n_dim, next.frame_size, setup.work_cfg);
       } else {
@@ -523,8 +523,8 @@ BlackboxSolverOutcome ltmads_minimizer(
 namespace {
 
 struct AdvancedEvalRecord {
-  Series objectives{Series::undefined()};
-  Series constraints{Series::undefined()};
+  Series objectives{pluss::series::undefined()};
+  Series constraints{pluss::series::undefined()};
   double merit{std::numeric_limits<double>::infinity()};
   double violation{std::numeric_limits<double>::infinity()};
   bool feasible{false};
@@ -533,8 +533,8 @@ struct AdvancedEvalRecord {
 };
 
 struct AdvancedState {
-  Series incumbent{Series::undefined()};
-  Series incumbent_objectives{Series::undefined()};
+  Series incumbent{pluss::series::undefined()};
+  Series incumbent_objectives{pluss::series::undefined()};
   double best_merit{std::numeric_limits<double>::infinity()};
   double check_best{std::numeric_limits<double>::infinity()};
   double mesh_size{0.0};
@@ -550,8 +550,8 @@ struct AdvancedState {
 };
 
 struct AdvancedBatchOutcome {
-  Series best_point{Series::undefined()};
-  Series best_objectives{Series::undefined()};
+  Series best_point{pluss::series::undefined()};
+  Series best_objectives{pluss::series::undefined()};
   double best_merit{std::numeric_limits<double>::infinity()};
   bool improved{false};
 };
@@ -1124,7 +1124,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
     if (!improved &&
         state.evaluations < max_evaluations &&
         state.total_evaluations < max_total_evaluations) {
-      Series poll_offsets = Series::undefined();
+      Series poll_offsets = pluss::series::undefined();
       if (config.poll_scheme == MadsPollScheme::Ortho2N) {
         poll_offsets = poll_offsets_ortho_2n(n_dim, state.frame_size, setup.work_cfg);
       } else {

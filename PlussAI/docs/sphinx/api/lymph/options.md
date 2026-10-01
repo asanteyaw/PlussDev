@@ -27,7 +27,7 @@ model.learn_(x, y, train);          // passed by value
 
 A `Series`-typed field (`sample_weights`, `class_weights`, `groups`,
 `label_order`, `stratify`, `parameter_lower_bounds`, …) defaults to
-`Series::undefined()` and means "not set" — leave it undefined to skip that
+`pluss::series::undefined()` and means "not set" — leave it undefined to skip that
 behavior. Fields typed `std::optional<...>` default to `std::nullopt` with the
 same meaning.
 

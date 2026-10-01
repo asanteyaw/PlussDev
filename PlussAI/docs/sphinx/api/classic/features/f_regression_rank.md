@@ -16,6 +16,15 @@ classic::StatusOr<pluss::Series> classic::f_regression_rank(
     const classic::ScoreRankOptions& options = {});
 ```
 
+## What It Does
+
+Scores every feature in `batch` by its correlation-based F-statistic
+against a continuous target (`batch.y`), then returns only the indices of
+the `top_k` highest-scoring features -- a direct call into
+[`rank_features`](rank_features.md) with `mode` fixed to `RegressionF`, for
+callers who just want the winning indices without setting up the more
+general call themselves.
+
 ## Parameters
 
 `batch`

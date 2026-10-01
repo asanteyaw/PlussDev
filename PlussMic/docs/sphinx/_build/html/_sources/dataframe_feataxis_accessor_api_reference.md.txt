@@ -16,6 +16,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/dataframe-feataxis/duration
 api/dataframe-feataxis/like
 api/dataframe-feataxis/match
 api/dataframe-feataxis/note

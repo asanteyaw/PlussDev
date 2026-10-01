@@ -13,7 +13,7 @@ DataFrameTimelineAccessor::iso() const -> DataFrame
 
 ## What It Does
 
-Replaces every selected `Timeline`/`TimeIndex` feature with a fixed
+Replaces every selected `Timeline` feature with a fixed
 ISO-8601-with-offset text representation, as a `Note` `Series` — same feature
 name, same row order. Equivalent to
 [`fmt("%Y-%m-%dT%H:%M:%S.%f%z")`](fmt.md).
@@ -89,7 +89,7 @@ never actually truncated, only their display in this box render.
 - The offset is always `+HH:MM`/`-HH:MM` — UTC renders as `"+00:00"`, never a
   bare `"Z"`.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
-  be `Timeline`/`TimeIndex`-kind — narrow with
+  be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
 - A `NaT` row (or one already null on the underlying `Thread`) displays as
   `"NULL"`.

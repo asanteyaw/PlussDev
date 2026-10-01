@@ -90,14 +90,3 @@ data=true
 - [`construction`](construction.md): building the operands used here.
 - [`Timeline::add_duration`](../timeline/add_duration.md): the `Timeline`-side
   use of `Duration` arithmetic.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="construction.html">
-    <span class="label">Previous</span>
-    <span class="title">construction</span>
-  </a>
-  <a class="next-link" href="sub.html">
-    <span class="label">Next</span>
-    <span class="title">sub</span>
-  </a>
-</div>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NexusPull::specs &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
+    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="nexuspull-specs">
+<h1>NexusPull::specs<a class="headerlink" href="#nexuspull-specs" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../nexus_pull_api_reference.html"><span class="doc std std-doc">Back to NexusPull API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">NexusPull</span><span class="o">::</span><span class="n">specs</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">nexus</span><span class="o">::</span><span class="n">PullSpec</span><span class="o">&gt;&amp;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Exposes the builder’s accumulated request list — every
+<a class="reference internal" href="../nexus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">PullSpec</span></code></span></a> that <code class="docutils literal notranslate"><span class="pre">.take(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">.sum(...)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.agg(...)</span></code>, and <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.add(...)</span></code></span></a> have appended so far, in the exact
+order they were added. This is a read-only window into the same list
+<a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.collect()</span></code></span></a> will execute; nothing here is copied or
+recomputed.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>None.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;nexus::PullSpec&gt;&amp;</span></code>
+The accumulated specs, in call order. Empty for a freshly constructed
+builder that hasn’t had any field requested yet.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Inspect what a chain of calls actually built, before collecting.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">bundle</span><span class="p">;</span>
+
+<span class="c1">// nx: the customers/regions/events workspace from Nexus::pull&#39;s own page.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">builder</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nx</span><span class="p">.</span><span class="n">pull</span><span class="p">(</span><span class="s">&quot;customers&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">take</span><span class="p">(</span><span class="s">&quot;customer_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">sum</span><span class="p">(</span><span class="s">&quot;events.spend&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;total_spend&quot;</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">specs</span><span class="p">().</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; specs</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">spec</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">builder</span><span class="p">.</span><span class="n">specs</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  source=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">spec</span><span class="p">.</span><span class="n">source</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; op=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">spec</span><span class="p">.</span><span class="n">op</span><span class="p">)</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; alias=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">spec</span><span class="p">.</span><span class="n">alias</span><span class="p">.</span><span class="n">has_value</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">spec</span><span class="p">.</span><span class="n">alias</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;&lt;none&gt;&quot;</span><span class="p">))</span>
+<span class="w">            </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2 specs
+  source=customer_id op=0 alias=&lt;none&gt;
+  source=events.spend op=3 alias=total_spend
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">op=0</span></code> is <code class="docutils literal notranslate"><span class="pre">PullOp::Take</span></code>; <code class="docutils literal notranslate"><span class="pre">op=3</span></code> is <code class="docutils literal notranslate"><span class="pre">PullOp::Sum</span></code> — see
+<a class="reference internal" href="../nexus/pull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nexus::PullOp</span></code></span></a> for the full enumerator list.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Every fluent method funnels through <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>, so <code class="docutils literal notranslate"><span class="pre">.specs()</span></code>
+after any combination of <code class="docutils literal notranslate"><span class="pre">.take(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.sum(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.agg(table)...end()</span></code>
+calls shows exactly what those calls constructed — there is no separate
+internal representation to fall out of sync with.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.specs()</span></code> reflects <code class="docutils literal notranslate"><span class="pre">.add(...)</span></code> calls too, including hand-built specs with
+<code class="docutils literal notranslate"><span class="pre">.windowed(...)</span></code>/<code class="docutils literal notranslate"><span class="pre">.root_windowed(...)</span></code> attached.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::add</span></code></span></a>: the method every other builder call
+ultimately appends a spec through.</p></li>
+<li><p><a class="reference internal" href="root.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::root</span></code></span></a>: the complementary piece of builder state —
+which table these specs will be pulled against.</p></li>
+<li><p><a class="reference internal" href="collect.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NexusPull::collect</span></code></span></a>: execute exactly this list.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="root.html">
+    <span class="label">Previous</span>
+    <span class="title">root</span>
+  </a>
+  <a class="next-link" href="std.html">
+    <span class="label">Next</span>
+    <span class="title">std</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/nexus-pull/specs.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

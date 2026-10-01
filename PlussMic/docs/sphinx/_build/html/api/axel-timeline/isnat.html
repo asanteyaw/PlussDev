@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=76d8b11c"></script>
+    <script src="../../_static/api_nav.js?v=af5a0516"></script>
     <script src="../../_static/layout.js?v=6be133a8"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="AxelTimelineAccessor::iso" href="iso.html" />
-    <link rel="prev" title="AxelTimelineAccessor::index" href="index.html" />
+    <link rel="prev" title="AxelTimelineAccessor::hour" href="hour.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -60,7 +60,7 @@ every frame via <a class="reference internal" href="../axel/map.html"><span clas
 Every method on this accessor — not just <code class="docutils literal notranslate"><span class="pre">isnat()</span></code> — routes through
 <code class="docutils literal notranslate"><span class="pre">Registry::tl()</span></code> per frame, which itself routes through <code class="docutils literal notranslate"><span class="pre">Slot::tl()</span></code>
 per field. If any bound field in any frame isn’t <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind
-(<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, <code class="docutils literal notranslate"><span class="pre">Mixed</span></code>, <code class="docutils literal notranslate"><span class="pre">Null</span></code>, or <code class="docutils literal notranslate"><span class="pre">Empty</span></code>), the call
+(<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Mixed</span></code>, <code class="docutils literal notranslate"><span class="pre">Null</span></code>, or <code class="docutils literal notranslate"><span class="pre">Empty</span></code>), the call
 throws <code class="docutils literal notranslate"><span class="pre">&quot;Slot::tl:</span> <span class="pre">slot</span> <span class="pre">kind</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline&quot;</span></code>. Since
 <a class="reference internal" href="../axel/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Axel::tl()</span></code></span></a> binds <em>every</em> field of <em>every</em> frame by
 default, project down to just the timestamp fields first with
@@ -141,9 +141,9 @@ from.</p></li>
 fields before calling <code class="docutils literal notranslate"><span class="pre">.tl()</span></code>, per the important callout above.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="index.html">
+  <a class="prev-link" href="hour.html">
     <span class="label">Previous</span>
-    <span class="title">index</span>
+    <span class="title">hour</span>
   </a>
   <a class="next-link" href="iso.html">
     <span class="label">Next</span>
@@ -206,7 +206,7 @@ fields before calling <code class="docutils literal notranslate"><span class="pr
   <li><a href="../plussmic_scribble.html">PlussMic <code class="docutils literal notranslate"><span class="pre">scribble</span></code></a><ul>
   <li><a href="../../axel_api_reference.html">Axel API Reference</a><ul>
   <li><a href="../../axel_timeline_accessor_api_reference.html">AxelTimelineAccessor API Reference</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">AxelTimelineAccessor::index</a></li>
+      <li>Previous: <a href="hour.html" title="previous chapter">AxelTimelineAccessor::hour</a></li>
       <li>Next: <a href="iso.html" title="next chapter">AxelTimelineAccessor::iso</a></li>
   </ul></li>
   </ul></li>

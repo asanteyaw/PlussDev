@@ -36,9 +36,9 @@ std::string Thread::info_string() const {
       case ThreadKind::Series: return "Series";
       case ThreadKind::Note: return "Note";
       case ThreadKind::Timeline: return "Timeline";
-      case ThreadKind::TimeIndex: return "TimeIndex";
-      default: return "Unknown";
+      case ThreadKind::Duration: return "Duration";
     }
+    return "Unknown";
   }();
 
   std::string out;

@@ -55,14 +55,8 @@ created_at
 
 - [`RegistryFieldAxisAccessor::kind`](kind.md): the general form this method
   wraps.
-- [`RegistryFieldAxisAccessor::timeindex`](timeindex.md): the related shorthand
-  for `TimeIndex`-kind fields, a different datetime representation.
 - [`RegistryFieldAxisAccessor::series`](series.md) / [`note`](note.md): the
   shorthands for the other scalar kinds.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeindex.html">
-    <span class="label">Previous</span>
-    <span class="title">timeindex</span>
-  </a>
 </div>

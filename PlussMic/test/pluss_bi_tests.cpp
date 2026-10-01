@@ -291,6 +291,54 @@ void test_temporal_filters_and_query_windowing() {
          "temporal filters followed by head() should keep the requested window size");
 }
 
+void test_duration_filter_bounds() {
+  using namespace pluss::bi;
+
+  const pluss::table::Thread elapsed(pluss::duration::nanos(
+      std::vector<std::int64_t>{
+          -2'000'000'000LL,
+          0,
+          3'000'000'000LL,
+          pluss::Duration::kNaT,
+          5'000'000'000LL,
+      }));
+  const auto zero = pluss::duration::nanos(std::vector<std::int64_t>{0});
+  const auto three = pluss::duration::nanos(
+      std::vector<std::int64_t>{3'000'000'000LL});
+
+  expect(detail::apply_filter_(elapsed, Filter::ge("elapsed", zero))
+             .as_series()
+             .to_vec<bool>() == std::vector<bool>({false, true, true, false, true}),
+         "Duration scalar filters must broadcast an exact elapsed-time bound");
+  expect(detail::apply_filter_(elapsed, Filter::eq("elapsed", three))
+             .as_series()
+             .to_vec<bool>() == std::vector<bool>({false, false, true, false, false}),
+         "Duration equality filters must not match NaT or neighboring values");
+
+  const auto reversed = Filter::between_duration("elapsed", three, zero);
+  expect(detail::apply_filter_(elapsed, reversed).as_series().to_vec<bool>() ==
+             std::vector<bool>({false, true, true, false, false}),
+         "Duration ranges must normalize reversed endpoints and remain inclusive");
+
+  expect_throws_contains(
+      [&] { (void)detail::apply_filter_(elapsed, Filter::ge("elapsed", 0.0)); },
+      "explicit Duration bound",
+      "Duration filters must reject numeric bounds rather than treating them as nanoseconds");
+
+  const FilterScalar scalar = pluss::duration::nanos(
+      std::vector<std::int64_t>{-9'876'543'210LL});
+  expect(detail::filter_scalar_type_token_(scalar) == "duration",
+         "Duration filter serialization must use its own type token");
+  const auto restored = detail::decode_filter_scalar_(
+      detail::filter_scalar_type_token_(scalar),
+      detail::filter_scalar_value_token_(scalar),
+      "duration filter test");
+  expect(std::holds_alternative<pluss::Duration>(restored) &&
+             std::get<pluss::Duration>(restored).host() ==
+                 std::vector<std::int64_t>{-9'876'543'210LL},
+         "Duration filter serialization must preserve exact signed nanoseconds");
+}
+
 void test_query_arrange_orders_results_before_windowing() {
   using namespace pluss::bi;
 
@@ -1016,6 +1064,7 @@ int main() {
   test_scoped_session_filters_skip_or_throw_correctly();
   test_unscoped_session_filters_skip_missing_features();
   test_temporal_filters_and_query_windowing();
+  test_duration_filter_bounds();
   test_query_arrange_orders_results_before_windowing();
   test_query_group_pivot_and_resample_plans();
   test_control_tiles_materialize_active_state();

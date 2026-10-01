@@ -18,6 +18,14 @@ classic::Status classic::Flow::add_column_stage(
     classic::RouteRemainderPolicy remainder = classic::RouteRemainderPolicy::PassThrough);
 ```
 
+## What It Does
+
+The same work [`add_named_transform`](add_named_transform.md) does --
+appends a transform stage built from `kind`/`options` -- with `stage_key`
+moved from a trailing default to a required leading parameter, so a call
+site that cares about naming the stage reads that intent up front rather
+than as an easily-missed trailing argument.
+
 ## Parameters
 
 `stage_key` — `std::string`, required (no default)

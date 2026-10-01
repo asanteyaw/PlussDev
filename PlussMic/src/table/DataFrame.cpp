@@ -28,7 +28,6 @@
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
 #include "CodeN/core/OpsInternal.h"
-#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/tils/aux/transmit.h"
 #include "loader/CsvLoader.h"
@@ -121,6 +120,33 @@ pluss::Timeline pack_timeline_columns(const std::vector<pluss::Timeline>& cols,
   return pluss::timeline::from_epoch(matrix);
 }
 
+pluss::Duration pack_duration_columns(const std::vector<pluss::Duration>& cols,
+                                      std::string_view where,
+                                      bool force_matrix_2d = false) {
+  PLUSS_CHECK(!cols.empty(), std::string(where) + ": no Duration payloads available");
+  if (cols.size() == 1 && !force_matrix_2d) {
+    return cols.front();
+  }
+
+  const auto rows = cols.front().numel();
+  const auto ncols = static_cast<std::int64_t>(cols.size());
+  std::vector<std::vector<std::int64_t>> hosts;
+  hosts.reserve(cols.size());
+  for (const auto& col : cols) {
+    PLUSS_CHECK(col.numel() == rows, std::string(where) + ": Duration payload length mismatch");
+    hosts.push_back(col.host());
+  }
+
+  std::vector<std::int64_t> flat(static_cast<std::size_t>(rows * ncols));
+  for (std::int64_t row = 0; row < rows; ++row) {
+    for (std::int64_t col = 0; col < ncols; ++col) {
+      flat[static_cast<std::size_t>(row * ncols + col)] =
+          hosts[static_cast<std::size_t>(col)][static_cast<std::size_t>(row)];
+    }
+  }
+  return pluss::duration::nanos(flat, std::array<std::int64_t, 2>{rows, ncols});
+}
+
 } // namespace
 
 pluss::Series DataFrame::MatrixValues::as_series() const {
@@ -144,10 +170,10 @@ pluss::Timeline DataFrame::MatrixValues::as_timeline() const {
   return blocks.front();
 }
 
-pluss::TimeIndex DataFrame::MatrixValues::as_timeindex() const {
+pluss::Duration DataFrame::MatrixValues::as_duration() const {
   const auto& blocks = std::get<3>(*this);
-  PLUSS_CHECK(!blocks.empty(), "DataFrame::MatrixValues::as_timeindex: no TimeIndex matrix block available");
-  PLUSS_CHECK(blocks.size() == 1, "DataFrame::MatrixValues::as_timeindex: expected a single TimeIndex matrix block");
+  PLUSS_CHECK(!blocks.empty(), "DataFrame::MatrixValues::as_duration: no Duration matrix block available");
+  PLUSS_CHECK(blocks.size() == 1, "DataFrame::MatrixValues::as_duration: expected a single Duration matrix block");
   return blocks.front();
 }
 
@@ -450,8 +476,6 @@ std::string thread_scalar_string_at(const Thread& t, std::int64_t row) {
       return std::string(t.as_note().at(row));
     case ThreadKind::Timeline:
       return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case ThreadKind::TimeIndex:
-      return fmt::format("{}", t.as_timeindex().timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "";
   }
@@ -2542,9 +2566,9 @@ Thread null_thread_like_(const Thread& value, std::int64_t size, std::string_vie
       out = Thread(pluss::make_timeline(
           std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
       break;
-    case ThreadKind::TimeIndex:
-      out = Thread(pluss::make_timeindex(
-          std::vector<std::string>(static_cast<std::size_t>(size), "1970-01-01T00:00:00Z")));
+    case ThreadKind::Duration:
+      out = Thread(pluss::duration::nanos(
+          std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)));
       break;
   }
   return clear_assignment_metadata_(detail::with_validity_mask(
@@ -2723,6 +2747,7 @@ void set_prepared_feature_(
 
 
 #include "table/ops/shared/GroupInternals.inc"
+#include "table/ops/shared/TimeAxis.inc"
 #include "table/ops/dataframe/DataFrameLifecycleAndIO.inc"
 #include "table/ops/dataframe/DataFrameCoreAndFeatures.inc"
 #include "table/ops/dataframe/DataFrameSelectionAndTransform.inc"

@@ -159,10 +159,10 @@ private:
 };
 
 struct SparseFoldReport {
-  Series metrics = Series::undefined();
-  Series train_metrics = Series::undefined();
-  Series train_indices = Series::undefined();
-  Series test_indices = Series::undefined();
+  Series metrics = pluss::series::undefined();
+  Series train_metrics = pluss::series::undefined();
+  Series train_indices = pluss::series::undefined();
+  Series test_indices = pluss::series::undefined();
   double fit_time_seconds = 0.0;
   double score_time_seconds = 0.0;
 };
@@ -170,12 +170,12 @@ struct SparseFoldReport {
 struct SparseCrossReport {
   std::vector<SparseFoldReport> folds{};
   std::vector<MetricKind> metrics{};
-  Series mean_metrics = Series::undefined();
-  Series std_metrics = Series::undefined();
-  Series mean_train_metrics = Series::undefined();
-  Series std_train_metrics = Series::undefined();
-  Series fit_time_seconds = Series::undefined();
-  Series score_time_seconds = Series::undefined();
+  Series mean_metrics = pluss::series::undefined();
+  Series std_metrics = pluss::series::undefined();
+  Series mean_train_metrics = pluss::series::undefined();
+  Series std_train_metrics = pluss::series::undefined();
+  Series fit_time_seconds = pluss::series::undefined();
+  Series score_time_seconds = pluss::series::undefined();
 };
 
 enum class SparseObjectivePolicy : std::uint8_t {
@@ -194,16 +194,16 @@ struct SparseTuneTrial {
 struct SparseTuneLedger {
   std::vector<MetricKind> metrics{};
   std::vector<std::string> encoded_param_feature_names{};
-  Series objective = Series::undefined();
-  Series objective_rank = Series::undefined();
-  Series status_code = Series::undefined();
-  Series is_success = Series::undefined();
-  Series mean_test_metrics = Series::undefined();
-  Series std_test_metrics = Series::undefined();
-  Series split_test_metrics = Series::undefined();
-  Series fit_time_seconds = Series::undefined();
-  Series score_time_seconds = Series::undefined();
-  Series encoded_params = Series::undefined();
+  Series objective = pluss::series::undefined();
+  Series objective_rank = pluss::series::undefined();
+  Series status_code = pluss::series::undefined();
+  Series is_success = pluss::series::undefined();
+  Series mean_test_metrics = pluss::series::undefined();
+  Series std_test_metrics = pluss::series::undefined();
+  Series split_test_metrics = pluss::series::undefined();
+  Series fit_time_seconds = pluss::series::undefined();
+  Series score_time_seconds = pluss::series::undefined();
+  Series encoded_params = pluss::series::undefined();
 };
 
 struct SparseTuneReport {

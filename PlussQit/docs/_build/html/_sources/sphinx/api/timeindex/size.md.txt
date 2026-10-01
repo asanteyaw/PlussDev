@@ -72,12 +72,12 @@ if (values.numel() != idx.size()) {
 - [`TimeIndex::timeline`](timeline.md): expose the underlying `Timeline`.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="timeline.html">
+  <a class="prev-link" href="searchsorted.html">
     <span class="label">Previous</span>
-    <span class="title">timeline</span>
+    <span class="title">searchsorted</span>
   </a>
-  <a class="next-link" href="host.html">
+  <a class="next-link" href="slice.html">
     <span class="label">Next</span>
-    <span class="title">host</span>
+    <span class="title">slice</span>
   </a>
 </div>

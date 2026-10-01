@@ -5,8 +5,7 @@
 ## Signatures
 
 ```cpp
-TimeIndex::intersection(const TimeIndex& other) const -> TimeIndex
-TimeIndex::intersect(const TimeIndex& other) const -> TimeIndex
+TimeIndex TimeIndex::intersection(const TimeIndex& other) const
 ```
 
 ## What It Does
@@ -59,12 +58,12 @@ auto overlap = base.intersection(right);
 - [`TimeIndex::difference`](difference.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="union_.html">
+  <a class="prev-link" href="host.html">
     <span class="label">Previous</span>
-    <span class="title">union_</span>
+    <span class="title">host</span>
   </a>
-  <a class="next-link" href="difference.html">
+  <a class="next-link" href="is_monotonic_decreasing.html">
     <span class="label">Next</span>
-    <span class="title">difference</span>
+    <span class="title">is_monotonic_decreasing</span>
   </a>
 </div>

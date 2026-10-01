@@ -13,6 +13,14 @@ constructing a batch first).
 bool classic::EstimatorBase::trained() const noexcept;
 ```
 
+## What It Does
+
+Reports whether [`learn`](learn.md) has succeeded at least once on this
+estimator -- a plain flag check, not a re-derivation from internal state.
+It exists as the cheapest possible way to branch on trained-vs-untrained
+before calling [`infer`](infer.md)/[`assess`](assess.md), without first
+having to construct a batch just to trigger their own precondition check.
+
 ## Parameters
 
 None.

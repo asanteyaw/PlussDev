@@ -13,6 +13,15 @@ Only reachable via `->` (`net->output_type_at(index)`).
 const std::type_info& nn::Schedule::Impl::output_type_at(std::size_t index) const;
 ```
 
+## What It Does
+
+The output counterpart to [`input_type_at`](input_type_at.md): reports what
+type a given stage declared as its output when added. Checking the last
+stage's declared output type is exactly what
+[`forward`](forward.md)/[`run<ReturnType>`](run.md) do internally before
+running the chain, so this is the accessor to reach for when diagnosing why
+one of those calls rejects a `ReturnType`.
+
 ## Parameters
 
 `std::size_t index`
@@ -47,8 +56,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   for (std::size_t i = 0; i < net->size(); ++i) {
     std::cout << "stage " << i << " output_type_at==typeid(Series): " << std::boolalpha
@@ -68,7 +77,7 @@ stage 1 output_type_at==typeid(Series): true
 
 ### Example 2
 
-`then`/`insert` enforce this exact equality every time a stage is added:
+`append`/`insert` enforce this exact equality every time a stage is added:
 one stage's declared output type must equal the next stage's declared input
 type.
 
@@ -82,8 +91,8 @@ int main() {
   namespace nn = pluss::ai::nn;
 
   nn::Schedule net;
-  net.then("in", nn::Fusion(3, 4));
-  net.then("out", nn::Fusion(4, 2));
+  net.append("in", nn::Fusion(3, 4));
+  net.append("out", nn::Fusion(4, 2));
 
   for (std::size_t i = 0; i + 1 < net->size(); ++i) {
     std::cout << "output_type_at(" << i << ") == input_type_at(" << (i + 1) << "): " << std::boolalpha
@@ -103,7 +112,7 @@ output_type_at(0) == input_type_at(1): true
 ### Example 3
 
 An `RNN` stage's declared output is `std::tuple<Series, Series>`, not
-`Series` -- the reason it cannot be added with plain [`then`](then.md).
+`Series` -- the reason it cannot be added with plain [`append`](append.md).
 
 ```cpp
 #include <pluss/pluss.h>
@@ -117,7 +126,7 @@ int main() {
   using pluss::Series;
 
   nn::Schedule net;
-  net.then_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(3, 4));
+  net.append_as<Series, std::tuple<Series, Series>>("rnn", nn::RNN(3, 4));
 
   std::cout << "'rnn' output_type is Series: " << std::boolalpha
             << (net->output_type_at(0) == typeid(Series)) << "\n";

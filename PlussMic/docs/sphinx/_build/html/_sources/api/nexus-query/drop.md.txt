@@ -8,6 +8,9 @@
 
 ```cpp
 NexusTraverse::drop(std::initializer_list<std::string_view> features) const -> NexusTraverse
+NexusTraverse::drop(pluss::msharp::RangeView::Of<std::string_view> features) const -> NexusTraverse
+template <detail::StringViewNameRange NameRange>
+NexusTraverse::drop(const NameRange& features) const -> NexusTraverse
 ```
 
 ## What It Does
@@ -19,10 +22,18 @@ with it.
 
 ## Parameters
 
-**features** (`std::initializer_list<std::string_view>`)
+**features** (a range of `std::string_view` — a brace literal, a named
+container such as `std::vector<std::string_view>`/`std::vector<std::string>`,
+or any other range whose elements convert to `std::string_view`)
     The feature names to remove from the final result. Same validation as
     [`.pick()`](pick.md): each name must be non-empty and unique within the request.
     Existence is checked when [`.collect()`](collect.md) runs.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+See [`Nexus::select`](../nexus/select.md)'s own note on this — the same
+three-overload pattern (brace literal / named `RangeView`-convertible
+container / any other qualifying range) applies here identically.
+```
 
 ## Returns
 
@@ -75,6 +86,29 @@ order_id amount name
 
 `customer_id` (the join key, now redundant once the frames are joined) is gone;
 `order_id`, `amount`, and `name` all survive, in the joined frame's own original order.
+
+Example 2. Continuing from Example 1: the same drop list via named
+containers — a `std::vector<std::string_view>` (the `RangeView` overload)
+and a `std::vector<std::string>` (the templated overload).
+
+```cpp
+std::vector<std::string_view> as_view = {"customer_id"};
+std::vector<std::string> as_owned = {"customer_id"};
+
+auto r1 = linked.from("orders").join("customers").drop(as_view).collect();
+auto r2 = linked.from("orders").join("customers").drop(as_owned).collect();
+
+for (const auto& f : r1.features()) std::cout << f << " ";
+std::cout << "\n";
+for (const auto& f : r2.features()) std::cout << f << " ";
+```
+
+### Output
+
+```text
+order_id amount name
+order_id amount name
+```
 
 ## Notes
 

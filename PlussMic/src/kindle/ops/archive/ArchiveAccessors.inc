@@ -128,8 +128,8 @@ Archive ArchiveKeyAxisAccessor::timeline() const {
   return archive_.map_catalogs([](const Catalog& catalog) { return catalog.keyaxis().timeline(); });
 }
 
-Archive ArchiveKeyAxisAccessor::timeindex() const {
-  return archive_.map_catalogs([](const Catalog& catalog) { return catalog.keyaxis().timeindex(); });
+Archive ArchiveKeyAxisAccessor::duration() const {
+  return archive_.map_catalogs([](const Catalog& catalog) { return catalog.keyaxis().duration(); });
 }
 
 Archive ArchiveKeyAxisAccessor::prefix(std::string_view prefix) const {
@@ -170,8 +170,10 @@ Archive ArchiveKeyAccessor::fillnull(const pluss::Timeline& value) const {
   return map_selected_([&](const Catalog& catalog) { return catalog.keys(keys_).fillnull(value); });
 }
 
-Archive ArchiveKeyAccessor::fillnull(const pluss::TimeIndex& value) const {
-  return map_selected_([&](const Catalog& catalog) { return catalog.keys(keys_).fillnull(value); });
+Archive ArchiveKeyAccessor::fillnull(const pluss::Duration& value) const {
+  return map_selected_([&](const Catalog& catalog) {
+    return catalog.keys(keys_).fillnull(value);
+  });
 }
 
 Archive ArchiveKeyAccessor::dropnull() const {
@@ -231,8 +233,10 @@ Archive ArchiveCastAccessor::timeline() const {
   return keysel_.map_selected_([&](const Catalog& catalog) { return catalog.keys(keysel_.keys_).cast(options_).timeline(); });
 }
 
-Archive ArchiveCastAccessor::timeindex() const {
-  return keysel_.map_selected_([&](const Catalog& catalog) { return catalog.keys(keysel_.keys_).cast(options_).timeindex(); });
+Archive ArchiveCastAccessor::duration() const {
+  return keysel_.map_selected_([&](const Catalog& catalog) {
+    return catalog.keys(keysel_.keys_).cast(options_).duration();
+  });
 }
 
 ArchiveTimelineAccessor::ArchiveTimelineAccessor(Archive archive, std::vector<std::string> keys)
@@ -306,10 +310,6 @@ Archive ArchiveTimelineAccessor::localize(const pluss::table::TimelineLocalizeOp
       [&](const Catalog& catalog) { return catalog.keys(keysel_.keys_).tl().localize(options); });
 }
 
-Archive ArchiveTimelineAccessor::index(bool require_sorted) const {
-  return keysel_.map_selected_(
-      [&](const Catalog& catalog) { return catalog.keys(keysel_.keys_).tl().index(require_sorted); });
-}
 
 ArchiveTimeSeriesAccessor::ArchiveTimeSeriesAccessor(Archive archive, std::vector<std::string> keys)
     : keysel_(std::move(archive), std::move(keys)) {}

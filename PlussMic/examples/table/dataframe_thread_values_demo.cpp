@@ -81,9 +81,9 @@ int main() {
   std::cout << "features(\"event_time\").as_timeline().year()/hour() used to derive year/hour:\n";
   ts_enriched.features({"event_time", "year", "hour", "load_mw"}).head(8);
 
-  auto ts_idx = ts.features({"event_time"}).cast().timeindex();
-  auto bins = ts_idx.features("event_time").as_timeindex().resample_count("H", 6);
-  std::cout << "features(\"event_time\").as_timeindex().resample_count(\"H\", 6):\n";
+  auto ts_idx = ts.features({"event_time"}).cast().timeline();
+  auto bins = ts_idx.features("event_time").as_timeline().index(true).resample_count("H", 6);
+  std::cout << "features(\"event_time\").as_timeline().index(true).resample_count(\"H\", 6):\n";
   std::cout << pluss::series::print(bins) << "\n";
 
   std::cout << "features({\"load_mw\", \"speed_mph\"}).ts({.axis = features(\"event_time\")}).resample(\"6H\").mean():\n";

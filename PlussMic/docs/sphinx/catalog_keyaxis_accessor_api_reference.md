@@ -16,12 +16,12 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 :hidden:
 :maxdepth: 1
 
+api/catalog-keyaxis/duration
 api/catalog-keyaxis/like
 api/catalog-keyaxis/match
 api/catalog-keyaxis/note
 api/catalog-keyaxis/prefix
 api/catalog-keyaxis/series
 api/catalog-keyaxis/suffix
-api/catalog-keyaxis/timeindex
 api/catalog-keyaxis/timeline
 ```

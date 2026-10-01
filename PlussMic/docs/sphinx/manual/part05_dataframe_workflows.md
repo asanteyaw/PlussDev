@@ -99,8 +99,8 @@ Practical rule:
 ## Select cases
 
 ```cpp
-auto first = df.case_study(0);
-auto first_ten = df.case_study(0, 10);
+auto first = df.case_study().at(0);
+auto first_ten = df.case_study().slice(0, 10);
 auto middle = df.slice(100, 200);
 auto sampled = df.sample(100, 7);
 auto taken = df.take({0, 2, 5, 9});

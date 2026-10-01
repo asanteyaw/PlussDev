@@ -83,6 +83,44 @@ public:
 
   Timeline() = delete; // construction via factories only
 
+  // Option/result types for the ordered-axis operations reachable through
+  // index() (searchsorted/asof/resample_bins/...). Canonically defined here
+  // rather than on TimeIndex, since TimeIndex is becoming Timeline::index()'s
+  // private implementation detail; TimeIndex::ResampleOptions/AsofDirection
+  // alias these for source compatibility while callers migrate.
+  enum class ResampleClosed : std::uint8_t {
+    Left = 0,
+    Right = 1,
+  };
+
+  enum class ResampleLabel : std::uint8_t {
+    Left = 0,
+    Right = 1,
+  };
+
+  enum class ResampleOrigin : std::uint8_t {
+    StartDay = 0,
+    Start = 1,
+    Epoch = 2,
+  };
+
+  struct ResampleOptions {
+    std::string freq{"D"};
+    std::int64_t step{1};
+    ResampleClosed closed{ResampleClosed::Left};
+    ResampleLabel label{ResampleLabel::Left};
+    ResampleOrigin origin{ResampleOrigin::StartDay};
+    std::int64_t offset_nanos{0};
+  };
+
+  enum class AsofDirection { Backward, Forward, Nearest };
+
+  // Public name for whatever index() returns (the ordered-axis accessor
+  // behind searchsorted/asof/resample_bins/...). TimeIndex remains CodeH's
+  // private implementation detail, not nameable outside CodeH; this is the
+  // spelling external callers use when they need to name the type itself.
+  using TimelineIndexAccessor = pluss::codeh::TimelineIndexAccessor;
+
   using TimelineBase::weekday_name;
   using TimelineBase::month_name;
 

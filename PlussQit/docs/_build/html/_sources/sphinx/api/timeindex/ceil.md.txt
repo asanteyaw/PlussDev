@@ -5,17 +5,12 @@
 ## Signature
 
 ```cpp
-TimeIndex::ceil(std::string_view unit) const -> TimeIndex
+TimeIndex TimeIndex::ceil(std::string_view unit) const
 ```
 
 ## What It Does
 
 Rounds each timestamp up to the requested unit.
-
-Unit-specific wrappers mirror the generic method:
-
-- `ceil_ns()`, `ceil_us()`, `ceil_ms()`, `ceil_s()`
-- `ceil_min()`, `ceil_h()`, `ceil_D()`, `ceil_W()`
 
 Use this when later bucket ownership should prefer the next boundary rather than
 the previous one.
@@ -64,12 +59,12 @@ auto next_boundaries = base.ceil("H");
 - [`TimeIndex::round`](round.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="floor.html">
+  <a class="prev-link" href="asof.html">
     <span class="label">Previous</span>
-    <span class="title">floor</span>
+    <span class="title">asof</span>
   </a>
-  <a class="next-link" href="round.html">
+  <a class="next-link" href="difference.html">
     <span class="label">Next</span>
-    <span class="title">round</span>
+    <span class="title">difference</span>
   </a>
 </div>

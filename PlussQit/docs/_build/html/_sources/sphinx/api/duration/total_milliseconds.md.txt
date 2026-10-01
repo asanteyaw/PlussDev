@@ -54,14 +54,3 @@ data=5.4000e+06
 
 - [`total().microseconds()`](total_microseconds.md): the finer unit this divides.
 - [`total().seconds()`](total_seconds.md): the next unit up.
-
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="total_microseconds.html">
-    <span class="label">Previous</span>
-    <span class="title">total_microseconds</span>
-  </a>
-  <a class="next-link" href="total_seconds.html">
-    <span class="label">Next</span>
-    <span class="title">total_seconds</span>
-  </a>
-</div>

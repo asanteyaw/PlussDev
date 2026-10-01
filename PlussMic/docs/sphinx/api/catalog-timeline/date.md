@@ -17,7 +17,7 @@ Strips the time-of-day from each bound key's timestamp (dropped to midnight),
 replacing each bound key's values in place. Equivalent to
 [`floor("D")`](floor.md).
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.

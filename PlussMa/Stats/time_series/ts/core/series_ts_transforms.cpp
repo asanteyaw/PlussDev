@@ -315,17 +315,18 @@ Series fill_gaps(const Series& x, GapFillMode mode, std::optional<double> consta
   return out;
 }
 
-ResampleResult resample(const pluss::TimeIndex& index,
+ResampleResult resample(const pluss::Timeline& timeline,
                         const Series& values,
                         std::string_view freq,
                         ResampleOp op,
                         std::int64_t step) {
   PLUSS_CHECK(values.defined(), "subsp::stats::ts::resample: expected defined Series values");
   PLUSS_CHECK(values.dim() == 1, "subsp::stats::ts::resample: expected 1D values");
-  PLUSS_CHECK(index.size() == values.numel(), "subsp::stats::ts::resample: index/values length mismatch");
   PLUSS_CHECK(step > 0, "subsp::stats::ts::resample: step must be > 0");
   PLUSS_CHECK(!freq.empty(), "subsp::stats::ts::resample: freq cannot be empty");
 
+  const auto index = timeline.index();
+  PLUSS_CHECK(index.size() == values.numel(), "subsp::stats::ts::resample: index/values length mismatch");
   const Series xr = as_real_vector_(values, "resample");
   ResampleResult out{};
   out.labels = index.resample_bins(freq, step).labels;

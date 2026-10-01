@@ -111,8 +111,8 @@ Slot::Value slot_value_from_scalar_thread(const pluss::table::Thread& thread) {
       return thread.as_note();
     case pluss::table::ThreadKind::Timeline:
       return thread.as_timeline();
-    case pluss::table::ThreadKind::TimeIndex:
-      return thread.as_timeindex();
+    case pluss::table::ThreadKind::Duration:
+      return thread.as_duration();
   }
   return std::monostate{};
 }

@@ -11,6 +11,8 @@ Series Series::floor_divide(const Series& other) const
 Series Series::floor_divide(double other) const
 Series& Series::floor_divide_(const Series& other)
 Series& Series::floor_divide_(double other)
+Series& Series::floor_divide_(const Series& rhs) const
+Series& Series::floor_divide_(double rhs) const
 ```
 
 ## What It Does
@@ -57,6 +59,43 @@ against the receiver; a `double` applies the same divisor everywhere.
 `floor_divide()` is a rounding operation with a locally constant value, so it
 is **not differentiable** — a reverse pass through it alone raises. For a
 differentiable quotient use [`div()`](div.md).
+
+## In-Place Form
+
+`floor_divide_()` is the in-place sibling of [`floor_divide()`](floor_divide.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `floor_divide_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({7.0, -7.0, 8.0}, {3});
+auto y = pluss::make_series({2.0, 2.0, 2.0}, {3});
+
+x.floor_divide_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[3, -4, 4]
+```
+
+```cpp
+auto x = pluss::make_series({7.0, -7.0, 8.0}, {3});
+x.floor_divide_(2.0);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[3, -4, 4]
+```
 
 ## Examples
 

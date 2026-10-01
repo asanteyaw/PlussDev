@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 659443fa590b -->
+<!-- pluss-signature-hash: 4194293fc150 -->
 
 # DataFrameLabelAccessor::fillnull
 
@@ -12,7 +12,6 @@ DataFrameLabelAccessor::fillnull(double value) const -> Thread
 DataFrameLabelAccessor::fillnull(std::string_view value) const -> Thread
 DataFrameLabelAccessor::fillnull(const char* value) const -> Thread
 DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const -> Thread
-DataFrameLabelAccessor::fillnull(const pluss::TimeIndex& value) const -> Thread
 ```
 
 ## What It Does
@@ -23,8 +22,8 @@ To actually change the frame's case labels, pass the result to
 [`set()`](set.md).
 
 Pick the overload matching the case labels' own kind: `double` for a numeric
-(`Series`) axis, `std::string_view`/`const char*` for `Note`, `Timeline`/
-`TimeIndex` for their respective temporal kinds.
+(`Series`) axis, `std::string_view`/`const char*` for `Note`, `Timeline` for a
+`Timeline` axis.
 
 ## Parameters
 
@@ -134,10 +133,6 @@ value, `2024-01-02`. As in Example 1, this is still just the filled values —
   Example 1's `double` overload, just for a `Note`-kind axis instead of a
   numeric one — pass the replacement text directly, e.g.
   `readings.label().fillnull("unknown")`.
-- The `pluss::TimeIndex` overload behaves identically to Example 2's
-  `pluss::Timeline` overload — the same fill mechanics apply to either
-  temporal kind.
-
 ## See Also
 
 - [`DataFrameLabelAccessor::isnull`](isnull.md),

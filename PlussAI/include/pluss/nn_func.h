@@ -25,6 +25,7 @@ using ::pluss::ai::rnn::rnn;
 using ::pluss::ai::cudnn_rnn_enabled;
 using ::pluss::ai::cudnn_rnn_strict;
 using ::pluss::ai::cudnn_rnn_ready;
+using ::pluss::ai::Padding1d;
 using ::pluss::ai::causal_padding1d;
 using ::pluss::ai::conv;
 using ::pluss::ai::conv1d;
@@ -48,14 +49,15 @@ using ::pluss::ai::MultiheadOptions;
 using ::pluss::ai::MultiheadWeights;
 
 // Type shim for concise functional RNN configuration:
-//   pluss::nn::rnn::NetWeight, pluss::nn::rnn::NetConfig
+//   pluss::nn::rnn::NetWeight, pluss::nn::rnn::NetConfig, pluss::nn::rnn::LSTMState
 // while keeping callable pluss::nn::rnn(...) in the same surface.
 struct rnn {
   using NetWeight = ::pluss::ai::rnn::NetWeight;
   using NetConfig = ::pluss::ai::rnn::NetConfig;
+  using LSTMState = ::pluss::ai::rnn::LSTMState;
 };
 
-inline Series fusion(const Series& input, const Series& weight, const Series& bias = Series()) {
+inline Series fusion(const Series& input, const Series& weight, const Series& bias = pluss::series::undefined()) {
   return ::pluss::ai::ff(input, weight, bias);
 }
 

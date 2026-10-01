@@ -301,8 +301,8 @@ Series triangular_solve_small_complex_(const Series& a, const Series& b, bool up
   const Series a11 = mat_scalar_(a, 1, 1);
   const Series b0 = rhs.select(0, 0).contiguous();
   const Series b1 = rhs.select(0, 1).contiguous();
-  Series x0;
-  Series x1;
+  Series x0 = pluss::series::undefined();
+  Series x1 = pluss::series::undefined();
   if (upper) {
     x1 = unitriangular ? b1 : b1.div(a11);
     x0 = b0.sub(a01.mul(x1));
@@ -330,7 +330,7 @@ Series stack_scalars_as_row_(std::vector<Series> values, const char* op) {
 
 Series det_small_real_backward_factor_(const Series& a) {
   if (is_complex_scalar_(a.scalar_type()) || a.dim() != 2 || a.sizes()[0] != a.sizes()[1]) {
-    return Series::undefined();
+    return pluss::series::undefined();
   }
   const std::int64_t n = a.sizes()[0];
   if (n == 1) {
@@ -374,7 +374,7 @@ Series det_small_real_backward_factor_(const Series& a) {
              "det_backward_3x3_row2")},
         "det_backward_3x3");
   }
-  return Series::undefined();
+  return pluss::series::undefined();
 }
 
 Series triangular_masked_like_(const Series& value, bool upper, bool unitriangular) {
@@ -475,7 +475,7 @@ Series qr_backward_(const Series& q, const Series& r, const Series& grad, bool g
   const auto m = q.sizes()[static_cast<std::size_t>(q.dim() - 2)];
   const auto n = r.sizes()[static_cast<std::size_t>(r.dim() - 1)];
 
-  Series core;
+  Series core = pluss::series::undefined();
   if (grad_is_q) {
     core = matrix_adjoint_(q).matmul(grad).neg();
   } else {
@@ -799,7 +799,7 @@ void bind_matrix_power_backward_(const Series& out, const Series& a, std::int64_
   link->parents = {a};
   link->propagate = [a, exponent](const Series& out_sens) {
     const std::uint64_t magnitude = matrix_power_magnitude_(exponent);
-    Series grad;
+    Series grad = pluss::series::undefined();
     if (magnitude == 0) {
       grad = Series::zeros(a.sizes(), a.scalar_type()).to(a.platform());
     } else if (exponent > 0) {
@@ -1643,14 +1643,14 @@ inline bool mps_native_pinverse_supported_(const Series& a) {
 inline Series pinverse_mps_native_(const Series& a, double rcond);
 
 struct NativeQrResult {
-  Series q{Series::undefined()};
-  Series r{Series::undefined()};
+  Series q{pluss::series::undefined()};
+  Series r{pluss::series::undefined()};
 };
 
 struct NativeSvdResult {
-  Series u{Series::undefined()};
-  Series s{Series::undefined()};
-  Series vh{Series::undefined()};
+  Series u{pluss::series::undefined()};
+  Series s{pluss::series::undefined()};
+  Series vh{pluss::series::undefined()};
 };
 
 struct DecompCacheKey {
@@ -2106,7 +2106,7 @@ inline Series triangular_solve_mps_native_(
       return vector_rhs ? x.reshape({n}).contiguous() : x.contiguous();
     }
 
-    std::vector<Series> solved_rows(static_cast<std::size_t>(n), Series::undefined());
+    std::vector<Series> solved_rows(static_cast<std::size_t>(n), pluss::series::undefined());
     for (std::int64_t i = n - 1; i >= 0; --i) {
       Series row = rhs.select(0, i).contiguous();
       if (i + 1 < n) {

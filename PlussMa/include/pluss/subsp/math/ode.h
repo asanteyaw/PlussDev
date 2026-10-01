@@ -89,16 +89,16 @@ struct OdeOptions {
 };
 
 struct OdeResult {
-  Series y_final{};
+  Series y_final = pluss::series::undefined();
   std::int64_t steps{0};
   std::int64_t function_evaluations{0};
   bool converged{false};
 };
 
 struct OdeAdjointResult {
-  Series y_final{};
-  Series grad_y0{};
-  Series grad_theta{};   // undefined if `theta` was undefined
+  Series y_final = pluss::series::undefined();
+  Series grad_y0 = pluss::series::undefined();
+  Series grad_theta = pluss::series::undefined();   // undefined if `theta` was undefined
   std::int64_t forward_steps{0};
   std::int64_t backward_steps{0};
 };
@@ -125,7 +125,7 @@ inline Series rk4_step_(const OdeFn& f, double t, double h, const Series& y, con
 
 }  // namespace detail
 
-inline OdeResult fluxa(const OdeFn& f, const Series& y0, double t0, double t1, const Series& theta = Series{},
+inline OdeResult fluxa(const OdeFn& f, const Series& y0, double t0, double t1, const Series& theta = pluss::series::undefined(),
                        const OdeOptions& options = {}) {
   if (!f) {
     ::pluss::throw_error("subsp::math::ode::fluxa: right-hand-side callback is required");
@@ -195,7 +195,7 @@ inline OdeAdjointResult fluxa_adjoint(const OdeFn& f, const Series& y0, double t
 
   // Backward pass.
   Series a = grad_y_final;
-  Series theta_grad;  // accumulated lazily; stays undefined if !has_theta
+  Series theta_grad = pluss::series::undefined();  // accumulated lazily; stays undefined if !has_theta
   double t = t1;
   for (std::int64_t i = options.steps; i > 0; --i) {
     t -= h;
@@ -205,7 +205,7 @@ inline OdeAdjointResult fluxa_adjoint(const OdeFn& f, const Series& y0, double t
     auto ty = pluss::subsp::math::diff::trace(y_leaf, /*tracks_slope=*/true);
     const Series y_tracked = ty.value();
 
-    Series theta_tracked;
+    Series theta_tracked = pluss::series::undefined();
     pluss::subsp::math::diff::Trace ttheta;
     if (has_theta) {
       Series theta_leaf = theta.detach();

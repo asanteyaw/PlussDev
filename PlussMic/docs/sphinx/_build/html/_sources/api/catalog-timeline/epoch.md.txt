@@ -14,9 +14,9 @@ Catalog CatalogTimelineAccessor::epoch(pluss::table::TimeUnit unit = pluss::tabl
 ## What It Does
 
 Extracts each bound key's timestamp as a Unix epoch value in `unit`, replacing
-each `Timeline`- or `TimeIndex`-kind key with an `Int64` `Series` key.
+each `Timeline`-kind key with an `Int64` `Series` key.
 
-```{important} CatalogTimelineAccessor requires every bound key to be Timeline- or TimeIndex-kind
+```{important} CatalogTimelineAccessor requires every bound key to be Timeline-kind
 Same precondition as every method on this accessor — see
 [`CatalogTimelineAccessor::isnat`](isnat.md)'s own important callout for the full
 explanation and the exact throw message.

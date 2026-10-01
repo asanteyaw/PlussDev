@@ -14,7 +14,7 @@ int main() {
   heading("no_grad_evaluation");
   auto weights = pluss::make_series({2.0, 3.0, 4.0});
   weights.tracks_slope_(true);
-  pluss::Series prediction;
+  auto prediction = pluss::series::undefined();
   {
     pluss::NoGradGuard guard;
     prediction = weights.square();
@@ -26,7 +26,7 @@ int main() {
   heading("recording_resumes");
   auto x = pluss::make_series({1.0, 2.0, 3.0});
   x.tracks_slope_(true);
-  pluss::Series report;
+  auto report = pluss::series::undefined();
   {
     pluss::NoGradGuard guard;
     report = x.mul(10.0);
@@ -38,8 +38,8 @@ int main() {
   heading("nested_enable");
   auto nested = pluss::make_series({2.0, 3.0});
   nested.tracks_slope_(true);
-  pluss::Series outside_graph;
-  pluss::Series inside_graph;
+  auto outside_graph = pluss::series::undefined();
+  auto inside_graph = pluss::series::undefined();
   {
     pluss::NoGradGuard guard;
     outside_graph = nested.add(1.0);
@@ -54,7 +54,7 @@ int main() {
   heading("pause_recording");
   auto paused = pluss::make_series({-2.0, 1.0, 4.0});
   paused.tracks_slope_(true);
-  pluss::Series positive_mask;
+  auto positive_mask = pluss::series::undefined();
   {
     pluss::PauseRecording pause;
     positive_mask = paused.gt(0.0);

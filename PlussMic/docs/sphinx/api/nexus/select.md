@@ -8,6 +8,9 @@
 
 ```cpp
 Nexus::select(std::initializer_list<std::string_view> keys) const -> Nexus
+Nexus::select(pluss::msharp::RangeView::Of<std::string_view> keys) const -> Nexus
+template <detail::StringViewNameRange NameRange>
+Nexus::select(const NameRange& keys) const -> Nexus
 ```
 
 ## What It Does
@@ -32,16 +35,31 @@ valid on the selected key set.
 
 ## Parameters
 
-**keys** (`std::initializer_list<std::string_view>`)
+**keys** (a range of `std::string_view` — a brace literal, a named
+container such as `std::vector<std::string_view>`/`std::vector<std::string>`,
+or any other range whose elements convert to `std::string_view`)
 
-The table names to keep.
+The table names to keep, in iteration order.
 
 - Each key must be non-empty.
 - Each key must be unique within the request itself.
 - Each key must already exist in the source workspace.
-- Request order becomes output order.
+- **Iteration order becomes output order** — not necessarily *your* intended
+  order. A brace literal or `std::vector` iterates in the order you wrote it;
+  an *ordered* container like `std::set` iterates in *its own* sorted order
+  regardless of how you inserted into it — see Example 4.
 
-An empty list is allowed and produces a defined but empty workspace.
+An empty range is allowed and produces a defined but empty workspace.
+
+```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+`RangeView::Of<std::string_view>` has implicit constructors from a brace
+list, a `std::vector<std::string_view>`, and other contiguous containers, so
+passing any of those at a call site works without ever naming `RangeView`
+yourself. Example 1 below uses a brace literal (the dedicated
+`initializer_list` overload exists specifically to keep that call
+unambiguous); Examples 2 and 3 pass a named container instead, to exercise
+the `RangeView` and templated overloads respectively without naming either.
+```
 
 ## Returns
 
@@ -107,7 +125,67 @@ payments, customers
 customers, orders, payments, refunds
 ```
 
-Example 2. Continuing from Example 1, selecting an empty key list produces an
+Example 2. Continuing from Example 1: the same request via a named
+`std::vector<std::string_view>` — the `RangeView` overload, reached without
+naming `RangeView` anywhere.
+
+```cpp
+std::vector<std::string_view> keep = {"payments", "customers"};
+auto out = biz.select(keep);
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
+```
+
+### Output
+
+```text
+payments, customers
+```
+
+Example 3. Continuing from Example 1: a named `std::vector<std::string>`
+(owning strings, not views) reaches the templated overload instead, since
+`RangeView`'s vector constructor requires the exact element type
+`std::string_view` — `std::vector<std::string>` doesn't match it, but does
+satisfy the broader `StringViewNameRange` concept. Same result either way.
+
+```cpp
+std::vector<std::string> keep = {"payments", "customers"};
+auto out = biz.select(keep);
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
+```
+
+### Output
+
+```text
+payments, customers
+```
+
+Example 4. The iteration-order gotcha: a `std::set<std::string_view>` also
+reaches the templated overload, but a `std::set` iterates in *sorted* order —
+not insertion order — so the request `{"payments", "customers"}` produces
+`customers, payments`, not `payments, customers`.
+
+```cpp
+std::set<std::string_view> keep = {"payments", "customers"};
+auto out = biz.select(keep);
+for (std::int64_t i = 0; i < out.ntables(); ++i) {
+  if (i > 0) std::cout << ", ";
+  std::cout << out.keys()[static_cast<std::size_t>(i)];
+}
+```
+
+### Output
+
+```text
+customers, payments
+```
+
+Example 5. Continuing from Example 1, selecting an empty key list produces an
 empty but still defined workspace.
 
 ```cpp
@@ -120,7 +198,7 @@ std::cout << biz.select({}).ntables();
 0
 ```
 
-Example 3. Continuing from Example 1, validation is strict: empty request keys,
+Example 6. Continuing from Example 1, validation is strict: empty request keys,
 duplicate request keys, and unknown keys all throw.
 
 ```cpp

@@ -8,6 +8,7 @@
 
 ```cpp
 Series::logical_and(const Series& rhs) const -> Series
+Series& Series::logical_and_(const Series& rhs) const
 ```
 
 ## What It Does
@@ -39,6 +40,30 @@ Behavior that matters in practice:
 
 `Series`
     A boolean `Series` containing the lane-wise logical conjunction.
+
+## In-Place Form
+
+`logical_and_()` is the in-place sibling of [`logical_and()`](logical_and.md): it computes the same
+result and writes it back into `self` directly — mutating it (and any other
+handle sharing the same storage) instead of allocating a new `Series` — then
+returns a reference to `self`.
+
+Despite being declared `const` at the call site — a quirk of how this method's wrapper is generated, not a promise that `self` is left unchanged — `logical_and_()` genuinely mutates the series it's called on.
+
+```cpp
+auto x = pluss::make_series({true, true, false}, pluss::ScalarType::Bool);
+auto y = pluss::make_series({true, false, false}, pluss::ScalarType::Bool);
+
+x.logical_and_(y);
+std::cout << x;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[3], strides=[1], dtype=bool, platform=cpu, numel=3, contiguous=true)
+data=[true, false, false]
+```
 
 ## Examples
 

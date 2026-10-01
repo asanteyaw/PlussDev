@@ -14,7 +14,6 @@
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
-#include "pluss/codeh/timeindex_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "kindle/Stream.h"
 
@@ -41,7 +40,7 @@ SlotKind slot_kind_of_value(const Slot::Value& value) {
         if constexpr (std::is_same_v<T, pluss::Series>) return SlotKind::Series;
         if constexpr (std::is_same_v<T, pluss::Note>) return SlotKind::Note;
         if constexpr (std::is_same_v<T, pluss::Timeline>) return SlotKind::Timeline;
-        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return SlotKind::TimeIndex;
+        if constexpr (std::is_same_v<T, pluss::Duration>) return SlotKind::Duration;
         return SlotKind::Mixed;
       },
       value);
@@ -55,7 +54,7 @@ bool slot_value_scalar_like(const Slot::Value& value) {
         if constexpr (std::is_same_v<T, pluss::Series>) return v.numel() == 1;
         if constexpr (std::is_same_v<T, pluss::Note>) return v.numel() == 1;
         if constexpr (std::is_same_v<T, pluss::Timeline>) return v.numel() == 1;
-        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return v.size() == 1;
+        if constexpr (std::is_same_v<T, pluss::Duration>) return v.numel() == 1;
         return false;
       },
       value);
@@ -111,7 +110,7 @@ std::string slot_kind_name(SlotKind kind) {
     case SlotKind::Series: return "Series";
     case SlotKind::Note: return "Note";
     case SlotKind::Timeline: return "Timeline";
-    case SlotKind::TimeIndex: return "TimeIndex";
+    case SlotKind::Duration: return "Duration";
     case SlotKind::Mixed: return "Mixed";
   }
   return "Unknown";
@@ -122,7 +121,7 @@ SlotKind slot_kind_from_stream_kind(pluss::kindle::StreamKind kind) {
     case pluss::kindle::StreamKind::Series: return SlotKind::Series;
     case pluss::kindle::StreamKind::Note: return SlotKind::Note;
     case pluss::kindle::StreamKind::Timeline: return SlotKind::Timeline;
-    case pluss::kindle::StreamKind::TimeIndex: return SlotKind::TimeIndex;
+    case pluss::kindle::StreamKind::Duration: return SlotKind::Duration;
   }
   return SlotKind::Mixed;
 }
@@ -160,7 +159,7 @@ std::string value_to_json(const Slot::Value& value) {
         if constexpr (std::is_same_v<T, pluss::Series>) return fmt::format("\"Series[{}]\"", v.dtype().name);
         if constexpr (std::is_same_v<T, pluss::Note>) return fmt::format("\"Note[numel={}]\"", v.numel());
         if constexpr (std::is_same_v<T, pluss::Timeline>) return fmt::format("\"Timeline[numel={}]\"", v.numel());
-        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return fmt::format("\"TimeIndex[size={}]\"", v.size());
+        if constexpr (std::is_same_v<T, pluss::Duration>) return fmt::format("\"Duration[numel={}]\"", v.numel());
         return "\"unknown\"";
       },
       value);
@@ -174,7 +173,7 @@ std::string value_type_name(const Slot::Value& value) {
         if constexpr (std::is_same_v<T, pluss::Series>) return "Series";
         if constexpr (std::is_same_v<T, pluss::Note>) return "Note";
         if constexpr (std::is_same_v<T, pluss::Timeline>) return "Timeline";
-        if constexpr (std::is_same_v<T, pluss::TimeIndex>) return "TimeIndex";
+        if constexpr (std::is_same_v<T, pluss::Duration>) return "Duration";
         return "unknown";
       },
       value);
@@ -209,7 +208,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
   PLUSS_CHECK(required_kind == SlotKind::Series ||
                   required_kind == SlotKind::Note ||
                   required_kind == SlotKind::Timeline ||
-                  required_kind == SlotKind::TimeIndex,
+                  required_kind == SlotKind::Duration,
               "Slot accessor: unsupported required family");
   PLUSS_CHECK(slot.kind() == required_kind,
               std::string(where) + ": slot kind must be " + slot_kind_name(required_kind));
@@ -326,9 +325,8 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
           pluss::timeline::from_epoch(ticks, {n}, tz_name.value_or("UTC")),
           has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
     }
-    case SlotKind::TimeIndex: {
-      std::vector<std::int64_t> ticks(static_cast<std::size_t>(n), 0);
-      std::optional<std::string> tz_name;
+    case SlotKind::Duration: {
+      std::vector<std::int64_t> nanos(static_cast<std::size_t>(n), 0);
       for (std::int64_t i = 0; i < n; ++i) {
         const auto& value = slot.at(i);
         if (std::holds_alternative<std::monostate>(value)) {
@@ -336,22 +334,13 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
           valid[static_cast<std::size_t>(i)] = false;
           continue;
         }
-        const auto& index = std::get<pluss::TimeIndex>(value);
-        PLUSS_CHECK(index.size() == 1, std::string(where) + ": TimeIndex values must be scalar-like");
-        ticks[static_cast<std::size_t>(i)] = index.timeline().ticks()[0];
-        std::string value_tz(index.timeline().tz());
-        if (!tz_name.has_value()) {
-          tz_name = std::move(value_tz);
-        } else {
-          PLUSS_CHECK(*tz_name == value_tz,
-                      std::string(where) + ": TimeIndex slot values carry mismatched timezones ('" +
-                          *tz_name + "' vs '" + value_tz +
-                          "'); a Stream's TimeIndex column has one shared tz, so relabel with tz() "
-                          "(or localize()) to a common zone before combining");
-        }
+        const auto& duration = std::get<pluss::Duration>(value);
+        PLUSS_CHECK(duration.numel() == 1,
+                    std::string(where) + ": Duration values must be scalar-like");
+        nanos[static_cast<std::size_t>(i)] = duration.host()[0];
       }
       return pluss::kindle::Stream(
-          pluss::make_timeindex(pluss::timeline::from_epoch(ticks, {n}, tz_name.value_or("UTC")), false),
+          pluss::duration::nanos(nanos, {n}),
           has_null ? std::optional<pluss::Series>(validity_mask_from_valid(valid)) : std::nullopt);
     }
     case SlotKind::Empty:
@@ -379,10 +368,10 @@ pluss::table::Thread thread_from_slot_value(const Slot::Value& value) {
           return pluss::table::Thread(pluss::timeline::from_epoch(
               std::vector<std::int64_t>{ticks[0]},
               std::vector<std::int64_t>{1}));
-        } else if constexpr (std::is_same_v<T, pluss::TimeIndex>) {
-          PLUSS_CHECK(v.size() == 1, "Slot: TimeIndex value must be scalar-like for Thread delegation");
-          const auto ticks = v.timeline().ticks();
-          return pluss::table::Thread(pluss::make_timeindex(std::vector<std::int64_t>{ticks[0]}, false));
+        } else if constexpr (std::is_same_v<T, pluss::Duration>) {
+          PLUSS_CHECK(v.numel() == 1, "Slot: Duration value must be scalar-like for Thread delegation");
+          return pluss::table::Thread(pluss::duration::nanos(
+              std::vector<std::int64_t>{v.host()[0]}));
         }
       },
       value);
@@ -396,8 +385,8 @@ Slot::Value slot_value_from_thread_payload(const pluss::table::Thread& thread) {
       return thread.as_note();
     case pluss::table::ThreadKind::Timeline:
       return thread.as_timeline();
-    case pluss::table::ThreadKind::TimeIndex:
-      return thread.as_timeindex();
+    case pluss::table::ThreadKind::Duration:
+      return thread.as_duration();
   }
   return std::monostate{};
 }
@@ -444,10 +433,9 @@ Slot::Value slot_value_to_note(const Slot::Value& value) {
           PLUSS_CHECK(v.numel() == 1, "Slot::cast(Note): Timeline value must be scalar-like");
           const auto ticks = v.ticks();
           return pluss::make_note(std::vector<std::string>{std::to_string(ticks[0])});
-        } else if constexpr (std::is_same_v<T, pluss::TimeIndex>) {
-          PLUSS_CHECK(v.size() == 1, "Slot::cast(Note): TimeIndex value must be scalar-like");
-          const auto ticks = v.timeline().ticks();
-          return pluss::make_note(std::vector<std::string>{std::to_string(ticks[0])});
+        } else if constexpr (std::is_same_v<T, pluss::Duration>) {
+          PLUSS_CHECK(v.numel() == 1, "Slot::cast(Note): Duration value must be scalar-like");
+          return pluss::make_note(std::vector<std::string>{std::string(v.to_note_iso().scalar())});
         }
       },
       value);
@@ -466,8 +454,8 @@ bool slot_value_matches_target(const Slot::Value& value,
           return target == pluss::table::ThreadCastTarget::Note;
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
           return target == pluss::table::ThreadCastTarget::Timeline;
-        } else if constexpr (std::is_same_v<T, pluss::TimeIndex>) {
-          return target == pluss::table::ThreadCastTarget::TimeIndex;
+        } else if constexpr (std::is_same_v<T, pluss::Duration>) {
+          return target == pluss::table::ThreadCastTarget::Duration;
         }
       },
       value);
@@ -477,7 +465,7 @@ Slot::Value scalar_fill_value_for_target(pluss::table::ThreadCastTarget target,
                                          double numeric,
                                          std::string_view text,
                                          const pluss::Timeline* timeline,
-                                         const pluss::TimeIndex* timeindex) {
+                                         const pluss::Duration* duration) {
   switch (target) {
     case pluss::table::ThreadCastTarget::Series:
       return pluss::make_series(numeric, pluss::codem::ScalarType::Float64);
@@ -487,10 +475,11 @@ Slot::Value scalar_fill_value_for_target(pluss::table::ThreadCastTarget target,
       PLUSS_CHECK(timeline != nullptr, "Slot::fillnull(Timeline): fill value missing");
       PLUSS_CHECK(timeline->numel() == 1, "Slot::fillnull(Timeline): fill value must be scalar-like");
       return *timeline;
-    case pluss::table::ThreadCastTarget::TimeIndex:
-      PLUSS_CHECK(timeindex != nullptr, "Slot::fillnull(TimeIndex): fill value missing");
-      PLUSS_CHECK(timeindex->size() == 1, "Slot::fillnull(TimeIndex): fill value must be scalar-like");
-      return *timeindex;
+    case pluss::table::ThreadCastTarget::Duration:
+      PLUSS_CHECK(duration != nullptr, "Slot::fillnull(Duration): fill value missing");
+      PLUSS_CHECK(duration->numel() == 1,
+                  "Slot::fillnull(Duration): fill value must be scalar-like");
+      return *duration;
   }
   PLUSS_FAIL("Slot::fillnull: unsupported target");
 }

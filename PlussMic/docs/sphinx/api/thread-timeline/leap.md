@@ -58,7 +58,7 @@ Every 2024 row flags `true`; the 2023 row flags `false`.
 - Reflects the *row's year*, not whether the row's exact date is February
   29th — a `"2024-06-15"` row also flags `true`, since 2024 as a whole is a
   leap year.
-- `.tl()` requires the bound thread to already be `Timeline`/`TimeIndex`-kind —
+- `.tl()` requires the bound thread to already be `Timeline`-kind —
   the accessor's constructor throws otherwise.
 - A `NaT` row (or one already null on the underlying thread) displays as
   `"NULL"`, not `false`.

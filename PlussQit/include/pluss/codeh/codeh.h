@@ -33,7 +33,6 @@ namespace pluss {
 using Timeline = codeh::Timeline;
 using Duration = codeh::Duration;
 using DurationTotal = codeh::DurationTotal;
-using TimeIndex = codeh::TimeIndex;
 using codeh::BusinessCalendar;
 using codeh::TimelineSpanAnchor;
 using codeh::TimelineSpanClosed;

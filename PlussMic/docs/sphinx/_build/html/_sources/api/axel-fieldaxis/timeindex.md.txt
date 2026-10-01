@@ -33,7 +33,7 @@ Example 1. Keep only the `TimeIndex`-kind field in every frame.
 
 ```cpp
 auto r0 = pluss::scribble::Registry({
-    {"idx", pluss::scribble::Slot({pluss::make_timeindex(pluss::make_timeline({"2024-01-01T00:00:00Z"}))})},
+    {"idx", pluss::scribble::Slot({pluss::timeindex::make(pluss::make_timeline({"2024-01-01T00:00:00Z"}))})},
     {"id", pluss::scribble::Slot({pluss::make_series(1)})},
 });
 auto axel = pluss::scribble::Axel({r0});

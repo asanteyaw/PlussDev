@@ -18,6 +18,16 @@ classic::StatusOr<classic::KNearestResult> classic::SpatialIndex::query_self_k(
     std::int64_t k) const;
 ```
 
+## What It Does
+
+For every point already in the index, finds its `k` nearest *other*
+indexed points, in one call, with no separate query batch needed -- each
+point's own row is excluded from its own result by identity, not by
+distance, so a genuine coincident duplicate elsewhere in the index still
+counts as a valid neighbor. This is the shape to reach for when the
+question is "what is near each of my existing points," as opposed to
+[`query_k`](query_k.md)'s "what is near each of these new points."
+
 ## Parameters
 
 `k` — `std::int64_t`
