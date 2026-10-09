@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::frac_slash
+# Note::TexAccessor::frac_slash
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::frac_slash() const
+Note Note::TexAccessor::frac_slash() const
 ```
 
 ## Rewrite Fraction Commands As Explicit Division

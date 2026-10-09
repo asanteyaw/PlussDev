@@ -28,7 +28,7 @@ void lymph::models::Model::save(
 void lymph::models::Model::save(
     const std::string& path,
     const pluss::table::DataFrame& x_train,
-    const pluss::table::Thread& y_train,
+    const pluss::table::Slate& y_train,
     const lymph::options::Train& train_options = {},
     lymph::io::FlowBundleMetadata metadata = {}) const;
 
@@ -75,7 +75,7 @@ nothing fitted to write.
 
 `const pluss::table::DataFrame& x_train, const pluss::Series& y_train`
 : The training inputs to embed. Supplying them switches on the self-describing
-  form. The label may also be a `pluss::table::Thread` (`y_train`), or the
+  form. The label may also be a `pluss::table::Slate` (`y_train`), or the
   features and label may arrive as one `frame` plus a
   `data_options` (`lymph::options::DFBatch`) naming the label column, or as a
   single `train_batch` (`lymph::LabeledBatch`). Use the shape you trained with.
@@ -129,7 +129,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -137,7 +137,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.4, 1.8, 3.4, 3.8, 4.2}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 
@@ -150,9 +150,9 @@ int main() {
   // Reload it into a brand new Model and confirm predictions are unchanged.
   const lymph::models::Model reloaded = lymph::models::Model::load(path.string());
   const DataFrame check({
-      {"income", Thread(income)},
-      {"original", Thread(model.infer(x))},
-      {"reloaded", Thread(reloaded.infer(x))},
+      {"income", Slate(income)},
+      {"original", Slate(model.infer(x))},
+      {"reloaded", Slate(reloaded.infer(x))},
   });
   std::cout << check;
 
@@ -194,7 +194,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -202,7 +202,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.4, 1.8, 3.4, 3.8, 4.2}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.prepare().scale({"income", "balance"});
@@ -258,7 +258,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -266,7 +266,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.4, 1.8, 3.4, 3.8, 4.2}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 
@@ -284,9 +284,9 @@ int main() {
   std::cout << "reloaded trained = " << std::boolalpha << reloaded.trained() << "\n\n";
 
   const DataFrame check({
-      {"income", Thread(income)},
-      {"original", Thread(model.infer(x))},
-      {"reloaded", Thread(reloaded.infer(x))},
+      {"income", Slate(income)},
+      {"original", Slate(model.infer(x))},
+      {"reloaded", Slate(reloaded.infer(x))},
   });
   std::cout << check;
 

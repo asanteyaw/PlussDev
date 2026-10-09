@@ -16,7 +16,7 @@ by hand.
 // models::Model + data -- four data shapes.
 ThresholdCurve reports::threshold_curve(const models::Model&, const LabeledBatch&,          const InferOptions& = {});
 ThresholdCurve reports::threshold_curve(const models::Model&, const DataFrame& x, const Series& y, const InferOptions& = {});
-ThresholdCurve reports::threshold_curve(const models::Model&, const DataFrame& x, const Thread& y, const InferOptions& = {});
+ThresholdCurve reports::threshold_curve(const models::Model&, const DataFrame& x, const Slate& y, const InferOptions& = {});
 ThresholdCurve reports::threshold_curve(const models::Model&, const DataFrame& frame, const DataFrameBatchOptions&, const InferOptions& = {});
 
 double reports::best_threshold(const models::Model&, /* same four shapes */ ..., MetricKind objective = MetricKind::F1, const InferOptions& = {});
@@ -30,6 +30,10 @@ ThresholdCurve reports::Model::threshold_curve(/* data */) const;
 double         reports::Model::best_threshold(/* data */, MetricKind objective = MetricKind::F1) const;
 ```
 
+## What It Does
+
+`threshold_curve` runs the model to get scores, then reports precision, recall, and F1 at every threshold the scores allow. `best_threshold` returns the single cutoff that maximizes one objective, which defaults to F1. Both run inference internally, so the caller passes data and does not build a score series by hand.
+
 ## Parameters
 
 `model` / `workflow`
@@ -37,7 +41,7 @@ double         reports::Model::best_threshold(/* data */, MetricKind objective =
 
 `x` / `y` / `frame` / `data_options` / `batch` / `payload`
 : The data, in any shape every other verb accepts — `(x, y)` with a `Series`
-  or `Thread` label, `(frame, data_options)`, a `LabeledBatch` (`batch`), or
+  or `Slate` label, `(frame, data_options)`, a `LabeledBatch` (`batch`), or
   a `Payload` for the `Workflow` overloads. `y` is the binary ground truth.
 
 `objective` (`best_threshold` only) — `MetricKind`, default `MetricKind::F1`
@@ -82,15 +86,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"income", Thread(pluss::make_series(
+      {"income", Slate(pluss::make_series(
           {1.0, 1.3, 1.7, 2.1, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4}, {10}, f64))},
-      {"balance", Thread(pluss::make_series(
+      {"balance", Slate(pluss::make_series(
           {0.4, 0.7, 1.0, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0}, {10}, f64))},
   });
   const Series y = pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
@@ -139,15 +143,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"income", Thread(pluss::make_series(
+      {"income", Slate(pluss::make_series(
           {1.0, 1.3, 1.7, 2.1, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4}, {10}, f64))},
-      {"balance", Thread(pluss::make_series(
+      {"balance", Slate(pluss::make_series(
           {0.4, 0.7, 1.0, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0}, {10}, f64))},
   });
   const Series y = pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
@@ -190,18 +194,18 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"id", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, {10}, f64))},
-      {"income", Thread(pluss::make_series(
+      {"id", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, {10}, f64))},
+      {"income", Slate(pluss::make_series(
           {1.0, 1.3, 1.7, 2.1, 2.4, 2.8, 3.2, 3.6, 4.0, 4.4}, {10}, f64))},
-      {"balance", Thread(pluss::make_series(
+      {"balance", Slate(pluss::make_series(
           {0.4, 0.7, 1.0, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0}, {10}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64))},
   });
 
   workflow::Policy policy{};

@@ -18,15 +18,34 @@ structure worth exploiting.
 
 ## How To Call It
 
+Stack two one-dimensional convolutions with a ReLU between them, then run two signals of length 20. The program prints the output shape.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::Schedule net;
-net.append("conv1", nn::Conv1d(1, 8, 5));   // 1 -> 8 channels, kernel_size=5
-net.append("act1", nn::ReLU());
-net.append("conv2", nn::Conv1d(8, 16, 3));  // 8 -> 16 channels, kernel_size=3
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-const Series y = net.forward(x);  // x: [batch, 1, length]
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::Schedule net;
+  net.append("conv1", nn::Conv1d(1, 8, 5));
+  net.append("act1", nn::ReLU());
+  net.append("conv2", nn::Conv1d(8, 16, 3));
+  const pluss::Series x = pluss::make_series(std::vector<double>(2 * 1 * 20, 0.1), {2, 1, 20});
+  const pluss::Series y = net.forward(x);
+  std::cout << "output = " << y.sizes()[0] << " x " << y.sizes()[1] << " x " << y.sizes()[2] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+output = 2 x 16 x 14
 ```
 
 Every `cnn` layer composes into a [`Schedule`](module/Schedule.md) the

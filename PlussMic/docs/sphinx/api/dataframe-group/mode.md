@@ -49,8 +49,8 @@ Example 1. Most common loan status per region, including a tie.
 using namespace pluss::table;
 
 auto loans = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"status", Thread(pluss::make_note({"good", "good", "bad", "good"}))},
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"status", Slate(pluss::make_note({"good", "good", "bad", "good"}))},
 });
 std::cout << loans;
 
@@ -91,15 +91,15 @@ std::cout << out;
 one `"bad"` and one `"good"` — tied at one occurrence each — and `status_mode` picks
 `"bad"` because it appears first in the source data (row `2`), not because it sorts
 first alphabetically. This is the same first-occurrence tie-break used by
-[`Thread::freq()`](../thread/freq.md).
+[`Slate::freq()`](../slate/freq.md).
 
 Example 2. Target one selected feature on a wider value side.
 
 ```cpp
 auto wide = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"status", Thread(pluss::make_note({"good", "good", "bad", "good"}))},
-    {"segment", Thread(pluss::make_note({"retail", "retail", "sme", "sme"}))},
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"status", Slate(pluss::make_note({"good", "good", "bad", "good"}))},
+    {"segment", Slate(pluss::make_note({"retail", "retail", "sme", "sme"}))},
 });
 
 auto out2 = wide.group().by({"region"}).mode({"segment"});

@@ -1,14 +1,14 @@
-# TimelineIndexAccessor::tz_localize
+# Timeline::TimelineIndexAccessor::tz_localize
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor::tz_localize(
+Timeline::TimelineIndexAccessor::tz_localize(
     std::string_view tz_name,
     int fold = 0,
-    std::string_view nonexistent = "raise") const -> TimelineIndexAccessor
+    std::string_view nonexistent = "raise") const -> Timeline::TimelineIndexAccessor
 ```
 
 ## What It Does
@@ -48,7 +48,7 @@ forward gap.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The localized time index.
 
 ## Examples
@@ -56,13 +56,13 @@ forward gap.
 Example 1. Attach New York timezone meaning to naive local wall-clock values.
 
 ```cpp
-auto naive_local = pluss::timeindex::make({
+auto naive_local = pluss::timeline::make({
     "2024-11-01T09:00:00",
     "2024-11-01T10:15:00",
-}, false);
+}).index(false);
 
 auto out = naive_local.tz_localize("America/New_York");
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -77,7 +77,7 @@ actually part of the input problem.
 
 ```cpp
 auto localized = naive_local.tz_localize("America/New_York", 0, "raise");
-std::cout << pluss::timeindex::print(localized) << "\n";
+std::cout << pluss::timeline::print(localized.timeline()) << "\n";
 ```
 
 ## Notes
@@ -87,7 +87,7 @@ std::cout << pluss::timeindex::print(localized) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::tz_convert`](tz_convert.md)
+- [`Timeline::TimelineIndexAccessor::tz_convert`](tz_convert.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tz_convert.html">

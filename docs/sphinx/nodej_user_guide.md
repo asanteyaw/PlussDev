@@ -298,7 +298,7 @@ Use DataFrame bridge when your data lives in PlussMic tables. Use explicit batch
 - `label_feature`
 - `sample_weight_feature`
 - `layout`
-- `thread_policy`: `SeriesOnly` / `CastTemporalToSeries`
+- `slate_policy`: `SeriesOnly` / `CastTemporalToSeries`
 - `note_policy`: `Reject` / `Drop` / `Hash`
 - `note_hash_seed`
 
@@ -309,7 +309,7 @@ nje::DataFrameBatchOptions data_opts{};
 data_opts.feature_names = {"x1", "x2", "x3"};
 data_opts.label_feature = std::string("target");
 data_opts.layout = nje::ObservationLayout::Rows;
-data_opts.thread_policy = nje::DataThreadPolicy::CastTemporalToSeries;
+data_opts.slate_policy = nje::DataSlatePolicy::CastTemporalToSeries;
 data_opts.note_policy = nje::DataNotePolicy::Reject;
 
 auto labeled_or = nje::labeled_batch_from_dataframe(df, data_opts);
@@ -505,10 +505,10 @@ if (!flow.add_standard_scaler().ok()) throw std::runtime_error("scaler add faile
 - `prep::SimpleImputer::learn_map(batch: FeatureBatch, learn_options: TrainOptions = {}, infer_options: InferOptions = {}) -> StatusOr<Series>`
 - same contract for all NodeJ preprocessors (`StandardScaler`, `MinMaxScaler`, `RobustScaler`, `NeighborImputer`, `IterativeImputer`, `OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`, `VectorNormalizer`, `MaxAbsScaler`, `QuantileMap`, `PowerMap`, `ThresholdBinarizer`, `PolynomialLift`)
 - single-feature categorical convenience:
-  - `prep::OneHotEncoder::learn(feature: pluss::table::Thread, ...)`
-  - `prep::OneHotEncoder::map(feature: pluss::table::Thread, ...)`
-  - `prep::OneHotEncoder::learn_map(feature: pluss::table::Thread, ...)`
-  - same Thread overloads for `prep::FrequencyEncoder`, `prep::OrdinalEncoder`, and `prep::LabelEncoder`
+  - `prep::OneHotEncoder::learn(feature: pluss::table::Slate, ...)`
+  - `prep::OneHotEncoder::map(feature: pluss::table::Slate, ...)`
+  - `prep::OneHotEncoder::learn_map(feature: pluss::table::Slate, ...)`
+  - same Slate overloads for `prep::FrequencyEncoder`, `prep::OrdinalEncoder`, and `prep::LabelEncoder`
 
 ### Notes
 
@@ -532,7 +532,7 @@ Practical guidance:
 ### Inputs
 
 - `FeatureBatch`
-- `pluss::table::Thread` for single-feature categorical encoding (`OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`) across Series/Note/Timeline/TimeIndex
+- `pluss::table::Slate` for single-feature categorical encoding (`OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`) across Series/Note/Timeline/TimeIndex
 
 ### Output
 

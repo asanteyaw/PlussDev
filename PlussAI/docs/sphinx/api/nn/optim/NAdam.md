@@ -82,9 +82,13 @@ int main() {
   optim::NAdam nadam(std::vector<Series*>{&w_nadam}, optim::NAdamOptions{.learning_rate = 0.5});
 
   for (int step = 0; step < 8; ++step) {
-    adam.step(std::vector<Series>{w_adam.sub(target)});
-    nadam.step(std::vector<Series>{w_nadam.sub(target)});
-    std::cout << "step " << step << ": Adam w = " << w_adam.item<float>()
+    const Series w_adam_residual = w_adam.sub(target);
+    const float w_adam_loss = w_adam_residual.square().mul(0.5).item<float>();
+    adam.step(std::vector<Series>{w_adam_residual});
+    const Series w_nadam_residual = w_nadam.sub(target);
+    const float w_nadam_loss = w_nadam_residual.square().mul(0.5).item<float>();
+    nadam.step(std::vector<Series>{w_nadam_residual});
+    std::cout << "step " << step << ": Adam loss = " << w_adam_loss << ", NAdam loss = " << w_nadam_loss << ", Adam w = " << w_adam.item<float>()
                << ", NAdam w = " << w_nadam.item<float>() << "\n";
   }
 
@@ -95,14 +99,14 @@ int main() {
 Output
 
 ```text
-step 0: Adam w = 4.5, NAdam w = 4.47177
-step 1: Adam w = 4.00284, NAdam w = 4.10538
-step 2: Adam w = 3.5111, NAdam w = 3.77764
-step 3: Adam w = 3.028, NAdam w = 3.46436
-step 4: Adam w = 2.55751, NAdam w = 3.15983
-step 5: Adam w = 2.10445, NAdam w = 2.86408
-step 6: Adam w = 1.67443, NAdam w = 2.57922
-step 7: Adam w = 1.27372, NAdam w = 2.30805
+step 0: Adam loss = 8, NAdam loss = 8, Adam w = 4.5, NAdam w = 4.47177
+step 1: Adam loss = 6.125, NAdam loss = 6.0266, Adam w = 4.00284, NAdam w = 4.10538
+step 2: Adam loss = 4.50852, NAdam loss = 4.82169, Adam w = 3.5111, NAdam w = 3.77764
+step 3: Adam loss = 3.1528, NAdam loss = 3.85764, Adam w = 3.028, NAdam w = 3.46436
+step 4: Adam loss = 2.05638, NAdam loss = 3.03653, Adam w = 2.55751, NAdam w = 3.15983
+step 5: Adam loss = 1.21293, NAdam loss = 2.33243, Adam w = 2.10445, NAdam w = 2.86408
+step 6: Adam loss = 0.609909, NAdam loss = 1.7374, Adam w = 1.67443, NAdam w = 2.57922
+step 7: Adam loss = 0.227427, NAdam loss = 1.24697, Adam w = 1.27372, NAdam w = 2.30805
 ```
 
 NAdam is more conservative here -- its own default `learning_rate` (`2e-3`

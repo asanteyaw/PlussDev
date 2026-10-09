@@ -15,11 +15,11 @@ int main() {
   enc.max_categories = 64;
   enc.include_unknown_bucket = true;
 
-  lymph::Policy gate{
+  lymph::workflow::Policy gate{
       .drop_columns = {"FIRST_NAME", "LAST_NAME", "Combo Name", "DATE_STARTED", "ORIG_START", "DATE_TERM"},
       .reject_missing = {" GROSS_PAY "},
   };
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"DEPARTMENT", "JOB_TITLE", "ELECTED_OFFICIAL", "SEX", "ETHNICITY", "PAY_STATUS",
                  " ANNUAL_SALARY ", " REGULAR_PAY ", " OVERTIME_PAY ", " INCENTIVE_PAY "})
       .label(" GROSS_PAY ")
@@ -29,14 +29,14 @@ int main() {
       gate,
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("cat", {"DEPARTMENT", "JOB_TITLE", "ELECTED_OFFICIAL", "SEX", "ETHNICITY", "PAY_STATUS"}, {
-              {"encode", lymph::stage::one_hot_encoder(enc)},
+              {"encode", lymph::prep::stage::one_hot_encoder(enc)},
           }),
           lymph::workflow::branch("pay", {" ANNUAL_SALARY ", " REGULAR_PAY ", " OVERTIME_PAY ", " INCENTIVE_PAY "}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"scale", lymph::stage::standard_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::random_forest_regressor({.learners = 80, .subsample = 0.85}));
+      lymph::models::random_forest_regressor({.learners = 80, .subsample = 0.85}));
 
   wf.learn_(data);
   std::cout << "employee salary r2: " << wf.assess(data).r2.item<double>() << "\n";

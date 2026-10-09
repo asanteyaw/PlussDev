@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Atlas::column_names" href="column_names.html" />
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5c7c12ce7704 -->
+<!-- pluss-signature-hash: 96e580d40ede -->
 <section id="atlas-axis0-labels">
 <h1>Atlas::axis0_labels<a class="headerlink" href="#atlas-axis0-labels" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../atlas_api_reference.html"><span class="doc std std-doc">Back to Atlas API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">axis0_labels</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Thread</span><span class="o">&gt;&amp;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Atlas</span><span class="o">::</span><span class="n">axis0_labels</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Slate</span><span class="o">&gt;&amp;</span>
 </pre></div>
 </div>
 </section>
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the labels attached to the depth axis — the name given to each stacked frame’s
 position, the same role a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>’s case labels play for rows. Unlike case labels,
-depth labels are <strong>optional</strong>: an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> constructed without an explicit label <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+depth labels are <strong>optional</strong>: an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> constructed without an explicit label <code class="docutils literal notranslate"><span class="pre">Slate</span></code>
 has <code class="docutils literal notranslate"><span class="pre">axis0_labels()</span></code> return an empty <code class="docutils literal notranslate"><span class="pre">std::optional</span></code>, and every depth-label-aware method
 (<code class="docutils literal notranslate"><span class="pre">loc()</span></code>, <a class="reference internal" href="sort_depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sort_depth()</span></code></span></a>, <a class="reference internal" href="align_depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">align_depth()</span></code></span></a>) either
 requires labels to be set first or falls back to plain integer positions. This is the raw
@@ -63,7 +63,7 @@ accessor; <a class="reference internal" href="label.html"><span class="std std-d
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::optional&lt;Thread&gt;&amp;</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::optional&lt;Slate&gt;&amp;</span></code>
 The depth-axis labels, if any were set; an empty <code class="docutils literal notranslate"><span class="pre">std::optional</span></code> otherwise.</p>
 </section>
 <section id="examples">
@@ -71,9 +71,9 @@ The depth-axis labels, if any were set; an empty <code class="docutils literal n
 <p>Example 1. An atlas constructed with explicit depth labels.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024Q2&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">},</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024Q2&quot;</span><span class="p">})));</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">axis0_labels</span><span class="p">().</span><span class="n">has_value</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">*</span><span class="n">atlas</span><span class="p">.</span><span class="n">axis0_labels</span><span class="p">();</span>
@@ -90,8 +90,8 @@ The depth-axis labels, if any were set; an empty <code class="docutils literal n
 empty <code class="docutils literal notranslate"><span class="pre">std::optional</span></code>, not a default integer range.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">axis0_labels</span><span class="p">().</span><span class="n">has_value</span><span class="p">();</span>
@@ -125,7 +125,7 @@ construction time.</p></li>
 — <code class="docutils literal notranslate"><span class="pre">values()</span></code> defaults to integer labels instead of throwing or requiring a manual
 <code class="docutils literal notranslate"><span class="pre">has_value()</span></code> check.</p></li>
 <li><p><a class="reference internal" href="relabel_depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::relabel_depth</span></code></span></a>: replace the depth labels with a new
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 <li><p><a class="reference internal" href="sort_depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::sort_depth</span></code></span></a> / <a class="reference internal" href="align_depth.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::align_depth</span></code></span></a>: reorder
 the stack using these labels.</p></li>
 </ul>

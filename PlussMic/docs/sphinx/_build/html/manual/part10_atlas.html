@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part XI: Kindle: Stream, Catalog, and Archive" href="part11_kindle.html" />
@@ -48,7 +48,7 @@
 </pre></div>
 </div>
 <p>With depth labels:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;train&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;valid&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;train&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;valid&quot;</span><span class="p">});</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="nf">atlas</span><span class="p">({</span><span class="n">train</span><span class="p">,</span><span class="w"> </span><span class="n">valid</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -57,7 +57,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales_frame</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">south</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;region == &#39;south&#39;&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">query</span><span class="p">(</span><span class="s">&quot;region != &#39;south&#39;&quot;</span><span class="p">);</span>
-<span class="n">Thread</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p">});</span>
+<span class="n">Slate</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p">});</span>
 
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="nf">atlas</span><span class="p">({</span><span class="n">south</span><span class="p">,</span><span class="w"> </span><span class="n">other</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;depth=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">depth</span><span class="p">()</span>

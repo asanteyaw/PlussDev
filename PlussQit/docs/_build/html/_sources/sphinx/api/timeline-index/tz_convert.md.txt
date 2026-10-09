@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::tz_convert
+# Timeline::TimelineIndexAccessor::tz_convert
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::tz_convert(std::string_view tz_name) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::tz_convert(std::string_view tz_name) const
 ```
 
 ## What It Does
@@ -30,7 +30,7 @@ calendar-facing work should interpret the same underlying instants.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The same instant series rendered in the requested timezone.
 
 ## Examples
@@ -38,13 +38,13 @@ calendar-facing work should interpret the same underlying instants.
 Example 1. Convert a UTC axis into New York wall-clock time.
 
 ```cpp
-auto utc_midday = pluss::timeindex::make({
+auto utc_midday = pluss::timeline::make({
     "2024-11-01T16:00:00Z",
     "2024-11-01T18:30:00Z",
-});
+}).index();
 
 auto out = utc_midday.tz_convert("America/New_York");
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -58,7 +58,7 @@ Example 2. Dedicated conversion back to UTC.
 
 ```cpp
 auto out = utc_midday.tz_convert("UTC");
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -76,8 +76,8 @@ Timeline(shape=[2], tz=UTC)
 
 ## See Also
 
-- [`TimelineIndexAccessor::tz_localize`](tz_localize.md)
-- [`TimelineIndexAccessor::to_note_iso`](to_note_iso.md)
+- [`Timeline::TimelineIndexAccessor::tz_localize`](tz_localize.md)
+- [`Timeline::TimelineIndexAccessor::to_note_iso`](to_note_iso.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="to_note_iso.html">

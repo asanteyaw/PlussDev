@@ -19,14 +19,33 @@ output at any timestep can depend on every timestep that came before it.
 
 ## How To Call It
 
+Run a two-layer GRU over a sequence of four steps for two sequences. The program prints the output shape, then builds the same GRU as a schedule stage.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::GRU rnn(16, 32, /*num_layers=*/2);  // input_size=16, hidden_size=32
-const auto [output, hidden] = rnn.forward(x);  // x: [seq_len, batch, 16]
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-nn::Schedule net;
-net.append_as<pluss::Series, std::tuple<pluss::Series, pluss::Series>>("gru_stage", nn::GRU(16, 32));
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::GRU rnn(16, 32, /*num_layers=*/2);
+  const pluss::Series x = pluss::make_series(std::vector<double>(4 * 2 * 16, 0.1), {4, 2, 16});
+  const auto [output, hidden] = rnn.forward(x);
+  std::cout << "output = " << output.sizes()[0] << " x " << output.sizes()[1] << " x " << output.sizes()[2] << "\n";
+  nn::Schedule net;
+  net.append_as<pluss::Series, std::tuple<pluss::Series, pluss::Series>>("gru_stage", nn::GRU(16, 32));
+  return 0;
+}
+```
+
+Output
+
+```text
+output = 4 x 2 x 32
 ```
 
 All three layer types share the same shape conventions -- see

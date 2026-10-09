@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::symbols
+# Note::TexAccessor::symbols
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::symbols() const
+TokenBatch Note::TexAccessor::symbols() const
 ```
 
 ## Inventory Control Words And Operators

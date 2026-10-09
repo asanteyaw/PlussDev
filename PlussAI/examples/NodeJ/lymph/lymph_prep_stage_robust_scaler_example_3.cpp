@@ -7,13 +7,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series v = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}, {10}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   // with_centering / with_scaling switch the two steps independently, exactly
   // like standard_scaler. lower_quantile / upper_quantile widen or narrow the

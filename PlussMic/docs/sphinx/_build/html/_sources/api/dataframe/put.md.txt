@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: fc94d1dd417f -->
+<!-- pluss-signature-hash: b84f0fb430a0 -->
 
 # DataFrame::put
 
@@ -8,17 +8,17 @@
 ## Signatures
 
 ```cpp
-DataFrame::put(const Thread& bool_mask, const Thread& value) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, const Thread& value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, double value) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, double value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, std::string_view value) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, std::string_view value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, const char* value) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, const char* value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, pluss::null_t value) const -> DataFrame
-DataFrame::put(const Thread& bool_mask, pluss::null_t value, const AlignOptions& options) const -> DataFrame
-// each Thread-mask overload above also has a pluss::Series-mask convenience:
+DataFrame::put(const Slate& bool_mask, const Slate& value) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, const Slate& value, const AlignOptions& options) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, double value) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, double value, const AlignOptions& options) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, std::string_view value) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, std::string_view value, const AlignOptions& options) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, const char* value) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, const char* value, const AlignOptions& options) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, pluss::null_t value) const -> DataFrame
+DataFrame::put(const Slate& bool_mask, pluss::null_t value, const AlignOptions& options) const -> DataFrame
+// each Slate-mask overload above also has a pluss::Series-mask convenience:
 DataFrame::put(const pluss::Series& bool_mask, /* value as above */) const -> DataFrame
 ```
 
@@ -28,7 +28,7 @@ Rewrites values across **every** feature on the frame wherever `bool_mask` is `t
 leaving every other row untouched — the whole-frame, mask-driven sibling of
 [`mask()`](mask.md) (which nulls out cells rather than replacing them with a chosen
 value). It applies independently to each column, via that column's own
-[`Thread::put()`](../thread/put.md): where `value` is itself a `Thread` rather than a
+[`Slate::put()`](../thread/put.md): where `value` is itself a `Slate` rather than a
 scalar, each masked row is replaced by **that same row's own value** in `value` — not
 one shared replacement broadcast to every masked cell.
 
@@ -48,17 +48,17 @@ mutates `*this` directly instead.
 
 ## Parameters
 
-**bool_mask** (`const Thread&` or `const pluss::Series&`)
+**bool_mask** (`const Slate&` or `const pluss::Series&`)
 
 A boolean row mask. `true` rewrites the corresponding row on every column; `false`
 leaves that row's existing values unchanged. A masked-missing mask entry behaves like
 `false`.
 
-**value** (`const Thread&`, `double`, `std::string_view`, `const char*`, or
+**value** (`const Slate&`, `double`, `std::string_view`, `const char*`, or
 `pluss::null_t`)
 
 The replacement, written into every column on the frame. A scalar (`double`, string,
-or `pluss::series::null`) is broadcast to every masked row identically. A full `Thread`
+or `pluss::series::null`) is broadcast to every masked row identically. A full `Slate`
 instead supplies a **different** replacement value per row — row `i` of `value`
 replaces row `i` of each column, wherever `bool_mask` is `true` at row `i`.
 
@@ -83,9 +83,9 @@ and merge the result back into the full frame.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 auto is_middle = orders.features("id") == 2.0;
@@ -112,12 +112,12 @@ Only case `1` (where `id == 2`) is rewritten; cases `0` and `2` keep their origi
 `double` compatible with every column it touches — calling it on the unnarrowed
 `orders` directly would fail once it reached the `Note`-kind `city` column.
 
-Example 2. Replace with a per-row `Thread` instead of one shared scalar, across two
+Example 2. Replace with a per-row `Slate` instead of one shared scalar, across two
 compatible numeric features at once.
 
 ```cpp
-auto mask = Thread(pluss::make_series({true, false, true}));
-auto replacements = Thread(pluss::make_series({500.0, 999.0, 700.0}));
+auto mask = Slate(pluss::make_series({true, false, true}));
+auto replacements = Slate(pluss::make_series({500.0, 999.0, 700.0}));
 auto both = orders.features({"id", "sales"}).put(mask, replacements);
 std::cout << both;
 ```
@@ -138,7 +138,7 @@ std::cout << both;
 `mask` is `true` at rows `0` and `2`; both narrowed columns pick up `replacements`'
 own values at those same positions on every masked row. Row `1` is unmasked, so both
 columns keep their original values there — `replacements`' row-`1` value (`999`) is
-never used, since a `Thread` replacement supplies per-row values rather than a single
+never used, since a `Slate` replacement supplies per-row values rather than a single
 broadcast value.
 
 Example 3. Replace with `pluss::series::null` to mark matched cells as missing.
@@ -164,9 +164,9 @@ std::cout << orders.update(out);
 ## Notes
 
 - A scalar `value` (`double`, string, or `pluss::series::null`) is the same replacement for
-  every masked row; a `Thread` `value` supplies a different replacement per row,
+  every masked row; a `Slate` `value` supplies a different replacement per row,
   taken from that row's own position in `value`.
-- `bool_mask` may be a `Thread` or a `pluss::Series` — the `Series` overloads are pure
+- `bool_mask` may be a `Slate` or a `pluss::Series` — the `Series` overloads are pure
   convenience wrappers with identical behavior.
 - `put()` never changes a column's kind: a scalar `double`/`pluss::series::null` value only
   works against numeric (`Series`-kind) columns, and a string/`pluss::series::null` value only

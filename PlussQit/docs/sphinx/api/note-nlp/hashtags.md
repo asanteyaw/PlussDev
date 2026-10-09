@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::hashtags
+# Note::NlpAccessor::hashtags
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::hashtags() const
+TokenBatch Note::NlpAccessor::hashtags() const
 ```
 
 ## Extract Hashtag Tokens

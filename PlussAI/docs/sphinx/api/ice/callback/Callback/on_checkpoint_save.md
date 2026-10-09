@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 3055a93796b3 -->
 # `pluss::ai::ice::Callback::on_checkpoint_save`
 
 [Back to `pluss::ai::ice::Callback`](../Callback.md)
@@ -8,54 +7,97 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+virtual void pluss::ai::ice::Callback::on_checkpoint_save(pluss::ai::ice::RunState& state, std::string_view filepath);
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Fires right after a checkpoint has actually been written to disk --
+once per [`CheckpointPolicy::save_last`](../../options/CheckpointPolicy.md)
+write (every `every_n_epochs` epochs) and once per `save_best` write
+(every improving validation epoch), independently, so both can fire in
+the same epoch. Never fires at all if
+[`CheckpointPolicy::enabled`](../../options/CheckpointPolicy.md) is
+`false`. The default implementation does nothing -- override it to log
+checkpoint activity, upload the file somewhere, or prune old
+checkpoints.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`RunState& state`
+: `state.checkpoint_path` and `state.last_checkpoint_path` are both
+  already updated to `filepath` by the time this fires (even for a
+  `save_best` write -- `checkpoint_path` always tracks whichever write
+  happened most recently, of either kind).
+
+`std::string_view filepath`
+: The path just written to -- `<dirpath>/<filename>-best.ckpt` or
+  `<dirpath>/<filename>-last.ckpt`, per
+  [`CheckpointPolicy::dirpath`/`filename`](../../options/CheckpointPolicy.md).
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`void`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None from the base class; whatever an override throws propagates out
+of the run and triggers [`on_exception`](on_exception.md) instead.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: `save_last` firing once per epoch, `save_best` and
+`save_last` both enabled firing independently with different suffixes,
+and confirming `RunState`'s own checkpoint-path fields already match
+`filepath` by this point.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class LogCheckpointSaveCallback final : public pluss::ai::ice::Callback {
+ public:
+  int fire_count = 0;
+  void on_checkpoint_save(pluss::ai::ice::RunState& state, std::string_view filepath) override {
+    ++fire_count;
+    std::cout << "on_checkpoint_save: epoch = " << state.epoch
+               << ", filepath = " << filepath << "\n";
+  }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 2;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+  options.checkpoint.enabled = true;
+  options.checkpoint.save_last = true;
+  options.checkpoint.dirpath = "./ice_checkpoint_demo";
+  options.checkpoint.filename = "demo";
+
+  const auto logger = std::make_shared<LogCheckpointSaveCallback>();
+  ice::Coach coach(options);
+  coach.add_callback(logger);
+  coach.learn(model, x, y);
+
+  std::cout << "on_checkpoint_save fired " << logger->fire_count << " time(s)\n";
 
   return 0;
 }
@@ -64,27 +106,58 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+on_checkpoint_save: epoch = 0, filepath = ./ice_checkpoint_demo/demo-last.ckpt
+on_checkpoint_save: epoch = 1, filepath = ./ice_checkpoint_demo/demo-last.ckpt
+on_checkpoint_save fired 2 time(s)
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+With both `save_best` and `save_last` enabled over two epochs where
+every epoch improves the monitored metric, each epoch fires this hook
+twice -- once for each write, with a different suffix.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class LogCheckpointSaveCallback final : public pluss::ai::ice::Callback {
+ public:
+  void on_checkpoint_save(pluss::ai::ice::RunState&, std::string_view filepath) override {
+    std::cout << "on_checkpoint_save: filepath = " << filepath << "\n";
+  }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 2;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.5;
+  options.shuffle = false;
+  options.checkpoint.enabled = true;
+  options.checkpoint.save_best = true;
+  options.checkpoint.save_last = true;
+  options.checkpoint.dirpath = "./ice_checkpoint_demo";
+  options.checkpoint.filename = "demo";
+
+  ice::Coach coach(options);
+  coach.add_callback(std::make_shared<LogCheckpointSaveCallback>());
+  coach.learn(model, x, y);
 
   return 0;
 }
@@ -93,27 +166,56 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+on_checkpoint_save: filepath = ./ice_checkpoint_demo/demo-best.ckpt
+on_checkpoint_save: filepath = ./ice_checkpoint_demo/demo-last.ckpt
+on_checkpoint_save: filepath = ./ice_checkpoint_demo/demo-best.ckpt
+on_checkpoint_save: filepath = ./ice_checkpoint_demo/demo-last.ckpt
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class LogCheckpointSaveCallback final : public pluss::ai::ice::Callback {
+ public:
+  void on_checkpoint_save(pluss::ai::ice::RunState& state, std::string_view filepath) override {
+    std::cout << "on_checkpoint_save: state.checkpoint_path == filepath: "
+               << (state.checkpoint_path == filepath)
+               << ", state.last_checkpoint_path == filepath: "
+               << (state.last_checkpoint_path == filepath) << "\n";
+  }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 1;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+  options.checkpoint.enabled = true;
+  options.checkpoint.save_last = true;
+  options.checkpoint.dirpath = "./ice_checkpoint_demo";
+  options.checkpoint.filename = "demo";
+
+  ice::Coach coach(options);
+  coach.add_callback(std::make_shared<LogCheckpointSaveCallback>());
+  coach.learn(model, x, y);
 
   return 0;
 }
@@ -122,12 +224,19 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+on_checkpoint_save: state.checkpoint_path == filepath: 1, state.last_checkpoint_path == filepath: 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`on_checkpoint_load`](on_checkpoint_load.md) -- the matching hook
+  when resuming from one of these files.
+- [`CheckpointPolicy`](../../options/CheckpointPolicy.md) -- every field
+  that controls when and where this fires.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

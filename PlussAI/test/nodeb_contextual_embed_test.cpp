@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -52,6 +53,20 @@ bool run_nodeb_contextual_embed_checks(std::ostream* err = nullptr) {
   options.seed = 3;
 
   ContextualEmbedder model(options);
+
+  ContextualEmbedOptions invalid_options = options;
+  invalid_options.learning_rate = std::numeric_limits<double>::quiet_NaN();
+  if (ContextualEmbedder(invalid_options).learn(docs).ok()) {
+    if (err) *err << "nodeb contextual embedder should reject a non-finite learning rate\n";
+    return false;
+  }
+  invalid_options = options;
+  invalid_options.width = 10;
+  invalid_options.num_heads = 4;
+  if (ContextualEmbedder(invalid_options).learn(docs).ok()) {
+    if (err) *err << "nodeb contextual embedder should require width to divide evenly across heads\n";
+    return false;
+  }
 
   // Error paths before training.
   if (model.ready()) {
@@ -224,6 +239,29 @@ bool run_nodeb_contextual_embed_checks(std::ostream* err = nullptr) {
   }
   if (sampled_once.value() != sampled_twice.value()) {
     if (err) *err << "nodeb contextual embedder generate() sampling should be reproducible for a fixed seed\n";
+    return false;
+  }
+
+  embed::GenerateOptions invalid_sample = sample_options;
+  invalid_sample.temperature = std::numeric_limits<double>::quiet_NaN();
+  if (model.generate(bank_raised_interest, invalid_sample).ok()) {
+    if (err) *err << "nodeb contextual embedder sampling should reject non-finite temperature\n";
+    return false;
+  }
+  invalid_sample = sample_options;
+  invalid_sample.top_k = -1;
+  if (model.generate(bank_raised_interest, invalid_sample).ok()) {
+    if (err) *err << "nodeb contextual embedder sampling should reject negative top_k\n";
+    return false;
+  }
+
+  // Sampling controls are intentionally ignored under greedy decoding.
+  embed::GenerateOptions greedy_ignores_sampling = greedy_options;
+  greedy_ignores_sampling.temperature = std::numeric_limits<double>::quiet_NaN();
+  greedy_ignores_sampling.top_k = -1;
+  const auto ignored_controls = model.generate(bank_raised_interest, greedy_ignores_sampling);
+  if (!ignored_controls.ok() || ignored_controls.value() != greedy_once.value()) {
+    if (err) *err << "nodeb contextual embedder greedy decoding should ignore sampling-only controls\n";
     return false;
   }
 

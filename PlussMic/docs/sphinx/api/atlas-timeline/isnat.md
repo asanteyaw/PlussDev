@@ -50,7 +50,7 @@ auto valid_tl = pluss::make_timeline({
     "2024-02-29T23:45:00Z",
     "2024-06-15T12:00:00Z",
 });
-auto ticks = DataFrame({{"ts", Thread(valid_tl)}})
+auto ticks = DataFrame({{"ts", Slate(valid_tl)}})
                  .tl().epoch().features("ts").as_series().to_vec<std::int64_t>();
 ticks[2] = pluss::codeh::Timeline::kNaT;
 std::vector<std::int64_t> sizes{(std::int64_t)ticks.size()};
@@ -58,8 +58,8 @@ auto tl_with_nat = pluss::timeline::from_epoch(
     pluss::msharp::RangeView::Of<std::int64_t>(ticks.data(), ticks.size()),
     pluss::msharp::RangeView::Of<std::int64_t>(sizes.data(), sizes.size()));
 
-auto q1 = DataFrame({{"ts", Thread(tl_with_nat)}});
-auto q2 = DataFrame({{"ts", Thread(pluss::make_timeline({
+auto q1 = DataFrame({{"ts", Slate(tl_with_nat)}});
+auto q2 = DataFrame({{"ts", Slate(pluss::make_timeline({
     "2024-07-06T14:00:00Z",
     "2023-03-01T00:00:00Z",
     "2023-12-31T23:59:59Z",

@@ -17,7 +17,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 namespace ice = pluss::ai::ice;
 namespace data = pluss::ai::ice::data;
 
@@ -40,9 +40,9 @@ DataFrame make_cross_section_frame() {
     label.push_back((1.8F * a - 1.2F * b) > 0.0F ? 1.0F : 0.0F);
   }
   return DataFrame({
-      {"score_a", Thread(pluss::make_series(score_a, {static_cast<std::int64_t>(score_a.size())}, float_cfg()))},
-      {"score_b", Thread(pluss::make_series(score_b, {static_cast<std::int64_t>(score_b.size())}, float_cfg()))},
-      {"label", Thread(pluss::make_series(label, {static_cast<std::int64_t>(label.size())}, float_cfg()))},
+      {"score_a", Slate(pluss::make_series(score_a, {static_cast<std::int64_t>(score_a.size())}, float_cfg()))},
+      {"score_b", Slate(pluss::make_series(score_b, {static_cast<std::int64_t>(score_b.size())}, float_cfg()))},
+      {"label", Slate(pluss::make_series(label, {static_cast<std::int64_t>(label.size())}, float_cfg()))},
   });
 }
 
@@ -86,14 +86,14 @@ DataFrame make_panel_frame(std::int64_t n_series, std::int64_t steps) {
   }
 
   return DataFrame({
-      {"series", Thread(pluss::make_note(group_col))},
-      {"t", Thread(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
-      {"level", Thread(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, float_cfg()))},
+      {"series", Slate(pluss::make_note(group_col))},
+      {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
+      {"level", Slate(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, float_cfg()))},
       {"position",
-       Thread(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
       {"observed",
-       Thread(pluss::make_series(observed_col, {static_cast<std::int64_t>(observed_col.size())}, float_cfg()))},
-      {"y", Thread(pluss::make_series(target_col, {static_cast<std::int64_t>(target_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(observed_col, {static_cast<std::int64_t>(observed_col.size())}, float_cfg()))},
+      {"y", Slate(pluss::make_series(target_col, {static_cast<std::int64_t>(target_col.size())}, float_cfg()))},
   });
 }
 

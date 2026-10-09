@@ -1,8 +1,8 @@
 # `pluss::ai::ice::TrainOptions`
 
 Central training configuration: batch size, learning rate, optimizer/loss
-kind, shuffle/seed, standardize, and the five nested policy structs
-(validation, three regularization structs, checkpoint, execution).
+kind, shuffle/seed, standardization, live progress reporting, validation,
+regularization, checkpointing, and execution policy.
 
 The underlying declared type is `Recipe`; `TrainOptions` is a public
 `using TrainOptions = Recipe;` alias -- every signature across `ice`
@@ -71,6 +71,14 @@ failure already on.
   the `DataFrame` overloads of `infer()`/`assess()` -- a caller never
   recomputes them by hand.
 
+### `progress`
+
+[`ProgressPolicy`](ProgressPolicy.md) `progress = {}`
+: Live epoch reporting: enablement, cadence, line or progress-bar rendering,
+  output destination, selected metrics, bar width, and precision. Silent by
+  default. Unlike `training_report()`, which is inspected after the run,
+  `progress` emits completed-epoch results while `learn()` is running.
+
 ### `validation`
 
 [`ValidationPolicy`](ValidationPolicy.md) `validation = {}`
@@ -118,6 +126,9 @@ failure already on.
 Leave every field at its default for a reasonable first training run:
 Adam at `1e-3`, shuffled mini-batches, gradient clipping and non-finite
 failure already on (`execution`'s own defaults), no validation split.
+Set `progress.verbose = true` when an interactive program should report each
+completed epoch; leave it disabled in libraries and services that own their own
+logging. Use `progress.log_every_n_epochs` to keep long runs readable.
 Set `validation.split_ratio > 0` and tune `loop_regularization` together
 to get early stopping; they are read together (`EarlyStopCallback` is
 constructed from both). Set `standardize = true` only when training

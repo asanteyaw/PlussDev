@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::to_text
+# Note::TexAccessor::to_text
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-Note NoteTexAccessor::to_text() const
-Note NoteTexAccessor::to_text(std::int64_t mode) const
+Note Note::TexAccessor::to_text() const
+Note Note::TexAccessor::to_text(std::int64_t mode) const
 ```
 
 ## Reduce Authored TeX To Readable Plain Text
@@ -38,7 +38,7 @@ In order, each cell is passed through:
    braced content.
 5. **Every other `\command`** — removed. A symbol macro such as `\alpha`
    leaves nothing behind; it is not transliterated to `α` or `alpha`.
-   Compare `NoteTexAccessor::render`, which renders that same macro to
+   Compare `Note::TexAccessor::render`, which renders that same macro to
    Unicode instead of dropping it (reference page not yet written).
 6. Remaining `{` and `}` become spaces; runs of whitespace collapse to one;
    the cell is trimmed.
@@ -142,12 +142,12 @@ Note(shape=[], dim=0, numel=1, encoding=utf8)
 
 ## See Also
 
-- [`NoteTexAccessor::escape`](escape.md): the opposite direction — protect
+- [`Note::TexAccessor::escape`](escape.md): the opposite direction — protect
   text for TeX.
-- `NoteTexAccessor::strip_comments` / `strip_preamble` / `render`: run just
+- `Note::TexAccessor::strip_comments` / `strip_preamble` / `render`: run just
   one stage of the pipeline, or render the dropped macros into Unicode
   instead of discarding them (reference pages not yet written).
-- [`NoteNlpAccessor::mask_pii`](../note-nlp/mask_pii.md): a different "clean
+- [`Note::NlpAccessor::mask_pii`](../note-nlp/mask_pii.md): a different "clean
   this text" pass, keyed to identifiers rather than markup.
 
 <div class="pluss-inline-prev-next">

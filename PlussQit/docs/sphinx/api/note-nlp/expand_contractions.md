@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::expand_contractions
+# Note::NlpAccessor::expand_contractions
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::expand_contractions() const
+Note Note::NlpAccessor::expand_contractions() const
 ```
 
 ## Make Selected English Contractions Explicit

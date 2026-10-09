@@ -13,7 +13,7 @@ Stream::astype(pluss::codem::ScalarType dtype) const -> Stream
 
 ## What It Does
 
-Shorthand for `cast(ThreadCastTarget::Series, {.series_dtype = dtype})` — converts the
+Shorthand for `cast(SlateCastTarget::Series, {.series_dtype = dtype})` — converts the
 stream to `Series` with the requested numeric dtype. Unlike
 [`abs()`](abs.md)/[`clip()`](clip.md)/[`log()`](log.md)/[`exp()`](exp.md), `astype()` is
 **not** restricted to already-`Series` streams: it works on any payload kind, parsing

@@ -1,0 +1,58 @@
+summary = """
+Compute the correlation between two numeric slates.
+"""
+
+returns = """
+`double`
+    Scalar correlation value.
+"""
+
+notes = [
+  """
+Both slates must be numeric and pairwise compatible after dropping invalid or missing pairs.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand numeric slate to correlate with the current slate.
+"""
+
+[[parameters]]
+name = "method"
+body = """
+Correlation method.
+
+- `Pearson`: ordinary linear correlation.
+- `Spearman`: rank correlation.
+- `KendallTau`: rank-concordance correlation.
+"""
+
+[[examples]]
+title = "Compute Pearson correlation between two numeric slates."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto other = Slate(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
+
+auto out = scores.corr(other, SlateCorrMethod::Pearson);
+"""
+output = """
+0.943119
+"""
+
+[[examples]]
+title = "Switch to Spearman correlation when you care about rank association."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto other = Slate(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
+
+auto out = scores.corr(other, SlateCorrMethod::Spearman);
+"""
+output = """
+0.948683
+"""

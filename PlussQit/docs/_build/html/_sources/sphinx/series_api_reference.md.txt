@@ -125,7 +125,7 @@ The current handwritten shape and slice/indexing cluster now covers:
   `cumulative_trapezoid` methods documented in the dedicated accessor
   reference
 
-The complete handwritten `SeriesStatAccessor` reference covers:
+The complete handwritten `Series::StatAccessor` reference covers:
 
 - descriptive reductions and higher moments
 - normal density and cumulative-distribution helpers
@@ -137,13 +137,13 @@ The complete handwritten `SeriesStatAccessor` reference covers:
 
 `Series` has namespace-like accessors for related method families:
 
-- `stat` -> [`SeriesStatAccessor`](series_stat_accessor_api_reference.md)
+- `stat` -> [`Series::StatAccessor`](series_stat_accessor_api_reference.md)
 - `linearalg` ->
-  [`SeriesLinearAlgAccessor`](series_linearalg_accessor_api_reference.md)
+  [`Series::LinearAlgAccessor`](series_linearalg_accessor_api_reference.md)
 - `traverse` ->
-  [`SeriesTraverseAccessor`](series_traverse_accessor_api_reference.md)
+  [`Series::TraverseAccessor`](series_traverse_accessor_api_reference.md)
 - `antidiff` ->
-  [`SeriesAntidiffAccessor`](series_antidiff_accessor_api_reference.md)
+  [`Series::AntidiffAccessor`](series_antidiff_accessor_api_reference.md)
 
 All four accessor references are complete across their public surfaces. Start
 with [`Series::stat`](api/series/stat.md),

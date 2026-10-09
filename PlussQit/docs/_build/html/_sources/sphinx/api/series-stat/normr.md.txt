@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::normr
+# Series::StatAccessor::normr
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::normr() const
+Series Series::StatAccessor::normr() const
 Series SeriesStatProxy::normr() const
 ```
 

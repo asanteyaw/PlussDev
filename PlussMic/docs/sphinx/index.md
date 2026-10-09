@@ -4,7 +4,7 @@
 <div class="pluss-hero">
 <div class="kicker">Pluss &middot; Space</div>
 <h1>PlussMic</h1>
-<p class="tagline">The data-analysis layer of Pluss: tabular data (<code>DataFrame</code>), typed columns (<code>Thread</code>), stacks of related frames (<code>Atlas</code>), aligned streaming containers, heterogeneous record scribbles, and multi-table workbenches.</p>
+<p class="tagline">The data-analysis layer of Pluss: tabular data (<code>DataFrame</code>), typed columns (<code>Slate</code>), stacks of related frames (<code>Atlas</code>), aligned streaming containers, heterogeneous record scribbles, and multi-table workbenches.</p>
 <div class="pluss-hero-actions">
 <a class="primary" href="api_reference.html">API Reference</a>
 </div>
@@ -17,8 +17,8 @@
 
 <div class="pluss-card">
 <span class="card-name">table</span>
-<span class="card-model">DataFrame &middot; Thread &middot; Atlas</span>
-<p class="card-desc">Named, mixed-type tabular analysis: <code>DataFrame</code> for 2D tables, <code>Thread</code> for one typed column, <code>Atlas</code> for a depth stack of frames.</p>
+<span class="card-model">DataFrame &middot; Slate &middot; Atlas</span>
+<p class="card-desc">Named, mixed-type tabular analysis: <code>DataFrame</code> for 2D tables, <code>Slate</code> for one typed column, <code>Atlas</code> for a depth stack of frames.</p>
 </div>
 
 <div class="pluss-card">

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b40624f75a75 -->
+<!-- pluss-signature-hash: 936a189b353a -->
 
 # DataFrame::get
 
@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-DataFrame::get(std::string_view feature_name) const -> std::optional<Thread>
+DataFrame::get(std::string_view feature_name) const -> std::optional<Slate>
 ```
 
 ## What It Does
 
-Looks up a single feature by name and returns it wrapped in `std::optional<Thread>` —
+Looks up a single feature by name and returns it wrapped in `std::optional<Slate>` —
 `std::nullopt` if no feature with that name exists, instead of raising. This is the
 "ask first" counterpart to [`features(name)`](features.md), which returns the column
 directly but raises when the name doesn't exist. Reach for `get()` whenever the
@@ -29,7 +29,7 @@ The feature name to look up.
 
 ## Returns
 
-`std::optional<Thread>`
+`std::optional<Slate>`
     The requested column, labeled with the source frame's case labels and its own
     feature name as its display name, if `feature_name` exists on the frame.
     `std::nullopt` otherwise.
@@ -42,9 +42,9 @@ Example 1. Look up a feature that exists.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
 });
 
 auto units = orders.get("units");
@@ -65,7 +65,7 @@ if (units.has_value()) {
 Name: units, ptype: Series
 ```
 
-`units` is a real feature, so `get()` returns an engaged `std::optional<Thread>`
+`units` is a real feature, so `get()` returns an engaged `std::optional<Slate>`
 holding the same column [`features("units")`](features.md) would return.
 
 Example 2. Look up a feature that doesn't exist.
@@ -89,7 +89,7 @@ default, skip the column, report a schema mismatch, and so on).
 
 - `get()` never raises for an unknown feature name; that's the entire reason it exists
   alongside [`features(name)`](features.md), which does raise.
-- The returned `Thread`, when present, carries the feature's name as its display name
+- The returned `Slate`, when present, carries the feature's name as its display name
   and the frame's case labels as its display labels — identical to what
   `features(name)` returns.
 - `get()` only looks up a single feature by exact name; it has no fuzzy-matching or

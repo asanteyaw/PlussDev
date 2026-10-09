@@ -18,18 +18,36 @@ no meaningful default table shape.
 
 ## How To Call It
 
+Look up three category codes in a 1000-entry embedding table of 16-dimensional vectors, then apply a ReLU. The program prints the output shape.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::EmbeddingOptions opts{};
-opts.cardinality = 1000;  // 1000 distinct categories
-opts.hidden_size = 16;    // each category becomes a 16-dim vector
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-nn::Schedule net;
-net.append("emb", nn::Embedding(opts));
-net.append("act1", nn::ReLU());
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::EmbeddingOptions opts{};
+  opts.cardinality = 1000;
+  opts.hidden_size = 16;
+  nn::Schedule net;
+  net.append("emb", nn::Embedding(opts));
+  net.append("act1", nn::ReLU());
+  const pluss::Series index = pluss::make_series({0LL, 7LL, 999LL}, {3}).to(pluss::ScalarType::Int64);
+  const pluss::Series y = net.forward(index);
+  std::cout << "embedding = " << y.sizes()[0] << " x " << y.sizes()[1] << "\n";
+  return 0;
+}
+```
 
-const Series y = net.forward(index);  // index: integer category codes
+Output
+
+```text
+embedding = 3 x 16
 ```
 
 `Embedding` composes into a [`Schedule`](module/Schedule.md) the same way

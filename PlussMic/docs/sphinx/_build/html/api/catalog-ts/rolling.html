@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="CatalogCastAccessor API Reference" href="../../catalog_cast_accessor_api_reference.html" />
@@ -69,7 +69,7 @@ full explanation and how to project down to numeric keys first.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Only the fixed-window overload — no calendar-duration form
-Unlike <a class="reference internal" href="../thread-ts/rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::ts().rolling()</span></code></span></a>, which also has a
+Unlike <a class="reference internal" href="../slate-ts/rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::ts().rolling()</span></code></span></a>, which also has a
 <code class="docutils literal notranslate"><span class="pre">rolling(axis,</span> <span class="pre">duration,</span> <span class="pre">...)</span></code> calendar-duration overload,
 <code class="docutils literal notranslate"><span class="pre">CatalogTimeSeriesAccessor::rolling()</span></code> only has this one fixed-row-count
 signature — a multi-key catalog has no single unambiguous time axis to key a
@@ -196,11 +196,11 @@ positions <code class="docutils literal notranslate"><span class="pre">1..3</spa
 </section>
 <section id="id3">
 <h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::moving: window must be &gt; 0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::moving: window must be &gt; 0
 </pre></div>
 </div>
 <p>A window of <code class="docutils literal notranslate"><span class="pre">0</span></code> (or negative) has no meaningful trailing span, so it’s
-rejected outright. The error is reported under <code class="docutils literal notranslate"><span class="pre">Thread::moving</span></code> — the private
+rejected outright. The error is reported under <code class="docutils literal notranslate"><span class="pre">Slate::moving</span></code> — the private
 engine this method delegates to internally.</p>
 </section>
 </section>
@@ -225,7 +225,7 @@ contribute to the statistic).</p></li>
 <li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the single-stream equivalent, which also
 exposes the calendar-duration overload — see the important callout above.</p></li>
 <li><p><a class="reference internal" href="../catalog/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>
-<li><p><a class="reference internal" href="../thread-ts/rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::rolling</span></code></span></a>: the underlying
+<li><p><a class="reference internal" href="../slate-ts/rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::rolling</span></code></span></a>: the underlying
 single-thread engine this method’s fixed-window form delegates to.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

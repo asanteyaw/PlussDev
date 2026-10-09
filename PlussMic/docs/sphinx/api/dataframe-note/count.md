@@ -84,7 +84,7 @@ literal dots.
 using namespace pluss::table;
 
 auto notes = DataFrame({
-    {"text", Thread(pluss::make_note(
+    {"text", Slate(pluss::make_note(
         {"banana", "a.b.c", "no dots", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -152,7 +152,7 @@ whose case doesn't match every row.
 
 ```cpp
 auto mixed = DataFrame({
-    {"text", Thread(pluss::make_note(
+    {"text", Slate(pluss::make_note(
         {"banana", "BANANA", "no match", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -202,7 +202,7 @@ cell has "at least N" occurrences, not the exact total.
 
 ```cpp
 auto repeats = DataFrame({
-    {"text", Thread(pluss::make_note(
+    {"text", Slate(pluss::make_note(
         {"ababab", "aaaa", "xyz", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });

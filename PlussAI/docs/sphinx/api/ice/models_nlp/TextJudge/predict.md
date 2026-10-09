@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 12c6a42ad8b2 -->
 # `pluss::ai::ice::models::TextJudge::predict`
 
 [Back to `pluss::ai::ice::models::TextJudge`](../TextJudge.md)
@@ -8,54 +7,96 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] std::vector<pluss::ai::ice::models::TextJudgePrediction> pluss::ai::ice::models::TextJudge::predict(
+    const std::vector<pluss::ai::nlp::Doc>& docs) const;
+[[nodiscard]] std::vector<pluss::ai::ice::models::TextJudgePrediction> pluss::ai::ice::models::TextJudge::predict(
+    pluss::RangeView<std::string_view> texts) const;
+[[nodiscard]] std::vector<pluss::ai::ice::models::TextJudgePrediction> pluss::ai::ice::models::TextJudge::predict(
+    const std::vector<std::string>& texts) const;
+[[nodiscard]] std::vector<pluss::ai::ice::models::TextJudgePrediction> pluss::ai::ice::models::TextJudge::predict(
+    const pluss::Note& texts) const;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Runs the model in evaluation mode and returns one
+[`TextJudgePrediction`](../TextJudgePrediction.md) per input, in
+order. All four overloads accept the input corpus in a different
+shape, exactly matching [`learn`'s own four overloads](learn.md) --
+and produce identical predictions for the identical underlying texts,
+regardless of which shape is used (see Examples 2 and 3).
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`const std::vector<pluss::ai::nlp::Doc>& docs` / `RangeView<std::string_view> texts` / `const std::vector<std::string>& texts` / `const pluss::Note& texts`
+: The texts to classify, in whichever of the four shapes is
+  convenient.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`std::vector<TextJudgePrediction>`, same length and order as the
+input.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None directly, beyond what a malformed input range would throw while
+being read.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the `vector<std::string>` overload returning one
+prediction per input, the `pluss::Note` overload matching it exactly
+on an identical probe set, and the `RangeView<std::string_view>`
+overload matching it too.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace models = ice::models;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("stocks rallied after the earnings report");
+    labels.push_back("finance");
+    texts.push_back("the market closed higher on strong profits");
+    labels.push_back("finance");
+    texts.push_back("the striker scored twice in the cup match");
+    labels.push_back("sport");
+    texts.push_back("fans celebrated the league victory downtown");
+    labels.push_back("sport");
+  }
+
+  models::TextJudgeOptions model_options{};
+  model_options.width = 24;
+  model_options.dropout = 0.0;
+  model_options.seed = 9;
+  models::TextJudge model(model_options);
+
+  models::TextJudgeTrainOptions train_options{};
+  train_options.batch_size = 12;
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 80;
+  train_options.validation.split_ratio = 0.0;
+  train_options.seed = 13;
+  model.learn(texts, labels, train_options);
+
+  const auto preds = model.predict(std::vector<std::string>{
+      "profits lifted the stock market today",
+      "the forward won the match with a late goal",
+  });
+  std::cout << "preds.size() = " << preds.size() << "\n";
+  std::cout << "preds[0].label = " << preds[0].label << "\n";
+  std::cout << "preds[1].label = " << preds[1].label << "\n";
 
   return 0;
 }
@@ -64,27 +105,63 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+preds.size() = 2
+preds[0].label = finance
+preds[1].label = sport
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace models = ice::models;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("stocks rallied after the earnings report");
+    labels.push_back("finance");
+    texts.push_back("the market closed higher on strong profits");
+    labels.push_back("finance");
+    texts.push_back("the striker scored twice in the cup match");
+    labels.push_back("sport");
+    texts.push_back("fans celebrated the league victory downtown");
+    labels.push_back("sport");
+  }
+
+  models::TextJudgeOptions model_options{};
+  model_options.width = 24;
+  model_options.dropout = 0.0;
+  model_options.seed = 9;
+  models::TextJudge model(model_options);
+
+  models::TextJudgeTrainOptions train_options{};
+  train_options.batch_size = 12;
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 80;
+  train_options.validation.split_ratio = 0.0;
+  train_options.seed = 13;
+  model.learn(texts, labels, train_options);
+
+  const std::vector<std::string> probes{
+      "profits lifted the stock market today",
+      "the forward won the match with a late goal",
+  };
+  const auto preds_vec = model.predict(probes);
+
+  const pluss::Note note_probes = pluss::make_note(probes);
+  const auto preds_note = model.predict(note_probes);
+
+  std::cout << "Note overload matches vector<string> overload: "
+            << (preds_note[0].label == preds_vec[0].label && preds_note[1].label == preds_vec[1].label) << "\n";
 
   return 0;
 }
@@ -93,27 +170,62 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+Note overload matches vector<string> overload: 1
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace models = ice::models;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("stocks rallied after the earnings report");
+    labels.push_back("finance");
+    texts.push_back("the market closed higher on strong profits");
+    labels.push_back("finance");
+    texts.push_back("the striker scored twice in the cup match");
+    labels.push_back("sport");
+    texts.push_back("fans celebrated the league victory downtown");
+    labels.push_back("sport");
+  }
+
+  models::TextJudgeOptions model_options{};
+  model_options.width = 24;
+  model_options.dropout = 0.0;
+  model_options.seed = 9;
+  models::TextJudge model(model_options);
+
+  models::TextJudgeTrainOptions train_options{};
+  train_options.batch_size = 12;
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 80;
+  train_options.validation.split_ratio = 0.0;
+  train_options.seed = 13;
+  model.learn(texts, labels, train_options);
+
+  const std::vector<std::string> probes{
+      "profits lifted the stock market today",
+      "the forward won the match with a late goal",
+  };
+  const auto preds_vec = model.predict(probes);
+
+  const std::vector<std::string_view> view_probes(probes.begin(), probes.end());
+  const auto preds_view = model.predict(view_probes);
+
+  std::cout << "RangeView overload matches vector<string> overload: "
+            << (preds_view[0].label == preds_vec[0].label && preds_view[1].label == preds_vec[1].label) << "\n";
 
   return 0;
 }
@@ -122,12 +234,16 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+RangeView overload matches vector<string> overload: 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`TextJudgePrediction`](../TextJudgePrediction.md) -- the returned
+  element type.
+- [`learn`](learn.md) -- trains the model this call reads.
+- [`assess`](assess.md) -- a loss/accuracy summary instead of
+  per-input predictions, for text that does have real labels.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

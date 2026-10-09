@@ -39,9 +39,9 @@ Example 1. Select every feature whose name starts with `"sales_"`.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))},
-     {"city",        Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))},
+     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
 std::cout << orders;
 
 auto out = orders.feataxis().match("^sales_");
@@ -84,9 +84,9 @@ plain substring search can't express on its own.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))},
-     {"city",        Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))},
+     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
 
 auto out = orders.feataxis().match("e$");
 std::cout << out;
@@ -116,7 +116,7 @@ Example 3. Pass an invalid regular expression to see the call throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))}});
 
 try {
   auto out = orders.feataxis().match("[");

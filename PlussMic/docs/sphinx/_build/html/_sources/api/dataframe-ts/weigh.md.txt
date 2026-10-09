@@ -56,8 +56,8 @@ Example 1. A 2-element weighted moving average that favors the most recent value
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().weigh({0.25, 0.75});
@@ -145,8 +145,8 @@ try {
 ### Output
 
 ```text
-Thread::weigh: weights cannot be empty
-Thread::weigh: invalid min_count
+Slate::weigh: weights cannot be empty
+Slate::weigh: invalid min_count
 ```
 
 An empty weight kernel has no window width to speak of, so it's rejected

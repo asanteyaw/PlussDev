@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -100,10 +101,25 @@ bool run_ice_action_value_agent_checks(std::ostream* err = nullptr) {
   train_options.loop_regularization.early_stopping = true;
   train_options.loop_regularization.patience = 12;
   train_options.loop_regularization.restore_best_weights = true;
+  train_options.progress.verbose = true;
+  train_options.progress.log_every_n_epochs = 50;
   train_options.seed = 5;
 
   const auto batch = make_chain_batch(64);
-  agent.learn(batch, train_options);
+  std::ostringstream progress{};
+  auto* original = std::cout.rdbuf(progress.rdbuf());
+  try {
+    agent.learn(batch, train_options);
+  } catch (...) {
+    std::cout.rdbuf(original);
+    throw;
+  }
+  std::cout.rdbuf(original);
+  if (progress.str().find("epoch ") == std::string::npos ||
+      progress.str().find("loss=") == std::string::npos) {
+    if (err) *err << "ice ActionValueAgent should honor its shared progress policy\n";
+    return false;
+  }
   if (!agent.ready()) {
     if (err) *err << "ice ActionValueAgent should report ready after learn()\n";
     return false;

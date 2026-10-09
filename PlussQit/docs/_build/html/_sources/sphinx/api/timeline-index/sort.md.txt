@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::sort
+# Timeline::TimelineIndexAccessor::sort
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::sort() const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::sort() const
 ```
 
 ## What It Does
@@ -17,7 +17,7 @@ Use this to canonicalize an axis before you rely on ordered semantics such as
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     A sorted time index.
 
 ## Examples
@@ -25,16 +25,16 @@ Use this to canonicalize an axis before you rely on ordered semantics such as
 Example 1. Sort an unsorted axis that also contains duplicates.
 
 ```cpp
-auto dup = pluss::timeindex::make({
+auto dup = pluss::timeline::make({
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T01:00:00Z",
-}, false);
+}).index(false);
 
 auto out = dup.sort();
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -51,7 +51,7 @@ plan applied to other aligned payloads too.
 auto order = dup.argsort();
 auto sorted_idx = dup.take(order);
 std::cout << pluss::series::print(order) << "\n";
-std::cout << pluss::timeindex::print(sorted_idx) << "\n";
+std::cout << pluss::timeline::print(sorted_idx.timeline()) << "\n";
 ```
 
 ## Notes
@@ -62,8 +62,8 @@ std::cout << pluss::timeindex::print(sorted_idx) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::argsort`](argsort.md)
-- [`TimelineIndexAccessor::unique`](unique.md)
+- [`Timeline::TimelineIndexAccessor::argsort`](argsort.md)
+- [`Timeline::TimelineIndexAccessor::unique`](unique.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="slice_time.html">

@@ -318,7 +318,7 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
         }
       }
       // A kindle::Stream's Timeline column carries exactly one shared tz label
-      // (mirroring Thread/DataFrame). An all-null slot has nothing to derive a
+      // (mirroring Slate/DataFrame). An all-null slot has nothing to derive a
       // tz from, so it falls back to "UTC" -- same default every other
       // tz-less Timeline factory in this codebase already uses.
       return pluss::kindle::Stream(
@@ -351,42 +351,42 @@ pluss::kindle::Stream slot_family_stream(const Slot& slot,
   PLUSS_FAIL("Slot accessor: unsupported slot family");
 }
 
-pluss::table::Thread thread_from_slot_value(const Slot::Value& value) {
+pluss::table::Slate slate_from_slot_value(const Slot::Value& value) {
   return std::visit(
-      [](const auto& v) -> pluss::table::Thread {
+      [](const auto& v) -> pluss::table::Slate {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) {
-          PLUSS_FAIL("Slot: null value has no Thread payload");
+          PLUSS_FAIL("Slot: null value has no Slate payload");
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
-          return pluss::table::Thread(v);
+          return pluss::table::Slate(v);
         } else if constexpr (std::is_same_v<T, pluss::Note>) {
-          PLUSS_CHECK(v.numel() == 1, "Slot: Note value must be scalar-like for Thread delegation");
-          return pluss::table::Thread(pluss::make_note(std::vector<std::string>{std::string(v.at(0))}));
+          PLUSS_CHECK(v.numel() == 1, "Slot: Note value must be scalar-like for Slate delegation");
+          return pluss::table::Slate(pluss::make_note(std::vector<std::string>{std::string(v.at(0))}));
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
-          PLUSS_CHECK(v.numel() == 1, "Slot: Timeline value must be scalar-like for Thread delegation");
+          PLUSS_CHECK(v.numel() == 1, "Slot: Timeline value must be scalar-like for Slate delegation");
           const auto ticks = v.ticks();
-          return pluss::table::Thread(pluss::timeline::from_epoch(
+          return pluss::table::Slate(pluss::timeline::from_epoch(
               std::vector<std::int64_t>{ticks[0]},
               std::vector<std::int64_t>{1}));
         } else if constexpr (std::is_same_v<T, pluss::Duration>) {
-          PLUSS_CHECK(v.numel() == 1, "Slot: Duration value must be scalar-like for Thread delegation");
-          return pluss::table::Thread(pluss::duration::nanos(
+          PLUSS_CHECK(v.numel() == 1, "Slot: Duration value must be scalar-like for Slate delegation");
+          return pluss::table::Slate(pluss::duration::nanos(
               std::vector<std::int64_t>{v.host()[0]}));
         }
       },
       value);
 }
 
-Slot::Value slot_value_from_thread_payload(const pluss::table::Thread& thread) {
-  switch (thread.kind()) {
-    case pluss::table::ThreadKind::Series:
-      return thread.as_series();
-    case pluss::table::ThreadKind::Note:
-      return thread.as_note();
-    case pluss::table::ThreadKind::Timeline:
-      return thread.as_timeline();
-    case pluss::table::ThreadKind::Duration:
-      return thread.as_duration();
+Slot::Value slot_value_from_slate_payload(const pluss::table::Slate& slate) {
+  switch (slate.kind()) {
+    case pluss::table::SlateKind::Series:
+      return slate.as_series();
+    case pluss::table::SlateKind::Note:
+      return slate.as_note();
+    case pluss::table::SlateKind::Timeline:
+      return slate.as_timeline();
+    case pluss::table::SlateKind::Duration:
+      return slate.as_duration();
   }
   return std::monostate{};
 }
@@ -442,40 +442,40 @@ Slot::Value slot_value_to_note(const Slot::Value& value) {
 }
 
 bool slot_value_matches_target(const Slot::Value& value,
-                               pluss::table::ThreadCastTarget target) {
+                               pluss::table::SlateCastTarget target) {
   return std::visit(
       [&](const auto& v) -> bool {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) {
           return true;
         } else if constexpr (std::is_same_v<T, pluss::Series>) {
-          return target == pluss::table::ThreadCastTarget::Series;
+          return target == pluss::table::SlateCastTarget::Series;
         } else if constexpr (std::is_same_v<T, pluss::Note>) {
-          return target == pluss::table::ThreadCastTarget::Note;
+          return target == pluss::table::SlateCastTarget::Note;
         } else if constexpr (std::is_same_v<T, pluss::Timeline>) {
-          return target == pluss::table::ThreadCastTarget::Timeline;
+          return target == pluss::table::SlateCastTarget::Timeline;
         } else if constexpr (std::is_same_v<T, pluss::Duration>) {
-          return target == pluss::table::ThreadCastTarget::Duration;
+          return target == pluss::table::SlateCastTarget::Duration;
         }
       },
       value);
 }
 
-Slot::Value scalar_fill_value_for_target(pluss::table::ThreadCastTarget target,
+Slot::Value scalar_fill_value_for_target(pluss::table::SlateCastTarget target,
                                          double numeric,
                                          std::string_view text,
                                          const pluss::Timeline* timeline,
                                          const pluss::Duration* duration) {
   switch (target) {
-    case pluss::table::ThreadCastTarget::Series:
+    case pluss::table::SlateCastTarget::Series:
       return pluss::make_series(numeric, pluss::codem::ScalarType::Float64);
-    case pluss::table::ThreadCastTarget::Note:
+    case pluss::table::SlateCastTarget::Note:
       return pluss::make_note(text);
-    case pluss::table::ThreadCastTarget::Timeline:
+    case pluss::table::SlateCastTarget::Timeline:
       PLUSS_CHECK(timeline != nullptr, "Slot::fillnull(Timeline): fill value missing");
       PLUSS_CHECK(timeline->numel() == 1, "Slot::fillnull(Timeline): fill value must be scalar-like");
       return *timeline;
-    case pluss::table::ThreadCastTarget::Duration:
+    case pluss::table::SlateCastTarget::Duration:
       PLUSS_CHECK(duration != nullptr, "Slot::fillnull(Duration): fill value missing");
       PLUSS_CHECK(duration->numel() == 1,
                   "Slot::fillnull(Duration): fill value must be scalar-like");
@@ -485,7 +485,7 @@ Slot::Value scalar_fill_value_for_target(pluss::table::ThreadCastTarget target,
 }
 
 Slot fill_slot_nulls(const Slot& slot,
-                     pluss::table::ThreadCastTarget target,
+                     pluss::table::SlateCastTarget target,
                      std::string_view where,
                      Slot::Value monostate_fill) {
   PLUSS_CHECK(slot.defined(), "Slot: undefined handle");
@@ -523,7 +523,7 @@ bool slot_value_invalid(const Slot::Value& value) {
           return false;
         } else {
           try {
-            return pluss::table::Thread(v).invalid().any(false).to_int() != 0;
+            return pluss::table::Slate(v).invalid().any(false).to_int() != 0;
           } catch (const std::exception&) {
             return false;
           }

@@ -27,9 +27,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"sales_units", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"sales_price", pluss::table::Thread(pluss::make_series({1.5, 2.0, 1.8}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"sales_units", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"sales_price", pluss::table::Slate(pluss::make_series({1.5, 2.0, 1.8}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto feataxis = df.feataxis();
 

@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 namespace data = pluss::ai::ice::data;
 
 Config float_cfg() {
@@ -25,17 +25,17 @@ Config float_cfg() {
 
 DataFrame make_cross_section_train() {
   return DataFrame({
-      {"city", Thread(pluss::make_note({"Accra", "Tema", "Accra", "Tema"}))},
-      {"sales", Thread(pluss::make_series({10.0, 7.0, 13.0, 9.0}, float_cfg()))},
-      {"label", Thread(pluss::make_series({1.0, 0.0, 1.0, 0.0}, float_cfg()))},
+      {"city", Slate(pluss::make_note({"Accra", "Tema", "Accra", "Tema"}))},
+      {"sales", Slate(pluss::make_series({10.0, 7.0, 13.0, 9.0}, float_cfg()))},
+      {"label", Slate(pluss::make_series({1.0, 0.0, 1.0, 0.0}, float_cfg()))},
   });
 }
 
 DataFrame make_cross_section_holdout() {
   return DataFrame({
-      {"city", Thread(pluss::make_note({"Kumasi", "Accra"}))},
-      {"sales", Thread(pluss::make_series({11.0, 8.0}, float_cfg()))},
-      {"label", Thread(pluss::make_series({0.0, 1.0}, float_cfg()))},
+      {"city", Slate(pluss::make_note({"Kumasi", "Accra"}))},
+      {"sales", Slate(pluss::make_series({11.0, 8.0}, float_cfg()))},
+      {"label", Slate(pluss::make_series({0.0, 1.0}, float_cfg()))},
   });
 }
 

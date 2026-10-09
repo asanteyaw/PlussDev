@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="AtlasTimelineAccessor::time" href="time.html" />
@@ -37,14 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e7dae7b5b44c -->
+<!-- pluss-signature-hash: ce73c098046c -->
 <section id="atlastimelineaccessor-span">
 <h1>AtlasTimelineAccessor::span<a class="headerlink" href="#atlastimelineaccessor-span" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../atlas_timeline_accessor_api_reference.html"><span class="doc std std-doc">Back to AtlasTimelineAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasTimelineAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TimelineSpanOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
-<span class="n">AtlasTimelineAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">TimeUnit</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasTimelineAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TimelineSpanOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
+<span class="n">AtlasTimelineAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">TimeUnit</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 <span class="n">AtlasTimelineAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">TimelineSpanOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 <span class="n">AtlasTimelineAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">TimeUnit</span><span class="w"> </span><span class="n">unit</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Atlas</span>
 </pre></div>
@@ -59,14 +59,14 @@ frame, broadcast across the whole <code class="docutils literal notranslate"><sp
 <p>```{important} No Atlas overload — the same <code class="docutils literal notranslate"><span class="pre">other</span></code> is applied to every frame
 Unlike <a class="reference internal" href="../dataframe-timeline/span.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrameTimelineAccessor::span</span></code></span></a>, which has a
 <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code> overload pairing each frame against its own matching <code class="docutils literal notranslate"><span class="pre">other</span></code> frame,
-this accessor has <strong>no <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> overload</strong>. Only a single <code class="docutils literal notranslate"><span class="pre">Thread</span></code> or <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code>
+this accessor has <strong>no <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> overload</strong>. Only a single <code class="docutils literal notranslate"><span class="pre">Slate</span></code> or <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code>
 is accepted as <code class="docutils literal notranslate"><span class="pre">other</span></code>, and that <em>same</em> value is used as the right-hand side for
 <strong>every</strong> frame in the stack — there is no way to pair each frame against a different
 per-frame <code class="docutils literal notranslate"><span class="pre">other</span></code> in one call.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
 ## Parameters
 
-**other** (`const Thread&amp;` / `const pluss::Timeline&amp;`)
+**other** (`const Slate&amp;` / `const pluss::Timeline&amp;`)
     The right-hand timestamp(s), applied identically to every frame in the stack — see
     the important callout above.
 
@@ -94,11 +94,11 @@ value.
 ```cpp
 using namespace pluss::table;
 
-auto s1 = DataFrame({{&quot;ts&quot;, Thread(pluss::make_timeline({&quot;2024-01-01T00:00:00Z&quot;}))}});
-auto s2 = DataFrame({{&quot;ts&quot;, Thread(pluss::make_timeline({&quot;2024-02-01T00:00:00Z&quot;}))}});
+auto s1 = DataFrame({{&quot;ts&quot;, Slate(pluss::make_timeline({&quot;2024-01-01T00:00:00Z&quot;}))}});
+auto s2 = DataFrame({{&quot;ts&quot;, Slate(pluss::make_timeline({&quot;2024-02-01T00:00:00Z&quot;}))}});
 auto atlas = Atlas({s1, s2});
 
-auto other = Thread(pluss::make_timeline({&quot;2024-02-01T00:00:00Z&quot;}));
+auto other = Slate(pluss::make_timeline({&quot;2024-02-01T00:00:00Z&quot;}));
 auto out = atlas.tl().span(other, TimeUnit::Days);
 std::cout &lt;&lt; out.frame(0) &lt;&lt; &quot;\n&quot; &lt;&lt; out.frame(1);
 </pre></div>

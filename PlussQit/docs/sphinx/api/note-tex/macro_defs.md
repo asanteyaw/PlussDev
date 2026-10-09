@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::macro_defs
+# Note::TexAccessor::macro_defs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::macro_defs() const
+TokenBatch Note::TexAccessor::macro_defs() const
 ```
 
 ## Inventory Complete Local Macro Declarations

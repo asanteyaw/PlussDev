@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 8c10bad972a7 -->
+<!-- pluss-signature-hash: 417519f4eff3 -->
 
 # DataFrame::rand
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame::rand(const DataFrame& other) const -> DataFrame
-DataFrame::rand(const Thread& other) const -> DataFrame
+DataFrame::rand(const Slate& other) const -> DataFrame
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ An earlier revision of `rand(const DataFrame&)` computed the reflection as
 `other.land(*this)`, which meant the result's case labels and title came from
 `other` instead of from the frame the method was called on — a real, verified quirk
 that was documented here as a caution. That has since been fixed: `rand()` now zips
-`*this` and `other` directly (with `Thread::rand()` handling the per-cell operand
+`*this` and `other` directly (with `Slate::rand()` handling the per-cell operand
 order internally), so the result's structure always comes from `*this`, matching
 [`land()`](land.md) and every other method in this family. If you're working against
 an older build where this fix isn't present, verify which behavior you're actually
@@ -35,9 +35,9 @@ seeing before relying on either.
 
 **other**
 
-`const DataFrame&` or `const Thread&` — identical shape requirements to
+`const DataFrame&` or `const Slate&` — identical shape requirements to
 [`land()`](land.md): same feature names in order and same case count for the
-`DataFrame` overload; one boolean thread matching `ncases()` for the `Thread` overload.
+`DataFrame` overload; one boolean slate matching `ncases()` for the `Slate` overload.
 
 ## Returns
 
@@ -105,10 +105,10 @@ from `left`, the frame both methods were called on), even though `right` uses a
 completely different set of case labels (`x, y, z`) that never appear in either
 result.
 
-Example 2. The `Thread` overload behaves identically, as it always has.
+Example 2. The `Slate` overload behaves identically, as it always has.
 
 ```cpp
-auto mask = Thread(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
+auto mask = Slate(pluss::make_series({true, false, true}, pluss::ScalarType::Bool));
 auto out = left.rand(mask);
 std::cout << out;
 ```

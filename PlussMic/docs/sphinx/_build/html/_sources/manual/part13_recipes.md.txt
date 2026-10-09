@@ -130,7 +130,7 @@ auto base = DataFrame::load_csv("base.csv");
 auto stress = DataFrame::load_csv("stress.csv");
 auto optimistic = DataFrame::load_csv("optimistic.csv");
 
-pluss::table::Thread labels =
+pluss::table::Slate labels =
     pluss::make_note({"base", "stress", "optimistic"});
 pluss::table::Atlas scenarios({base, stress, optimistic}, labels);
 

@@ -72,7 +72,12 @@ int main() {
   optim::Adagrad optimizer(groups);
 
   for (int step = 0; step < 3; ++step) {
-    optimizer.step(std::vector<Series>{backbone.sub(target), head.sub(target)});
+    const Series backbone_residual = backbone.sub(target);
+    const Series head_residual = head.sub(target);
+    const float loss = backbone_residual.square().mul(0.5).item<float>() +
+                       head_residual.square().mul(0.5).item<float>();
+    optimizer.step(std::vector<Series>{backbone_residual, head_residual});
+    std::cout << "step " << step << ": loss = " << loss << "\n";
   }
   std::cout << "backbone (lr=0.1): w = " << backbone.item<float>() << "\n";
   std::cout << "head (lr=1.0):     w = " << head.item<float>() << "\n";
@@ -84,6 +89,9 @@ int main() {
 Output
 
 ```text
+step 0: loss = 16
+step 1: loss = 12.105
+step 2: loss = 10.2152
 backbone (lr=0.1): w = 4.77364
 head (lr=1.0):     w = 2.96727
 ```

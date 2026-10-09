@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::overlap_tokens
+# Note::NlpAccessor::overlap_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::overlap_tokens(const Note& other) const
+Note Note::NlpAccessor::overlap_tokens(const Note& other) const
 ```
 
 ## Word-Set Containment Score Between Two Notes
@@ -55,9 +55,9 @@ not storage. Use `reals()` for a borrowed contiguous host view or
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Rejections raise `pluss::Error`:
 
-- either side in bytes mode → `NoteNlpAccessor::overlap_tokens requires a UTF-8 text
+- either side in bytes mode → `Note::NlpAccessor::overlap_tokens requires a UTF-8 text
   Note (lhs is bytes)` (or `rhs is bytes`).
-- unequal `numel` with neither side a scalar → `NoteNlpAccessor::overlap_tokens expects
+- unequal `numel` with neither side a scalar → `Note::NlpAccessor::overlap_tokens expects
   equal numel or scalar broadcast`.
 
 ## Example 1: A Subset Scores 1.0
@@ -115,11 +115,11 @@ Note(shape=[1], dim=1, numel=1, dtype=Float64)
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_tokens`](jaccard_tokens.md): `|A ∩ B| / |A ∪ B|` — size
+- [`Note::NlpAccessor::jaccard_tokens`](jaccard_tokens.md): `|A ∩ B| / |A ∪ B|` — size
   differences lower the score.
-- [`NoteNlpAccessor::intersect_tokens`](intersect_tokens.md): the shared words, not a
+- [`Note::NlpAccessor::intersect_tokens`](intersect_tokens.md): the shared words, not a
   score.
-- [`NoteNlpAccessor::overlap_terms`](overlap_terms.md): the same score over content
+- [`Note::NlpAccessor::overlap_terms`](overlap_terms.md): the same score over content
   words only.
 
 <div class="pluss-inline-prev-next">

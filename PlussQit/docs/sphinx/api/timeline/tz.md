@@ -105,6 +105,6 @@ read on a wall clock*.
 - [`Timeline::ticks`](ticks.md)
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_timeindex.html"><span class="label">Previous</span><span class="title">to_timeindex</span></a>
+  <a class="prev-link" href="to_note_iso.html"><span class="label">Previous</span><span class="title">to_note_iso</span></a>
   <a class="next-link" href="host.html"><span class="label">Next</span><span class="title">host</span></a>
 </div>

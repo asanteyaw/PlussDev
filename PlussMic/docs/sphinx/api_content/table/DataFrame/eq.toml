@@ -1,5 +1,5 @@
 summary = """
-Compare the current frame for equality against a scalar, a thread, or another frame and return a boolean-style result frame.
+Compare the current frame for equality against a scalar, a slate, or another frame and return a boolean-style result frame.
 
 `eq(...)` is the explicit named equality surface when you want a reusable mask table instead of operator syntax.
 """
@@ -12,7 +12,7 @@ returns = """
 see_also = [
   "<a href=\"#equals\"><code>DataFrame::equals</code></a>: whole-frame exact identity check that returns one `bool` instead of a mask frame.",
   "<a href=\"#ne\"><code>DataFrame::ne</code></a>: not-equal comparison.",
-  "<a href=\"../../thread_api_reference.md#eq\"><code>Thread::eq</code></a>: equality comparison on one extracted thread."
+  "<a href=\"../../slate_api_reference.md#eq\"><code>Slate::eq</code></a>: equality comparison on one extracted slate."
 ]
 
 notes = [
@@ -20,7 +20,7 @@ notes = [
 Numeric scalar equality broadcasts one value across compatible numeric features.
 """,
   """
-Text scalar equality is most useful on note-backed columns. It maps the comparison across the current frame's threads and returns a boolean-style frame.
+Text scalar equality is most useful on note-backed columns. It maps the comparison across the current frame's slates and returns a boolean-style frame.
 """,
   """
 Frame-to-frame equality compares matched cells. When you need explicit structural matching rules, use the overload that accepts `AlignOptions`.
@@ -36,25 +36,25 @@ Supported overload families include:
 
 - numeric scalar broadcast such as `84.0`,
 - text scalar broadcast such as `"Ada"`,
-- `const Thread&` when you want one thread compared across a chosen axis,
+- `const Slate&` when you want one slate compared across a chosen axis,
 - `const DataFrame&` when you want cellwise frame-to-frame equality.
 """
 
 [[parameters]]
 name = "axis"
 body = """
-Axis used by the thread overload.
+Axis used by the slate overload.
 
-- `Axis::Feature`: compare one thread across features.
-- `Axis::Case`: compare one thread across cases.
+- `Axis::Feature`: compare one slate across features.
+- `Axis::Case`: compare one slate across cases.
 
-Use the examples below as the primary guide for when a thread is being interpreted row-wise versus column-wise.
+Use the examples below as the primary guide for when a slate is being interpreted row-wise versus column-wise.
 """
 
 [[parameters]]
 name = "options"
 body = """
-Optional alignment rules for overloads that compare against another `DataFrame` or `Thread`.
+Optional alignment rules for overloads that compare against another `DataFrame` or `Slate`.
 
 This is where you choose label-aware matching behavior such as `AlignBy::Both` when the right-hand side has a different row order or a smaller structural footprint.
 """

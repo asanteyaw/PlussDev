@@ -102,7 +102,7 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
 - [`Note::html_unescape`](html_unescape.md): the inverse.
 - [`Note::json_escape`](json_escape.md): escaping for JSON string bodies
   instead of markup.
-- [`NoteTexAccessor::escape`](../note-tex/escape.md): escaping TeX special characters.
+- [`Note::TexAccessor::escape`](../note-tex/escape.md): escaping TeX special characters.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="host.html">

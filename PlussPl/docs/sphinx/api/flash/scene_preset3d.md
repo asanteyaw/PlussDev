@@ -23,7 +23,7 @@ of a [`theme_preset3d`](theme_preset3d.md) call, `Pane::grid(GridStyle::Major)`,
 |---|---|---|---|
 | `Survey` | `Ocean` | `camera_preset3d(Isometric)` | headlight + lamp_left |
 | `Presentation` | `Paper` | `camera3d(-42.0, 24.0, Perspective, 28.0)` | headlight + lamp_right + sun_key |
-| `Studio` | `Slate` | `camera_preset3d(Spatial)` | headlight + lamp_left + lamp_right |
+| `Studio` | `Graphite` | `camera_preset3d(Spatial)` | headlight + lamp_left + lamp_right |
 | `Topology` | `Mist` | `camera_preset3d(TopDown)` | headlight only |
 
 `Presentation` is the only preset that switches to `Perspective` projection — the other

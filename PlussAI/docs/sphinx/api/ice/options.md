@@ -16,6 +16,7 @@ policy structs, and `AssessReport`, the result `assess()` returns.
 | [`LoopRegularization`](options/LoopRegularization.md) | early stopping, patience, min delta, best-weight restoration |
 | [`CheckpointPolicy`](options/CheckpointPolicy.md) | whether/when/where to write checkpoints, and how to resume |
 | [`ExecutionPolicy`](options/ExecutionPolicy.md) | gradient clipping, epoch/batch limits, non-finite failure, determinism, precision, platform |
+| [`ProgressPolicy`](options/ProgressPolicy.md) | live epoch output, cadence, progress-bar rendering, stream selection, and displayed metrics |
 | [`AssessReport`](options/AssessReport.md) | the loss + metric result `assess()` returns |
 
 ## How To Call It
@@ -83,6 +84,9 @@ options/ObjectiveRegularization
 options/LoopRegularization
 options/CheckpointPolicy
 options/ExecutionPolicy
+options/ProgressPolicy
 options/AssessReport
+options/TrainingReport
+options/EpochReport
 ```
 <!-- apiref:toctree:end -->

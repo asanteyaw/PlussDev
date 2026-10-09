@@ -1,0 +1,71 @@
+summary = """
+Build a boolean mask that marks duplicate entries.
+
+This is the slate-level inspection route behind duplicate-aware filtering and counting workflows.
+
+It tells you which entries are duplicate followers under the keep policy you selected.
+"""
+
+returns = """
+`Slate`
+    Boolean-like slate with one value per entry indicating duplicate membership.
+"""
+
+notes = [
+  """
+The returned mask has the same length as the source slate, so it can be inspected directly or reused in later boolean-style filtering logic.
+""",
+  """
+`duplicated(...)` reports duplicate membership only. It never removes entries by itself.
+"""
+]
+
+[[parameters]]
+name = "keep_first"
+body = """
+Whether the first observed occurrence in each duplicate group should be treated as the surviving reference entry.
+
+With the default keep-first route, the first appearance of a value stays unmarked and later repeats are marked duplicate.
+"""
+
+[[parameters]]
+name = "keep_last"
+body = """
+Whether the last observed occurrence in each duplicate group should be treated as the surviving reference entry instead.
+
+With this route, earlier repeats are marked duplicate and the final appearance is left unmarked.
+"""
+
+[[examples]]
+title = "Mark duplicates while keeping the first occurrence as the survivor."
+code = """
+using namespace pluss::table;
+
+auto out = Slate(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}))
+               .duplicated();
+"""
+output = """
+0  false
+1  false
+2  true
+3  false
+4  true
+ptype: Series
+"""
+
+[[examples]]
+title = "Switch to a keep-last duplicate policy."
+code = """
+using namespace pluss::table;
+
+auto out = Slate(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", "Tema"}))
+               .duplicated(false, true);
+"""
+output = """
+0  true
+1  true
+2  false
+3  false
+4  false
+ptype: Series
+"""

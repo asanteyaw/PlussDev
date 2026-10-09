@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 304eedb4c06c -->
+<!-- pluss-signature-hash: ffcdc5138a56 -->
 
 # DataFrame::csmax
 
@@ -8,13 +8,13 @@
 ## Signature
 
 ```cpp
-DataFrame::csmax(Axis axis = Axis::Case, bool skipnull = true) const -> Thread
+DataFrame::csmax(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
 ```
 
 ## What It Does
 
 Reports *where* each numeric feature's maximum value occurs, not the maximum value
-itself — the argmax-style companion to [`max()`](max.md). The returned `Thread` always
+itself — the argmax-style companion to [`max()`](max.md). The returned `Slate` always
 holds label strings (case labels or feature names), never numeric values, so it always
 prints with `ptype: Note`.
 
@@ -36,7 +36,7 @@ Missing-value policy while searching for the maximum.
 
 ## Returns
 
-`Thread`
+`Slate`
     A `Note`-typed label thread: case labels (`Axis::Case`) or feature names
     (`Axis::Feature`), one per participating numeric feature or case respectively.
 

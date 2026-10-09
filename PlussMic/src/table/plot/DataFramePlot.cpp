@@ -170,37 +170,37 @@ std::vector<double> positional_plot_x(std::int64_t nrows) {
   return out;
 }
 
-pluss::Series thread_to_plot_numeric_series(const Thread& t) {
-  Thread numeric_thread = t;
+pluss::Series slate_to_plot_numeric_series(const Slate& t) {
+  Slate numeric_slate = t;
   switch (t.kind()) {
-    case ThreadKind::Series: {
+    case SlateKind::Series: {
       break;
     }
-    case ThreadKind::Timeline: {
-      numeric_thread = Thread(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
+    case SlateKind::Timeline: {
+      numeric_slate = Slate(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
       break;
     }
-    case ThreadKind::Note: {
-      numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
+    case SlateKind::Note: {
+      numeric_slate = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
       break;
     }
     default:
-      PLUSS_FAIL("DataFrame::plot: unsupported Thread kind for numeric plotting");
+      PLUSS_FAIL("DataFrame::plot: unsupported Slate kind for numeric plotting");
   }
 
-  auto values = numeric_thread.as_series().to(pluss::codem::ScalarType::Float64);
-  if (detail::has_validity_mask(numeric_thread)) {
+  auto values = numeric_slate.as_series().to(pluss::codem::ScalarType::Float64);
+  if (detail::has_validity_mask(numeric_slate)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
-    values = values.where(detail::validity_mask(numeric_thread)->logical_not(), nan_fill);
+    values = values.where(detail::validity_mask(numeric_slate)->logical_not(), nan_fill);
   }
   return values.reshape({values.numel()});
 }
 
-std::vector<double> thread_to_plot_numeric_values(const Thread& t) {
-  auto values = thread_to_plot_numeric_series(t);
+std::vector<double> slate_to_plot_numeric_values(const Slate& t) {
+  auto values = slate_to_plot_numeric_series(t);
   return values.to_vec<double>();
 }
 
@@ -237,7 +237,7 @@ TemporalLabelKind infer_temporal_label_kind(const pluss::Timeline& timeline) {
   return TemporalLabelKind::DateTime;
 }
 
-std::vector<std::string> temporal_thread_to_plot_labels(const Thread& t, DateTimeLabelView datetime_label_view) {
+std::vector<std::string> temporal_slate_to_plot_labels(const Slate& t, DateTimeLabelView datetime_label_view) {
   const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64(timeline.nanosecond());
   const auto rendered = [&]() -> pluss::Note {
@@ -266,11 +266,11 @@ std::vector<std::string> temporal_thread_to_plot_labels(const Thread& t, DateTim
   return out;
 }
 
-std::vector<std::string> thread_to_plot_labels(const Thread& t, const DataFramePlotOptions& options) {
-  if (t.kind() == ThreadKind::Timeline) {
-    return temporal_thread_to_plot_labels(t, options.datetime_label_view);
+std::vector<std::string> slate_to_plot_labels(const Slate& t, const DataFramePlotOptions& options) {
+  if (t.kind() == SlateKind::Timeline) {
+    return temporal_slate_to_plot_labels(t, options.datetime_label_view);
   }
-  const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast().note();
+  const auto note_like = (t.kind() == SlateKind::Note) ? t : t.cast().note();
   std::vector<std::string> out;
   const auto& note = note_like.as_note();
   out.reserve(static_cast<std::size_t>(note.numel()));
@@ -296,8 +296,8 @@ void require_plot_size(const std::vector<std::string>& values,
               std::string(where) + ": feature '" + std::string(feature_name) + "' length mismatch with cases");
 }
 
-bool thread_prefers_labeled_axis(const Thread& t) {
-  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline;
+bool slate_prefers_labeled_axis(const Slate& t) {
+  return t.kind() == SlateKind::Note || t.kind() == SlateKind::Timeline;
 }
 
 struct ResolvedPlotAxis {
@@ -326,18 +326,18 @@ ResolvedPlotAxis resolve_plot_axis(const DataFrame& frame,
                                    const DataFramePlotOptions& options) {
   const auto nrows = frame.ncases();
   const auto axis_name = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
-  const auto axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
+  const auto axis_slate = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
 
   ResolvedPlotAxis axis;
   axis.label = axis_name;
-  if (thread_prefers_labeled_axis(axis_thread)) {
+  if (slate_prefers_labeled_axis(axis_slate)) {
     axis.values = positional_plot_x(nrows);
-    axis.labels = thread_to_plot_labels(axis_thread, options);
+    axis.labels = slate_to_plot_labels(axis_slate, options);
     require_plot_size(axis.labels, nrows, axis_name, where);
     return axis;
   }
 
-  axis.values = thread_to_plot_numeric_values(axis_thread);
+  axis.values = slate_to_plot_numeric_values(axis_slate);
   require_plot_size(axis.values, nrows, axis_name);
   return axis;
 }
@@ -427,17 +427,17 @@ void apply_axis(Pane& pane, const ResolvedPlotAxis& axis, const DataFramePlotOpt
 std::vector<std::string> labels_for_cases(const DataFrame& frame,
                                           std::string_view where,
                                           const DataFramePlotOptions& options) {
-  auto labels = thread_to_plot_labels(frame.label().values(), options);
+  auto labels = slate_to_plot_labels(frame.label().values(), options);
   require_plot_size(labels, frame.ncases(), "case", where);
   return labels;
 }
 
-bool thread_supports_correlation(const Thread& thread) {
-  return thread.kind() == ThreadKind::Series;
+bool slate_supports_correlation(const Slate& slate) {
+  return slate.kind() == SlateKind::Series;
 }
 
-bool thread_supports_hue(const Thread& thread) {
-  return thread.kind() == ThreadKind::Note || thread.kind() == ThreadKind::Timeline;
+bool slate_supports_hue(const Slate& slate) {
+  return slate.kind() == SlateKind::Note || slate.kind() == SlateKind::Timeline;
 }
 
 std::vector<std::string> numeric_feature_names(const DataFrame& frame,
@@ -452,7 +452,7 @@ std::vector<std::string> hue_feature_names(const DataFrame& frame) {
       features.begin(),
       features.end(),
       std::back_inserter(names),
-      [&](const std::string& feature) { return thread_supports_hue(frame.features(feature)); });
+      [&](const std::string& feature) { return slate_supports_hue(frame.features(feature)); });
   return names;
 }
 
@@ -472,9 +472,9 @@ std::vector<std::string> numeric_feature_names(const DataFrame& frame,
         requested.end(),
         std::back_inserter(names),
         [&](std::string_view feature) {
-          const auto thread = frame.features(feature);
+          const auto slate = frame.features(feature);
           PLUSS_CHECK(
-              thread_supports_correlation(thread),
+              slate_supports_correlation(slate),
               std::string(where) + ": feature '" + std::string(feature) + "' is not a numeric Series");
           return std::string(feature);
         });
@@ -487,7 +487,7 @@ std::vector<std::string> numeric_feature_names(const DataFrame& frame,
       features.begin(),
       features.end(),
       std::back_inserter(names),
-      [&](const std::string& feature) { return thread_supports_correlation(frame.features(feature)); });
+      [&](const std::string& feature) { return slate_supports_correlation(frame.features(feature)); });
   PLUSS_CHECK(!names.empty(), std::string(where) + ": no numeric Series features available");
   return names;
 }
@@ -502,17 +502,17 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
       names.end(),
       std::back_inserter(columns),
       [&](const std::string& name) {
-        const auto thread = frame.features(name);
+        const auto slate = frame.features(name);
         PLUSS_CHECK(
-            thread.kind() == ThreadKind::Series,
+            slate.kind() == SlateKind::Series,
             std::string(where) + ": feature '" + name + "' is not a numeric Series");
-        auto values = thread.as_series().to(pluss::codem::ScalarType::Float64).reshape({thread.as_series().numel()});
-        if (detail::has_validity_mask(thread)) {
+        auto values = slate.as_series().to(pluss::codem::ScalarType::Float64).reshape({slate.as_series().numel()});
+        if (detail::has_validity_mask(slate)) {
           const auto nan_fill = pluss::Series::full(
               {values.numel()},
               std::numeric_limits<double>::quiet_NaN(),
               pluss::codem::ScalarType::Float64);
-          values = values.where(detail::validity_mask(thread)->logical_not(), nan_fill);
+          values = values.where(detail::validity_mask(slate)->logical_not(), nan_fill);
         }
         return values;
       });
@@ -520,9 +520,9 @@ std::vector<pluss::Series> numeric_series_columns(const DataFrame& frame,
   return columns;
 }
 
-pluss::Note thread_to_plot_note(const Thread& t, std::string_view where, std::string_view feature_name) {
-  const auto note_like = (t.kind() == ThreadKind::Note) ? t : t.cast().note();
-  PLUSS_CHECK(note_like.kind() == ThreadKind::Note,
+pluss::Note slate_to_plot_note(const Slate& t, std::string_view where, std::string_view feature_name) {
+  const auto note_like = (t.kind() == SlateKind::Note) ? t : t.cast().note();
+  PLUSS_CHECK(note_like.kind() == SlateKind::Note,
               std::string(where) + ": feature '" + std::string(feature_name) + "' cannot be converted to Note");
   return note_like.as_note();
 }
@@ -532,14 +532,14 @@ bool all_nonnegative_columns(const DataFrame& frame, const std::vector<std::stri
       names.begin(),
       names.end(),
       [&](const std::string& name) {
-        auto values = thread_to_plot_numeric_series(frame.features(name));
+        auto values = slate_to_plot_numeric_series(frame.features(name));
         values = values.nan_to_num(0.0, 0.0, 0.0);
         return !values.lt(0.0).any().item<bool>();
       });
 }
 
 bool prefer_index_plot(const DataFrame& frame) {
-  return thread_prefers_labeled_axis(frame.label().values()) || frame.ncases() > 24;
+  return slate_prefers_labeled_axis(frame.label().values()) || frame.ncases() > 24;
 }
 
 pluss::Series columns_to_matrix_series(const std::vector<pluss::Series>& columns,
@@ -796,7 +796,7 @@ Studio box_from_names(const DataFrame& frame,
   merged_values.reserve(static_cast<std::size_t>(frame.ncases()) * names.size());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
-    auto values = thread_to_plot_numeric_values(frame.features(names[i]));
+    auto values = slate_to_plot_numeric_values(frame.features(names[i]));
     require_plot_size(values, frame.ncases(), names[i]);
     std::for_each(values.begin(), values.end(), [&](double value) {
       if (std::isfinite(value)) {
@@ -833,7 +833,7 @@ Studio violin_from_names(const DataFrame& frame,
   merged_values.reserve(static_cast<std::size_t>(frame.ncases()) * names.size());
 
   for (std::size_t i = 0; i < names.size(); ++i) {
-    auto values = thread_to_plot_numeric_values(frame.features(names[i]));
+    auto values = slate_to_plot_numeric_values(frame.features(names[i]));
     require_plot_size(values, frame.ncases(), names[i]);
     std::for_each(values.begin(), values.end(), [&](double value) {
       if (std::isfinite(value)) {
@@ -880,7 +880,7 @@ Studio make_xy_figure(const DataFrame& frame,
 
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto y_values = thread_to_plot_numeric_values(frame.features(y_name));
+    auto y_values = slate_to_plot_numeric_values(frame.features(y_name));
     require_plot_size(y_values, frame.ncases(), y_name);
     add_trace(pane, axis, y_values, y_name, feature_index);
     ++feature_index;
@@ -1277,7 +1277,7 @@ pluss::pl::Studio DataFramePlotAccessor::area_stacked(
   auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
+    auto heights = slate_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
     auto tops = baselines.add(heights);
     auto& trace = flash::areaplot(pane, axis.values, tops, 0.0);
@@ -1308,7 +1308,7 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(
     const ScatterPlotOptions& options) const {
   const auto resolved_hue = resolve_hue_feature(hue_feature);
   const auto axis = resolve_plot_axis(frame_, x_feature, "DataFrame::plot().scatter", options_);
-  const auto y_values = thread_to_plot_numeric_values(frame_.features(y_feature));
+  const auto y_values = slate_to_plot_numeric_values(frame_.features(y_feature));
   require_plot_size(y_values, frame_.ncases(), y_feature);
 
   auto fig = make_studio();
@@ -1326,10 +1326,10 @@ pluss::pl::Studio DataFramePlotAccessor::scatter(
     return fig;
   }
 
-  const auto hue_thread = frame_.features(*resolved_hue);
-  PLUSS_CHECK(thread_supports_hue(hue_thread),
+  const auto hue_slate = frame_.features(*resolved_hue);
+  PLUSS_CHECK(slate_supports_hue(hue_slate),
               "DataFrame::plot().scatter: hue feature '" + std::string(*resolved_hue) + "' must be note-like or time-like");
-  const auto hue_labels = thread_to_plot_labels(hue_thread, options_);
+  const auto hue_labels = slate_to_plot_labels(hue_slate, options_);
   require_plot_size(hue_labels, frame_.ncases(), *resolved_hue, "DataFrame::plot().scatter");
   const auto grouped = build_scatter_hue_groups(hue_labels, axis.values, y_values);
   for (const auto group_index : std::views::iota(std::size_t{0}, grouped.labels.size())) {
@@ -1411,7 +1411,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_bar(
   const std::size_t group_count = y_features.size();
   std::size_t group_index = 0;
   for (const auto y_name : y_features) {
-    auto y_values = thread_to_plot_numeric_values(frame_.features(y_name));
+    auto y_values = slate_to_plot_numeric_values(frame_.features(y_name));
     require_plot_size(y_values, frame_.ncases(), y_name);
 
     AggregatedBarSeries ci_ready{};
@@ -1485,7 +1485,7 @@ pluss::pl::Studio DataFramePlotAccessor::bar_stacked(
   auto baselines = pluss::Series::full({frame_.ncases()}, 0.0, pluss::codem::ScalarType::Float64);
   std::size_t feature_index = 0;
   for (const auto y_name : y_features) {
-    auto heights = thread_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
+    auto heights = slate_to_plot_numeric_series(frame_.features(y_name)).reshape({frame_.ncases()});
     require_plot_size(heights, frame_.ncases(), y_name);
     auto tops = baselines.add(heights);
     auto& trace = flash::barplot(pane, axis.values, tops);
@@ -1539,7 +1539,7 @@ pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
 pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
                                                 std::string_view group_feature,
                                                 const ViolinPlotOptions& options) const {
-  const auto y_values = thread_to_plot_numeric_values(frame_.features(value_feature));
+  const auto y_values = slate_to_plot_numeric_values(frame_.features(value_feature));
   require_plot_size(y_values, frame_.ncases(), value_feature);
   const auto y_series = pluss::make_series(y_values, {static_cast<std::int64_t>(y_values.size())});
 
@@ -1548,17 +1548,17 @@ pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
   auto& pane = fig.pane2();
   setup_pane(pane, false, &options_);
 
-  const auto group_thread = frame_.features(group_feature);
-  if (thread_supports_hue(group_thread)) {
+  const auto group_slate = frame_.features(group_feature);
+  if (slate_supports_hue(group_slate)) {
     auto& trace = flash::violinplot(
         pane,
-        pluss::make_note(thread_to_plot_labels(group_thread, options_)),
+        pluss::make_note(slate_to_plot_labels(group_slate, options_)),
         y_series,
         to_core_violin_options(options));
     trace.label(std::string(value_feature));
     style_trace(trace, 0, options.alpha, options.line_width);
   } else {
-    auto group_values = thread_to_plot_numeric_values(group_thread);
+    auto group_values = slate_to_plot_numeric_values(group_slate);
     require_plot_size(group_values, frame_.ncases(), group_feature);
     auto& trace = flash::violinplot(
         pane,
@@ -1613,7 +1613,7 @@ pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::
                                               const HistPlotOptions& options) const {
   const auto names = numeric_feature_names(frame_, features, "DataFrame::plot().hist");
   if (names.size() == 1) {
-    auto values = thread_to_plot_numeric_series(frame_.features(names.front())).reshape({frame_.ncases()});
+    auto values = slate_to_plot_numeric_series(frame_.features(names.front())).reshape({frame_.ncases()});
     require_plot_size(values, frame_.ncases(), names.front());
     auto fig = make_studio();
     apply_figure_options(fig);
@@ -1654,7 +1654,7 @@ pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::
 pluss::pl::Studio DataFramePlotAccessor::impl_hist(std::string_view feature, std::int64_t bins) const {
   HistPlotOptions options;
   options.bins = bins;
-  auto values = thread_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
+  auto values = slate_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
   require_plot_size(values, frame_.ncases(), feature);
   auto fig = make_studio();
   apply_figure_options(fig);
@@ -1736,10 +1736,10 @@ pluss::pl::Studio DataFramePlotAccessor::pie(
 pluss::pl::Studio DataFramePlotAccessor::impl_pie(std::string_view value_feature,
                                                   std::optional<std::string_view> label_feature,
                                                   const PiePlotOptions& options) const {
-  auto values = thread_to_plot_numeric_values(frame_.features(value_feature));
+  auto values = slate_to_plot_numeric_values(frame_.features(value_feature));
   require_plot_size(values, frame_.ncases(), value_feature);
-  const auto labels = label_feature.has_value() ? thread_to_plot_labels(frame_.features(*label_feature), options_)
-                                                : thread_to_plot_labels(frame_.label().values(), options_);
+  const auto labels = label_feature.has_value() ? slate_to_plot_labels(frame_.features(*label_feature), options_)
+                                                : slate_to_plot_labels(frame_.label().values(), options_);
   require_plot_size(labels,
                     frame_.ncases(),
                     label_feature.has_value() ? *label_feature : std::string_view("case"),
@@ -1835,7 +1835,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(pluss::msharp::RangeView::
   columns.reserve(features.size());
   y_labels.reserve(features.size());
   for (const auto feature : features) {
-    auto feature_values = thread_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
+    auto feature_values = slate_to_plot_numeric_series(frame_.features(feature)).reshape({frame_.ncases()});
     PLUSS_CHECK(feature_values.numel() == frame_.ncases(),
                 "DataFrame::plot().heatmap: feature '" + std::string(feature) + "' length mismatch with cases");
     columns.push_back(std::move(feature_values));
@@ -1903,7 +1903,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_heatmap(std::string_view case_feat
       pivot_features.end(),
       std::back_inserter(columns),
       [&](const std::string& name) {
-        auto column_values = thread_to_plot_numeric_series(pivoted.features(name)).reshape({pivoted.ncases()});
+        auto column_values = slate_to_plot_numeric_series(pivoted.features(name)).reshape({pivoted.ncases()});
         PLUSS_CHECK(column_values.numel() == pivoted.ncases(),
                     "DataFrame::plot().heatmap: feature '" + name + "' length mismatch with cases");
         return column_values;
@@ -1947,7 +1947,7 @@ PivotGrid3D build_pivot_grid_3d(const DataFrame& pivoted, std::string_view where
   PLUSS_CHECK(out.rows > 0, std::string(where) + ": pivot produced zero rows");
   PLUSS_CHECK(out.cols > 0, std::string(where) + ": pivot produced zero columns");
 
-  out.y_axis = thread_to_plot_numeric_values(pivoted.label().values());
+  out.y_axis = slate_to_plot_numeric_values(pivoted.label().values());
   std::size_t y_index = 0;
   std::for_each(out.y_axis.begin(), out.y_axis.end(), [&](double& value) {
     if (!std::isfinite(value)) {
@@ -1979,7 +1979,7 @@ PivotGrid3D build_pivot_grid_3d(const DataFrame& pivoted, std::string_view where
       feature_names.end(),
       std::back_inserter(columns),
       [&](const std::string& name) {
-        auto values = thread_to_plot_numeric_series(pivoted.features(name)).reshape({out.rows});
+        auto values = slate_to_plot_numeric_series(pivoted.features(name)).reshape({out.rows});
         PLUSS_CHECK(values.numel() == out.rows,
                     std::string(where) + ": feature '" + name + "' length mismatch with cases");
         return values;
@@ -2059,7 +2059,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_parallel(
   }
   auto fig = make_studio();
   if (class_feature.has_value()) {
-    const auto classes = thread_to_plot_note(
+    const auto classes = slate_to_plot_note(
         frame_.features(*class_feature),
         "DataFrame::plot().parallel",
         *class_feature);
@@ -2090,7 +2090,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_andrews_curves(
   }
   auto fig = make_studio();
   if (class_feature.has_value()) {
-    const auto classes = thread_to_plot_note(
+    const auto classes = slate_to_plot_note(
         frame_.features(*class_feature),
         "DataFrame::plot().andrews_curves",
         *class_feature);
@@ -2121,7 +2121,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_radviz(
   }
   auto fig = make_studio();
   if (class_feature.has_value()) {
-    const auto classes = thread_to_plot_note(
+    const auto classes = slate_to_plot_note(
         frame_.features(*class_feature),
         "DataFrame::plot().radviz",
         *class_feature);
@@ -2243,7 +2243,7 @@ pluss::pl::Studio DataFramePlotAccessor::impl_auto_plot(pluss::msharp::RangeView
       return scatter(names[0], names[1], hue_names.front());
     }
   }
-  if (names.size() <= 3 && thread_prefers_labeled_axis(frame_.label().values()) && all_nonnegative_columns(frame_, names)) {
+  if (names.size() <= 3 && slate_prefers_labeled_axis(frame_.label().values()) && all_nonnegative_columns(frame_, names)) {
     if (frame_.ncases() <= 12) {
       if (names.size() == 2) {
         return bar_stacked({names[0], names[1]});
@@ -2304,26 +2304,26 @@ pluss::pl::Studio DataFramePlot3DAccessor::scatter(std::string_view x_feature,
   plot::detail::apply_3d_scene_options(pane, options.scene);
 
   const auto n = frame_.ncases();
-  const auto x = thread_to_plot_numeric_values(frame_.features(x_feature));
-  const auto y = thread_to_plot_numeric_values(frame_.features(y_feature));
-  const auto z = thread_to_plot_numeric_values(frame_.features(z_feature));
+  const auto x = slate_to_plot_numeric_values(frame_.features(x_feature));
+  const auto y = slate_to_plot_numeric_values(frame_.features(y_feature));
+  const auto z = slate_to_plot_numeric_values(frame_.features(z_feature));
   require_plot_size(x, n, x_feature);
   require_plot_size(y, n, y_feature);
   require_plot_size(z, n, z_feature);
 
   Trace* trace = nullptr;
   if (size_feature.has_value()) {
-    const auto s = thread_to_plot_numeric_values(frame_.features(*size_feature));
+    const auto s = slate_to_plot_numeric_values(frame_.features(*size_feature));
     require_plot_size(s, n, *size_feature);
     if (color_feature.has_value()) {
-      const auto c = thread_to_plot_numeric_values(frame_.features(*color_feature));
+      const auto c = slate_to_plot_numeric_values(frame_.features(*color_feature));
       require_plot_size(c, n, *color_feature);
       trace = &flash::cloud3(pane, x, y, z, s, c).label("scatter3d");
     } else {
       trace = &flash::cloud3(pane, x, y, z, s).label("scatter3d");
     }
   } else if (color_feature.has_value()) {
-    const auto c = thread_to_plot_numeric_values(frame_.features(*color_feature));
+    const auto c = slate_to_plot_numeric_values(frame_.features(*color_feature));
     require_plot_size(c, n, *color_feature);
     std::vector<double> default_size(static_cast<std::size_t>(n), options.default_marker_size);
     trace = &flash::cloud3(pane, x, y, z, default_size, c).label("scatter3d");
@@ -2349,9 +2349,9 @@ pluss::pl::Studio DataFramePlot3DAccessor::line(std::string_view x_feature,
   plot::detail::apply_3d_scene_options(pane, options.scene);
 
   const auto n = frame_.ncases();
-  const auto x = thread_to_plot_numeric_values(frame_.features(x_feature));
-  const auto y = thread_to_plot_numeric_values(frame_.features(y_feature));
-  const auto z = thread_to_plot_numeric_values(frame_.features(z_feature));
+  const auto x = slate_to_plot_numeric_values(frame_.features(x_feature));
+  const auto y = slate_to_plot_numeric_values(frame_.features(y_feature));
+  const auto z = slate_to_plot_numeric_values(frame_.features(z_feature));
   require_plot_size(x, n, x_feature);
   require_plot_size(y, n, y_feature);
   require_plot_size(z, n, z_feature);
@@ -2372,8 +2372,8 @@ pluss::pl::Studio DataFramePlot3DAccessor::hist(std::string_view x_feature,
   plot::detail::apply_3d_scene_options(pane, options.scene);
 
   const auto n = frame_.ncases();
-  const auto x = thread_to_plot_numeric_values(frame_.features(x_feature));
-  const auto y = thread_to_plot_numeric_values(frame_.features(y_feature));
+  const auto x = slate_to_plot_numeric_values(frame_.features(x_feature));
+  const auto y = slate_to_plot_numeric_values(frame_.features(y_feature));
   require_plot_size(x, n, x_feature);
   require_plot_size(y, n, y_feature);
 

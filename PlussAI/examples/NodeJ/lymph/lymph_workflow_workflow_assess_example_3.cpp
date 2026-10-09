@@ -8,14 +8,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"income", Thread(pluss::make_series({1.0, 1.3, 1.7, 2.1}, {4}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.5, 0.9}, {4}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1}, {4}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9}, {4}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
 

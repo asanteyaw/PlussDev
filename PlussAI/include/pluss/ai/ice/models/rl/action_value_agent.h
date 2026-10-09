@@ -29,6 +29,7 @@ struct ActionValueTrainOptions {
   bool shuffle = true;
   bool use_huber = true;
   std::uint64_t seed = 0;
+  ProgressPolicy progress{};
   ValidationPolicy validation{};
   ObjectiveRegularization objective_regularization{};
   LoopRegularization loop_regularization{};

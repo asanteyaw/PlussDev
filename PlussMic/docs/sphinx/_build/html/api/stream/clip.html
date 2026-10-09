@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::defined" href="defined.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Clamps every value in a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind stream to <code class="docutils literal notranslate"><span class="pre">[min_value,</span> <span class="pre">max_value]</span></code> — values below
 <code class="docutils literal notranslate"><span class="pre">min_value</span></code> become <code class="docutils literal notranslate"><span class="pre">min_value</span></code>, values above <code class="docutils literal notranslate"><span class="pre">max_value</span></code> become <code class="docutils literal notranslate"><span class="pre">max_value</span></code>, and everything
-in between passes through unchanged. Delegates to <code class="docutils literal notranslate"><span class="pre">Thread::clip()</span></code>, so it’s <code class="docutils literal notranslate"><span class="pre">Series</span></code>-only,
+in between passes through unchanged. Delegates to <code class="docutils literal notranslate"><span class="pre">Slate::clip()</span></code>, so it’s <code class="docutils literal notranslate"><span class="pre">Series</span></code>-only,
 same as <a class="reference internal" href="abs.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">abs()</span></code></span></a>/<a class="reference internal" href="log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log()</span></code></span></a>/<a class="reference internal" href="exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">exp()</span></code></span></a>.</p>
 </section>
 <section id="parameters">
@@ -105,7 +105,7 @@ in this elementwise math family.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::clip is only valid for Series payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::clip is only valid for Series payload
 </pre></div>
 </div>
 </section>
@@ -114,7 +114,7 @@ in this elementwise math family.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code>-only; throws on <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> streams — see Example 2.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">min_value</span></code>/<code class="docutils literal notranslate"><span class="pre">max_value</span></code> are not validated against each other; passing <code class="docutils literal notranslate"><span class="pre">min_value</span> <span class="pre">&gt;</span> <span class="pre">max_value</span></code> is not checked for here and follows whatever <code class="docutils literal notranslate"><span class="pre">Thread::clip()</span></code> does with an
+<li><p><code class="docutils literal notranslate"><span class="pre">min_value</span></code>/<code class="docutils literal notranslate"><span class="pre">max_value</span></code> are not validated against each other; passing <code class="docutils literal notranslate"><span class="pre">min_value</span> <span class="pre">&gt;</span> <span class="pre">max_value</span></code> is not checked for here and follows whatever <code class="docutils literal notranslate"><span class="pre">Slate::clip()</span></code> does with an
 inverted range — keep them in the expected order to avoid surprising results.</p></li>
 <li><p>The thrown exception’s <code class="docutils literal notranslate"><span class="pre">.what()</span></code> appends a native stack trace after the message text
 shown above; examples here show only the leading message for readability.</p></li>

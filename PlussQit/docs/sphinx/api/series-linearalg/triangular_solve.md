@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::triangular_solve
+# Series::LinearAlgAccessor::triangular_solve
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::triangular_solve(
+Series Series::LinearAlgAccessor::triangular_solve(
     const Series& b, bool upper = true, bool unitriangular = false) const
 Series SeriesLinearAlgProxy::triangular_solve(
     bool upper = true, bool unitriangular = false) const

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_emails
+# Note::NlpAccessor::remove_emails
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_emails() const
+Note Note::NlpAccessor::remove_emails() const
 ```
 
 ## Delete Address-Shaped Email Tokens

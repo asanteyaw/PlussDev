@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 0162c5cfd718 -->
+<!-- pluss-signature-hash: 5aadfd0eeda3 -->
 
 # DataFrame::mod
 
@@ -11,9 +11,9 @@
 DataFrame::mod(double other) const -> DataFrame
 DataFrame::mod(const DataFrame& other) const -> DataFrame
 DataFrame::mod(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::mod(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::mod(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::mod(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::mod(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::mod(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::mod(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrame::mod(const Thread& other, const AlignOptions& options, Axis axis = Axi
 The named-method form of elementwise remainder (modulo). `mod()` shares the exact same
 six-overload shape and alignment rules as [`add()`](add.md) and the rest of the
 arithmetic family — see `add()`'s "What It Does" for the general explanation of the
-scalar/frame/`Thread` operand shapes and the `axis`/`options` parameters. `mod()` is
+scalar/frame/`Slate` operand shapes and the `axis`/`options` parameters. `mod()` is
 the natural companion to [`floordiv()`](floordiv.md): together they satisfy
 `x == divisor * x.floordiv(divisor) + x.mod(divisor)` — every example on this page
 uses the identical dataset and divisors as `floordiv()`'s own examples so the two
@@ -36,9 +36,9 @@ The right-hand operand (the divisor), in one of three shapes:
 - `double`: one scalar divisor, applied to every numeric feature.
 - `const DataFrame&`: another frame supplying one divisor per cell, after the two
   frames are aligned.
-- `const Thread&`: one column of divisors, broadcast according to `axis`.
+- `const Slate&`: one column of divisors, broadcast according to `axis`.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 - `Axis::Feature` (the default): `other` supplies **one divisor per feature** — its
   length must match `nfeatures()`.
@@ -47,7 +47,7 @@ The right-hand operand (the divisor), in one of three shapes:
 
 **options** (`AlignOptions`, optional)
 
-Same meaning as [`add()`](add.md)'s `options` — controls how a `DataFrame`/`Thread`
+Same meaning as [`add()`](add.md)'s `options` — controls how a `DataFrame`/`Slate`
 divisor is aligned before the remainder is computed. Defaults to strict positional
 alignment (`AlignBy::Pos`).
 
@@ -107,11 +107,11 @@ c     | 0      1
 [`floordiv(2.0)`](floordiv.md) also landing on a whole quotient (`5`) for that same
 row with nothing left over.
 
-Example 2. A `Thread` with one divisor per feature (`Axis::Feature`, the default) —
+Example 2. A `Slate` with one divisor per feature (`Axis::Feature`, the default) —
 `total` is taken mod `2`, `extra` mod `3`.
 
 ```cpp
-auto per_feature_divisor = Thread(pluss::make_series({2.0, 3.0}));
+auto per_feature_divisor = Slate(pluss::make_series({2.0, 3.0}));
 auto out = counts.mod(per_feature_divisor);
 std::cout << out;
 ```
@@ -129,12 +129,12 @@ c     | 0      1
 [3 cs x 2 feat]
 ```
 
-Example 3. A `Thread` with one divisor per *case* instead (`Axis::Case`) — row `a`'s
+Example 3. A `Slate` with one divisor per *case* instead (`Axis::Case`) — row `a`'s
 divisor is `2`, row `b`'s is `3`, row `c`'s is `4`, applied across both features in
 that row.
 
 ```cpp
-auto per_case_divisor = Thread(pluss::make_series({2.0, 3.0, 4.0}));
+auto per_case_divisor = Slate(pluss::make_series({2.0, 3.0, 4.0}));
 auto out = counts.mod(per_case_divisor, Axis::Case);
 std::cout << out;
 ```
@@ -157,9 +157,9 @@ overload — a plain positional pairing that ignores both frames' case labels.
 
 ```cpp
 auto divisors = DataFrame({
-    {"col1", Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"col2", Thread(pluss::make_series({4.0, 5.0, 3.0}))},
-}, Thread(pluss::make_note({"x", "y", "z"})));
+    {"col1", Slate(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"col2", Slate(pluss::make_series({4.0, 5.0, 3.0}))},
+}, Slate(pluss::make_note({"x", "y", "z"})));
 std::cout << divisors;
 
 auto out = counts.mod(divisors);
@@ -203,9 +203,9 @@ case label instead of physical position.
 
 ```cpp
 auto divisors_by_label = DataFrame({
-    {"col1", Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"col2", Thread(pluss::make_series({4.0, 5.0, 3.0}))},
-}, Thread(pluss::make_note({"c", "a", "b"})));
+    {"col1", Slate(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"col2", Slate(pluss::make_series({4.0, 5.0, 3.0}))},
+}, Slate(pluss::make_note({"c", "a", "b"})));
 std::cout << divisors_by_label;
 
 auto out = counts.mod(divisors_by_label, AlignOptions{.align = AlignBy::Caselbl});

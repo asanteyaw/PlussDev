@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::ceil
+# Timeline::TimelineIndexAccessor::ceil
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::ceil(std::string_view unit) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::ceil(std::string_view unit) const
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ The target rounding unit.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The rounded axis.
 
 ## Examples
@@ -32,7 +32,7 @@ Example 1. Snap every timestamp up to the containing or next hour boundary.
 
 ```cpp
 auto out = base.ceil("H");
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -55,8 +55,8 @@ auto next_boundaries = base.ceil("H");
 
 ## See Also
 
-- [`TimelineIndexAccessor::floor`](floor.md)
-- [`TimelineIndexAccessor::round`](round.md)
+- [`Timeline::TimelineIndexAccessor::floor`](floor.md)
+- [`Timeline::TimelineIndexAccessor::round`](round.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="asof.html">

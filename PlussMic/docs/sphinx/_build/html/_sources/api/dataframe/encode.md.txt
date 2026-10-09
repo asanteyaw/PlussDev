@@ -47,7 +47,7 @@ was previously missing.
 
 The feature to encode. Must exist on the frame; throws
 `"DataFrame::encode: unknown feature '<name>'"` otherwise. Works on a feature of any
-`Thread` kind (`Series`, `Note`, `Timeline`, `TimeIndex`) — "distinct value" is
+`Slate` kind (`Series`, `Note`, `Timeline`, `TimeIndex`) — "distinct value" is
 determined the same way [`factor()`](factor.md) determines it, not restricted to text.
 
 **mode** (`EncodeMode`, default `OneHot`)
@@ -90,9 +90,9 @@ using namespace pluss::table;
 auto city_valid = pluss::make_series({true, true, true, true, false}, pluss::ScalarType::Bool);
 
 auto customers = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3, 4, 5}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", ""}), city_valid)},
-    {"score", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3, 4, 5}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi", ""}), city_valid)},
+    {"score", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
 });
 std::cout << customers;
 ```

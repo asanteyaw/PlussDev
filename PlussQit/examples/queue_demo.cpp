@@ -52,8 +52,8 @@ int main() {
       "2024-01-15T10:11:12Z",
       "2024-01-16T10:11:12Z",
   });
-  auto qidx = qt1d.invoke("to_timeindex", {true});
-  std::cout << "Type.as_timeindex().size(): " << qidx.as_timeindex().size() << "\n\n";
+  auto qidx = qt1d.timeline().index();
+  std::cout << "Type.timeline().index().size(): " << qidx.size() << "\n\n";
 
   auto mask = pluss::make_series({true, false, true});
   auto lhs = pluss::make_series({10.0, 20.0, 30.0});
@@ -70,12 +70,12 @@ int main() {
   auto n = pluss::make_note({"apple", "banana", "apricot"});
   pluss::args starts_with_args;
   starts_with_args.emplace_back(std::string_view("a"));
-  auto starts_with_a = pluss::dispense_as<std::vector<std::uint8_t>>(
+  auto starts_with_a = pluss::dispense_as<pluss::Note>(
       n, &pluss::Note::starts_with, starts_with_args);
   std::cout << "dispense(Note,&Note::starts_with,args{...}): ["
-            << static_cast<int>(starts_with_a[0]) << ", "
-            << static_cast<int>(starts_with_a[1]) << ", "
-            << static_cast<int>(starts_with_a[2]) << "]\n";
+            << static_cast<int>(starts_with_a.bools()[0]) << ", "
+            << static_cast<int>(starts_with_a.bools()[1]) << ", "
+            << static_cast<int>(starts_with_a.bools()[2]) << "]\n";
 
   auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   pluss::args floor_args;

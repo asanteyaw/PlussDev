@@ -2,7 +2,7 @@
 
 // `pluss::series::*` (series_factory.h) is the primary Series factory
 // surface. `pluss::make_series` is the one flat spelling kept as a permanent
-// shortcut (mirroring the Note, Timeline, and TimeIndex factory families/
+// shortcut (mirroring the Note, Timeline, and Duration factory families/
 // make_duration) for the common construct-from-data case -- every other flat
 // spelling (pluss::zeros, pluss::full, pluss::pile, ...) was a transitional
 // compatibility alias and has been removed now that all internal call sites

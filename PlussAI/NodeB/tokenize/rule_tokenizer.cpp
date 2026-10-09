@@ -104,7 +104,7 @@ void RuleTokenizerStage::load_state_lines(pluss::msharp::RangeView::Of<std::stri
       continue;
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::RuleTokenizerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
+        "nlp::RuleTokenizerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
   }
 }
 

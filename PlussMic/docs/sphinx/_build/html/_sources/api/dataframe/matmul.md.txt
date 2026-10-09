@@ -41,8 +41,8 @@ Example 1. Multiply a 2x2 numeric frame by another 2x2 numeric frame.
 using namespace pluss::table;
 
 auto a = DataFrame({
-    {"x", Thread(pluss::make_series({1.0, 3.0}))},
-    {"y", Thread(pluss::make_series({2.0, 4.0}))},
+    {"x", Slate(pluss::make_series({1.0, 3.0}))},
+    {"y", Slate(pluss::make_series({2.0, 4.0}))},
 });
 std::cout << a;
 ```
@@ -61,8 +61,8 @@ std::cout << a;
 
 ```cpp
 auto b = DataFrame({
-    {"p", Thread(pluss::make_series({5.0, 6.0}))},
-    {"q", Thread(pluss::make_series({7.0, 8.0}))},
+    {"p", Slate(pluss::make_series({5.0, 6.0}))},
+    {"q", Slate(pluss::make_series({7.0, 8.0}))},
 });
 std::cout << b;
 ```

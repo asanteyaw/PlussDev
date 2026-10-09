@@ -14,7 +14,7 @@ returns = """
 see_also = [
   "<a href=\"#cast_series\"><code>DataFrame::cast_series</code></a>: force selected features onto the Series payload family before working numerically.",
   "<a href=\"#cast_note\"><code>DataFrame::cast_note</code></a>: force selected features onto the Note payload family before text-oriented operations.",
-  "<a href=\"thread_api_reference.html#astype\"><code>Thread::astype</code></a>: cast one thread directly outside a frame."
+  "<a href=\"slate_api_reference.html#astype\"><code>Slate::astype</code></a>: cast one slate directly outside a frame."
 ]
 
 notes = [

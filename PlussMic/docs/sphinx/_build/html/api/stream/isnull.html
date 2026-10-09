@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::kind" href="kind.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns a new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype <code class="docutils literal notranslate"><span class="pre">Series</span></code> stream, same length as the receiver, marking which
 rows are <code class="docutils literal notranslate"><span class="pre">NULL</span></code> (validity-masked as invalid, or an unmarked <code class="docutils literal notranslate"><span class="pre">NaN</span></code> in a numeric payload).
-Delegates to <code class="docutils literal notranslate"><span class="pre">Thread::isnull()</span></code>; works uniformly across all four payload kinds — unlike the
+Delegates to <code class="docutils literal notranslate"><span class="pre">Slate::isnull()</span></code>; works uniformly across all four payload kinds — unlike the
 elementwise math family, <code class="docutils literal notranslate"><span class="pre">isnull()</span></code> never throws based on kind.</p>
 </section>
 <section id="parameters">
@@ -119,7 +119,7 @@ label        | value
 <li><p>The result is always <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code>), regardless of the receiver’s own
 kind.</p></li>
 <li><p>In every case tested here, produces the same result as <a class="reference internal" href="invalid.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">invalid()</span></code></span></a> — the
-two call different underlying <code class="docutils literal notranslate"><span class="pre">Thread</span></code> methods but agree in ordinary use.</p></li>
+two call different underlying <code class="docutils literal notranslate"><span class="pre">Slate</span></code> methods but agree in ordinary use.</p></li>
 </ul>
 </section>
 <section id="see-also">

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::math_funcs
+# Note::TexAccessor::math_funcs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::math_funcs() const
+TokenBatch Note::TexAccessor::math_funcs() const
 ```
 
 ## Recognize Function Commands Inside Math

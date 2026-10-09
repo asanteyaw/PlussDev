@@ -34,9 +34,9 @@ Controls how the conversion is done. Omitting it entirely is equivalent to passi
 default-constructed `KindelizePolicy`. Its fields:
 
 - **`attach_labels`** (`bool`, default `true`): when `true`, each `Stream` carries the
-  frame's case-label thread alongside its values. Set `false` to build plain,
+  frame's case-label slate alongside its values. Set `false` to build plain,
   label-less streams instead.
-- **`materialize_label`** (`bool`, default `false`): when `true`, the case-label thread
+- **`materialize_label`** (`bool`, default `false`): when `true`, the case-label slate
   is *also* added as its own additional `Catalog` entry (keyed by `label_key`), rather
   than only being attached to each feature's `Stream`.
 - **`label_key`** (`std::string`, default `"_label"`): the key used for the
@@ -59,10 +59,10 @@ Example 1. Convert a frame into a catalog using the default policy.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"sales", Thread(pluss::make_series({100.0, 150.0, 90.0}))},
-}, Thread(pluss::make_note({"o1", "o2", "o3"})));
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"sales", Slate(pluss::make_series({100.0, 150.0, 90.0}))},
+}, Slate(pluss::make_note({"o1", "o2", "o3"})));
 std::cout << orders;
 ```
 
@@ -99,7 +99,7 @@ sales: 3 cases
 Each of the three features becomes its own catalog entry, keyed by its original
 feature name, and each `Stream` carries `orders`'s three cases with it.
 
-Example 2. Materialize the case-label thread as its own catalog entry.
+Example 2. Materialize the case-label slate as its own catalog entry.
 
 ```cpp
 pluss::kindle::KindelizePolicy policy;
@@ -118,7 +118,7 @@ true
 ```
 
 With `materialize_label = true`, a fourth entry appears — keyed `"_label"` by default
-— holding the case-label thread (`o1, o2, o3`) as a stream in its own right, in
+— holding the case-label slate (`o1, o2, o3`) as a stream in its own right, in
 addition to it already being attached to `id`, `city`, and `sales`'s individual
 streams.
 
@@ -138,7 +138,7 @@ streams.
 - [`Catalog::tabelize`](../catalog/tabelize.md): the reverse conversion, from `Catalog`
   back to `DataFrame`.
 - [`DataFrame::features`](features.md): the plain, in-frame way to pull out a single
-  feature as a `Thread`, without leaving the `DataFrame` representation at all.
+  feature as a `Slate`, without leaving the `DataFrame` representation at all.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="join.html">

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e10f433535cc -->
+<!-- pluss-signature-hash: 8b399e8f5c1d -->
 
 # Slot::cast
 
@@ -9,7 +9,7 @@
 
 ```cpp
 SlotCastAccessor Slot::cast() const
-SlotCastAccessor Slot::cast(const pluss::table::ThreadCastOptions& options) const
+SlotCastAccessor Slot::cast(const pluss::table::SlateCastOptions& options) const
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ same regardless of how many values the slot holds, including exactly one
 
 ## Parameters
 
-**options** (`pluss::table::ThreadCastOptions`, optional)
+**options** (`pluss::table::SlateCastOptions`, optional)
     `series_dtype` (default `std::nullopt`, meaning "infer"), `format`
     (a parse pattern for text-to-datetime casts), and `invalid` (how to
     handle unparseable input — `ParseInvalid::Raise` by default).
@@ -54,7 +54,7 @@ Example 2. Pass `options` to force a specific target dtype.
 
 ```cpp
 auto slot = pluss::scribble::Slot({pluss::make_note("1"), pluss::make_note("2")});
-pluss::table::ThreadCastOptions options;
+pluss::table::SlateCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Float64;
 auto out = slot.cast(options).series();
 std::cout << std::get<pluss::Series>(out.at(0)).to_vec<double>()[0];

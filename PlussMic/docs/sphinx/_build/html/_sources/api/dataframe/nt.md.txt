@@ -48,8 +48,8 @@ Example 1. Lowercase a text feature — after selecting it first.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",   Thread(pluss::make_series({1, 2, 3}))},
-    {"city", Thread(pluss::make_note({"Accra", "TEMA", "Kumasi"}))},
+    {"id",   Slate(pluss::make_series({1, 2, 3}))},
+    {"city", Slate(pluss::make_note({"Accra", "TEMA", "Kumasi"}))},
 });
 std::cout << orders;
 ```

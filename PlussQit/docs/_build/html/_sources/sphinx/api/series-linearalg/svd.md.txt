@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::svd
+# Series::LinearAlgAccessor::svd
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-SvdDecomposition SeriesLinearAlgAccessor::svd(bool full_matrices = true) const
+SvdDecomposition Series::LinearAlgAccessor::svd(bool full_matrices = true) const
 SvdDecomposition SeriesLinearAlgProxy::svd(bool full_matrices = true) const
 ```
 
@@ -37,7 +37,7 @@ The two signatures do not perform different decompositions. They describe two
 ways the accessor machinery reaches the same unary operation:
 
 ```cpp
-auto direct = matrix.linearalg.svd(false);    // SeriesLinearAlgAccessor
+auto direct = matrix.linearalg.svd(false);    // Series::LinearAlgAccessor
 auto proxied = matrix.linearalg().svd(false); // SeriesLinearAlgProxy
 ```
 

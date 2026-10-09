@@ -519,28 +519,35 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Queue& q) {
-  auto write_wrapped = [&](std::string_view kind, std::string_view payload_prefix, const auto& payload) {
+  auto write_wrapped = [&](std::string_view kind, const auto& payload) {
     std::ostringstream tmp;
     tmp << payload;
     std::string body = tmp.str();
-    if (body.rfind(std::string(payload_prefix), 0) == 0) {
-      body.erase(0, payload_prefix.size());
+    // Series::operator<< deliberately qualifies itself with a "pluss::"
+    // namespace prefix (see CodeM/core/Printing.cpp); Note/Timeline/Duration's
+    // own operator<< do not. Strip whichever form is actually present so the
+    // kind name is never printed twice.
+    const std::string qualified_prefix = "pluss::" + std::string(kind);
+    if (body.rfind(qualified_prefix, 0) == 0) {
+      body.erase(0, qualified_prefix.size());
+    } else if (body.rfind(std::string(kind), 0) == 0) {
+      body.erase(0, kind.size());
     }
     os << "Queue<" << kind << ">" << body;
   };
 
   switch (q.kind()) {
     case Queue::Kind::Series:
-      write_wrapped("Series", "Series", q.series());
+      write_wrapped("Series", q.series());
       break;
     case Queue::Kind::Note:
-      write_wrapped("Note", "Note", q.note());
+      write_wrapped("Note", q.note());
       break;
     case Queue::Kind::Timeline:
-      write_wrapped("Timeline", "Timeline", q.timeline());
+      write_wrapped("Timeline", q.timeline());
       break;
     case Queue::Kind::Duration:
-      write_wrapped("Duration", "Duration", q.duration());
+      write_wrapped("Duration", q.duration());
       break;
   }
   return os;

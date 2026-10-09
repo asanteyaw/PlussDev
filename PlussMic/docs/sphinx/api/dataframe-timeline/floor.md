@@ -38,7 +38,7 @@ Example 1. Floor every row of a `Timeline` feature to the nearest hour.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T09:47:12Z",
           "2024-06-01T14:05:00Z",
       }))}});
@@ -82,7 +82,7 @@ Example 2. Floor a sub-second timestamp to the nearest whole second with
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T14:05:00.750000000Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:00.750000000Z"}))}});
 std::cout << events;
 
 auto out = events.tl().floor("S");
@@ -120,7 +120,7 @@ Example 3. Floor to the nearest minute with `"min"`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T14:05:47Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:47Z"}))}});
 std::cout << events;
 
 auto out = events.tl().floor("min");
@@ -159,7 +159,7 @@ dates.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T14:05:00Z",
           "2024-06-02T23:59:59Z",
       }))}});
@@ -204,7 +204,7 @@ to see that `"D"` aligns to **local** midnight, not UTC midnight.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-15T03:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-15T03:00:00Z"}))}});
 
 auto local = events.tl().tz("America/New_York");
 std::cout << local;
@@ -247,7 +247,7 @@ Example 6. Pass an unsupported unit to see the call throw.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
 
 try {
   auto out = events.tl().floor("week");

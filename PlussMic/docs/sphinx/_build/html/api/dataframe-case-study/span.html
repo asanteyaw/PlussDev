@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameCaseStudyAccessor::take" href="take.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1d5fa29f2728 -->
+<!-- pluss-signature-hash: b82f4722ff8e -->
 <section id="dataframecasestudyaccessor-span">
 <h1>DataFrameCaseStudyAccessor::span<a class="headerlink" href="#dataframecasestudyaccessor-span" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_case_study_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameCaseStudyAccessor API Reference</span></a></p>
@@ -46,7 +46,7 @@
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
-<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">span</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">stop</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -62,17 +62,17 @@ its first occurrence, while a repeated stop extends through its last occurrence.
 the stop lies before the start, the result is an empty frame. If either endpoint is
 absent, the call fails rather than guessing an insertion position.</p>
 <p>The numeric overloads format keys exactly as public numeric case labels are rendered.
-The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload accepts one scalar value per endpoint and is useful when bounds
-already come from table operations; each endpoint Thread must be defined, strictly 1D,
+The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload accepts one scalar value per endpoint and is useful when bounds
+already come from table operations; each endpoint Slate must be defined, strictly 1D,
 and contain exactly one value.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>start</strong> / <strong>stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code> / <code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)
+<p><strong>start</strong> / <strong>stop</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> / <code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code> / <code class="docutils literal notranslate"><span class="pre">double</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
 The inclusive interval endpoints, in the case axis’s own key representation. The
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload requires each argument to be a defined, 1D, single-element
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload requires each argument to be a defined, 1D, single-element
 thread (<code class="docutils literal notranslate"><span class="pre">pluss::make_note({&quot;X&quot;})</span></code>, not the scalar <code class="docutils literal notranslate"><span class="pre">pluss::make_note(&quot;X&quot;)</span></code> — the
-latter constructs a 0D payload that <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own constructor rejects).</p>
+latter constructs a 0D payload that <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own constructor rejects).</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -85,8 +85,8 @@ with the original feature schema rather than throwing.</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. A plain label interval; both endpoints are included.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;v&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))}})</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;v&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))}})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;D&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">span</span><span class="p">(</span><span class="s">&quot;B&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">window</span><span class="p">;</span>
@@ -123,8 +123,8 @@ B    | 3
 </pre></div>
 </div>
 <p>Example 3. Numeric labels can be passed without first converting them to strings.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;v&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="p">}))}})</span>
-<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">})));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;v&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="p">}))}})</span>
+<span class="w">    </span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">})));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbered</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">span</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">numeric</span><span class="p">;</span>
 </pre></div>
@@ -144,8 +144,8 @@ B    | 3
 <p>Example 4. Scalar Threads let computed bounds flow into the selection without leaving
 the PlussMic value system. Each endpoint must be a strictly 1D, single-element Note —
 constructed with a one-element initializer list, not the bare-scalar overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="w"> </span><span class="n">begin</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">}));</span>
-<span class="n">Thread</span><span class="w"> </span><span class="n">end</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;C&quot;</span><span class="p">}));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="w"> </span><span class="n">begin</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">}));</span>
+<span class="n">Slate</span><span class="w"> </span><span class="n">end</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;C&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">computed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">span</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;v&quot;</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">computed</span><span class="p">;</span>
 </pre></div>
@@ -202,9 +202,9 @@ physical rows fall “between” the endpoints.</p></li>
 of guessing an insertion position — the two failure modes are deliberately
 different.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pluss::make_note(&quot;X&quot;)</span></code> (a single string argument, no braces) constructs a scalar
-(0D) Note. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload’s endpoints require a strictly 1D payload, so use
+(0D) Note. The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload’s endpoints require a strictly 1D payload, so use
 <code class="docutils literal notranslate"><span class="pre">pluss::make_note({&quot;X&quot;})</span></code> instead — a one-element initializer list — when building a
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> endpoint directly.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> endpoint directly.</p></li>
 </ul>
 </section>
 <section id="choosing-between-span-and-slice">

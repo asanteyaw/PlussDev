@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 0b4dd2b90555 -->
 # `pluss::ai::ice::Callback::load_state`
 
 [Back to `pluss::ai::ice::Callback`](../Callback.md)
@@ -8,54 +7,66 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+virtual void pluss::ai::ice::Callback::load_state(const std::unordered_map<std::string, std::string>& state);
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Restores this callback's own state from the map
+[`save_state`](save_state.md) previously produced. `Coach::learn` calls
+this once per callback, for every callback whose
+[`state_key`](state_key.md) is non-empty and present in the resumed
+checkpoint's own stored state, right after the checkpoint file is read
+-- before [`on_checkpoint_load`](on_checkpoint_load.md) fires. The
+default implementation does nothing. An override only needs to parse
+back whatever `save_state` wrote; the map's values are always plain
+strings regardless of a field's real type.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`const std::unordered_map<std::string, std::string>& state`
+: The same map this callback's own `save_state` produced on a previous
+  run, read back from the checkpoint.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`void`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None from the base class; an override that mis-parses a value (for
+example `std::stoi` on malformed text) throws whatever that parse
+itself throws.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the default no-op accepting arbitrary data safely, a
+custom override restoring a member from a hand-built map, and this
+method actually called by `Coach::learn` on a real checkpoint resume.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <unordered_map>
+
+namespace {
+
+class PlainCallback final : public pluss::ai::ice::Callback {};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  PlainCallback callback;
+  const std::unordered_map<std::string, std::string> some_state{{"count", "42"}};
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  // The default implementation ignores whatever is passed -- there is
+  // nothing to restore and no observable effect.
+  callback.load_state(some_state);
+  std::cout << "load_state() on the default implementation has no observable effect\n";
 
   return 0;
 }
@@ -64,27 +75,38 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+load_state() on the default implementation has no observable effect
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <string>
+#include <unordered_map>
+
+namespace {
+
+class EpochCounterCallback final : public pluss::ai::ice::Callback {
+ public:
+  int count = 0;
+  void load_state(const std::unordered_map<std::string, std::string>& state) override {
+    const auto it = state.find("count");
+    if (it != state.end()) count = std::stoi(it->second);
+  }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  EpochCounterCallback callback;
+  std::cout << "before: count = " << callback.count << "\n";
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  callback.load_state({{"count", "7"}});
+  std::cout << "after:  count = " << callback.count << "\n";
 
   return 0;
 }
@@ -93,27 +115,84 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+before: count = 0
+after:  count = 7
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+`Coach::learn` calls `load_state` itself during a checkpoint resume --
+here it is what lets a *fresh* `EpochCounterCallback` instance, added
+to a new `Coach`, pick its count back up from the first run's final
+value instead of starting over at `0`.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+#include <string>
+#include <unordered_map>
+
+namespace {
+
+class EpochCounterCallback final : public pluss::ai::ice::Callback {
+ public:
+  int count = 0;
+
+  std::string state_key() const override { return "epoch_counter"; }
+
+  std::unordered_map<std::string, std::string> save_state() const override {
+    return {{"count", std::to_string(count)}};
+  }
+
+  void load_state(const std::unordered_map<std::string, std::string>& state) override {
+    const auto it = state.find("count");
+    if (it != state.end()) count = std::stoi(it->second);
+  }
+
+  void on_epoch_end(pluss::ai::ice::RunState&) override { ++count; }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions save_options{};
+  save_options.execution.max_epochs = 2;
+  save_options.learning_rate = 0.1;
+  save_options.validation.split_ratio = 0.0;
+  save_options.checkpoint.enabled = true;
+  save_options.checkpoint.save_last = true;
+  save_options.checkpoint.dirpath = "./ice_checkpoint_demo";
+  save_options.checkpoint.filename = "demo";
+
+  const auto first_counter = std::make_shared<EpochCounterCallback>();
+  ice::Coach save_coach(save_options);
+  save_coach.add_callback(first_counter);
+  save_coach.learn(model, x, y);
+  std::cout << "first run: count = " << first_counter->count << "\n";
+
+  ice::Outline resumed_model(nn::Fusion(2, 1));
+  ice::TrainOptions resume_options = save_options;
+  resume_options.execution.max_epochs = 3;
+  resume_options.checkpoint.resume_from = "./ice_checkpoint_demo/demo-last.ckpt";
+
+  const auto resumed_counter = std::make_shared<EpochCounterCallback>();
+  std::cout << "fresh instance before resume: count = " << resumed_counter->count << "\n";
+
+  ice::Coach resume_coach(resume_options);
+  resume_coach.add_callback(resumed_counter);
+  resume_coach.learn(resumed_model, x, y);
+  std::cout << "after resumed run: count = " << resumed_counter->count << "\n";
 
   return 0;
 }
@@ -122,12 +201,21 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+first run: count = 2
+fresh instance before resume: count = 0
+after resumed run: count = 3
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`save_state`](save_state.md) -- what produces the map this restores
+  from.
+- [`on_checkpoint_load`](on_checkpoint_load.md) -- fires right after
+  this, once per resumed callback.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

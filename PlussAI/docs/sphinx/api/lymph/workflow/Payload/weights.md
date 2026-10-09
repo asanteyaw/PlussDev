@@ -23,6 +23,10 @@ bool lymph::workflow::Payload::has_weight_feature() const;    // true after weig
 bool lymph::workflow::Payload::has_external_weights() const;  // true after weights(Series)
 ```
 
+## What It Does
+
+`weights` attaches a per-row weight that scales each row's contribution to the loss. It takes a column name or a separate series. A frame-backed payload must use the column form, so that row filtering keeps the weights aligned with the rows.
+
 ## Parameters
 
 `std::string feature_name`
@@ -68,16 +72,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"balance", Thread(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
-      {"row_weight", Thread(pluss::make_series({1.0, 1.0, 1.0, 3.0, 3.0, 3.0}, {6}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"row_weight", Slate(pluss::make_series({1.0, 1.0, 1.0, 3.0, 3.0, 3.0}, {6}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
   });
 
   const workflow::Payload payload = workflow::payload::make(raw)
@@ -126,14 +130,14 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"balance", Thread(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
   const pluss::Series w = pluss::make_series({1.0, 1.0, 1.0, 3.0, 3.0, 3.0}, {6}, f64);
@@ -180,15 +184,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
-      {"balance", Thread(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6, 3.0}, {6}, f64))},
+      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9, 2.2}, {6}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
   });
   const pluss::Series w = pluss::make_series({1.0, 1.0, 1.0, 3.0, 3.0, 3.0}, {6}, f64);
 

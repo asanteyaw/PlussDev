@@ -14,7 +14,7 @@ Stream::sum() const -> Stream
 ## What It Does
 
 Returns the sum of a `Series`-kind stream's values, as a one-element `Stream` —
-`NULL`-marked rows are excluded from the computation. Delegates to `Thread::sum()`, so it's
+`NULL`-marked rows are excluded from the computation. Delegates to `Slate::sum()`, so it's
 `Series`-only, same as [`mean()`](mean.md)/[`min()`](min.md)/[`max()`](max.md)/
 [`var()`](var.md)/[`std()`](std.md).
 
@@ -68,7 +68,7 @@ try {
 ### Output
 
 ```text
-Thread::sum is only valid for Series payload
+Slate::sum is only valid for Series payload
 ```
 
 ## Notes

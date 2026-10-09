@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::log" href="log.html" />
@@ -42,7 +42,7 @@
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesLinearAlgAccessor</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">LinearAlgAccessor</span>
 
 <span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span>
 <span class="n">Series</span><span class="o">::</span><span class="n">linearalg</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span>
@@ -95,7 +95,7 @@ Binding a peer does not reverse the order.</p>
 </div>
 <p>The complete accessor surface is documented: products, norms, determinants,
 matrix transformations, factorizations, and structured or general solves.</p>
-<p>Use the <a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">SeriesLinearAlgAccessor API Reference</span></a>
+<p>Use the <a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">Series::LinearAlgAccessor API Reference</span></a>
 as the landing page for this family. Each accessor method is documented there
 on its own page:</p>
 <ul class="simple">
@@ -130,7 +130,7 @@ on its own page:</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor</span></code> or <code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgProxy</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor</span></code> or <code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgProxy</span></code>
 A lightweight method-selection object bound to the owning <code class="docutils literal notranslate"><span class="pre">Series</span></code>, and
 optionally to a peer <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Accessing `linearalg` does not copy numeric data and does not mutate the
@@ -178,13 +178,13 @@ decomposition requirements.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">SeriesLinearAlgAccessor API Reference</span></a></p></li>
-<li><p><a class="reference internal" href="../series-linearalg/matmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::matmul</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::dot</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="../series-linearalg/det.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::det</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="../series-linearalg/inverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::inverse</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="../series-linearalg/matrix_exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::matrix_exp</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="../series-linearalg/pinverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::pinverse</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">Series::LinearAlgAccessor API Reference</span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/matmul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::matmul</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::dot</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/det.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::det</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/inverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::inverse</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/matrix_exp.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::matrix_exp</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="../series-linearalg/pinverse.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::pinverse</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lgamma.html">
@@ -193,7 +193,7 @@ decomposition requirements.</p></li>
   </a>
   <a class="next-link" href="../../series_linearalg_accessor_api_reference.html">
     <span class="label">Next</span>
-    <span class="title">SeriesLinearAlgAccessor</span>
+    <span class="title">Series::LinearAlgAccessor</span>
   </a>
 </div>
 </section>
@@ -232,7 +232,6 @@ decomposition requirements.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -240,8 +239,8 @@ decomposition requirements.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

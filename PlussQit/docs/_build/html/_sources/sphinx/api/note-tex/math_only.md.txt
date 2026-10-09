@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::math_only
+# Note::TexAccessor::math_only
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::math_only() const
+Note Note::TexAccessor::math_only() const
 ```
 
 ## Project Each Cell Onto Its Authored Formulae

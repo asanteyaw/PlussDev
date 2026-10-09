@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-NoteNlpAccessor Note::nlp() const noexcept
+Note::NlpAccessor Note::nlp() const noexcept
 ```
 
 ## Enter The Linguistic Operation Surface

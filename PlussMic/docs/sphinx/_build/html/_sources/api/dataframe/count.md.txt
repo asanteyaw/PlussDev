@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 2a54e871b92a -->
+<!-- pluss-signature-hash: 92eb84b065e5 -->
 
 # DataFrame::count
 
@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-DataFrame::count(Axis axis = Axis::Case) const -> Thread
+DataFrame::count(Axis axis = Axis::Case) const -> Slate
 ```
 
 ## What It Does
 
-Counts non-missing entries along the requested axis and returns one `Thread` of
+Counts non-missing entries along the requested axis and returns one `Slate` of
 `Int64` counts. Unlike [`sum()`](sum.md), [`mean()`](mean.md), and the other numeric
 reducers, `count()` does not skip non-numeric features — every feature in the frame
 participates, because counting present-vs-missing cells doesn't require numeric
@@ -31,7 +31,7 @@ case — how many of that row's cells (across every feature) are non-null.
 
 ## Returns
 
-`Thread`
+`Slate`
     One `Int64` entry per feature (`Axis::Case`) or per case (`Axis::Feature`),
     holding the number of non-missing cells counted.
 
@@ -43,10 +43,10 @@ Example 1. Count non-missing cells per feature, the default axis.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto counts = orders.count();
@@ -116,11 +116,11 @@ Example 3. `count()` includes non-numeric features — unlike `sum()` or `mean()
 ```cpp
 auto status_valid = pluss::make_series({true, true, true, true, false, true}, pluss::ScalarType::Bool);
 auto orders_status = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
-    {"status",     Thread(pluss::make_note({"shipped", "shipped", "shipped", "shipped", "", "shipped"}), status_valid)},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"status",     Slate(pluss::make_note({"shipped", "shipped", "shipped", "shipped", "", "shipped"}), status_valid)},
 });
 
 auto counts_all = orders_status.count();

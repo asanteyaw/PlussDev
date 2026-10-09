@@ -1,0 +1,622 @@
+# apiref_manifest_nlp.toml -- the `pluss::ai::nlp` public framework.
+# `nlp` is the public alias for PlussAI's text/NLP engine, internally named
+# `nodeb` (see PlussAI/NodeB/NODEB_BLUEPRINT.md for the full design
+# rationale -- `namespace nlp = ::pluss::ai::nodeb;` in
+# PlussAI/include/pluss/ai/nlp.h is the exact alias). Drive the toolchain at
+# this file with
+#   python3 apiref.py <cmd> --manifest apiref_manifest_nlp.toml
+#
+# Organized by category (core/workflow/tasks/vectorize/embed/runtime/
+# registry/resources/io), matching ice/procedure's own precedent (nlp is not
+# family-based like classic/lymph). Locked order rationale: core first,
+# since every later category's signatures reference Doc/Token/Span/Lexicon/
+# IStage; workflow next, the central orchestrator built directly on core;
+# tasks next, the stage catalog Workflow composes; vectorize and embed next,
+# two independent, ready-made feature/embedding tools built on core alone
+# (vectorize bridges to classic's classical-ML feature types; embed is
+# self-contained deep NLP); runtime next, the lower-level NodeK-backed
+# sequence-building escape hatch the Sequence-backend tasks and
+# ContextualEmbedder use internally, for a caller who wants to build a
+# custom sequence head directly; registry/resources/io close the reference
+# because all three describe mechanisms other categories already depend on
+# (custom stage registration, language-asset lookup, the Workflow save/load
+# binary format) rather than new primary surface of their own.
+#
+# Two things worth flagging up front:
+#   - `nodeb.h`'s own headers spell every type with the internal `nodeb`
+#     name; public prose and every signature in this reference use the
+#     confirmed public alias `pluss::ai::nlp` instead, and never repeat the
+#     literal word "nodeb" anywhere (lint enforces this as a forbidden
+#     term). The one exception is `classic::*` types `vectorize`/`embed`/
+#     `runtime` borrow by value (`Status`/`StatusOr`/`FeatureBatch`/
+#     `SparseTripletMatrix`/`LexiconMapper`/`HashMapper`/...) -- those are
+#     genuinely `pluss::ai::classic`'s own public surface (the public alias
+#     for the internal `nodej` name), confirmed via
+#     `namespace classic = ::pluss::ai::nodej;` in `PlussAI/include/pluss/
+#     ai/ml.h`, and are presented as `classic::*` throughout.
+#   - Every `pluss::msharp::RangeView::Of<T>` parameter in the raw headers
+#     is presented as the public spelling `pluss::RangeView<T>` instead,
+#     per the standing doc-standards rule against leaking
+#     `pluss::msharp::rangeview` into public docs.
+#
+# Hub-vs-self-contained choices (per the lymph doc standards' own
+# distinction): `Doc`, `Lexicon`, `IStage`, `Workflow`, `Mapper`, `Hasher`,
+# `Embedder`, `ContextualEmbedder`, `Indexer`, `EmbeddingTable`,
+# `TransformerTextEncoder`, `LstmTextEncoder`, and `StageRegistry` are hubs
+# (substantial, directly-called public surface -- `methods` non-empty, one
+# page per method, each held to the full 3-example-minimum). `TextPool`,
+# `MorphBank`, and `SequenceBatch` are self-contained (minor utility
+# surface, `methods = []`, folded onto one page as `## Methods`
+# subsections). The 8 stage classes in `tasks` (`RuleTokenizerStage`,
+# `SentencizerStage`, `LemmatizerStage`, `MatcherStage`, `TaggerStage`,
+# `SyntaxStage`, `NerStage`, `TextCatStage`) are also self-contained --
+# each one's own page covers construction (via its `stage::` factory),
+# its options, and worked `apply`/`learn`/persistence examples as prose
+# sections, rather than exploding into near-duplicate per-method pages
+# across all eight.
+
+[framework.nlp]
+title = "nlp"
+summary = "PlussAI text/NLP engine: pipeline-first document processing, a stage catalog, classical and deep text vectorization, and neural embedding and sequence tooling built on nn."
+include = "<pluss/nlp.h>"
+header = "PlussAI"
+
+# ===========================================================================
+#  FAMILIES
+# ===========================================================================
+
+[[family]]
+path = "nlp/core"
+page = "api/nlp/core.md"
+title = "core"
+maxdepth = 2
+children = ["core/Introduction", "core/Doc", "core/Span", "core/Token", "core/Morphology", "core/Lexeme", "core/TextPool", "core/MorphBank", "core/Lexicon", "core/IStage"]
+
+[[family]]
+path = "nlp/workflow"
+page = "api/nlp/workflow.md"
+title = "workflow"
+maxdepth = 2
+children = ["workflow/Introduction", "workflow/Workflow", "workflow/WorkflowReport"]
+
+[[family]]
+path = "nlp/tasks"
+page = "api/nlp/tasks.md"
+title = "tasks"
+maxdepth = 2
+children = ["tasks/Introduction", "tasks/assess_ner", "tasks/assess_tagger", "tasks/EntityPattern", "tasks/EntityScore", "tasks/LemmatizerStage", "tasks/MatcherPattern", "tasks/MatcherStage", "tasks/NerStage", "tasks/RuleTokenizerStage", "tasks/SentencizerStage", "tasks/SyntaxStage", "tasks/TaggerStage", "tasks/TagScore", "tasks/TextCatStage", "tasks/TrainingReport"]
+
+[[family]]
+path = "nlp/vectorize"
+page = "api/nlp/vectorize.md"
+title = "vectorize"
+maxdepth = 2
+children = ["vectorize/Introduction", "vectorize/DocMapOptions", "vectorize/CorpusStats", "vectorize/Mapper", "vectorize/Hasher", "vectorize/describe"]
+
+[[family]]
+path = "nlp/embed"
+page = "api/nlp/embed.md"
+title = "embed"
+maxdepth = 2
+children = ["embed/Introduction", "embed/ContextualEmbedOptions", "embed/ContextualEmbedder", "embed/EmbedOptions", "embed/Embedder", "embed/GenerateOptions"]
+
+[[family]]
+path = "nlp/runtime"
+page = "api/nlp/runtime.md"
+title = "runtime"
+maxdepth = 2
+children = ["runtime/Introduction", "runtime/SequenceOptions", "runtime/SequenceBatch", "runtime/Indexer", "runtime/EmbeddingOptions", "runtime/EmbeddingTable", "runtime/TransformerTextEncoder", "runtime/LstmTextEncoder", "runtime/mean_pool", "runtime/last_pool"]
+
+[[family]]
+path = "nlp/registry"
+page = "api/nlp/registry.md"
+title = "registry"
+maxdepth = 2
+children = ["registry/Introduction", "registry/StageRegistry"]
+
+[[family]]
+path = "nlp/resources"
+page = "api/nlp/resources.md"
+title = "resources"
+maxdepth = 2
+children = ["resources/Introduction", "resources/LemmaRule", "resources/TokenMergeRule", "resources/LanguagePack", "resources/pack", "resources/available_languages", "resources/parse_language_code", "resources/language_code", "resources/language_name", "resources/is_abbreviation", "resources/is_title", "resources/lookup_lemma", "resources/try_merge_token_exception"]
+
+[[family]]
+path = "nlp/io"
+page = "api/nlp/io.md"
+title = "io"
+maxdepth = 2
+children = ["io/Introduction", "io/write_workflow", "io/read_workflow"]
+
+# ===========================================================================
+#  SYMBOLS
+# ===========================================================================
+
+# --- core ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::Doc"
+kind = "class"
+family = "nlp/core"
+page = "api/nlp/core/Doc.md"
+summary = "One processed document: raw text plus every annotation layer a Workflow's stages add -- tokens, sentences, phrases, matches, entities, and (for a textcat-bearing pipeline) a predicted label or label set."
+methods = ["ensure_lexicon", "maybe_lexicon", "token_texts", "lemma_texts", "sentence_texts", "phrase_texts", "match_texts", "entity_texts", "children_of", "lineage_of", "branch_of", "left_edge_of", "right_edge_of"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::Span"
+kind = "class"
+family = "nlp/core"
+page = "api/nlp/core/Span.md"
+summary = "A labeled token range inside a Doc -- the shared shape behind sentences, phrases, matches, and entities."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::Token"
+kind = "options"
+family = "nlp/core"
+page = "api/nlp/core/Token.md"
+summary = "One token's full annotation: its character/string-id fields, surface/lemma/pos/role/entity-label strings, punctuation/sentence-boundary/spacing flags, and its own Morphology."
+fields = ["index", "char_start", "char_end", "chief", "orth_id", "lower_id", "norm_id", "prefix_id", "suffix_id", "lemma_id", "morphology_id", "orth", "lemma", "pos", "role", "entity_label", "is_punct", "sentence_start", "sentence_end", "space_after", "morphology"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::Morphology"
+kind = "options"
+family = "nlp/core"
+page = "api/nlp/core/Morphology.md"
+summary = "A token's or lexeme's cached shape/casing/character-class analysis, computed once at tokenization time -- casing, token kind, length, ASCII/alpha/digit/hyphen/apostrophe flags, and normalized/shape/prefix/suffix string forms."
+fields = ["casing", "kind", "length", "is_ascii", "has_alpha", "has_digit", "has_hyphen", "has_apostrophe", "is_titlecase", "is_uppercase", "is_lowercase", "is_number_like", "is_url", "is_email", "is_punct", "norm", "shape", "prefix", "suffix", "spec"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::Lexeme"
+kind = "options"
+family = "nlp/core"
+page = "api/nlp/core/Lexeme.md"
+summary = "The type-level (not occurrence-level) record a Lexicon keeps for one distinct surface form: its interned string ids, surface/lower/lemma/norm/prefix/suffix text, and its own Morphology."
+fields = ["id", "lower_id", "norm_id", "prefix_id", "suffix_id", "morphology_id", "text", "lower", "lemma", "norm", "prefix", "suffix", "morphology"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::TextPool"
+kind = "class"
+family = "nlp/core"
+page = "api/nlp/core/TextPool.md"
+summary = "A deterministic string-interning table: every distinct string a Lexicon sees is stored once and addressed afterward by a stable StringId."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::MorphBank"
+kind = "class"
+family = "nlp/core"
+page = "api/nlp/core/MorphBank.md"
+summary = "The Morphology-side counterpart to TextPool: deduplicates and interns Morphology records by StringId, attached to the same TextPool a Lexicon uses for its own text interning."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::Lexicon"
+kind = "class"
+family = "nlp/core"
+page = "api/nlp/core/Lexicon.md"
+summary = "Per-Doc (by default) type-level lexical state: interns strings and Morphology records, and tracks one Lexeme per distinct surface form observed so far."
+methods = ["intern", "lookup", "text", "observe", "find", "intern_morphology", "find_morphology", "size", "texts", "morphs", "clear"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::IStage"
+kind = "class"
+family = "nlp/core"
+page = "api/nlp/core/IStage.md"
+summary = "The contract every pipeline stage implements: apply() to transform a Doc, optional learn() for a trainable stage, and dump_state_lines()/load_state_lines() for persistence -- what a Workflow actually calls, and what a custom stage must provide to participate."
+methods = ["apply", "dump_state_lines", "learn", "load_state_lines", "name"]
+
+# --- workflow ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::Workflow"
+kind = "class"
+family = "nlp/workflow"
+page = "api/nlp/workflow/Workflow.md"
+summary = "The central pipeline object: an ordered stage list plus learn/infer/assess/save/load, run against raw text, a pluss::Note of text, or already-tokenized Docs."
+methods = ["append_stage", "learn", "infer", "assess", "save", "load"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::WorkflowReport"
+kind = "options"
+family = "nlp/workflow"
+page = "api/nlp/workflow/WorkflowReport.md"
+summary = "What Workflow::assess returns: corpus-level counts (documents, tokens, sentences) and their per-document means -- a pipeline-health summary, not a task-specific accuracy score."
+fields = ["doc_count", "token_count", "sentence_count", "mean_tokens_per_doc", "mean_sentences_per_doc"]
+
+# --- tasks ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::RuleTokenizerStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/RuleTokenizerStage.md"
+summary = "The pipeline's entry stage: splits raw text into tokens via rule-based (not learned) segmentation, honoring language-specific exceptions."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::SentencizerStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/SentencizerStage.md"
+summary = "Marks sentence boundaries over already-tokenized text via punctuation/newline rules and language-specific abbreviation lists."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::LemmatizerStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/LemmatizerStage.md"
+summary = "Fills each token's lemma via rule/lookup lemmatization, with a language-specific lookup table and a same-as-surface fallback."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::MatcherPattern"
+kind = "options"
+family = "nlp/tasks"
+page = "api/nlp/tasks/MatcherPattern.md"
+summary = "One rule the MatcherStage looks for: a label plus an ordered token sequence, matched on lemma or surface form."
+fields = ["label", "tokens", "use_lemmas"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::MatcherStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/MatcherStage.md"
+summary = "Rule-based phrase matching: scans a Doc for every registered MatcherPattern and records each hit as a labeled Span in Doc::matches."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::TaggerStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/TaggerStage.md"
+summary = "Part-of-speech tagging, either heuristic (rule-based, no training needed) or trainable, with a classical or sequence-model backend selectable via TaggerOptions."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::SyntaxStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/SyntaxStage.md"
+summary = "A dependency-style syntax baseline: assigns each token a head and role, from which Doc::children_of/lineage_of/branch_of derive subtree structure."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::EntityPattern"
+kind = "options"
+family = "nlp/tasks"
+page = "api/nlp/tasks/EntityPattern.md"
+summary = "One independently typed entity rule: a label plus an ordered token sequence, used to seed NerStage alongside its learned and heuristic paths."
+fields = ["label", "tokens", "use_lemmas"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::NerStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/NerStage.md"
+summary = "Named-entity recognition: rule-based pattern matching, a trainable path, or both together, with a classical or sequence-model backend selectable via NerOptions."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::TextCatStage"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/TextCatStage.md"
+summary = "Single- or multi-label text classification, trained from labeled Docs, with a classical (tf-idf + linear) or sequence-model backend selectable via TextCatOptions."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::TagScore"
+kind = "options"
+family = "nlp/tasks"
+page = "api/nlp/tasks/TagScore.md"
+summary = "What assess::tagger returns: token-level tagging accuracy over a predicted/gold Doc pair."
+fields = ["doc_count", "token_count", "correct_count", "accuracy"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::EntityScore"
+kind = "options"
+family = "nlp/tasks"
+page = "api/nlp/tasks/EntityScore.md"
+summary = "What assess::ner returns: span-level entity precision/recall/F1 over a predicted/gold Doc pair."
+fields = ["doc_count", "gold_count", "predicted_count", "correct_count", "precision", "recall", "f1"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::TrainingReport"
+kind = "class"
+family = "nlp/tasks"
+page = "api/nlp/tasks/TrainingReport.md"
+summary = "What the most recent learn() call on a trainable stage did: document and entry counts, and the loss after each Sequence-backend optimizer step."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::nlp::assess::tagger"
+kind = "function"
+family = "nlp/tasks"
+page = "api/nlp/tasks/assess_tagger.md"
+summary = "Scores a predicted/gold Doc pair's token-level tagging accuracy, returning a TagScore."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::assess::ner"
+kind = "function"
+family = "nlp/tasks"
+page = "api/nlp/tasks/assess_ner.md"
+summary = "Scores a predicted/gold Doc pair's span-level entity precision/recall/F1, returning an EntityScore."
+overloads = 1
+
+# --- vectorize ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::vectorize::DocMapOptions"
+kind = "options"
+family = "nlp/vectorize"
+page = "api/nlp/vectorize/DocMapOptions.md"
+summary = "Shared text-normalization policy for every vectorize:: entry point: whether to map tokens through their lemma instead of surface form, and whether to skip punctuation tokens."
+fields = ["use_lemmas", "skip_punct"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::vectorize::CorpusStats"
+kind = "options"
+family = "nlp/vectorize"
+page = "api/nlp/vectorize/CorpusStats.md"
+summary = "What vectorize::describe returns: corpus-level counts plus per-document token/unique-term counts, a vocabulary, and document frequencies -- a quick statistical profile of a Doc collection before choosing a vectorizer."
+fields = ["doc_count", "token_count", "sentence_count", "phrase_count", "unique_term_count", "document_token_counts", "document_unique_term_counts", "vocabulary", "document_frequency"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::vectorize::Mapper"
+kind = "class"
+family = "nlp/vectorize"
+page = "api/nlp/vectorize/Mapper.md"
+summary = "A fitted-vocabulary classical text vectorizer: learns a term list from a corpus, then produces dense or sparse count/tf-idf feature matrices for classic ML models."
+methods = ["learn", "count_dense", "count_sparse", "tfidf_dense", "tfidf_sparse", "vocabulary", "dump_state", "load_state"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::vectorize::Hasher"
+kind = "class"
+family = "nlp/vectorize"
+page = "api/nlp/vectorize/Hasher.md"
+summary = "A fit-free classical text vectorizer: hashes terms directly into a fixed-width feature space, trading the exact vocabulary Mapper keeps for no learning step and bounded memory regardless of corpus size."
+methods = ["dense", "sparse"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::vectorize::describe"
+kind = "function"
+family = "nlp/vectorize"
+page = "api/nlp/vectorize/describe.md"
+summary = "Computes a CorpusStats profile of a Doc collection -- counts, vocabulary, and document frequencies -- without fitting a vectorizer."
+overloads = 1
+
+# --- embed ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::embed::EmbedOptions"
+kind = "options"
+family = "nlp/embed"
+page = "api/nlp/embed/EmbedOptions.md"
+summary = "Embedder's hyperparameters: vector width, context window, negative-sample count, minimum term frequency, epochs, batch size, learning rate, and seed for its skip-gram training."
+fields = ["use_lemmas", "lowercase", "skip_punct", "width", "window", "negative_samples", "min_count", "epochs", "batch_size", "learning_rate", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::embed::Embedder"
+kind = "class"
+family = "nlp/embed"
+page = "api/nlp/embed/Embedder.md"
+summary = "A standalone static-vector text embedding model: genuine unsupervised skip-gram-with-negative-sampling training over raw, unlabeled text, producing one vector per vocabulary token meaningful on its own, with no labels or downstream task required."
+methods = ["learn", "ready", "width", "vocabulary", "contains", "vector_of", "embed", "similarity", "nearest", "save", "load"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::embed::ContextualEmbedOptions"
+kind = "options"
+family = "nlp/embed"
+page = "api/nlp/embed/ContextualEmbedOptions.md"
+summary = "ContextualEmbedder's vocabulary policy and full-batch causal-language-model architecture: vector width, Transformer layer/head counts, feedforward width, epochs, learning rate, and seed."
+fields = ["use_lemmas", "lowercase", "skip_punct", "width", "num_layers", "num_heads", "feedforward_width", "epochs", "learning_rate", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::embed::GenerateOptions"
+kind = "options"
+family = "nlp/embed"
+page = "api/nlp/embed/GenerateOptions.md"
+summary = "Decoding policy for ContextualEmbedder::generate: greedy argmax versus temperature/top-k sampling, maximum new tokens, and a sampling seed."
+fields = ["max_new_tokens", "greedy", "temperature", "top_k", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::embed::ContextualEmbedder"
+kind = "class"
+family = "nlp/embed"
+page = "api/nlp/embed/ContextualEmbedder.md"
+summary = "A contextual text encoder and generator: a Transformer trained from scratch via genuine causal-language-model pretraining over raw, unlabeled text, giving every token a sentence-dependent vector and the ability to autoregressively continue a prompt."
+methods = ["learn", "ready", "width", "encode", "embed", "generate", "save", "load"]
+
+# --- runtime ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::SequenceOptions"
+kind = "options"
+family = "nlp/runtime"
+page = "api/nlp/runtime/SequenceOptions.md"
+summary = "Indexer's tokenization/batching policy: lemma/punctuation/casing normalization, whether to add BOS/EOS markers, batch-first layout, and the four special-token spellings."
+fields = ["use_lemmas", "skip_punct", "lowercase", "add_bos", "add_eos", "batch_first", "pad_token", "unk_token", "bos_token", "eos_token"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::SequenceBatch"
+kind = "class"
+family = "nlp/runtime"
+page = "api/nlp/runtime/SequenceBatch.md"
+summary = "A padded batch of token-id sequences ready for a sequence encoder: token/position ids, validity and key-padding masks, and per-sequence lengths."
+methods = ["empty", "pack", "causal_mask"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::Indexer"
+kind = "class"
+family = "nlp/runtime"
+page = "api/nlp/runtime/Indexer.md"
+summary = "Builds a vocabulary from Docs and turns further Docs into SequenceBatch values -- the indexed batching layer beneath trainable sequence models."
+methods = ["learn", "batch", "options", "vocabulary", "pad_id", "unk_id", "bos_id", "eos_id", "dump_state_lines", "load_state_lines"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::EmbeddingOptions"
+kind = "options"
+family = "nlp/runtime"
+page = "api/nlp/runtime/EmbeddingOptions.md"
+summary = "EmbeddingTable's shape/platform policy: vector width, whether to use (and learn) position embeddings, a maximum position count, device/dtype config, and a seed."
+fields = ["width", "use_positions", "learned_positions", "max_positions", "cfg", "seed"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::EmbeddingTable"
+kind = "class"
+family = "nlp/runtime"
+page = "api/nlp/runtime/EmbeddingTable.md"
+summary = "A trainable token (plus optional position) embedding table: turns an Indexer's SequenceBatch of token ids into a dense Series an encoder can consume."
+methods = ["reset", "forward", "options", "weights", "position_weights", "vocab_size", "pad_id", "dump_state_lines", "load_state_lines"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::TransformerTextEncoder"
+kind = "class"
+family = "nlp/runtime"
+page = "api/nlp/runtime/TransformerTextEncoder.md"
+summary = "A thin SequenceBatch-aware wrapper over nn::TransformerEncoder: builds the padding (and, optionally, causal) attention mask from the batch automatically instead of requiring the caller to construct one by hand."
+methods = ["forward", "model"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::LstmTextEncoder"
+kind = "class"
+family = "nlp/runtime"
+page = "api/nlp/runtime/LstmTextEncoder.md"
+summary = "A thin SequenceBatch-aware wrapper over nn::LSTM: packs/unpacks variable-length sequences from the batch's lengths automatically."
+methods = ["forward", "model"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::mean_pool"
+kind = "function"
+family = "nlp/runtime"
+page = "api/nlp/runtime/mean_pool.md"
+summary = "Mean-pools an encoder's per-position output over each sequence's real (non-padding) positions, using the batch's own validity mask and lengths."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::runtime::last_pool"
+kind = "function"
+family = "nlp/runtime"
+page = "api/nlp/runtime/last_pool.md"
+summary = "Extracts each sequence's last real (non-padding) position from an encoder's per-position output, using the batch's own lengths."
+overloads = 1
+
+# --- registry ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::registry::StageRegistry"
+kind = "class"
+family = "nlp/registry"
+page = "api/nlp/registry/StageRegistry.md"
+summary = "The thread-safe, process-wide catalog mapping a stage's registry name to a zero-argument factory -- how Workflow::load resolves a custom stage type alongside the eight built-ins, without nlp needing to know about it ahead of time."
+methods = ["instance", "add", "contains", "create", "names"]
+
+# --- resources ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::LemmaRule"
+kind = "options"
+family = "nlp/resources"
+page = "api/nlp/resources/LemmaRule.md"
+summary = "One language-pack lookup entry: a surface form mapped directly to its lemma, consulted by LemmatizerStage before falling back to rule-based normalization."
+fields = ["surface", "lemma"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::TokenMergeRule"
+kind = "options"
+family = "nlp/resources"
+page = "api/nlp/resources/TokenMergeRule.md"
+summary = "One language-pack tokenizer exception: two adjacent surface forms that should merge back into a single token (contractions and similar), with the merged spelling to use."
+fields = ["left", "right", "merged"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::LanguagePack"
+kind = "options"
+family = "nlp/resources"
+page = "api/nlp/resources/LanguagePack.md"
+summary = "One language's bundled assets: its code/name, sentence-abbreviation and title lists the tokenizer/sentencizer consult, and its lemma/token-merge rule tables."
+fields = ["lang", "code", "name", "abbreviations", "titles", "lemma_rules", "token_merges"]
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::pack"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/pack.md"
+summary = "Returns the bundled LanguagePack for a Language value."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::available_languages"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/available_languages.md"
+summary = "Lists every Language this build has a bundled LanguagePack for."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::parse_language_code"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/parse_language_code.md"
+summary = "Parses a two-letter language code (\"en\", \"fr\", ...) into a Language value."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::language_code"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/language_code.md"
+summary = "Returns a Language value's own two-letter code -- the inverse of parse_language_code."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::language_name"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/language_name.md"
+summary = "Returns a Language value's human-readable name."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::is_abbreviation"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/is_abbreviation.md"
+summary = "Reports whether a token is a known sentence-ending abbreviation in a given Language, consulted by SentencizerStage before breaking a sentence on a period."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::is_title"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/is_title.md"
+summary = "Reports whether a token is a known honorific/title in a given Language, consulted by SentencizerStage so \"Dr. Smith\" is not mistaken for a sentence boundary."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::lookup_lemma"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/lookup_lemma.md"
+summary = "Looks a surface form up directly in a Language's bundled lemma table, returning an empty string on a miss -- the table LemmatizerStage consults before its rule-based fallback."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::resources::try_merge_token_exception"
+kind = "function"
+family = "nlp/resources"
+page = "api/nlp/resources/try_merge_token_exception.md"
+summary = "Checks whether two adjacent surface forms match one of a Language's bundled TokenMergeRules, writing the merged spelling and returning true on a hit."
+overloads = 1
+
+# --- io ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::nlp::io::write_workflow"
+kind = "function"
+family = "nlp/io"
+page = "api/nlp/io/write_workflow.md"
+summary = "Serializes a Workflow's stage list and every stage's persisted state to a stream, in the current schema version -- what Workflow::save calls internally."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::nlp::io::read_workflow"
+kind = "function"
+family = "nlp/io"
+page = "api/nlp/io/read_workflow.md"
+summary = "Reconstructs a Workflow from a stream written by write_workflow, transparently upgrading any schema from v1 onward and failing fast with an explicit diagnostic on a truncated, corrupted, or unsupported artifact -- what Workflow::load calls internally."
+overloads = 1

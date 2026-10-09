@@ -129,7 +129,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -137,19 +137,19 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.4, 1.8, 3.4, 3.8, 4.2}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x_train({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x_train({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x_train, y);
 
   // Predict for three applicants the model has never seen.
   const pluss::Series new_income = pluss::make_series({1.2, 2.6, 4.0}, {3}, f64);
   const pluss::Series new_balance = pluss::make_series({0.4, 1.2, 2.2}, {3}, f64);
-  const DataFrame x_new({{"income", Thread(new_income)}, {"balance", Thread(new_balance)}});
+  const DataFrame x_new({{"income", Slate(new_income)}, {"balance", Slate(new_balance)}});
 
   const DataFrame result({
-      {"income", Thread(new_income)},
-      {"balance", Thread(new_balance)},
-      {"predicted_label", Thread(model.infer(x_new))},
+      {"income", Slate(new_income)},
+      {"balance", Slate(new_balance)},
+      {"predicted_label", Slate(model.infer(x_new))},
   });
   std::cout << result;
 
@@ -186,7 +186,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -196,7 +196,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.8, 2.6, 2.8, 3.6, 4.4}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.5, 1.0, 1.5, 1.6, 2.1, 2.6}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 
@@ -208,10 +208,10 @@ int main() {
   strict.positive_threshold = 0.95;
 
   const DataFrame compare({
-      {"actual", Thread(y)},
-      {"score", Thread(model.infer_scores(x))},
-      {"label_at_0_5", Thread(model.infer(x))},
-      {"label_at_0_95", Thread(model.infer(x, strict))},
+      {"actual", Slate(y)},
+      {"score", Slate(model.infer_scores(x))},
+      {"label_at_0_5", Slate(model.infer(x))},
+      {"label_at_0_95", Slate(model.infer(x, strict))},
   });
   std::cout << compare;
 
@@ -251,7 +251,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -263,9 +263,9 @@ int main() {
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series defaulted = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
   const DataFrame train_frame({
-      {"income", Thread(income)},
-      {"balance", Thread(balance)},
-      {"defaulted", Thread(defaulted)},
+      {"income", Slate(income)},
+      {"balance", Slate(balance)},
+      {"defaulted", Slate(defaulted)},
   });
 
   lymph::options::DFBatch batch{};
@@ -278,15 +278,15 @@ int main() {
   // A fresh frame. It carries a `defaulted` column too (unknown, filled with
   // zeros); infer ignores it because the batch only lists the two features.
   const DataFrame score_frame({
-      {"income", Thread(pluss::make_series({1.2, 2.6, 4.0}, {3}, f64))},
-      {"balance", Thread(pluss::make_series({0.4, 1.2, 2.2}, {3}, f64))},
-      {"defaulted", Thread(pluss::make_series({0, 0, 0}, {3}, f64))},
+      {"income", Slate(pluss::make_series({1.2, 2.6, 4.0}, {3}, f64))},
+      {"balance", Slate(pluss::make_series({0.4, 1.2, 2.2}, {3}, f64))},
+      {"defaulted", Slate(pluss::make_series({0, 0, 0}, {3}, f64))},
   });
 
   const DataFrame result({
       {"income", score_frame.features("income")},
       {"balance", score_frame.features("balance")},
-      {"predicted", Thread(model.infer(score_frame, batch))},
+      {"predicted", Slate(model.infer(score_frame, batch))},
   });
   std::cout << result;
 

@@ -59,9 +59,9 @@ Example 1. Fix one dimension and then render the remaining two-way table.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto out = df.contingency({"city", "channel", "weekend"})
@@ -113,9 +113,9 @@ Example 3. Use the typed boolean overload instead of stringifying a logical leve
 
 ```cpp
 auto flags = DataFrame({
-    {"segment", Thread(pluss::make_note({"A", "A", "B", "B"}))},
-    {"active",  Thread(pluss::make_series({true, false, true, false}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Cash", "Card", "Cash"}))},
+    {"segment", Slate(pluss::make_note({"A", "A", "B", "B"}))},
+    {"active",  Slate(pluss::make_series({true, false, true, false}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Cash", "Card", "Cash"}))},
 });
 
 auto out = flags.contingency({"segment", "active", "channel"})

@@ -41,10 +41,10 @@ Example 1. Read both dimensions with a structured binding.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
 });
 
 auto [cases, features] = orders.shape();

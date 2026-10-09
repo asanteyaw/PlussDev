@@ -51,8 +51,8 @@ own name.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region", true); // drop_feature=true
 std::cout << labeled;
 

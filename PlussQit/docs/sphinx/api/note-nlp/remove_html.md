@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_html
+# Note::NlpAccessor::remove_html
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_html() const
+Note Note::NlpAccessor::remove_html() const
 ```
 
 ## Strip Markup While Retaining Visible Text
@@ -179,7 +179,7 @@ Bool, Int64, and Float64 Notes reject under the same Text-only rule.
 
 - [`html_unescape`](../note/html_unescape.md): decode entities after markup removal when desired.
 - [`remove_code`](remove_code.md): delete inline, fenced, and indented code forms.
-- `NoteNlpAccessor::remove_markdown`: remove a broader set of Markdown constructs.
+- `Note::NlpAccessor::remove_markdown`: remove a broader set of Markdown constructs.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="remove_headers.html"><span class="label">Previous</span><span class="title">remove_headers</span></a>

@@ -4,7 +4,8 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow sentiment{
       .lang = Language::English,
@@ -49,7 +50,7 @@ int main() {
   };
   const auto inferred = sentiment.infer(probes);
 
-  std::cout << "== NodeB Sentiment / Text Classification ==\n";
+  std::cout << "== PlussAI NLP Sentiment / Text Classification ==\n";
   for (std::size_t i = 0; i < probes.size(); ++i) {
     std::cout << "text: " << probes[i] << "\n";
     std::cout << "  label=" << inferred[i].doc_label

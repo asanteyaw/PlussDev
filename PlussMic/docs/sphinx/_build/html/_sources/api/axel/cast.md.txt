@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 7b5415270269 -->
+<!-- pluss-signature-hash: c24710e63216 -->
 
 # Axel::cast
 
@@ -9,7 +9,7 @@
 
 ```cpp
 AxelCastAccessor Axel::cast() const
-AxelCastAccessor Axel::cast(const pluss::table::ThreadCastOptions& options) const
+AxelCastAccessor Axel::cast(const pluss::table::SlateCastOptions& options) const
 ```
 
 ## What It Does
@@ -28,7 +28,7 @@ of every frame. To cast only one field, chain
 
 ## Parameters
 
-**options** (`const pluss::table::ThreadCastOptions&`, optional)
+**options** (`const pluss::table::SlateCastOptions&`, optional)
     Cast behavior options (e.g. parse formats) forwarded to each
     frame's underlying `Registry::cast(options)` call. Omit for
     defaults.

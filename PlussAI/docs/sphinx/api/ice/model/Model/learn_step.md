@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8261aa53d988 -->
 # `pluss::ai::ice::Model::learn_step`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -186,3 +188,16 @@ learn_step: stage=0 epoch=1 batch_index=1
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="learn.html">
+    <span class="label">Previous</span>
+    <span class="title">learn</span>
+  </a>
+  <a class="next-link" href="load.html">
+    <span class="label">Next</span>
+    <span class="title">load</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

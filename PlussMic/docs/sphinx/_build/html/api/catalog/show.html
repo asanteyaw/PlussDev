@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Catalog::similarity" href="similarity.html" />
@@ -51,14 +51,14 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Renders the catalog’s ASCII-table view directly to <code class="docutils literal notranslate"><span class="pre">os</span></code> — the same rendering
 <code class="docutils literal notranslate"><span class="pre">operator&lt;&lt;</span></code>, <a class="reference internal" href="display.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">display()</span></code></span></a>, and <a class="reference internal" href="info.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">info()</span></code></span></a> all use internally.
-Unlike <code class="docutils literal notranslate"><span class="pre">Thread::show()</span></code>, <code class="docutils literal notranslate"><span class="pre">Catalog::show()</span></code> <strong>requires</strong> an explicit stream argument; there
+Unlike <code class="docutils literal notranslate"><span class="pre">Slate::show()</span></code>, <code class="docutils literal notranslate"><span class="pre">Catalog::show()</span></code> <strong>requires</strong> an explicit stream argument; there
 is no no-argument overload, so there’s no risk of it silently opening a GUI viewer window
 the way some other <code class="docutils literal notranslate"><span class="pre">show()</span></code>-named methods in this codebase can.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>display(), info(), and show() all render identically — there is no separate metadata summary
-Unlike Thread::info(), which prints a name/kind/dtype/null-count summary distinct from
-Thread::show()’s row rendering, Catalog::info() and Catalog::display() both call the exact
+Unlike Slate::info(), which prints a name/kind/dtype/null-count summary distinct from
+Slate::show()’s row rendering, Catalog::info() and Catalog::display() both call the exact
 same underlying render as show() and operator&lt;&lt;. All four produce byte-identical output;
 there is currently no metadata-only summary view for Catalog.</p>
 </div>

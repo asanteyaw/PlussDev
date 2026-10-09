@@ -8,6 +8,13 @@
 
 namespace {
 
+static_assert(std::is_same_v<pluss::Note::NlpAccessor,
+                             decltype(std::declval<const pluss::Note&>().nlp())>);
+static_assert(std::is_same_v<pluss::Note::RegexAccessor,
+                             decltype(std::declval<const pluss::Note&>().regex())>);
+static_assert(std::is_same_v<pluss::Note::TexAccessor,
+                             decltype(std::declval<const pluss::Note&>().tex())>);
+
 template <class T>
 concept HasRootRemoveEmails = requires(const T& value) {
   value.nlp_remove_emails();

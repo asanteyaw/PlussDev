@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::sentences
+# Note::NlpAccessor::sentences
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::sentences() const
+TokenBatch Note::NlpAccessor::sentences() const
 ```
 
 ## Split Cells Into Sentences

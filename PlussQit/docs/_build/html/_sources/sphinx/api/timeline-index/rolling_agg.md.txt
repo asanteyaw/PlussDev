@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::rolling_agg
+# Timeline::TimelineIndexAccessor::rolling_agg
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_agg(
+pluss::Series Timeline::TimelineIndexAccessor::rolling_agg(
     const pluss::Series& values,
     const pluss::Duration& window,
     std::string_view op) const
@@ -15,7 +15,7 @@ pluss::Series TimelineIndexAccessor::rolling_agg(
 
 ## Runtime Selection Of A Trailing Reduction
 
-`rolling_agg()` is the dynamic entry point for the TimelineIndexAccessor rolling family.
+`rolling_agg()` is the dynamic entry point for the Timeline::TimelineIndexAccessor rolling family.
 It applies the reducer named by `op` to every inclusive trailing interval
 `[index[i] - window, index[i]]` and returns one result per original timestamp.
 
@@ -56,11 +56,11 @@ resampling creates non-overlapping bins and may change output length.
 ## Examples
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
 auto window = pluss::duration::minutes(45);
 ```
@@ -142,9 +142,9 @@ new contiguous `Series`; neither input is mutated.
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_mean`](rolling_mean.md)
-- [`TimelineIndexAccessor::rolling_min`](rolling_min.md)
-- [`TimelineIndexAccessor::resample_agg`](resample_agg.md)
+- [`Timeline::TimelineIndexAccessor::rolling_mean`](rolling_mean.md)
+- [`Timeline::TimelineIndexAccessor::rolling_min`](rolling_min.md)
+- [`Timeline::TimelineIndexAccessor::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_sum.html">

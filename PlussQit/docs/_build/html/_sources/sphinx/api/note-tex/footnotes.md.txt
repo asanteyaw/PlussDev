@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::footnotes
+# Note::TexAccessor::footnotes
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::footnotes() const
+TokenBatch Note::TexAccessor::footnotes() const
 ```
 
 ## Extract Footnote Bodies

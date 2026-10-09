@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::det
+# Series::LinearAlgAccessor::det
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::det() const
+Series Series::LinearAlgAccessor::det() const
 Series SeriesLinearAlgProxy::det() const
 ```
 
@@ -190,9 +190,9 @@ singular matrix.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::slogdet`](slogdet.md): sign and log-magnitude.
-- [`SeriesLinearAlgAccessor::logdet`](logdet.md): real logarithm of a positive determinant.
-- [`SeriesLinearAlgAccessor::inverse`](inverse.md): multiplicative inverse of a matrix.
+- [`Series::LinearAlgAccessor::slogdet`](slogdet.md): sign and log-magnitude.
+- [`Series::LinearAlgAccessor::logdet`](logdet.md): real logarithm of a positive determinant.
+- [`Series::LinearAlgAccessor::inverse`](inverse.md): multiplicative inverse of a matrix.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="cholesky_solve.html">

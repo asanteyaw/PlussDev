@@ -19,13 +19,13 @@ StreamPlotAccessor::bar(const Stream& x, const BarPlotOptions& options) const ->
 Draws one bar per row for the bound stream's values, against an optional companion `x`
 stream — the same shape and naming rules as [`line()`](line.md), drawn as bars instead of a
 connected line. Every overload forwards to
-[`ThreadPlotAccessor::bar`](../thread-plot/bar.md) after `Stream::to_thread()`.
+[`SlatePlotAccessor::bar`](../slate-plot/bar.md) after `Stream::to_slate()`.
 
 ## Parameters
 
 **x** (`const Stream&`, optional)
     Same as [`line()`](line.md)'s `x` — a mismatched size throws
-    `"Thread::plot: thread size mismatch"`.
+    `"Slate::plot: thread size mismatch"`.
 
 **options** (`BarPlotOptions`)
     The identical struct documented on
@@ -119,7 +119,7 @@ try {
 ### Output
 
 ```text
-Thread::plot: thread size mismatch
+Slate::plot: thread size mismatch
 ```
 
 ## Notes
@@ -131,7 +131,7 @@ Thread::plot: thread size mismatch
 
 ## See Also
 
-- [`ThreadPlotAccessor::bar`](../thread-plot/bar.md): the method this delegates to.
+- [`SlatePlotAccessor::bar`](../slate-plot/bar.md): the method this delegates to.
 - [`StreamPlotAccessor::line`](line.md): the canonical explanation of this accessor's
   shared naming/row-label mechanics.
 - [`StreamPlotAccessor::hist`](hist.md): bars over binned value ranges instead of one bar

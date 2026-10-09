@@ -39,7 +39,7 @@ depth labels are not set"` if no depth labels have been set. Always check
 ```{important} align() throws on any unmatched target label — it does not fill with NULL
 `align(target_labels)` requires every label in `target_labels` to exist among the
 archive's own depth labels; a target label with no match throws `"Archive::label().align:
-label not found '<label>'"`. This is stricter than `Thread::align`/`Stream::lbl().align()`,
+label not found '<label>'"`. This is stricter than `Slate::align`/`Stream::lbl().align()`,
 which fill unmatched positions with `NULL` (or a supplied `fill` value) instead of
 throwing.
 ```
@@ -196,7 +196,7 @@ Archive::label().align: label not found 'c'
 - `values()` throws rather than synthesizing a fallback when unlabeled — see the first
   important callout above. Check [`has()`](label.md) first.
 - `align()` throws on any unmatched target label rather than filling with `NULL` — see the
-  second important callout above. This is stricter than `Thread`/`Stream`'s own `align()`.
+  second important callout above. This is stricter than `Slate`/`Stream`'s own `align()`.
 - `sort()`/`align()` both reorder the underlying catalogs together with the label stream —
   see Example 3.
 

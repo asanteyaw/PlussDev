@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::linearalg -> SeriesLinearAlgAccessor
+Series::linearalg -> Series::LinearAlgAccessor
 
 Series::linearalg() -> SeriesLinearAlgProxy
 Series::linearalg(const Series& other) -> SeriesLinearAlgProxy
@@ -68,7 +68,7 @@ auto same_result = matrix.linearalg().det();
 The complete accessor surface is documented: products, norms, determinants,
 matrix transformations, factorizations, and structured or general solves.
 
-Use the [SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+Use the [Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 as the landing page for this family. Each accessor method is documented there
 on its own page:
 
@@ -102,7 +102,7 @@ on its own page:
 
 ## Returns
 
-`SeriesLinearAlgAccessor` or `SeriesLinearAlgProxy`
+`Series::LinearAlgAccessor` or `SeriesLinearAlgProxy`
     A lightweight method-selection object bound to the owning `Series`, and
     optionally to a peer `Series`.
 
@@ -148,13 +148,13 @@ accessor can change the result.
 
 ## See Also
 
-- [SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
-- [`SeriesLinearAlgAccessor::matmul`](../series-linearalg/matmul.md)
-- [`SeriesLinearAlgAccessor::dot`](../series-linearalg/dot.md)
-- [`SeriesLinearAlgAccessor::det`](../series-linearalg/det.md)
-- [`SeriesLinearAlgAccessor::inverse`](../series-linearalg/inverse.md)
-- [`SeriesLinearAlgAccessor::matrix_exp`](../series-linearalg/matrix_exp.md)
-- [`SeriesLinearAlgAccessor::pinverse`](../series-linearalg/pinverse.md)
+- [Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+- [`Series::LinearAlgAccessor::matmul`](../series-linearalg/matmul.md)
+- [`Series::LinearAlgAccessor::dot`](../series-linearalg/dot.md)
+- [`Series::LinearAlgAccessor::det`](../series-linearalg/det.md)
+- [`Series::LinearAlgAccessor::inverse`](../series-linearalg/inverse.md)
+- [`Series::LinearAlgAccessor::matrix_exp`](../series-linearalg/matrix_exp.md)
+- [`Series::LinearAlgAccessor::pinverse`](../series-linearalg/pinverse.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lgamma.html">
@@ -163,6 +163,6 @@ accessor can change the result.
   </a>
   <a class="next-link" href="../../series_linearalg_accessor_api_reference.html">
     <span class="label">Next</span>
-    <span class="title">SeriesLinearAlgAccessor</span>
+    <span class="title">Series::LinearAlgAccessor</span>
   </a>
 </div>

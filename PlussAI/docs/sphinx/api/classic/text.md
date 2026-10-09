@@ -24,15 +24,49 @@ which of the two classes to reach for.
 
 ## How To Call It
 
+Learn a lexicon from two sentences and map a new sentence to dense features. Hash a different document into a fixed width. The program prints each column count.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::LexiconMapper mapper;
-mapper.learn({"the cat sat", "the dog ran"});
-const cls::FeatureBatch dense = mapper.map_dense({"the cat sat again"}).value();
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-cls::HashMapper hasher;
-const cls::FeatureBatch hashed = hasher.map_dense({"any document at all"}).value();
+int main() {
+  cls::LexiconMapper mapper;
+  mapper.learn({"the cat sat", "the dog ran"});
+  const cls::FeatureBatch dense = mapper.map_dense({"the cat sat again"}).value();
+  cls::HashMapper hasher;
+  const cls::FeatureBatch hashed = hasher.map_dense({"any document at all"}).value();
+  std::cout << "lexicon columns = " << dense.x.sizes()[1] << "\n";
+  std::cout << "hash columns = " << hashed.x.sizes()[1] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+lexicon columns = 5
+hash columns = 32768
 ```
 
 ## Related Pages

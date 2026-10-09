@@ -19,8 +19,8 @@ to `show(std::cout)`.
 ```{important} Identical to info(), show(), and operator<< — no separate metadata view
 `display()`, [`info()`](info.md), [`show()`](show.md) (when passed `std::cout`), and
 `operator<<` all render byte-identical output. There is no metadata-only summary view for
-`Catalog` the way `Thread::info()` provides a name/kind/dtype/null-count summary distinct
-from `Thread::show()`'s row rendering — pick whichever of these four names reads best at
+`Catalog` the way `Slate::info()` provides a name/kind/dtype/null-count summary distinct
+from `Slate::show()`'s row rendering — pick whichever of these four names reads best at
 the call site; the result is the same either way.
 ```
 

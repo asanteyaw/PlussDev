@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Catalog::begin" href="begin.html" />
@@ -50,7 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>A single-argument shorthand for <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a>, applied across every stream:
-<code class="docutils literal notranslate"><span class="pre">astype(dtype)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">cast(ThreadCastTarget::Series,</span> <span class="pre">{.series_dtype</span> <span class="pre">=</span> <span class="pre">dtype})</span></code>.
+<code class="docutils literal notranslate"><span class="pre">astype(dtype)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">cast(SlateCastTarget::Series,</span> <span class="pre">{.series_dtype</span> <span class="pre">=</span> <span class="pre">dtype})</span></code>.
 Everything documented on <code class="docutils literal notranslate"><span class="pre">cast()</span></code>’s page — including the important callout that it applies
 uniformly to every stream, not just the ones that obviously need it — applies here too.</p>
 </section>
@@ -105,7 +105,7 @@ and the important callout about applying to every stream unconditionally.</p></l
 <ul class="simple">
 <li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::cast</span></code></span></a>: the full, target-configurable casting method this is a
 shorthand for.</p></li>
-<li><p><a class="reference internal" href="../thread/astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::astype</span></code></span></a>: the underlying single-stream conversion this
+<li><p><a class="reference internal" href="#../thread/astype.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::astype</span></code></span></a>: the underlying single-stream conversion this
 method applies uniformly.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

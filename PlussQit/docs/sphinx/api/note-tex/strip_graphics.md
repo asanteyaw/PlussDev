@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_graphics
+# Note::TexAccessor::strip_graphics
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_graphics() const
+Note Note::TexAccessor::strip_graphics() const
 ```
 
 ## Remove Direct Graphics And Figure Containers

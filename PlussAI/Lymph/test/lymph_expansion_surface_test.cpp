@@ -98,12 +98,16 @@ bool run_expansion_surface_checks(std::ostream* err) {
     TrainOptions train{};
     train.random.seed = 31;
     train.random.deterministic = true;
-    const cluster::Result grouped = cluster::model(models::kmeans(options)).run(two_class_features(), train);
+    const models::cluster::Result grouped = models::cluster::model(models::kmeans(options)).run(two_class_features(), train);
     if (!(grouped.trained()
           && grouped.labels().numel() == 16
           && grouped.cluster_count() == 2
           && grouped.board().ncases() == 2)) {
-      if (err) *err << "cluster result should contain labels, centers, and a two-row board\n";
+      if (err) *err << "cluster result should contain labels, centers, and a two-row board"
+                    << " (trained=" << grouped.trained()
+                    << ", labels=" << grouped.labels().numel()
+                    << ", clusters=" << grouped.cluster_count()
+                    << ", rows=" << grouped.board().ncases() << ")\n";
       return false;
     }
   }
@@ -111,7 +115,7 @@ bool run_expansion_surface_checks(std::ostream* err) {
   {
     DecomposeFamilyOptions options{};
     options.components = 1;
-    const embed::Result mapped = embed::model(models::pca(options)).run(curved_features());
+    const models::embed::Result mapped = models::embed::model(models::pca(options)).run(curved_features());
     if (!(mapped.trained()
           && mapped.coordinates().sizes().size() == 2
           && mapped.coordinates().sizes()[0] == 12
@@ -131,7 +135,7 @@ bool run_expansion_surface_checks(std::ostream* err) {
     options.contamination = 0.08;
     options.random.seed = 37;
     options.random.deterministic = true;
-    const detect::Result found = detect::model(models::isolation_detector(options)).run(two_class_features());
+    const models::detect::Result found = models::detect::model(models::isolation_detector(options)).run(two_class_features());
     if (!(found.has_model()
           && found.labels().numel() == 16
           && found.flagged().numel() == 16
@@ -142,16 +146,16 @@ bool run_expansion_surface_checks(std::ostream* err) {
   }
 
   {
-    semi::Options semi_options{};
-    semi_options.select = semi::SelectKind::Confidence;
+    models::semi::Options semi_options{};
+    semi_options.select = models::semi::SelectKind::Confidence;
     semi_options.confidence = 0.0;
     semi_options.max_rounds = 1;
-    const semi::Result learned = semi::model(models::gaussian_nb_classifier()).run(semi_batch(), semi_options);
+    const models::semi::Result learned = models::semi::model(models::gaussian_nb_classifier()).run(semi_batch(), semi_options);
     if (!(learned.model().trained()
           && learned.labels().numel() == 16
           && learned.labeled_count() == 16
           && learned.pseudo_labeled_count() == 12
-          && learned.stop() == semi::StopReason::AllLabeled
+          && learned.stop() == models::semi::StopReason::AllLabeled
           && learned.board().ncases() == 4)) {
       if (err) *err << "semi confidence run should pseudo-label every unlabeled row\n";
       return false;
@@ -159,30 +163,30 @@ bool run_expansion_surface_checks(std::ostream* err) {
   }
 
   {
-    semi::Options semi_options{};
-    semi_options.select = semi::SelectKind::TopK;
+    models::semi::Options semi_options{};
+    semi_options.select = models::semi::SelectKind::TopK;
     semi_options.top_k = 5;
     semi_options.max_rounds = 1;
-    const semi::Result learned = semi::model(models::gaussian_nb_classifier()).run(semi_batch(), semi_options);
+    const models::semi::Result learned = models::semi::model(models::gaussian_nb_classifier()).run(semi_batch(), semi_options);
     if (!(learned.model().trained()
           && learned.labeled_count() == 9
           && learned.pseudo_labeled_count() == 5
           && learned.rounds() == 1
-          && learned.stop() == semi::StopReason::MaxRounds)) {
+          && learned.stop() == models::semi::StopReason::MaxRounds)) {
       if (err) *err << "semi top-k run should add exactly top_k labels before max-round termination\n";
       return false;
     }
   }
 
   if (!throws_pluss([] {
-        (void)cluster::model(models::pca()).run(curved_features());
+        (void)models::cluster::model(models::pca()).run(curved_features());
       })) {
     if (err) *err << "cluster should reject non-cluster models\n";
     return false;
   }
 
   if (!throws_pluss([] {
-        (void)detect::model(models::kmeans()).run(two_class_features());
+        (void)models::detect::model(models::kmeans()).run(two_class_features());
       })) {
     if (err) *err << "detect should reject non-detector models\n";
     return false;
@@ -190,7 +194,7 @@ bool run_expansion_surface_checks(std::ostream* err) {
 
   if (!throws_pluss([] {
         std::vector<double> labels(16, -1.0);
-        (void)semi::model(models::knn_classifier()).run(LabeledBatch{
+        (void)models::semi::model(models::knn_classifier()).run(LabeledBatch{
             .features = two_class_features(),
             .y = pluss::make_series(labels, {16}, f64()),
         });
@@ -200,7 +204,7 @@ bool run_expansion_surface_checks(std::ostream* err) {
   }
 
   if (!throws_pluss([] {
-        (void)semi::model(models::linear_regression()).run(semi_batch());
+        (void)models::semi::model(models::linear_regression()).run(semi_batch());
       })) {
     if (err) *err << "semi should reject non-classification models\n";
     return false;

@@ -12,7 +12,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -20,7 +20,7 @@ int main() {
   // Column with a gap (NaN) so the impute -> scale pipeline in the composed
   // branch has something to do.
   const DataFrame raw({
-      {"x", Thread(pluss::make_series({10., 20., std::nan(""), 40., 50.}, {5}, f64))},
+      {"x", Slate(pluss::make_series({10., 20., std::nan(""), 40., 50.}, {5}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"x"}).feature_batch();

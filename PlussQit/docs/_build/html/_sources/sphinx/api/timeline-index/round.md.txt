@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::round
+# Timeline::TimelineIndexAccessor::round
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::round(std::string_view unit) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::round(std::string_view unit) const
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ The target rounding unit.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The rounded axis.
 
 ## Examples
@@ -32,7 +32,7 @@ Example 1. Snap each timestamp to the nearest hour boundary.
 
 ```cpp
 auto out = base.round("H");
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -46,13 +46,13 @@ Example 2. Choose `round()` when the closest boundary is what matters.
 
 ```cpp
 auto nearest_hours = base.round("H");
-std::cout << pluss::timeindex::print(nearest_hours) << "\n";
+std::cout << pluss::timeline::print(nearest_hours.timeline()) << "\n";
 ```
 
 ## See Also
 
-- [`TimelineIndexAccessor::floor`](floor.md)
-- [`TimelineIndexAccessor::ceil`](ceil.md)
+- [`Timeline::TimelineIndexAccessor::floor`](floor.md)
+- [`Timeline::TimelineIndexAccessor::ceil`](ceil.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_sum.html">

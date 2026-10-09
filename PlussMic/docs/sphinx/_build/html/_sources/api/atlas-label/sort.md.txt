@@ -40,12 +40,12 @@ content moves along with its label.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"mar", "jan"})));
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Slate(pluss::make_note({"mar", "jan"})));
 
 auto sorted = atlas.label().sort();
 std::cout << sorted.label().values() << "\n\n";

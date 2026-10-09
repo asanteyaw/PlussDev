@@ -119,8 +119,8 @@ label        | value
     <span class="label">Previous</span>
     <span class="title">filter</span>
   </a>
-  <a class="next-link" href="from_thread.html">
+  <a class="next-link" href="from_slate.html">
     <span class="label">Next</span>
-    <span class="title">from_thread</span>
+    <span class="title">from_slate</span>
   </a>
 </div>

@@ -11,11 +11,11 @@ Recommended mapping
 
 | Table | Kindle | Bundle | Role |
 |---|---|---|---|
-| `Thread` | `Stream` | `Slot` | 1D-ish payload container |
+| `Slate` | `Stream` | `Slot` | 1D-ish payload container |
 | `DataFrame` | `Catalog` | `Registry` | named collection / 2D-like object |
 | `Atlas` | `Archive` | `Axel` | stack/depth collection |
 
-But the mapping is conceptual, not exact. `Thread` is a strict 1D table feature. `Stream` may be more document/record oriented depending on Kindle semantics. `Slot` is heterogeneous, so it should not pretend to have every numeric/text/timeline method unless delegation is type-safe.
+But the mapping is conceptual, not exact. `Slate` is a strict 1D table feature. `Stream` may be more document/record oriented depending on Kindle semantics. `Slot` is heterogeneous, so it should not pretend to have every numeric/text/timeline method unless delegation is type-safe.
 
 What I would standardize across all models
 
@@ -86,7 +86,7 @@ freq()
 rank()
 ```
 
-For `Stream`, these can delegate to underlying `Series/Note/Timeline` similarly to `Thread`.
+For `Stream`, these can delegate to underlying `Series/Note/Timeline` similarly to `Slate`.
 
 For `Catalog`, batch/delegate to `Stream`.
 
@@ -157,7 +157,7 @@ My implementation strategy would be phased
 Phase 1: inventory and policy
 
 - Diff public methods:
-  - `Thread` vs `Stream` vs `Slot`
+  - `Slate` vs `Stream` vs `Slot`
   - `DataFrame` vs `Catalog` vs `Registry`
   - `Atlas` vs `Archive` vs `Axel`
 - Classify each table method:

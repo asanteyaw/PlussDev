@@ -14,7 +14,7 @@ returns = """
 see_also = [
   "<a href=\"#ffill\"><code>DataFrame::ffill</code></a>: propagate the last observed value forward instead of using the next one below.",
   "<a href=\"#fillnull\"><code>DataFrame::fillnull</code></a>: write an explicit replacement value instead of borrowing a neighboring observation.",
-  "<a href=\"thread_api_reference.html#bfill\"><code>Thread::bfill</code></a>: backward-fill one column directly outside a frame."
+  "<a href=\"slate_api_reference.html#bfill\"><code>Slate::bfill</code></a>: backward-fill one column directly outside a frame."
 ]
 
 notes = [

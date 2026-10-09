@@ -1761,11 +1761,9 @@ StatusOr<Series> Flow::learn_map(const FeatureBatch& batch,
                                  const InferOptions& infer_options) {
   StatusOr<FeatureBatch> mapped_or = apply_learn_map(batch, learn_options, infer_options);
   if (!mapped_or.ok()) return StatusOr<Series>(mapped_or.status());
-  if (!has_model()) {
-    trained_ = true;
-  } else {
-    trained_ = false;
-  }
+  // Transform models fit their state in apply_learn_map(), so they are ready
+  // immediately. A classifier or regressor still needs a labeled learn().
+  trained_ = !classifier_ && !regressor_;
   return StatusOr<Series>(mapped_or.move_value().x);
 }
 

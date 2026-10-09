@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part XII: Scribble: Slot, Registry, and Axel" href="part12_scribble.html" />
@@ -43,8 +43,8 @@ still typed and column-like, but you want metadata and catalog operations
 instead of strict DataFrame ergonomics.</p>
 <section id="stream">
 <h2>Stream<a class="headerlink" href="#stream" title="Link to this heading">¶</a></h2>
-<p>A <code class="docutils literal notranslate"><span class="pre">Stream</span></code> is similar to a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, with optional cases and metadata.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">::</span><span class="n">from_thread</span><span class="p">(</span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;balance&quot;</span><span class="p">));</span>
+<p>A <code class="docutils literal notranslate"><span class="pre">Stream</span></code> is similar to a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, with optional cases and metadata.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="o">::</span><span class="n">from_slate</span><span class="p">(</span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;balance&quot;</span><span class="p">));</span>
 </pre></div>
 </div>
 <p>Common stream operations:</p>

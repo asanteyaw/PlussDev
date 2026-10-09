@@ -12,9 +12,48 @@ The implementation lives at the full scope `lymph::models::builder::Builder`, an
 the `models` family re-exports it as `lymph::models::Builder`. Both spellings name
 the same type:
 
+Create a builder through the explicit path and the shortcut. The program injects a logistic model into the explicit builder and prints its name count and membership, then prints whether the shortcut builder is empty.
+
 ```cpp
-lymph::models::builder::Builder a = lymph::models::builder::build();   // fully explicit
-lymph::models::Builder          b = lymph::models::build();            // family shortcut
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  lymph::models::builder::Builder explicit_builder = lymph::models::builder::build();
+  lymph::models::Builder shortcut = lymph::models::build();
+  explicit_builder.inject("logreg", lymph::models::logistic_regression());
+  std::cout << "explicit names = " << explicit_builder.names().size() << "\n";
+  std::cout << "explicit has logreg = " << (explicit_builder.has("logreg") ? "true" : "false") << "\n";
+  std::cout << "shortcut empty = " << (shortcut.empty() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+explicit names = 1
+explicit has logreg = true
+shortcut empty = true
 ```
 
 Construction always goes through the free `build(...)` functions — `Builder` has

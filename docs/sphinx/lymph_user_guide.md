@@ -62,10 +62,10 @@ namespace lym = pluss::ai::lymph;
 ### API Signature
 
 - `Workflow(model: WorkflowModel, stages: list<TransformSpec> = {}) -> Workflow`
-- `Workflow::learn_(x: DataFrame, y: Series|Thread, options: TrainOptions = {}) -> Workflow&`
+- `Workflow::learn_(x: DataFrame, y: Series|Slate, options: TrainOptions = {}) -> Workflow&`
 - `Workflow::infer(x: DataFrame, options: InferOptions = {}) -> Series`
-- `Workflow::assess(x: DataFrame, y: Series|Thread, options: AssessOptions = {}) -> MetricReport`
-- `Workflow::save(path: string, x_train: DataFrame, y_train: Series|Thread, options: TrainOptions = {}, metadata: FlowBundleMetadata = {}) -> void`
+- `Workflow::assess(x: DataFrame, y: Series|Slate, options: AssessOptions = {}) -> MetricReport`
+- `Workflow::save(path: string, x_train: DataFrame, y_train: Series|Slate, options: TrainOptions = {}, metadata: FlowBundleMetadata = {}) -> void`
 - `Workflow::load(path: string) -> Workflow`
 
 ### Notes
@@ -108,9 +108,9 @@ lym::Workflow wf{
 ### API Signature
 
 - `linear_factory::linear_regression(options: LinearFamilyOptions = {}) -> WorkflowModel`
-- `Workflow::learn_(x: DataFrame, y: Series|Thread, options: TrainOptions = {}) -> Workflow&`
+- `Workflow::learn_(x: DataFrame, y: Series|Slate, options: TrainOptions = {}) -> Workflow&`
 - `Workflow::infer(x: DataFrame, options: InferOptions = {}) -> Series`
-- `Workflow::assess(x: DataFrame, y: Series|Thread, options: AssessOptions = {}) -> MetricReport`
+- `Workflow::assess(x: DataFrame, y: Series|Slate, options: AssessOptions = {}) -> MetricReport`
 
 ### Notes
 
@@ -119,7 +119,7 @@ This is the fastest path for a classical tabular regression flow.
 ### Inputs
 
 - feature frame (`x_train`, `x_test`)
-- target series/thread (`y_train`, `y_test`)
+- target series/slate (`y_train`, `y_test`)
 
 ### Output
 
@@ -569,8 +569,8 @@ auto diff = lym::compare_series(y_hat, y_ref);
 
 ### API Signature
 
-- `cross_validate(model: WorkflowModel|Workflow|ModelSpec, x: DataFrame, y: Series|Thread, cv: CrossValidationOptions = {}, train_options: TrainOptions = {}, assess_options: AssessOptions = {}) -> CrossValidationReport`
-- `selection::tune(candidates: vector<Candidate>, x: DataFrame, y: Series|Thread, cv: CrossValidationOptions = {}, train_options: TrainOptions = {}, assess_options: AssessOptions = {}, objective_metric: MetricKind = Accuracy, objective_policy: TuneObjectivePolicy = Auto) -> TuneResult`
+- `cross_validate(model: WorkflowModel|Workflow|ModelSpec, x: DataFrame, y: Series|Slate, cv: CrossValidationOptions = {}, train_options: TrainOptions = {}, assess_options: AssessOptions = {}) -> CrossValidationReport`
+- `selection::tune(candidates: vector<Candidate>, x: DataFrame, y: Series|Slate, cv: CrossValidationOptions = {}, train_options: TrainOptions = {}, assess_options: AssessOptions = {}, objective_metric: MetricKind = Accuracy, objective_policy: TuneObjectivePolicy = Auto) -> TuneResult`
 - `selection::tune_specs(...) -> SpecTuneResult`
 - `selection::probe_specs(...) -> SpecTuneResult`
 
@@ -643,7 +643,7 @@ auto repeated_cv = lym::cross_validate(
 
 ### API Signature
 
-- `Workflow::save(path: string, x_train: DataFrame, y_train: Series|Thread, train_options: TrainOptions = {}, metadata: FlowBundleMetadata = {}) -> void`
+- `Workflow::save(path: string, x_train: DataFrame, y_train: Series|Slate, train_options: TrainOptions = {}, metadata: FlowBundleMetadata = {}) -> void`
 - `Workflow::load(path: string) -> Workflow`
 - `Workflow::restore(bundle: FlowBundle) -> Workflow`
 
@@ -687,10 +687,10 @@ const double delta = lym::max_abs_diff(pred_a, pred_b);
 
 - `online_factory::linear_classifier(options: OnlineLinearOptions = {}) -> OnlineLinearClassifier`
 - `online_factory::linear_regressor(options: OnlineLinearOptions = {}) -> OnlineLinearRegressor`
-- `OnlineLinear*::learn_(x: DataFrame, y: Series|Thread, options: TrainOptions = {}) -> OnlineLinear*&`
-- `OnlineLinear*::advance_(x: DataFrame, y: Series|Thread, options: TrainOptions = {}) -> OnlineLinear*&`
+- `OnlineLinear*::learn_(x: DataFrame, y: Series|Slate, options: TrainOptions = {}) -> OnlineLinear*&`
+- `OnlineLinear*::advance_(x: DataFrame, y: Series|Slate, options: TrainOptions = {}) -> OnlineLinear*&`
 - `OnlineLinear*::infer(x: DataFrame, options: InferOptions = {}) -> Series`
-- `OnlineLinear*::assess(x: DataFrame, y: Series|Thread, options: AssessOptions = {}) -> MetricReport`
+- `OnlineLinear*::assess(x: DataFrame, y: Series|Slate, options: AssessOptions = {}) -> MetricReport`
 
 ### Notes
 

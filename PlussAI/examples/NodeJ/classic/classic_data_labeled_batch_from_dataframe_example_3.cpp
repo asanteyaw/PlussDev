@@ -9,13 +9,13 @@
 int main() {
   namespace cls = pluss::ai::classic;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame frame({
-      {"income", Thread(pluss::make_series({1.0, 1.5, 2.0}, {3}, f64))},
-      {"default", Thread(pluss::make_series({0.0, 1.0, 1.0}, {3}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.5, 2.0}, {3}, f64))},
+      {"default", Slate(pluss::make_series({0.0, 1.0, 1.0}, {3}, f64))},
   });
 
   cls::DataFrameBatchOptions no_label{};

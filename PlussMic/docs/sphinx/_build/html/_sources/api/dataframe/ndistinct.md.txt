@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1b04cf0d00f3 -->
+<!-- pluss-signature-hash: 6e502bc39d48 -->
 
 # DataFrame::ndistinct
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::ndistinct(bool dropnull = true) const -> Thread
+DataFrame::ndistinct(bool dropnull = true) const -> Slate
 ```
 
 ## What It Does
@@ -35,7 +35,7 @@ from the distinct count entirely (`true`, the default).
 
 ## Returns
 
-`Thread`
+`Slate`
     One `Int64` entry per selected feature, labeled by feature name, named
     `"ndistinct"`.
 
@@ -47,8 +47,8 @@ Example 1. Count distinct values per feature on a small frame.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",   Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"city", Thread(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"}))},
+    {"id",   Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"city", Slate(pluss::make_note({"Accra", "Tema", "Accra", "Kumasi"}))},
 });
 std::cout << orders;
 ```

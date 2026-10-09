@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b975ca99e5ac -->
+<!-- pluss-signature-hash: a13c8f867cdd -->
 
 # DataFrame::align
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame::align(const AlignSpec& spec) const -> DataFrame
-DataFrame::align(const Thread& new_label) const -> DataFrame
+DataFrame::align(const Slate& new_label) const -> DataFrame
 ```
 
 ## What It Does
@@ -30,14 +30,14 @@ feature subset — all in the same call.
 
 ## Parameters
 
-**new_label** (`const Thread&`, case-only overload)
+**new_label** (`const Slate&`, case-only overload)
 
 The target case-label axis, in the exact order you want the output rows in. Equivalent
 to `align(AlignSpec{.label = new_label})`.
 
 **spec** (`const AlignSpec&`)
 
-- **`label`** (`std::optional<Thread>`, default unset): target case-label axis. Leave
+- **`label`** (`std::optional<Slate>`, default unset): target case-label axis. Leave
   unset to keep the frame's existing case axis unchanged while still reordering
   features via `features`.
 - **`features`** (`std::vector<std::string>`, default empty): target feature order.
@@ -68,11 +68,11 @@ the source.
 using namespace pluss::table;
 
 auto prices = DataFrame({
-    {"price", Thread(pluss::make_series({10.0, 20.0, 30.0}))},
-    {"grade", Thread(pluss::make_note({"A", "B", "C"}))},
-}, Thread(pluss::make_note({"p1", "p2", "p3"})));
+    {"price", Slate(pluss::make_series({10.0, 20.0, 30.0}))},
+    {"grade", Slate(pluss::make_note({"A", "B", "C"}))},
+}, Slate(pluss::make_note({"p1", "p2", "p3"})));
 
-auto target = Thread(pluss::make_note({"p2", "p4", "p1"}));
+auto target = Slate(pluss::make_note({"p2", "p4", "p1"}));
 auto reindexed = prices.align(target);
 std::cout << reindexed;
 ```

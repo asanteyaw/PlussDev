@@ -16,6 +16,10 @@ void          workflow::Workflow::save(const std::string& path) const;
 workflow::Workflow   workflow::load(const std::string& path);
 ```
 
+## What It Does
+
+This page states what a saved bundle guarantees when it is loaded again, and where the guarantee stops. The four entry points share one contract: a model or workflow written by `save` and read back by `load` predicts the same way it did when it was saved, given the same inputs. Anything the bundle does not record is not restored.
+
 ## Parameters
 
 `path`
@@ -83,14 +87,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"a", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
-      {"b", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+      {"a", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"b", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
 
@@ -147,16 +151,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"id", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
-      {"income", Thread(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"id", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   lymph::options::DFBatch data_options{};
@@ -216,14 +220,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series a = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
-  const DataFrame x({{"a", Thread(a)}});
+  const DataFrame x({{"a", Slate(a)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.learn_(x, y);

@@ -42,8 +42,8 @@ Example 1. A classic two-way contingency table has two retained dimensions.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
 });
 
 std::cout << df.contingency("city", "channel").ndim() << "\n";
@@ -60,9 +60,9 @@ dimension.
 
 ```cpp
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto ct = df.contingency({"city", "channel", "weekend"});

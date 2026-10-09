@@ -39,7 +39,7 @@ Example 1. Round every row of a `Timeline` feature to the nearest hour.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T09:47:12Z",
           "2024-06-01T14:05:00Z",
       }))}});
@@ -82,7 +82,7 @@ Example 2. Round to the nearest second with `"S"`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T14:05:00.300000000Z",
           "2024-06-01T14:05:00.700000000Z",
       }))}});
@@ -124,7 +124,7 @@ Example 3. Round to the nearest minute with `"min"`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T14:05:29Z",
           "2024-06-01T14:05:31Z",
       }))}});
@@ -168,7 +168,7 @@ just after local noon.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T11:59:00Z",
           "2024-06-01T12:01:00Z",
       }))}});
@@ -213,7 +213,7 @@ boundaries, to confirm the tie-break direction.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T09:30:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T09:30:00Z"}))}});
 std::cout << events;
 
 auto out = events.tl().round("H");

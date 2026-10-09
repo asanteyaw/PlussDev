@@ -14,14 +14,53 @@ a label, not a re-expression of the input features.
 
 ## How To Call It
 
+Fit an outlier isolator on one feature with a single extreme value, then score and label each row. The program prints how many scores and labels came back.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::prep::OutlierIsolator isolator;  // contamination = auto by default
-isolator.learn(train_batch);
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-const pluss::Series scores = isolator.score_samples(probe_batch).value();  // continuous, lower = more anomalous
-const pluss::Series labels = isolator.infer(probe_batch).value();          // -1 (anomaly) or 1 (normal)
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.1, 0.0, 0.2, 0.1, 0.0, 9.0, 0.1}, {10, 1}, cfg);
+  cls::FeatureBatch batch{};
+  batch.x = x;
+  cls::prep::OutlierIsolator isolator;
+  isolator.learn(batch);
+  const pluss::Series scores = isolator.score_samples(batch).value();
+  const pluss::Series labels = isolator.infer(batch).value();
+  std::cout << "scores = " << scores.numel() << "\n";
+  std::cout << "labels = " << labels.numel() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+scores = 10
+labels = 10
 ```
 
 ## Related Pages

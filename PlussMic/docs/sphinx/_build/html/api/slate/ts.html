@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slate::ts &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Slate::unname" href="unname.html" />
+    <link rel="prev" title="Slate::truediv" href="truediv.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9f1772b1ecaa -->
+<section id="slate-ts">
+<h1>Slate::ts<a class="headerlink" href="#slate-ts" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../slate_api_reference.html"><span class="doc std std-doc">Back to Slate API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="o">::</span><span class="n">ts</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">TimeSeriesAccessor</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Enters the dedicated time-series-<em>numerics</em> accessor for this thread — period-over-
+period returns, differencing, lag/lead, rolling and expanding windows, exponentially-
+weighted statistics, gap filling, resampling, and axis-aligned arithmetic, one method
+per operation. Unlike <a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tl()</span></code></span></a> (which requires <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> payloads),
+<code class="docutils literal notranslate"><span class="pre">ts()</span></code> requires the thread to already be a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> — cast it first with
+<a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">astype()</span></code></span></a>/<a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a> if it isn’t.</p>
+<p>Unlike <a class="reference internal" href="../dataframe/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ts()</span></code></span></a>, this overload takes no options — there’s
+no <code class="docutils literal notranslate"><span class="pre">group</span></code>/<code class="docutils literal notranslate"><span class="pre">anchor</span></code> concept for a single thread outside a frame, and duration-based
+methods that need an explicit time axis (like the duration overload of <code class="docutils literal notranslate"><span class="pre">rolling()</span></code>)
+simply take that axis as a direct argument instead.</p>
+<p>This page previews the accessor’s most common entry points. Every one of its methods
+has its own dedicated, example-rich reference page — start at the
+<a class="reference internal" href="../../slate_ts_accessor_api_reference.html"><span class="doc std std-doc">TimeSeriesAccessor API Reference</span></a> and use its
+left sidebar to jump straight to any method (<code class="docutils literal notranslate"><span class="pre">lag</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ewm</span></code>, and more).</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code>
+A lightweight accessor bound to this (numeric) thread. Every method on it returns a
+new <code class="docutils literal notranslate"><span class="pre">Slate</span></code> (or a <code class="docutils literal notranslate"><span class="pre">TimeSeriesResample</span></code>/<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> for the block/resample methods);
+the source thread is never mutated.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Compute a lag and a period-over-period difference on a numeric thread.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">load</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">15.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">lagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">load</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">lagged</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  10
+2  20
+3  15
+
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.lag(1)</span></code> is equivalent to <a class="reference internal" href="shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shift(1)</span></code></span></a>: each position now shows the previous
+position’s value, with position <code class="docutils literal notranslate"><span class="pre">0</span></code> becoming <code class="docutils literal notranslate"><span class="pre">NULL</span></code> since it has no predecessor.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">changes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">load</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">diff</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">changes</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  NULL
+1  10
+2  -5
+3  15
+
+ptype: Series
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.diff(1)</span></code> is <code class="docutils literal notranslate"><span class="pre">load[i]</span> <span class="pre">-</span> <span class="pre">load[i</span> <span class="pre">-</span> <span class="pre">1]</span></code>: position <code class="docutils literal notranslate"><span class="pre">1</span></code> is <code class="docutils literal notranslate"><span class="pre">20</span> <span class="pre">-</span> <span class="pre">10</span> <span class="pre">=</span> <span class="pre">10</span></code>, position <code class="docutils literal notranslate"><span class="pre">2</span></code> is
+<code class="docutils literal notranslate"><span class="pre">15</span> <span class="pre">-</span> <span class="pre">20</span> <span class="pre">=</span> <span class="pre">-5</span></code>, position <code class="docutils literal notranslate"><span class="pre">3</span></code> is <code class="docutils literal notranslate"><span class="pre">30</span> <span class="pre">-</span> <span class="pre">15</span> <span class="pre">=</span> <span class="pre">15</span></code>; position <code class="docutils literal notranslate"><span class="pre">0</span></code> has no prior position to
+subtract, so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">ts()</span></code> on a non-numeric thread throws before the accessor’s methods can run.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">words</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">lag</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TimeSeriesAccessor::lag: source must be Series
+</pre></div>
+</div>
+<p>The check happens lazily, on the first method call against the accessor — <code class="docutils literal notranslate"><span class="pre">ts()</span></code>
+itself never throws, since it just binds the thread without inspecting it.</p>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The source thread must already be a numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; every accessor method throws
+otherwise (<code class="docutils literal notranslate"><span class="pre">ts()</span></code> itself doesn’t validate eagerly).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.lag(periods)</span></code> on a numeric thread behaves identically to <a class="reference internal" href="shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shift(periods)</span></code></span></a>
+— both introduce <code class="docutils literal notranslate"><span class="pre">NULL</span></code> at the vacated end.</p></li>
+<li><p>No <code class="docutils literal notranslate"><span class="pre">options</span></code>/<code class="docutils literal notranslate"><span class="pre">TsOptions</span></code> parameter here, unlike <a class="reference internal" href="../dataframe/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::ts()</span></code></span></a>
+— duration-aware methods take their time axis directly as an argument instead.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::shift</span></code></span></a>: the lower-level positional shift <code class="docutils literal notranslate"><span class="pre">.ts().lag()</span></code> is built
+on, without the time-series-accessor framing.</p></li>
+<li><p><a class="reference internal" href="tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::tl</span></code></span></a>: the equivalent dedicated accessor for calendar/timestamp
+components on <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> payloads, instead of numeric time-series values.</p></li>
+<li><p><a class="reference internal" href="weigh.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::weigh</span></code></span></a>, <a class="reference internal" href="bounded.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::bounded</span></code></span></a>: lower-level windowing
+primitives that some of this accessor’s fixed-width methods are built on top of.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="truediv.html">
+    <span class="label">Previous</span>
+    <span class="title">truediv</span>
+  </a>
+  <a class="next-link" href="unname.html">
+    <span class="label">Next</span>
+    <span class="title">unname</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../slate_api_reference.html">Slate API Reference</a><ul>
+      <li>Previous: <a href="truediv.html" title="previous chapter">Slate::truediv</a></li>
+      <li>Next: <a href="unname.html" title="next chapter">Slate::unname</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/slate/ts.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

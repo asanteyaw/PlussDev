@@ -178,7 +178,7 @@ def generated_records() -> list[dict[str, object]]:
     return records
 
 
-def accessor_records(path: Path, class_name: str) -> list[dict[str, object]]:
+def accessor_records(path: Path, class_name: str, public_scope: str) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     inside_class = False
     public = False
@@ -220,10 +220,10 @@ def accessor_records(path: Path, class_name: str) -> list[dict[str, object]]:
             continue
         record: dict[str, object] = {
             "source": str(path.relative_to(ROOT)),
-            "scope": class_name,
+            "scope": public_scope,
             "line": statement_line,
             "name": name,
-            "signature": f"{current_return} {class_name}::{name}({compact(parameters)}) const",
+            "signature": f"{current_return} {public_scope}::{name}({compact(parameters)}) const",
             "current_return": current_return,
         }
         record.update(classify_generated(name, current_return))
@@ -251,9 +251,9 @@ def manual_record(name: str, signature: str, current: str, target: str,
 def manual_records() -> list[dict[str, object]]:
     rows = [
         manual_record("undefined", "static Note Note::undefined() noexcept", "Note", "Note", "untyped", "undefined handle constructor", "none", "src/CodeN/core/Note.h"),
-        manual_record("nlp", "NoteNlpAccessor Note::nlp() const noexcept", "NoteNlpAccessor", "NoteNlpAccessor", "accessor", "borrowed linguistic operation gateway", "complete", "src/CodeN/core/Note.h"),
-        manual_record("regex", "NoteRegexAccessor Note::regex() const noexcept", "NoteRegexAccessor", "NoteRegexAccessor", "accessor", "borrowed regular-expression operation gateway", "complete", "src/CodeN/core/Note.h"),
-        manual_record("tex", "NoteTexAccessor Note::tex() const noexcept", "NoteTexAccessor", "NoteTexAccessor", "accessor", "borrowed TeX/LaTeX-source operation gateway", "complete", "src/CodeN/core/Note.h"),
+        manual_record("nlp", "Note::NlpAccessor Note::nlp() const noexcept", "Note::NlpAccessor", "Note::NlpAccessor", "accessor", "borrowed linguistic operation gateway", "complete", "src/CodeN/core/Note.h"),
+        manual_record("regex", "Note::RegexAccessor Note::regex() const noexcept", "Note::RegexAccessor", "Note::RegexAccessor", "accessor", "borrowed regular-expression operation gateway", "complete", "src/CodeN/core/Note.h"),
+        manual_record("tex", "Note::TexAccessor Note::tex() const noexcept", "Note::TexAccessor", "Note::TexAccessor", "accessor", "borrowed TeX/LaTeX-source operation gateway", "complete", "src/CodeN/core/Note.h"),
         manual_record("defined", "bool Note::defined() const", "bool", "bool", "metadata", "presence query", "none"),
         manual_record("dim", "std::int64_t Note::dim() const", "std::int64_t", "std::int64_t", "metadata", "rank query", "none"),
         manual_record("size", "std::int64_t Note::size(std::int64_t dim) const", "std::int64_t", "std::int64_t", "metadata", "single extent query", "none"),
@@ -367,9 +367,9 @@ def manual_records() -> list[dict[str, object]]:
 def build_manifest() -> dict[str, object]:
     records = (
         generated_records()
-        + accessor_records(NLP_DECLS, "NoteNlpAccessor")
-        + accessor_records(REGEX_DECLS, "NoteRegexAccessor")
-        + accessor_records(TEX_DECLS, "NoteTexAccessor")
+        + accessor_records(NLP_DECLS, "NoteNlpAccessor", "Note::NlpAccessor")
+        + accessor_records(REGEX_DECLS, "NoteRegexAccessor", "Note::RegexAccessor")
+        + accessor_records(TEX_DECLS, "NoteTexAccessor", "Note::TexAccessor")
         + manual_records()
     )
     summary: dict[str, int] = {}

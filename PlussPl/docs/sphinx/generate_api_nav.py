@@ -26,7 +26,7 @@ STATIC_DIR = SPHINX_ROOT / "_static"
 
 # ---------------------------------------------------------------------------
 # Pane / Studio / Trace: plain alphabetical classes, exactly like every
-# PlussMic class (DataFrame, Catalog, Thread, ...) — the sidebar groups by
+# PlussMic class (DataFrame, Catalog, Slate, ...) — the sidebar groups by
 # first letter, built straight from the files on disk.
 # ---------------------------------------------------------------------------
 

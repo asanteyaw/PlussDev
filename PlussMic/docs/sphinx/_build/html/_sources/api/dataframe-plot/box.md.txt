@@ -75,9 +75,9 @@ Example 1. No explicit features: every numeric feature in the frame is summarize
 using namespace pluss::table;
 
 auto scores = DataFrame({
-    {"midterm", Thread(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0}))},
-    {"final",   Thread(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0}))},
-    {"cohort",  Thread(pluss::make_note({"Morning", "Evening", "Morning", "Evening", "Morning"}))},
+    {"midterm", Slate(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0}))},
+    {"final",   Slate(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0}))},
+    {"cohort",  Slate(pluss::make_note({"Morning", "Evening", "Morning", "Evening", "Morning"}))},
 });
 
 auto chart = scores.plot().box();

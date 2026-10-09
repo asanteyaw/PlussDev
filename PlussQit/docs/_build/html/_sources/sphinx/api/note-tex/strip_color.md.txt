@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_color
+# Note::TexAccessor::strip_color
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_color() const
+Note Note::TexAccessor::strip_color() const
 ```
 
 ## Remove Color Styling While Retaining Visible Content

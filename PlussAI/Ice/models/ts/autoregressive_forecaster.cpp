@@ -196,6 +196,7 @@ struct FeatureEncoder {
   out.objective_regularization = options.objective_regularization;
   out.loop_regularization = options.loop_regularization;
   out.validation = options.validation;
+  out.progress = options.progress;
   out.execution = options.execution;
   return out;
 }
@@ -613,7 +614,8 @@ void AutoregressiveForecaster::learn(const AutoregressiveBatch& train,
   const auto parameters = impl_->all_parameters();
   PLUSS_CHECK(!parameters.empty(),
               "pluss::ai::ice::models::AutoregressiveForecaster::learn: model has no parameters.");
-  auto optimizer = ice::make_optimizer(parameters, make_optimizer_options_(options));
+  const TrainOptions runtime_options = make_optimizer_options_(options);
+  auto optimizer = ice::make_optimizer(parameters, runtime_options);
 
   const auto n = train_on_device.encoder_target.sizes()[0];
   std::mt19937_64 rng(options.seed);
@@ -626,6 +628,9 @@ void AutoregressiveForecaster::learn(const AutoregressiveBatch& train,
        options.loop_regularization.restore_best_weights)) {
     callbacks.add(std::make_shared<EarlyStopCallback>(options.validation, options.loop_regularization));
   }
+  if (options.progress.verbose) {
+    callbacks.add(std::make_shared<EpochLoggerCallback>(options.progress));
+  }
   RunState state{
       .model = nullptr,
       .stage = StepStage::Learn,
@@ -636,6 +641,7 @@ void AutoregressiveForecaster::learn(const AutoregressiveBatch& train,
       .rows = 0,
       .metrics = {},
       .parameters = &parameters,
+      .recipe = &runtime_options,
       .stop_requested = false,
       .stop_reason = {},
       .exception_message = {},

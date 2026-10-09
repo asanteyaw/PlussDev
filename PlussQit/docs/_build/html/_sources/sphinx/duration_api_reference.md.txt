@@ -20,14 +20,12 @@ anchor to any calendar date). Elapsed nanoseconds and calendar positions are
 separate types because they obey different arithmetic rules.
 
 `Duration` is a genuine standalone N-D array type, not a helper that only
-exists inside a `Timeline` expression — it has its own shape (`dim()`,
+exists inside a `Timeline` expression. It has its own shape (`dim()`,
 `numel()`, `sizes()`), its own factories (including `range()`, which builds an
-array with no `Timeline` involved at all), and a full arithmetic/comparison/
-conversion surface. The one real asymmetry: `Duration` is not one of the four
-`ThreadKind` payloads a DataFrame column can hold (`Series`, `Note`,
-`Timeline`, `TimeIndex`) — to store elapsed time in a column, convert to a
-plain `Series` first via one of the [`total()`](api/duration/total_nanoseconds.md)
-accessor's unit methods.
+array with no `Timeline` involved at all), and a full arithmetic, comparison,
+and conversion surface. It is also the elapsed-time payload kind used by the
+table layer alongside `Series`, `Note`, and `Timeline`; it does not need to be
+reinterpreted as either a number or an instant to live in a column.
 
 Use `Duration` when you have elapsed time that isn't anchored to a particular
 calendar date:

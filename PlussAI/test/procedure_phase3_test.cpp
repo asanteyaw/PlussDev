@@ -20,7 +20,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -44,28 +44,29 @@ lymph::LabeledBatch regression_batch() {
 
 DataFrame raw_frame() {
   return DataFrame({
-      {"id", Thread(pluss::make_series(std::vector<double>{100, 101, 102, 103}, {4}, f64()))},
-      {"timestamp", Thread(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {4}, f64()))},
-      {"x", Thread(pluss::make_series(std::vector<double>{0, 1, 2, 3}, {4}, f64()))},
-      {"y", Thread(pluss::make_series(std::vector<double>{0, 2, 4, 6}, {4}, f64()))},
+      {"id", Slate(pluss::make_series(std::vector<double>{100, 101, 102, 103}, {4}, f64()))},
+      {"timestamp", Slate(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {4}, f64()))},
+      {"x", Slate(pluss::make_series(std::vector<double>{0, 1, 2, 3}, {4}, f64()))},
+      {"y", Slate(pluss::make_series(std::vector<double>{0, 2, 4, 6}, {4}, f64()))},
   });
 }
 
 bool run_phase3_checks(std::ostream* err = nullptr) {
   {
-    lymph::Payload payload = lymph::payload::make(raw_frame())
+    lymph::workflow::Payload sample = lymph::workflow::payload::make(raw_frame())
         .features({"x"})
         .label("y")
-        .time(lymph::TimeOptions{.index = "timestamp", .horizon = 1});
+        .time(lymph::workflow::TimeOptions{.index = "timestamp", .horizon = 1});
     const ai::Procedure proc = ai::procedure::make({
-        ai::procedure::step("gate", "raw", "clean", lymph::Policy{
+        ai::procedure::step("gate", "raw", "clean", lymph::workflow::Policy{
             .drop_columns = {"id"},
             .require_columns = {"timestamp", "x", "y"},
             .reject_missing = {"timestamp", "y"},
         }),
     });
-    const ai::ProcedureResult result = proc.run({ai::procedure::input("raw", payload)});
-    const lymph::Payload clean = result.get<lymph::Payload>("clean");
+    const ai::ProcedureResult result = proc.run({ai::procedure::input("raw", sample)});
+    const lymph::workflow::Payload clean =
+        result.get<lymph::workflow::Payload>("clean");
     if (!clean.has_time() || clean.time_feature() != "timestamp" || clean.frame().get("id").has_value()) {
       if (err) *err << "Procedure Policy adapter should apply raw admission while preserving Payload time roles\n";
       return false;
@@ -117,14 +118,16 @@ bool run_phase3_checks(std::ostream* err = nullptr) {
   }
 
   {
-    lymph::Workflow wf = lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 3}));
+    lymph::workflow::Workflow wf =
+        lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 3}));
     const ai::Procedure learn_proc = ai::procedure::make({
         ai::procedure::step("learn_wf", "train", "workflow", wf),
     });
     ai::RunOptions learn_mode{};
     learn_mode.mode = ai::ProcedureMode::Learn;
     const ai::ProcedureResult learned = learn_proc.run({ai::procedure::input("train", regression_batch())}, learn_mode);
-    const lymph::Workflow trained = learned.get<lymph::Workflow>("workflow");
+    const lymph::workflow::Workflow trained =
+        learned.get<lymph::workflow::Workflow>("workflow");
     if (!trained.trained()) {
       if (err) *err << "Procedure Workflow adapter should return a trained Workflow in Learn mode\n";
       return false;

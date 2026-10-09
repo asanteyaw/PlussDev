@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteRegexAccessor::replace
+# Note::RegexAccessor::replace
 
 [Back to Note API Reference](../../note_api_reference)
 
 ## Signatures
 
 ```cpp
-Note NoteRegexAccessor::replace(std::string_view pattern,
+Note Note::RegexAccessor::replace(std::string_view pattern,
                                 std::string_view replacement,
                                 std::int64_t flags = 0) const
 ```
@@ -131,9 +131,9 @@ regex().replace: The expression contained mismatched ( and ).
 ## See Also
 
 - [`Note::replace`](../note/replace.md): literal (non-regex) global substitution.
-- [`NoteRegexAccessor::findall`](findall.md): extract the matches instead of
+- [`Note::RegexAccessor::findall`](findall.md): extract the matches instead of
   rewriting them.
-- [`NoteRegexAccessor::split`](split.md): split each cell at the matches.
+- [`Note::RegexAccessor::split`](split.md): split each cell at the matches.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="match.html">

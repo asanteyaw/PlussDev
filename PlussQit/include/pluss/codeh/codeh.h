@@ -7,7 +7,7 @@
 
 #include "CodeH/core/Timeline.h"
 #include "CodeH/core/Duration.h"
-#include "CodeH/core/TimeIndex.h"
+#include "CodeH/core/TimelineIndexAccessor.h"
 #include "CodeH/core/Printing.h"
 #include "CodeH/compat/Invoke.h"
 

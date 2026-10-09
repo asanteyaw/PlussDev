@@ -17,18 +17,36 @@ over.
 
 ## How To Call It
 
+Build a layer that maps 784 inputs to 128 features, then layer-normalize and apply a ReLU. The input is float32 so it matches the default layer parameters. The program prints the output shape.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::LayerNormOptions opts{};
-opts.normalized_size = 128;  // must match the width of the axis being normalized
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-nn::Schedule net;
-net.append("fc1", nn::Fusion(784, 128));
-net.append("norm1", nn::LayerNorm(opts));
-net.append("act1", nn::ReLU());
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::LayerNormOptions opts{};
+  opts.normalized_size = 128;
+  nn::Schedule net;
+  net.append("fc1", nn::Fusion(784, 128));
+  net.append("norm1", nn::LayerNorm(opts));
+  net.append("act1", nn::ReLU());
+  const pluss::Series x = pluss::make_series(std::vector<float>(2 * 784, 0.5F), {2, 784});
+  const pluss::Series y = net.forward(x);
+  std::cout << "output = " << y.sizes()[0] << " x " << y.sizes()[1] << "\n";
+  return 0;
+}
+```
 
-const Series y = net.forward(x);
+Output
+
+```text
+output = 2 x 128
 ```
 
 `LayerNorm` composes into a [`Schedule`](module/Schedule.md) the same way

@@ -63,7 +63,7 @@ is required to match (`full = true`).
 using namespace pluss::table;
 
 auto codes = DataFrame({
-    {"code", Thread(pluss::make_note(
+    {"code", Slate(pluss::make_note(
         {"A123", "A123XYZ", "123A", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -163,11 +163,11 @@ try {
 ### Output
 
 ```text
-Thread::matches: invalid regular expression: <implementation-defined regex error text>
+Slate::matches: invalid regular expression: <implementation-defined regex error text>
 ```
 
 The exact wording after the colon comes from the underlying `std::regex`
-implementation and varies by standard library, but the `"Thread::matches:
+implementation and varies by standard library, but the `"Slate::matches:
 invalid regular expression: "` prefix is always present.
 
 ## Notes

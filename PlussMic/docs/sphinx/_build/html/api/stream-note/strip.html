@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamNoteAccessor::titlecase" href="titlecase.html" />
@@ -58,11 +58,11 @@ trims any of the given characters, in any order, from either end.</p>
 <p class="admonition-title">Important</p>
 <p>StreamNoteAccessor requires the bound stream to be Note-kind
 Every method on this accessor — not just strip() — routes through
-<code class="docutils literal notranslate"><span class="pre">Thread::strip()</span></code> (or the equivalent) for the bound stream. If the stream isn’t
+<code class="docutils literal notranslate"><span class="pre">Slate::strip()</span></code> (or the equivalent) for the bound stream. If the stream isn’t
 Note-kind (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), the call throws
-<code class="docutils literal notranslate"><span class="pre">&quot;Thread::strip</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code> (the exact message names
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::strip</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code> (the exact message names
 whichever method actually ran). Cast first with
-<a class="reference internal" href="../stream/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(ThreadCastTarget::Note)</span></code></span></a> if the stream isn’t
+<a class="reference internal" href="../stream/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(SlateCastTarget::Note)</span></code></span></a> if the stream isn’t
 already text.</p>
 </div>
 </section>
@@ -132,7 +132,7 @@ callout above.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::strip is only valid for Note payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::strip is only valid for Note payload
 </pre></div>
 </div>
 </section>

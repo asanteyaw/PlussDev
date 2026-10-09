@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::simplify_fractions
+# Note::TexAccessor::simplify_fractions
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::simplify_fractions() const
+Note Note::TexAccessor::simplify_fractions() const
 ```
 
 ## Canonicalize Fraction Source Without Rendering It

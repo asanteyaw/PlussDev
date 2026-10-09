@@ -65,7 +65,7 @@ children = ["scaling/Introduction", "scaling/StandardScaler", "scaling/MinMaxSca
 
 [[family]]
 path = "lymph/prep/stage_family"
-page = "api/lymph/prep/stage_family.md"
+page = "api/lymph/prep/stage.md"
 title = "stage"
 maxdepth = 3
 children = ["stage/Introduction", "stage/Stage", "stage/standard_scaler", "stage/minmax_scaler", "stage/robust_scaler", "stage/maxabs_scaler", "stage/one_hot_encoder", "stage/ordinal_encoder", "stage/label_encoder", "stage/frequency_encoder", "stage/basen_encoder", "stage/hashing_encoder", "stage/target_encoder", "stage/woe_encoder", "stage/simple_imputer", "stage/neighbor_imputer", "stage/iterative_imputer", "stage/quantile_map", "stage/power_map", "stage/threshold_binarizer", "stage/vector_normalizer", "stage/polynomial_lift", "stage/custom"]
@@ -75,7 +75,7 @@ path = "lymph/prep"
 page = "api/lymph/prep.md"
 title = "prep"
 maxdepth = 3
-children = ["prep/route", "prep/stage_family", "prep/scaling", "prep/encoding", "prep/feature"]
+children = ["prep/route", "prep/stage", "prep/scaling", "prep/encoding", "prep/feature"]
 
 [[family]]
 path = "lymph/reports"

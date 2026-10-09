@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_and
+# Series::TraverseAccessor::find_and
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_and(const Series& lhs_mask,
+TraverseMatch Series::TraverseAccessor::find_and(const Series& lhs_mask,
                                                const Series& rhs_mask) const;
 TraverseMatch SeriesTraverseProxy::find_and(const Series& lhs_mask,
                                             const Series& rhs_mask) const;

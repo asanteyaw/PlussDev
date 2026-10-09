@@ -18,12 +18,12 @@ returns = """
 see_also = [
   "<a href=\"#label().align\"><code>DataFrame::label().align</code></a>: shorter case-axis-only surface when you are not also conforming features.",
   "<a href=\"#conform\"><code>DataFrame::conform</code></a>: align this frame to another frame's schema and labels in one call.",
-  "<a href=\"../../thread_api_reference.md#align\"><code>Thread::align</code></a>: lower-level alignment for a single extracted column."
+  "<a href=\"../../slate_api_reference.md#align\"><code>Slate::align</code></a>: lower-level alignment for a single extracted column."
 ]
 
 notes = [
   """
-`align(const Thread& new_label)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
+`align(const Slate& new_label)` is the row-axis shortcut. It keeps the current feature set and only rebuilds the case axis.
 """,
   """
 `align(const AlignSpec& spec)` is the full structured form. Use it when you need to control target case labels, target feature order, and numeric fill behavior together.
@@ -58,7 +58,7 @@ name = "new_label"
 body = """
 Replacement case axis used by the case-label-only overload.
 
-Pass a note-backed or otherwise defined `Thread` containing the output row labels in the exact order you want. PlussMic will gather matching rows by label, insert missing rows for unmatched labels, and keep the existing feature set unchanged.
+Pass a note-backed or otherwise defined `Slate` containing the output row labels in the exact order you want. PlussMic will gather matching rows by label, insert missing rows for unmatched labels, and keep the existing feature set unchanged.
 """
 
 [[examples]]

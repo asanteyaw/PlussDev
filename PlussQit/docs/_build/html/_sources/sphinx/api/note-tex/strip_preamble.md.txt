@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_preamble
+# Note::TexAccessor::strip_preamble
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_preamble() const
+Note Note::TexAccessor::strip_preamble() const
 ```
 
 ## Isolate A Complete Document Body

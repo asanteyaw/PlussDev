@@ -8,22 +8,22 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const Series x = pluss::series::linspace(-2.0, 2.0, 64, ScalarType::Float64);
   const Series y = x.sin().gt(0.0).to(ScalarType::Float64);
-  const DataFrame raw({{"x", Thread(x)}, {"sin_x", Thread(x.sin())}, {"y", Thread(y)}});
-  lymph::Payload data = lymph::payload::make(raw).features({"x", "sin_x"}).label("y");
+  const DataFrame raw({{"x", Slate(x)}, {"sin_x", Slate(x.sin())}, {"y", Slate(y)}});
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x", "sin_x"}).label("y");
 
   lymph::NeighborFamilyOptions knn{};
   knn.k = 5;
   lymph::Builder models = lymph::builder::build({
-      {"neighbor", lymph::model::knn_classifier(knn)},
-      {"gauss", lymph::model::gaussian_nb_classifier()},
-      {"tree", lymph::model::decision_tree_classifier({.max_depth = 4})},
+      {"neighbor", lymph::models::knn_classifier(knn)},
+      {"gauss", lymph::models::gaussian_nb_classifier()},
+      {"tree", lymph::models::decision_tree_classifier({.max_depth = 4})},
   });
 
-  lymph::metrics::CrossValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
   const lymph::spotcheck::Result ranked = lymph::spotcheck::suite(models)

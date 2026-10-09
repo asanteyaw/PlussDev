@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::align_sentences
+# Note::NlpAccessor::align_sentences
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::align_sentences(const Note& other) const
+TokenBatch Note::NlpAccessor::align_sentences(const Note& other) const
 ```
 
 ## Sentence-Level Alignment Of Two Notes
@@ -63,9 +63,9 @@ same [`numel`](../note/numel.md), or one of them may be a **scalar**
 shape is ignored beyond its cell count. Two rejections, both raising
 `pluss::Error`:
 
-- `self` in bytes mode → `NoteNlpAccessor::align_sentences requires a UTF-8 text Note
+- `self` in bytes mode → `Note::NlpAccessor::align_sentences requires a UTF-8 text Note
   (lhs is bytes)`.
-- unequal `numel` with neither side a scalar → `NoteNlpAccessor::align_sentences expects
+- unequal `numel` with neither side a scalar → `Note::NlpAccessor::align_sentences expects
   equal numel or scalar broadcast`.
 
 The alignment is `O(m · n)` in sentences per cell and fully deterministic:
@@ -133,12 +133,12 @@ the single `+` token.
 
 ## See Also
 
-- [`NoteNlpAccessor::align_tokens`](align_tokens.md): the same alignment at word
+- [`Note::NlpAccessor::align_tokens`](align_tokens.md): the same alignment at word
   granularity.
-- [`NoteNlpAccessor::diff_words`](diff_words.md) / [`Note::diff_lines`](../note/diff_lines.md) /
+- [`Note::NlpAccessor::diff_words`](diff_words.md) / [`Note::diff_lines`](../note/diff_lines.md) /
   [`Note::diff_chars`](../note/diff_chars.md): change-only views at other
   granularities.
-- [`NoteNlpAccessor::tokens`](tokens.md): the `TokenBatch` shape in
+- [`Note::NlpAccessor::tokens`](tokens.md): the `TokenBatch` shape in
   detail.
 - [`Note::remove_prefix`](../note/remove_prefix.md): strip the one-byte tag back off
   a token.

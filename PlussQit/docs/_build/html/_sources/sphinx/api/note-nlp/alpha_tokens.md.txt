@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::alpha_tokens
+# Note::NlpAccessor::alpha_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::alpha_tokens() const
+TokenBatch Note::NlpAccessor::alpha_tokens() const
 ```
 
 ## Keep Letter-Only Tokens

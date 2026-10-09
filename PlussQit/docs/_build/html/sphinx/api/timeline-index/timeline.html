@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TimelineIndexAccessor::timeline &#8212; PlussQit  documentation</title>
+    <title>Timeline::TimelineIndexAccessor::timeline &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimelineIndexAccessor::to_note_iso" href="to_note_iso.html" />
-    <link rel="prev" title="TimelineIndexAccessor::take" href="take.html" />
+    <link rel="next" title="Timeline::TimelineIndexAccessor::to_note_iso" href="to_note_iso.html" />
+    <link rel="prev" title="Timeline::TimelineIndexAccessor::take" href="take.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,12 +36,12 @@
 
           <div class="body" role="main">
             
-  <section id="timelineindexaccessor-timeline">
-<h1>TimelineIndexAccessor::timeline<a class="headerlink" href="#timelineindexaccessor-timeline" title="Link to this heading">¶</a></h1>
+  <section id="timeline-timelineindexaccessor-timeline">
+<h1>Timeline::TimelineIndexAccessor::timeline<a class="headerlink" href="#timeline-timelineindexaccessor-timeline" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_index_accessor_api_reference.html"><span class="doc std std-doc">Back to Timeline Index Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">timeline</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">timeline</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -65,13 +65,13 @@ A reference to the underlying 1D temporal payload.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Expose the full time axis as a 1D <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
-<span class="p">});</span>
+<span class="p">}).</span><span class="n">index</span><span class="p">();</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">timeline</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -86,8 +86,18 @@ A reference to the underlying 1D temporal payload.</p>
 <p>Example 2. Drop to <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> semantics, do a transform there, then rebuild an
 index if you need ordered lookup semantics again.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">local_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">idx</span><span class="p">.</span><span class="n">timeline</span><span class="p">().</span><span class="n">floor</span><span class="p">(</span><span class="s">&quot;H&quot;</span><span class="p">);</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">local_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">local_axis</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">local_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">local_axis</span><span class="p">.</span><span class="n">index</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">local_axis</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;ordered=&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">boolalpha</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">local_idx</span><span class="p">.</span><span class="n">is_monotonic_increasing</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timeline(shape=[5], tz=UTC)
+[ 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-11-01 01:00:00, 2024-11-01 01:00:00 ]
+ordered=true
 </pre></div>
 </div>
 </section>
@@ -97,19 +107,19 @@ index if you need ordered lookup semantics again.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">timeline()</span></code> does not copy the time values by itself; it exposes the stored
 payload.</p></li>
-<li><p>The returned object is still 1D because <code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor</span></code> itself is 1D.</p></li>
+<li><p>The returned object is still 1D because <code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor</span></code> itself is 1D.</p></li>
 <li><p>Staying on <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> makes sense for formatting, calendar extraction,
 timezone transforms, and temporal arithmetic.</p></li>
 <li><p>If you need ordered lookup again after a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> transformation, rebuild a
-<code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor</span></code> from the transformed timeline.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor</span></code> from the transformed timeline.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="searchsorted.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::searchsorted</span></code></span></a>: ordered insertion lookup on the
+<li><p><a class="reference internal" href="searchsorted.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::searchsorted</span></code></span></a>: ordered insertion lookup on the
 index axis.</p></li>
-<li><p><a class="reference internal" href="slice_time.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::slice_time</span></code></span></a>: label-based time slicing without
+<li><p><a class="reference internal" href="slice_time.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::slice_time</span></code></span></a>: label-based time slicing without
 dropping down to <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -158,7 +168,6 @@ dropping down to <code class="docutils literal notranslate"><span class="pre">Ti
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -166,8 +175,8 @@ dropping down to <code class="docutils literal notranslate"><span class="pre">Ti
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -177,8 +186,8 @@ dropping down to <code class="docutils literal notranslate"><span class="pre">Ti
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_index_accessor_api_reference.html">Timeline Index Accessor API Reference</a><ul>
-      <li>Previous: <a href="take.html" title="previous chapter">TimelineIndexAccessor::take</a></li>
-      <li>Next: <a href="to_note_iso.html" title="next chapter">TimelineIndexAccessor::to_note_iso</a></li>
+      <li>Previous: <a href="take.html" title="previous chapter">Timeline::TimelineIndexAccessor::take</a></li>
+      <li>Next: <a href="to_note_iso.html" title="next chapter">Timeline::TimelineIndexAccessor::to_note_iso</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

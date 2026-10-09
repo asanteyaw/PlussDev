@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_metadata
+# Note::TexAccessor::strip_metadata
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_metadata() const
+Note Note::TexAccessor::strip_metadata() const
 ```
 
 ## Remove Front-Matter Declarations

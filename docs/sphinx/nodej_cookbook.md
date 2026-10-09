@@ -146,7 +146,7 @@ Use explicit mapping when dataset columns are mixed or you need strict policy be
 
 ### Options
 
-- `feature_names`, `label_feature`, `thread_policy`, `note_policy`
+- `feature_names`, `label_feature`, `slate_policy`, `note_policy`
 
 ### Examples
 
@@ -154,7 +154,7 @@ Use explicit mapping when dataset columns are mixed or you need strict policy be
 nje::DataFrameBatchOptions data_opts{};
 data_opts.feature_names = {"x1", "x2", "x3", "x4"};
 data_opts.label_feature = std::string("y");
-data_opts.thread_policy = nje::DataThreadPolicy::CastTemporalToSeries;
+data_opts.slate_policy = nje::DataSlatePolicy::CastTemporalToSeries;
 data_opts.note_policy = nje::DataNotePolicy::Reject;
 data_opts.layout = nje::ObservationLayout::Rows;
 

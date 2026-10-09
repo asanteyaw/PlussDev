@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Timeline::day" href="day.html" />
@@ -95,9 +95,9 @@ requested frequency and step.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">date_range(...)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, not a <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p></li>
-<li><p>Promote the result to <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> when the range is going to become an
-ordered lookup axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_range(...)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> and retains the ordinary temporal
+value surface.</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">.index()</span></code> on the result when it will serve as an ordered lookup axis.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> are scalar endpoints. This is not a pairwise
 vectorized-range constructor.</p></li>
 <li><p>The main toggle in practice is the combination of <code class="docutils literal notranslate"><span class="pre">freq</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code>.</p></li>
@@ -207,7 +207,6 @@ grid by changing <code class="docutils literal notranslate"><span class="pre">fr
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -215,8 +214,8 @@ grid by changing <code class="docutils literal notranslate"><span class="pre">fr
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::center
+# Series::StatAccessor::center
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::center() const
-Series SeriesStatAccessor::center(std::int64_t dim) const
+Series Series::StatAccessor::center() const
+Series Series::StatAccessor::center(std::int64_t dim) const
 Series SeriesStatProxy::center() const
 Series SeriesStatProxy::center(std::int64_t dim) const
 ```

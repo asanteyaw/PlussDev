@@ -134,12 +134,12 @@ An empty token `Note` and an empty range for the one cell.
 
 ## See Also
 
-- [`NoteNlpAccessor::diff_words`](../note-nlp/diff_words.md) / [`Note::diff_lines`](diff_lines.md):
+- [`Note::NlpAccessor::diff_words`](../note-nlp/diff_words.md) / [`Note::diff_lines`](diff_lines.md):
   coarser change-only views.
-- [`NoteNlpAccessor::align_tokens`](../note-nlp/align_tokens.md) /
-  [`NoteNlpAccessor::align_sentences`](../note-nlp/align_sentences.md): transcripts that keep the
+- [`Note::NlpAccessor::align_tokens`](../note-nlp/align_tokens.md) /
+  [`Note::NlpAccessor::align_sentences`](../note-nlp/align_sentences.md): transcripts that keep the
   unchanged tokens.
-- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): the `TokenBatch` shape.
+- [`Note::NlpAccessor::tokens`](../note-nlp/tokens.md): the `TokenBatch` shape.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="defined.html">

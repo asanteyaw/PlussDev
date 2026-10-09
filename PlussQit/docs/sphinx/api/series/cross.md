@@ -159,7 +159,7 @@ cross: expected dim extent == 3
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::dot`](../series-linearalg/dot.md): the scalar
+- [`Series::LinearAlgAccessor::dot`](../series-linearalg/dot.md): the scalar
   companion product of two 3-vectors.
 - [`Series::outer`](outer.md): the rank-1 product of two vectors.
 

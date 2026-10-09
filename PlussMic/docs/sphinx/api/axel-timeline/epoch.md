@@ -95,7 +95,7 @@ try {
 ### Output
 
 ```text
-Thread::tl().epoch: unit is span-only; use Thread::tl().span
+Slate::tl().epoch: unit is span-only; use Slate::tl().span
 ```
 
 ## Notes
@@ -103,7 +103,7 @@ Thread::tl().epoch: unit is span-only; use Thread::tl().span
 - See the important callout above — the default unit is `Nanos`.
 - Only fixed-duration units are accepted; passing `Weeks`, `Months`,
   `Years`, or `BusinessDays` throws. The throw message references
-  `Thread::tl().span`, a suggestion that comes from the shared
+  `Slate::tl().span`, a suggestion that comes from the shared
   underlying engine — `Axel`'s `tl()` accessor has no `span()` method
   of its own.
 - Requires every bound field, in every frame, to be `Timeline`-kind — a

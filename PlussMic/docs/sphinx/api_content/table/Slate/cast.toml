@@ -1,0 +1,74 @@
+summary = """
+Cast the current slate into another payload family or numeric dtype.
+
+`Slate::cast(...)` is the direct typed-column casting surface behind many table-level conversions.
+"""
+
+returns = """
+`Slate`
+    Cast slate with the requested target family or dtype.
+"""
+
+see_also = [
+  "<a href=\"#as_series\"><code>Slate::as_series</code></a>, <a href=\"#as_note\"><code>Slate::as_note</code></a>: direct typed access without changing the payload.",
+  "<a href=\"../../dataframe_api_reference.md#cast\"><code>DataFrame::cast</code></a>: cast selected frame features in one call."
+]
+
+[[parameters]]
+name = "target"
+body = """
+Requested target payload family such as `Series`, `Note`, `Timeline`, or `TimeIndex`.
+"""
+
+[[parameters]]
+name = "options"
+body = """
+Structured cast policy.
+
+Use this when you need to control details such as:
+- numeric dtype selection,
+- invalid parse handling,
+- other target-specific cast behavior.
+"""
+
+[[parameters]]
+name = "series_dtype"
+body = """
+Optional scalar dtype used when the target is `SlateCastTarget::Series`.
+"""
+
+[[examples]]
+title = "Cast note-backed numeric text into a numeric series by naming the target dtype directly."
+code = """
+using namespace pluss::table;
+using pluss::ScalarType;
+
+auto out = Slate(pluss::make_note({"1.0", "2.0", "3.0"}))
+               .cast(SlateCastTarget::Series, ScalarType::Float64);
+"""
+output = """
+0  1
+1  2
+2  3
+ptype: Series
+"""
+
+[[examples]]
+title = "Use `SlateCastOptions` when invalid text should become null instead of throwing."
+code = """
+using namespace pluss::table;
+using pluss::ScalarType;
+
+SlateCastOptions options;
+options.series_dtype = ScalarType::Float64;
+options.invalid = ParseInvalid::Null;
+
+auto out = Slate(pluss::make_note({"4.0", "oops", "6.0"}))
+               .cast(SlateCastTarget::Series, options);
+"""
+output = """
+0  4
+1  NA
+2  6
+ptype: Series
+"""

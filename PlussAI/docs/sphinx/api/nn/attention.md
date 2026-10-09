@@ -25,18 +25,37 @@ lets every position attend directly to every other position.
 
 ## How To Call It
 
+Run self-attention on one token, then run a transformer encoder layer on the same input. The program prints the output width of each.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::MultiheadAttention attn(8, 2);
-const pluss::Series x = pluss::make_series({1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {1, 1, 8});
-const auto [output, weights] = attn.forward(x, x, x);  // self-attention
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-nn::TransformerEncoderLayer layer(8, 2, /*dim_feedforward=*/16);
-const pluss::Series y = layer.forward(x);  // plain Series in, plain Series out
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::MultiheadAttention attn(8, 2);
+  const pluss::Series x = pluss::make_series({1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {1, 1, 8});
+  const auto [output, weights] = attn.forward(x, x, x);
+  std::cout << "attention output = " << output.sizes()[2] << "\n";
+  nn::TransformerEncoderLayer layer(8, 2, /*dim_feedforward=*/16);
+  const pluss::Series y = layer.forward(x);
+  nn::Schedule net;
+  net.append(layer);
+  std::cout << "encoder output = " << y.sizes()[2] << "\n";
+  return 0;
+}
+```
 
-nn::Schedule net;
-net.append(layer);  // returns a plain Series -- ordinary append works, unlike rnn's tuple-returning layers
+Output
+
+```text
+attention output = 8
+encoder output = 8
 ```
 
 `MultiheadAttention::forward` always returns a `tuple<Series, Series>`

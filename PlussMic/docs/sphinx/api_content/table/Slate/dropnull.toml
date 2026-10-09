@@ -1,0 +1,37 @@
+summary = """
+Remove entries marked missing from the slate.
+
+This is the direct slate-level route when you want only the observed values carried forward.
+"""
+
+returns = """
+`Slate`
+    Slate containing only the non-missing entries.
+"""
+
+notes = [
+  """
+`dropnull()` operates on the slate validity mask. Plain `NaN` values inside a numeric series are not dropped unless they are represented as missing by the slate mask.
+""",
+  """
+The result is compacted: surviving entries are returned as a new shorter slate rather than leaving null holes in place.
+"""
+]
+
+[[examples]]
+title = "Drop entries masked as missing."
+code = """
+using namespace pluss::table;
+
+auto values = Slate(
+    pluss::make_series({10.0, 20.0, 30.0, 40.0}),
+    pluss::make_series(std::vector<bool>{true, false, true, false})
+);
+
+auto out = values.dropnull();
+"""
+output = """
+0  10
+1  30
+ptype: Series
+"""

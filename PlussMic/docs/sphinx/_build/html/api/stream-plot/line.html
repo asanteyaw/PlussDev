@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamPlotAccessor::scatter" href="scatter.html" />
@@ -54,28 +54,28 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Draws a single line trace of the bound stream’s own values, against either a plain case
 index (no <code class="docutils literal notranslate"><span class="pre">x</span></code> given) or an explicit companion <code class="docutils literal notranslate"><span class="pre">Stream</span></code> used as the x-axis. Every overload
-is a one-line forward — <code class="docutils literal notranslate"><span class="pre">base_.to_thread().plot(options_).line(...)</span></code> — into
-<a class="reference internal" href="../thread-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code></span></a>, converting the bound stream (and, if
-given, <code class="docutils literal notranslate"><span class="pre">x</span></code>) to <code class="docutils literal notranslate"><span class="pre">Thread</span></code> first via <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>. See that page for the full
+is a one-line forward — <code class="docutils literal notranslate"><span class="pre">base_.to_slate().plot(options_).line(...)</span></code> — into
+<a class="reference internal" href="../slate-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code></span></a>, converting the bound stream (and, if
+given, <code class="docutils literal notranslate"><span class="pre">x</span></code>) to <code class="docutils literal notranslate"><span class="pre">Slate</span></code> first via <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code>. See that page for the full
 mechanics; this page covers what’s specific to the <code class="docutils literal notranslate"><span class="pre">Stream</span></code> layer.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Stream has no name() — every chart is column-named “value”/”x”/”hue”
-<code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code>’s naming rule names the wrapped column after the source
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one, falling back to <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> (the bound thread) or
-<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (a companion thread) otherwise. <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code> never sets a name on the
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> it produces — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no <code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> concept at all — so every
+<code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code>’s naming rule names the wrapped column after the source
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own <code class="docutils literal notranslate"><span class="pre">name()</span></code> if it has one, falling back to <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> (the bound thread) or
+<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (a companion thread) otherwise. <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code> never sets a name on the
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> it produces — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no <code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> concept at all — so every
 <code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor</span></code> chart’s axis labels are <strong>always</strong> the generic fallback names: <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>
 for the bound stream, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> for a companion stream (other methods on this accessor use
 <code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code> for their own second-stream argument). There is no way to get a custom column name
-out of a <code class="docutils literal notranslate"><span class="pre">Stream</span></code>-sourced chart the way a named <code class="docutils literal notranslate"><span class="pre">Thread</span></code> or a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> feature can.</p>
+out of a <code class="docutils literal notranslate"><span class="pre">Stream</span></code>-sourced chart the way a named <code class="docutils literal notranslate"><span class="pre">Slate</span></code> or a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> feature can.</p>
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>Row (case) labels are still inherited, via with_label()
-Unlike naming, <strong>row labels do carry through</strong>: <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code> copies the bound
+Unlike naming, <strong>row labels do carry through</strong>: <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code> copies the bound
 stream’s own label (attached via <a class="reference internal" href="../stream/with_label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::with_label</span></code></span></a>) onto the
-resulting <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s row labels. <code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code>’s own inheritance rule then
+resulting <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s row labels. <code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code>’s own inheritance rule then
 applies — the bound stream’s label wins if present, otherwise a companion <code class="docutils literal notranslate"><span class="pre">x</span></code> stream’s
 label, otherwise a plain case index. See Examples 1 and 2.</p>
 </div>
@@ -84,8 +84,8 @@ label, otherwise a plain case index. See Examples 1 and 2.</p>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>, optional)
 A companion stream used as the x-axis. Must be the same size as the bound stream — a
-mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> (the message still refers
-to <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, since that’s where the size check actually runs after both streams
+mismatched size throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> (the message still refers
+to <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, since that’s where the size check actually runs after both streams
 convert). Omitted means the x-axis falls back to the bound stream’s own label, or a
 plain case index if it has none — see the important callout above.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>)
@@ -93,7 +93,7 @@ The identical struct documented on
 <a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a> (<code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">line_width</span></code>,
 <code class="docutils literal notranslate"><span class="pre">y_limit_method</span></code>, <code class="docutils literal notranslate"><span class="pre">align</span></code>) — see that page for each field’s meaning. <code class="docutils literal notranslate"><span class="pre">align</span></code> is
 accepted for shape-compatibility but has no observable effect here: <code class="docutils literal notranslate"><span class="pre">Stream::line()</span></code>
-only ever wraps at most two operands (the bound stream and <code class="docutils literal notranslate"><span class="pre">x</span></code>) into a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-level
+only ever wraps at most two operands (the bound stream and <code class="docutils literal notranslate"><span class="pre">x</span></code>) into a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-level
 call, which has no multi-key alignment step to configure.</p>
 </section>
 <section id="returns">
@@ -116,19 +116,19 @@ to a plain case index.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">revenue</span></code> has no label, so the x-axis falls back to a plain <code class="docutils literal notranslate"><span class="pre">0..3</span></code> case index; the y-axis
 is labeled <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> — never <code class="docutils literal notranslate"><span class="pre">&quot;revenue&quot;</span></code>, since <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no name to draw from.</p>
-<p><img alt="Output of Example 1" src="../../_images/line-14.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/line-15.svg" /></p>
 <p>Example 2. No companion stream, but the bound stream carries its own label — that label
 becomes the x-axis instead of a bare case index.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">}))</span>
-<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
+<span class="w">    </span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Q4&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">chart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled_revenue</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">();</span>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/line-22.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/line-23.svg" /></p>
 <p>Example 3. An explicit companion stream as the x-axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -141,7 +141,7 @@ becomes the x-axis instead of a bare case index.</p>
 </div>
 <p>The line is drawn against <code class="docutils literal notranslate"><span class="pre">month</span></code>’s four categorical positions instead of a case index; the
 x-axis is titled <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">month</span></code> has no name to contribute either).</p>
-<p><img alt="Output of Example 3" src="../../_images/line-33.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/line-34.svg" /></p>
 <p>Example 4. An explicit <code class="docutils literal notranslate"><span class="pre">LinePlotOptions</span></code>, tuning opacity and the y-axis fit, with no
 companion stream.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
@@ -156,7 +156,7 @@ companion stream.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 4" src="../../_images/line-43.svg" /></p>
+<p><img alt="Output of Example 4" src="../../_images/line-44.svg" /></p>
 <p>Example 5. A companion stream together with explicit options — the four-argument-equivalent
 overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
@@ -188,7 +188,7 @@ overload.</p>
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::plot: thread size mismatch
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::plot: thread size mismatch
 </pre></div>
 </div>
 </section>
@@ -196,12 +196,12 @@ overload.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Delegates straight to <a class="reference internal" href="../thread-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code></span></a> after
-<code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code> — see that page (and, beneath it,
+<li><p>Delegates straight to <a class="reference internal" href="../slate-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code></span></a> after
+<code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code> — see that page (and, beneath it,
 <a class="reference internal" href="../dataframe-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFramePlotAccessor::line</span></code></span></a>) for the full mechanics.</p></li>
 <li><p>Column naming is always the generic fallback (<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code>) — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no
-<code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> the way <code class="docutils literal notranslate"><span class="pre">Thread</span></code> does. See the important callout above.</p></li>
-<li><p>Row labels <strong>do</strong> carry through, via <code class="docutils literal notranslate"><span class="pre">Stream::with_label()</span></code> → <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> the way <code class="docutils literal notranslate"><span class="pre">Slate</span></code> does. See the important callout above.</p></li>
+<li><p>Row labels <strong>do</strong> carry through, via <code class="docutils literal notranslate"><span class="pre">Stream::with_label()</span></code> → <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code>.</p></li>
 <li><p>A mismatched-size companion <code class="docutils literal notranslate"><span class="pre">x</span></code> throws — see Example 6.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see
 <a class="reference internal" href="../catalog-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::line</span></code></span></a>’s important callout for how to view
@@ -211,7 +211,7 @@ or save the result.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../thread-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::line</span></code></span></a>: the method this delegates to.</p></li>
+<li><p><a class="reference internal" href="../slate-plot/line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::line</span></code></span></a>: the method this delegates to.</p></li>
 <li><p><a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::bar</span></code></span></a>: the same shape, drawn as bars instead of a connected
 line.</p></li>
 <li><p><a class="reference internal" href="scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::scatter</span></code></span></a>: points against a required companion stream,

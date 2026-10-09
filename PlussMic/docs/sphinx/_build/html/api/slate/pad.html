@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slate::pad &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Slate::partition" href="partition.html" />
+    <link rel="prev" title="Slate::nt" href="nt.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0669836f4bbb -->
+<section id="slate-pad">
+<h1>Slate::pad<a class="headerlink" href="#slate-pad" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../slate_api_reference.html"><span class="doc std std-doc">Back to Slate API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="o">::</span><span class="n">pad</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">width</span><span class="p">,</span>
+<span class="w">            </span><span class="n">TextAlign</span><span class="w"> </span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Left</span><span class="p">,</span>
+<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Grows every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread up to a target character <code class="docutils literal notranslate"><span class="pre">width</span></code> by
+adding <code class="docutils literal notranslate"><span class="pre">fill</span></code> characters, positioning the original text according to <code class="docutils literal notranslate"><span class="pre">align</span></code>.
+Requires the thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">TextAlign</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">Left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">Right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">Center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">};</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">TextAlign::Left</span></code></strong> (the default): the original text is left-aligned — fill
+characters are added on the <strong>right</strong>.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">TextAlign::Right</span></code></strong>: the original text is right-aligned — fill characters are
+added on the <strong>left</strong>. The classic use is zero-padding numeric-looking codes
+(<code class="docutils literal notranslate"><span class="pre">&quot;7&quot;</span></code> → <code class="docutils literal notranslate"><span class="pre">&quot;0007&quot;</span></code>).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">TextAlign::Center</span></code></strong>: fill is split between both sides. When the amount needed is
+odd, the <strong>extra</strong> fill character goes on the right (<code class="docutils literal notranslate"><span class="pre">left</span> <span class="pre">=</span> <span class="pre">needed</span> <span class="pre">/</span> <span class="pre">2</span></code>, integer
+division; <code class="docutils literal notranslate"><span class="pre">right</span> <span class="pre">=</span> <span class="pre">needed</span> <span class="pre">-</span> <span class="pre">left</span></code>).</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>pad() only ever grows a cell, never shrinks it
+If a cell is already at least <code class="docutils literal notranslate"><span class="pre">width</span></code> characters long, <code class="docutils literal notranslate"><span class="pre">pad()</span></code> leaves it completely
+unchanged — there’s no truncation mode. <code class="docutils literal notranslate"><span class="pre">width</span></code> is measured in Unicode codepoints,
+the same unit <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a> counts.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>width</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>)
+The target character width. Must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code> — <code class="docutils literal notranslate"><span class="pre">pad(-1)</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::pad:</span>&#160;&#160;&#160;&#160; <span class="pre">width</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">&gt;=</span> <span class="pre">0&quot;</span></code>.</p>
+<p><strong>align</strong> (<code class="docutils literal notranslate"><span class="pre">TextAlign</span></code>, default <code class="docutils literal notranslate"><span class="pre">TextAlign::Left</span></code>)
+Where the fill characters go: <code class="docutils literal notranslate"><span class="pre">Left</span></code> pads on the right, <code class="docutils literal notranslate"><span class="pre">Right</span></code> pads on the left,
+<code class="docutils literal notranslate"><span class="pre">Center</span></code> splits the fill (extra character on the right for an odd amount).</p>
+<p><strong>fill</strong> (<code class="docutils literal notranslate"><span class="pre">char</span></code>, default <code class="docutils literal notranslate"><span class="pre">'</span> <span class="pre">'</span></code>)
+The single character used to pad. Note this is a <code class="docutils literal notranslate"><span class="pre">char</span></code>, not a
+<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> — multi-byte UTF-8 fill sequences aren’t supported.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
+A new <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread, same length as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, holding the padded text (or
+left unchanged, for cells already at or beyond <code class="docutils literal notranslate"><span class="pre">width</span></code>).</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. All three alignments, side by side, using a visible <code class="docutils literal notranslate"><span class="pre">.</span></code> fill character so
+the padding itself is visible in the rendered output.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">codes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;A&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;BB&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CCCC&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">codes</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Left</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Right</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">center</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Center</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">left</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">right</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">center</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  A
+1  BB
+2  CCCC
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output-textalign-left-the-default-alignment">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">TextAlign::Left</span></code>, the default alignment)<a class="headerlink" href="#output-textalign-left-the-default-alignment" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  A.....
+1  BB....
+2  CCCC..
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output-textalign-right">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">TextAlign::Right</span></code>)<a class="headerlink" href="#output-textalign-right" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  .....A
+1  ....BB
+2  ..CCCC
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output-textalign-center">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">TextAlign::Center</span></code>)<a class="headerlink" href="#output-textalign-center" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  ..A...
+1  ..BB..
+2  .CCCC.
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> (1 character) needs 5 fill characters to reach width 6: all 5 on the right
+under <code class="docutils literal notranslate"><span class="pre">Left</span></code>, all 5 on the left under <code class="docutils literal notranslate"><span class="pre">Right</span></code>, and split 2-left/3-right under <code class="docutils literal notranslate"><span class="pre">Center</span></code>
+(the odd character goes right). <code class="docutils literal notranslate"><span class="pre">&quot;BB&quot;</span></code> needs 4 (split evenly, 2/2, since 4 is even).
+<code class="docutils literal notranslate"><span class="pre">&quot;CCCC&quot;</span></code> needs only 2 (split 1/1). Row 3 was invalid on input and stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> under
+every alignment — <code class="docutils literal notranslate"><span class="pre">pad()</span></code> never manufactures text for an invalid cell.</p>
+<p>Example 2. The practical, real-world use of <code class="docutils literal notranslate"><span class="pre">Right</span></code> alignment: zero-padding
+numeric-looking codes to a fixed width.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">ids</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;7&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;42&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;103&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">zero_padded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ids</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Right</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;0&#39;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">zero_padded</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  0007
+1  0042
+2  0103
+
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;7&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;0007&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;42&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;0042&quot;</span></code>, and so on — the familiar zero-padded
+ID/order-number look, achieved without any string-formatting helper beyond <code class="docutils literal notranslate"><span class="pre">pad()</span></code>
+itself.</p>
+<p>Example 3. A cell already at or past the target width is left completely unchanged —
+<code class="docutils literal notranslate"><span class="pre">pad()</span></code> never truncates.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">unchanged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">TextAlign</span><span class="o">::</span><span class="n">Left</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">unchanged</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  A...
+1  BB..
+2  CCCC
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;CCCC&quot;</span></code> is already 4 characters — at or beyond the requested width of 3 — so it
+comes back completely untouched, not truncated to <code class="docutils literal notranslate"><span class="pre">&quot;CCC&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;BB&quot;</span></code> are still
+shorter than 3, so they’re padded as usual.</p>
+<p>Example 4. A negative <code class="docutils literal notranslate"><span class="pre">width</span></code> throws immediately.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">codes</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">-1</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::pad: width must be &gt;= 0
+</pre></div>
+</div>
+<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">pad</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::pad: expected Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad()</span></code> only grows; a cell already at or beyond <code class="docutils literal notranslate"><span class="pre">width</span></code> is returned unchanged,
+never truncated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">width</span></code> is measured in Unicode codepoints, the same unit <a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">length()</span></code></span></a>
+counts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fill</span></code> is a single <code class="docutils literal notranslate"><span class="pre">char</span></code>, not a string — no multi-byte UTF-8 fill characters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Center</span></code>’s extra fill character (when the amount needed is odd) always goes on the
+right.</p></li>
+<li><p>A null cell on input stays null on output.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">width</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::pad:</span> <span class="pre">width</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">&gt;=</span> <span class="pre">0&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="chars.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::chars</span></code></span></a>: the complementary shrink/slice operation.</p></li>
+<li><p><a class="reference internal" href="length.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::length</span></code></span></a>: the character-count unit <code class="docutils literal notranslate"><span class="pre">width</span></code> is measured in.</p></li>
+<li><p><a class="reference internal" href="strip.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::strip</span></code></span></a>: removes characters instead of adding them.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nt.html">
+    <span class="label">Previous</span>
+    <span class="title">nt</span>
+  </a>
+  <a class="next-link" href="partition.html">
+    <span class="label">Next</span>
+    <span class="title">partition</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../slate_api_reference.html">Slate API Reference</a><ul>
+      <li>Previous: <a href="nt.html" title="previous chapter">Slate::nt</a></li>
+      <li>Next: <a href="partition.html" title="next chapter">Slate::partition</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/slate/pad.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

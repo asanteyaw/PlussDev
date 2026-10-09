@@ -18,7 +18,7 @@ int main() {
       .y = y,
   };
 
-  lymph::Model model = lymph::model::linear_regression({.regularization_strength = 0.001});
+  lymph::models::Model model = lymph::models::linear_regression({.regularization_strength = 0.001});
   model.learn_(batch);
   const lymph::MetricReport report = model.assess(batch);
 

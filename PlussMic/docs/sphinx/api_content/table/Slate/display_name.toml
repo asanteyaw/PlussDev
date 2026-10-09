@@ -1,0 +1,35 @@
+summary = """
+Return the display name attached to the current slate.
+
+The display name is presentation metadata, useful for rendering and labeling, not for changing the underlying values.
+
+Use it when you need the current human-facing label without reaching into renderer-specific code.
+"""
+
+returns = """
+`std::string`
+    Current display name, if one has been attached.
+"""
+
+notes = [
+  """
+Like `display_labels()`, this is metadata-only. Reading it does not mutate the slate or affect later numeric, text, or temporal operations.
+"""
+]
+
+see_also = [
+  "<a href=\"#with_display_name\"><code>Slate::with_display_name</code></a>, <a href=\"#clear_display_name\"><code>Slate::clear_display_name</code></a>: attach or remove the metadata."
+]
+
+[[examples]]
+title = "Inspect the display name attached to a slate."
+code = """
+using namespace pluss::table;
+
+auto out = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))
+               .with_display_name("scores")
+               .display_name();
+"""
+output = """
+scores
+"""

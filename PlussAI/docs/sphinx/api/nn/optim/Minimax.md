@@ -164,9 +164,10 @@ int main() {
 
   for (int step = 0; step < 60; ++step) {
     const Series gradient = x.sub(target);
+    const float loss = gradient.square().mul(0.5).item<float>();
     minimax.step(std::vector<Series>{gradient});
     if (step == 0 || step == 4 || step == 9 || step == 19 || step == 39 || step == 59) {
-      std::cout << "step " << step << ": x = " << x.item<float>() << "\n";
+      std::cout << "step " << step << ": objective = " << loss << ", x = " << x.item<float>() << "\n";
     }
   }
 
@@ -177,12 +178,12 @@ int main() {
 Output
 
 ```text
-step 0: x = 0.100001
-step 4: x = 0.49902
-step 9: x = 0.992405
-step 19: x = 1.93967
-step 39: x = 3.40134
-step 59: x = 2.97
+step 0: objective = 12.5, x = 0.100001
+step 4: objective = 10.5823, x = 0.49902
+step 9: objective = 8.4278, x = 0.992405
+step 19: objective = 4.96664, x = 1.93967
+step 39: objective = 1.3182, x = 3.40134
+step 59: objective = 2.07774, x = 2.97
 ```
 
 ### Example 2
@@ -233,7 +234,9 @@ int main() {
     const Series gy = y.sub(target);
     minimax.step(std::vector<Series>{gx, gy});
   }
-  std::cout << "x = " << x.item<float>() << ", y = " << y.item<float>()
+  const float objective = x.sub(target).square().mul(0.5).item<float>() +
+                          y.sub(target).square().mul(0.5).item<float>();
+  std::cout << "objective = " << objective << ", x = " << x.item<float>() << ", y = " << y.item<float>()
              << ", x + y = " << (x.item<float>() + y.item<float>()) << "\n";
 
   return 0;
@@ -243,7 +246,7 @@ int main() {
 Output
 
 ```text
-x = 2.0098, y = 2.0098, x + y = 4.01961
+objective = 8.94127, x = 2.0098, y = 2.0098, x + y = 4.01961
 ```
 
 ### Example 3
@@ -286,7 +289,8 @@ int main() {
     const Series gradient = x.sub(target);
     minimax.step(std::vector<Series>{gradient});
   }
-  std::cout << "x after 30 steps (bounded to [0, 2]): " << x.item<float>() << "\n";
+  const float objective = x.sub(target).square().mul(0.5).item<float>();
+  std::cout << "objective = " << objective << ", x after 30 steps (bounded to [0, 2]): " << x.item<float>() << "\n";
 
   return 0;
 }
@@ -295,7 +299,7 @@ int main() {
 Output
 
 ```text
-x after 30 steps (bounded to [0, 2]): 2
+objective = 4.5, x after 30 steps (bounded to [0, 2]): 2
 ```
 
 ## Changelog

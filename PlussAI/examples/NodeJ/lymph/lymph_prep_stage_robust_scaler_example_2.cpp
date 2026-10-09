@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,8 +15,8 @@ int main() {
   // Five clustered values and one extreme outlier (1000).
   const pluss::Series clean = pluss::make_series({10.0, 12.0, 14.0, 16.0, 18.0, 20.0}, {6}, f64);
   const pluss::Series spiked = pluss::make_series({10.0, 12.0, 14.0, 16.0, 18.0, 1000.0}, {6}, f64);
-  const DataFrame clean_df({{"v", Thread(clean)}});
-  const DataFrame spiked_df({{"v", Thread(spiked)}});
+  const DataFrame clean_df({{"v", Slate(clean)}});
+  const DataFrame spiked_df({{"v", Slate(spiked)}});
 
   // robust_scaler uses the median and IQR, so the quartile-based centre and
   // scale barely move when one value blows up. standard_scaler, driven by the

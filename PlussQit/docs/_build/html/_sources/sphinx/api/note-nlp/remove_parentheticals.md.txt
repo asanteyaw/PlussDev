@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_parentheticals
+# Note::NlpAccessor::remove_parentheticals
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_parentheticals() const
+Note Note::NlpAccessor::remove_parentheticals() const
 ```
 
 ## Remove Balanced Parenthetical Asides

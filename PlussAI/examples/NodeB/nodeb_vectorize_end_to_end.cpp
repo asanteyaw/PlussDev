@@ -1,10 +1,12 @@
 #include <pluss/nlp.h>
+#include <pluss/ai/ml.h>
 
 #include <iostream>
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow prep{
       .lang = Language::English,
@@ -21,7 +23,7 @@ int main() {
   });
 
   vectorize::Mapper mapper(
-      pluss::ai::nodej::LexiconMapOptions{
+      pluss::ai::classic::LexiconMapOptions{
           .lowercase = true,
           .max_features = 32,
           .min_document_frequency = 1,
@@ -47,7 +49,7 @@ int main() {
   }
 
   vectorize::Hasher hasher(
-      pluss::ai::nodej::HashMapOptions{
+      pluss::ai::classic::HashMapOptions{
           .lowercase = true,
           .n_features = 64,
           .binary = false,
@@ -67,7 +69,7 @@ int main() {
 
   const auto stats = vectorize::describe(docs);
 
-  std::cout << "== NodeB Vectorization ==\n";
+  std::cout << "== PlussAI NLP Vectorization ==\n";
   std::cout << "vocab size=" << mapper.vocabulary().size()
             << " dense rows=" << count_dense.value().sample_count()
             << " dense cols=" << count_dense.value().feature_count()

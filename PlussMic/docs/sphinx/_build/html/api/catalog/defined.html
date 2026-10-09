@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Catalog::display" href="display.html" />
@@ -50,7 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Reports whether the catalog owns a concrete backing handle at all — the same
-undefined/defined distinction <code class="docutils literal notranslate"><span class="pre">Thread::defined()</span></code> and <code class="docutils literal notranslate"><span class="pre">DataFrame::defined()</span></code> make. A
+undefined/defined distinction <code class="docutils literal notranslate"><span class="pre">Slate::defined()</span></code> and <code class="docutils literal notranslate"><span class="pre">DataFrame::defined()</span></code> make. A
 default-constructed <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> is <strong>undefined</strong>; almost every other method throws
 <code class="docutils literal notranslate"><span class="pre">&quot;Catalog:</span> <span class="pre">undefined</span> <span class="pre">handle&quot;</span></code> if called on one. A <code class="docutils literal notranslate"><span class="pre">Catalog</span></code> built from an explicit (even
 empty) stream list is defined — <code class="docutils literal notranslate"><span class="pre">defined()</span></code> is about handle existence, not about whether

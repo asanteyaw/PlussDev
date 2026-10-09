@@ -37,7 +37,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   using lymph::AssessOptions;
   using lymph::LinearFamilyOptions;
   using lymph::MetricKind;
@@ -47,13 +47,13 @@ int main() {
   const pluss::Config f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"customer_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"region", Thread(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"observed_at", Thread(pluss::make_timeline({
+      {"customer_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106, 107, 108}, {8}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
+      {"late", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"region", Slate(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"observed_at", Slate(pluss::make_timeline({
           "2026-01-01T00:00:00Z",
           "2026-01-02T00:00:00Z",
           "2026-01-03T00:00:00Z",
@@ -65,7 +65,7 @@ int main() {
       }))},
   });
 
-  lymph::Policy policy{};
+  lymph::workflow::Policy policy{};
   policy.drop({"customer_id"});
   policy.require({"income", "balance", "late", "region", "observed_at"});
 
@@ -74,7 +74,7 @@ int main() {
   std::cout << "raw_rows=" << raw.ncases() << " admitted_rows=" << admitted.ncases() << "\n";
   std::cout << "admitted_features=" << admitted.nfeatures() << "\n";
 
-  lymph::Payload payload = lymph::payload::make(raw)
+  lymph::workflow::Payload payload = lymph::workflow::payload::make(raw)
       .features({"income", "balance", "late", "region"})
       .label("default")
       .time("observed_at")
@@ -90,13 +90,13 @@ int main() {
             << " feature_width=" << labeled.features.feature_count() << "\n";
 
   const std::vector<std::string> ordered_names = {"income", "balance", "late", "region"};
-  const lymph::ColumnRouter numeric = lymph::columnrouter::where(
+  const lymph::prep::Route numeric = lymph::prep::route::where(
       [](std::string_view, std::string_view dtype) {
         return dtype == "float64";
       });
-  const lymph::ColumnRouter categorical =
-      lymph::columnrouter::names(std::vector<std::string>{"region"});
-  const lymph::ColumnRouter remainder = lymph::columnrouter::remaining_of(categorical);
+  const lymph::prep::Route categorical =
+      lymph::prep::route::names(std::vector<std::string>{"region"});
+  const lymph::prep::Route remainder = lymph::prep::route::remaining_of(categorical);
 
   std::cout << "== column_router ==\n";
   std::cout << "numeric=" << join_i64(numeric.resolve(raw, ordered_names)) << "\n";
@@ -140,7 +140,7 @@ int main() {
       {
           lymph::prep::branch::compose(
               {
-                  lymph::stage::standard_scaler(),
+                  lymph::prep::stage::standard_scaler(),
               },
               {"income"}),
           lymph::prep::branch::one_hot_encoder(
@@ -152,8 +152,8 @@ int main() {
               {"region"}),
       },
       lymph::prep::FeatureRemainderPolicy::PassThrough);
-  const lymph::Payload transform_payload =
-      lymph::payload::make(raw).features({"income", "region", "balance"}).note(lymph::DataNotePolicy::Factorize);
+  const lymph::workflow::Payload transform_payload =
+      lymph::workflow::payload::make(raw).features({"income", "region", "balance"}).note(lymph::DataNotePolicy::Factorize);
   const lymph::FeatureBatch transform_batch = transform_payload.feature_batch();
   const Series transformed = lymph::resolve(
       feature_transformer.learn_map(transform_batch), "feature_transformer.learn_map");
@@ -169,8 +169,8 @@ int main() {
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
-  lymph::Model model = lymph::model::logistic_regression(logistic_options);
-  lymph::ModelPrep prep = model.prepare();
+  lymph::models::Model model = lymph::models::logistic_regression(logistic_options);
+  lymph::models::ModelPrep prep = model.prepare();
   prep.standardize({"income", "balance", "late"});
   prep.encode(categorical, lymph::prep::OneHotEncoderOptions{
       .max_categories = 8,
@@ -188,17 +188,17 @@ int main() {
   data_options.label_feature = "default";
   data_options.note_policy = lymph::DataNotePolicy::Factorize;
 
-  lymph::Model staged_model = lymph::model::logistic_regression(logistic_options);
+  lymph::models::Model staged_model = lymph::models::logistic_regression(logistic_options);
   staged_model.append(
-      lymph::stage::standard_scaler(),
-      lymph::columnrouter::names({"income", "balance", "late"}));
+      lymph::prep::stage::standard_scaler(),
+      lymph::prep::route::names({"income", "balance", "late"}));
   staged_model.append(
-      lymph::stage::one_hot_encoder(lymph::prep::OneHotEncoderOptions{
+      lymph::prep::stage::one_hot_encoder(lymph::prep::OneHotEncoderOptions{
           .max_categories = 8,
           .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,
           .include_unknown_bucket = true,
       }),
-      lymph::columnrouter::names({"region"}));
+      lymph::prep::route::names({"region"}));
   staged_model.learn_(raw, data_options, train_options);
   std::cout << "== stage ==\n";
   std::cout << "stage_count=" << staged_model.stage_count()
@@ -219,14 +219,14 @@ int main() {
   std::cout << "accuracy=" << model_score.accuracy
             << " f1=" << model_score.f1 << "\n";
 
-  lymph::Workflow workflow = lymph::workflow::make(model, policy);
+  lymph::workflow::Workflow workflow = lymph::workflow::make(model, policy);
   const DataFrame incoming({
-      {"customer_id", Thread(pluss::make_series({201, 202, 203}, {3}, f64))},
-      {"income", Thread(pluss::make_series({1.2, 4.4, 1.6}, {3}, f64))},
-      {"balance", Thread(pluss::make_series({0.3, 2.3, 0.5}, {3}, f64))},
-      {"late", Thread(pluss::make_series({0, 1, 0}, {3}, f64))},
-      {"region", Thread(pluss::make_note({"north", "south", "west"}))},
-      {"observed_at", Thread(pluss::make_timeline({
+      {"customer_id", Slate(pluss::make_series({201, 202, 203}, {3}, f64))},
+      {"income", Slate(pluss::make_series({1.2, 4.4, 1.6}, {3}, f64))},
+      {"balance", Slate(pluss::make_series({0.3, 2.3, 0.5}, {3}, f64))},
+      {"late", Slate(pluss::make_series({0, 1, 0}, {3}, f64))},
+      {"region", Slate(pluss::make_note({"north", "south", "west"}))},
+      {"observed_at", Slate(pluss::make_timeline({
           "2026-02-01T00:00:00Z",
           "2026-02-02T00:00:00Z",
           "2026-02-03T00:00:00Z",
@@ -240,8 +240,8 @@ int main() {
   model.save(model_path.string());
   workflow.save(workflow_path.string());
 
-  const lymph::Model loaded_model = lymph::Model::load(model_path.string());
-  const lymph::Workflow loaded_workflow = lymph::workflow::load(workflow_path.string());
+  const lymph::models::Model loaded_model = lymph::models::Model::load(model_path.string());
+  const lymph::workflow::Workflow loaded_workflow = lymph::workflow::load(workflow_path.string());
   const Series loaded_model_pred = loaded_model.infer(raw, data_options);
   const Series loaded_workflow_pred = loaded_workflow.infer(incoming, data_options);
 

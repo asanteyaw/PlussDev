@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::std
+# Series::StatAccessor::std
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::std(bool unbiased = true) const
-Series SeriesStatAccessor::std(std::int64_t dim, bool unbiased = true,
+Series Series::StatAccessor::std(bool unbiased = true) const
+Series Series::StatAccessor::std(std::int64_t dim, bool unbiased = true,
                                bool keepdim = false) const
 Series SeriesStatProxy::std(bool unbiased = true) const
 Series SeriesStatProxy::std(std::int64_t dim, bool unbiased = true,

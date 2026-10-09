@@ -59,10 +59,10 @@ numeric feature, ignoring a non-numeric one.
 using namespace pluss::table;
 
 auto sample = DataFrame({
-    {"x", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
-    {"y", Thread(pluss::make_series({2.0, 4.0, 6.0, 8.0}))},
-    {"z", Thread(pluss::make_series({4.0, 1.0, 3.0, 2.0}))},
-    {"city", Thread(pluss::make_note({"A", "B", "C", "D"}))},
+    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"y", Slate(pluss::make_series({2.0, 4.0, 6.0, 8.0}))},
+    {"z", Slate(pluss::make_series({4.0, 1.0, 3.0, 2.0}))},
+    {"city", Slate(pluss::make_note({"A", "B", "C", "D"}))},
 });
 
 auto out = sample.covar();

@@ -172,7 +172,7 @@ Cache by:
 1. Source version mismatch invalidates executable plan use.
 2. Backend capability change invalidates lowered plan.
 
-### 8.3 Thread safety
+### 8.3 Slate safety
 
 1. Plan objects immutable after compile.
 2. Shared cache guarded by lock-free map or coarse mutex in phase 1.

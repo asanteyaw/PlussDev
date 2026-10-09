@@ -59,3 +59,12 @@ concrete override (a logging `learn_step` that still delegates to
   types every step method's override ladder operates on.
 - [`options`](../../options.md) -- `TrainOptions`, what every `learn`
   overload takes.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="assess.html">
+    <span class="label">Next</span>
+    <span class="title">assess</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

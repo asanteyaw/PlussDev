@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5e8f14a62754 -->
 # `pluss::ai::ice::Model::valid_step`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -175,3 +177,12 @@ loss.defined() = 1
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="training_report.html">
+    <span class="label">Previous</span>
+    <span class="title">training_report</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

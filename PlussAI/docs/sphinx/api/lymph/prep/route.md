@@ -2,7 +2,7 @@
 
 `route` is the `prep` subfamily for **declarative feature selection** — the
 "which columns" half of a preprocessing step, the piece that pairs with a
-[`prep::Stage`](stage_family.md) "what".
+[`prep::Stage`](stage.md) "what".
 
 A route is a rule, written once, that turns into concrete column positions only
 when it is [`resolve`](route/Route/resolve.md)d against a real frame. Making the
@@ -31,9 +31,49 @@ unclaimed columns — pass them through (the default) or drop them.
 
 ## Where it fits
 
+The stage says what to do and the route says where to do it. This program attaches the scaler to two named columns, then trains from a dataframe that carries those columns. It prints the stage count before and after training.
+
 ```cpp
-model.append(lymph::prep::stage::standard_scaler(),          // the "what"
-             lymph::prep::route::names({"amount", "ratio"})); // the "where"
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::table::DataFrame;
+  using pluss::table::Slate;
+
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame frame({
+      {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0, 60.0}, {6}, cfg))},
+      {"ratio", Slate(pluss::make_series(std::vector<double>{0.1, 0.4, 0.2, 0.5, 0.3, 0.6}, {6}, cfg))},
+      {"label", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
+  });
+
+  lymph::models::Model model = lymph::models::logistic_regression();
+  model.append(lymph::prep::stage::standard_scaler(),
+               lymph::prep::route::names({"amount", "ratio"}));
+  std::cout << "stages before learn = " << model.stage_count() << "\n";
+
+  lymph::DataFrameBatchOptions options{};
+  options.feature_names = {"amount", "ratio"};
+  options.label_feature = "label";
+  model.learn_(frame, options);
+  std::cout << "stages after learn = " << model.stage_count() << "\n";
+  std::cout << "trained = " << (model.trained() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+stages before learn = 0
+stages after learn = 1
+trained = true
 ```
 
 [`Model::append`](../models/Model/append.md) and

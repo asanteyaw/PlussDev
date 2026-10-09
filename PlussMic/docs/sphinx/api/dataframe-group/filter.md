@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 9732d3cd8128 -->
+<!-- pluss-signature-hash: f506fd9b90eb -->
 
 # DataFrameGrouped::filter
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrameGrouped::filter(const pluss::Series& keep) const -> DataFrame
-DataFrameGrouped::filter(const Thread& keep) const -> DataFrame
+DataFrameGrouped::filter(const Slate& keep) const -> DataFrame
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ that group survives. If it is `false`, every row in that group is removed.
 
 ## Parameters
 
-**keep** (`Series` or `Thread`)
+**keep** (`Series` or `Slate`)
 
 A boolean grouped mask with one element per group.
 
@@ -50,8 +50,8 @@ Example 1. Keep only regions whose grouped total is above a threshold.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"amount", Slate(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
 });
 
 auto totals = sales.group()

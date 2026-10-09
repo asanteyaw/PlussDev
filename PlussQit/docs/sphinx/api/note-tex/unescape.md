@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::unescape
+# Note::TexAccessor::unescape
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::unescape() const
+Note Note::TexAccessor::unescape() const
 ```
 
 ## Reverse `escape()`'s Ten-Character Table

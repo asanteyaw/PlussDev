@@ -12,7 +12,7 @@ The type is `lymph::prep::FrequencyEncoder`. It takes an
 `prep::FrequencyEncoderOptions`) at construction, default-constructed if
 omitted. It shares its whole method surface with
 [`prep::OneHotEncoder`](OneHotEncoder.md) — `features` / `learn` / `map` /
-`learn_map` / `learned` / `summary`, plus the single-column `Thread` overloads
+`learn_map` / `learned` / `summary`, plus the single-column `Slate` overloads
 and the `categories_` / `frequencies_` attributes.
 
 ## Construction
@@ -53,7 +53,7 @@ signatures, semantics, and per-method examples.
 | [`learned()`](OneHotEncoder.md#learned) | has `learn` run yet? |
 | [`summary()`](OneHotEncoder.md#summary) | fitted state as a `TransformerSummary` |
 
-Plus the single-column [`Thread` overloads](OneHotEncoder.md#single-column-overloads).
+Plus the single-column [`Slate` overloads](OneHotEncoder.md#single-column-overloads).
 
 ## Practical Examples
 
@@ -71,12 +71,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"city", Thread(pluss::make_series({1., 1., 1., 1., 2., 2., 2., 3.}, {8}, f64))}});
-  const DataFrame later({{"city", Thread(pluss::make_series({3., 2., 1.}, {3}, f64))}});
+  const DataFrame train({{"city", Slate(pluss::make_series({1., 1., 1., 1., 2., 2., 2., 3.}, {8}, f64))}});
+  const DataFrame later({{"city", Slate(pluss::make_series({3., 2., 1.}, {3}, f64))}});
 
   lymph::prep::FrequencyEncoder encoder;
   std::cout << "learn_map(train):\n"
@@ -131,12 +131,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"city", Thread(pluss::make_series({1., 1., 1., 2., 2., 3.}, {6}, f64))}});
-  const DataFrame later({{"city", Thread(pluss::make_series({1., 7.}, {2}, f64))}});
+  const DataFrame train({{"city", Slate(pluss::make_series({1., 1., 1., 2., 2., 3.}, {6}, f64))}});
+  const DataFrame later({{"city", Slate(pluss::make_series({1., 7.}, {2}, f64))}});
 
   lymph::prep::FrequencyEncoder encoder(
       lymph::prep::FrequencyEncoderOptions{.unknown_frequency = 0.01});
@@ -180,12 +180,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   //   city 1 x4,  city 2 x2,  city 3 x2   (8 rows)
-  const DataFrame train({{"city", Thread(pluss::make_series(
+  const DataFrame train({{"city", Slate(pluss::make_series(
       {1., 1., 1., 1., 2., 2., 3., 3.}, {8}, f64))}});
 
   lymph::prep::FrequencyEncoder encoder;

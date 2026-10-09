@@ -205,13 +205,13 @@ a chance to run at all.
   numeric-looking column onto the `Note` text family before string operations), see
   [`cast()`](cast.md) instead — `astype()` changes the scalar dtype within a feature's
   existing payload family, not the family itself. `cast()`'s `CastSpec` overload accepts a
-  `ThreadCastTarget` (e.g. `ThreadCastTarget::Note`) for exactly that purpose.
+  `SlateCastTarget` (e.g. `SlateCastTarget::Note`) for exactly that purpose.
 
 ## See Also
 
 - [`DataFrame::cast`](cast.md): the broader casting route — change a feature's payload
   family (`Series`/`Note`/etc.), not just its scalar dtype within the current family.
-- [`Thread::astype`](../thread/astype.md): cast one thread directly outside a frame.
+- [`Slate::astype`](../thread/astype.md): cast one thread directly outside a frame.
 - [`DataFrame::features`](features.md): narrow the frame to the feature(s) the
   shared-dtype overload should cast.
 - [`DataFrame::update`](update.md): merge a narrowed, cast-only result back into the

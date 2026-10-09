@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: fc02d23b3ee1 -->
+<!-- pluss-signature-hash: bb86a6bf5cc3 -->
 
 # DataFrame::floordiv
 
@@ -11,9 +11,9 @@
 DataFrame::floordiv(double other) const -> DataFrame
 DataFrame::floordiv(const DataFrame& other) const -> DataFrame
 DataFrame::floordiv(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::floordiv(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::floordiv(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::floordiv(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::floordiv(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::floordiv(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::floordiv(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -36,9 +36,9 @@ The right-hand operand (the divisor), in one of three shapes:
 - `double`: one scalar divisor, applied to every numeric feature.
 - `const DataFrame&`: another frame supplying one divisor per cell, after the two
   frames are aligned.
-- `const Thread&`: one column of divisors, broadcast according to `axis`.
+- `const Slate&`: one column of divisors, broadcast according to `axis`.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 - `Axis::Feature` (the default): `other` supplies **one divisor per feature**.
 - `Axis::Case`: `other` supplies **one divisor per case**.
@@ -105,11 +105,11 @@ plain [`div()`](div.md) would agree on that one cell — compare against
 [`mod(2.0)`](mod.md) on the same frame, which gives `0` for that same evenly-divided
 cell and non-zero remainders everywhere else.
 
-Example 2. A `Thread` with one divisor per feature (`Axis::Feature`, the default) —
+Example 2. A `Slate` with one divisor per feature (`Axis::Feature`, the default) —
 `total` is floor-divided by `2`, `extra` by `3`.
 
 ```cpp
-auto per_feature_divisor = Thread(pluss::make_series({2.0, 3.0}));
+auto per_feature_divisor = Slate(pluss::make_series({2.0, 3.0}));
 auto out = counts.floordiv(per_feature_divisor);
 std::cout << out;
 ```
@@ -127,11 +127,11 @@ c     | 5      4
 [3 cs x 2 feat]
 ```
 
-Example 3. A `Thread` with one divisor per *case* instead (`Axis::Case`) — row `a`'s
+Example 3. A `Slate` with one divisor per *case* instead (`Axis::Case`) — row `a`'s
 divisor is `2`, row `b`'s is `3`, row `c`'s is `4`.
 
 ```cpp
-auto per_case_divisor = Thread(pluss::make_series({2.0, 3.0, 4.0}));
+auto per_case_divisor = Slate(pluss::make_series({2.0, 3.0, 4.0}));
 auto out = counts.floordiv(per_case_divisor, Axis::Case);
 std::cout << out;
 ```
@@ -154,9 +154,9 @@ overload — a plain positional pairing that ignores both frames' case labels.
 
 ```cpp
 auto divisors = DataFrame({
-    {"col1", Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"col2", Thread(pluss::make_series({4.0, 5.0, 3.0}))},
-}, Thread(pluss::make_note({"x", "y", "z"})));
+    {"col1", Slate(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"col2", Slate(pluss::make_series({4.0, 5.0, 3.0}))},
+}, Slate(pluss::make_note({"x", "y", "z"})));
 std::cout << divisors;
 
 auto out = counts.floordiv(divisors);
@@ -199,9 +199,9 @@ case label instead of physical position.
 
 ```cpp
 auto divisors_by_label = DataFrame({
-    {"col1", Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"col2", Thread(pluss::make_series({4.0, 5.0, 3.0}))},
-}, Thread(pluss::make_note({"c", "a", "b"})));
+    {"col1", Slate(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"col2", Slate(pluss::make_series({4.0, 5.0, 3.0}))},
+}, Slate(pluss::make_note({"c", "a", "b"})));
 std::cout << divisors_by_label;
 
 auto out = counts.floordiv(divisors_by_label, AlignOptions{.align = AlignBy::Caselbl});

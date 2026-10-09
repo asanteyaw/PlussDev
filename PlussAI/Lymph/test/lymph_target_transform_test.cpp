@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -54,7 +54,7 @@ bool run_target_transform_checks(std::ostream* err) {
   }
   const Series x_series = pluss::make_series(x_values, {static_cast<std::int64_t>(x_values.size())}, f64());
   const Series y_series = pluss::make_series(y_values, {static_cast<std::int64_t>(y_values.size())}, f64());
-  const DataFrame x_frame({{"x", Thread(x_series)}});
+  const DataFrame x_frame({{"x", Slate(x_series)}});
 
   // 1) A plain linear model fit directly on y should do a visibly poor job --
   // establishes the transform is actually earning its keep, not just plumbing.

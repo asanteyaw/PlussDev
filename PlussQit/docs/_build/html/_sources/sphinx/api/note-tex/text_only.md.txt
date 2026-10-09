@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::text_only
+# Note::TexAccessor::text_only
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::text_only() const
+Note Note::TexAccessor::text_only() const
 ```
 
 ## Project Each Cell Onto Its Prose, Dropping Math

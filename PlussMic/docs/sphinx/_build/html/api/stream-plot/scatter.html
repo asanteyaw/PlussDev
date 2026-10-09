@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamCastAccessor API Reference" href="../../stream_cast_accessor_api_reference.html" />
@@ -54,15 +54,15 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Draws one point per row at <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">value)</span></code>, where <code class="docutils literal notranslate"><span class="pre">value</span></code> is the bound stream, optionally
 split into separate, distinctly colored/labeled point groups by a companion <code class="docutils literal notranslate"><span class="pre">hue</span></code> stream.
-Every overload forwards to <a class="reference internal" href="../thread-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::scatter</span></code></span></a> after
-<code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>.</p>
+Every overload forwards to <a class="reference internal" href="../slate-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::scatter</span></code></span></a> after
+<code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code>.</p>
 <p>Unlike every other method on this accessor, <code class="docutils literal notranslate"><span class="pre">scatter()</span></code> has <strong>no zero-argument overload</strong> —
 <code class="docutils literal notranslate"><span class="pre">x</span></code> is always required, since a scatter plot needs two independent axes, not one axis plus
 a case index the way <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>/<a class="reference internal" href="bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bar()</span></code></span></a> fall back to.</p>
 <p>See <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callouts for the shared naming and row-label
 inheritance rules — here, <code class="docutils literal notranslate"><span class="pre">x</span></code> always wraps to a column named <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">hue</span></code> always wraps
 to a column named <code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no <code class="docutils literal notranslate"><span class="pre">name()</span></code> to override either, unlike the
-equivalent <code class="docutils literal notranslate"><span class="pre">Thread</span></code>-level method).</p>
+equivalent <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-level method).</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>hue must be Note-, Timeline-, or TimeIndex-kind, same as the 2D accessor
@@ -78,7 +78,7 @@ since <code class="docutils literal notranslate"><span class="pre">Stream</span>
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>, required)
 The companion stream for the horizontal axis. Must match the bound stream’s size, or
-the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> — see Example 6.</p>
+the call throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code> — see Example 6.</p>
 <p><strong>hue</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>, optional)
 Optional companion stream splitting points into separate colored/labeled groups. Must
 be Note-, Timeline-, or TimeIndex-kind — see the important callout above.</p>
@@ -107,7 +107,7 @@ distinct hue value when <code class="docutils literal notranslate"><span class="
 </div>
 <p>Every row becomes one point at <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">value)</span></code>; both axes are labeled with the generic
 fallback names <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>.</p>
-<p><img alt="Output of Example 1" src="../../_images/scatter-14.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/scatter-15.svg" /></p>
 <p>Example 2. With a categorical hue stream: points split into one trace per distinct cohort
 value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
@@ -120,7 +120,7 @@ value.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/scatter-24.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/scatter-25.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">ScatterPlotOptions</span></code>, no hue.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -135,7 +135,7 @@ value.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 3" src="../../_images/scatter-33.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/scatter-34.svg" /></p>
 <p>Example 4. <code class="docutils literal notranslate"><span class="pre">hue</span></code> together with explicit options — the four-argument-equivalent overload.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -151,7 +151,7 @@ value.</p>
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 4" src="../../_images/scatter-43.svg" /></p>
+<p><img alt="Output of Example 4" src="../../_images/scatter-44.svg" /></p>
 <p>Example 5. The type-requirement throw: a purely numeric <code class="docutils literal notranslate"><span class="pre">hue</span></code> stream is rejected.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -186,7 +186,7 @@ value.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::plot: thread size mismatch
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::plot: thread size mismatch
 </pre></div>
 </div>
 </section>
@@ -197,7 +197,7 @@ value.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> is required, non-optional — there is no case-index fallback the way
 <code class="docutils literal notranslate"><span class="pre">line()</span></code>/<code class="docutils literal notranslate"><span class="pre">bar()</span></code>/etc. have.</p></li>
 <li><p>Both <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">hue</span></code> always wrap to the generic fallback names <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code> — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has
-no <code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> the way <code class="docutils literal notranslate"><span class="pre">Thread</span></code> does, so the throw message in Example 5 always
+no <code class="docutils literal notranslate"><span class="pre">name()</span></code>/<code class="docutils literal notranslate"><span class="pre">named()</span></code> the way <code class="docutils literal notranslate"><span class="pre">Slate</span></code> does, so the throw message in Example 5 always
 says <code class="docutils literal notranslate"><span class="pre">'hue'</span></code> literally, never a name derived from the stream you passed.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">hue</span></code> must be Note-, Timeline-, or TimeIndex-kind, or the call throws — see Example 5.</p></li>
 <li><p>Returns a <code class="docutils literal notranslate"><span class="pre">pluss::pl::Studio</span></code> — see <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s important callouts for how to
@@ -207,7 +207,7 @@ view or save the result.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../thread-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::scatter</span></code></span></a>: the method this delegates to.</p></li>
+<li><p><a class="reference internal" href="../slate-plot/scatter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::scatter</span></code></span></a>: the method this delegates to.</p></li>
 <li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::line</span></code></span></a>: the canonical explanation of this accessor’s
 shared naming/row-label mechanics.</p></li>
 </ul>

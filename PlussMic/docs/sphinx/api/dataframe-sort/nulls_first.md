@@ -40,7 +40,7 @@ last.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"sales", Thread(pluss::make_series({120.0, 100.0, 90.0}),
+    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0}),
                      pluss::make_series(std::vector<bool>{true, false, true}))},
 });
 

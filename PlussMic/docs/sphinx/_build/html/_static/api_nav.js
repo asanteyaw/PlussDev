@@ -440,17 +440,6 @@ window.PLUSS_API_NAV = {
       "sum"
     ]
   },
-  "DataFrameCastAccessor": {
-    "title": "DataFrameCastAccessor",
-    "slug": "dataframe-cast",
-    "landing": "dataframe_cast_accessor_api_reference.html",
-    "methods": [
-      "duration",
-      "note",
-      "series",
-      "timeline"
-    ]
-  },
   "DataFrameGroupBuilder": {
     "title": "DataFrameGroupBuilder",
     "slug": "dataframe-group",
@@ -510,10 +499,10 @@ window.PLUSS_API_NAV = {
       "to_frame"
     ]
   },
-  "Thread": {
-    "title": "Thread",
-    "slug": "thread",
-    "landing": "thread_api_reference.html",
+  "Slate": {
+    "title": "Slate",
+    "slug": "slate",
+    "landing": "slate_api_reference.html",
     "methods": [
       "abs",
       "add",
@@ -673,45 +662,10 @@ window.PLUSS_API_NAV = {
       "window"
     ]
   },
-  "TimeSeriesAccessor": {
-    "title": "TimeSeriesAccessor",
-    "slug": "thread-ts",
-    "landing": "thread_ts_accessor_api_reference.html",
-    "methods": [
-      "add",
-      "align_to",
-      "calendar",
-      "diff",
-      "div",
-      "eq",
-      "ewm",
-      "expanding",
-      "fill_gaps",
-      "ge",
-      "grouped",
-      "gt",
-      "lag",
-      "lag_block",
-      "le",
-      "lead",
-      "log_returns",
-      "lt",
-      "mul",
-      "ne",
-      "resample",
-      "returns",
-      "rolling",
-      "rolling_block",
-      "sort",
-      "sub",
-      "timed",
-      "zscore_rolling"
-    ]
-  },
-  "ThreadPlotAccessor": {
-    "title": "ThreadPlotAccessor",
-    "slug": "thread-plot",
-    "landing": "thread_plot_api_reference.html",
+  "SlatePlotAccessor": {
+    "title": "SlatePlotAccessor",
+    "slug": "slate-plot",
+    "landing": "slate_plot_api_reference.html",
     "methods": [
       "act",
       "area",
@@ -967,7 +921,7 @@ window.PLUSS_API_NAV = {
       "fillnull",
       "filter",
       "freq",
-      "from_thread",
+      "from_slate",
       "has_label",
       "has_meta",
       "head",
@@ -1001,8 +955,8 @@ window.PLUSS_API_NAV = {
       "take",
       "tl",
       "to_json",
+      "to_slate",
       "to_string",
-      "to_thread",
       "ts",
       "unique",
       "var",
@@ -1906,6 +1860,151 @@ window.PLUSS_API_NAV = {
       "log_returns",
       "returns",
       "rolling"
+    ]
+  },
+  "DataFrameCastAccessor": {
+    "title": "DataFrameCastAccessor",
+    "slug": "dataframe-cast",
+    "landing": "dataframe_cast_accessor_api_reference.html",
+    "methods": [
+      "note",
+      "series",
+      "timeindex",
+      "timeline"
+    ]
+  },
+  "SlateLabelAccessor": {
+    "title": "SlateLabelAccessor",
+    "slug": "slate-label",
+    "landing": "slate_label_accessor_api_reference.html",
+    "methods": [
+      "align",
+      "diff",
+      "distinct",
+      "duplicated",
+      "fillnull",
+      "find",
+      "freq",
+      "has",
+      "intersect",
+      "isnull",
+      "map",
+      "monotonic",
+      "notnull",
+      "pos",
+      "range",
+      "repeated",
+      "reset",
+      "set",
+      "slice",
+      "sort",
+      "symdiff",
+      "take",
+      "unite",
+      "values"
+    ]
+  },
+  "SlateNoteAccessor": {
+    "title": "SlateNoteAccessor",
+    "slug": "slate-note",
+    "landing": "slate_note_accessor_api_reference.html",
+    "methods": [
+      "casefold",
+      "chars",
+      "count",
+      "encode",
+      "ends",
+      "extract",
+      "findall",
+      "fullmatch",
+      "has",
+      "indicate",
+      "length",
+      "lower",
+      "lstrip",
+      "matches",
+      "normalize",
+      "pad",
+      "partition",
+      "replace",
+      "rstrip",
+      "split",
+      "starts",
+      "strip",
+      "titlecase",
+      "upper"
+    ]
+  },
+  "SlateTimelineAccessor": {
+    "title": "SlateTimelineAccessor",
+    "slug": "slate-timeline",
+    "landing": "slate_timeline_accessor_api_reference.html",
+    "methods": [
+      "ceil",
+      "date",
+      "day",
+      "epoch",
+      "floor",
+      "fmt",
+      "hour",
+      "isnat",
+      "iso",
+      "leap",
+      "localize",
+      "minute",
+      "month",
+      "month_end",
+      "month_name",
+      "month_start",
+      "period",
+      "quarter",
+      "round",
+      "second",
+      "shift",
+      "span",
+      "time",
+      "tz",
+      "utc",
+      "valid",
+      "week",
+      "weekday",
+      "weekday_name",
+      "weekend",
+      "year",
+      "yearday"
+    ]
+  },
+  "TimeSeriesAccessor": {
+    "title": "TimeSeriesAccessor",
+    "slug": "slate-ts",
+    "landing": "slate_ts_accessor_api_reference.html",
+    "methods": [
+      "add",
+      "align_to",
+      "diff",
+      "div",
+      "eq",
+      "ewm",
+      "expanding",
+      "fill_gaps",
+      "ge",
+      "grouped",
+      "gt",
+      "lag",
+      "lag_block",
+      "le",
+      "lead",
+      "log_returns",
+      "lt",
+      "mul",
+      "ne",
+      "resample",
+      "returns",
+      "rolling",
+      "rolling_block",
+      "sub",
+      "timed",
+      "zscore_rolling"
     ]
   },
   "Nexus": {

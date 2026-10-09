@@ -12,7 +12,7 @@ returns = """
 see_also = [
   "<a href=\"#ne\"><code>DataFrame::ne</code></a>: explicit not-equal comparison.",
   "<a href=\"#eq\"><code>DataFrame::eq</code></a>: equality comparison.",
-  "<a href=\"../../thread_api_reference.md#compare\"><code>Thread::compare</code></a>: lower-level typed comparison surface."
+  "<a href=\"../../slate_api_reference.md#compare\"><code>Slate::compare</code></a>: lower-level typed comparison surface."
 ]
 
 notes = [

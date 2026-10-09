@@ -14,7 +14,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -25,15 +25,15 @@ DataFrame frame() {
   const Series x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64());
   const Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64());
   return DataFrame({
-      {"x", Thread(x)},
-      {"y", Thread(y)},
+      {"x", Slate(x)},
+      {"y", Slate(y)},
   });
 }
 
 DataFrame timed_frame() {
   const Series value = pluss::make_series(std::vector<double>{40, 10, 80, 20, 60, 30, 70, 50}, {8}, f64());
   return DataFrame({
-      {"stamp", Thread(pluss::make_timeline({
+      {"stamp", Slate(pluss::make_timeline({
                     "2024-01-04T00:00:00Z",
                     "2024-01-01T00:00:00Z",
                     "2024-01-08T00:00:00Z",
@@ -43,7 +43,7 @@ DataFrame timed_frame() {
                     "2024-01-07T00:00:00Z",
                     "2024-01-05T00:00:00Z",
                 }))},
-      {"value", Thread(value)},
+      {"value", Slate(value)},
   });
 }
 

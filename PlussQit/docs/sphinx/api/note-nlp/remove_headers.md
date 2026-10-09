@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_headers
+# Note::NlpAccessor::remove_headers
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_headers() const
+Note Note::NlpAccessor::remove_headers() const
 ```
 
 ## Remove Hash-Marked Heading Lines
@@ -106,7 +106,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 
 - [`remove_footers`](remove_footers.md): remove recognized page and rights lines.
 - [`remove_bullets`](remove_bullets.md): retain list-item text while deleting its marker.
-- `NoteNlpAccessor::remove_markdown`: remove several Markdown constructs in one broader pass.
+- `Note::NlpAccessor::remove_markdown`: remove several Markdown constructs in one broader pass.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="remove_hashtags.html"><span class="label">Previous</span><span class="title">remove_hashtags</span></a>

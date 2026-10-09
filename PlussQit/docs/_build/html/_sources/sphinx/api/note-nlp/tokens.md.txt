@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::tokens
+# Note::NlpAccessor::tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::tokens(std::int64_t flags = 0) const
+TokenBatch Note::NlpAccessor::tokens(std::int64_t flags = 0) const
 ```
 
 ## Tokenize Each Cell Into Word-Like Units
@@ -132,8 +132,8 @@ The `1×2` input flattens row-major: cell `0` → `[0, 2)`, cell `1` →
 
 - [`Note::split_whitespace`](../note/split_whitespace.md): faster, purely
   whitespace-delimited, keeps punctuation attached.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md) /
-  [`NoteRegexAccessor::split`](../note-regex/split.md): define an explicit
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md) /
+  [`Note::RegexAccessor::split`](../note-regex/split.md): define an explicit
   ECMAScript pattern.
 - `sentences()` / `punct_tokens()`: sibling accessor methods for other units.
 

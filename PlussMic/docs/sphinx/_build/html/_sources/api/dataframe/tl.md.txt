@@ -51,8 +51,8 @@ Example 1. Extract the year from a timestamp feature — after selecting it firs
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({1, 2, 3}))},
-    {"ordered_at", Thread(pluss::make_timeline({
+    {"order_id",   Slate(pluss::make_series({1, 2, 3}))},
+    {"ordered_at", Slate(pluss::make_timeline({
         "2024-01-02T00:00:00Z",
         "2024-02-20T00:00:00Z",
         "2024-03-10T00:00:00Z",

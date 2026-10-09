@@ -9,10 +9,8 @@ namespace {
 pluss::Series wave_field(std::int64_t rows, std::int64_t cols) {
   const auto x_axis = pluss::series::linspace(0.0, 25.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
   const auto y_axis = pluss::series::linspace(0.0, 30.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
-  const std::array<std::int64_t, 2> x_tile{rows, 1};
-  const std::array<std::int64_t, 2> y_tile{1, cols};
-  const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
-  const auto y = y_axis.tile(std::span<const std::int64_t>(y_tile.data(), y_tile.size()));
+  const auto x = x_axis.repeat({rows, 1});
+  const auto y = y_axis.repeat({1, cols});
 
   const auto envelope = x.sub(11.0).pow(2.0).add(y.sub(10.0).pow(2.0).mul(0.7)).mul(-0.04).exp();
   const auto ripple = x.mul(0.48).sin().mul(y.mul(0.28).cos()).mul(8.0)

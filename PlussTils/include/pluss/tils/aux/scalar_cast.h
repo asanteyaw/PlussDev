@@ -8,7 +8,9 @@
 #include <pluss/config.h>
 
 #include <complex>
+#include <array>
 #include <cstdint>
+#include <span>
 #include <type_traits>
 
 namespace pluss::tils {
@@ -66,17 +68,50 @@ inline Series as_u64(const Series& x, Config cfg) { return as_dtype(x, ScalarTyp
 inline Series as_c64(const Series& x, Config cfg) { return as_dtype(x, ScalarType::Complex64, cfg); }
 inline Series as_c128(const Series& x, Config cfg) { return as_dtype(x, ScalarType::Complex128, cfg); }
 
-inline Series as_bool(bool value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::Bool, cfg); }
-inline Series as_f32(float value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::Float32, cfg); }
-inline Series as_f64(double value, Config cfg) { return as_dtype(value, ScalarType::Float64, cfg); }
-inline Series as_i8(std::int8_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::Int8, cfg); }
-inline Series as_i16(std::int16_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::Int16, cfg); }
-inline Series as_i32(std::int32_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::Int32, cfg); }
-inline Series as_i64(std::int64_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::Int64, cfg); }
-inline Series as_u8(std::uint8_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::UInt8, cfg); }
-inline Series as_u16(std::uint16_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::UInt16, cfg); }
-inline Series as_u32(std::uint32_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::UInt32, cfg); }
-inline Series as_u64(std::uint64_t value, Config cfg) { return as_dtype(static_cast<double>(value), ScalarType::UInt64, cfg); }
+namespace detail {
+template <class T>
+Series scalar_series(T value, ScalarType dtype, Config cfg) {
+  const std::array<T, 1> host{value};
+  return pluss::make_series(
+      std::span<const T>(host.data(), host.size()),
+      std::span<const std::int64_t>{},
+      as_dtype(cfg, dtype));
+}
+} // namespace detail
+
+inline Series as_bool(bool value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Bool, cfg);
+}
+inline Series as_f32(float value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Float32, cfg);
+}
+inline Series as_f64(double value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Float64, cfg);
+}
+inline Series as_i8(std::int8_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Int8, cfg);
+}
+inline Series as_i16(std::int16_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Int16, cfg);
+}
+inline Series as_i32(std::int32_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Int32, cfg);
+}
+inline Series as_i64(std::int64_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::Int64, cfg);
+}
+inline Series as_u8(std::uint8_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::UInt8, cfg);
+}
+inline Series as_u16(std::uint16_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::UInt16, cfg);
+}
+inline Series as_u32(std::uint32_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::UInt32, cfg);
+}
+inline Series as_u64(std::uint64_t value, Config cfg) {
+  return detail::scalar_series(value, ScalarType::UInt64, cfg);
+}
 
 namespace detail {
 template <class T>
@@ -91,18 +126,6 @@ inline constexpr bool is_scalar_extractable_v = detail::is_scalar_extractable<T>
 
 inline codem::Complex64 as_c64(const Series& x);
 inline codem::Complex128 as_c128(const Series& x);
-
-inline codem::Complex64 as_C64(const Series& x) { return as_c64(x); }
-inline codem::Complex128 as_C128(const Series& x) { return as_c128(x); }
-
-inline Series as_C64(const Series& x, Config cfg) { return as_c64(x, cfg); }
-inline Series as_C128(const Series& x, Config cfg) { return as_c128(x, cfg); }
-
-inline Config as_C64(Config cfg = {}) { return as_c64(cfg); }
-inline Config as_C128(Config cfg = {}) { return as_c128(cfg); }
-
-inline Series as_C64(std::complex<float> value, Config cfg) { return as_c64(value, cfg); }
-inline Series as_C128(std::complex<double> value, Config cfg) { return as_c128(value, cfg); }
 
 template <class T>
 T to_scalar(const Series& x) {
@@ -126,42 +149,5 @@ inline std::uint32_t as_u32(const Series& x) { return to_scalar<std::uint32_t>(x
 inline std::uint64_t as_u64(const Series& x) { return to_scalar<std::uint64_t>(x); }
 inline codem::Complex64 as_c64(const Series& x) { return to_scalar<codem::Complex64>(x); }
 inline codem::Complex128 as_c128(const Series& x) { return to_scalar<codem::Complex128>(x); }
-
-// Upper-case numeric aliases for teams that prefer this style.
-inline std::int8_t as_I8(const Series& x) { return as_i8(x); }
-inline std::int16_t as_I16(const Series& x) { return as_i16(x); }
-inline std::int32_t as_I32(const Series& x) { return as_i32(x); }
-inline std::int64_t as_I64(const Series& x) { return as_i64(x); }
-inline std::uint8_t as_U8(const Series& x) { return as_u8(x); }
-inline std::uint16_t as_U16(const Series& x) { return as_u16(x); }
-inline std::uint32_t as_U32(const Series& x) { return as_u32(x); }
-inline std::uint64_t as_U64(const Series& x) { return as_u64(x); }
-
-inline Series as_I8(const Series& x, Config cfg) { return as_i8(x, cfg); }
-inline Series as_I16(const Series& x, Config cfg) { return as_i16(x, cfg); }
-inline Series as_I32(const Series& x, Config cfg) { return as_i32(x, cfg); }
-inline Series as_I64(const Series& x, Config cfg) { return as_i64(x, cfg); }
-inline Series as_U8(const Series& x, Config cfg) { return as_u8(x, cfg); }
-inline Series as_U16(const Series& x, Config cfg) { return as_u16(x, cfg); }
-inline Series as_U32(const Series& x, Config cfg) { return as_u32(x, cfg); }
-inline Series as_U64(const Series& x, Config cfg) { return as_u64(x, cfg); }
-
-inline Config as_I8(Config cfg = {}) { return as_i8(cfg); }
-inline Config as_I16(Config cfg = {}) { return as_i16(cfg); }
-inline Config as_I32(Config cfg = {}) { return as_i32(cfg); }
-inline Config as_I64(Config cfg = {}) { return as_i64(cfg); }
-inline Config as_U8(Config cfg = {}) { return as_u8(cfg); }
-inline Config as_U16(Config cfg = {}) { return as_u16(cfg); }
-inline Config as_U32(Config cfg = {}) { return as_u32(cfg); }
-inline Config as_U64(Config cfg = {}) { return as_u64(cfg); }
-
-inline Series as_I8(std::int8_t value, Config cfg) { return as_i8(value, cfg); }
-inline Series as_I16(std::int16_t value, Config cfg) { return as_i16(value, cfg); }
-inline Series as_I32(std::int32_t value, Config cfg) { return as_i32(value, cfg); }
-inline Series as_I64(std::int64_t value, Config cfg) { return as_i64(value, cfg); }
-inline Series as_U8(std::uint8_t value, Config cfg) { return as_u8(value, cfg); }
-inline Series as_U16(std::uint16_t value, Config cfg) { return as_u16(value, cfg); }
-inline Series as_U32(std::uint32_t value, Config cfg) { return as_u32(value, cfg); }
-inline Series as_U64(std::uint64_t value, Config cfg) { return as_u64(value, cfg); }
 
 } // namespace pluss::tils

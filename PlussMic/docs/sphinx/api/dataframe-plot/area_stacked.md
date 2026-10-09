@@ -90,9 +90,9 @@ point is `sales + returns_cost` combined.
 using namespace pluss::table;
 
 auto breakdown = DataFrame({
-    {"month",        Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}))},
-    {"sales",        Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
-    {"returns_cost", Thread(pluss::make_series({8.0, 5.0, 12.0, 6.0}))},
+    {"month",        Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}))},
+    {"sales",        Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+    {"returns_cost", Slate(pluss::make_series({8.0, 5.0, 12.0, 6.0}))},
 });
 
 auto chart = breakdown.plot().area_stacked({"sales", "returns_cost"}, "month");
@@ -109,10 +109,10 @@ Example 2. Three features stacked, via a reusable `RangeView` built at runtime.
 
 ```cpp
 auto breakdown3 = DataFrame({
-    {"month",   Thread(pluss::make_note({"Jan", "Feb", "Mar"}))},
-    {"product", Thread(pluss::make_series({60.0, 70.0, 55.0}))},
-    {"support", Thread(pluss::make_series({20.0, 18.0, 22.0}))},
-    {"other",   Thread(pluss::make_series({5.0, 6.0, 4.0}))},
+    {"month",   Slate(pluss::make_note({"Jan", "Feb", "Mar"}))},
+    {"product", Slate(pluss::make_series({60.0, 70.0, 55.0}))},
+    {"support", Slate(pluss::make_series({20.0, 18.0, 22.0}))},
+    {"other",   Slate(pluss::make_series({5.0, 6.0, 4.0}))},
 });
 
 std::vector<std::string_view> parts{"product", "support", "other"};

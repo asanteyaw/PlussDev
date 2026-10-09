@@ -41,7 +41,16 @@ int main(int argc, char** argv) {
   auto work = df;
   work.set({"Start_Time", "End_Time"}) =
       df.features({"Start_Time", "End_Time"}).cast().timeline();
-  work = work.features({
+  work.set({"Severity",
+          "Distance(mi)",
+          "Start_Lat",
+          "Start_Lng",
+          "Visibility(mi)",
+          "Wind_Speed(mph)",
+          "Humidity(%)",
+          "Pressure(in)",
+          "Precipitation(in)"}) =
+      work.features({
           "Severity",
           "Distance(mi)",
           "Start_Lat",
@@ -51,22 +60,23 @@ int main(int argc, char** argv) {
           "Humidity(%)",
           "Pressure(in)",
           "Precipitation(in)",
-      }).astype(pluss::codem::ScalarType::Float64)
+      }).astype(pluss::codem::ScalarType::Float64);
+  work = work
       .assign({
           pluss::table::DataFrame::DeriveSpec{"Start_Year", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.features("Start_Time").as_timeline().year());
+             return pluss::table::Slate(f.features("Start_Time").as_timeline().year());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_Month", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.features("Start_Time").as_timeline().month());
+             return pluss::table::Slate(f.features("Start_Time").as_timeline().month());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_Day", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.features("Start_Time").as_timeline().day());
+             return pluss::table::Slate(f.features("Start_Time").as_timeline().day());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_Hour", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.features("Start_Time").as_timeline().hour());
+             return pluss::table::Slate(f.features("Start_Time").as_timeline().hour());
            }},
           pluss::table::DataFrame::DeriveSpec{"Start_DOW", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.features("Start_Time").as_timeline().strftime("%A"));
+             return pluss::table::Slate(f.features("Start_Time").as_timeline().strftime("%A"));
            }},
           pluss::table::DataFrame::DeriveSpec{"Duration_min", [](const pluss::table::DataFrame& f) {
              auto end_ns = f.features("End_Time")
@@ -79,10 +89,10 @@ int main(int argc, char** argv) {
                                  .series()
                                  .as_series()
                                  .to(pluss::codem::ScalarType::Float64);
-             return pluss::table::Thread(end_ns.sub(start_ns).div(6.0e10));
+             return pluss::table::Slate(end_ns.sub(start_ns).div(6.0e10));
            }},
           pluss::table::DataFrame::DeriveSpec{"Sev_ge_3", [](const pluss::table::DataFrame& f) {
-             return pluss::table::Thread(f.features("Severity").as_series().ge(3.0));
+             return pluss::table::Slate(f.features("Severity").as_series().ge(3.0));
            }},
           pluss::table::DataFrame::DeriveSpec{"Is_RushHour", [](const pluss::table::DataFrame& f) {
              const auto h = f.features("Start_Hour").as_series().to_vec<std::int64_t>();
@@ -92,7 +102,7 @@ int main(int argc, char** argv) {
                const auto hh = h[i];
                p[i] = ((hh >= 7 && hh <= 9) || (hh >= 16 && hh <= 18));
              }
-             return pluss::table::Thread(out);
+             return pluss::table::Slate(out);
            }},
       });
 

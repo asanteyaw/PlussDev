@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::min
+# Timeline::TimelineIndexAccessor::min
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Timeline TimelineIndexAccessor::min() const
+Timeline Timeline::TimelineIndexAccessor::min() const
 ```
 
 ## What It Does
@@ -45,7 +45,7 @@ auto hi = idx.max();
 
 ## See Also
 
-- [`TimelineIndexAccessor::max`](max.md)
+- [`Timeline::TimelineIndexAccessor::max`](max.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="max.html">

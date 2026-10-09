@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::ordinal_encoder`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `ordinal_encoder` builds an attachable [`prep::Stage`](Stage.md) that maps each routed category to a small integer code — 1-based by default, with 0 reserved for a category unseen at fit time. It is the stage counterpart of the standalone `prep::OrdinalEncoder`.
 
@@ -63,7 +63,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -74,7 +74,7 @@ int main() {
   const pluss::Series spend = pluss::make_series({120.0, 200.0, 90.0, 260.0, 140.0, 300.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 1, 0, 1, 0, 1}, {6}, f64);
-  const DataFrame x({{"spend", Thread(spend)}, {"region", Thread(region)}});
+  const DataFrame x({{"spend", Slate(spend)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::ordinal_encoder(),
@@ -82,9 +82,9 @@ int main() {
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"region", Thread(region)},
-                          {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"region", Slate(region)},
+                          {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -123,7 +123,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -132,7 +132,7 @@ int main() {
   // one_based = true (default): codes start at 1, 0 marks unseen. Set
   // one_based = false to start at 0.
   const pluss::Series tier = pluss::make_series({10, 20, 30, 10, 20, 30}, {6}, f64);
-  const DataFrame frame({{"tier", Thread(tier)}});
+  const DataFrame frame({{"tier", Slate(tier)}});
 
   lymph::prep::OrdinalEncoder one_based{lymph::options::OrdinalEncoder{}};
   one_based.features({"tier"});
@@ -192,7 +192,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -202,15 +202,15 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::standard_scaler(), lymph::prep::route::names({"amount"}))
        .append(lymph::prep::stage::ordinal_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"amount", Thread(amount)}, {"region", Thread(region)},
-                          {"actual", Thread(y)}, {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"amount", Slate(amount)}, {"region", Slate(region)},
+                          {"actual", Slate(y)}, {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

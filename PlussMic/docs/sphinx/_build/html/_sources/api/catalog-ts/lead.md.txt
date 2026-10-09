@@ -78,7 +78,7 @@ successor, so it's `nan` — the `nan` lands at the opposite end from
 
 - [`CatalogTimeSeriesAccessor::lag`](lag.md): the mirror-image shift.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::lead`](../thread-ts/lead.md): the underlying
+- [`TimeSeriesAccessor::lead`](../slate-ts/lead.md): the underlying
   single-thread engine this method delegates to.
 
 <div class="pluss-inline-prev-next">

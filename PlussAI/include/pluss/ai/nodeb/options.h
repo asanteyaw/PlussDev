@@ -56,6 +56,21 @@ struct AssessOptions {
   bool require_sentences = false;
 };
 
+// What the most recent learn() call on a trainable stage did. The counts
+// describe the training data and what it produced; `loss_history` holds the
+// loss after each gradient step of the text classifier's model. The tagger and
+// NER classic backends learn count tables with no iterations, so theirs is
+// empty; the classic text classifier reports its linear model's iterations.
+struct TrainingReport {
+  std::int64_t doc_count = 0;
+  std::int64_t entry_count = 0;
+  std::vector<double> loss_history{};
+
+  [[nodiscard]] std::int64_t steps() const noexcept {
+    return static_cast<std::int64_t>(loss_history.size());
+  }
+};
+
 struct RuleTokenizerOptions {
   bool keep_punct = true;
   bool use_language_exceptions = true;
@@ -89,14 +104,10 @@ struct TextCatOptions {
   bool multi_label = false;
   double multi_label_threshold = 0.5;
   TaskBackend backend = TaskBackend::Classic;
-  SequenceHead sequence_head = SequenceHead::Transformer;
-  SequencePooling sequence_pooling = SequencePooling::Mean;
   std::int64_t sequence_width = 64;
   double sequence_learning_rate = 5e-2;
   double sequence_dropout = 0.0;
   std::uint64_t sequence_seed = 0;
-  QuantizationHint quantization = QuantizationHint::None;
-  DistillationHint distillation = DistillationHint::None;
 };
 
 struct MatcherOptions {
@@ -110,11 +121,8 @@ struct TaggerOptions {
   bool prefer_learned = true;
   bool use_heuristics = true;
   TaskBackend backend = TaskBackend::Classic;
-  SequenceHead sequence_head = SequenceHead::BiLstm;
   std::int64_t sequence_width = 48;
   std::uint64_t sequence_seed = 0;
-  QuantizationHint quantization = QuantizationHint::None;
-  DistillationHint distillation = DistillationHint::None;
 };
 
 struct NerOptions {
@@ -123,13 +131,10 @@ struct NerOptions {
   bool use_heuristics = true;
   bool prefer_learned = true;
   TaskBackend backend = TaskBackend::Classic;
-  SequenceHead sequence_head = SequenceHead::Transformer;
   std::int64_t sequence_width = 48;
   std::int64_t sequence_max_span_width = 4;
   double sequence_min_score = 0.55;
   std::uint64_t sequence_seed = 0;
-  QuantizationHint quantization = QuantizationHint::None;
-  DistillationHint distillation = DistillationHint::None;
 };
 
 struct SyntaxOptions {

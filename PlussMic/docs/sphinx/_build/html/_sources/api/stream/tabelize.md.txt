@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Stream::tabelize() -> pluss::table::Thread
+Stream::tabelize() -> pluss::table::Slate
 ```
 
 ## What It Does
@@ -18,7 +18,7 @@ This is an explicit bridge between PlussMic models so you can switch to the repr
 
 ## Returns
 
-`pluss::table::Thread`
+`pluss::table::Slate`
     Value produced by this call.
 
 ## Examples

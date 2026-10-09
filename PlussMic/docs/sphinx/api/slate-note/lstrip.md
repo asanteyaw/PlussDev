@@ -1,0 +1,81 @@
+<!-- pluss-hand-authored -->
+
+# SlateNoteAccessor::lstrip
+
+[Back to SlateNoteAccessor API Reference](../../slate_note_accessor_api_reference)
+
+## Signatures
+
+```cpp
+SlateNoteAccessor::lstrip() const -> Slate
+SlateNoteAccessor::lstrip(std::string_view chars) const -> Slate
+```
+
+## What It Does
+
+The left-only half of [`strip()`](strip.md): trims characters from the **start** of
+the bound slate's cells, leaving the trailing end untouched. A direct forward to
+[`Slate::lstrip()`](../slate/lstrip.md). Same two policies as `strip()` (whitespace
+by default, character-set membership with `chars`).
+
+## Parameters
+
+**chars** (`std::string_view`, `chars`-overload only)
+
+The set of characters to strip from each cell's left edge only.
+
+## Returns
+
+`Slate`
+    A new `Note`-kind slate, same length as the bound slate, with each cell's
+    leading text trimmed.
+
+## Examples
+
+Example 1. Strip a leading marker character, leaving the trailing end untouched.
+
+```cpp
+using namespace pluss::table;
+
+auto ids = Slate(pluss::make_note({"#203930", "##7788", "4455##"}));
+auto out = ids.nt().lstrip("#");
+std::cout << out;
+```
+
+### Output
+
+```text
+0  203930
+1  7788
+2  4455##
+
+ptype: Note
+```
+
+Row `2`'s trailing `##` is untouched — only leading `#` characters are peeled off.
+
+## Notes
+
+- `SlateNoteAccessor::lstrip()` is a one-line forward to
+  [`Slate::lstrip()`](../slate/lstrip.md) — identical behavior and throws.
+- See [`strip()`](strip.md) for the full explanation of the default-whitespace vs.
+  `chars`-set-membership policies.
+
+## See Also
+
+- [`Slate::lstrip`](../slate/lstrip.md): the direct, non-accessor form this
+  method forwards to.
+- [`SlateNoteAccessor::rstrip`](rstrip.md): the mirror image, trimming the
+  trailing end only.
+- [`SlateNoteAccessor::strip`](strip.md): both ends at once.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lower.html">
+    <span class="label">Previous</span>
+    <span class="title">lower</span>
+  </a>
+  <a class="next-link" href="matches.html">
+    <span class="label">Next</span>
+    <span class="title">matches</span>
+  </a>
+</div>

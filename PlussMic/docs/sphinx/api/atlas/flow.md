@@ -15,7 +15,7 @@ Atlas::flow(const std::function<Atlas(const Atlas&)>& fn) const -> Atlas
 
 Calls `fn` **exactly once**, passing the entire current atlas, and returns exactly what
 `fn` returns — with no depth or shape validation at all, the `Atlas` analog of
-[`Thread::flow`](../thread/flow.md). Reach for `flow()` when you want to drop into a
+[`Slate::flow`](../slate/flow.md). Reach for `flow()` when you want to drop into a
 pipeline stage that changes depth arbitrarily (filtering, expanding, reducing to a single
 frame's worth of depth) without a shape check getting in the way.
 
@@ -35,10 +35,10 @@ Example 1. Drop into a pipeline stage that reduces depth arbitrarily.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({4.0, 5.0, 6.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
@@ -73,7 +73,7 @@ depth: 1
 
 - [`Atlas::map_frames`](map_frames.md): transform each frame independently instead of the
   whole atlas at once.
-- [`Thread::flow`](../thread/flow.md): the single-column analog of this method.
+- [`Slate::flow`](../slate/flow.md): the single-column analog of this method.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="features.html">

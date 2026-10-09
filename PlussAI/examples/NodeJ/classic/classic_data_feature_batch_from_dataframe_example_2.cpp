@@ -9,13 +9,13 @@
 int main() {
   namespace cls = pluss::ai::classic;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame train_frame({
-      {"income", Thread(pluss::make_series({1.0, 1.5, 2.0, 2.5}, {4}, f64))},
-      {"region", Thread(pluss::make_note({"north", "south", "north", "east"}))},
+      {"income", Slate(pluss::make_series({1.0, 1.5, 2.0, 2.5}, {4}, f64))},
+      {"region", Slate(pluss::make_note({"north", "south", "north", "east"}))},
   });
 
   cls::DataFrameBatchOptions options{};
@@ -33,8 +33,8 @@ int main() {
 
   // A later, unrelated frame -- different row order, same category set.
   const DataFrame infer_frame({
-      {"income", Thread(pluss::make_series({3.0, 1.8}, {2}, f64))},
-      {"region", Thread(pluss::make_note({"south", "north"}))},
+      {"income", Slate(pluss::make_series({3.0, 1.8}, {2}, f64))},
+      {"region", Slate(pluss::make_note({"south", "north"}))},
   });
   const cls::StatusOr<cls::FeatureBatch> infer_batch =
       cls::feature_batch_from_dataframe(infer_frame, options, &fitted, /*fitted_categories_out=*/nullptr);

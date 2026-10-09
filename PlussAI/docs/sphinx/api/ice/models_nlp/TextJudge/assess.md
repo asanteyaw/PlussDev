@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 6644c81a33db -->
 # `pluss::ai::ice::models::TextJudge::assess`
 
 [Back to `pluss::ai::ice::models::TextJudge`](../TextJudge.md)
@@ -8,54 +7,98 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] pluss::ai::ice::models::TextJudgeReport pluss::ai::ice::models::TextJudge::assess(
+    const std::vector<pluss::ai::nlp::Doc>& docs,
+    pluss::RangeView<std::string_view> labels) const;
+[[nodiscard]] pluss::ai::ice::models::TextJudgeReport pluss::ai::ice::models::TextJudge::assess(
+    pluss::RangeView<std::string_view> texts,
+    pluss::RangeView<std::string_view> labels) const;
+[[nodiscard]] pluss::ai::ice::models::TextJudgeReport pluss::ai::ice::models::TextJudge::assess(
+    const std::vector<std::string>& texts, const std::vector<std::string>& labels) const;
+[[nodiscard]] pluss::ai::ice::models::TextJudgeReport pluss::ai::ice::models::TextJudge::assess(
+    const pluss::Note& texts, const pluss::Note& labels) const;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Scores the model against `texts`/`labels`, returning a
+[`TextJudgeReport`](../TextJudgeReport.md) -- mean loss, accuracy, and
+example count. All four overloads mirror
+[`learn`'s own four overloads](learn.md), and produce an identical
+report for identical underlying text/label pairs (see Example 2).
+`accuracy` genuinely reflects correctness -- scoring against the real
+labels gives a higher accuracy than scoring the same texts against
+every label flipped (see Example 3).
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`const std::vector<pluss::ai::nlp::Doc>& docs` / `RangeView<std::string_view> texts` / `const std::vector<std::string>& texts` / `const pluss::Note& texts`
+: The texts to score, in whichever of the four shapes is convenient.
+
+`RangeView<std::string_view> labels` / `const std::vector<std::string>& labels` / `const pluss::Note& labels`
+: The ground-truth label per text, same length as `texts`/`docs`.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+[`TextJudgeReport`](../TextJudgeReport.md).
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+- Throws if `texts`/`docs` and `labels` have different lengths.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: a finite loss and in-range accuracy against the
+training corpus, the `pluss::Note` overload matching the
+`vector<std::string>` overload exactly, and `accuracy` dropping when
+every label is deliberately flipped.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
+#include <cmath>
 #include <iostream>
+#include <string>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace models = ice::models;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("stocks rallied after the earnings report");
+    labels.push_back("finance");
+    texts.push_back("the market closed higher on strong profits");
+    labels.push_back("finance");
+    texts.push_back("the striker scored twice in the cup match");
+    labels.push_back("sport");
+    texts.push_back("fans celebrated the league victory downtown");
+    labels.push_back("sport");
+  }
+
+  models::TextJudgeOptions model_options{};
+  model_options.width = 24;
+  model_options.dropout = 0.0;
+  model_options.seed = 9;
+  models::TextJudge model(model_options);
+
+  models::TextJudgeTrainOptions train_options{};
+  train_options.batch_size = 12;
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 80;
+  train_options.validation.split_ratio = 0.0;
+  train_options.seed = 13;
+  model.learn(texts, labels, train_options);
+
+  const auto report = model.assess(texts, labels);
+  std::cout << "report.count = " << report.count << "\n";
+  std::cout << "report.loss is finite = " << std::isfinite(report.loss) << "\n";
+  std::cout << "report.accuracy in [0,1] = " << (report.accuracy >= 0.0 && report.accuracy <= 1.0) << "\n";
 
   return 0;
 }
@@ -64,27 +107,62 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+report.count = 96
+report.loss is finite = 1
+report.accuracy in [0,1] = 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace models = ice::models;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("stocks rallied after the earnings report");
+    labels.push_back("finance");
+    texts.push_back("the market closed higher on strong profits");
+    labels.push_back("finance");
+    texts.push_back("the striker scored twice in the cup match");
+    labels.push_back("sport");
+    texts.push_back("fans celebrated the league victory downtown");
+    labels.push_back("sport");
+  }
+
+  models::TextJudgeOptions model_options{};
+  model_options.width = 24;
+  model_options.dropout = 0.0;
+  model_options.seed = 9;
+  models::TextJudge model(model_options);
+
+  models::TextJudgeTrainOptions train_options{};
+  train_options.batch_size = 12;
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 80;
+  train_options.validation.split_ratio = 0.0;
+  train_options.seed = 13;
+  model.learn(texts, labels, train_options);
+
+  const auto report_vec = model.assess(texts, labels);
+
+  const pluss::Note note_texts = pluss::make_note(texts);
+  const pluss::Note note_labels = pluss::make_note(labels);
+  const auto report_note = model.assess(note_texts, note_labels);
+
+  std::cout << "Note overload matches vector<string> overload exactly: "
+            << (report_note.loss == report_vec.loss && report_note.accuracy == report_vec.accuracy &&
+                report_note.count == report_vec.count)
+            << "\n";
 
   return 0;
 }
@@ -93,27 +171,60 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+Note overload matches vector<string> overload exactly: 1
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace models = ice::models;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::string> texts{};
+  std::vector<std::string> labels{};
+  for (int i = 0; i < 24; ++i) {
+    texts.push_back("stocks rallied after the earnings report");
+    labels.push_back("finance");
+    texts.push_back("the market closed higher on strong profits");
+    labels.push_back("finance");
+    texts.push_back("the striker scored twice in the cup match");
+    labels.push_back("sport");
+    texts.push_back("fans celebrated the league victory downtown");
+    labels.push_back("sport");
+  }
+
+  models::TextJudgeOptions model_options{};
+  model_options.width = 24;
+  model_options.dropout = 0.0;
+  model_options.seed = 9;
+  models::TextJudge model(model_options);
+
+  models::TextJudgeTrainOptions train_options{};
+  train_options.batch_size = 12;
+  train_options.learning_rate = 5e-2;
+  train_options.execution.max_epochs = 80;
+  train_options.validation.split_ratio = 0.0;
+  train_options.seed = 13;
+  model.learn(texts, labels, train_options);
+
+  const auto good_report = model.assess(texts, labels);
+
+  std::vector<std::string> flipped_labels{};
+  for (const auto& label : labels) {
+    flipped_labels.push_back(label == "finance" ? "sport" : "finance");
+  }
+  const auto bad_report = model.assess(texts, flipped_labels);
+
+  std::cout << "good_report.accuracy > bad_report.accuracy: "
+            << (good_report.accuracy > bad_report.accuracy) << "\n";
 
   return 0;
 }
@@ -122,12 +233,15 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+good_report.accuracy > bad_report.accuracy: 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`TextJudgeReport`](../TextJudgeReport.md) -- the returned type.
+- [`learn`](learn.md) -- minimizes the same loss this reports.
+- [`predict`](predict.md) -- per-input predictions instead of an
+  aggregate report, for text without labels.
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

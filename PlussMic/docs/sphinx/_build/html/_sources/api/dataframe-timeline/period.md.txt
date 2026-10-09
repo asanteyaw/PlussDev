@@ -43,7 +43,7 @@ Example 1. Truncate every row of a `Timeline` feature to its month start.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -91,7 +91,7 @@ Example 2. Truncate the same rows to their year start instead.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -142,7 +142,7 @@ different name.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
 std::cout << events;
 
 auto out = events.tl().period("days");
@@ -182,7 +182,7 @@ Example 4. Pass an unrecognized frequency string to see the call throw.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:00Z"}))}});
 
 try {
   auto out = events.tl().period("week");

@@ -26,7 +26,7 @@ namespace pluss::ai::lymph {
   DataFrameBatchOptions options{};
   options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
-  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
   return options;
 }
@@ -171,7 +171,7 @@ template <>
     ::pluss::throw_error(std::string(where) + ": mapped sample count mismatch.");
   }
   if (feature_count != static_cast<std::int64_t>(names.size())) {
-    std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
+    std::vector<std::pair<std::string, pluss::table::Slate>> columns{};
     columns.reserve(static_cast<std::size_t>(feature_count));
     for (std::int64_t j = 0; j < feature_count; ++j) {
       const Series idx = pluss::make_series(
@@ -185,7 +185,7 @@ template <>
       } else {
         out_name = std::string("feature_") + std::to_string(j);
       }
-      columns.emplace_back(std::move(out_name), pluss::table::Thread(col));
+      columns.emplace_back(std::move(out_name), pluss::table::Slate(col));
     }
     return pluss::table::DataFrame(std::move(columns), frame.label().values());
   }
@@ -197,7 +197,7 @@ template <>
         {1},
         Config{}.with_dtype(ScalarType::Int64).with_platform(mapped.platform()));
     const Series col = mapped.index_select(1, idx).reshape({sample_count});
-    out.set_(names[static_cast<std::size_t>(j)], pluss::table::Thread(col));
+    out.set_(names[static_cast<std::size_t>(j)], pluss::table::Slate(col));
   }
   return out;
 }
@@ -349,7 +349,7 @@ prep::OutlierIsolator& prep::OutlierIsolator::learn(const pluss::table::DataFram
   return *this;
 }
 
-pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::DataFrame& frame,
+pluss::table::Slate prep::OutlierIsolator::infer(const pluss::table::DataFrame& frame,
                                                          const InferOptions& options) const {
   if (!learned_) {
     ::pluss::throw_error("prep::OutlierIsolator.infer: call learn() or learn_infer() first.");
@@ -357,10 +357,10 @@ pluss::table::Thread prep::OutlierIsolator::infer(const pluss::table::DataFrame&
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.infer");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
                              "prep::OutlierIsolator.infer.feature_batch_from_dataframe");
-  return pluss::table::Thread(resolve(core_.infer(batch, options), "prep::OutlierIsolator.infer"));
+  return pluss::table::Slate(resolve(core_.infer(batch, options), "prep::OutlierIsolator.infer"));
 }
 
-pluss::table::Thread prep::OutlierIsolator::score_samples(const pluss::table::DataFrame& frame,
+pluss::table::Slate prep::OutlierIsolator::score_samples(const pluss::table::DataFrame& frame,
                                                                  const InferOptions& options) const {
   if (!learned_) {
     ::pluss::throw_error("prep::OutlierIsolator.score_samples: call learn() or learn_infer() first.");
@@ -368,10 +368,10 @@ pluss::table::Thread prep::OutlierIsolator::score_samples(const pluss::table::Da
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.score_samples");
   const auto batch = resolve(feature_batch_from_dataframe(frame, batch_options_for_(names)),
                              "prep::OutlierIsolator.score_samples.feature_batch_from_dataframe");
-  return pluss::table::Thread(resolve(core_.score_samples(batch, options), "prep::OutlierIsolator.score_samples"));
+  return pluss::table::Slate(resolve(core_.score_samples(batch, options), "prep::OutlierIsolator.score_samples"));
 }
 
-pluss::table::Thread prep::OutlierIsolator::learn_infer(const pluss::table::DataFrame& frame,
+pluss::table::Slate prep::OutlierIsolator::learn_infer(const pluss::table::DataFrame& frame,
                                                                const TrainOptions& learn_options,
                                                                const InferOptions& infer_options) {
   const auto names = resolved_feature_names_(frame, "prep::OutlierIsolator.learn_infer");
@@ -381,7 +381,7 @@ pluss::table::Thread prep::OutlierIsolator::learn_infer(const pluss::table::Data
   feature_names_ = names;
   feature_names_pinned_ = true;
   learned_ = true;
-  return pluss::table::Thread(labels);
+  return pluss::table::Slate(labels);
 }
 
 pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss::table::DataFrame& frame,
@@ -462,13 +462,13 @@ pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss::table
     return merge_mapped_(frame, names, mapped, Label ".learn_map");                              \
   }
 
-#define PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(WrapperName, Label)                          \
+#define PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_SLATE(WrapperName, Label)                          \
   PLUSS_NODEJ_DEFINE_PREP_WRAPPER(WrapperName, Label)                                             \
                                                                                                   \
-  prep::WrapperName& prep::WrapperName::learn(const pluss::table::Thread& feature,        \
+  prep::WrapperName& prep::WrapperName::learn(const pluss::table::Slate& feature,        \
                                                       const TrainOptions& options) {              \
-    prep_before_thread_fit_(*this, feature);                                                     \
-    resolve(core_.learn(feature, options), Label ".learn(Thread)");                              \
+    prep_before_slate_fit_(*this, feature);                                                     \
+    resolve(core_.learn(feature, options), Label ".learn(Slate)");                              \
     if (feature_names_.empty() && feature.named()) {                                              \
       feature_names_ = {feature.name()};                                                          \
       feature_names_pinned_ = true;                                                               \
@@ -478,20 +478,20 @@ pluss::table::DataFrame prep::OutlierIsolator::filter_inliers(const pluss::table
     return *this;                                                                                 \
   }                                                                                               \
                                                                                                   \
-  Series prep::WrapperName::map(const pluss::table::Thread& feature,                      \
+  Series prep::WrapperName::map(const pluss::table::Slate& feature,                      \
                                         const InferOptions& options) const {                      \
     if (!learned_) {                                                                              \
-      ::pluss::throw_error(std::string(Label) + ".map(Thread): call learn() or learn_map() first."); \
+      ::pluss::throw_error(std::string(Label) + ".map(Slate): call learn() or learn_map() first."); \
     }                                                                                             \
-    return resolve(core_.map(feature, options), Label ".map(Thread)");                           \
+    return resolve(core_.map(feature, options), Label ".map(Slate)");                           \
   }                                                                                               \
                                                                                                   \
-  Series prep::WrapperName::learn_map(const pluss::table::Thread& feature,                \
+  Series prep::WrapperName::learn_map(const pluss::table::Slate& feature,                \
                                               const TrainOptions& learn_options,                  \
                                               const InferOptions& infer_options) {                \
-    prep_before_thread_fit_(*this, feature);                                                     \
+    prep_before_slate_fit_(*this, feature);                                                     \
     const auto mapped = resolve(core_.learn_map(feature, learn_options, infer_options),          \
-                                Label ".learn_map(Thread)");                                      \
+                                Label ".learn_map(Slate)");                                      \
     if (feature_names_.empty() && feature.named()) {                                              \
       feature_names_ = {feature.name()};                                                          \
       feature_names_pinned_ = true;                                                               \
@@ -505,10 +505,10 @@ PLUSS_NODEJ_DEFINE_PREP_WRAPPER(MinMaxScaler, "prep::MinMaxScaler")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(RobustScaler, "prep::RobustScaler")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(NeighborImputer, "prep::NeighborImputer")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(IterativeImputer, "prep::IterativeImputer")
-PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(OneHotEncoder, "prep::OneHotEncoder")
-PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(FrequencyEncoder, "prep::FrequencyEncoder")
-PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(OrdinalEncoder, "prep::OrdinalEncoder")
-PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD(LabelEncoder, "prep::LabelEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_SLATE(OneHotEncoder, "prep::OneHotEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_SLATE(FrequencyEncoder, "prep::FrequencyEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_SLATE(OrdinalEncoder, "prep::OrdinalEncoder")
+PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_SLATE(LabelEncoder, "prep::LabelEncoder")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(VectorNormalizer, "prep::VectorNormalizer")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(MaxAbsScaler, "prep::MaxAbsScaler")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(QuantileMap, "prep::QuantileMap")
@@ -519,11 +519,11 @@ PLUSS_NODEJ_DEFINE_PREP_WRAPPER(BaseNEncoder, "prep::BaseNEncoder")
 PLUSS_NODEJ_DEFINE_PREP_WRAPPER(HashingEncoder, "prep::HashingEncoder")
 
 #undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER
-#undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_THREAD
+#undef PLUSS_NODEJ_DEFINE_PREP_WRAPPER_WITH_SLATE
 
-void prep::prep_before_thread_fit_(OneHotEncoder& wrapper, const pluss::table::Thread& feature) {
+void prep::prep_before_slate_fit_(OneHotEncoder& wrapper, const pluss::table::Slate& feature) {
   wrapper.category_labels_by_key_.clear();
-  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  if (feature.kind() != pluss::table::SlateKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
     if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
@@ -534,9 +534,9 @@ void prep::prep_before_thread_fit_(OneHotEncoder& wrapper, const pluss::table::T
   }
 }
 
-void prep::prep_before_thread_fit_(FrequencyEncoder& wrapper, const pluss::table::Thread& feature) {
+void prep::prep_before_slate_fit_(FrequencyEncoder& wrapper, const pluss::table::Slate& feature) {
   wrapper.category_labels_by_key_.clear();
-  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  if (feature.kind() != pluss::table::SlateKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
     if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
@@ -547,9 +547,9 @@ void prep::prep_before_thread_fit_(FrequencyEncoder& wrapper, const pluss::table
   }
 }
 
-void prep::prep_before_thread_fit_(OrdinalEncoder& wrapper, const pluss::table::Thread& feature) {
+void prep::prep_before_slate_fit_(OrdinalEncoder& wrapper, const pluss::table::Slate& feature) {
   wrapper.category_labels_by_key_.clear();
-  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  if (feature.kind() != pluss::table::SlateKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
     if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
@@ -560,9 +560,9 @@ void prep::prep_before_thread_fit_(OrdinalEncoder& wrapper, const pluss::table::
   }
 }
 
-void prep::prep_before_thread_fit_(LabelEncoder& wrapper, const pluss::table::Thread& feature) {
+void prep::prep_before_slate_fit_(LabelEncoder& wrapper, const pluss::table::Slate& feature) {
   wrapper.category_labels_by_key_.clear();
-  if (feature.kind() != pluss::table::ThreadKind::Note) return;
+  if (feature.kind() != pluss::table::SlateKind::Note) return;
   for (std::int64_t i = 0; i < feature.size(); ++i) {
     if (!pluss::table::detail::valid_at(feature, i)) continue;
     const auto token = std::string(feature.as_note().at(i));
@@ -807,7 +807,7 @@ prep::OneHotEncoderOptions prep::CategoryIndexer::to_one_hot_options_(const Cate
 }
 
 Series prep::CategoryIndexer::encode_feature_(const OneHotEncoder& encoder,
-                                                     const pluss::table::Thread& feature,
+                                                     const pluss::table::Slate& feature,
                                                      bool one_based,
                                                      const InferOptions& options,
                                                      const char* where) {
@@ -855,10 +855,10 @@ void prep::CategoryIndexer::refresh_from_encoders_() {
   }
 }
 
-prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::Thread& feature,
+prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::Slate& feature,
                                                            const TrainOptions& options) {
   if (!feature.defined()) {
-    ::pluss::throw_error("prep::CategoryIndexer.learn(Thread): input feature must be defined.");
+    ::pluss::throw_error("prep::CategoryIndexer.learn(Slate): input feature must be defined.");
   }
   if (feature.named()) {
     feature_names_ = {feature.name()};
@@ -898,15 +898,15 @@ prep::CategoryIndexer& prep::CategoryIndexer::learn(const pluss::table::DataFram
   return *this;
 }
 
-Series prep::CategoryIndexer::map(const pluss::table::Thread& feature, const InferOptions& options) const {
+Series prep::CategoryIndexer::map(const pluss::table::Slate& feature, const InferOptions& options) const {
   if (!learned_ || encoders_.empty()) {
-    ::pluss::throw_error("prep::CategoryIndexer.map(Thread): call learn() or learn_map() first.");
+    ::pluss::throw_error("prep::CategoryIndexer.map(Slate): call learn() or learn_map() first.");
   }
   if (encoders_.size() != 1) {
     ::pluss::throw_error(
-        "prep::CategoryIndexer.map(Thread): encoder was trained for multiple features; map(DataFrame) is required.");
+        "prep::CategoryIndexer.map(Slate): encoder was trained for multiple features; map(DataFrame) is required.");
   }
-  return encode_feature_(encoders_.front(), feature, options_.one_based, options, "prep::CategoryIndexer.map(Thread)");
+  return encode_feature_(encoders_.front(), feature, options_.one_based, options, "prep::CategoryIndexer.map(Slate)");
 }
 
 pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame& frame,
@@ -918,7 +918,7 @@ pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame
     ::pluss::throw_error("prep::CategoryIndexer.map(DataFrame): internal encoder state is inconsistent.");
   }
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
+  std::vector<std::pair<std::string, pluss::table::Slate>> columns{};
   columns.reserve(feature_names_.size());
   for (std::size_t i = 0; i < feature_names_.size(); ++i) {
     const auto& name = feature_names_[i];
@@ -935,12 +935,12 @@ pluss::table::DataFrame prep::CategoryIndexer::map(const pluss::table::DataFrame
     const std::string out_name = i < mapped_names_.size()
                                      ? mapped_names_[i]
                                      : (name + "_index");
-    columns.emplace_back(out_name, pluss::table::Thread(idx.reshape({frame.ncases()})));
+    columns.emplace_back(out_name, pluss::table::Slate(idx.reshape({frame.ncases()})));
   }
   return pluss::table::DataFrame(std::move(columns), frame.label().values());
 }
 
-Series prep::CategoryIndexer::learn_map(const pluss::table::Thread& feature,
+Series prep::CategoryIndexer::learn_map(const pluss::table::Slate& feature,
                                                const TrainOptions& learn_options,
                                                const InferOptions& infer_options) {
   learn(feature, learn_options);

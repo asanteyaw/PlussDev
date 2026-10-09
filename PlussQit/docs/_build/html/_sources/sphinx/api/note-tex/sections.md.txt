@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::sections
+# Note::TexAccessor::sections
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::sections() const
+TokenBatch Note::TexAccessor::sections() const
 ```
 
 ## Extract Top-Level Section Titles

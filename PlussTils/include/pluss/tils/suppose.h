@@ -12,14 +12,12 @@
 
 namespace pluss::tils {
 
-namespace detail {
-
 template <class T>
-class suppose_box {
+class SupposeBox {
  public:
   using value_type = T;
 
-  constexpr explicit suppose_box(T value) : value_(std::move(value)) {}
+  constexpr explicit SupposeBox(T value) : value_(std::move(value)) {}
 
   constexpr T& value() & noexcept { return value_; }
   constexpr const T& value() const& noexcept { return value_; }
@@ -33,19 +31,19 @@ class suppose_box {
 
   template <class F>
   constexpr auto then(F&& fn) & {
-    return suppose_box<std::decay_t<std::invoke_result_t<F&, T&>>>(
+    return SupposeBox<std::decay_t<std::invoke_result_t<F&, T&>>>(
         std::invoke(std::forward<F>(fn), value_));
   }
 
   template <class F>
   constexpr auto then(F&& fn) const& {
-    return suppose_box<std::decay_t<std::invoke_result_t<F&, const T&>>>(
+    return SupposeBox<std::decay_t<std::invoke_result_t<F&, const T&>>>(
         std::invoke(std::forward<F>(fn), value_));
   }
 
   template <class F>
   constexpr auto then(F&& fn) && {
-    return suppose_box<std::decay_t<std::invoke_result_t<F&, T&&>>>(
+    return SupposeBox<std::decay_t<std::invoke_result_t<F&, T&&>>>(
         std::invoke(std::forward<F>(fn), std::move(value_)));
   }
 
@@ -59,19 +57,19 @@ class suppose_box {
   constexpr auto transform(F&& fn) && { return std::move(*this).then(std::forward<F>(fn)); }
 
   template <class F>
-  constexpr suppose_box& tap(F&& fn) & {
+  constexpr SupposeBox& tap(F&& fn) & {
     std::invoke(std::forward<F>(fn), value_);
     return *this;
   }
 
   template <class F>
-  constexpr const suppose_box& tap(F&& fn) const& {
+  constexpr const SupposeBox& tap(F&& fn) const& {
     std::invoke(std::forward<F>(fn), value_);
     return *this;
   }
 
   template <class F>
-  constexpr suppose_box&& tap(F&& fn) && {
+  constexpr SupposeBox&& tap(F&& fn) && {
     std::invoke(std::forward<F>(fn), value_);
     return std::move(*this);
   }
@@ -80,36 +78,34 @@ class suppose_box {
   constexpr auto into() const& {
     static_assert(std::is_constructible_v<U, const T&>,
                   "suppose::into<U>: U must be constructible from const T&");
-    return suppose_box<U>(U(value_));
+    return SupposeBox<U>(U(value_));
   }
 
   template <class U>
   constexpr auto into() && {
     static_assert(std::is_constructible_v<U, T&&>,
                   "suppose::into<U>: U must be constructible from T&&");
-    return suppose_box<U>(U(std::move(value_)));
+    return SupposeBox<U>(U(std::move(value_)));
   }
 
  private:
   T value_;
 };
 
-}  // namespace detail
-
-struct suppose_t {
+struct SupposeFn {
   template <class T>
   constexpr auto operator()(T&& value) const {
-    return detail::suppose_box<std::decay_t<T>>(std::forward<T>(value));
+    return SupposeBox<std::decay_t<T>>(std::forward<T>(value));
   }
 
   template <class To, class From>
   constexpr auto as(From&& value) const {
     static_assert(std::is_constructible_v<To, From&&>,
                   "suppose.as<To>(value): To must be constructible from value");
-    return detail::suppose_box<To>(To(std::forward<From>(value)));
+    return SupposeBox<To>(To(std::forward<From>(value)));
   }
 };
 
-inline constexpr suppose_t suppose{};
+inline constexpr SupposeFn suppose{};
 
 }  // namespace pluss::tils

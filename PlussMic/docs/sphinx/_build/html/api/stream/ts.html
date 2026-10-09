@@ -13,12 +13,12 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::unique" href="unique.html" />
-    <link rel="prev" title="Stream::to_thread" href="to_thread.html" />
+    <link rel="prev" title="Stream::to_string" href="to_string.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
   
@@ -76,7 +76,7 @@ this same asymmetry.</p>
 Calling any method on this accessor with a non-numeric stream (<code class="docutils literal notranslate"><span class="pre">Note</span></code>,
 <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>) throws — the exact message names whichever method
 actually ran, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;TimeSeriesAccessor::diff:</span> <span class="pre">source</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Series&quot;</span></code>. Cast
-first with <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(ThreadCastTarget::Series)</span></code></span></a> if the stream
+first with <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(SlateCastTarget::Series)</span></code></span></a> if the stream
 isn’t already numeric.</p>
 </div>
 </section>
@@ -153,13 +153,13 @@ text-processing and timestamp-feature operations.</p></li>
 <li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast</span></code></span></a>: convert a non-numeric stream to <code class="docutils literal notranslate"><span class="pre">Series</span></code> first.</p></li>
 <li><p><a class="reference internal" href="../catalog/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::ts</span></code></span></a>: the whole-catalog equivalent, with a much
 smaller method surface — see the important callout above.</p></li>
-<li><p><a class="reference internal" href="../thread-ts/returns.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code> (Thread)</span></a>: the underlying
+<li><p><a class="reference internal" href="../slate-ts/returns.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code> (Slate)</span></a>: the underlying
 single-column engine this accessor’s methods delegate to.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_thread.html">
+  <a class="prev-link" href="to_slate.html">
     <span class="label">Previous</span>
-    <span class="title">to_thread</span>
+    <span class="title">to_slate</span>
   </a>
   <a class="next-link" href="unique.html">
     <span class="label">Next</span>
@@ -221,7 +221,7 @@ single-column engine this accessor’s methods delegate to.</p></li>
   <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="../plussmic_kindle.html">PlussMic <code class="docutils literal notranslate"><span class="pre">kindle</span></code></a><ul>
   <li><a href="../../stream_api_reference.html">Stream API Reference</a><ul>
-      <li>Previous: <a href="to_thread.html" title="previous chapter">Stream::to_thread</a></li>
+      <li>Previous: <a href="to_string.html" title="previous chapter">Stream::to_string</a></li>
       <li>Next: <a href="unique.html" title="next chapter">Stream::unique</a></li>
   </ul></li>
   </ul></li>

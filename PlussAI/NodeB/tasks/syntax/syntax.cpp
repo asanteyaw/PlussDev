@@ -359,7 +359,7 @@ void SyntaxStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view
       continue;
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::SyntaxStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
+        "nlp::SyntaxStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
   }
 }
 

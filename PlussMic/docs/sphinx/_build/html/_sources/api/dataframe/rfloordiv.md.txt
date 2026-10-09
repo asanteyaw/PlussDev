@@ -93,7 +93,7 @@ the numerator can move results from "always zero" to "always at least two".
 - `rfloordiv()` always rounds the quotient down to the nearest whole number, exactly
   like the forward [`floordiv()`](floordiv.md), just with the operand order reversed.
 - Only accepts a scalar `double` — see [`radd()`](radd.md) for why there is no
-  reflected `DataFrame` or `Thread` overload.
+  reflected `DataFrame` or `Slate` overload.
 
 ## See Also
 

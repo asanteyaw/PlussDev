@@ -45,7 +45,7 @@ Example 1. Default: raw statistic plus a 3-catalog rolling window.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -69,7 +69,7 @@ Example 2. `window = 2`, `show_raw = false`: only the smoothed line, over a shor
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {

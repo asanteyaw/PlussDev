@@ -37,7 +37,7 @@ inline void require_anomaly_model_(const Model& model, std::string_view where) {
   DataFrameBatchOptions options{};
   options.feature_names = copy_range_values(names);
   options.layout = ObservationLayout::Rows;
-  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
   options.note_policy = DataNotePolicy::Reject;
   return options;
 }
@@ -88,8 +88,8 @@ class Result final {
   [[nodiscard]] pluss::table::DataFrame board() const {
     const Config cfg = Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
     return pluss::table::DataFrame({
-        {"metric", pluss::table::Thread(pluss::make_note({"sample_count", "flagged_count", "flagged_rate", "threshold"}))},
-        {"value", pluss::table::Thread(pluss::make_series(std::vector<double>{
+        {"metric", pluss::table::Slate(pluss::make_note({"sample_count", "flagged_count", "flagged_rate", "threshold"}))},
+        {"value", pluss::table::Slate(pluss::make_series(std::vector<double>{
                                                 static_cast<double>(sample_count()),
                                                 static_cast<double>(flagged_count()),
                                                 flagged_rate(),

@@ -469,7 +469,7 @@ ReadExcelOptions excel_read_options_from_config(const Config& config) {
   return options;
 }
 
-pluss::table::Thread infer_padded_thread_from_raw(const CsvRawColumn& column,
+pluss::table::Slate infer_padded_slate_from_raw(const CsvRawColumn& column,
                                                   const ReadCsvOptions& options,
                                                   std::int64_t target_len) {
   if (column.note_values.has_value()) {
@@ -481,14 +481,14 @@ pluss::table::Thread infer_padded_thread_from_raw(const CsvRawColumn& column,
     if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
       values.resize(static_cast<std::size_t>(target_len));
     }
-    return pluss::table::detail::infer_thread_from_raw_csv_column(
+    return pluss::table::detail::infer_slate_from_raw_csv_column(
         column.name, column.source_index, values, options);
   }
   std::vector<std::string> values = column.values;
   if (target_len >= 0 && static_cast<std::int64_t>(values.size()) < target_len) {
     values.resize(static_cast<std::size_t>(target_len));
   }
-  return pluss::table::detail::infer_thread_from_raw_csv_column(
+  return pluss::table::detail::infer_slate_from_raw_csv_column(
       column.name, column.source_index, values, options);
 }
 
@@ -505,15 +505,15 @@ pluss::table::DataFrame dataframe_from_raw_batch_padded(const CsvRawBatch& raw,
     target_len = std::max<std::int64_t>(target_len, static_cast<std::int64_t>(raw_col_size(*raw.cases)));
   }
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> cols;
+  std::vector<std::pair<std::string, pluss::table::Slate>> cols;
   cols.reserve(raw.features.size());
   for (const auto& col : raw.features) {
-    cols.emplace_back(col.name, infer_padded_thread_from_raw(col, options, target_len));
+    cols.emplace_back(col.name, infer_padded_slate_from_raw(col, options, target_len));
   }
 
-  std::optional<pluss::table::Thread> cases = std::nullopt;
+  std::optional<pluss::table::Slate> cases = std::nullopt;
   if (raw.cases.has_value()) {
-    cases = infer_padded_thread_from_raw(*raw.cases, options, target_len);
+    cases = infer_padded_slate_from_raw(*raw.cases, options, target_len);
   }
 
   return pluss::table::DataFrame(std::move(cols), std::move(cases));
@@ -1533,7 +1533,7 @@ std::int64_t duration_value_to_nanos(
   return static_cast<std::int64_t>(scaled);
 }
 
-pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>& array) {
+pluss::table::Slate slate_from_arrow_array(const std::shared_ptr<arrow::Array>& array) {
   const auto valid = arrow_validity(array);
   const auto n = static_cast<std::int64_t>(array->length());
   const auto type_id = array->type_id();
@@ -1544,7 +1544,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
       auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
       auto* p = reinterpret_cast<bool*>(s.raw_data());
       for (std::int64_t i = 0; i < n; ++i) p[i] = valid[static_cast<std::size_t>(i)] ? a->Value(i) : false;
-      return pluss::table::Thread(s, validity_mask_from_valid(valid));
+      return pluss::table::Slate(s, validity_mask_from_valid(valid));
     }
     case arrow::Type::INT8:
     case arrow::Type::INT16:
@@ -1582,7 +1582,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
             break;
         }
       }
-      return pluss::table::Thread(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Slate(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::UINT64:
     case arrow::Type::HALF_FLOAT:
@@ -1608,7 +1608,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
             break;
         }
       }
-      return pluss::table::Thread(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Slate(pluss::make_series(out, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::DATE32:
     case arrow::Type::DATE64:
@@ -1628,7 +1628,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
           ticks[static_cast<std::size_t>(i)] = base * time_unit_to_nanos(ts_type->unit());
         }
       }
-      return pluss::table::Thread(pluss::timeline::from_epoch(ticks, {n}), validity_mask_from_valid(valid));
+      return pluss::table::Slate(pluss::timeline::from_epoch(ticks, {n}), validity_mask_from_valid(valid));
     }
     case arrow::Type::DURATION: {
       const auto* duration_type =
@@ -1642,7 +1642,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
         nanos[static_cast<std::size_t>(i)] =
             duration_value_to_nanos(values->Value(i), duration_type->unit());
       }
-      return pluss::table::Thread(
+      return pluss::table::Slate(
           pluss::duration::nanos(std::move(nanos), {n}),
           validity_mask_from_valid(valid));
     }
@@ -1657,7 +1657,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
           out[static_cast<std::size_t>(i)] = std::static_pointer_cast<arrow::LargeStringArray>(array)->GetString(i);
         }
       }
-      return pluss::table::Thread(pluss::make_note(out), validity_mask_from_valid(valid));
+      return pluss::table::Slate(pluss::make_note(out), validity_mask_from_valid(valid));
     }
     default: {
       std::vector<std::string> out(static_cast<std::size_t>(n));
@@ -1668,7 +1668,7 @@ pluss::table::Thread thread_from_arrow_array(const std::shared_ptr<arrow::Array>
           out[static_cast<std::size_t>(i)] = (*scalar)->ToString();
         }
       }
-      return pluss::table::Thread(pluss::make_note(out), validity_mask_from_valid(valid));
+      return pluss::table::Slate(pluss::make_note(out), validity_mask_from_valid(valid));
     }
   }
 }
@@ -1708,21 +1708,21 @@ std::vector<std::string> raw_strings_from_arrow_array(const std::shared_ptr<arro
   return out;
 }
 
-std::vector<bool> thread_validity(const pluss::table::Thread& thread) {
-  const auto n = static_cast<std::size_t>(thread.size());
-  if (!pluss::table::detail::has_validity_mask(thread)) {
+std::vector<bool> slate_validity(const pluss::table::Slate& slate) {
+  const auto n = static_cast<std::size_t>(slate.size());
+  if (!pluss::table::detail::has_validity_mask(slate)) {
     return std::vector<bool>(n, true);
   }
-  auto valid = pluss::table::detail::validity_mask(thread)->to_vec<bool>();
-  PLUSS_CHECK(valid.size() == n, "loader::save_parquet: thread validity mask size mismatch");
+  auto valid = pluss::table::detail::validity_mask(slate)->to_vec<bool>();
+  PLUSS_CHECK(valid.size() == n, "loader::save_parquet: slate validity mask size mismatch");
   return valid;
 }
 
-std::shared_ptr<arrow::Array> note_thread_to_arrow_string_array(const pluss::table::Thread& thread) {
-  const auto valid = thread_validity(thread);
-  const auto note = thread.as_note();
+std::shared_ptr<arrow::Array> note_slate_to_arrow_string_array(const pluss::table::Slate& slate) {
+  const auto valid = slate_validity(slate);
+  const auto note = slate.as_note();
   PLUSS_CHECK(static_cast<std::size_t>(note.numel()) == valid.size(),
-              "loader::save_parquet: Note thread length mismatch");
+              "loader::save_parquet: Note slate length mismatch");
   arrow::StringBuilder builder;
   for (std::int64_t i = 0; i < note.numel(); ++i) {
     const auto idx = static_cast<std::size_t>(i);
@@ -1735,11 +1735,11 @@ std::shared_ptr<arrow::Array> note_thread_to_arrow_string_array(const pluss::tab
   return out;
 }
 
-std::shared_ptr<arrow::Array> series_thread_to_arrow_array(const pluss::table::Thread& thread) {
-  const auto valid = thread_validity(thread);
-  const auto series = thread.as_series();
+std::shared_ptr<arrow::Array> series_slate_to_arrow_array(const pluss::table::Slate& slate) {
+  const auto valid = slate_validity(slate);
+  const auto series = slate.as_series();
   const auto n = static_cast<std::size_t>(series.numel());
-  PLUSS_CHECK(n == valid.size(), "loader::save_parquet: Series thread length mismatch");
+  PLUSS_CHECK(n == valid.size(), "loader::save_parquet: Series slate length mismatch");
 
   auto finish_or_throw = [](auto& builder, std::string_view what) -> std::shared_ptr<arrow::Array> {
     std::shared_ptr<arrow::Array> out;
@@ -1852,14 +1852,14 @@ std::shared_ptr<arrow::Array> series_thread_to_arrow_array(const pluss::table::T
       return finish_or_throw(builder, "Float64");
     }
     default:
-      return note_thread_to_arrow_string_array(thread.cast().note());
+      return note_slate_to_arrow_string_array(slate.cast().note());
   }
 }
 
-std::shared_ptr<arrow::Array> timeline_thread_to_arrow_array(const pluss::table::Thread& thread) {
-  const auto valid = thread_validity(thread);
-  const auto ticks = thread.as_timeline().ticks();
-  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: Timeline thread length mismatch");
+std::shared_ptr<arrow::Array> timeline_slate_to_arrow_array(const pluss::table::Slate& slate) {
+  const auto valid = slate_validity(slate);
+  const auto ticks = slate.as_timeline().ticks();
+  PLUSS_CHECK(ticks.size() == valid.size(), "loader::save_parquet: Timeline slate length mismatch");
   arrow::TimestampBuilder builder(arrow::timestamp(arrow::TimeUnit::NANO), arrow::default_memory_pool());
   for (std::size_t i = 0; i < ticks.size(); ++i) {
     auto st = valid[i] ? builder.Append(ticks[i]) : builder.AppendNull();
@@ -1871,12 +1871,12 @@ std::shared_ptr<arrow::Array> timeline_thread_to_arrow_array(const pluss::table:
   return out;
 }
 
-std::shared_ptr<arrow::Array> duration_thread_to_arrow_array(
-    const pluss::table::Thread& thread) {
-  const auto valid = thread_validity(thread);
-  const auto nanos = thread.as_duration().host();
+std::shared_ptr<arrow::Array> duration_slate_to_arrow_array(
+    const pluss::table::Slate& slate) {
+  const auto valid = slate_validity(slate);
+  const auto nanos = slate.as_duration().host();
   PLUSS_CHECK(nanos.size() == valid.size(),
-              "loader::save_parquet: Duration thread length mismatch");
+              "loader::save_parquet: Duration slate length mismatch");
   arrow::DurationBuilder builder(
       arrow::duration(arrow::TimeUnit::NANO), arrow::default_memory_pool());
   for (std::size_t i = 0; i < nanos.size(); ++i) {
@@ -1894,18 +1894,18 @@ std::shared_ptr<arrow::Array> duration_thread_to_arrow_array(
   return out;
 }
 
-std::shared_ptr<arrow::Array> thread_to_arrow_array(const pluss::table::Thread& thread) {
-  switch (thread.kind()) {
-    case pluss::table::ThreadKind::Series:
-      return series_thread_to_arrow_array(thread);
-    case pluss::table::ThreadKind::Note:
-      return note_thread_to_arrow_string_array(thread);
-    case pluss::table::ThreadKind::Timeline:
-      return timeline_thread_to_arrow_array(thread);
-    case pluss::table::ThreadKind::Duration:
-      return duration_thread_to_arrow_array(thread);
+std::shared_ptr<arrow::Array> slate_to_arrow_array(const pluss::table::Slate& slate) {
+  switch (slate.kind()) {
+    case pluss::table::SlateKind::Series:
+      return series_slate_to_arrow_array(slate);
+    case pluss::table::SlateKind::Note:
+      return note_slate_to_arrow_string_array(slate);
+    case pluss::table::SlateKind::Timeline:
+      return timeline_slate_to_arrow_array(slate);
+    case pluss::table::SlateKind::Duration:
+      return duration_slate_to_arrow_array(slate);
   }
-  PLUSS_FAIL("loader::save_parquet: unsupported Thread kind");
+  PLUSS_FAIL("loader::save_parquet: unsupported Slate kind");
 }
 
 parquet::Compression::type parquet_compression_from_config(const Config& config) {
@@ -1946,7 +1946,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   }
 
   auto names = frame.features();
-  std::vector<pluss::table::Thread> columns;
+  std::vector<pluss::table::Slate> columns;
   columns.reserve(names.size());
   for (const auto& name : names) {
     columns.push_back(frame.features(name));
@@ -1975,7 +1975,7 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
       name = fmt::format("{}_{}", name, nth);
     }
 
-    auto array = thread_to_arrow_array(columns[i]);
+    auto array = slate_to_arrow_array(columns[i]);
     PLUSS_CHECK(array != nullptr, "loader::save_parquet: failed to build arrow array for column '" + name + "'");
     fields.emplace_back(arrow::field(name, array->type(), array->null_count() > 0));
     arrays.emplace_back(std::move(array));
@@ -2146,7 +2146,7 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
     table = *combined;
   }
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> features;
+  std::vector<std::pair<std::string, pluss::table::Slate>> features;
   features.reserve(static_cast<std::size_t>(table->num_columns()));
   for (int i = 0; i < table->num_columns(); ++i) {
     const auto& col = table->column(i);
@@ -2157,10 +2157,10 @@ pluss::table::DataFrame load_parquet_cpp(std::string_view filepath, const Config
     } else {
       array = col->chunk(0);
     }
-    features.emplace_back(table->field(i)->name(), thread_from_arrow_array(array));
+    features.emplace_back(table->field(i)->name(), slate_from_arrow_array(array));
   }
 
-  std::optional<pluss::table::Thread> cases = std::nullopt;
+  std::optional<pluss::table::Slate> cases = std::nullopt;
   if (const auto* v = find_config(config, {"casecol", "case", "caseindex"})) {
     if (auto idx = parse_int_value(*v); idx.has_value()) {
       PLUSS_CHECK(*idx >= 0 && *idx < static_cast<std::int64_t>(features.size()),
@@ -2728,41 +2728,41 @@ std::string series_json_scalar_token(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-std::string thread_json_scalar_token(const pluss::table::Thread& thread,
+std::string slate_json_scalar_token(const pluss::table::Slate& slate,
                                      const std::optional<std::vector<bool>>& valid_mask,
                                      const std::optional<pluss::Note>& note_cache,
                                      std::int64_t row) {
   if (valid_mask.has_value() && !(*valid_mask)[static_cast<std::size_t>(row)]) {
     return "null";
   }
-  if (thread.kind() == pluss::table::ThreadKind::Duration &&
-      thread.as_duration().host()[static_cast<std::size_t>(row)] ==
+  if (slate.kind() == pluss::table::SlateKind::Duration &&
+      slate.as_duration().host()[static_cast<std::size_t>(row)] ==
           pluss::Duration::kNaT) {
     return "null";
   }
 
-  switch (thread.kind()) {
-    case pluss::table::ThreadKind::Series:
-      return series_json_scalar_token(thread.as_series(), row);
-    case pluss::table::ThreadKind::Note: {
+  switch (slate.kind()) {
+    case pluss::table::SlateKind::Series:
+      return series_json_scalar_token(slate.as_series(), row);
+    case pluss::table::SlateKind::Note: {
       const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
       if (note == nullptr) {
-        const auto local = thread.as_note();
+        const auto local = slate.as_note();
         return json_string_token(local.at(row));
       }
       return json_string_token(note->at(row));
     }
-    case pluss::table::ThreadKind::Timeline: {
+    case pluss::table::SlateKind::Timeline: {
       const auto* note = note_cache.has_value() ? &(*note_cache) : nullptr;
       if (note == nullptr) {
-        const auto local = thread.cast().note().as_note();
+        const auto local = slate.cast().note().as_note();
         return json_string_token(local.at(row));
       }
       return json_string_token(note->at(row));
     }
-    case pluss::table::ThreadKind::Duration:
+    case pluss::table::SlateKind::Duration:
       return json_string_token(fmt::format(
-          "{}", thread.as_duration().host()[static_cast<std::size_t>(row)]));
+          "{}", slate.as_duration().host()[static_cast<std::size_t>(row)]));
   }
   return "null";
 }
@@ -2825,9 +2825,9 @@ std::vector<std::string> json_column_names_with_cases(const pluss::table::DataFr
   return names;
 }
 
-std::vector<pluss::table::Thread> json_columns_with_cases(const pluss::table::DataFrame& frame,
+std::vector<pluss::table::Slate> json_columns_with_cases(const pluss::table::DataFrame& frame,
                                                           bool add_cases) {
-  std::vector<pluss::table::Thread> columns;
+  std::vector<pluss::table::Slate> columns;
   const auto& names = frame.features();
   columns.reserve(names.size() + (add_cases ? 1 : 0));
   for (const auto& name : names) {
@@ -2897,7 +2897,7 @@ void save_json(const pluss::table::DataFrame& frame,
     if (pluss::table::detail::has_validity_mask(columns[j])) {
       valid_masks[j] = pluss::table::detail::validity_mask(columns[j])->to_vec<bool>();
     }
-    if (columns[j].kind() != pluss::table::ThreadKind::Series) {
+    if (columns[j].kind() != pluss::table::SlateKind::Series) {
       note_cache[j] = columns[j].cast().note().as_note();
     }
   }
@@ -2917,7 +2917,7 @@ void save_json(const pluss::table::DataFrame& frame,
       for (std::int64_t r = 0; r < nrows; ++r) {
         if (r != 0) out << ",";
         if (pretty) out << " ";
-        out << thread_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+        out << slate_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
       }
       out << "]";
       if (j + 1 < columns.size()) out << ",";
@@ -2942,7 +2942,7 @@ void save_json(const pluss::table::DataFrame& frame,
       for (std::size_t j = 0; j < columns.size(); ++j) {
         if (j != 0) out << ",";
         if (pretty) out << " ";
-        out << thread_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+        out << slate_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
       }
       out << "]";
       if (r + 1 < nrows) out << ",";
@@ -2959,7 +2959,7 @@ void save_json(const pluss::table::DataFrame& frame,
     out << i1 << "{" << newline;
     for (std::size_t j = 0; j < columns.size(); ++j) {
       out << i2 << json_string_token(names[j]) << ":" << (pretty ? " " : "");
-      out << thread_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
+      out << slate_json_scalar_token(columns[j], valid_masks[j], note_cache[j], r);
       if (j + 1 < columns.size()) out << ",";
       out << newline;
     }

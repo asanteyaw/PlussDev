@@ -69,9 +69,9 @@ int main() {
   fig_hist.save_pdf("plot_df_hist.pdf");
 
   auto monthly = pluss::table::DataFrame({
-      {"sales", pluss::table::Thread(pluss::make_series({120.0, 135.0, 128.0, 150.0, 162.0, 171.0}))},
-      {"forecast", pluss::table::Thread(pluss::make_series({118.0, 130.0, 132.0, 147.0, 158.0, 168.0}))},
-      {"month", pluss::table::Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr", "May", "Jun"}))},
+      {"sales", pluss::table::Slate(pluss::make_series({120.0, 135.0, 128.0, 150.0, 162.0, 171.0}))},
+      {"forecast", pluss::table::Slate(pluss::make_series({118.0, 130.0, 132.0, 147.0, 158.0, 168.0}))},
+      {"month", pluss::table::Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr", "May", "Jun"}))},
   }).label().set("month", /*drop_feature=*/false);
 
   auto fig_monthly = monthly.plot().line({"sales", "forecast"});
@@ -128,9 +128,9 @@ int main() {
   fig_auto.save_pdf("plot_df_auto.pdf");
 
   auto metrics = pluss::table::DataFrame({
-      {"ret", pluss::table::Thread(pluss::make_series({0.11, 0.15, 0.09, 0.13, 0.17, 0.12}))},
-      {"vol", pluss::table::Thread(pluss::make_series({0.21, 0.26, 0.18, 0.24, 0.28, 0.2}))},
-      {"carry", pluss::table::Thread(pluss::make_series({0.03, 0.04, 0.025, 0.038, 0.045, 0.031}))},
+      {"ret", pluss::table::Slate(pluss::make_series({0.11, 0.15, 0.09, 0.13, 0.17, 0.12}))},
+      {"vol", pluss::table::Slate(pluss::make_series({0.21, 0.26, 0.18, 0.24, 0.28, 0.2}))},
+      {"carry", pluss::table::Slate(pluss::make_series({0.03, 0.04, 0.025, 0.038, 0.045, 0.031}))},
   });
 
   auto fig_matrix = metrics.plot().scatter_matrix();
@@ -142,9 +142,9 @@ int main() {
   fig_box.save_pdf("plot_df_box.pdf");
 
   auto regime_points = pluss::table::DataFrame({
-      {"ret", pluss::table::Thread(pluss::make_series({0.08, 0.11, 0.12, 0.1, 0.14, 0.16, 0.07, 0.09}))},
-      {"vol", pluss::table::Thread(pluss::make_series({0.18, 0.23, 0.27, 0.2, 0.29, 0.31, 0.16, 0.19}))},
-      {"desk", pluss::table::Thread(pluss::make_note({"macro", "macro", "rates", "rates", "equity", "equity", "credit", "credit"}))},
+      {"ret", pluss::table::Slate(pluss::make_series({0.08, 0.11, 0.12, 0.1, 0.14, 0.16, 0.07, 0.09}))},
+      {"vol", pluss::table::Slate(pluss::make_series({0.18, 0.23, 0.27, 0.2, 0.29, 0.31, 0.16, 0.19}))},
+      {"desk", pluss::table::Slate(pluss::make_note({"macro", "macro", "rates", "rates", "equity", "equity", "credit", "credit"}))},
   });
 
   pluss::table::DataFramePlotOptions hue_opts;
@@ -155,9 +155,9 @@ int main() {
   fig_scatter_hue.save_pdf("plot_df_scatter_hue.pdf");
 
   auto option_surface = pluss::table::DataFrame({
-      {"maturity", pluss::table::Thread(pluss::make_note({"1M", "1M", "1M", "3M", "3M", "3M", "6M", "6M", "6M"}))},
-      {"delta_bucket", pluss::table::Thread(pluss::make_note({"25P", "ATM", "25C", "25P", "ATM", "25C", "25P", "ATM", "25C"}))},
-      {"implied_vol", pluss::table::Thread(pluss::make_series({0.29, 0.24, 0.22, 0.31, 0.26, 0.24, 0.34, 0.29, 0.27}))},
+      {"maturity", pluss::table::Slate(pluss::make_note({"1M", "1M", "1M", "3M", "3M", "3M", "6M", "6M", "6M"}))},
+      {"delta_bucket", pluss::table::Slate(pluss::make_note({"25P", "ATM", "25C", "25P", "ATM", "25C", "25P", "ATM", "25C"}))},
+      {"implied_vol", pluss::table::Slate(pluss::make_series({0.29, 0.24, 0.22, 0.31, 0.26, 0.24, 0.34, 0.29, 0.27}))},
   });
 
   auto fig_surface_heatmap = option_surface.plot().heatmap("maturity", "delta_bucket", "implied_vol");

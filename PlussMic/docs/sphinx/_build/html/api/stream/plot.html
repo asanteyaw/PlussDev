@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::ptype" href="ptype.html" />
@@ -55,7 +55,7 @@
 figures. Like <code class="docutils literal notranslate"><span class="pre">Catalog::plot()</span></code>, there is no separate <code class="docutils literal notranslate"><span class="pre">StreamPlotOptions</span></code> type — the
 accessor reuses <code class="docutils literal notranslate"><span class="pre">pluss::table::DataFramePlotOptions</span></code> as-is. Every method on the returned
 <code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor</span></code> is itself a thin forward into
-<a class="reference internal" href="../../thread_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor</span></code></span></a> (via <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>), so the
+<a class="reference internal" href="../../slate_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor</span></code></span></a> (via <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code>), so the
 Stream-level pages focus on what’s different at this layer — mainly that <code class="docutils literal notranslate"><span class="pre">Stream</span></code> has no
 <code class="docutils literal notranslate"><span class="pre">name()</span></code>, so every chart’s axis labels use the generic fallback names (<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;hue&quot;</span></code>) rather than any name of your own. Every method has its own page, with real
@@ -93,9 +93,9 @@ chart-building.</p>
 accessor’s methods to actually build a chart.</p></li>
 <li><p>Reuses <code class="docutils literal notranslate"><span class="pre">pluss::table::DataFramePlotOptions</span></code> directly — there is no <code class="docutils literal notranslate"><span class="pre">StreamPlotOptions</span></code>.</p></li>
 <li><p>Every method on the returned accessor is a subset of, and forwards to,
-<a class="reference internal" href="../../thread_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor</span></code></span></a>’s own methods — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> exposes
+<a class="reference internal" href="../../slate_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor</span></code></span></a>’s own methods — <code class="docutils literal notranslate"><span class="pre">Stream</span></code> exposes
 <code class="docutils literal notranslate"><span class="pre">line</span></code>/<code class="docutils literal notranslate"><span class="pre">bar</span></code>/<code class="docutils literal notranslate"><span class="pre">scatter</span></code>/<code class="docutils literal notranslate"><span class="pre">hist</span></code>/<code class="docutils literal notranslate"><span class="pre">density</span></code>/<code class="docutils literal notranslate"><span class="pre">auto_plot</span></code> only, not the full
-<code class="docutils literal notranslate"><span class="pre">step</span></code>/<code class="docutils literal notranslate"><span class="pre">area</span></code>/<code class="docutils literal notranslate"><span class="pre">box</span></code>/<code class="docutils literal notranslate"><span class="pre">violin</span></code>/<code class="docutils literal notranslate"><span class="pre">pie</span></code> set <code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor</span></code> has.</p></li>
+<code class="docutils literal notranslate"><span class="pre">step</span></code>/<code class="docutils literal notranslate"><span class="pre">area</span></code>/<code class="docutils literal notranslate"><span class="pre">box</span></code>/<code class="docutils literal notranslate"><span class="pre">violin</span></code>/<code class="docutils literal notranslate"><span class="pre">pie</span></code> set <code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor</span></code> has.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -103,9 +103,9 @@ accessor’s methods to actually build a chart.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="../../stream_plot_accessor_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor</span></code> API Reference</span></a>: every
 chart method on the accessor this call returns, each with a real rendered example.</p></li>
-<li><p><a class="reference internal" href="../../thread_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor</span></code></span></a>: the accessor every
+<li><p><a class="reference internal" href="../../slate_plot_api_reference.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor</span></code></span></a>: the accessor every
 <code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor</span></code> method delegates to underneath.</p></li>
-<li><p><a class="reference internal" href="to_thread.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::to_thread</span></code></span></a>: the conversion every plotting method runs first.</p></li>
+<li><p><a class="reference internal" href="to_slate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::to_slate</span></code></span></a>: the conversion every plotting method runs first.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nrecords.html">

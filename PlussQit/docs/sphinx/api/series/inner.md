@@ -25,7 +25,7 @@ that complements [`outer()`](outer.md): `outer` fans two vectors out to a
 matrix, `inner` collapses them to a scalar.
 
 For two genuine 1-D vectors this is the dot product; see
-[`SeriesLinearAlgAccessor::dot`](../series-linearalg/dot.md), which enforces the
+[`Series::LinearAlgAccessor::dot`](../series-linearalg/dot.md), which enforces the
 rank-1 contract instead of flattening.
 
 ## Shape Versus Pairing
@@ -99,7 +99,7 @@ data=5
 - The result is always a scalar `Series`, not a `double`. Call `.item<double>()`
   to extract the number.
 - For a strict 1-D dot product without flattening, use
-  [`SeriesLinearAlgAccessor::dot`](../series-linearalg/dot.md).
+  [`Series::LinearAlgAccessor::dot`](../series-linearalg/dot.md).
 
 ## Summary
 
@@ -112,7 +112,7 @@ data=5
 ## See Also
 
 - [`Series::outer`](outer.md): the rank-1 expansion.
-- [`SeriesLinearAlgAccessor::dot`](../series-linearalg/dot.md): strict 1-D dot
+- [`Series::LinearAlgAccessor::dot`](../series-linearalg/dot.md): strict 1-D dot
   product.
 - [`Series::mul`](mul.md) + [`Series::sum`](sum.md): the explicit two-step form.
 

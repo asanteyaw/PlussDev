@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::rolling_first
+# Timeline::TimelineIndexAccessor::rolling_first
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_first(
+pluss::Series Timeline::TimelineIndexAccessor::rolling_first(
     const pluss::Series& values,
     const pluss::Duration& window) const
 ```
@@ -40,11 +40,11 @@ payload dtype and contains one lane per index timestamp.
 ## Examples
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto window = pluss::duration::minutes(45);
 ```
 
@@ -120,9 +120,9 @@ returns a new contiguous `Series` and does not mutate either input.
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_last`](rolling_last.md)
-- [`TimelineIndexAccessor::rolling_min`](rolling_min.md)
-- [`TimelineIndexAccessor::resample_first`](resample_first.md)
+- [`Timeline::TimelineIndexAccessor::rolling_last`](rolling_last.md)
+- [`Timeline::TimelineIndexAccessor::rolling_min`](rolling_min.md)
+- [`Timeline::TimelineIndexAccessor::resample_first`](resample_first.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_count.html">

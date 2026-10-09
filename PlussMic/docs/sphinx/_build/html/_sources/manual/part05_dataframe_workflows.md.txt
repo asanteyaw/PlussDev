@@ -127,7 +127,7 @@ auto selected = df.query("job in ('management', 'technician')");
 auto combined = df.query("age >= 45 and balance > 0");
 ```
 
-Use `filter` when you already have a boolean `Series` or boolean `Thread`:
+Use `filter` when you already have a boolean `Series` or boolean `Slate`:
 
 ```cpp
 auto mask = df.features("balance").gt(0.0).as_series();
@@ -337,8 +337,8 @@ df.set_("balance_x2", df.features("balance") * 2.0);
 Transform all features:
 
 ```cpp
-auto transformed = df.transform([](const pluss::table::Thread& feature) {
-  if (feature.kind() == pluss::table::ThreadKind::Series) {
+auto transformed = df.transform([](const pluss::table::Slate& feature) {
+  if (feature.kind() == pluss::table::SlateKind::Series) {
     return feature + 1.0;
   }
   return feature;

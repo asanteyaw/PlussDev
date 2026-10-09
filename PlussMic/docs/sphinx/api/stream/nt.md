@@ -27,8 +27,8 @@ Unlike [`Catalog::nt()`](../catalog/nt.md), which binds every key of a multi-key
 collection, `Stream::nt()` binds a single stream — but that stream must already be
 `Note`-kind. Calling any `StreamNoteAccessor` method on a `Series`/`Timeline`/
 `TimeIndex` stream throws (the exact message names whichever method actually ran,
-e.g. `"Thread::strip is only valid for Note payload"`). Cast first with
-[`Stream::cast(ThreadCastTarget::Note)`](cast.md) if the stream isn't already text.
+e.g. `"Slate::strip is only valid for Note payload"`). Cast first with
+[`Stream::cast(SlateCastTarget::Note)`](cast.md) if the stream isn't already text.
 ```
 
 ## Parameters
@@ -83,7 +83,7 @@ try {
 ### Output
 
 ```text
-Thread::strip is only valid for Note payload
+Slate::strip is only valid for Note payload
 ```
 
 ## Notes

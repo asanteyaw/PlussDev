@@ -9,7 +9,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   using lymph::AssessOptions;
   using lymph::ClassReportOptions;
   using lymph::ConfusionOptions;
@@ -21,11 +21,11 @@ int main() {
   const pluss::Config f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame frame({
-      {"income", Thread(pluss::make_series(std::vector<double>{1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Thread(pluss::make_series(std::vector<double>{0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Thread(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"target", Thread(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"when", Thread(pluss::make_timeline({
+      {"income", Slate(pluss::make_series(std::vector<double>{1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
+      {"balance", Slate(pluss::make_series(std::vector<double>{0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
+      {"late", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"target", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"when", Slate(pluss::make_timeline({
           "2026-01-01T00:00:00Z",
           "2026-01-02T00:00:00Z",
           "2026-01-03T00:00:00Z",

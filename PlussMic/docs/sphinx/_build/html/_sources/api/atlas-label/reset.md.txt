@@ -33,12 +33,12 @@ Example 1. Reset a labeled atlas's depth labels back to the default sequence.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 
 auto reset_atlas = atlas.label().reset();
 std::cout << "has after reset: " << reset_atlas.label().has() << "\n";

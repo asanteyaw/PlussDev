@@ -42,9 +42,9 @@ Example 1. Select every feature whose name contains `"units"`.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))},
-     {"city",        Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))},
+     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
 std::cout << orders;
 
 auto out = orders.feataxis().like("units");
@@ -86,8 +86,8 @@ Example 2. Pass `case_sensitive = false` to match regardless of case.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))}});
 
 auto out = orders.feataxis().like("UNITS", false);
 std::cout << out;
@@ -118,8 +118,8 @@ frame instead of throwing.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))}});
 
 auto out = orders.feataxis().like("quantity");
 std::cout << out;

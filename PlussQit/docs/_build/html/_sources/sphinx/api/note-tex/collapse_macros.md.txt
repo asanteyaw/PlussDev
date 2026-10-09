@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::collapse_macros
+# Note::TexAccessor::collapse_macros
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::collapse_macros() const
+Note Note::TexAccessor::collapse_macros() const
 ```
 
 ## Remove Local Declarations Without Expanding Use Sites

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::escape
+# Note::TexAccessor::escape
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::escape() const
+Note Note::TexAccessor::escape() const
 ```
 
 ## Make Every Cell Safe To Drop Into TeX Source
@@ -115,9 +115,9 @@ lossless round trip.
 
 ## See Also
 
-- `NoteTexAccessor::unescape`: the exact inverse of `escape` (reference page
+- `Note::TexAccessor::unescape`: the exact inverse of `escape` (reference page
   not yet written).
-- [`NoteTexAccessor::to_text`](to_text.md): the other direction — reduce
+- [`Note::TexAccessor::to_text`](to_text.md): the other direction — reduce
   authored TeX to readable plain text (lossy).
 - [`Note::url_encode`](../note/url_encode.md) /
   [`Note::base64_encode`](../note/base64_encode.md): escaping/encoding for

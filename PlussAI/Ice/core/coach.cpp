@@ -101,9 +101,14 @@ void maybe_save_checkpoint_(const CheckpointPolicy& policy,
   } else {
     io::save_checkpoint(path, model, optimizer, snapshot, callbacks.callbacks());
   }
-  state.checkpoint_path = std::string(path);
-  state.last_checkpoint_path = std::string(path);
-  callbacks.on_checkpoint_save(state, path);
+  // `path` may alias one of the fields assigned below (the save_last call
+  // site passes state.last_checkpoint_path itself) -- copy it to a stable
+  // local first so neither the field writes nor the callback see a
+  // dangling view into a buffer that assignment just freed.
+  const std::string path_copy(path);
+  state.checkpoint_path = path_copy;
+  state.last_checkpoint_path = path_copy;
+  callbacks.on_checkpoint_save(state, path_copy);
 }
 
 } // namespace
@@ -113,12 +118,53 @@ Coach& Coach::add_callback(std::shared_ptr<Callback> callback) {
   return *this;
 }
 
+namespace {
+
+// Copies each epoch's metrics out of RunState into the model's training
+// report. It only reads state, so it never changes what a run does.
+class TrainingRecorder final : public Callback {
+public:
+  explicit TrainingRecorder(TrainingReport* report) : report_(report) {}
+
+  void on_run_begin(RunState&) override {
+    report_->epochs.clear();
+    report_->global_steps = 0;
+    report_->stop_reason.clear();
+  }
+
+  void on_epoch_end(RunState& state) override {
+    EpochReport epoch{};
+    epoch.epoch = state.epoch;
+    epoch.train_loss = state.metric("loss").value_or(0.0);
+    epoch.val_loss = state.metric("val_loss");
+    report_->epochs.push_back(epoch);
+  }
+
+  void on_run_end(RunState& state) override {
+    report_->global_steps = state.global_step;
+    report_->stop_reason = state.stop_reason;
+  }
+
+  void on_exception(RunState& state) override {
+    report_->global_steps = state.global_step;
+    report_->stop_reason = "exception";
+  }
+
+private:
+  TrainingReport* report_;
+};
+
+} // namespace
+
 CallbackChain Coach::build_train_callbacks_(const TrainOptions& options, bool has_validation) const {
   CallbackChain chain(callbacks_);
   if (has_validation &&
       (options.loop_regularization.early_stopping ||
        options.loop_regularization.restore_best_weights)) {
     chain.add(std::make_shared<EarlyStopCallback>(options.validation, options.loop_regularization));
+  }
+  if (options.progress.verbose) {
+    chain.add(std::make_shared<EpochLoggerCallback>(options.progress));
   }
   return chain;
 }
@@ -171,6 +217,7 @@ void Coach::train_loop_(Model& model, Source& source, const TrainOptions& option
   auto optimizer = make_optimizer(parameters, options);
   const bool has_val = !valid_batches.empty();
   CallbackChain callbacks = build_train_callbacks_(options, has_val);
+  callbacks.add(std::make_shared<TrainingRecorder>(&model.training_report_));
   std::mt19937_64 rng(options.seed);
   std::int64_t start_epoch = 0;
   std::optional<io::CheckpointState> loaded_checkpoint = std::nullopt;
@@ -217,6 +264,11 @@ void Coach::train_loop_(Model& model, Source& source, const TrainOptions& option
     model.train(true);
     callbacks.on_run_begin(state);
     if (loaded_checkpoint.has_value()) {
+      // Restore each callback's own state now, *after* on_run_begin --
+      // on_run_begin unconditionally resets a stateful callback like
+      // EarlyStopCallback, so restoring beforehand would just be
+      // overwritten. load_checkpoint itself cannot do this restoration
+      // (it runs before on_run_begin), so it stays the caller's job here.
       for (const auto& callback : callbacks.callbacks()) {
         if (!callback) continue;
         const auto key = callback->state_key();
@@ -668,6 +720,9 @@ void Coach::learn(Model& model, const Series& x_train, const Series& y_train) co
             .shuffle = options_.shuffle,
             .seed = options_.seed,
         });
+    PLUSS_CHECK(split.val_fields[0].numel() > 0,
+                "pluss::ai::ice::Coach::learn: validation.split_ratio left no validation rows; "
+                "use more rows or set validation.split_ratio to 0.");
     TensorSource source(
         split.train_fields[0],
         split.train_fields[1],

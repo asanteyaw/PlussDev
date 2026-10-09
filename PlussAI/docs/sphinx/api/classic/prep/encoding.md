@@ -38,22 +38,57 @@ vectorized `Series` arithmetic and never consult `unknown_categorical` at
 all; see each page's own `## Errors` section for exactly what an unseen
 value produces there instead.
 
-Every encoder also accepts a single `pluss::table::Thread` directly,
+Every encoder also accepts a single `pluss::table::Slate` directly,
 alongside the usual [`FeatureBatch`](../data/FeatureBatch.md) overload — a
 convenience for the common case of encoding one raw table column without
 building a batch around it by hand.
 
 ## How To Call It
 
+Learn a one-hot encoding over one categorical column with three levels, then map it. The encoder adds one column for unknown values, so the program prints four columns.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::prep::OneHotEncoderOptions options{};
-cls::prep::OneHotEncoder encoder(options);
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-encoder.learn(train_batch);
-const pluss::Series encoded = encoder.map(train_batch).value();
-// encoder.learn_map(train_batch) fuses the two calls above into one.
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const pluss::Series x = pluss::make_series(std::vector<double>{0, 1, 2, 0, 1, 2}, {6, 1}, cfg);
+  cls::FeatureBatch batch{};
+  batch.x = x;
+  cls::prep::OneHotEncoderOptions options{};
+  cls::prep::OneHotEncoder encoder(options);
+  encoder.learn(batch);
+  const pluss::Series encoded = encoder.map(batch).value();
+  std::cout << "encoded columns = " << encoded.sizes()[1] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+encoded columns = 4
 ```
 
 [`TargetEncoder`](encoding/TargetEncoder.md) and

@@ -46,9 +46,9 @@ Example 1. Run the prepared SQL statement with no external parameter bindings.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > 95");
 
@@ -66,9 +66,9 @@ Example 2. Run the prepared SQL statement while binding named scalar placeholder
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 
@@ -86,9 +86,9 @@ Example 3. Run the prepared SQL statement while binding both scalar placeholders
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto stmt = df.prep_sql("SELECT id, sales FROM self WHERE sales > {min_sales}");
 

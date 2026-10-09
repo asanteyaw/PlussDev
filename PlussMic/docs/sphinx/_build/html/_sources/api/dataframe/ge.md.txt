@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 88d633112c0f -->
+<!-- pluss-signature-hash: 3257bda32b6a -->
 
 # DataFrame::ge
 
@@ -12,15 +12,15 @@ DataFrame::ge(double other) const -> DataFrame
 DataFrame::ge(std::string_view other) const -> DataFrame
 DataFrame::ge(const DataFrame& other) const -> DataFrame
 DataFrame::ge(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::ge(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::ge(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::ge(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::ge(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::ge(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::ge(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
 The ordering relation "greater than or equal to", returning a boolean-valued frame the
-same shape as the source. `ge()` shares the same scalar/string/`DataFrame`/`Thread`
+same shape as the source. `ge()` shares the same scalar/string/`DataFrame`/`Slate`
 operand shapes as [`eq()`](eq.md) — see `eq()`'s "What It Does" for the full
 explanation.
 
@@ -36,10 +36,10 @@ same call site, use [`gt()`](gt.md) directly instead.
 **other**
 
 The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
-`const DataFrame&`, or `const Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for
+`const DataFrame&`, or `const Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for
 the full breakdown.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -147,11 +147,11 @@ this with [`scores.gt(changed)`](gt.md) on the identical two frames: strict `>` 
 every one of these equal cells to `false`, leaving only that one genuinely-larger cell
 `true`.
 
-Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+Example 4. Compare against a `Slate` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
 auto out_thread = scores.ge(thresholds);
 std::cout << out_thread;
 ```

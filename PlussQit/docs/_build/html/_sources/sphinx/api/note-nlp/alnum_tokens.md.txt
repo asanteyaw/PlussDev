@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::alnum_tokens
+# Note::NlpAccessor::alnum_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::alnum_tokens() const
+TokenBatch Note::NlpAccessor::alnum_tokens() const
 ```
 
 ## Keep Letter-And-Digit Tokens

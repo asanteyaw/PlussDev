@@ -14,7 +14,7 @@ It tracks the current implementation in `PlussMic/src/table/` and is intended to
 
 Main table types:
 
-- `pluss::table::Thread` (1D)
+- `pluss::table::Slate` (1D)
 - `pluss::table::DataFrame` (2D)
 - `pluss::table::Atlas` (3D strict cube)
 
@@ -22,14 +22,14 @@ Main table types:
 
 - A DataFrame is a collection of **features**.
 - A DataFrame has a **case axis** (rows), conceptually equivalent to pandas index.
-- A feature payload is one pluss type via `Thread`:
+- A feature payload is one pluss type via `Slate`:
   - `Series` (numeric/bool)
   - `Note` (text)
   - `Timeline` or `TimeIndex` (datetime/time index)
 
 The design direction is:
 
-- `Atlas -> DataFrame -> Thread -> (Series/Note/Timeline/TimeIndex)`
+- `Atlas -> DataFrame -> Slate -> (Series/Note/Timeline/TimeIndex)`
 
 ## 3. Loading Data
 
@@ -98,34 +98,34 @@ auto loaded = pluss::loader::load("excel", "../../data/report.xlsx", {{"sheet na
 
 ### Constructing In Memory (No CSV/Excel)
 
-You can build `Thread`, `DataFrame`, and `Atlas` directly from your own raw lvalues/containers.
+You can build `Slate`, `DataFrame`, and `Atlas` directly from your own raw lvalues/containers.
 
-Build `Thread` values from pluss-native payloads:
+Build `Slate` values from pluss-native payloads:
 
 ```cpp
-using pluss::table::Thread;
+using pluss::table::Slate;
 
-// numeric lvalue container -> Series -> Thread
+// numeric lvalue container -> Series -> Slate
 std::vector<double> price_raw{12.5, 8.0, 19.2, 7.7};
 auto price_s = pluss::make_series(price_raw, {static_cast<std::int64_t>(price_raw.size())});
-Thread price_t(price_s);
+Slate price_t(price_s);
 
-// text lvalue container -> Note -> Thread
+// text lvalue container -> Note -> Slate
 std::vector<std::string> city_raw{"Austin", "Dallas", "Houston", "Plano"};
-Thread city_t(pluss::make_note(city_raw));
+Slate city_t(pluss::make_note(city_raw));
 
-// datetime lvalue container -> Timeline -> Thread
+// datetime lvalue container -> Timeline -> Slate
 std::vector<std::string> ts_raw{
     "2026-01-01 08:00:00",
     "2026-01-01 09:00:00",
     "2026-01-01 10:00:00",
     "2026-01-01 11:00:00",
 };
-Thread start_t(pluss::make_timeline(ts_raw, {static_cast<std::int64_t>(ts_raw.size())}));
+Slate start_t(pluss::make_timeline(ts_raw, {static_cast<std::int64_t>(ts_raw.size())}));
 
 // optional null mask (same length as payload)
 auto valid = pluss::make_series({true, true, false, true});
-Thread price_with_nulls(price_s, valid);
+Slate price_with_nulls(price_s, valid);
 ```
 
 Build a `DataFrame` from named features:
@@ -144,7 +144,7 @@ DataFrame df({
 Build a `DataFrame` with explicit cases labels:
 
 ```cpp
-Thread case_labels(pluss::make_note(std::vector<std::string>{"c0", "c1", "c2", "c3"}));
+Slate case_labels(pluss::make_note(std::vector<std::string>{"c0", "c1", "c2", "c3"}));
 
 DataFrame df_labeled({
     {"price", price_t},
@@ -164,7 +164,7 @@ auto df_t2 = df_t1.set_features("price", df_t1.features("price") + 1.0);
 
 Atlas at(
     std::vector<DataFrame>{df_t0, df_t1, df_t2},
-    Thread(pluss::make_note(std::vector<std::string>{"t0", "t1", "t2"}))
+    Slate(pluss::make_note(std::vector<std::string>{"t0", "t1", "t2"}))
 );
 ```
 
@@ -177,19 +177,19 @@ Rules still apply during manual construction:
 Rvalue construction is also supported:
 
 ```cpp
-using pluss::table::Thread;
+using pluss::table::Slate;
 using pluss::table::DataFrame;
 using pluss::table::Atlas;
 
-// Thread from rvalue payloads
-Thread t_num(pluss::make_series({1.0, 2.0, 3.0}));
-Thread t_txt(pluss::make_note({"a", "b", "c"}));
-Thread t_dt(pluss::make_timeline({"2026-01-01 08:00:00", "2026-01-01 09:00:00", "2026-01-01 10:00:00"}));
+// Slate from rvalue payloads
+Slate t_num(pluss::make_series({1.0, 2.0, 3.0}));
+Slate t_txt(pluss::make_note({"a", "b", "c"}));
+Slate t_dt(pluss::make_timeline({"2026-01-01 08:00:00", "2026-01-01 09:00:00", "2026-01-01 10:00:00"}));
 
 // DataFrame from rvalue feature list
 DataFrame df_r({
-    {"x", Thread(pluss::make_series({1, 2, 3}))},
-    {"label", Thread(pluss::make_note({"u", "v", "w"}))},
+    {"x", Slate(pluss::make_series({1, 2, 3}))},
+    {"label", Slate(pluss::make_note({"u", "v", "w"}))},
 });
 
 // Atlas from rvalue frame stack
@@ -240,14 +240,14 @@ auto names = df.features();
 Access features:
 
 ```cpp
-auto f = df.features("price");                // Thread
+auto f = df.features("price");                // Slate
 auto subset = df.features({"price", "qty"});  // DataFrame subset
 ```
 
 Access case labels and cases:
 
 ```cpp
-auto case_axis = df.label().values();    // Thread, pandas-index equivalent
+auto case_axis = df.label().values();    // Slate, pandas-index equivalent
 auto one_case_df = df.case_study(pluss::table::pos(10));
 auto case_slice = df.case_study(pluss::table::pos(5, 10)); // [5,10)
 auto cell1 = df.case_study(pluss::table::pos(3), pluss::table::feature(2));
@@ -257,8 +257,8 @@ auto cell2 = df.case_study(pluss::table::pos(3), pluss::table::feature("price"))
 Extract underlying pluss payload type:
 
 ```cpp
-auto v = df.features("price").value(); // ThreadValue
-// ThreadValue can be converted to Series/Note/Timeline/TimeIndex depending on actual kind.
+auto v = df.features("price").value(); // SlateValue
+// SlateValue can be converted to Series/Note/Timeline/TimeIndex depending on actual kind.
 ```
 
 Typed extraction helpers:
@@ -309,8 +309,8 @@ General cast:
 
 ```cpp
 auto c = df.cast({
-  {"Start_Time", pluss::table::ThreadCastTarget::Timeline, std::nullopt},
-  {"price", pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64},
+  {"Start_Time", pluss::table::SlateCastTarget::Timeline, std::nullopt},
+  {"price", pluss::table::SlateCastTarget::Series, pluss::codem::ScalarType::Float64},
 });
 ```
 
@@ -345,7 +345,7 @@ auto df2 = a1.squeeze();      // requires depth == 1
 With optional depth label:
 
 ```cpp
-auto label = pluss::table::Thread(pluss::make_note({"batch_0"}, {1}));
+auto label = pluss::table::Slate(pluss::make_note({"batch_0"}, {1}));
 auto a2 = df.unsqueeze(label);
 ```
 
@@ -381,18 +381,18 @@ auto q3 = df.query("isnull(price)");
 ```cpp
 auto out = df.assign({
   {"is_high_price", [](const pluss::table::DataFrame& f) {
-     return pluss::table::Thread(f.series_value("price").to(pluss::codem::ScalarType::Float64).ge(100.0));
+     return pluss::table::Slate(f.series_value("price").to(pluss::codem::ScalarType::Float64).ge(100.0));
    }},
 });
 ```
 
 ```cpp
-auto t0 = df.transform([](const pluss::table::Thread& f) {
-  if (f.kind() == pluss::table::ThreadKind::Series) return f + 1.0;
+auto t0 = df.transform([](const pluss::table::Slate& f) {
+  if (f.kind() == pluss::table::SlateKind::Series) return f + 1.0;
   return f;
 });
 
-auto t1 = df.transform("price", [](const pluss::table::Thread& f) { return f.log(); });
+auto t1 = df.transform("price", [](const pluss::table::Slate& f) { return f.log(); });
 ```
 
 ### 7.5 aggregate + summary
@@ -468,12 +468,12 @@ auto n7 = df.dropna_all({"price", "qty"});
 
 ```cpp
 auto r = df.rolling({
-  {"price_roll_mean_3", "price", pluss::table::ThreadWindowOp::RollingMean, 3, 1},
+  {"price_roll_mean_3", "price", pluss::table::SlateWindowOp::RollingMean, 3, 1},
 }, true);
 
 // lower-level window API is also available:
 auto w = df.window({
-  {"price_roll_sum_5", "price", pluss::table::ThreadWindowOp::RollingSum, 5, 1},
+  {"price_roll_sum_5", "price", pluss::table::SlateWindowOp::RollingSum, 5, 1},
 }, true);
 ```
 
@@ -525,7 +525,7 @@ auto stitched2 = left_df.stitch_on({"id", "bucket"}, right_df, {"id", "bucket"},
 
 ## 8. Arithmetic And Comparison APIs
 
-DataFrame provides vectorized wrappers that delegate to Thread/Series semantics where valid:
+DataFrame provides vectorized wrappers that delegate to Slate/Series semantics where valid:
 
 - Arithmetic: `add/sub/mul/div/truediv/floordiv/mod/pow`
 - Reverse arithmetic: `radd/rsub/rmul/rdiv/rtruediv/rfloordiv/rmod/rpow`
@@ -581,10 +581,10 @@ Build:
 
 ```cpp
 using pluss::table::Atlas;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 std::vector<pluss::table::DataFrame> frames = {df_t0, df_t1, df_t2};
-auto labels = Thread(pluss::Note({"2024-01", "2024-02", "2024-03"}));
+auto labels = Slate(pluss::Note({"2024-01", "2024-02", "2024-03"}));
 Atlas at(std::move(frames), labels);
 ```
 
@@ -599,8 +599,8 @@ auto slice = at.slice_frames(0, 2);
 auto first = at.head(2);
 auto last = at.tail(2);
 auto sorted = at.sort_depth(false);
-auto relabeled_depth = at.relabel_depth(pluss::table::Thread(pluss::Note({"A", "B", "C"})));
-auto aligned_depth = at.align_depth(pluss::table::Thread(pluss::Note({"2024-03", "2024-01"})));
+auto relabeled_depth = at.relabel_depth(pluss::table::Slate(pluss::Note({"A", "B", "C"})));
+auto aligned_depth = at.align_depth(pluss::table::Slate(pluss::Note({"2024-03", "2024-01"})));
 ```
 
 Transform/reduce:
@@ -626,7 +626,7 @@ std::cout << at << "\n";
 - Use `features` and `cases` terminology consistently in user code.
 - Prefer focused methods (`query`, `assign`, `group_by`, `aggregate`, `sort_values`, `sort_caselbl`) over manual loops.
 - Use `render=false` when composing display-returning methods programmatically.
-- Keep heavy numeric/text/datetime operations at Thread-level semantics and let DataFrame orchestrate.
+- Keep heavy numeric/text/datetime operations at Slate-level semantics and let DataFrame orchestrate.
 
 ## 12. Current Gaps / Next Additions
 
@@ -665,7 +665,7 @@ Core:
 ```cpp
 auto n = s.size();
 auto k = s.kind();
-auto t = s.to_thread();
+auto t = s.to_slate();
 ```
 
 Predicates/transforms:
@@ -688,11 +688,11 @@ auto clean = s.dropna();
 Typed cast/reduction:
 
 ```cpp
-auto s_num = s.cast(pluss::table::ThreadCastTarget::Series, pluss::codem::ScalarType::Float64);
+auto s_num = s.cast(pluss::table::SlateCastTarget::Series, pluss::codem::ScalarType::Float64);
 auto mu = s.mean();  // scalar Stream (Series payload, numel == 1)
 ```
 
-Arithmetic/comparison (delegates to Thread semantics):
+Arithmetic/comparison (delegates to Slate semantics):
 
 ```cpp
 auto z = s + 1.0;

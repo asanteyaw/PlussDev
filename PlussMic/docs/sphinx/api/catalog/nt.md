@@ -87,7 +87,7 @@ try {
 ### Output
 
 ```text
-Thread::strip is only valid for Note payload
+Slate::strip is only valid for Note payload
 ```
 
 ## Notes

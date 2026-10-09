@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::cmd_sub
+# Note::TexAccessor::cmd_sub
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::cmd_sub(std::string_view cmd,
+Note Note::TexAccessor::cmd_sub(std::string_view cmd,
                              std::string_view repl) const
 ```
 

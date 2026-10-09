@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::inline_math
+# Note::TexAccessor::inline_math
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::inline_math() const
+TokenBatch Note::TexAccessor::inline_math() const
 ```
 
 ## Extract Inline Formulae Without Mixing In Displays

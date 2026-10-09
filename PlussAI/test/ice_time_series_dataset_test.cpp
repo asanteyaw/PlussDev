@@ -21,7 +21,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 namespace data = pluss::ai::ice::data;
 
 Config float_cfg() { return Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU); }
@@ -61,15 +61,15 @@ DataFrame make_panel(std::int64_t groups, std::int64_t steps_per_group, std::uin
   }
 
   return DataFrame({
-      {"group", Thread(pluss::make_note(group_col))},
-      {"region", Thread(pluss::make_note(region_col))},
-      {"t", Thread(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
-      {"base", Thread(pluss::make_series(base_col, {static_cast<std::int64_t>(base_col.size())}, float_cfg()))},
+      {"group", Slate(pluss::make_note(group_col))},
+      {"region", Slate(pluss::make_note(region_col))},
+      {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
+      {"base", Slate(pluss::make_series(base_col, {static_cast<std::int64_t>(base_col.size())}, float_cfg()))},
       {"position",
-       Thread(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
       {"noisy_obs",
-       Thread(pluss::make_series(noisy_obs_col, {static_cast<std::int64_t>(noisy_obs_col.size())}, float_cfg()))},
-      {"y", Thread(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(noisy_obs_col, {static_cast<std::int64_t>(noisy_obs_col.size())}, float_cfg()))},
+      {"y", Slate(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
   });
 }
 
@@ -230,15 +230,15 @@ bool run_gap_and_short_group_checks(std::ostream* err = nullptr) {
   for (std::int64_t t = 0; t < 20; ++t) push_row("clean", t);
 
   const DataFrame df({
-      {"group", Thread(pluss::make_note(group_col))},
-      {"region", Thread(pluss::make_note(region_col))},
-      {"t", Thread(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
-      {"base", Thread(pluss::make_series(base_col, {static_cast<std::int64_t>(base_col.size())}, float_cfg()))},
+      {"group", Slate(pluss::make_note(group_col))},
+      {"region", Slate(pluss::make_note(region_col))},
+      {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
+      {"base", Slate(pluss::make_series(base_col, {static_cast<std::int64_t>(base_col.size())}, float_cfg()))},
       {"position",
-       Thread(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
       {"noisy_obs",
-       Thread(pluss::make_series(noisy_obs_col, {static_cast<std::int64_t>(noisy_obs_col.size())}, float_cfg()))},
-      {"y", Thread(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(noisy_obs_col, {static_cast<std::int64_t>(noisy_obs_col.size())}, float_cfg()))},
+      {"y", Slate(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
   });
 
   const auto options = make_options(kEncoderLength, kDecoderLength);
@@ -293,15 +293,15 @@ bool run_categorical_vocabulary_checks(std::ostream* err = nullptr) {
     y_col.push_back(5.0F);
   }
   const DataFrame held_out_df({
-      {"group", Thread(pluss::make_note(group_col))},
-      {"region", Thread(pluss::make_note(region_col))},
-      {"t", Thread(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
-      {"base", Thread(pluss::make_series(base_col, {static_cast<std::int64_t>(base_col.size())}, float_cfg()))},
+      {"group", Slate(pluss::make_note(group_col))},
+      {"region", Slate(pluss::make_note(region_col))},
+      {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
+      {"base", Slate(pluss::make_series(base_col, {static_cast<std::int64_t>(base_col.size())}, float_cfg()))},
       {"position",
-       Thread(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
       {"noisy_obs",
-       Thread(pluss::make_series(noisy_obs_col, {static_cast<std::int64_t>(noisy_obs_col.size())}, float_cfg()))},
-      {"y", Thread(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
+       Slate(pluss::make_series(noisy_obs_col, {static_cast<std::int64_t>(noisy_obs_col.size())}, float_cfg()))},
+      {"y", Slate(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
   });
 
   const auto held_out_dataset = data::TimeSeriesDataSet::from_dataframe(held_out_df, options, train_dataset);

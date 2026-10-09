@@ -36,8 +36,8 @@ Example 1. Iterate the stack directly as a `std::vector<DataFrame>`.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 for (const auto& frame : atlas.frames()) {
@@ -59,8 +59,8 @@ for an `Atlas`-specific reduction method.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 double total = 0.0;

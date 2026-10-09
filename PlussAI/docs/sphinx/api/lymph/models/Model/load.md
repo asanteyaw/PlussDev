@@ -75,7 +75,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -83,7 +83,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.4, 1.8, 3.4, 3.8, 4.2}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   // Train in one place, persist, then load elsewhere.
   const std::filesystem::path path = std::filesystem::temp_directory_path() / "lymph_round_trip.flow";
@@ -95,9 +95,9 @@ int main() {
   std::cout << "trained right after load = " << std::boolalpha << model.trained() << "\n\n";
 
   const DataFrame result({
-      {"income", Thread(income)},
-      {"balance", Thread(balance)},
-      {"predicted", Thread(model.infer(x))},
+      {"income", Slate(income)},
+      {"balance", Slate(balance)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << result;
 
@@ -140,7 +140,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -148,7 +148,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"region", Thread(region)}});
+  const DataFrame x({{"income", Slate(income)}, {"region", Slate(region)}});
 
   // A model with two preparation stages plus the estimator.
   lymph::models::Model original = lymph::models::logistic_regression();
@@ -165,10 +165,10 @@ int main() {
   std::cout << "loaded   stage_count = " << loaded.stage_count() << "\n\n";
 
   const DataFrame check({
-      {"income", Thread(income)},
-      {"region", Thread(region)},
-      {"original", Thread(original.infer(x))},
-      {"loaded", Thread(loaded.infer(x))},
+      {"income", Slate(income)},
+      {"region", Slate(region)},
+      {"original", Slate(original.infer(x))},
+      {"loaded", Slate(loaded.infer(x))},
   });
   std::cout << check;
 

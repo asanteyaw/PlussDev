@@ -167,24 +167,24 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"region_id",   Thread(pluss::make_series({10.0, 20.0, 10.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"region_id",   Slate(pluss::make_series({10.0, 20.0, 10.0}))},
 });
 auto regions = DataFrame({
-    {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
-    {"zone",      Thread(pluss::make_note({"west", "east"}))},
+    {"region_id", Slate(pluss::make_series({10.0, 20.0}))},
+    {"zone",      Slate(pluss::make_note({"west", "east"}))},
 });
 auto events = DataFrame({
-    {"event_id",    Thread(pluss::make_series({100.0, 101.0, 102.0, 103.0, 104.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0, 2.0, 2.0}))},
-    {"occurred_at", Thread(pluss::make_timeline({
+    {"event_id",    Slate(pluss::make_series({100.0, 101.0, 102.0, 103.0, 104.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0, 2.0, 2.0}))},
+    {"occurred_at", Slate(pluss::make_timeline({
         "2026-01-01T00:00:00Z",
         "2026-01-20T00:00:00Z",
         "2026-01-05T00:00:00Z",
         "2026-01-25T00:00:00Z",
         "2026-02-10T00:00:00Z",
     }))},
-    {"spend",       Thread(pluss::make_series({10.0, 5.0, 2.0, 8.0, 4.0}))},
+    {"spend",       Slate(pluss::make_series({10.0, 5.0, 2.0, 8.0, 4.0}))},
 });
 
 TableMeta customer_meta;
@@ -257,18 +257,18 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"region_id",   Thread(pluss::make_series({10.0, 20.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"region_id",   Slate(pluss::make_series({10.0, 20.0}))},
 });
 auto regions = DataFrame({
-    {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
-    {"zone",      Thread(pluss::make_note({"west", "east"}))},
+    {"region_id", Slate(pluss::make_series({10.0, 20.0}))},
+    {"zone",      Slate(pluss::make_note({"west", "east"}))},
 });
 auto events = DataFrame({
-    {"event_id",    Thread(pluss::make_series({100.0, 101.0, 102.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
-    {"spend",       Thread(pluss::make_series({10.0, 5.0, 8.0}))},
-    {"occurred_at", Thread(pluss::make_timeline({
+    {"event_id",    Slate(pluss::make_series({100.0, 101.0, 102.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
+    {"spend",       Slate(pluss::make_series({10.0, 5.0, 8.0}))},
+    {"occurred_at", Slate(pluss::make_timeline({
         "2026-01-01T00:00:00Z",
         "2026-01-20T00:00:00Z",
         "2026-01-25T00:00:00Z",
@@ -349,12 +349,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"region_id",   Thread(pluss::make_series({10.0, 20.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"region_id",   Slate(pluss::make_series({10.0, 20.0}))},
 });
 auto regions = DataFrame({
-    {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
-    {"zone",      Thread(pluss::make_note({"west", "east"}))},
+    {"region_id", Slate(pluss::make_series({10.0, 20.0}))},
+    {"zone",      Slate(pluss::make_note({"west", "east"}))},
 });
 
 Relationship rel;
@@ -403,13 +403,13 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0, 104.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 2.0, 1.0}))},
-    {"amount",      Thread(pluss::make_series({50.0, 75.0, 20.0, 30.0}))},
+    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0, 104.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0, 1.0}))},
+    {"amount",      Slate(pluss::make_series({50.0, 75.0, 20.0, 30.0}))},
 });
 
 auto biz = Nexus({
@@ -522,14 +522,14 @@ trailing 7-day window anchored at their own latest order.
 
 ```cpp
 auto customers2 = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben"}))},
 });
 auto orders2 = DataFrame({
-    {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
-    {"amount",      Thread(pluss::make_series({50.0, 30.0, 75.0}))},
-    {"ordered_at",  Thread(pluss::make_timeline({
+    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
+    {"amount",      Slate(pluss::make_series({50.0, 30.0, 75.0}))},
+    {"ordered_at",  Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z",
         "2024-01-11T00:00:00Z",
         "2024-01-01T00:00:00Z",
@@ -579,9 +579,9 @@ latest order" to "the root table's own declared time — here, `signup_at`."
 
 ```cpp
 auto customers3 = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben"}))},
-    {"signup_at",   Thread(pluss::make_timeline({
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben"}))},
+    {"signup_at",   Slate(pluss::make_timeline({
         "2024-01-08T00:00:00Z",
         "2024-01-01T00:00:00Z",
     }))},
@@ -636,12 +636,12 @@ Example 9. Backtick-quoting a feature name that itself contains a literal `.`.
 
 ```cpp
 auto customers4 = DataFrame({
-    {"customer_id",  Thread(pluss::make_series({1.0, 2.0}))},
-    {"display.name", Thread(pluss::make_note({"Ada A.", "Ben B."}))},
+    {"customer_id",  Slate(pluss::make_series({1.0, 2.0}))},
+    {"display.name", Slate(pluss::make_note({"Ada A.", "Ben B."}))},
 });
 auto orders4 = DataFrame({
-    {"order_id",    Thread(pluss::make_series({101.0, 102.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
 });
 
 auto biz4 = Nexus({

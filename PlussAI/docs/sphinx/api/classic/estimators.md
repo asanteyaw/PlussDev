@@ -21,19 +21,49 @@ get back* and *how you drive it*.
 
 ## How To Call It
 
+Build a logistic classifier from a model spec, fit it, and predict. The program prints how many predictions came back.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::LinearFamilyOptions linear{};
-linear.objective = cls::LinearObjective::Logistic;  // classification needs Logistic or Hinge
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
-    cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
-if (!made.ok()) { /* made.status() */ }
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const cls::LabeledBatch batch = fixture_batch(cfg);
+  cls::LinearFamilyOptions linear{};
+  linear.objective = cls::LinearObjective::Logistic;
+  cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> made =
+      cls::make_classifier(cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear});
+  if (!made.ok()) return 1;
+  cls::ClassifierBase& model = *made.value();
+  model.learn(batch);
+  const cls::Series pred = model.infer(batch.features).value();
+  std::cout << "predictions = " << pred.numel() << "\n";
+  return 0;
+}
+```
 
-cls::ClassifierBase& model = *made.value();
-model.learn(batch);                       // Status
-cls::Series pred = model.infer(x).value(); // StatusOr<Series>
+Output
+
+```text
+predictions = 8
 ```
 
 You always reach an `EstimatorBase` through one of these three factories,

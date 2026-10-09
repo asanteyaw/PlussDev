@@ -54,7 +54,7 @@ Example 1. Case-fold a mixed-case text feature.
 using namespace pluss::table;
 
 auto roles_a = DataFrame({
-    {"role", Thread(pluss::make_note({"MEMBER", "Guest", "Admin"}))},
+    {"role", Slate(pluss::make_note({"MEMBER", "Guest", "Admin"}))},
 });
 std::cout << roles_a;
 
@@ -96,7 +96,7 @@ frames before comparing them, instead of comparing the raw text directly.
 
 ```cpp
 auto roles_b = DataFrame({
-    {"role", Thread(pluss::make_note({"member", "GUEST", "admin"}))},
+    {"role", Slate(pluss::make_note({"member", "GUEST", "admin"}))},
 });
 
 auto raw_eq = roles_a.eq(roles_b);

@@ -36,7 +36,7 @@ Example 1. Extract the year from every row of a `Timeline` feature.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -86,7 +86,7 @@ calendar year.
   selected — narrow with [`features()`](../dataframe/features.md) first
   (`df.features({"ts"}).tl().year()`) if the source frame also has non-time
   columns.
-- A row whose underlying timestamp is `NaT` (or whose `Thread` already carries
+- A row whose underlying timestamp is `NaT` (or whose `Slate` already carries
   a null mask) displays as `"NULL"` in the year output, not some sentinel
   number.
 - `year()` reads local calendar fields — i.e. relative to whatever timezone

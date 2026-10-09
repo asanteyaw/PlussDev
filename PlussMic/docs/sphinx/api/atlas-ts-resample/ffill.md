@@ -41,12 +41,12 @@ Example 1. Forward-fill two frames' 3-point series onto their own daily grids.
 using namespace pluss::table;
 
 auto q1 = DataFrame(
-    {{"value", Thread(pluss::make_series({100.0, 102.0, 110.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({100.0, 102.0, 110.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z"})));
 auto q2 = DataFrame(
-    {{"value", Thread(pluss::make_series({200.0, 204.0, 220.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({200.0, 204.0, 220.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z"})));
 auto atlas = Atlas({q1, q2});
 

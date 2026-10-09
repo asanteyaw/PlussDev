@@ -14,7 +14,7 @@ int main() {
   csv.names = {"sepal_length", "sepal_width", "petal_length", "petal_width", "species"};
   const DataFrame raw = DataFrame::load_csv((root / "data/iris.csv").string(), csv);
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"sepal_length", "sepal_width", "petal_length", "petal_width"})
       .label("species")
       .note(lymph::DataNotePolicy::Factorize);
@@ -22,10 +22,10 @@ int main() {
   lymph::Workflow wf = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"sepal_length", "sepal_width", "petal_length", "petal_width"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::random_forest_classifier({.learners = 51, .subsample = 1.0}));
+      lymph::models::random_forest_classifier({.learners = 51, .subsample = 1.0}));
 
   wf.learn_(data);
   const lymph::MetricReport report = wf.assess(data);

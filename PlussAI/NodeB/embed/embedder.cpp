@@ -156,20 +156,21 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
   PLUSS_CALL_GUARD();
   if (docs.empty()) {
     return nodej::Status::invalid_argument(
-        "nodeb::embed::Embedder::learn: expected at least one document.");
+        "nlp::embed::Embedder::learn: expected at least one document.");
   }
   if (options_.width <= 0 || options_.window <= 0 || options_.negative_samples <= 0 ||
-      options_.epochs <= 0 || options_.batch_size <= 0) {
+      options_.min_count <= 0 || options_.epochs <= 0 || options_.batch_size <= 0 ||
+      !std::isfinite(options_.learning_rate) || options_.learning_rate <= 0.0) {
     return nodej::Status::invalid_argument(
-        "nodeb::embed::Embedder::learn: width, window, negative_samples, epochs and "
-        "batch_size must all be positive.");
+        "nlp::embed::Embedder::learn: width, window, negative_samples, min_count, epochs, "
+        "batch_size, and learning_rate must all be positive.");
   }
 
   const auto doc_terms = docs_to_terms(docs, options_);
   const auto vocab = build_vocab(doc_terms, options_.min_count);
   if (vocab.empty()) {
     return nodej::Status::precondition(
-        "nodeb::embed::Embedder::learn: vocabulary is empty after min_count filtering.");
+        "nlp::embed::Embedder::learn: vocabulary is empty after min_count filtering.");
   }
   const auto vocab_size = static_cast<std::int64_t>(vocab.size());
 
@@ -184,7 +185,7 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
   const auto pairs = build_pairs(doc_terms, impl->token_to_id, options_.window);
   if (pairs.centers.empty()) {
     return nodej::Status::precondition(
-        "nodeb::embed::Embedder::learn: no training pairs were generated; documents may be "
+        "nlp::embed::Embedder::learn: no training pairs were generated; documents may be "
         "too short for the configured window, or every token was filtered by min_count.");
   }
   const auto negative_probs = build_negative_distribution(vocab);
@@ -266,7 +267,7 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
     }
   } catch (const std::exception& e) {
     return nodej::Status::numerical_failure(
-        std::string("nodeb::embed::Embedder::learn: training became numerically unstable: ") + e.what());
+        std::string("nlp::embed::Embedder::learn: training became numerically unstable: ") + e.what());
   }
 
   const auto flat = input_weights.to(pluss::pCPU, ScalarType::Float64)
@@ -287,12 +288,12 @@ nodej::Status Embedder::learn(const std::vector<Doc>& docs) {
 nodej::StatusOr<std::vector<double>> Embedder::vector_of(std::string_view token) const {
   if (!ready()) {
     return nodej::StatusOr<std::vector<double>>(
-        nodej::Status::precondition("nodeb::embed::Embedder::vector_of: model has not been trained."));
+        nodej::Status::precondition("nlp::embed::Embedder::vector_of: model has not been trained."));
   }
   const auto it = impl_->token_to_id.find(std::string(token));
   if (it == impl_->token_to_id.end()) {
     return nodej::StatusOr<std::vector<double>>(nodej::Status::invalid_argument(
-        "nodeb::embed::Embedder::vector_of: '" + std::string(token) + "' is out of vocabulary."));
+        "nlp::embed::Embedder::vector_of: '" + std::string(token) + "' is out of vocabulary."));
   }
   return nodej::StatusOr<std::vector<double>>(impl_->host_vectors[static_cast<std::size_t>(it->second)]);
 }
@@ -300,7 +301,7 @@ nodej::StatusOr<std::vector<double>> Embedder::vector_of(std::string_view token)
 nodej::StatusOr<std::vector<double>> Embedder::embed(const Doc& doc) const {
   if (!ready()) {
     return nodej::StatusOr<std::vector<double>>(
-        nodej::Status::precondition("nodeb::embed::Embedder::embed: model has not been trained."));
+        nodej::Status::precondition("nlp::embed::Embedder::embed: model has not been trained."));
   }
   std::vector<double> sum(static_cast<std::size_t>(options_.width), 0.0);
   std::int64_t count = 0;
@@ -317,7 +318,7 @@ nodej::StatusOr<std::vector<double>> Embedder::embed(const Doc& doc) const {
   }
   if (count == 0) {
     return nodej::StatusOr<std::vector<double>>(nodej::Status::precondition(
-        "nodeb::embed::Embedder::embed: none of the document's tokens are in vocabulary."));
+        "nlp::embed::Embedder::embed: none of the document's tokens are in vocabulary."));
   }
   for (auto& value : sum) {
     value /= static_cast<double>(count);
@@ -357,12 +358,16 @@ nodej::StatusOr<std::vector<std::pair<std::string, double>>> Embedder::nearest(s
   using Result = std::vector<std::pair<std::string, double>>;
   if (!ready()) {
     return nodej::StatusOr<Result>(
-        nodej::Status::precondition("nodeb::embed::Embedder::nearest: model has not been trained."));
+        nodej::Status::precondition("nlp::embed::Embedder::nearest: model has not been trained."));
+  }
+  if (k < 0) {
+    return nodej::StatusOr<Result>(nodej::Status::invalid_argument(
+        "nlp::embed::Embedder::nearest: k must be non-negative."));
   }
   const auto it = impl_->token_to_id.find(std::string(token));
   if (it == impl_->token_to_id.end()) {
     return nodej::StatusOr<Result>(nodej::Status::invalid_argument(
-        "nodeb::embed::Embedder::nearest: '" + std::string(token) + "' is out of vocabulary."));
+        "nlp::embed::Embedder::nearest: '" + std::string(token) + "' is out of vocabulary."));
   }
   const auto query_id = static_cast<std::size_t>(it->second);
   const auto& query_vec = impl_->host_vectors[query_id];
@@ -373,7 +378,7 @@ nodej::StatusOr<std::vector<std::pair<std::string, double>>> Embedder::nearest(s
     if (id == query_id) continue;
     scored.emplace_back(impl_->vocabulary[id], similarity(query_vec, impl_->host_vectors[id]));
   }
-  const auto count = std::min(static_cast<std::size_t>(std::max<std::int64_t>(k, 0)), scored.size());
+  const auto count = std::min(static_cast<std::size_t>(k), scored.size());
   std::partial_sort(scored.begin(), scored.begin() + static_cast<std::ptrdiff_t>(count), scored.end(),
                     [](const auto& a, const auto& b) { return a.second > b.second; });
   scored.resize(count);
@@ -383,7 +388,7 @@ nodej::StatusOr<std::vector<std::pair<std::string, double>>> Embedder::nearest(s
 namespace {
 
 constexpr std::string_view kMagicLine = "pluss_nodeb_embedder";
-constexpr std::int64_t kCurrentSchema = 1;
+constexpr std::int64_t kCurrentSchema = 2;
 
 [[nodiscard]] std::string hex_encode(std::string_view value) {
   static constexpr char kHex[] = "0123456789abcdef";
@@ -435,15 +440,15 @@ constexpr std::int64_t kCurrentSchema = 1;
 void Embedder::save(std::string_view filepath) const {
   PLUSS_CALL_GUARD();
   if (filepath.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::Embedder::save: output path cannot be empty.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::Embedder::save: output path cannot be empty.");
   }
   if (!ready()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::Embedder::save: model has not been trained.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::Embedder::save: model has not been trained.");
   }
   std::ofstream out{std::string(filepath)};
   if (!out.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::save: failed to open '" + std::string(filepath) + "'.");
+        "nlp::embed::Embedder::save: failed to open '" + std::string(filepath) + "'.");
   }
 
   std::ostringstream body{};
@@ -456,34 +461,40 @@ void Embedder::save(std::string_view filepath) const {
   out << kMagicLine << "\n";
   out << "schema=" << kCurrentSchema << "\n";
   out << "width=" << options_.width << "\n";
+  out << "use_lemmas=" << (options_.use_lemmas ? 1 : 0) << "\n";
+  out << "lowercase=" << (options_.lowercase ? 1 : 0) << "\n";
+  out << "skip_punct=" << (options_.skip_punct ? 1 : 0) << "\n";
   out << "vocab_count=" << impl_->vocabulary.size() << "\n";
   out << "checksum=" << io::detail::to_hex(io::detail::fnv1a64(body_text)) << "\n";
   out << body_text;
 
   if (!out.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::save: failed while writing '" + std::string(filepath) + "'.");
+        "nlp::embed::Embedder::save: failed while writing '" + std::string(filepath) + "'.");
   }
 }
 
 Embedder Embedder::load(std::string_view filepath) {
   PLUSS_CALL_GUARD();
   if (filepath.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::Embedder::load: input path cannot be empty.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::Embedder::load: input path cannot be empty.");
   }
   std::ifstream in{std::string(filepath)};
   if (!in.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::load: failed to open '" + std::string(filepath) + "'.");
+        "nlp::embed::Embedder::load: failed to open '" + std::string(filepath) + "'.");
   }
 
   std::string line{};
   if (!std::getline(in, line) || line != kMagicLine) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::Embedder::load: invalid embedder header.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::Embedder::load: invalid embedder header.");
   }
 
   std::int64_t schema = -1;
   std::int64_t width = -1;
+  bool use_lemmas = true;
+  bool lowercase = true;
+  bool skip_punct = true;
   std::int64_t vocab_count = -1;
   std::uint64_t expected_checksum = 0;
   bool have_checksum = false;
@@ -496,6 +507,18 @@ Embedder Embedder::load(std::string_view filepath) {
       width = io::detail::parse_i64(std::string_view(line).substr(6));
       continue;
     }
+    if (line.rfind("use_lemmas=", 0) == 0) {
+      use_lemmas = io::detail::parse_i64(std::string_view(line).substr(11)) != 0;
+      continue;
+    }
+    if (line.rfind("lowercase=", 0) == 0) {
+      lowercase = io::detail::parse_i64(std::string_view(line).substr(10)) != 0;
+      continue;
+    }
+    if (line.rfind("skip_punct=", 0) == 0) {
+      skip_punct = io::detail::parse_i64(std::string_view(line).substr(11)) != 0;
+      continue;
+    }
     if (line.rfind("vocab_count=", 0) == 0) {
       vocab_count = io::detail::parse_i64(std::string_view(line).substr(12));
       continue;
@@ -506,14 +529,14 @@ Embedder Embedder::load(std::string_view filepath) {
       break; // checksum is always the last header line; the body follows immediately.
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::load: unrecognized embedder header line '" + line + "'.");
+        "nlp::embed::Embedder::load: unrecognized embedder header line '" + line + "'.");
   }
-  if (schema != kCurrentSchema) {
+  if (schema != 1 && schema != kCurrentSchema) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::load: unsupported embedder schema " + std::to_string(schema) + ".");
+        "nlp::embed::Embedder::load: unsupported embedder schema " + std::to_string(schema) + ".");
   }
   if (width <= 0 || vocab_count < 0 || !have_checksum) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::Embedder::load: embedder header is incomplete.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::Embedder::load: embedder header is incomplete.");
   }
 
   std::ostringstream body_buffer{};
@@ -521,11 +544,14 @@ Embedder Embedder::load(std::string_view filepath) {
   const auto body_text = body_buffer.str();
   if (io::detail::fnv1a64(body_text) != expected_checksum) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::load: checksum mismatch, artifact is truncated or corrupted.");
+        "nlp::embed::Embedder::load: checksum mismatch, artifact is truncated or corrupted.");
   }
 
   EmbedOptions options{};
   options.width = width;
+  options.use_lemmas = use_lemmas;
+  options.lowercase = lowercase;
+  options.skip_punct = skip_punct;
   Embedder embedder(options);
   auto impl = std::make_shared<Impl>();
   impl->vocabulary.reserve(static_cast<std::size_t>(vocab_count));
@@ -537,13 +563,13 @@ Embedder Embedder::load(std::string_view filepath) {
   while (std::getline(body_stream, term_line)) {
     if (term_line.rfind("term=", 0) != 0 || !std::getline(body_stream, vec_line) ||
         vec_line.rfind("vec=", 0) != 0) {
-      ::pluss::ai::nodeb::detail::fail("nodeb::embed::Embedder::load: malformed vocabulary entry.");
+      ::pluss::ai::nodeb::detail::fail("nlp::embed::Embedder::load: malformed vocabulary entry.");
     }
     auto term = hex_decode(std::string_view(term_line).substr(5));
     auto vec = parse_doubles(std::string_view(vec_line).substr(4));
     if (static_cast<std::int64_t>(vec.size()) != width) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::embed::Embedder::load: vector width mismatch for '" + term + "'.");
+          "nlp::embed::Embedder::load: vector width mismatch for '" + term + "'.");
     }
     impl->token_to_id.emplace(term, static_cast<std::int64_t>(impl->vocabulary.size()));
     impl->vocabulary.push_back(std::move(term));
@@ -551,7 +577,7 @@ Embedder Embedder::load(std::string_view filepath) {
   }
   if (static_cast<std::int64_t>(impl->vocabulary.size()) != vocab_count) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::Embedder::load: expected " + std::to_string(vocab_count) +
+        "nlp::embed::Embedder::load: expected " + std::to_string(vocab_count) +
         " vocabulary entries but found " + std::to_string(impl->vocabulary.size()) + ".");
   }
   impl->trained = true;

@@ -319,8 +319,8 @@ pluss::table::DataFrame Nexus::summary() const {
   }
 
   return pluss::table::DataFrame({
-      {"table", pluss::table::Thread(pluss::make_note(names))},
-      {"ncases", pluss::table::Thread(pluss::make_series(row_counts))},
-      {"nfeatures", pluss::table::Thread(pluss::make_series(feature_counts))},
+      {"table", pluss::table::Slate(pluss::make_note(names))},
+      {"ncases", pluss::table::Slate(pluss::make_series(row_counts))},
+      {"nfeatures", pluss::table::Slate(pluss::make_series(feature_counts))},
   });
 }

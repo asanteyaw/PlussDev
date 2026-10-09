@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::with_label_" href="with_label_.html" />
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4cb59fd36c93 -->
+<!-- pluss-signature-hash: 5b88e4856d62 -->
 <section id="stream-with-label">
 <h1>Stream::with_label<a class="headerlink" href="#stream-with-label" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../stream_api_reference.html"><span class="doc std std-doc">Back to Stream API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="o">::</span><span class="n">with_label</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Stream</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="o">::</span><span class="n">with_label</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Stream</span>
 </pre></div>
 </div>
 </section>
@@ -62,9 +62,9 @@ different source than the stream’s own row count.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>label</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Thread&amp;</span></code>)
+<p><strong>label</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Slate&amp;</span></code>)
 The row-label axis to attach. Commonly a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind thread of string labels, but any
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> payload kind is accepted. Must match the stream’s own length.</p>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> payload kind is accepted. Must match the stream’s own length.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -75,10 +75,10 @@ axis.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Attach a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind label to a numeric stream.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">labels</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;original has_label: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">has_label</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -97,10 +97,10 @@ ptype: Note
 </pre></div>
 </div>
 <p>Example 2. A length mismatch throws immediately, before the receiver is touched.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">too_short</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">too_short</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">}));</span>
 
 <span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">with_label</span><span class="p">(</span><span class="n">too_short</span><span class="p">);</span>
@@ -137,7 +137,7 @@ show only the leading message for readability.</p></li>
 <li><p><a class="reference internal" href="with_label_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::with_label_</span></code></span></a>: the mutating in-place version of this method.</p></li>
 <li><p><a class="reference internal" href="clear_label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::clear_label</span></code></span></a>: remove a label axis instead of attaching one.</p></li>
 <li><p><a class="reference internal" href="lbl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::lbl</span></code></span></a><code class="docutils literal notranslate"><span class="pre">.set()</span></code>: the accessor-surface equivalent, accepting either a
-<code class="docutils literal notranslate"><span class="pre">Stream</span></code> or a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Stream</span></code> or a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 <li><p><a class="reference internal" href="lbl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::lbl</span></code></span></a><code class="docutils literal notranslate"><span class="pre">.align()</span></code>: reconciles length/order mismatches instead of
 rejecting them outright.</p></li>
 </ul>

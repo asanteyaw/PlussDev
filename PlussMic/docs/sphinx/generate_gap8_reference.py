@@ -18,16 +18,16 @@ METHODS = {
     "percentiles": ("points: RangeView<double> = {0.25, 0.5, 0.75}, min_count: int64 = 1", "DataFrame", "requested distribution points"),
     "most_frequent": ("drop_nulls: bool = true", "DataFrame", "all tied most-frequent values per feature"),
     "ranks": ("ties: RankTieRule = Average, nulls: RankNullRule = Keep, ascending: bool = true, percentage: bool = false", "DataFrame", "ranked numeric features"),
-    "asymmetry": ("axis: int64 = 0, min_count: int64 = 3", "Thread", "bias-corrected skewness"),
-    "tail_weight": ("axis: int64 = 0, min_count: int64 = 4", "Thread", "bias-corrected Fisher excess kurtosis"),
-    "variance": ("axis: int64 = 0, options: StatisticOptions = {}", "Thread", "variance with configurable denominator and validity"),
-    "deviation": ("axis: int64 = 0, options: StatisticOptions = {}", "Thread", "standard deviation with configurable denominator and validity"),
-    "mean_error": ("axis: int64 = 0, options: StatisticOptions = {}", "Thread", "standard error of the mean"),
+    "asymmetry": ("axis: int64 = 0, min_count: int64 = 3", "Slate", "bias-corrected skewness"),
+    "tail_weight": ("axis: int64 = 0, min_count: int64 = 4", "Slate", "bias-corrected Fisher excess kurtosis"),
+    "variance": ("axis: int64 = 0, options: StatisticOptions = {}", "Slate", "variance with configurable denominator and validity"),
+    "deviation": ("axis: int64 = 0, options: StatisticOptions = {}", "Slate", "standard deviation with configurable denominator and validity"),
+    "mean_error": ("axis: int64 = 0, options: StatisticOptions = {}", "Slate", "standard error of the mean"),
     "running_sum": ("skip_nulls: bool = true", "DataFrame", "cumulative sums"),
     "running_product": ("skip_nulls: bool = true", "DataFrame", "cumulative products"),
     "running_minimum": ("skip_nulls: bool = true", "DataFrame", "cumulative minima"),
     "running_maximum": ("skip_nulls: bool = true", "DataFrame", "cumulative maxima"),
-    "correlate_with": ("other: const DataFrame&, method: CorrMethod = Pearson, min_count: int64 = 1", "Thread", "one aligned correlation per common numeric feature"),
+    "correlate_with": ("other: const DataFrame&, method: CorrMethod = Pearson, min_count: int64 = 1", "Slate", "one aligned correlation per common numeric feature"),
     "matrix_product": ("other: const DataFrame&", "DataFrame", "matrix multiplication result"),
     "moving_sum": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving sums"),
     "moving_mean": ("window: int64, options: WindowOptions = {}", "DataFrame", "fixed-width moving means"),
@@ -241,7 +241,7 @@ def option_lines(name: str, args: str) -> list[str]:
     if "adjusted:" in args:
         lines.extend([
             "- `adjusted=true` normalizes geometric weights; `false` uses recursion.",
-            "- Recursive (`adjusted=false`) execution currently requires a non-nullable numeric Thread.",
+            "- Recursive (`adjusted=false`) execution currently requires a non-nullable numeric Slate.",
         ])
     if "bias_corrected:" in args:
         lines.append("- `bias_corrected=true` applies finite-sample correction.")

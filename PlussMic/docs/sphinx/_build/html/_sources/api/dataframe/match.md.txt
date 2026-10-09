@@ -59,13 +59,13 @@ the default `Unite` rule on both axes.
 using namespace pluss::table;
 
 auto left = DataFrame({
-    {"score", Thread(pluss::make_series({88.0, 92.0, 79.0}))},
-}, Thread(pluss::make_note({"a", "b", "c"})));
+    {"score", Slate(pluss::make_series({88.0, 92.0, 79.0}))},
+}, Slate(pluss::make_note({"a", "b", "c"})));
 
 auto right = DataFrame({
-    {"score", Thread(pluss::make_series({10.0, 20.0}))},
-    {"bonus", Thread(pluss::make_series({5.0, 8.0}))},
-}, Thread(pluss::make_note({"b", "d"})));
+    {"score", Slate(pluss::make_series({10.0, 20.0}))},
+    {"bonus", Slate(pluss::make_series({5.0, 8.0}))},
+}, Slate(pluss::make_note({"b", "d"})));
 
 std::cout << left;
 ```

@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::rolling_count
+# Timeline::TimelineIndexAccessor::rolling_count
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_count(const Duration& window) const
+pluss::Series Timeline::TimelineIndexAccessor::rolling_count(const Duration& window) const
 ```
 
 ## What It Does
@@ -77,8 +77,8 @@ data=[1, 2, 3, 4, 4]
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_sum`](rolling_sum.md)
-- [`TimelineIndexAccessor::resample_count`](resample_count.md)
+- [`Timeline::TimelineIndexAccessor::rolling_sum`](rolling_sum.md)
+- [`Timeline::TimelineIndexAccessor::resample_count`](resample_count.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_agg.html">

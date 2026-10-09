@@ -65,7 +65,7 @@ The intended end state is:
 ```text
 Public
   Timeline
-  Timeline::index() -> TimelineIndexAccessor
+  Timeline::index() -> Timeline::TimelineIndexAccessor
 
 Internal
   pluss::codeh::detail::TimeIndexEngine
@@ -84,7 +84,7 @@ Migration proceeds in compatibility-preserving stages:
 6. Decode legacy serialized `TimeIndex` values as Timeline while writing only
    the Timeline representation for new data.
 7. Remove the public TimeIndex type, factories, exports, and documentation.
-8. Move the retained implementation behind `TimelineIndexAccessor` as
+8. Move the retained implementation behind `Timeline::TimelineIndexAccessor` as
    `detail::TimeIndexEngine`.
 
 Compatibility names are transitional, not permanent aliases. The migration
@@ -105,7 +105,7 @@ Duration
 
 Removing TimeIndex therefore creates the runtime-type position needed by
 Duration without increasing the number of payload alternatives. Index status
-belongs to DataFrame/Thread axis metadata and operation contracts, not to a
+belongs to DataFrame/Slate axis metadata and operation contracts, not to a
 column's value dtype.
 
 Duration integration must define behavior throughout PlussMic rather than
@@ -145,7 +145,7 @@ The migration is complete when:
 ## Current Checkpoint
 
 The compatibility phase is active. `Timeline::index()` is public and its
-`TimelineIndexAccessor` name currently aliases the proven TimeIndex engine, so
+`Timeline::TimelineIndexAccessor` name currently aliases the proven TimeIndex engine, so
 new source and documentation use the accessor contract without duplicating
 kernels or invalidating existing TimeIndex consumers. The complete handwritten
 TimeIndex method family has moved to the `timeline-index` documentation family;
@@ -154,7 +154,7 @@ the old landing page now exists only to explain the transition.
 Duration is now a first-class payload through the initial PlussMic structural
 boundary:
 
-- `Thread`, `Stream`, `Slot`, `Registry`, and `Catalog` preserve Duration kind,
+- `Slate`, `Stream`, `Slot`, `Registry`, and `Catalog` preserve Duration kind,
   signed nanoseconds, lane order, and validity;
 - explicit casts support Duration to Int64 nanoseconds or Note text and Int64
   or exact decimal-nanosecond Note values back to Duration, while
@@ -181,7 +181,7 @@ transitional TimeIndex names from exported variants and enums, read legacy
 TimeIndex serialization as Timeline, and only then remove the compatibility
 type, factories, and old landing page.
 
-The value-kind collapse has begun at the PlussMic storage boundary. `Thread`
+The value-kind collapse has begun at the PlussMic storage boundary. `Slate`
 and `Stream` now store temporal payloads only as `Timeline`; their temporary
 TimeIndex constructors normalize immediately, and compatibility extraction
 projects through `Timeline::index(false)`. `Slot` applies the same
@@ -190,17 +190,17 @@ cannot reintroduce TimeIndex storage. `StreamKind::TimeIndex` and
 `SlotKind::TimeIndex` have been removed, and new Stream, Slot, and Catalog JSON
 emits only the Timeline representation. Their transitional TimeIndex overloads
 remain temporarily as input adapters and produce Timeline-backed values.
-`ThreadKind::TimeIndex` and its downstream switch branches remain for the next
-compiler-guided cleanup phase, although the current Thread constructors can no
+`SlateKind::TimeIndex` and its downstream switch branches remain for the next
+compiler-guided cleanup phase, although the current Slate constructors can no
 longer produce that runtime kind.
 
 The PlussMic accessor cutover is also complete. Public `.timeindex()` cast and
-axis-selection methods have been removed from Thread, DataFrame, Stream,
+axis-selection methods have been removed from Slate, DataFrame, Stream,
 Catalog, Archive, Slot, Registry, and Axel. Their Duration replacements are
 available consistently: container cast accessors expose `.duration()`, and
 DataFrame feature-axis, Catalog/Archive key-axis, and Registry/Axel field-axis
 accessors select Duration values directly. Duration-aware fill operations now
-span Stream, Catalog, Archive, Slot, Registry, DataFrame, and Thread. Remaining
+span Stream, Catalog, Archive, Slot, Registry, DataFrame, and Slate. Remaining
 TimeIndex references are compatibility constructors and scalar overloads,
-`ThreadKind`/`ThreadCastTarget` branches, legacy matrix payload alternatives,
+`SlateKind`/`SlateCastTarget` branches, legacy matrix payload alternatives,
 and CodeH index-engine option types; none is a `.timeindex()` user call form.

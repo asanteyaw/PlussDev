@@ -34,6 +34,16 @@ JoinPlan normalize_view_plan(const detail::NexusImpl& src,
 
 } // namespace
 
+std::vector<std::string> Nexus::stores() const {
+  std::vector<std::string> names;
+  names.reserve(impl_ref_().saved_views_.size());
+  for (const auto& [name, plan] : impl_ref_().saved_views_) {
+    names.push_back(name);
+  }
+  std::sort(names.begin(), names.end());
+  return names;
+}
+
 bool Nexus::has_store(std::string_view name) const {
   return impl_ref_().saved_views_.find(std::string(name)) != impl_ref_().saved_views_.end();
 }

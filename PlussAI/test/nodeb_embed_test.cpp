@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -40,6 +41,7 @@ bool run_nodeb_embed_checks(std::ostream* err = nullptr) {
   options.batch_size = 64;
   options.learning_rate = 0.05;
   options.seed = 42;
+  options.lowercase = false;
 
   Embedder embedder(options);
   const auto learn_status = embedder.learn(docs);
@@ -104,6 +106,10 @@ bool run_nodeb_embed_checks(std::ostream* err = nullptr) {
     if (err) *err << "nodeb embedder vector_of should fail for out-of-vocabulary tokens\n";
     return false;
   }
+  if (embedder.nearest("cat", -1).ok()) {
+    if (err) *err << "nodeb embedder nearest() should reject a negative result count\n";
+    return false;
+  }
 
   const auto doc_embedding = embedder.embed(docs.front());
   if (!doc_embedding.ok() || doc_embedding.value().size() != static_cast<std::size_t>(options.width)) {
@@ -133,6 +139,12 @@ bool run_nodeb_embed_checks(std::ostream* err = nullptr) {
     if (err) *err << "nodeb embedder learn() should reject an empty document set\n";
     return false;
   }
+  EmbedOptions invalid_options = options;
+  invalid_options.learning_rate = std::numeric_limits<double>::quiet_NaN();
+  if (Embedder(invalid_options).learn(docs).ok()) {
+    if (err) *err << "nodeb embedder learn() should reject a non-finite learning rate\n";
+    return false;
+  }
   if (embedder.embed(Doc{}).ok()) {
     if (err) *err << "nodeb embedder embed() should fail for a document with no in-vocabulary tokens\n";
     return false;
@@ -156,6 +168,11 @@ bool run_nodeb_embed_checks(std::ostream* err = nullptr) {
   const auto restored_cat = restored.vector_of("cat");
   if (!restored_cat.ok() || restored_cat.value() != cat.value()) {
     if (err) *err << "nodeb embedder save/load should preserve learned vectors exactly\n";
+    return false;
+  }
+  const auto uppercase_doc = tokenizer.infer("CAT DOG");
+  if (embedder.embed(uppercase_doc).ok() || restored.embed(uppercase_doc).ok()) {
+    if (err) *err << "nodeb embedder save/load should preserve lowercase=false preprocessing\n";
     return false;
   }
 

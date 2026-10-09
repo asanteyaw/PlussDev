@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_times
+# Note::NlpAccessor::mask_times
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_times() const
+Note Note::NlpAccessor::mask_times() const
 ```
 
 ## Replace Valid Clock Shapes As One Unit

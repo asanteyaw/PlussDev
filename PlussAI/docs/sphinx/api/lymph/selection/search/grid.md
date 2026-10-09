@@ -116,7 +116,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -128,7 +128,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame frame({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x1", "x2"};
@@ -187,7 +187,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -199,7 +199,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame frame({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x1", "x2"};
@@ -268,7 +268,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -280,7 +280,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame frame({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x1", "x2"};
@@ -339,7 +339,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -351,7 +351,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame frame({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x1", "x2"};

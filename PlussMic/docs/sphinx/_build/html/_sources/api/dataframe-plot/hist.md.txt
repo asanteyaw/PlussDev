@@ -90,8 +90,8 @@ Example 1. A single named feature, default bin count.
 using namespace pluss::table;
 
 auto exams = DataFrame({
-    {"midterm", Thread(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0, 74.0, 90.0}))},
-    {"final",   Thread(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0, 78.0, 88.0}))},
+    {"midterm", Slate(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0, 74.0, 90.0}))},
+    {"final",   Slate(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0, 78.0, 88.0}))},
 });
 
 auto chart = exams.plot().hist("midterm");

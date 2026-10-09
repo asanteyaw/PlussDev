@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_hashtags
+# Note::NlpAccessor::mask_hashtags
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_hashtags() const
+Note Note::NlpAccessor::mask_hashtags() const
 ```
 
 ## Retain The Tag Role, Remove The Tag Value

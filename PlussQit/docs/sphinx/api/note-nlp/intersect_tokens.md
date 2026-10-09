@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::intersect_tokens
+# Note::NlpAccessor::intersect_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::intersect_tokens(const Note& other) const
+TokenBatch Note::NlpAccessor::intersect_tokens(const Note& other) const
 ```
 
 ## Shared Words Between Two Notes
@@ -52,9 +52,9 @@ same [`numel`](../note/numel.md), or one may be a **scalar**
 scoring members, `intersect_tokens` always returns a flat `TokenBatch`, not a
 shaped `Note`. Rejections raise `pluss::Error`:
 
-- either side in bytes mode → `NoteNlpAccessor::intersect_tokens requires a UTF-8 text
+- either side in bytes mode → `Note::NlpAccessor::intersect_tokens requires a UTF-8 text
   Note (lhs is bytes)` (or `rhs is bytes`).
-- unequal `numel` with neither side a scalar → `NoteNlpAccessor::intersect_tokens
+- unequal `numel` with neither side a scalar → `Note::NlpAccessor::intersect_tokens
   expects equal numel or scalar broadcast`.
 
 ## Example 1: Shared Words, Per Cell
@@ -143,10 +143,10 @@ offsets: [0, 0]
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_tokens`](jaccard_tokens.md) /
-  [`NoteNlpAccessor::overlap_tokens`](overlap_tokens.md): score the same word sets.
-- [`NoteNlpAccessor::intersect_terms`](intersect_terms.md): the content-word set.
-- [`NoteNlpAccessor::tokens`](tokens.md): the word tokenizer and the
+- [`Note::NlpAccessor::jaccard_tokens`](jaccard_tokens.md) /
+  [`Note::NlpAccessor::overlap_tokens`](overlap_tokens.md): score the same word sets.
+- [`Note::NlpAccessor::intersect_terms`](intersect_terms.md): the content-word set.
+- [`Note::NlpAccessor::tokens`](tokens.md): the word tokenizer and the
   `TokenBatch` shape.
 
 <div class="pluss-inline-prev-next">

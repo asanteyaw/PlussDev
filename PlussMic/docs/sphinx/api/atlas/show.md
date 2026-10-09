@@ -48,9 +48,9 @@ form, per the important callout above.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
 });
-auto atlas = pluss::table::Atlas({f0}, pluss::table::Thread(pluss::make_note({"jan"})));
+auto atlas = pluss::table::Atlas({f0}, pluss::table::Slate(pluss::make_note({"jan"})));
 
 atlas.show(std::cout);
 ```
@@ -74,7 +74,7 @@ Example 2. Capture into an `std::ostringstream`; confirm it's one byte longer th
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 

@@ -30,15 +30,34 @@ learnable weight.
 
 ## How To Call It
 
+Build a two-layer network with a ReLU between the layers, then run a batch of two rows through it. The program prints the logit shape.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::Schedule net;
-net.append("fc1", nn::Fusion(784, 128));
-net.append("act1", nn::ReLU());
-net.append("fc2", nn::Fusion(128, 10));
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-const Series logits = net.forward(x);
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::Schedule net;
+  net.append("fc1", nn::Fusion(784, 128));
+  net.append("act1", nn::ReLU());
+  net.append("fc2", nn::Fusion(128, 10));
+  const pluss::Series x = pluss::make_series(std::vector<double>(2 * 784, 0.5), {2, 784});
+  const pluss::Series logits = net.forward(x);
+  std::cout << "logits = " << logits.sizes()[0] << " x " << logits.sizes()[1] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+logits = 2 x 10
 ```
 
 Every type here is added into a [`Schedule`](module/Schedule.md) the same

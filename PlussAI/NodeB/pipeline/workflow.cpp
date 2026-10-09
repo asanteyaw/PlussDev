@@ -13,13 +13,13 @@ void validate_training_docs(const std::vector<Doc>& docs,
   PLUSS_CALL_GUARD();
   if (docs.empty()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::learn: expected at least one document.");
+        "nlp::Workflow::learn: expected at least one document.");
   }
   if (!options.allow_empty_docs) {
     for (const auto& doc : docs) {
       if (doc.text.empty()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::Workflow::learn: empty document encountered while allow_empty_docs=false.");
+            "nlp::Workflow::learn: empty document encountered while allow_empty_docs=false.");
       }
     }
   }
@@ -32,7 +32,7 @@ void validate_labeled_training_docs(const std::vector<Doc>& docs,
   validate_training_docs(docs, options);
   if (labels.size() != docs.size()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::learn: label count must match document count.");
+        "nlp::Workflow::learn: label count must match document count.");
   }
 }
 
@@ -55,7 +55,7 @@ WorkflowReport make_report(const std::vector<Doc>& docs,
     for (const auto& doc : docs) {
       if (!doc.text.empty() && doc.sentences.empty()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::Workflow::assess: sentence spans required but missing from one or more docs.");
+            "nlp::Workflow::assess: sentence spans required but missing from one or more docs.");
       }
     }
   }
@@ -68,7 +68,7 @@ Workflow& Workflow::append_stage(Stage stage) {
   PLUSS_CALL_GUARD();
   if (!stage) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::append_stage: stage cannot be null.");
+        "nlp::Workflow::append_stage: stage cannot be null.");
   }
   stages.push_back(std::move(stage));
   return *this;
@@ -104,7 +104,7 @@ Workflow& Workflow::learn(const std::vector<Doc>& docs,
   for (const auto& stage : stages) {
     if (!stage) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::Workflow::learn: encountered null stage.");
+          "nlp::Workflow::learn: encountered null stage.");
     }
     stage->learn(docs, options);
   }
@@ -164,7 +164,7 @@ Workflow& Workflow::learn(const std::vector<Doc>& docs,
   for (const auto& stage : stages) {
     if (!stage) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::Workflow::learn: encountered null stage.");
+          "nlp::Workflow::learn: encountered null stage.");
     }
     stage->learn(docs, labels, options);
   }
@@ -179,7 +179,7 @@ Doc Workflow::infer(std::string_view text) const {
   for (const auto& stage : stages) {
     if (!stage) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::Workflow::infer: encountered null stage.");
+          "nlp::Workflow::infer: encountered null stage.");
     }
     stage->apply(doc);
   }
@@ -244,17 +244,17 @@ void Workflow::save(std::string_view filepath) const {
   PLUSS_CALL_GUARD();
   if (filepath.empty()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::save: output path cannot be empty.");
+        "nlp::Workflow::save: output path cannot be empty.");
   }
   std::ofstream out{std::string(filepath)};
   if (!out.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::save: failed to open '" + std::string(filepath) + "'.");
+        "nlp::Workflow::save: failed to open '" + std::string(filepath) + "'.");
   }
   io::write_workflow(out, *this);
   if (!out.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::save: failed while writing '" + std::string(filepath) + "'.");
+        "nlp::Workflow::save: failed while writing '" + std::string(filepath) + "'.");
   }
 }
 
@@ -262,12 +262,12 @@ Workflow Workflow::load(std::string_view filepath) {
   PLUSS_CALL_GUARD();
   if (filepath.empty()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::load: input path cannot be empty.");
+        "nlp::Workflow::load: input path cannot be empty.");
   }
   std::ifstream in{std::string(filepath)};
   if (!in.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::Workflow::load: failed to open '" + std::string(filepath) + "'.");
+        "nlp::Workflow::load: failed to open '" + std::string(filepath) + "'.");
   }
   return io::read_workflow(in);
 }

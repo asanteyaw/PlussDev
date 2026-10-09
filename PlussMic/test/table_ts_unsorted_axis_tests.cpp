@@ -19,7 +19,7 @@
 namespace {
 
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using pluss::table::TsAlignMode;
 using pluss::table::TsOptions;
 
@@ -56,26 +56,26 @@ pluss::Timeline make_timeline(std::span<const std::string_view> iso) {
 }
 
 // 2024-01-03, 2024-01-01, 2024-01-02 -- out of order.
-Thread unsorted_axis() {
+Slate unsorted_axis() {
   const std::array<std::string_view, 3> iso{
       "2024-01-03T00:00:00Z",
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
   };
-  return Thread(make_timeline(std::span<const std::string_view>(iso.data(), iso.size())));
+  return Slate(make_timeline(std::span<const std::string_view>(iso.data(), iso.size())));
 }
 
-Thread sorted_axis() {
+Slate sorted_axis() {
   const std::array<std::string_view, 3> iso{
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-03T00:00:00Z",
   };
-  return Thread(make_timeline(std::span<const std::string_view>(iso.data(), iso.size())));
+  return Slate(make_timeline(std::span<const std::string_view>(iso.data(), iso.size())));
 }
 
-Thread values_1_2_3() {
-  return Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}));
+Slate values_1_2_3() {
+  return Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}));
 }
 
 void test_align_to_ordered_modes_reject_unsorted_axis() {
@@ -151,7 +151,7 @@ void test_core_index_guards_ordered_kernels() {
          "the validated state must remain reusable across ordered kernels");
 }
 
-void test_thread_resample_rejects_unsorted_axis() {
+void test_slate_resample_rejects_unsorted_axis() {
   const auto values = values_1_2_3();
   const auto unsorted = unsorted_axis();
 
@@ -168,7 +168,7 @@ void test_thread_resample_rejects_unsorted_axis() {
       "TimeSeriesResampler::mean (via resample_bins) must reject an unsorted axis");
 }
 
-void test_thread_resampler_terminal_ops_reject_unsorted_axis() {
+void test_slate_resampler_terminal_ops_reject_unsorted_axis() {
   const auto values = values_1_2_3();
   const auto unsorted = unsorted_axis();
 
@@ -222,8 +222,8 @@ int main() {
     test_align_to_ordered_modes_reject_unsorted_axis();
     test_align_to_exact_mode_tolerates_unsorted_axis();
     test_core_index_guards_ordered_kernels();
-    test_thread_resample_rejects_unsorted_axis();
-    test_thread_resampler_terminal_ops_reject_unsorted_axis();
+    test_slate_resample_rejects_unsorted_axis();
+    test_slate_resampler_terminal_ops_reject_unsorted_axis();
     test_dataframe_resample_rejects_unsorted_axis();
     test_dataframe_resample_accepts_sorted_axis();
     std::cout << "table_ts_unsorted_axis_tests passed\n";

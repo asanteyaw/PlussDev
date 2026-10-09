@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b8e499be1826 -->
+<!-- pluss-signature-hash: d635fe11a708 -->
 
 # DataFrame::csmin
 
@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-DataFrame::csmin(Axis axis = Axis::Case, bool skipnull = true) const -> Thread
+DataFrame::csmin(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
 ```
 
 ## What It Does
 
 Reports *where* each numeric feature's minimum value occurs, not the minimum value
 itself — the argmin-style companion to [`min()`](min.md), and the mirror of
-[`csmax()`](csmax.md). The returned `Thread` always holds label strings (case labels or
+[`csmax()`](csmax.md). The returned `Slate` always holds label strings (case labels or
 feature names), never numeric values, so it always prints with `ptype: Note`.
 
 ## Parameters
@@ -36,7 +36,7 @@ Missing-value policy while searching for the minimum.
 
 ## Returns
 
-`Thread`
+`Slate`
     A `Note`-typed label thread: case labels (`Axis::Case`) or feature names
     (`Axis::Feature`), one per participating numeric feature or case respectively.
 

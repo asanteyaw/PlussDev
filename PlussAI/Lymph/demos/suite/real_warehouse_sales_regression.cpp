@@ -17,21 +17,21 @@ int main() {
   enc.max_categories = 64;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"YEAR", "MONTH", "SUPPLIER", "ITEM TYPE", "RETAIL SALES", "RETAIL TRANSFERS"})
       .label("WAREHOUSE SALES")
       .note(lymph::DataNotePolicy::Factorize);
 
   lymph::Workflow wf = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
-          lymph::workflow::branch("time", {"YEAR", "MONTH"}, {{"scale", lymph::stage::standard_scaler()}}),
-          lymph::workflow::branch("cat", {"SUPPLIER", "ITEM TYPE"}, {{"encode", lymph::stage::one_hot_encoder(enc)}}),
+          lymph::workflow::branch("time", {"YEAR", "MONTH"}, {{"scale", lymph::prep::stage::standard_scaler()}}),
+          lymph::workflow::branch("cat", {"SUPPLIER", "ITEM TYPE"}, {{"encode", lymph::prep::stage::one_hot_encoder(enc)}}),
           lymph::workflow::branch("sales", {"RETAIL SALES", "RETAIL TRANSFERS"}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"scale", lymph::stage::standard_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::random_forest_regressor({.learners = 60, .subsample = 0.8}));
+      lymph::models::random_forest_regressor({.learners = 60, .subsample = 0.8}));
 
   wf.learn_(data);
   std::cout << "warehouse rmse: " << wf.assess(data).rmse.item<double>() << "\n";

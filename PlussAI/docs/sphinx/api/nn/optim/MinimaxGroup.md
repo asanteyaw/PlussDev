@@ -118,8 +118,10 @@ int main() {
   for (int step = 0; step < 60; ++step) {
     minimax.step(std::vector<Series>{x_adam.sub(target), x_sgd.sub(target)});
   }
-  std::cout << "Adam-driven group: x = " << x_adam.item<float>() << "\n";
-  std::cout << "SGD-driven group:  x = " << x_sgd.item<float>() << "\n";
+  const float adam_objective = x_adam.sub(target).square().mul(0.5).item<float>();
+  const float sgd_objective = x_sgd.sub(target).square().mul(0.5).item<float>();
+  std::cout << "Adam-driven group: objective = " << adam_objective << ", x = " << x_adam.item<float>() << "\n";
+  std::cout << "SGD-driven group:  objective = " << sgd_objective << ", x = " << x_sgd.item<float>() << "\n";
 
   return 0;
 }
@@ -128,8 +130,8 @@ int main() {
 Output
 
 ```text
-Adam-driven group: x = 2.97
-SGD-driven group:  x = 2.7866
+Adam-driven group: objective = 2.06044, x = 2.97
+SGD-driven group:  objective = 2.44957, x = 2.7866
 ```
 
 ## Changelog

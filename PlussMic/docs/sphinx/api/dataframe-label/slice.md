@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 15af103f92ba -->
+<!-- pluss-signature-hash: 8814d23d8610 -->
 
 # DataFrameLabelAccessor::slice
 
@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const -> Thread
-DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const -> Thread
+DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const -> Slate
+DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const -> Slate
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ Two different slicing conventions:
   both ends. If either value never occurs, or `start`'s position ends up after
   `stop`'s, it throws.
 
-Both overloads return the sliced case-label **values** as a bare `Thread` —
+Both overloads return the sliced case-label **values** as a bare `Slate` —
 not a filtered `DataFrame`.
 
 ## Parameters
@@ -40,7 +40,7 @@ occurrence through `stop`'s **last** occurrence, inclusive.
 
 ## Returns
 
-`Thread`
+`Slate`
     The sliced case-label values, plain default integer index.
 
 ## Examples
@@ -51,8 +51,8 @@ Example 1. Positional slice — exclusive of `stop`.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().slice(1, 3);
@@ -121,9 +121,9 @@ try {
 ### Output
 
 ```text
-Thread::label().slice: start label not found
-Thread::label().slice: stop label not found
-Thread::label().slice: start label occurs after stop label
+Slate::label().slice: start label not found
+Slate::label().slice: stop label not found
+Slate::label().slice: start label occurs after stop label
 ```
 
 `"missing"` never occurs as either bound, so each throws its own not-found

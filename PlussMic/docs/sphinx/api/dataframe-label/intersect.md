@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: a6e6b7ffd2f0 -->
+<!-- pluss-signature-hash: 370efc02a533 -->
 
 # DataFrameLabelAccessor::intersect
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::intersect(const Thread& other) const -> Thread
+DataFrameLabelAccessor::intersect(const Slate& other) const -> Slate
 ```
 
 ## What It Does
@@ -19,13 +19,13 @@ first-occurrence order.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
 
 The values to intersect with.
 
 ## Returns
 
-`Thread`
+`Slate`
     The distinct case-label values also found in `other`, in first-occurrence
     order, `display_name` `"intersect"`.
 
@@ -37,11 +37,11 @@ Example 1. Intersect case labels with a repeat against a target set.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
-auto other = Thread(pluss::make_note({"west", "south", "north"}));
+auto other = Slate(pluss::make_note({"west", "south", "north"}));
 auto out = labeled.label().intersect(other);
 std::cout << out;
 ```

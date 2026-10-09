@@ -519,7 +519,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const FeatureBatch features{.x = x, .layout = ObservationLayout::Rows};
     const LabeledBatch batch{.features = features, .y = y};
 
-    auto nu_model = pluss::ai::lymph::kernel_factory::nu_svm_classifier(KernelFamilyOptions{
+    auto nu_model = pluss::ai::lymph::models::kernel::nu_svm_classifier(KernelFamilyOptions{
         .kernel = KernelKind::Rbf,
         .c = 25.0,
         .gamma = 1.0,
@@ -531,7 +531,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto one_class = pluss::ai::lymph::kernel_factory::one_class_svm(KernelFamilyOptions{
+    auto one_class = pluss::ai::lymph::models::kernel::one_class_svm(KernelFamilyOptions{
         .kernel = KernelKind::Rbf,
         .gamma = 0.8,
         .nu = 0.5,
@@ -546,7 +546,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto bernoulli = pluss::ai::lymph::bayes_factory::bernoulli_nb_classifier(BayesFamilyOptions{
+    auto bernoulli = pluss::ai::lymph::models::bayes::bernoulli_nb_classifier(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(batch);
     const auto bernoulli_pred = bernoulli.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
@@ -555,7 +555,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto multinomial = pluss::ai::lymph::bayes_factory::multinomial_nb_classifier(BayesFamilyOptions{
+    auto multinomial = pluss::ai::lymph::models::bayes::multinomial_nb_classifier(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(LabeledBatch{
         .features = FeatureBatch{
@@ -573,7 +573,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto complement = pluss::ai::lymph::bayes_factory::complement_nb_classifier(BayesFamilyOptions{
+    auto complement = pluss::ai::lymph::models::bayes::complement_nb_classifier(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(LabeledBatch{
         .features = FeatureBatch{
@@ -602,7 +602,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
     const Series yr = pluss::make_series(std::vector<double>{-1.0, -0.5, 0.0, 0.5, 1.0}, {5}, f64());
     const FeatureBatch regression_features{.x = xr, .layout = ObservationLayout::Rows};
     const LabeledBatch regression_batch{.features = regression_features, .y = yr};
-    auto nu_reg = pluss::ai::lymph::kernel_factory::nu_svm_regressor(KernelFamilyOptions{
+    auto nu_reg = pluss::ai::lymph::models::kernel::nu_svm_regressor(KernelFamilyOptions{
         .kernel = KernelKind::Rbf,
         .c = 100.0,
         .gamma = 0.7,
@@ -615,7 +615,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto bernoulli_reg = pluss::ai::lymph::bayes_factory::bernoulli_nb_regressor(BayesFamilyOptions{
+    auto bernoulli_reg = pluss::ai::lymph::models::bayes::bernoulli_nb_regressor(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(batch, TrainOptions{.max_iterations = 100, .tolerance = 1e-5});
     const auto bernoulli_reg_pred = bernoulli_reg.infer(features).to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
@@ -637,7 +637,7 @@ bool run_nodej_bayes_kernel_checks(std::ostream* err = nullptr) {
         },
         .y = pluss::make_series(std::vector<double>{1.0, 2.0, 6.0, 7.0}, {4}, f64()),
     };
-    auto multinomial_reg = pluss::ai::lymph::bayes_factory::multinomial_nb_regressor(BayesFamilyOptions{
+    auto multinomial_reg = pluss::ai::lymph::models::bayes::multinomial_nb_regressor(BayesFamilyOptions{
         .smoothing = 1e-6,
     }).learn(count_regression_batch);
     const auto multinomial_reg_pred = multinomial_reg.infer(FeatureBatch{

@@ -76,9 +76,9 @@ Example 1. Rename two specific features, leaving the rest alone.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103}))},
-    {"sales",    Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
+    {"sales",    Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 auto out = df.rename({{"sales", "revenue"}, {"city", "location"}});

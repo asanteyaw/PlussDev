@@ -22,7 +22,7 @@ already-existing `DataFrame` calls chained together (a `filter()` followed by an
 `insert()`, say) and you want that whole sequence to read as one step in a larger
 pipeline, rather than assigning it to an intermediate variable.
 
-[`fold()`](fold.md) is the equivalent hook for reducing a frame down to a `Thread`
+[`fold()`](fold.md) is the equivalent hook for reducing a frame down to a `Slate`
 instead of transforming it into another frame — the two share the same "run an
 arbitrary callback against the current frame" idea, just with a different return type
 and (for `fold()`) an optional result-shape check.
@@ -49,9 +49,9 @@ Example 1. Chain a filter and a computed column into one inline step.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"units",      Thread(pluss::make_series({2, 5, 1}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0}))},
-}, Thread(pluss::make_note({"o1", "o2", "o3"})));
+    {"units",      Slate(pluss::make_series({2, 5, 1}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0}))},
+}, Slate(pluss::make_note({"o1", "o2", "o3"})));
 std::cout << orders;
 ```
 
@@ -107,7 +107,7 @@ get a new `revenue` column (`units * unit_price`) appended — all expressed as 
 
 ## See Also
 
-- [`DataFrame::fold`](fold.md): the equivalent hook for reducing to a `Thread` instead
+- [`DataFrame::fold`](fold.md): the equivalent hook for reducing to a `Slate` instead
   of transforming into another `DataFrame`.
 - [`DataFrame::transform`](transform.md): apply a function per-feature or per-value
   across the frame, for simpler cases that don't need a whole custom pipeline.

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 083a99d76532 -->
+<!-- pluss-signature-hash: 703b2322c955 -->
 
 # DataFrame::le
 
@@ -12,15 +12,15 @@ DataFrame::le(double other) const -> DataFrame
 DataFrame::le(std::string_view other) const -> DataFrame
 DataFrame::le(const DataFrame& other) const -> DataFrame
 DataFrame::le(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::le(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::le(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::le(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::le(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::le(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::le(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
 The ordering relation "less than or equal to", returning a boolean-valued frame the
-same shape as the source. `le()` shares the same scalar/string/`DataFrame`/`Thread`
+same shape as the source. `le()` shares the same scalar/string/`DataFrame`/`Slate`
 operand shapes as [`eq()`](eq.md) — see `eq()`'s "What It Does" for the full
 explanation.
 
@@ -36,10 +36,10 @@ call site, use [`lt()`](lt.md) directly instead.
 **other**
 
 The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
-`const DataFrame&`, or `const Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for
+`const DataFrame&`, or `const Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for
 the full breakdown.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -145,11 +145,11 @@ Only `s3`'s `quiz` fails: `scores`'s `84` is not `<=` `changed`'s `83`. Every eq
 cell (all of `final`, and `quiz` at `s1`/`s2`) reports `true`, since equality
 satisfies `<=`.
 
-Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+Example 4. Compare against a `Slate` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
+auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
 auto out_thread = scores.le(thresholds);
 std::cout << out_thread;
 ```

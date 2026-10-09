@@ -11,13 +11,13 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"code",  Thread(pluss::make_series({10., 20., 30., 40., 10., 30.}, {6}, f64))},
-      {"spend", Thread(pluss::make_series({1., 2., 3., 4., 5., 6.}, {6}, f64))},
+      {"code",  Slate(pluss::make_series({10., 20., 30., 40., 10., 30.}, {6}, f64))},
+      {"spend", Slate(pluss::make_series({1., 2., 3., 4., 5., 6.}, {6}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"code", "spend"}).feature_batch();

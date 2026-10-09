@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::to_markdown
+# Note::TexAccessor::to_markdown
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-Note NoteTexAccessor::to_markdown() const
-Note NoteTexAccessor::to_markdown(std::int64_t mode) const
+Note Note::TexAccessor::to_markdown() const
+Note Note::TexAccessor::to_markdown(std::int64_t mode) const
 ```
 
 ## Convert A Recognized TeX Subset To Markdown

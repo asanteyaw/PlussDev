@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>SeriesLinearAlgAccessor::cholesky_inverse &#8212; PlussQit  documentation</title>
+    <title>Series::LinearAlgAccessor::cholesky_inverse &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="SeriesLinearAlgAccessor::cholesky_solve" href="cholesky_solve.html" />
-    <link rel="prev" title="SeriesLinearAlgAccessor::cholesky" href="cholesky.html" />
+    <link rel="next" title="Series::LinearAlgAccessor::cholesky_solve" href="cholesky_solve.html" />
+    <link rel="prev" title="Series::LinearAlgAccessor::cholesky" href="cholesky.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -37,12 +37,12 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<section id="serieslinearalgaccessor-cholesky-inverse">
-<h1>SeriesLinearAlgAccessor::cholesky_inverse<a class="headerlink" href="#serieslinearalgaccessor-cholesky-inverse" title="Link to this heading">¶</a></h1>
-<p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">Back to SeriesLinearAlgAccessor API Reference</span></a></p>
+<section id="series-linearalgaccessor-cholesky-inverse">
+<h1>Series::LinearAlgAccessor::cholesky_inverse<a class="headerlink" href="#series-linearalgaccessor-cholesky-inverse" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../series_linearalg_accessor_api_reference.html"><span class="std std-doc">Back to Series::LinearAlgAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">SeriesLinearAlgAccessor</span><span class="o">::</span><span class="n">cholesky_inverse</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">LinearAlgAccessor</span><span class="o">::</span><span class="n">cholesky_inverse</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">Series</span><span class="w"> </span><span class="n">SeriesLinearAlgProxy</span><span class="o">::</span><span class="n">cholesky_inverse</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
@@ -146,7 +146,6 @@ the inverse identity.</p>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -154,8 +153,8 @@ the inverse identity.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -165,9 +164,9 @@ the inverse identity.</p>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../series_api_reference.html">Series API Reference</a><ul>
-  <li><a href="../../series_linearalg_accessor_api_reference.html">SeriesLinearAlgAccessor API Reference</a><ul>
-      <li>Previous: <a href="cholesky.html" title="previous chapter">SeriesLinearAlgAccessor::cholesky</a></li>
-      <li>Next: <a href="cholesky_solve.html" title="next chapter">SeriesLinearAlgAccessor::cholesky_solve</a></li>
+  <li><a href="../../series_linearalg_accessor_api_reference.html">Series::LinearAlgAccessor API Reference</a><ul>
+      <li>Previous: <a href="cholesky.html" title="previous chapter">Series::LinearAlgAccessor::cholesky</a></li>
+      <li>Next: <a href="cholesky_solve.html" title="next chapter">Series::LinearAlgAccessor::cholesky_solve</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

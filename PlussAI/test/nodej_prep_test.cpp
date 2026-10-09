@@ -20,7 +20,7 @@ using pluss::ai::nodej::FeatureBatch;
 using pluss::ai::nodej::InferOptions;
 using pluss::ai::nodej::ObservationLayout;
 using pluss::ai::nodej::UnknownCategoryPolicy;
-using pluss::table::Thread;
+using pluss::table::Slate;
 namespace prep = pluss::ai::nodej::prep;
 
 Config f64() {
@@ -507,16 +507,16 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
   }
 
   {
-    const Thread category(pluss::make_note({"red", "blue", "red", "green"}));
+    const Slate category(pluss::make_note({"red", "blue", "red", "green"}));
     prep::OneHotEncoder enc;
     auto out_or = enc.learn_map(category);
     if (!out_or.ok()) {
-      if (err) *err << "OneHotEncoder Thread learn_map should succeed for single categorical feature\n";
+      if (err) *err << "OneHotEncoder Slate learn_map should succeed for single categorical feature\n";
       return false;
     }
     const auto sizes = out_or.value().sizes();
     if (sizes.size() != 2 || sizes[0] != 4 || sizes[1] != 4) {
-      if (err) *err << "OneHotEncoder Thread output should be [n_samples, encoded_width]\n";
+      if (err) *err << "OneHotEncoder Slate output should be [n_samples, encoded_width]\n";
       return false;
     }
 
@@ -524,14 +524,14 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
     double row0_sum = 0.0;
     for (std::int64_t j = 0; j < sizes[1]; ++j) row0_sum += out[static_cast<std::size_t>(j)];
     if (!approx(row0_sum, 1.0)) {
-      if (err) *err << "OneHotEncoder Thread should emit one active category per row\n";
+      if (err) *err << "OneHotEncoder Slate should emit one active category per row\n";
       return false;
     }
 
-    const Thread unknown(pluss::make_note({"red", "yellow"}));
+    const Slate unknown(pluss::make_note({"red", "yellow"}));
     auto err_or = enc.map(unknown);
     if (err_or.ok()) {
-      if (err) *err << "OneHotEncoder Thread default unknown policy should error\n";
+      if (err) *err << "OneHotEncoder Slate default unknown policy should error\n";
       return false;
     }
 
@@ -539,12 +539,12 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
     infer_opts.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
     auto missing_or = enc.map(unknown, infer_opts);
     if (!missing_or.ok()) {
-      if (err) *err << "OneHotEncoder Thread should support unknown MissingBucket policy\n";
+      if (err) *err << "OneHotEncoder Slate should support unknown MissingBucket policy\n";
       return false;
     }
     const auto missing = vec_f64(missing_or.value());
     if (missing.size() != 8 || !approx(missing[7], 1.0)) {
-      if (err) *err << "OneHotEncoder Thread unknown category should activate unknown bucket\n";
+      if (err) *err << "OneHotEncoder Slate unknown category should activate unknown bucket\n";
       return false;
     }
   }
@@ -599,7 +599,7 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
   }
 
   {
-    const Thread category(pluss::make_note({"red", "blue", "red", "green"}));
+    const Slate category(pluss::make_note({"red", "blue", "red", "green"}));
     prep::FrequencyEncoder enc(prep::FrequencyEncoderOptions{
         .max_categories = 16,
         .overflow = prep::CategoryOverflowPolicy::KeepMostFrequent,
@@ -607,20 +607,20 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
     });
     auto out_or = enc.learn_map(category);
     if (!out_or.ok()) {
-      if (err) *err << "FrequencyEncoder Thread learn_map should succeed\n";
+      if (err) *err << "FrequencyEncoder Slate learn_map should succeed\n";
       return false;
     }
     const auto out = vec_f64(out_or.value());
     if (out.size() != 4 || !approx(out[0], 0.5) || !approx(out[1], 0.25) || !approx(out[2], 0.5)
         || !approx(out[3], 0.25)) {
-      if (err) *err << "FrequencyEncoder Thread should map note categories to learned frequencies\n";
+      if (err) *err << "FrequencyEncoder Slate should map note categories to learned frequencies\n";
       return false;
     }
 
-    const Thread unknown(pluss::make_note({"red", "yellow"}));
+    const Slate unknown(pluss::make_note({"red", "yellow"}));
     auto err_or = enc.map(unknown);
     if (err_or.ok()) {
-      if (err) *err << "FrequencyEncoder Thread default unknown policy should error\n";
+      if (err) *err << "FrequencyEncoder Slate default unknown policy should error\n";
       return false;
     }
 
@@ -628,12 +628,12 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
     infer_opts.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
     auto miss_or = enc.map(unknown, infer_opts);
     if (!miss_or.ok()) {
-      if (err) *err << "FrequencyEncoder Thread should support unknown MissingBucket policy\n";
+      if (err) *err << "FrequencyEncoder Slate should support unknown MissingBucket policy\n";
       return false;
     }
     const auto miss = vec_f64(miss_or.value());
     if (miss.size() != 2 || !approx(miss[0], 0.5) || !approx(miss[1], 0.2)) {
-      if (err) *err << "FrequencyEncoder Thread should use unknown_frequency for unseen categories\n";
+      if (err) *err << "FrequencyEncoder Slate should use unknown_frequency for unseen categories\n";
       return false;
     }
   }
@@ -693,7 +693,7 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
   }
 
   {
-    const Thread category(pluss::make_note({"red", "blue", "red", "green"}));
+    const Slate category(pluss::make_note({"red", "blue", "red", "green"}));
     prep::LabelEncoder enc(prep::LabelEncoderOptions{
         .max_categories = 16,
         .overflow = prep::CategoryOverflowPolicy::KeepMostFrequent,
@@ -702,7 +702,7 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
     });
     auto out_or = enc.learn_map(category);
     if (!out_or.ok()) {
-      if (err) *err << "LabelEncoder Thread learn_map should succeed\n";
+      if (err) *err << "LabelEncoder Slate learn_map should succeed\n";
       return false;
     }
     const auto out = vec_f64(out_or.value());
@@ -711,22 +711,22 @@ bool run_nodej_prep_checks(std::ostream* err = nullptr) {
       return false;
     }
 
-    auto err_or = enc.map(Thread(pluss::make_note({"yellow"})));
+    auto err_or = enc.map(Slate(pluss::make_note({"yellow"})));
     if (err_or.ok()) {
-      if (err) *err << "LabelEncoder Thread default unknown policy should error\n";
+      if (err) *err << "LabelEncoder Slate default unknown policy should error\n";
       return false;
     }
 
     InferOptions infer_opts{};
     infer_opts.unknown_categorical = UnknownCategoryPolicy::MissingBucket;
-    auto miss_or = enc.map(Thread(pluss::make_note({"yellow"})), infer_opts);
+    auto miss_or = enc.map(Slate(pluss::make_note({"yellow"})), infer_opts);
     if (!miss_or.ok()) {
-      if (err) *err << "LabelEncoder Thread should support unknown MissingBucket policy\n";
+      if (err) *err << "LabelEncoder Slate should support unknown MissingBucket policy\n";
       return false;
     }
     const auto miss = vec_f64(miss_or.value());
     if (miss.size() != 1 || !approx(miss[0], 3.0)) {
-      if (err) *err << "LabelEncoder Thread unknown category should map to unknown label index\n";
+      if (err) *err << "LabelEncoder Slate unknown category should map to unknown label index\n";
       return false;
     }
   }

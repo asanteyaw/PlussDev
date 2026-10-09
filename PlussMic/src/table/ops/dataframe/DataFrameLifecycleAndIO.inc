@@ -1,12 +1,12 @@
-ColumnRef::ColumnRef(std::string name, Thread column)
+ColumnRef::ColumnRef(std::string name, Slate column)
     : name_(std::move(name)), column_(std::move(column)) {}
 
 const std::string& ColumnRef::name() const noexcept { return name_; }
-const Thread& ColumnRef::thread() const noexcept { return column_; }
+const Slate& ColumnRef::slate() const noexcept { return column_; }
 pluss::Series ColumnRef::mean() const { return column_.mean(); }
-Thread ColumnRef::head(std::int64_t n) const { return column_.head(n, false); }
-ThreadValue ColumnRef::value() const { return column_.value(); }
-Thread ColumnRef::values() const { return column_; }
+Slate ColumnRef::head(std::int64_t n) const { return column_.head(n, false); }
+SlateValue ColumnRef::value() const { return column_.value(); }
+Slate ColumnRef::values() const { return column_; }
 
 DataFrame::LetSlot::LetSlot(DataFrame& owner, std::string name, AlignOptions options)
     : owner_(&owner), name_(std::move(name)), options_(options) {
@@ -14,33 +14,33 @@ DataFrame::LetSlot::LetSlot(DataFrame& owner, std::string name, AlignOptions opt
   PLUSS_CHECK(!name_.empty(), "DataFrame::set: feature name cannot be empty");
 }
 
-DataFrame::LetSlot& DataFrame::LetSlot::operator=(const Thread& value) {
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const Slate& value) {
   set_prepared_feature_(
       owner_->mut_impl_(),
       name_,
-      prepare_feature_assignment_(owner_->impl_ref_(), value, "DataFrame::set(name)=Thread", options_));
+      prepare_feature_assignment_(owner_->impl_ref_(), value, "DataFrame::set(name)=Slate", options_));
   return *this;
 }
 
-DataFrame::LetSlot& DataFrame::LetSlot::operator=(const ThreadValue& value) {
+DataFrame::LetSlot& DataFrame::LetSlot::operator=(const SlateValue& value) {
   const auto& src = owner_->impl_ref_();
   set_prepared_feature_(
       owner_->mut_impl_(),
       name_,
       (src.columns_.empty() && src.nrows_ == 0)
-          ? clear_assignment_metadata_(value.thread())
-          : broadcast_assignment_thread_(
-                value.thread(), src.nrows_,
-                "DataFrame::set(name)=ThreadValue"));
+          ? clear_assignment_metadata_(value.slate())
+          : broadcast_assignment_slate_(
+                value.slate(), src.nrows_,
+                "DataFrame::set(name)=SlateValue"));
   return *this;
 }
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Series& value) {
   try {
     if (value.dim() == 0) {
-      return (*this = ThreadValue(Thread(value.reshape({1}))));
+      return (*this = SlateValue(Slate(value.reshape({1}))));
     }
-    return (*this = Thread(value));
+    return (*this = Slate(value));
   } catch (const std::exception& e) {
     PLUSS_FAIL("DataFrame::set(name)=Series failed: " + std::string(e.what()));
   }
@@ -49,10 +49,10 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Series& value) {
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Note& value) {
   try {
     if (value.dim() == 0) {
-      return (*this = ThreadValue(Thread(pluss::make_note(
+      return (*this = SlateValue(Slate(pluss::make_note(
           std::vector<std::string>{std::string(value.scalar())}))));
     }
-    return (*this = Thread(value));
+    return (*this = Slate(value));
   } catch (const std::exception& e) {
     PLUSS_FAIL("DataFrame::set(name)=Note failed: " + std::string(e.what()));
   }
@@ -60,7 +60,7 @@ DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Note& value) {
 
 DataFrame::LetSlot& DataFrame::LetSlot::operator=(const pluss::Timeline& value) {
   try {
-    return (*this = Thread(value));
+    return (*this = Slate(value));
   } catch (const std::exception& e) {
     PLUSS_FAIL("DataFrame::set(name)=Timeline failed: " + std::string(e.what()));
   }
@@ -85,7 +85,7 @@ DataFrame::LetSlots::LetSlots(DataFrame& owner, std::vector<std::string> names, 
   }
 }
 
-void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
+void DataFrame::LetSlots::assign_from_slates(std::span<const Slate> values) {
   PLUSS_CHECK(values.size() == names_.size(),
               "DataFrame::set(names): rhs feature count must match lhs feature count");
 
@@ -94,18 +94,18 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
   if (!src.columns_.empty() || src.nrows_ > 0) {
     expected_rows = src.nrows_;
   }
-  std::vector<Thread> prepared_values;
+  std::vector<Slate> prepared_values;
   prepared_values.reserve(values.size());
 
   for (const auto& value : values) {
-    PLUSS_CHECK(value.defined(), "DataFrame::set(names): rhs thread must be defined");
+    PLUSS_CHECK(value.defined(), "DataFrame::set(names): rhs slate must be defined");
     auto prepared = prepare_feature_assignment_(
         src, value, "DataFrame::set(names)", options_);
     if (!expected_rows.has_value()) {
       expected_rows = prepared.size();
     } else {
       PLUSS_CHECK(prepared.size() == *expected_rows,
-                  "DataFrame::set(names): rhs thread lengths must match target DataFrame cases");
+                  "DataFrame::set(names): rhs slate lengths must match target DataFrame cases");
     }
     prepared_values.push_back(std::move(prepared));
   }
@@ -131,30 +131,30 @@ void DataFrame::LetSlots::assign_from_threads(std::span<const Thread> values) {
 }
 
 DataFrame::LetSlots& DataFrame::LetSlots::operator=(const DataFrame& frame) {
-  std::vector<Thread> cols;
+  std::vector<Slate> cols;
   const auto& names = frame.features();
   cols.reserve(names.size());
   for (const auto& name : names) {
     cols.push_back(detail::with_display_labels(frame.features(name), frame.label().values()));
   }
-  assign_from_threads(std::span<const Thread>(cols.data(), cols.size()));
+  assign_from_slates(std::span<const Slate>(cols.data(), cols.size()));
   return *this;
 }
 
-DataFrame::LetSlots& DataFrame::LetSlots::operator=(std::initializer_list<Thread> values) {
-  assign_from_threads(std::span<const Thread>(values.begin(), values.size()));
+DataFrame::LetSlots& DataFrame::LetSlots::operator=(std::initializer_list<Slate> values) {
+  assign_from_slates(std::span<const Slate>(values.begin(), values.size()));
   return *this;
 }
 
-DataFrame::LetSlots& DataFrame::LetSlots::operator=(const std::vector<Thread>& values) {
-  assign_from_threads(std::span<const Thread>(values.data(), values.size()));
+DataFrame::LetSlots& DataFrame::LetSlots::operator=(const std::vector<Slate>& values) {
+  assign_from_slates(std::span<const Slate>(values.data(), values.size()));
   return *this;
 }
 
-DataFrame::DataFrame(std::vector<std::pair<std::string, Thread>> columns,
-                     std::optional<Thread> cases) {
+DataFrame::DataFrame(std::vector<std::pair<std::string, Slate>> columns,
+                     std::optional<Slate> cases) {
   std::vector<std::string> names;
-  std::vector<Thread> values;
+  std::vector<Slate> values;
   names.reserve(columns.size());
   values.reserve(columns.size());
   for (auto& kv : columns) {
@@ -532,16 +532,16 @@ pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy
 
   const auto case_axis = label().values();
   for (const auto& key : features()) {
-    auto stream = pluss::kindle::Stream::from_thread(
+    auto stream = pluss::kindle::Stream::from_slate(
         this->features(key),
-        policy.attach_labels ? std::optional<Thread>{case_axis} : std::nullopt);
+        policy.attach_labels ? std::optional<Slate>{case_axis} : std::nullopt);
     out.emplace_back(key, std::move(stream));
   }
 
   if (policy.materialize_label) {
     PLUSS_CHECK(features().end() == std::find(features().begin(), features().end(), policy.label_key),
                 "DataFrame::kindelize: label key collides with existing feature '" + policy.label_key + "'");
-    out.emplace_back(policy.label_key, pluss::kindle::Stream::from_thread(case_axis));
+    out.emplace_back(policy.label_key, pluss::kindle::Stream::from_slate(case_axis));
   }
 
   return pluss::kindle::Catalog(std::move(out));

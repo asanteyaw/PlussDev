@@ -53,7 +53,7 @@ using ::pluss::ai::nodej::CrossAssessReport;
 using ::pluss::ai::nodej::CVPlanKind;
 using ::pluss::ai::nodej::DataFrameBatchOptions;
 using ::pluss::ai::nodej::DataNotePolicy;
-using ::pluss::ai::nodej::DataThreadPolicy;
+using ::pluss::ai::nodej::DataSlatePolicy;
 using ::pluss::ai::nodej::DependenceCurve;
 using ::pluss::ai::nodej::DependenceSurface;
 using ::pluss::ai::nodej::DecomposeFamilyOptions;
@@ -148,7 +148,7 @@ template <class T>
 namespace detail {
 
 // DataFrame::dtypes() reports "<Kind><inner>"-shaped strings for every
-// column regardless of thread kind -- "Series<float64>", "Note<utf8>",
+// column regardless of slate kind -- "Series<float64>", "Note<utf8>",
 // "Timeline<...>", ... -- so this strip is kind-agnostic by construction
 // (it just takes whatever sits between the first '<' and the last '>'); the
 // two route_where overloads below both use it, one restricted to Series

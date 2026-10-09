@@ -141,8 +141,8 @@ TimeSeriesAccessor::diff: source must be Series
 - [`CatalogTimeSeriesAccessor::lag`](lag.md), [`lead()`](lead.md): the
   underlying shift this method's comparison base is built from.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::diff`](../thread-ts/diff.md): the underlying
-  single-thread engine this method delegates to, with additional edge-case
+- [`TimeSeriesAccessor::diff`](../slate-ts/diff.md): the underlying
+  single-slate engine this method delegates to, with additional edge-case
   examples (missing-entry propagation).
 
 <div class="pluss-inline-prev-next">

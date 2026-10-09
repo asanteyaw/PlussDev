@@ -482,8 +482,8 @@ inline pluss::Timeline select(const pluss::Series& condition,
 namespace pluss {
 
 // pluss::make_timeline is the one flat spelling kept as a permanent
-// shortcut (mirroring the Series, Note, and TimeIndex factory families/
-// make_duration) for the common construct-from-data case. Every other flat
+// shortcut (mirroring make_series, make_note, and make_duration) for the
+// common construct-from-data case. Every other flat
 // Timeline spelling (pluss::from_epoch_nanos, pluss::date_range) was a
 // transitional compatibility alias and has been removed now that all
 // internal call sites across the codebase go through pluss::timeline::*

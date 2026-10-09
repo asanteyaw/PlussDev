@@ -174,8 +174,8 @@ output.
 - [`CatalogTimeSeriesAccessor::lag`](lag.md), [`lead()`](lead.md): the
   underlying shift this method's comparison base is built from.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::returns`](../thread-ts/returns.md): the underlying
-  single-thread engine this method delegates to.
+- [`TimeSeriesAccessor::returns`](../slate-ts/returns.md): the underlying
+  single-slate engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log_returns.html">

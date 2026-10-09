@@ -1,18 +1,18 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::resample_min
+# Timeline::TimelineIndexAccessor::resample_min
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_min(
+pluss::Series Timeline::TimelineIndexAccessor::resample_min(
     const pluss::Series& values,
     std::string_view freq,
     std::int64_t step = 1) const
 
-pluss::Series TimelineIndexAccessor::resample_min(
+pluss::Series Timeline::TimelineIndexAccessor::resample_min(
     const pluss::Series& values,
     const ResampleOptions& options) const
 ```
@@ -24,7 +24,7 @@ bins and returns the smallest valid payload value in each bin. It is useful for
 interval lows: the least sensor reading in an hour, the smallest latency in a
 minute, or the minimum balance observed during a day.
 
-The `TimelineIndexAccessor` supplies timestamps; `values` supplies the numeric payload.
+The `Timeline::TimelineIndexAccessor` supplies timestamps; `values` supplies the numeric payload.
 Lane `i` in `values` belongs to timestamp `i` in the index, so `values` must be
 one-dimensional and have exactly the same number of lanes. The output has one
 lane per bin, not one lane per observation. Use [`rolling_min`](rolling_agg.md)
@@ -62,11 +62,11 @@ meaning across offset changes.
 Example 1. Compute hourly lows.
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
 
 std::cout << pluss::series::print(index.resample_min(values, "H")) << "\n";
@@ -95,10 +95,10 @@ data=[1.0000]
 Example 3. `NaN` is skipped, while a genuinely empty hour remains `NaN`.
 
 ```cpp
-auto sparse = pluss::timeindex::make({
+auto sparse = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:10:00Z",
     "2024-11-01T00:20:00Z", "2024-11-01T02:00:00Z",
-});
+}).index();
 auto readings = pluss::make_series(std::vector<double>{
     std::numeric_limits<double>::quiet_NaN(), 3.0, 1.0, 7.0});
 
@@ -130,10 +130,10 @@ Example 5. Right closure changes which exact-boundary observation participates
 in each minimum. Right labels then name the opposite edge.
 
 ```cpp
-pluss::TimelineIndexAccessor::ResampleOptions options;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions options;
 options.freq = "H";
-options.closed = pluss::TimelineIndexAccessor::ResampleClosed::Right;
-options.label = pluss::TimelineIndexAccessor::ResampleLabel::Right;
+options.closed = pluss::Timeline::TimelineIndexAccessor::ResampleClosed::Right;
+options.label = pluss::Timeline::TimelineIndexAccessor::ResampleLabel::Right;
 
 std::cout << pluss::timeline::print(index.resample_bins(options).labels) << "\n";
 std::cout << pluss::series::print(index.resample_min(values, options)) << "\n";
@@ -174,9 +174,9 @@ payloads are rejected. The method allocates bin metadata and one output
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_max`](resample_max.md)
-- [`TimelineIndexAccessor::resample_first`](resample_first.md)
-- [`TimelineIndexAccessor::resample_bins`](resample_bins.md)
+- [`Timeline::TimelineIndexAccessor::resample_max`](resample_max.md)
+- [`Timeline::TimelineIndexAccessor::resample_first`](resample_first.md)
+- [`Timeline::TimelineIndexAccessor::resample_bins`](resample_bins.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_mean.html">

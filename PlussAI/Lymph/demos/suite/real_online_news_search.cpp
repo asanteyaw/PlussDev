@@ -13,8 +13,8 @@ int main() {
   csv.ncases = 3000;
   const DataFrame raw = DataFrame::load_csv((root / "data/OnlineNewsPopularity.csv").string(), csv);
 
-  lymph::Policy gate{.drop_columns = {"url"}, .reject_missing = {"shares"}};
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Policy gate{.drop_columns = {"url"}, .reject_missing = {"shares"}};
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({" timedelta", " n_tokens_title", " n_tokens_content", " n_unique_tokens",
                  " num_hrefs", " num_imgs", " num_videos", " average_token_length",
                  " num_keywords", " kw_avg_avg", " self_reference_avg_sharess"})
@@ -26,21 +26,21 @@ int main() {
           lymph::workflow::branch("news", {" timedelta", " n_tokens_title", " n_tokens_content", " n_unique_tokens",
                                            " num_hrefs", " num_imgs", " num_videos", " average_token_length",
                                            " num_keywords", " kw_avg_avg", " self_reference_avg_sharess"}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"scale", lymph::stage::standard_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       });
 
   std::vector<lymph::GridAxis> space{
       {.name = "regularization_strength", .values = {0.0001, 0.001, 0.01}},
   };
-  lymph::metrics::CrossValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.plan = lymph::CVPlanKind::CrossVal;
   cv.folds = 3;
 
   const lymph::search::Result tuned = lymph::search::grid(space, cv)
       .run([](const lymph::GridPoint& point) {
-             return lymph::model::linear_regression({
+             return lymph::models::linear_regression({
                  .regularization_strength = point.at("regularization_strength"),
              });
            },

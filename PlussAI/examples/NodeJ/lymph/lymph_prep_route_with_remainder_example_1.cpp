@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -17,7 +17,7 @@ int main() {
   const pluss::Series ratio  = pluss::make_series({0.9, 1.1, 0.7, 1.3, 0.6, 1.4, 0.8, 1.2}, {8}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 0, 1, 0, 1, 0, 1}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"ratio", Thread(ratio)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}, {"region", Slate(region)}});
 
   // with_remainder(Drop): after the one-hot stage runs, the unclaimed columns
   // (amount, ratio) are removed. The estimator sees only the region indicators --
@@ -28,7 +28,7 @@ int main() {
   model.learn_(x, y);
   const auto acc = model.assess(x, y, {.metrics = {lymph::MetricKind::Accuracy}}).accuracy.item<double>();
   std::cout << "remainder = Drop -> region indicators only, accuracy " << acc << "\n";
-  std::cout << DataFrame({{"actual", Thread(y)}, {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"actual", Slate(y)}, {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

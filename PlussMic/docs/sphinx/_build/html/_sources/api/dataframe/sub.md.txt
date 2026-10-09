@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4f3eef023451 -->
+<!-- pluss-signature-hash: 799308ff4bc4 -->
 
 # DataFrame::sub
 
@@ -11,9 +11,9 @@
 DataFrame::sub(double other) const -> DataFrame
 DataFrame::sub(const DataFrame& other) const -> DataFrame
 DataFrame::sub(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::sub(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::sub(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::sub(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::sub(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::sub(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::sub(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrame::sub(const Thread& other, const AlignOptions& options, Axis axis = Axi
 The named-method form of elementwise subtraction. `sub()` shares the exact same
 overload shape and alignment rules as [`add()`](add.md), [`mul()`](mul.md),
 [`div()`](div.md), and the rest of the arithmetic family — see `add()`'s
-"What It Does" for the full explanation of the scalar/frame/Thread operand shapes and
+"What It Does" for the full explanation of the scalar/frame/Slate operand shapes and
 the `axis`/`options` parameters. Unlike addition, subtraction is not commutative, so
 operand order matters: `a.sub(b)` computes `a - b`, not `b - a`. Use
 [`rsub()`](rsub.md) when you specifically want `other - a` with `a`'s shape driving
@@ -32,10 +32,10 @@ the result.
 **other**
 
 The right-hand operand, subtracted from the current frame: `double` (broadcast
-scalar), `const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast
+scalar), `const DataFrame&` (aligned frame-to-frame), or `const Slate&` (broadcast
 per `axis`).
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
 value per feature; `Axis::Case` supplies one value per case.
@@ -43,7 +43,7 @@ value per feature; `Axis::Case` supplies one value per case.
 **options** (`AlignOptions`, optional)
 
 Same meaning as [`add()`](add.md)'s `options`: controls alignment and missing-value
-handling for the `DataFrame`/`Thread` overloads.
+handling for the `DataFrame`/`Slate` overloads.
 
 ## Returns
 
@@ -105,11 +105,11 @@ c    | 1      28
 [3 cs x 2 feat]
 ```
 
-Example 3. Subtract a `Thread` with one value per case (`Axis::Case`) — a per-row
+Example 3. Subtract a `Slate` with one value per case (`Axis::Case`) — a per-row
 adjustment applied across every feature in that row.
 
 ```cpp
-auto per_case_discount = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+auto per_case_discount = Slate(pluss::make_series({1.0, 2.0, 3.0}));
 auto out = prices.sub(per_case_discount, Axis::Case);
 std::cout << out;
 ```

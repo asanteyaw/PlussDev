@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::vector_norm
+# Note::TexAccessor::vector_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::vector_norm() const
+Note Note::TexAccessor::vector_norm() const
 ```
 
 ## Rewrite Vector Notation To `\vec{...}`

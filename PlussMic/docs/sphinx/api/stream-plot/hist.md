@@ -16,9 +16,9 @@ StreamPlotAccessor::hist(const HistPlotOptions& options) const -> pluss::pl::Stu
 
 Bins the bound stream's values into a single frequency-count histogram — always exactly
 one pane, since a `Stream` is always one series. Both overloads forward to
-[`ThreadPlotAccessor::hist`](../thread-plot/hist.md) after `Stream::to_thread()`.
+[`SlatePlotAccessor::hist`](../slate-plot/hist.md) after `Stream::to_slate()`.
 
-```{note} The same bins == 20 ambiguity as the 2D/Thread accessors
+```{note} The same bins == 20 ambiguity as the 2D/Slate accessors
 `bins` still passes through `resolve_bins()`, so the same "is `20` the caller's explicit
 choice, or just the untouched default" ambiguity documented on
 [`DataFramePlotAccessor::hist`](../dataframe-plot/hist.md) applies here too, whenever
@@ -95,7 +95,7 @@ chart.show();
 
 ## See Also
 
-- [`ThreadPlotAccessor::hist`](../thread-plot/hist.md): the method this delegates to.
+- [`SlatePlotAccessor::hist`](../slate-plot/hist.md): the method this delegates to.
 - [`StreamPlotAccessor::density`](density.md): the same per-stream distribution idea, as a
   smoothed density curve instead of binned counts.
 

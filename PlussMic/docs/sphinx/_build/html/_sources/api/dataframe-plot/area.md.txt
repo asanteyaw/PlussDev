@@ -77,9 +77,9 @@ Example 1. A single feature, explicit x-axis.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"month",  Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}))},
-    {"amount", Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
-    {"cost",   Thread(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
+    {"month",  Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"}))},
+    {"amount", Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+    {"cost",   Slate(pluss::make_series({60.0, 80.0, 55.0, 95.0}))},
 });
 
 auto chart = sales.plot().area("amount", "month");

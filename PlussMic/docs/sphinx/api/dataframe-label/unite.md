@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ced3c4e077ad -->
+<!-- pluss-signature-hash: 63ce27fb8892 -->
 
 # DataFrameLabelAccessor::unite
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::unite(const Thread& other) const -> Thread
+DataFrameLabelAccessor::unite(const Slate& other) const -> Slate
 ```
 
 ## What It Does
@@ -19,13 +19,13 @@ first-occurrence order), then `other`'s distinct values not already seen.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
 
 The values to union with.
 
 ## Returns
 
-`Thread`
+`Slate`
     The distinct values from both sides combined, `display_name` `"unite"`.
 
 ## Examples
@@ -37,11 +37,11 @@ overlapping value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
-auto other = Thread(pluss::make_note({"west", "south"}));
+auto other = Slate(pluss::make_note({"west", "south"}));
 auto out = labeled.label().unite(other);
 std::cout << out;
 ```

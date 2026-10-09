@@ -25,8 +25,8 @@ for every method's own dedicated page.
 ```{important} Requires the stream itself to be Timeline- or TimeIndex-kind
 Same pattern as [`Catalog::tl()`](../catalog/tl.md) — `tl()` accepts both
 `Timeline`-kind and `TimeIndex`-kind streams uniformly. Calling any method on a
-`Series`/`Note` stream throws `"Thread::tl: expected Timeline or TimeIndex
-payload"`. Cast first with [`Stream::cast(ThreadCastTarget::Timeline)`](cast.md)
+`Series`/`Note` stream throws `"Slate::tl: expected Timeline or TimeIndex
+payload"`. Cast first with [`Stream::cast(SlateCastTarget::Timeline)`](cast.md)
 if the stream isn't already a timestamp.
 ```
 
@@ -81,7 +81,7 @@ try {
 ### Output
 
 ```text
-Thread::tl: expected Timeline or TimeIndex payload
+Slate::tl: expected Timeline or TimeIndex payload
 ```
 
 ## Notes

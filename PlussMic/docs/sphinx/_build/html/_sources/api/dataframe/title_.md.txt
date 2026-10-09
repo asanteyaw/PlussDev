@@ -38,8 +38,8 @@ Example 1. Set a title in place, then read it back.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 
 orders.title_("sales_report");

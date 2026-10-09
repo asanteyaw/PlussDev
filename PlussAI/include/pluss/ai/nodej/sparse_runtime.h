@@ -48,6 +48,8 @@ public:
 
   [[nodiscard]] bool trained() const noexcept { return trained_; }
   [[nodiscard]] std::int64_t feature_count() const noexcept { return feature_count_; }
+  // Loss after each gradient iteration of the last learn() call, in order.
+  [[nodiscard]] const std::vector<double>& loss_history() const noexcept { return loss_history_; }
 
   Status learn(const SparseTripletMatrix& x,
                const Series& y,
@@ -78,6 +80,7 @@ private:
   bool trained_{false};
   std::int64_t feature_count_{0};
   std::vector<double> weights_{};
+  std::vector<double> loss_history_{};
 };
 
 class SparseLinearRegressor final {
@@ -86,6 +89,8 @@ public:
 
   [[nodiscard]] bool trained() const noexcept { return trained_; }
   [[nodiscard]] std::int64_t feature_count() const noexcept { return feature_count_; }
+  // Loss after each gradient iteration of the last learn() call, in order.
+  [[nodiscard]] const std::vector<double>& loss_history() const noexcept { return loss_history_; }
 
   Status learn(const SparseTripletMatrix& x,
                const Series& y,
@@ -114,6 +119,7 @@ private:
   bool trained_{false};
   std::int64_t feature_count_{0};
   std::vector<double> weights_{};
+  std::vector<double> loss_history_{};
 };
 
 class SparseLinearMultiClassifier final {
@@ -121,6 +127,8 @@ public:
   SparseLinearMultiClassifier() = default;
 
   [[nodiscard]] bool trained() const noexcept { return trained_; }
+  // One-vs-rest: each class's gradient-iteration losses, concatenated in class order.
+  [[nodiscard]] const std::vector<double>& loss_history() const noexcept { return loss_history_; }
   [[nodiscard]] std::int64_t feature_count() const noexcept { return feature_count_; }
   [[nodiscard]] std::int64_t class_count() const noexcept {
     return static_cast<std::int64_t>(class_values_.size());
@@ -156,6 +164,7 @@ private:
   std::int64_t feature_count_{0};
   std::vector<double> class_values_{};
   std::vector<double> weights_{}; // flattened [class0 (bias+f), class1 (bias+f), ...]
+  std::vector<double> loss_history_{};
 };
 
 struct SparseFoldReport {

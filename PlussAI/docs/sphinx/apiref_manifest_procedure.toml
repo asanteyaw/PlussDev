@@ -1,0 +1,364 @@
+# apiref_manifest_procedure.toml -- the `pluss::ai::procedure` public framework.
+# `procedure` is PlussAI's cross-engine execution/persistence/routing layer --
+# see PlussAI/PROCEDURE_DESIGN.md for the full design rationale (especially
+# "Public Families" and "Capability Contracts"). It lets a caller wire
+# `lymph`, `ice`, `nlp`, and raw `nn` components into one named, validated,
+# ordered DAG (`Procedure`), run it once in `Infer`/`Learn`/`Assess` mode,
+# and persist/restore the whole bundle (weights plus wiring) as a single
+# directory artifact. Drive the toolchain at this file with
+#   python3 apiref.py <cmd> --manifest apiref_manifest_procedure.toml
+#
+# Organized by category (core/build/callable/lymph/ice/nlp/module/registry/
+# persist), matching ice's own precedent (procedure is not family-based like
+# classic). Locked order rationale: core first, because every later
+# category's free functions construct or consume Procedure/Step/Link/
+# Artifact/ProcedureResult; build next, because its generic `step`/`sink`/
+# `link`/`input`/`make` are the primitives every engine-specific adapter
+# overload specializes; callable next, as the simplest engine-agnostic
+# adapter (a plain function/lambda over Series or DataFrame) and the one
+# that introduces the registry-by-key pattern registry formalizes later;
+# lymph/ice/nlp/module follow in the order their respective reference trees
+# were built (lymph, then ice, then nlp as nlp's own public family, then the
+# raw-module escape hatch last, since the blueprint names it the least
+# guided path -- "stable public path" is `Procedure -> Ice -> NodeK`,
+# justifying module last among the four adapter families); registry and
+# persist close the reference because both describe mechanisms every
+# earlier family's persistable steps already rely on (the custom-contract
+# registry a `step(..., CustomPersist, ...)` step needs to reload, and the
+# bundle format `Procedure::save`/`procedure::load` read and write) rather
+# than introducing new step-construction surface of their own.
+#
+# Two things worth flagging up front:
+#   - `procedure.h` is header-only and internally spells two of its adapted
+#     engines by their raw internal names: `nodeb::Workflow`/
+#     `nodeb::TrainOptions`/`nodeb::AssessOptions` (the `nlp` adapter) and
+#     the `Module` template parameter's persisted StepOptions::component tag
+#     (the raw-module adapter). Public prose always uses the confirmed
+#     public spelling `pluss::ai::nlp` for the former (see
+#     PlussAI/include/pluss/ai/nlp.h) and never repeats the module adapter's
+#     literal stored component tag at all -- `lymph` and `ice` need no such
+#     substitution, since both are already public names in their own right.
+#   - The same overloaded free function `pluss::ai::procedure::step` is the
+#     single entry point for all four adapter families (lymph/ice/nlp/
+#     module) plus the three generic/registry overloads in build/registry;
+#     each family's own `step.md` page documents only the overload subset
+#     that constructs *that* family's kind of Step, cross-linking to the
+#     others rather than repeating them.
+
+[framework.procedure]
+title = "procedure"
+summary = "PlussAI cross-engine execution/persistence/routing layer over lymph, ice, nlp, and raw nn components."
+include = "<pluss/ai/procedure.h>"
+header = "PlussAI"
+
+# ===========================================================================
+#  FAMILIES
+# ===========================================================================
+
+[[family]]
+path = "procedure/core"
+page = "api/procedure/core.md"
+title = "core"
+maxdepth = 2
+children = ["core/Introduction", "core/Procedure", "core/Step", "core/Link", "core/Artifact", "core/ProcedureResult", "core/ProcedureOptions", "core/RunOptions", "core/StepOptions", "core/StepPersistSpec", "core/SinkSpec", "core/ArtifactTrace", "core/StepTrace"]
+
+[[family]]
+path = "procedure/build"
+page = "api/procedure/build.md"
+title = "build"
+maxdepth = 2
+children = ["build/Introduction", "build/step", "build/sink", "build/link", "build/input", "build/make"]
+
+[[family]]
+path = "procedure/callable"
+page = "api/procedure/callable.md"
+title = "callable"
+maxdepth = 2
+children = ["callable/Introduction", "callable/step", "callable/bind"]
+
+[[family]]
+path = "procedure/lymph"
+page = "api/procedure/lymph.md"
+title = "lymph"
+maxdepth = 2
+children = ["lymph/Introduction", "lymph/step"]
+
+[[family]]
+path = "procedure/ice"
+page = "api/procedure/ice.md"
+title = "ice"
+maxdepth = 2
+children = ["ice/Introduction", "ice/step"]
+
+[[family]]
+path = "procedure/nlp"
+page = "api/procedure/nlp.md"
+title = "nlp"
+maxdepth = 2
+children = ["nlp/Introduction", "nlp/step"]
+
+[[family]]
+path = "procedure/module"
+page = "api/procedure/module.md"
+title = "module"
+maxdepth = 2
+children = ["module/Introduction", "module/step"]
+
+[[family]]
+path = "procedure/registry"
+page = "api/procedure/registry.md"
+title = "registry"
+maxdepth = 2
+children = ["registry/Introduction", "registry/CustomContract", "registry/CustomPersist", "registry/bind", "registry/bind_ice", "registry/step"]
+
+[[family]]
+path = "procedure/persist"
+page = "api/procedure/persist.md"
+title = "persist"
+maxdepth = 2
+children = ["persist/Introduction", "persist/load"]
+
+# ===========================================================================
+#  SYMBOLS
+# ===========================================================================
+
+# --- core ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::Procedure"
+kind = "class"
+family = "procedure/core"
+page = "api/procedure/core/Procedure.md"
+summary = "An immutable, validated DAG of Steps and Links: construct from a step/link list, then run() once per call in Infer/Learn/Assess mode to get a ProcedureResult."
+methods = ["steps", "links", "options", "step_count", "link_count", "empty", "save", "names", "has", "get", "check_message", "check", "run"]
+
+[[symbol]]
+qualname = "pluss::ai::Step"
+kind = "class"
+family = "procedure/core"
+page = "api/procedure/core/Step.md"
+summary = "One named node in a Procedure: a capability mask, declared input/output artifact names, an optional persistence spec, and the runner closure that actually executes it."
+methods = ["name", "options", "inputs", "outputs", "persistable", "trained", "can_change_row_count", "component", "runnable", "persist", "reloadable", "frozen", "custom", "persist_key", "persist_schema_version", "component_schema_version", "persist_fields", "can_save_component", "save_component", "capability_mask", "has", "run"]
+
+[[symbol]]
+qualname = "pluss::ai::Link"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/Link.md"
+summary = "A directed edge between two Steps by name, with optional named-output/named-input endpoints for steps that produce or accept more than one artifact."
+fields = ["from", "to", "from_output", "to_input"]
+
+[[symbol]]
+qualname = "pluss::ai::Artifact"
+kind = "class"
+family = "procedure/core"
+page = "api/procedure/core/Artifact.md"
+summary = "A named, type-erased value flowing between Steps -- a closed variant over every type a Procedure can carry (Series, DataFrame, Note, Slate, lymph/ice/nlp payloads and reports, plus a few scalar primitives)."
+methods = ["name", "named", "empty", "value", "is", "get"]
+
+[[symbol]]
+qualname = "pluss::ai::ProcedureResult"
+kind = "class"
+family = "procedure/core"
+page = "api/procedure/core/ProcedureResult.md"
+summary = "What Procedure::run returns: every produced Artifact plus a human-readable trace, a structured per-step audit, any non-fatal warnings, and which step failed (if any)."
+methods = ["ok", "failed_step", "trace", "audit", "warnings", "artifacts", "metrics", "get"]
+
+[[symbol]]
+qualname = "pluss::ai::ProcedureOptions"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/ProcedureOptions.md"
+summary = "Procedure-level construction policy: worker count (parallel execution), scheduling/caching intent, fail-fast behavior, and whether to validate the graph immediately on construction."
+fields = ["workers", "schedule", "cache", "fail_fast", "validate_on_make"]
+
+[[symbol]]
+qualname = "pluss::ai::RunOptions"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/RunOptions.md"
+summary = "Per-run policy passed to Procedure::run: which ProcedureMode to execute in, whether to collect a StepTrace audit, and whether to allow steps that declare future-data access."
+fields = ["mode", "audit", "allow_temporal_leakage"]
+
+[[symbol]]
+qualname = "pluss::ai::StepOptions"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/StepOptions.md"
+summary = "A Step's declared contract: its capability set, input/output artifact names, required DataFrame columns, time-feature name, and the persistable/trained/can_change_row_count/requires_time/learns_from_future flags Procedure::check and Procedure::run enforce."
+fields = ["capabilities", "inputs", "outputs", "require_columns", "time_feature", "persistable", "trained", "can_change_row_count", "requires_time", "learns_from_future", "component"]
+
+[[symbol]]
+qualname = "pluss::ai::StepPersistSpec"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/StepPersistSpec.md"
+summary = "How one Step saves itself inside a Procedure bundle: a component key, schema versions, reloadable/frozen/custom flags, the audit field list, and the actual Saver closure."
+fields = ["key", "schema_version", "component_schema_version", "reloadable", "frozen", "custom", "fields", "save"]
+
+[[symbol]]
+qualname = "pluss::ai::SinkSpec"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/SinkSpec.md"
+summary = "A terminal step's single field: the target name its one input artifact is published under."
+fields = ["target"]
+
+[[symbol]]
+qualname = "pluss::ai::ArtifactTrace"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/ArtifactTrace.md"
+summary = "A lightweight, type-aware snapshot of one Artifact captured during a run: its name, resolved type name, and (where known) row/column/element counts and definedness."
+fields = ["name", "type", "rows", "columns", "elements", "defined"]
+
+[[symbol]]
+qualname = "pluss::ai::StepTrace"
+kind = "options"
+family = "procedure/core"
+page = "api/procedure/core/StepTrace.md"
+summary = "One step's audit record from a run: its name/component, every input's ArtifactTrace, its output's ArtifactTrace, elapsed microseconds, and whether it changed row count."
+fields = ["step", "component", "inputs", "output", "elapsed_us", "row_count_changed"]
+
+# --- build ----------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/build"
+page = "api/procedure/build/step.md"
+summary = "The four generic Step builders: name-only, name+runner, name+runner+StepPersistSpec, and name+SinkSpec -- every engine-specific adapter overload (lymph/ice/nlp/module/callable/registry) ultimately builds a Step the same way these do."
+overloads = 4
+
+[[symbol]]
+qualname = "pluss::ai::procedure::sink"
+kind = "function"
+family = "procedure/build"
+page = "api/procedure/build/sink.md"
+summary = "Builds a SinkSpec from a target name, for use with the step(name, SinkSpec) overload that terminates a Procedure branch."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::procedure::link"
+kind = "function"
+family = "procedure/build"
+page = "api/procedure/build/link.md"
+summary = "Builds a Link between two step names, with optional named output/input endpoints for multi-artifact steps."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::procedure::input"
+kind = "function"
+family = "procedure/build"
+page = "api/procedure/build/input.md"
+summary = "Wraps any Artifact::Value-compatible value as a named Artifact, for seeding Procedure::run's initial input list."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::procedure::make"
+kind = "function"
+family = "procedure/build"
+page = "api/procedure/build/make.md"
+summary = "Builds a Procedure from a step list and link list (vector or initializer_list), optionally with ProcedureOptions -- the one constructor call every example in this reference ends with."
+overloads = 2
+
+# --- callable ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/callable"
+page = "api/procedure/callable/step.md"
+summary = "Wraps a plain function or lambda over Series or DataFrame as a Map-capability Step -- the engine-agnostic adapter, with an optional registry key overload that makes the step persistable."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::procedure::bind"
+kind = "function"
+family = "procedure/callable"
+page = "api/procedure/callable/bind.md"
+summary = "Registers a callable under a key so a persisted step(..., fn, key) can be reloaded by that key alone later -- the callable family's own sugar over the lower-level registry bind forms."
+overloads = 1
+
+# --- lymph ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/lymph"
+page = "api/procedure/lymph/step.md"
+summary = "The three lymph adapter overloads: a lymph::workflow::Policy transform step, a lymph::models::Model learn/infer/assess step, and a lymph::workflow::Workflow learn/infer/assess step -- all persistable, all routing on RunOptions::mode."
+overloads = 3
+
+# --- ice ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/ice"
+page = "api/procedure/ice/step.md"
+summary = "The two ice adapter overloads: a non-owning ice::Model& overload for a model whose lifetime the caller keeps, and an owning template overload (any ice::Model subclass) that takes a restore_key, making the step persistable."
+overloads = 2
+
+# --- nlp ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/nlp"
+page = "api/procedure/nlp/step.md"
+summary = "The nlp adapter overload: wraps an nlp::Workflow as a persistable learn/infer/assess step accepting text, pluss::Note, or Doc-vector inputs depending on RunOptions::mode."
+overloads = 1
+
+# --- module ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/module"
+page = "api/procedure/module/step.md"
+summary = "The raw-module adapter overload: wraps any object satisfying the SeriesForwardModule concept (a .forward(Series) -> Series method, e.g. an nn::Module layer) as a Map+Infer Step with no persistence of its own -- the least-guided of the four adapter families."
+overloads = 1
+
+# --- registry ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::CustomContract"
+kind = "options"
+family = "procedure/registry"
+page = "api/procedure/registry/CustomContract.md"
+summary = "The full registry record for a custom persistable step kind: its key, schema versions, frozen flag, the StepLoader that reconstructs a Step from a saved bundle, and an optional CompatibilityGate for custom version-compatibility logic."
+fields = ["key", "persist_schema_version", "component_schema_version", "frozen", "load", "compatible"]
+
+[[symbol]]
+qualname = "pluss::ai::procedure::CustomPersist"
+kind = "options"
+family = "procedure/registry"
+page = "api/procedure/registry/CustomPersist.md"
+summary = "The lightweight persistence request passed to step(..., CustomPersist, runner): a registry key that must already be bound via bind(), plus reloadable/frozen flags, audit fields, and a Saver."
+fields = ["key", "reloadable", "frozen", "fields", "save"]
+
+[[symbol]]
+qualname = "pluss::ai::procedure::bind"
+kind = "function"
+family = "procedure/registry"
+page = "api/procedure/registry/bind.md"
+summary = "The two low-level registry binders: bind(CustomContract) registers a full contract directly, and bind(key, StepLoader) is the shorthand that wraps a bare loader into a minimal CustomContract."
+overloads = 2
+
+[[symbol]]
+qualname = "pluss::ai::procedure::bind_ice"
+kind = "function"
+family = "procedure/registry"
+page = "api/procedure/registry/bind_ice.md"
+summary = "Registers a zero-argument factory that builds a fresh ice::Model subclass instance by key, so a persisted ice step's restore_key can reconstruct the right architecture before loading its weights."
+overloads = 1
+
+[[symbol]]
+qualname = "pluss::ai::procedure::step"
+kind = "function"
+family = "procedure/registry"
+page = "api/procedure/registry/step.md"
+summary = "The registry-backed Step builder: step(name, options, CustomPersist, runner) looks up CustomPersist::key in the contract registry (bound via bind()) and fails fast if nothing is bound for it."
+overloads = 1
+
+# --- persist ---------------------------------------------------------------
+[[symbol]]
+qualname = "pluss::ai::procedure::load"
+kind = "function"
+family = "procedure/persist"
+page = "api/procedure/persist/load.md"
+summary = "Reloads a Procedure from a directory bundle written by Procedure::save -- re-verifying every component's checksum and routing each step through its built-in or registry-bound StepLoader/IceFactory."
+overloads = 1

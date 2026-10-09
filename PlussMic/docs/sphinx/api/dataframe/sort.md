@@ -124,8 +124,8 @@ with `.yield()`.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city",  Thread(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
-    {"sales", Thread(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
+    {"city",  Slate(pluss::make_note({"Tema", "Accra", "Accra", "Tema"}))},
+    {"sales", Slate(pluss::make_series({120.0, 100.0, 90.0, 200.0}))},
 });
 
 auto out = df.sort().by("sales").yield();

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::match_tokens
+# Note::NlpAccessor::match_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::match_tokens(std::string_view pattern) const
+TokenBatch Note::NlpAccessor::match_tokens(std::string_view pattern) const
 ```
 
 ## Filter Tokens With A Pattern

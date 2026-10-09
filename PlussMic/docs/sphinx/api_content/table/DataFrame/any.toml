@@ -1,11 +1,11 @@
 summary = """
 Return whether at least one value is truthy along the requested axis.
 
-`DataFrame::any(...)` is the boolean reduction you use when you want an existence test rather than a count or a sum. The returned `Thread` changes shape with the axis you choose: one result per feature when you reduce feature-wise, or one result per case when you reduce row-wise.
+`DataFrame::any(...)` is the boolean reduction you use when you want an existence test rather than a count or a sum. The returned `Slate` changes shape with the axis you choose: one result per feature when you reduce feature-wise, or one result per case when you reduce row-wise.
 """
 
 returns = """
-`Thread`
+`Slate`
     Boolean reduction result.
 
     - With the default feature-wise reduction, the output is one boolean per participating feature.
@@ -14,7 +14,7 @@ returns = """
 
 see_also = [
   "<a href=\"#all\"><code>DataFrame::all</code></a>: require every participating value to be truthy instead of only one.",
-  "<a href=\"thread_api_reference.html#any\"><code>Thread::any</code></a>: reduce one thread to one boolean truth result."
+  "<a href=\"slate_api_reference.html#any\"><code>Slate::any</code></a>: reduce one slate to one boolean truth result."
 ]
 
 notes = [

@@ -51,8 +51,8 @@ Example 1. Output order is exactly request order, not source order.
 ```cpp
 using namespace pluss::table;
 auto frame = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
-    {"units", Thread(pluss::make_series({10, 7, 12, 5}))},
+    {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
+    {"units", Slate(pluss::make_series({10, 7, 12, 5}))},
 });
 
 auto reordered = frame.case_study().take({3, 0, 2});

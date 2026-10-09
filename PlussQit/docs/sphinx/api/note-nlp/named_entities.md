@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::named_entities
+# Note::NlpAccessor::named_entities
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::named_entities() const
+TokenBatch Note::NlpAccessor::named_entities() const
 ```
 
 ## Extract Title-Cased Name Candidates

@@ -42,8 +42,8 @@ Example 1. Extract calendar components from a frame's own `Timeline` case labels
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({1.0, 2.0}))}},
+    Slate(pluss::make_timeline({
         "2024-03-14T09:30:00Z", "2024-12-25T00:00:00Z"})));
 
 auto out = events.ts().calendar();
@@ -72,9 +72,9 @@ a separate bound numeric feature.
 
 ```cpp
 auto events_named = DataFrame(
-    {{"event_time", Thread(pluss::make_timeline({
+    {{"event_time", Slate(pluss::make_timeline({
           "2024-03-14T09:30:00Z", "2024-12-25T00:00:00Z"}))},
-     {"value", Thread(pluss::make_series({1.0, 2.0}))}});
+     {"value", Slate(pluss::make_series({1.0, 2.0}))}});
 std::cout << events_named;
 
 auto out2 = events_named.ts().calendar("event_time");
@@ -117,7 +117,7 @@ default integer index, to see it throw.
 using namespace pluss::table;
 
 auto untimed = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0}))}});
+    {{"value", Slate(pluss::make_series({1.0, 2.0}))}});
 
 try {
   auto out = untimed.ts().calendar();

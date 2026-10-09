@@ -14,7 +14,7 @@ DataFrame::mode(bool drop_nulls = true) const -> DataFrame
 ## What It Does
 
 Finds the most frequently occurring value in every compatible feature and returns a
-new `DataFrame`, not a `Thread` — like [`percentiles()`](percentiles.md), this
+new `DataFrame`, not a `Slate` — like [`percentiles()`](percentiles.md), this
 method's result is naturally a small table rather than one value per feature, because
 a feature can have **more than one** mode when several values are tied for most
 frequent.
@@ -54,8 +54,8 @@ Example 1. Find the single mode of a categorical and a numeric feature.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"region", Thread(pluss::make_note({"West", "East", "West", "North", "East", "West"}))},
-    {"units",  Thread(pluss::make_series({2, 5, 2, 3, 5, 2}))},
+    {"region", Slate(pluss::make_note({"West", "East", "West", "North", "East", "West"}))},
+    {"units",  Slate(pluss::make_series({2, 5, 2, 3, 5, 2}))},
 });
 
 auto common = sales.mode();
@@ -82,8 +82,8 @@ column padded with `NULL`.
 
 ```cpp
 auto sales_tied = DataFrame({
-    {"region", Thread(pluss::make_note({"West", "East", "West", "North", "East", "West"}))},
-    {"units",  Thread(pluss::make_series({2, 5, 2, 5, 3, 1}))},
+    {"region", Slate(pluss::make_note({"West", "East", "West", "North", "East", "West"}))},
+    {"units",  Slate(pluss::make_series({2, 5, 2, 5, 3, 1}))},
 });
 
 auto common_tied = sales_tied.mode();
@@ -113,7 +113,7 @@ Example 3. Use `drop_nulls = false` to let a missing value itself become the mod
 ```cpp
 auto status_valid = pluss::make_series({true, false, false, false, true, false}, pluss::ScalarType::Bool);
 auto shipments = DataFrame({
-    {"status", Thread(pluss::make_note({"shipped", "", "", "", "paid", ""}), status_valid)},
+    {"status", Slate(pluss::make_note({"shipped", "", "", "", "paid", ""}), status_valid)},
 });
 
 auto common_status = shipments.mode();
@@ -149,7 +149,7 @@ it's empty.
 
 ## Notes
 
-- `mode()`'s result is a `DataFrame`, not a `Thread` — like `percentiles()`, because
+- `mode()`'s result is a `DataFrame`, not a `Slate` — like `percentiles()`, because
   the result can have more than one row per call when ties occur.
 - Every feature type participates: numeric `Series`, `Note`, `Timeline`, and
   `TimeIndex` — this is not restricted to numeric features the way `sum()` and
@@ -162,7 +162,7 @@ it's empty.
 ## See Also
 
 - [`DataFrame::percentiles`](percentiles.md): the other numeric reducer in this family
-  that returns a `DataFrame` rather than a `Thread`.
+  that returns a `DataFrame` rather than a `Slate`.
 - [`DataFrame::freq`](freq.md): full frequency ranking of every observed value, not
   just the single most frequent one.
 - [`DataFrame::ndistinct`](ndistinct.md): counts how many distinct values a feature

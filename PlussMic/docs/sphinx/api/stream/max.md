@@ -14,7 +14,7 @@ Stream::max() const -> Stream
 ## What It Does
 
 Returns the maximum of a `Series`-kind stream's non-`NULL` values, as a one-element
-`Stream`. Delegates to `Thread::max()`, so it's `Series`-only, same as
+`Stream`. Delegates to `Slate::max()`, so it's `Series`-only, same as
 [`sum()`](sum.md)/[`mean()`](mean.md)/[`min()`](min.md)/[`var()`](var.md)/
 [`std()`](std.md).
 
@@ -54,7 +54,7 @@ label        | value
 
 ## Notes
 
-- `Series`-only; throws `"Thread::max is only valid for Series payload"` on
+- `Series`-only; throws `"Slate::max is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - `NULL` rows are excluded from consideration.
 - Returns a one-element `Stream`, not a raw scalar, same as every other reduction in this

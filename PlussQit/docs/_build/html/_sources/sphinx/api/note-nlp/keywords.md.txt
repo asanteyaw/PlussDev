@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::keywords
+# Note::NlpAccessor::keywords
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::keywords(std::int64_t count) const
+TokenBatch Note::NlpAccessor::keywords(std::int64_t count) const
 ```
 
 ## Rank Frequent Content Words

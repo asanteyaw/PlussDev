@@ -47,8 +47,8 @@ Example 1. Build a mask of which `unit_price` values are usable.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
 });
 
 auto price_observed = orders.notnull({"unit_price"});

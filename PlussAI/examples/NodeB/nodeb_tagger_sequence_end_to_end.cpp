@@ -4,7 +4,8 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow tokenizer{
       .lang = Language::English,
@@ -44,7 +45,7 @@ int main() {
 
   const auto predicted = tagger_flow.infer("the cat runs");
 
-  std::cout << "== NodeB Sequence Tagger ==\n";
+  std::cout << "== PlussAI NLP Sequence Tagger ==\n";
   for (const auto& token : predicted.tokens) {
     std::cout << "  " << token.orth << " -> " << token.pos << "\n";
   }

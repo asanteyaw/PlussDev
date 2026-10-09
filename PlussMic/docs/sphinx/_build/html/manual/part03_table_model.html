@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part IV: Loading and Saving Data" href="part04_io.html" />
@@ -38,14 +38,14 @@
             
   <section id="part-iii-the-table-model">
 <h1>Part III: The Table Model<a class="headerlink" href="#part-iii-the-table-model" title="Link to this heading">¶</a></h1>
-<p>This part explains how <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, and <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+<p>This part explains how <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code>, and <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
 relate. Understanding these types makes the rest of PlussMic predictable.</p>
-<section id="thread">
-<h2>Thread<a class="headerlink" href="#thread" title="Link to this heading">¶</a></h2>
-<p>A <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is one typed column. It can hold one of four payload kinds:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="nf">numeric</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;green&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blue&quot;</span><span class="p">}));</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="n">dates</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<section id="slate">
+<h2>Slate<a class="headerlink" href="#slate" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is one typed column. It can hold one of four payload kinds:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="nf">numeric</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;green&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blue&quot;</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="n">dates</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-01-02T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-01-03T00:00:00Z&quot;</span><span class="p">,</span>
@@ -61,7 +61,7 @@ relate. Understanding these types makes the rest of PlussMic predictable.</p>
 </pre></div>
 </div>
 <p>Access the payload only after you know the kind:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadKind</span><span class="o">::</span><span class="n">Series</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="kr">thread</span><span class="p">.</span><span class="n">kind</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateKind</span><span class="o">::</span><span class="n">Series</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">as_series</span><span class="p">();</span>
 <span class="p">}</span>
 </pre></div>
@@ -69,7 +69,7 @@ relate. Understanding these types makes the rest of PlussMic predictable.</p>
 </section>
 <section id="missingness-and-validity">
 <h2>Missingness and validity<a class="headerlink" href="#missingness-and-validity" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code> can carry a validity mask. Loader-created columns use this to represent
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code> can carry a validity mask. Loader-created columns use this to represent
 missing values from input files.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">missing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">isnull</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">present</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kr">thread</span><span class="p">.</span><span class="n">notnull</span><span class="p">();</span>
@@ -81,7 +81,7 @@ missing values from input files.</p>
 </section>
 <section id="dataframe">
 <h2>DataFrame<a class="headerlink" href="#dataframe" title="Link to this heading">¶</a></h2>
-<p>A <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> is a set of named <code class="docutils literal notranslate"><span class="pre">Thread</span></code> features with an optional case axis.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> is a set of named <code class="docutils literal notranslate"><span class="pre">Slate</span></code> features with an optional case axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;north&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.5</span><span class="p">})},</span>
@@ -139,13 +139,13 @@ The display has four cases and four features. The default case axis is the
 integer axis shown at the left. <code class="docutils literal notranslate"><span class="pre">features()</span></code> preserves insertion order:
 <code class="docutils literal notranslate"><span class="pre">city</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code>, <code class="docutils literal notranslate"><span class="pre">units</span></code>, then <code class="docutils literal notranslate"><span class="pre">price</span></code>.</p>
 <p>Feature selection:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span><span class="w">                 </span><span class="c1">// Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span><span class="w">                 </span><span class="c1">// Slate</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">smaller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sales&quot;</span><span class="p">});</span><span class="w">   </span><span class="c1">// DataFrame</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">numeric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">series</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">feataxis</span><span class="p">().</span><span class="n">note</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">features(&quot;name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> with display labels from the frame’s case
+<p><code class="docutils literal notranslate"><span class="pre">features(&quot;name&quot;)</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> with display labels from the frame’s case
 axis and a display name matching the feature. <code class="docutils literal notranslate"><span class="pre">features({&quot;a&quot;,</span> <span class="pre">&quot;b&quot;})</span></code> returns a
 new <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with the same case axis and the selected feature order.</p>
 </section>

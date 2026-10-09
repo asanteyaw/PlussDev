@@ -15,7 +15,7 @@ Archive ArchiveLabelAccessor::sort(bool ascending = true, bool nulls_last = true
 
 Reorders the archive's catalog stack (and its depth labels, if set) by depth-label
 value. This is the depth-axis analogue of
-[`DataFrame::sort`](../dataframe/sort.md)/`Thread::sort`, but simpler: there's no
+[`DataFrame::sort`](../dataframe/sort.md)/`Slate::sort`, but simpler: there's no
 builder, no multi-key plan — `sort()` is a single terminal call, ordering strictly by
 the depth label itself.
 

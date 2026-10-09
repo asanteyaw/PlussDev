@@ -24,16 +24,36 @@ against a target and returning a loss value. Five regression losses
 
 ## How To Call It
 
+Compute mean squared error on a three-value vector, then cross-entropy for one row of logits against class zero. The program prints each loss.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-const pluss::Series prediction = pluss::make_series({1.0, 2.0, 3.0});
-const pluss::Series target = pluss::make_series({1.5, 2.0, 2.0});
-const pluss::Series loss = nn::losses::MSE(prediction, target);
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-const pluss::Series logits = pluss::make_series({2.0, 1.0, 0.1}, {1, 3});
-const pluss::Series class_target = pluss::make_series({0LL}, {1}).to(pluss::ScalarType::Int64);
-const pluss::Series ce = nn::losses::CrossEntropy(logits, class_target);
+int main() {
+  namespace nn = pluss::ai::nn;
+  const pluss::Series prediction = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::Series target = pluss::make_series({1.5, 2.0, 2.0});
+  const pluss::Series loss = nn::losses::MSE(prediction, target);
+  std::cout << "mse = " << loss.item<double>() << "\n";
+  const pluss::Series logits = pluss::make_series({2.0, 1.0, 0.1}, {1, 3});
+  const pluss::Series class_target = pluss::make_series({0LL}, {1}).to(pluss::ScalarType::Int64);
+  const pluss::Series ce = nn::losses::CrossEntropy(logits, class_target);
+  std::cout << "cross entropy = " << ce.item<double>() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+mse = 0.416667
+cross entropy = 0.41703
 ```
 
 Every loss here is a plain function -- there is no type to construct, no

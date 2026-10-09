@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::language
+# Note::NlpAccessor::language
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::language() const
+Note Note::NlpAccessor::language() const
 ```
 
 ## Detect A Dominant Language Label

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::plot" href="plot.html" />
@@ -64,8 +64,8 @@ Unlike <a class="reference internal" href="../catalog/nt.html"><span class="std 
 collection, <code class="docutils literal notranslate"><span class="pre">Stream::nt()</span></code> binds a single stream — but that stream must already be
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. Calling any <code class="docutils literal notranslate"><span class="pre">StreamNoteAccessor</span></code> method on a <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/
 <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> stream throws (the exact message names whichever method actually ran,
-e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Thread::strip</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>). Cast first with
-<a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(ThreadCastTarget::Note)</span></code></span></a> if the stream isn’t already text.</p>
+e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Slate::strip</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>). Cast first with
+<a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::cast(SlateCastTarget::Note)</span></code></span></a> if the stream isn’t already text.</p>
 </div>
 </section>
 <section id="parameters">
@@ -115,7 +115,7 @@ stream throws — see the important callout above.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::strip is only valid for Note payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::strip is only valid for Note payload
 </pre></div>
 </div>
 </section>

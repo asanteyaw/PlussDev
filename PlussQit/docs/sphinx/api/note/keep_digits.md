@@ -43,7 +43,7 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 ## See Also
 
 - [`Note::remove_digits`](remove_digits.md): the complement.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): extract digit **runs**
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): extract digit **runs**
   separately (`R"(\d+)"`) instead of concatenating them.
 - [`Note::is_digit`](is_digit.md): test whether a cell is already pure
   digits.

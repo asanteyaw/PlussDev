@@ -7,8 +7,8 @@ It is the duplicate-analysis route; `drop_duplicates(...)` is the duplicate-remo
 """
 
 returns = """
-`Thread`
-    Boolean-like thread with one value per row indicating duplicate occurrence status under the requested keep policy.
+`Slate`
+    Boolean-like slate with one value per row indicating duplicate occurrence status under the requested keep policy.
 """
 
 see_also = [
@@ -18,7 +18,7 @@ see_also = [
 
 notes = [
   """
-The returned thread aligns one-for-one with the original row axis, so you can inspect it directly or reuse it in downstream masking logic.
+The returned slate aligns one-for-one with the original row axis, so you can inspect it directly or reuse it in downstream masking logic.
 """,
   """
 `duplicated(...)` does not change row order or remove data. It only reports duplicate occurrences.

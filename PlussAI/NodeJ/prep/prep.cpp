@@ -278,30 +278,30 @@ struct DenseMatrix {
   return StatusOr<FeatureBatch>(std::move(out));
 }
 
-[[nodiscard]] StatusOr<FeatureBatch> single_feature_batch_from_thread(const pluss::table::Thread& thread,
+[[nodiscard]] StatusOr<FeatureBatch> single_feature_batch_from_slate(const pluss::table::Slate& slate,
                                                                        const char* where) {
-  if (!thread.defined()) {
-    return StatusOr<FeatureBatch>(Status::invalid_argument(std::string(where) + " requires a defined Thread."));
+  if (!slate.defined()) {
+    return StatusOr<FeatureBatch>(Status::invalid_argument(std::string(where) + " requires a defined Slate."));
   }
-  const std::int64_t rows = thread.size();
+  const std::int64_t rows = slate.size();
   if (rows <= 0) {
     return StatusOr<FeatureBatch>(Status::shape_mismatch(std::string(where) + " requires at least one row."));
   }
 
   Series feature = pluss::series::undefined();
-  switch (thread.kind()) {
-    case pluss::table::ThreadKind::Series: {
-      feature = thread.as_series().to(ScalarType::Float64);
+  switch (slate.kind()) {
+    case pluss::table::SlateKind::Series: {
+      feature = slate.as_series().to(ScalarType::Float64);
       break;
     }
-    case pluss::table::ThreadKind::Note: {
+    case pluss::table::SlateKind::Note: {
       constexpr std::uint64_t fnv_offset = 1469598103934665603ULL;
       constexpr std::uint64_t fnv_prime = 1099511628211ULL;
       std::vector<double> hashed(static_cast<std::size_t>(rows), std::numeric_limits<double>::quiet_NaN());
       for (std::int64_t i = 0; i < rows; ++i) {
-        if (!pluss::table::detail::valid_at(thread, i)) continue;
+        if (!pluss::table::detail::valid_at(slate, i)) continue;
         std::uint64_t h = fnv_offset;
-        const std::string_view token = thread.as_note().at(i);
+        const std::string_view token = slate.as_note().at(i);
         for (unsigned char ch : token) {
           h ^= static_cast<std::uint64_t>(ch);
           h *= fnv_prime;
@@ -312,28 +312,28 @@ struct DenseMatrix {
       feature = pluss::make_series(std::move(hashed), {rows}, prep_work_config());
       break;
     }
-    case pluss::table::ThreadKind::Timeline: {
-      const pluss::table::Thread casted = thread.cast().series();
+    case pluss::table::SlateKind::Timeline: {
+      const pluss::table::Slate casted = slate.cast().series();
       feature = casted.as_series().to(ScalarType::Float64);
       break;
     }
     default: {
       return StatusOr<FeatureBatch>(
-          Status::invalid_argument(std::string(where) + " supports only Series/Note/Timeline Thread kinds."));
+          Status::invalid_argument(std::string(where) + " supports only Series/Note/Timeline Slate kinds."));
     }
   }
 
   if (!feature.defined() || feature.numel() != rows) {
     return StatusOr<FeatureBatch>(
-        Status::shape_mismatch(std::string(where) + " expected a 1D-compatible Thread column."));
+        Status::shape_mismatch(std::string(where) + " expected a 1D-compatible Slate column."));
   }
   feature = feature.reshape({rows});
 
-  if (pluss::table::detail::has_validity_mask(thread)) {
+  if (pluss::table::detail::has_validity_mask(slate)) {
     auto host = feature.to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
     bool touched = false;
     for (std::int64_t i = 0; i < rows; ++i) {
-      if (!pluss::table::detail::valid_at(thread, i)) {
+      if (!pluss::table::detail::valid_at(slate, i)) {
         host[static_cast<std::size_t>(i)] = std::numeric_limits<double>::quiet_NaN();
         touched = true;
       }
@@ -2355,8 +2355,8 @@ Status OneHotEncoder::learn(const FeatureBatch& batch, const TrainOptions& optio
   return Status::success();
 }
 
-Status OneHotEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OneHotEncoder::learn(Thread)");
+Status OneHotEncoder::learn(const pluss::table::Slate& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "OneHotEncoder::learn(Slate)");
   if (!batch_or.ok()) return batch_or.status();
   return learn(batch_or.value(), options);
 }
@@ -2417,8 +2417,8 @@ StatusOr<Series> OneHotEncoder::map(const FeatureBatch& batch, const InferOption
   return StatusOr<Series>(from_dense(matrix, std::move(out), encoded_feature_count_));
 }
 
-StatusOr<Series> OneHotEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OneHotEncoder::map(Thread)");
+StatusOr<Series> OneHotEncoder::map(const pluss::table::Slate& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "OneHotEncoder::map(Slate)");
   if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
   return map(batch_or.value(), options);
 }
@@ -2431,7 +2431,7 @@ StatusOr<Series> OneHotEncoder::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
-StatusOr<Series> OneHotEncoder::learn_map(const pluss::table::Thread& feature,
+StatusOr<Series> OneHotEncoder::learn_map(const pluss::table::Slate& feature,
                                           const TrainOptions& learn_options,
                                           const InferOptions& infer_options) {
   Status s = learn(feature, learn_options);
@@ -2517,8 +2517,8 @@ Status FrequencyEncoder::learn(const FeatureBatch& batch, const TrainOptions& op
   return Status::success();
 }
 
-Status FrequencyEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "FrequencyEncoder::learn(Thread)");
+Status FrequencyEncoder::learn(const pluss::table::Slate& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "FrequencyEncoder::learn(Slate)");
   if (!batch_or.ok()) return batch_or.status();
   return learn(batch_or.value(), options);
 }
@@ -2573,8 +2573,8 @@ StatusOr<Series> FrequencyEncoder::map(const FeatureBatch& batch, const InferOpt
   return StatusOr<Series>(from_dense_like(matrix, std::move(out)));
 }
 
-StatusOr<Series> FrequencyEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "FrequencyEncoder::map(Thread)");
+StatusOr<Series> FrequencyEncoder::map(const pluss::table::Slate& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "FrequencyEncoder::map(Slate)");
   if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
   return map(batch_or.value(), options);
 }
@@ -2587,7 +2587,7 @@ StatusOr<Series> FrequencyEncoder::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
-StatusOr<Series> FrequencyEncoder::learn_map(const pluss::table::Thread& feature,
+StatusOr<Series> FrequencyEncoder::learn_map(const pluss::table::Slate& feature,
                                              const TrainOptions& learn_options,
                                              const InferOptions& infer_options) {
   Status s = learn(feature, learn_options);
@@ -2742,8 +2742,8 @@ Status OrdinalEncoder::learn(const FeatureBatch& batch, const TrainOptions& opti
   return Status::success();
 }
 
-Status OrdinalEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OrdinalEncoder::learn(Thread)");
+Status OrdinalEncoder::learn(const pluss::table::Slate& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "OrdinalEncoder::learn(Slate)");
   if (!batch_or.ok()) return batch_or.status();
   return learn(batch_or.value(), options);
 }
@@ -2757,8 +2757,8 @@ StatusOr<Series> OrdinalEncoder::map(const FeatureBatch& batch, const InferOptio
   return map_index_like(matrix_or.value(), category_keys_, options_, options, "OrdinalEncoder::map");
 }
 
-StatusOr<Series> OrdinalEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "OrdinalEncoder::map(Thread)");
+StatusOr<Series> OrdinalEncoder::map(const pluss::table::Slate& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "OrdinalEncoder::map(Slate)");
   if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
   return map(batch_or.value(), options);
 }
@@ -2771,7 +2771,7 @@ StatusOr<Series> OrdinalEncoder::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
-StatusOr<Series> OrdinalEncoder::learn_map(const pluss::table::Thread& feature,
+StatusOr<Series> OrdinalEncoder::learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options,
                                            const InferOptions& infer_options) {
   Status s = learn(feature, learn_options);
@@ -2841,8 +2841,8 @@ Status LabelEncoder::learn(const FeatureBatch& batch, const TrainOptions& option
   return Status::success();
 }
 
-Status LabelEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "LabelEncoder::learn(Thread)");
+Status LabelEncoder::learn(const pluss::table::Slate& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "LabelEncoder::learn(Slate)");
   if (!batch_or.ok()) return batch_or.status();
   return learn(batch_or.value(), options);
 }
@@ -2856,8 +2856,8 @@ StatusOr<Series> LabelEncoder::map(const FeatureBatch& batch, const InferOptions
   return map_index_like(matrix_or.value(), category_keys_, options_, options, "LabelEncoder::map");
 }
 
-StatusOr<Series> LabelEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "LabelEncoder::map(Thread)");
+StatusOr<Series> LabelEncoder::map(const pluss::table::Slate& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "LabelEncoder::map(Slate)");
   if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
   return map(batch_or.value(), options);
 }
@@ -2870,7 +2870,7 @@ StatusOr<Series> LabelEncoder::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
-StatusOr<Series> LabelEncoder::learn_map(const pluss::table::Thread& feature,
+StatusOr<Series> LabelEncoder::learn_map(const pluss::table::Slate& feature,
                                          const TrainOptions& learn_options,
                                          const InferOptions& infer_options) {
   Status s = learn(feature, learn_options);
@@ -3002,8 +3002,8 @@ Status BaseNEncoder::learn(const FeatureBatch& batch, const TrainOptions& option
   return Status::success();
 }
 
-Status BaseNEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "BaseNEncoder::learn(Thread)");
+Status BaseNEncoder::learn(const pluss::table::Slate& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "BaseNEncoder::learn(Slate)");
   if (!batch_or.ok()) return batch_or.status();
   return learn(batch_or.value(), options);
 }
@@ -3037,8 +3037,8 @@ StatusOr<Series> BaseNEncoder::map(const FeatureBatch& batch, const InferOptions
   return StatusOr<Series>(encoder_finish_layout_(std::move(canonical), matrix));
 }
 
-StatusOr<Series> BaseNEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "BaseNEncoder::map(Thread)");
+StatusOr<Series> BaseNEncoder::map(const pluss::table::Slate& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "BaseNEncoder::map(Slate)");
   if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
   return map(batch_or.value(), options);
 }
@@ -3051,7 +3051,7 @@ StatusOr<Series> BaseNEncoder::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
-StatusOr<Series> BaseNEncoder::learn_map(const pluss::table::Thread& feature,
+StatusOr<Series> BaseNEncoder::learn_map(const pluss::table::Slate& feature,
                                          const TrainOptions& learn_options,
                                          const InferOptions& infer_options) {
   Status s = learn(feature, learn_options);
@@ -3077,8 +3077,8 @@ Status HashingEncoder::learn(const FeatureBatch& batch, const TrainOptions& opti
   return Status::success();
 }
 
-Status HashingEncoder::learn(const pluss::table::Thread& feature, const TrainOptions& options) {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "HashingEncoder::learn(Thread)");
+Status HashingEncoder::learn(const pluss::table::Slate& feature, const TrainOptions& options) {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "HashingEncoder::learn(Slate)");
   if (!batch_or.ok()) return batch_or.status();
   return learn(batch_or.value(), options);
 }
@@ -3112,8 +3112,8 @@ StatusOr<Series> HashingEncoder::map(const FeatureBatch& batch, const InferOptio
   return StatusOr<Series>(encoder_finish_layout_(std::move(canonical), matrix));
 }
 
-StatusOr<Series> HashingEncoder::map(const pluss::table::Thread& feature, const InferOptions& options) const {
-  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_thread(feature, "HashingEncoder::map(Thread)");
+StatusOr<Series> HashingEncoder::map(const pluss::table::Slate& feature, const InferOptions& options) const {
+  StatusOr<FeatureBatch> batch_or = single_feature_batch_from_slate(feature, "HashingEncoder::map(Slate)");
   if (!batch_or.ok()) return StatusOr<Series>(batch_or.status());
   return map(batch_or.value(), options);
 }
@@ -3126,7 +3126,7 @@ StatusOr<Series> HashingEncoder::learn_map(const FeatureBatch& batch,
   return map(batch, infer_options);
 }
 
-StatusOr<Series> HashingEncoder::learn_map(const pluss::table::Thread& feature,
+StatusOr<Series> HashingEncoder::learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options,
                                            const InferOptions& infer_options) {
   Status s = learn(feature, learn_options);

@@ -16,7 +16,7 @@ DataFrameLabelAccessor::depth() const -> std::int64_t
 Returns the **lexsort depth** of the case labels: how many of the leading
 levels, taken together in their current order, are already sorted ascending
 (nulls last). For an unstructured frame, this is `1` if the flat case-label
-thread itself is sorted ascending, else `0`. For a structured frame, `depth()`
+slate itself is sorted ascending, else `0`. For a structured frame, `depth()`
 checks longer and longer level prefixes — level 0 alone, then levels 0–1
 together, then 0–2, and so on — stopping at the first prefix that isn't
 jointly sorted.
@@ -36,9 +36,9 @@ correctly — full depth.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Thread(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.label().set({"region", "city"}, true, "/");
 
 auto out = grouped.label().depth();
@@ -61,9 +61,9 @@ first group — depth drops to `1`.
 
 ```cpp
 auto readings2 = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Thread(pluss::make_note({"NYC", "Boston", "LA", "SF"}))},
-     {"sales",  Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Slate(pluss::make_note({"NYC", "Boston", "LA", "SF"}))},
+     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped2 = readings2.label().set({"region", "city"}, true, "/");
 
 auto out2 = grouped2.label().depth();

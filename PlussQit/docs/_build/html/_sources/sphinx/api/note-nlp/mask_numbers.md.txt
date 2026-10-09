@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_numbers
+# Note::NlpAccessor::mask_numbers
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_numbers() const
+Note Note::NlpAccessor::mask_numbers() const
 ```
 
 ## Collapse Numeric Runs Into One Semantic Marker

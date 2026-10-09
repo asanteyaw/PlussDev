@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::standardize
+# Series::StatAccessor::standardize
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::standardize() const
-Series SeriesStatAccessor::standardize(std::int64_t dim) const
+Series Series::StatAccessor::standardize() const
+Series Series::StatAccessor::standardize(std::int64_t dim) const
 Series SeriesStatProxy::standardize() const
 Series SeriesStatProxy::standardize(std::int64_t dim) const
 ```

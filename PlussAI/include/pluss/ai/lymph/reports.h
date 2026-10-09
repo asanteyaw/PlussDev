@@ -83,7 +83,7 @@ using Tune = TuneReport;
 
 [[nodiscard]] inline Series classification_metric_series(const models::Model& model,
                                                          const pluss::table::DataFrame& x,
-                                                         const pluss::table::Thread& y,
+                                                         const pluss::table::Slate& y,
                                                          const AssessOptions& options = {}) {
   return detail::classification_metric_series(detail::model_core(model), x, y, options);
 }
@@ -147,7 +147,7 @@ using Tune = TuneReport;
 
 [[nodiscard]] inline ThresholdCurve threshold_curve(const models::Model& model,
                                                     const pluss::table::DataFrame& x,
-                                                    const pluss::table::Thread& y,
+                                                    const pluss::table::Slate& y,
                                                     const InferOptions& infer_options = {}) {
   return detail::threshold_curve(detail::model_core(model), x, y, infer_options);
 }
@@ -187,7 +187,7 @@ using Tune = TuneReport;
 
 [[nodiscard]] inline double best_threshold(const models::Model& model,
                                            const pluss::table::DataFrame& x,
-                                           const pluss::table::Thread& y,
+                                           const pluss::table::Slate& y,
                                            MetricKind objective = MetricKind::F1,
                                            const InferOptions& infer_options = {}) {
   return detail::best_threshold(detail::model_core(model), x, y, objective, infer_options);
@@ -271,7 +271,7 @@ class ModelReports final {
   }
 
   [[nodiscard]] Series metric_series(const pluss::table::DataFrame& x,
-                                     const pluss::table::Thread& y,
+                                     const pluss::table::Slate& y,
                                      const AssessOptions& options = {}) const {
     return reports::classification_metric_series(model_, x, y, options);
   }

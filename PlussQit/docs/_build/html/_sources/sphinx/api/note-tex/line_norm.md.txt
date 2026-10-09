@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::line_norm
+# Note::TexAccessor::line_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::line_norm() const
+Note Note::TexAccessor::line_norm() const
 ```
 
 ## Canonicalize Line Endings Without Reformatting Source

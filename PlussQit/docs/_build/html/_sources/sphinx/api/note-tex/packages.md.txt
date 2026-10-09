@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::packages
+# Note::TexAccessor::packages
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::packages() const
+TokenBatch Note::TexAccessor::packages() const
 ```
 
 ## Inventory Package Dependencies Per Cell

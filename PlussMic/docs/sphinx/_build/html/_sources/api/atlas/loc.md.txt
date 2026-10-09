@@ -45,12 +45,12 @@ Example 1. `loc(std::string_view)` on a `Note`-kind (text) depth-labeled atlas.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"train", "test"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"train", "test"})));
 
 std::cout << atlas.loc("test");
 ```
@@ -70,12 +70,12 @@ Example 2. `loc(std::int64_t)` on a genuinely numeric-labeled atlas works correc
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_series({100.0, 200.0})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_series({100.0, 200.0})));
 
 std::cout << atlas.loc(std::int64_t(200));
 ```
@@ -95,12 +95,12 @@ Example 3. Calling `loc(std::int64_t)` on a `Note`-labeled (text) atlas throws i
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"train", "test"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"train", "test"})));
 
 try {
   atlas.loc(std::int64_t(0));
@@ -119,13 +119,13 @@ Example 4. `loc(const pluss::Timeline&)` on a `Timeline`-kind depth-labeled atla
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1},
-    pluss::table::Thread(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z"})));
+    pluss::table::Slate(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-02-01T00:00:00Z"})));
 
 auto key = pluss::make_timeline({"2024-02-01T00:00:00Z"});
 std::cout << atlas.loc(key);

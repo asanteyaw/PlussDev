@@ -75,8 +75,8 @@ Example 1. Default 2D render from a two-way table.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
 });
 
 std::cout << df.contingency("city", "channel").to_frame();
@@ -98,9 +98,9 @@ Example 2. Explicitly project a 3D retained table to 2D.
 
 ```cpp
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 std::cout << df.contingency({"city", "channel", "weekend"})

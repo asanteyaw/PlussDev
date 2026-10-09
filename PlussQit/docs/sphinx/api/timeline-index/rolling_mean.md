@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::rolling_mean
+# Timeline::TimelineIndexAccessor::rolling_mean
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_mean(
+pluss::Series Timeline::TimelineIndexAccessor::rolling_mean(
     const pluss::Series& values,
     const pluss::Duration& window) const
 ```
@@ -26,7 +26,7 @@ quiet period and dozens during a burst. Use `rolling_mean()` when elapsed time
 defines relevance. Use [`resample_mean()`](resample_mean.md) when the objective
 is instead to collapse observations into non-overlapping bins.
 
-The index and payload play separate roles: the `TimelineIndexAccessor` determines window
+The index and payload play separate roles: the `Timeline::TimelineIndexAccessor` determines window
 membership, while `values[i]` is the measurement attached to timestamp `i`.
 `values` must consequently be one-dimensional and exactly as long as the
 index.
@@ -51,11 +51,11 @@ timestamps are valid and participate as separate observations.
 All examples use this irregular index unless stated otherwise:
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto window = pluss::duration::minutes(45);
 ```
 
@@ -135,9 +135,9 @@ neither the index nor `values` is modified.
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_min`](rolling_min.md)
-- [`TimelineIndexAccessor::rolling_sum`](rolling_sum.md)
-- [`TimelineIndexAccessor::resample_mean`](resample_mean.md)
+- [`Timeline::TimelineIndexAccessor::rolling_min`](rolling_min.md)
+- [`Timeline::TimelineIndexAccessor::rolling_sum`](rolling_sum.md)
+- [`Timeline::TimelineIndexAccessor::resample_mean`](resample_mean.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_max.html">

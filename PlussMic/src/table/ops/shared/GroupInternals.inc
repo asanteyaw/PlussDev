@@ -29,11 +29,11 @@ pluss::Series group_i64_series_(const std::vector<std::int64_t>& values,
   return out;
 }
 
-Thread group_i64_thread_(const std::vector<std::int64_t>& values) {
-  return Thread(group_i64_series_(values));
+Slate group_i64_slate_(const std::vector<std::int64_t>& values) {
+  return Slate(group_i64_series_(values));
 }
 
-Thread group_f64_thread_(const std::vector<double>& values,
+Slate group_f64_slate_(const std::vector<double>& values,
                          const std::vector<bool>& valid = {}) {
   auto out = pluss::Series::empty(
       {static_cast<std::int64_t>(values.size())},
@@ -42,12 +42,12 @@ Thread group_f64_thread_(const std::vector<double>& values,
     std::memcpy(out.raw_data(), values.data(), values.size() * sizeof(double));
   }
   if (valid.empty()) {
-    return Thread(out);
+    return Slate(out);
   }
-  return detail::with_validity_mask(Thread(out), group_bool_mask_(valid));
+  return detail::with_validity_mask(Slate(out), group_bool_mask_(valid));
 }
 
-Thread group_note_thread_(const std::vector<std::string>& values,
+Slate group_note_slate_(const std::vector<std::string>& values,
                           const std::vector<bool>& valid = {}) {
   std::vector<std::string_view> views;
   views.reserve(values.size());
@@ -55,7 +55,7 @@ Thread group_note_thread_(const std::vector<std::string>& values,
     views.push_back(value);
   }
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(views.size())};
-  auto out = Thread(pluss::coden::ops_internal::note_from_utf8(
+  auto out = Slate(pluss::coden::ops_internal::note_from_utf8(
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size())));
   if (!valid.empty()) {
@@ -74,20 +74,20 @@ pluss::Timeline group_rebuild_timeline_like_(const pluss::Timeline& reference,
   return out;
 }
 
-pluss::codem::Platform group_thread_platform_(const Thread& value) {
+pluss::codem::Platform group_slate_platform_(const Slate& value) {
   switch (value.kind()) {
-    case ThreadKind::Series:
+    case SlateKind::Series:
       return value.as_series().platform();
-    case ThreadKind::Timeline:
+    case SlateKind::Timeline:
       return value.as_timeline().epoch_nanos().platform();
-    case ThreadKind::Duration:
-    case ThreadKind::Note:
+    case SlateKind::Duration:
+    case SlateKind::Note:
       return pluss::codem::Platform::CPU;
   }
   return pluss::codem::Platform::CPU;
 }
 
-std::string group_key_name_(std::size_t index, const Thread& key) {
+std::string group_key_name_(std::size_t index, const Slate& key) {
   if (key.named() && !key.name().empty()) {
     return key.name();
   }
@@ -100,7 +100,7 @@ std::size_t group_hash_mix_(std::size_t seed, std::size_t value) {
 
 constexpr std::size_t kGroupNullHash_ = 0x9ae16a3b2f90404fULL;
 
-int group_compare_key_rows_(std::span<const Thread> keys,
+int group_compare_key_rows_(std::span<const Slate> keys,
                             std::int64_t lhs_row,
                             std::int64_t rhs_row,
                             bool nulls_last = true) {
@@ -113,12 +113,12 @@ int group_compare_key_rows_(std::span<const Thread> keys,
   return 0;
 }
 
-std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
+std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Slate> keys,
                                                    std::int64_t nrows) {
   std::vector<std::size_t> row_hashes(static_cast<std::size_t>(nrows), 0);
   for (const auto& key : keys) {
     switch (key.kind()) {
-      case ThreadKind::Note: {
+      case SlateKind::Note: {
         const auto& note = key.as_note();
         for (std::int64_t row = 0; row < nrows; ++row) {
           const auto idx = static_cast<std::size_t>(row);
@@ -130,7 +130,7 @@ std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
         }
         break;
       }
-      case ThreadKind::Timeline: {
+      case SlateKind::Timeline: {
         const auto ticks = key.as_timeline().epoch_nanos();
         const auto* raw = reinterpret_cast<const std::int64_t*>(ticks.raw_data());
         for (std::int64_t row = 0; row < nrows; ++row) {
@@ -143,7 +143,7 @@ std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
         }
         break;
       }
-      case ThreadKind::Duration: {
+      case SlateKind::Duration: {
         const auto nanos = key.as_duration().host();
         for (std::int64_t row = 0; row < nrows; ++row) {
           const auto idx = static_cast<std::size_t>(row);
@@ -155,7 +155,7 @@ std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
         }
         break;
       }
-      case ThreadKind::Series: {
+      case SlateKind::Series: {
         const auto series = key.as_series();
         switch (series.scalar_type()) {
           case pluss::codem::ScalarType::Bool: {
@@ -300,7 +300,7 @@ std::vector<std::size_t> prepare_group_row_hashes_(std::span<const Thread> keys,
               row_hashes[idx] = group_hash_mix_(
                   row_hashes[idx],
                   detail::valid_at(key, row)
-                      ? std::hash<std::string>{}(thread_scalar_string_at(key, row))
+                      ? std::hash<std::string>{}(slate_scalar_string_at(key, row))
                       : kGroupNullHash_);
             }
             break;
@@ -330,17 +330,17 @@ struct GroupFactorization_ {
   std::vector<std::int64_t> grouped_rows{};
 };
 
-Thread group_count_thread_(const GroupState_& state,
-                           std::optional<Thread> value = std::nullopt);
-Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state);
-Thread group_note_mode_thread_(const Thread& value, const GroupState_& state);
-Thread group_temporal_thread_(const Thread& value,
+Slate group_count_slate_(const GroupState_& state,
+                           std::optional<Slate> value = std::nullopt);
+Slate group_ndistinct_slate_(const Slate& value, const GroupState_& state);
+Slate group_note_mode_slate_(const Slate& value, const GroupState_& state);
+Slate group_temporal_slate_(const Slate& value,
                               const GroupState_& state,
                               GroupOp op);
-Thread group_numeric_thread_(const Thread& value,
+Slate group_numeric_slate_(const Slate& value,
                              const GroupState_& state,
                              GroupOp op);
-Thread reorder_group_thread_(const Thread& value, const GroupState_& state);
+Slate reorder_group_slate_(const Slate& value, const GroupState_& state);
 
 template <class Token>
 struct GroupDistinctKey_ {
@@ -362,8 +362,8 @@ struct GroupDistinctKeyHash_ {
 };
 
 template <class TokenFn>
-Thread group_ndistinct_tokens_(const GroupState_& state,
-                               const Thread* value,
+Slate group_ndistinct_tokens_(const GroupState_& state,
+                               const Slate* value,
                                TokenFn&& token_at) {
   using Token = std::decay_t<decltype(token_at(std::declval<std::int64_t>()))>;
 
@@ -381,12 +381,12 @@ Thread group_ndistinct_tokens_(const GroupState_& state,
       ++counts[static_cast<std::size_t>(group_id)];
     }
   }
-  return reorder_group_thread_(group_i64_thread_(counts), state);
+  return reorder_group_slate_(group_i64_slate_(counts), state);
 }
 
-Thread group_ndistinct_series_thread_(const pluss::Series& series,
+Slate group_ndistinct_series_slate_(const pluss::Series& series,
                                       const GroupState_& state,
-                                      const Thread* value) {
+                                      const Slate* value) {
   switch (series.scalar_type()) {
     case pluss::codem::ScalarType::Bool: {
       const auto* raw = reinterpret_cast<const bool*>(series.raw_data());
@@ -499,9 +499,9 @@ std::string group_value_output_name_(std::string_view value_name, GroupOp op) {
   return fmt::format("{}_{}", value_name, op_name);
 }
 
-GroupFactorization_ factor_group_keys_(std::span<const Thread> keys,
+GroupFactorization_ factor_group_keys_(std::span<const Slate> keys,
                                        std::int64_t nrows,
-                                       const ThreadGroupOptions& options,
+                                       const SlateGroupOptions& options,
                                        std::string_view where) {
   PLUSS_CHECK(!keys.empty(), std::string(where) + ": expected at least one key");
 
@@ -510,7 +510,7 @@ GroupFactorization_ factor_group_keys_(std::span<const Thread> keys,
   factor.group_ids.assign(static_cast<std::size_t>(nrows), -1);
 
   for (const auto& key : keys) {
-    PLUSS_CHECK(key.defined(), std::string(where) + ": key thread is undefined");
+    PLUSS_CHECK(key.defined(), std::string(where) + ": key slate is undefined");
     PLUSS_CHECK(key.size() == nrows, std::string(where) + ": key length mismatch");
     if (!options.dropnull || !detail::has_validity_mask(key)) {
       continue;
@@ -618,10 +618,10 @@ GroupFactorization_ factor_group_keys_(std::span<const Thread> keys,
   return factor;
 }
 
-GroupState_ build_group_state_(std::span<const Thread> keys,
+GroupState_ build_group_state_(std::span<const Slate> keys,
                                std::span<const std::string> names,
                                std::int64_t nrows,
-                               const ThreadGroupOptions& options,
+                               const SlateGroupOptions& options,
                                std::string_view where) {
   PLUSS_CHECK(keys.size() == names.size(), std::string(where) + ": key/name size mismatch");
 
@@ -652,15 +652,15 @@ GroupState_ build_group_state_(std::span<const Thread> keys,
   return state;
 }
 
-Thread reorder_group_thread_(const Thread& value, const GroupState_& state) {
+Slate reorder_group_slate_(const Slate& value, const GroupState_& state) {
   if (state.order.empty()) {
     return value;
   }
   return value.take(state.order);
 }
 
-std::vector<std::pair<std::string, Thread>> group_key_columns_(const GroupState_& state) {
-  std::vector<std::pair<std::string, Thread>> out;
+std::vector<std::pair<std::string, Slate>> group_key_columns_(const GroupState_& state) {
+  std::vector<std::pair<std::string, Slate>> out;
   out.reserve(state.keys.size());
   for (std::size_t i = 0; i < state.keys.size(); ++i) {
     out.emplace_back(state.names[i], state.keys[i].take(state.ordered_first_rows));
@@ -668,18 +668,18 @@ std::vector<std::pair<std::string, Thread>> group_key_columns_(const GroupState_
   return out;
 }
 
-Thread group_empty_transform_thread_(const Thread& value,
+Slate group_empty_transform_slate_(const Slate& value,
                                      GroupOp op,
                                      std::int64_t size) {
   switch (op) {
     case GroupOp::Count:
     case GroupOp::Ndistinct:
       return detail::with_validity_mask(
-          group_i64_thread_(std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)),
+          group_i64_slate_(std::vector<std::int64_t>(static_cast<std::size_t>(size), 0)),
           group_bool_mask_(std::vector<bool>(static_cast<std::size_t>(size), false)));
     case GroupOp::Mode:
-      if (value.kind() == ThreadKind::Note) {
-        return group_note_thread_(
+      if (value.kind() == SlateKind::Note) {
+        return group_note_slate_(
             std::vector<std::string>(static_cast<std::size_t>(size)),
             std::vector<bool>(static_cast<std::size_t>(size), false));
       }
@@ -691,14 +691,14 @@ Thread group_empty_transform_thread_(const Thread& value,
     case GroupOp::Max:
     case GroupOp::Std:
     case GroupOp::Var:
-      return group_f64_thread_(
+      return group_f64_slate_(
           std::vector<double>(static_cast<std::size_t>(size), 0.0),
           std::vector<bool>(static_cast<std::size_t>(size), false));
   }
   PLUSS_FAIL("group: unsupported transform op");
 }
 
-Thread group_broadcast_thread_(const Thread& grouped, const GroupState_& state) {
+Slate group_broadcast_slate_(const Slate& grouped, const GroupState_& state) {
   PLUSS_CHECK(grouped.size() == state.ngroups,
               "group: grouped transform result length mismatch");
 
@@ -720,7 +720,7 @@ Thread group_broadcast_thread_(const Thread& grouped, const GroupState_& state) 
 
   auto out = grouped.take(indices);
   if (std::any_of(valid.begin(), valid.end(), [](bool value) { return !value; })) {
-    auto validity = group_bool_mask_(valid, group_thread_platform_(out));
+    auto validity = group_bool_mask_(valid, group_slate_platform_(out));
     PLUSS_CHECK(
         validity.numel() == out.size(),
         fmt::format(
@@ -732,17 +732,17 @@ Thread group_broadcast_thread_(const Thread& grouped, const GroupState_& state) 
   return out;
 }
 
-pluss::Series group_keep_mask_(const Thread& keep,
+pluss::Series group_keep_mask_(const Slate& keep,
                                const GroupState_& state,
                                std::string_view where) {
   PLUSS_CHECK(keep.defined(), std::string(where) + ": keep mask is undefined");
-  PLUSS_CHECK(keep.kind() == ThreadKind::Series, std::string(where) + ": keep mask must be a Bool Series thread");
+  PLUSS_CHECK(keep.kind() == SlateKind::Series, std::string(where) + ": keep mask must be a Bool Series slate");
   PLUSS_CHECK(keep.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
               std::string(where) + ": keep mask must be Bool");
   PLUSS_CHECK(keep.size() == state.ngroups,
               std::string(where) + ": keep mask length must equal number of groups");
 
-  const auto platform = group_thread_platform_(keep);
+  const auto platform = group_slate_platform_(keep);
   if (state.group_ids.empty()) {
     return group_bool_mask_({}, platform);
   }
@@ -769,45 +769,45 @@ pluss::Series group_keep_mask_(const Thread& keep,
   return group_bool_mask_(row_keep, platform);
 }
 
-Thread group_agg_thread_(const GroupState_& state,
-                         const Thread* value,
+Slate group_agg_slate_(const GroupState_& state,
+                         const Slate* value,
                          GroupOp op,
                          std::string_view where) {
   PLUSS_CHECK(op == GroupOp::Count || value != nullptr,
               std::string(where) + ": feature is required for non-count aggregations");
   if (value == nullptr) {
-    return group_count_thread_(state);
+    return group_count_slate_(state);
   }
 
   switch (op) {
     case GroupOp::Count:
-      return group_count_thread_(state, *value);
+      return group_count_slate_(state, *value);
     case GroupOp::Ndistinct:
-      return group_ndistinct_thread_(*value, state);
+      return group_ndistinct_slate_(*value, state);
     case GroupOp::Mode:
-      return value->kind() == ThreadKind::Note
-          ? group_note_mode_thread_(*value, state)
-          : group_numeric_thread_(*value, state, op);
+      return value->kind() == SlateKind::Note
+          ? group_note_mode_slate_(*value, state)
+          : group_numeric_slate_(*value, state, op);
     case GroupOp::Sum:
     case GroupOp::Mean:
     case GroupOp::Median:
     case GroupOp::Std:
     case GroupOp::Var:
-      return group_numeric_thread_(*value, state, op);
+      return group_numeric_slate_(*value, state, op);
     case GroupOp::Min:
     case GroupOp::Max:
-      if (value->kind() == ThreadKind::Timeline) {
-        return group_temporal_thread_(*value, state, op);
+      if (value->kind() == SlateKind::Timeline) {
+        return group_temporal_slate_(*value, state, op);
       }
-      return group_numeric_thread_(*value, state, op);
+      return group_numeric_slate_(*value, state, op);
   }
   PLUSS_FAIL(std::string(where) + ": unsupported group aggregation op");
 }
 
-Thread group_count_thread_(const GroupState_& state,
-                           std::optional<Thread> value) {
+Slate group_count_slate_(const GroupState_& state,
+                           std::optional<Slate> value) {
   pluss::codem::Platform platform = pluss::codem::Platform::CPU;
-  if (value.has_value() && value->kind() == ThreadKind::Series) {
+  if (value.has_value() && value->kind() == SlateKind::Series) {
     platform = value->as_series().platform();
   }
 
@@ -844,29 +844,29 @@ Thread group_count_thread_(const GroupState_& state,
       pluss::codem::ScalarType::Float64,
       platform);
   counts = counts.scatter_add(0, ids, ones);
-  return reorder_group_thread_(Thread(counts.to(pluss::codem::ScalarType::Int64)), state);
+  return reorder_group_slate_(Slate(counts.to(pluss::codem::ScalarType::Int64)), state);
 }
 
-Thread group_ndistinct_thread_(const Thread& value, const GroupState_& state) {
+Slate group_ndistinct_slate_(const Slate& value, const GroupState_& state) {
   switch (value.kind()) {
-    case ThreadKind::Series:
-      return group_ndistinct_series_thread_(value.as_series(), state, &value);
-    case ThreadKind::Timeline:
-      return group_ndistinct_series_thread_(value.as_timeline().epoch_nanos(), state, &value);
-    case ThreadKind::Duration:
-      return group_ndistinct_series_thread_(
+    case SlateKind::Series:
+      return group_ndistinct_series_slate_(value.as_series(), state, &value);
+    case SlateKind::Timeline:
+      return group_ndistinct_series_slate_(value.as_timeline().epoch_nanos(), state, &value);
+    case SlateKind::Duration:
+      return group_ndistinct_series_slate_(
           group_i64_series_(value.as_duration().host()), state, &value);
-    case ThreadKind::Note: {
+    case SlateKind::Note: {
       const auto note = value.as_note();
       return group_ndistinct_tokens_(state, &value, [&note](std::int64_t row) -> std::string_view {
         return note.at(row);
       });
     }
   }
-  PLUSS_FAIL("group ndistinct: unsupported Thread kind");
+  PLUSS_FAIL("group ndistinct: unsupported Slate kind");
 }
 
-Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
+Slate group_note_mode_slate_(const Slate& value, const GroupState_& state) {
   struct ModeBucket {
     std::int64_t count{0};
     std::int64_t first_row{-1};
@@ -880,7 +880,7 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
       continue;
     }
     const auto group_id = state.included_group_ids[i];
-    auto& bucket = buckets[static_cast<std::size_t>(group_id)][thread_scalar_string_at(value, row)];
+    auto& bucket = buckets[static_cast<std::size_t>(group_id)][slate_scalar_string_at(value, row)];
     if (bucket.count == 0) {
       bucket.first_row = row;
     }
@@ -913,13 +913,13 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
     views.push_back(value);
   }
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(views.size())};
-  auto note = Thread(pluss::coden::ops_internal::note_from_utf8(
+  auto note = Slate(pluss::coden::ops_internal::note_from_utf8(
       std::span<const std::string_view>(views.data(), views.size()),
       std::span<const std::int64_t>(shape.data(), shape.size())));
   if (std::any_of(valid.begin(), valid.end(), [](bool value) { return !value; })) {
     note = detail::with_validity_mask(note, group_bool_mask_(valid));
   }
-  return reorder_group_thread_(note, state);
+  return reorder_group_slate_(note, state);
 }
 
 // Per-group set of every value tied for the highest count, sorted ascending.
@@ -928,7 +928,7 @@ Thread group_note_mode_thread_(const Thread& value, const GroupState_& state) {
 // must walk state.order themselves, the same way group_key_columns_ does via
 // ordered_first_rows. An empty inner vector means the group had zero valid
 // (non-null) observations at all.
-std::vector<std::vector<std::string>> group_note_mode_ties_(const Thread& value,
+std::vector<std::vector<std::string>> group_note_mode_ties_(const Slate& value,
                                                              const GroupState_& state) {
   std::vector<std::unordered_map<std::string, std::int64_t>> counts(
       static_cast<std::size_t>(state.ngroups));
@@ -938,7 +938,7 @@ std::vector<std::vector<std::string>> group_note_mode_ties_(const Thread& value,
       continue;
     }
     const auto group_id = state.included_group_ids[i];
-    ++counts[static_cast<std::size_t>(group_id)][thread_scalar_string_at(value, row)];
+    ++counts[static_cast<std::size_t>(group_id)][slate_scalar_string_at(value, row)];
   }
 
   std::vector<std::vector<std::string>> out(static_cast<std::size_t>(state.ngroups));
@@ -966,9 +966,9 @@ std::vector<std::vector<std::string>> group_note_mode_ties_(const Thread& value,
 
 // Numeric counterpart of group_note_mode_ties_: same contract, but sorted
 // ascending by numeric value rather than lexicographically by string.
-std::vector<std::vector<double>> group_numeric_mode_ties_(const Thread& value,
+std::vector<std::vector<double>> group_numeric_mode_ties_(const Slate& value,
                                                            const GroupState_& state) {
-  PLUSS_CHECK(value.kind() == ThreadKind::Series && is_numeric_series_type(value.as_series()),
+  PLUSS_CHECK(value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series()),
               "DataFrameGrouped::mode_ties: value feature must be Note or a numeric Series");
   const auto values = value.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
 
@@ -1011,7 +1011,7 @@ std::vector<std::vector<double>> group_numeric_mode_ties_(const Thread& value,
 // state.ordered_first_rows) rather than assuming exactly one output row per
 // group — the mechanism that lets a single group contribute more than one
 // row to mode_ties()'s output.
-std::vector<std::pair<std::string, Thread>> group_key_columns_expanded_(
+std::vector<std::pair<std::string, Slate>> group_key_columns_expanded_(
     const GroupState_& state,
     const std::vector<std::int64_t>& expanded_order_positions) {
   std::vector<std::int64_t> expanded_rows;
@@ -1019,7 +1019,7 @@ std::vector<std::pair<std::string, Thread>> group_key_columns_expanded_(
   for (const auto pos : expanded_order_positions) {
     expanded_rows.push_back(state.ordered_first_rows[static_cast<std::size_t>(pos)]);
   }
-  std::vector<std::pair<std::string, Thread>> out;
+  std::vector<std::pair<std::string, Slate>> out;
   out.reserve(state.keys.size());
   for (std::size_t i = 0; i < state.keys.size(); ++i) {
     out.emplace_back(state.names[i], state.keys[i].take(expanded_rows));
@@ -1027,11 +1027,11 @@ std::vector<std::pair<std::string, Thread>> group_key_columns_expanded_(
   return out;
 }
 
-Thread group_numeric_thread_(const Thread& value,
+Slate group_numeric_slate_(const Slate& value,
                              const GroupState_& state,
                              GroupOp op) {
-  PLUSS_CHECK(value.kind() == ThreadKind::Series && is_numeric_series_type(value.as_series()),
-              "group: numeric aggregation requires a numeric Series thread");
+  PLUSS_CHECK(value.kind() == SlateKind::Series && is_numeric_series_type(value.as_series()),
+              "group: numeric aggregation requires a numeric Series slate");
   const auto platform = value.as_series().platform();
 
   pluss::Series ids = pluss::series::undefined();
@@ -1125,16 +1125,16 @@ Thread group_numeric_thread_(const Thread& value,
           validity.numel(),
           out.numel()));
 
-  return reorder_group_thread_(Thread(out, validity), state);
+  return reorder_group_slate_(Slate(out, validity), state);
 }
 
-Thread group_temporal_thread_(const Thread& value,
+Slate group_temporal_slate_(const Slate& value,
                               const GroupState_& state,
                               GroupOp op) {
-  PLUSS_CHECK(value.kind() == ThreadKind::Timeline &&
+  PLUSS_CHECK(value.kind() == SlateKind::Timeline &&
                   (op == GroupOp::Min || op == GroupOp::Max),
               "group: temporal aggregation only supports min/max");
-  const auto platform = group_thread_platform_(value);
+  const auto platform = group_slate_platform_(value);
   const auto ticks_all = value.as_timeline().epoch_nanos();
 
   pluss::Series ids = pluss::series::undefined();
@@ -1187,8 +1187,8 @@ Thread group_temporal_thread_(const Thread& value,
         : ticks.grouped_max(ids, state.ngroups);
   }
 
-  const auto ordered_ticks = reorder_group_thread_(Thread(reduced), state);
-  const auto ordered_counts = reorder_group_thread_(Thread(counts), state);
+  const auto ordered_ticks = reorder_group_slate_(Slate(reduced), state);
+  const auto ordered_counts = reorder_group_slate_(Slate(counts), state);
   const auto tick_values = ordered_ticks.as_series().to_vec<std::int64_t>();
   const auto count_values = ordered_counts.as_series().to_vec<double>();
 
@@ -1197,10 +1197,10 @@ Thread group_temporal_thread_(const Thread& value,
     valid[i] = count_values[i] > 0.0;
   }
 
-  Thread out = Thread(group_rebuild_timeline_like_(value.as_timeline(), tick_values));
+  Slate out = Slate(group_rebuild_timeline_like_(value.as_timeline(), tick_values));
 
   if (std::any_of(valid.begin(), valid.end(), [](bool flag) { return !flag; })) {
-    out = detail::with_validity_mask(out, group_bool_mask_(valid, group_thread_platform_(out)));
+    out = detail::with_validity_mask(out, group_bool_mask_(valid, group_slate_platform_(out)));
   }
   return out;
 }

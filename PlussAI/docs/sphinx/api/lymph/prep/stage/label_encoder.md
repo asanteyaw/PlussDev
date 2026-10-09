@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::label_encoder`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `label_encoder` builds an attachable [`prep::Stage`](Stage.md) that integer-codes a routed column, the same operation as [`ordinal_encoder`](ordinal_encoder.md) but 0-based by default — the shape a downstream step expects for a label-style column indexed `0..K-1`.
 
@@ -56,7 +56,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -67,15 +67,15 @@ int main() {
   const pluss::Series grade = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series score = pluss::make_series({0.2, 0.5, 0.9, 0.3, 0.6, 0.8}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"grade", Thread(grade)}, {"score", Thread(score)}});
+  const DataFrame x({{"grade", Slate(grade)}, {"score", Slate(score)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::label_encoder(), lymph::prep::route::names({"grade"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"grade", Thread(grade)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"grade", Slate(grade)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -114,7 +114,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -122,7 +122,7 @@ int main() {
   // Standalone, showing the 0-based codes. label_encoder and ordinal_encoder
   // share their option struct; the difference is the one_based default.
   const pluss::Series band = pluss::make_series({5, 9, 5, 1, 9, 1}, {6}, f64);
-  const DataFrame frame({{"band", Thread(band)}});
+  const DataFrame frame({{"band", Slate(band)}});
 
   lymph::prep::LabelEncoder enc{lymph::options::LabelEncoder{}};
   enc.features({"band"});
@@ -163,7 +163,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -171,7 +171,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series grade = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"grade", Thread(grade)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"grade", Slate(grade)}});
 
   // label-encode the ordinal-ish column, minmax-scale the numeric one.
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -181,8 +181,8 @@ int main() {
   });
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"grade", Thread(grade)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"grade", Slate(grade)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

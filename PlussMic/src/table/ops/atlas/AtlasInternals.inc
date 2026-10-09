@@ -2,11 +2,11 @@ namespace detail {
 
 class AtlasImpl final : public pluss::msharp::RefCounted {
 public:
-  AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels);
+  AtlasImpl(std::vector<DataFrame> frames, std::optional<Slate> axis0_labels);
   void validate_();
 
   std::vector<DataFrame> frames_;
-  std::optional<Thread> axis0_labels_;
+  std::optional<Slate> axis0_labels_;
   std::int64_t nrows_{0};
   std::int64_t ncols_{0};
   std::vector<std::string> names_;
@@ -36,14 +36,14 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
   return {s, e};
 }
 
-Thread default_depth_labels_(std::int64_t depth) {
+Slate default_depth_labels_(std::int64_t depth) {
   PLUSS_CHECK(depth >= 0, "Atlas: default depth labels size must be non-negative");
   std::vector<std::int64_t> values(static_cast<std::size_t>(depth));
   std::iota(values.begin(), values.end(), std::int64_t{0});
-  return Thread(pluss::make_series(values));
+  return Slate(pluss::make_series(values));
 }
 
-void validate_axis0_labels(const std::optional<Thread>& labels, std::int64_t depth) {
+void validate_axis0_labels(const std::optional<Slate>& labels, std::int64_t depth) {
   if (!labels.has_value()) {
     return;
   }
@@ -65,8 +65,8 @@ void validate_schema_compat(const DataFrame& ref, const DataFrame& cur) {
   }
 }
 
-std::int64_t find_note_label(const Thread& labels, std::string_view key) {
-  PLUSS_CHECK(labels.kind() == ThreadKind::Note, "Atlas::loc(string): axis0 labels must be Note");
+std::int64_t find_note_label(const Slate& labels, std::string_view key) {
+  PLUSS_CHECK(labels.kind() == SlateKind::Note, "Atlas::loc(string): axis0 labels must be Note");
   const auto& note = labels.as_note();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (note.at(i) == key) {
@@ -76,8 +76,8 @@ std::int64_t find_note_label(const Thread& labels, std::string_view key) {
   return -1;
 }
 
-std::int64_t find_int_label(const Thread& labels, std::int64_t key) {
-  PLUSS_CHECK(labels.kind() == ThreadKind::Series, "Atlas::loc(int64): axis0 labels must be numeric Series");
+std::int64_t find_int_label(const Slate& labels, std::int64_t key) {
+  PLUSS_CHECK(labels.kind() == SlateKind::Series, "Atlas::loc(int64): axis0 labels must be numeric Series");
   const auto& s = labels.as_series();
   const auto vals = s.to_vec<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
@@ -88,14 +88,14 @@ std::int64_t find_int_label(const Thread& labels, std::int64_t key) {
   return -1;
 }
 
-std::vector<std::int64_t> timeline_ticks(const Thread& labels) {
-  if (labels.kind() == ThreadKind::Timeline) {
+std::vector<std::int64_t> timeline_ticks(const Slate& labels) {
+  if (labels.kind() == SlateKind::Timeline) {
     return labels.as_timeline().ticks();
   }
   PLUSS_FAIL("Atlas::loc(Timeline): axis0 labels must be Timeline");
 }
 
-std::int64_t find_timeline_label(const Thread& labels, const pluss::Timeline& key) {
+std::int64_t find_timeline_label(const Slate& labels, const pluss::Timeline& key) {
   PLUSS_CHECK(key.defined(), "Atlas::loc(Timeline): key is undefined");
   PLUSS_CHECK(key.numel() == 1, "Atlas::loc(Timeline): key must be scalar Timeline");
   const auto key_ticks = key.ticks();
@@ -108,9 +108,9 @@ std::int64_t find_timeline_label(const Thread& labels, const pluss::Timeline& ke
   return -1;
 }
 
-std::string label_string_at(const Thread& labels, std::int64_t i) {
+std::string label_string_at(const Slate& labels, std::int64_t i) {
   switch (labels.kind()) {
-    case ThreadKind::Series: {
+    case SlateKind::Series: {
       const auto s = labels.as_series();
       switch (s.scalar_type()) {
         case pluss::codem::ScalarType::Int64:
@@ -121,9 +121,9 @@ std::string label_string_at(const Thread& labels, std::int64_t i) {
           return std::to_string(i);
       }
     }
-    case ThreadKind::Note:
+    case SlateKind::Note:
       return std::string(labels.as_note().at(i));
-    case ThreadKind::Timeline:
+    case SlateKind::Timeline:
       return std::to_string(labels.as_timeline().ticks()[static_cast<std::size_t>(i)]);
     default:
       return std::to_string(i);
@@ -132,7 +132,7 @@ std::string label_string_at(const Thread& labels, std::int64_t i) {
 
 } // namespace
 
-detail::AtlasImpl::AtlasImpl(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels)
+detail::AtlasImpl::AtlasImpl(std::vector<DataFrame> frames, std::optional<Slate> axis0_labels)
     : frames_(std::move(frames)), axis0_labels_(std::move(axis0_labels)) {
   validate_();
 }

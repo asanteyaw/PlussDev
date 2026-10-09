@@ -59,9 +59,9 @@ Notes:
 - For strongest file:line call traces in downstream apps, build downstream in `RelWithDebInfo` too (or at least with symbols).
 - Ensure your env is activated first (so `CONDA_PREFIX` is exported). Example: `conda activate cpp_env`.
 - In multiline shell commands, ensure `\` is the last character on the line (no trailing spaces), otherwise zsh may execute `-D...` lines as separate commands.
-- On macOS, CMake now auto-selects `cpp_env/bin/clang` and `cpp_env/bin/clang++` for compile when compilers are not explicitly pinned.
+- On macOS, CMake defaults to Apple Clang so the compiler and resource headers match the installed Xcode SDK. Explicit CMake compiler settings and `CC`/`CXX` environment choices take priority.
 - If your build directory was configured earlier with a different compiler, delete it (or pass `-DCMAKE_C_COMPILER=... -DCMAKE_CXX_COMPILER=...`) so CMake re-detects the toolchain.
-- Link stage may still use `/usr/bin/clang++` internally when Conda’s linker wrapper is detected, to preserve framework-link correctness.
+- Explicit Conda Clang builds use `/usr/bin/clang++` for executable linking, including CMake compiler and Threads probes. The Conda compiler must still support the installed SDK headers.
 - `PLUSS_ENABLE_TORCH=ON` now auto-detects `Torch_DIR` from the active env (`CONDA_PREFIX` / `Python3_EXECUTABLE`) when possible.
 - URL loader support (`load_csv/load_txt/load_excel` on `http(s)`) now wires curl automatically:
   - uses system curl when available;

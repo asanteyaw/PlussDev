@@ -23,7 +23,12 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
+#include "bundle/WorkspaceStore.h"
+#include "relational/Codec.h"
+#include "relational/Links.h"
+#include "relational/Pull.h"
 #include "loader/CsvLoader.h"
+#include "table/io/SnapshotCsv.h"
 
 namespace pluss::bundle {
 
@@ -54,12 +59,6 @@ struct NexusRelationshipAuditProfile {
   RelationshipValidationStatus computed_status{RelationshipValidationStatus::Declared};
 };
 
-struct NexusAdjacencyLink {
-  std::string next{};
-  std::string relationship_name{};
-  bool reversed{false};
-};
-
 class NexusImpl final : public pluss::msharp::RefCounted {
 public:
   NexusImpl() = default;
@@ -75,14 +74,12 @@ public:
   std::int64_t next_auto_id_{0};
   mutable std::unordered_map<std::string, NexusKeyAuditProfile> key_profile_cache_{};
   mutable std::unordered_map<std::string, NexusRelationshipAuditProfile> relationship_audit_cache_{};
-  mutable std::unordered_map<std::string, JoinPath> path_cache_{};
-  mutable std::unordered_map<std::string, JoinPlan> plan_cache_{};
+  // Adjacency, paths and plans over relationships_ (shared with Locus).
+  relational::LinkCache link_cache_{};
   mutable std::unordered_map<std::string, pluss::table::DataFrame> neighbors_cache_{};
   mutable std::optional<pluss::table::DataFrame> profile_cache_{};
   mutable std::optional<pluss::table::DataFrame> scan_cache_{};
   mutable std::optional<pluss::table::DataFrame> deduce_cache_{};
-  mutable bool adjacency_built_{false};
-  mutable std::unordered_map<std::string, std::vector<NexusAdjacencyLink>> adjacency_{};
   mutable bool feature_owners_built_{false};
   mutable std::unordered_map<std::string, std::vector<std::size_t>> feature_owners_{};
 };

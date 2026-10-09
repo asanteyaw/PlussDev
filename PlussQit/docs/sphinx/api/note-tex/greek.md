@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::greek
+# Note::TexAccessor::greek
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::greek() const
+TokenBatch Note::TexAccessor::greek() const
 ```
 
 ## Classify Lowercase Greek Control Words

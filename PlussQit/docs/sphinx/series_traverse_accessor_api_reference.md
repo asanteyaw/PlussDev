@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor API Reference
+# Series::TraverseAccessor API Reference
 
 [Back to Series API Reference](series_api_reference.md)
 

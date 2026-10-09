@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Queue::series, Queue::note, Queue::timeline, Queue::duration &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Queue::defined, Queue::dim, Queue::numel" href="state.html" />
+    <link rel="prev" title="Queue::kind, Queue::Kind, Queue::kind_name, is_series, is_note, is_timeline, is_duration" href="kind.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="queue-series-queue-note-queue-timeline-queue-duration">
+<h1>Queue::series, Queue::note, Queue::timeline, Queue::duration<a class="headerlink" href="#queue-series-queue-note-queue-timeline-queue-duration" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../queue_api_reference.html"><span class="doc std std-doc">Back to Queue API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">series</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">series</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">note</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">note</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">timeline</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">timeline</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">duration</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="nf">duration</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Each accessor returns a reference to the payload, typed as its real type,
+<em>if</em> the <code class="docutils literal notranslate"><span class="pre">Queue</span></code> actually holds that kind. Calling the wrong one – <code class="docutils literal notranslate"><span class="pre">note()</span></code>
+on a <code class="docutils literal notranslate"><span class="pre">Queue</span></code> holding a <code class="docutils literal notranslate"><span class="pre">Series</span></code>, for instance – throws, with a message
+naming both the method you called and the kind the <code class="docutils literal notranslate"><span class="pre">Queue</span></code> actually holds.
+The non-<code class="docutils literal notranslate"><span class="pre">const</span></code> overloads give a mutable reference, so calling a payload’s
+own in-place (<code class="docutils literal notranslate"><span class="pre">_</span></code>-suffixed) methods through the accessor mutates the value
+the <code class="docutils literal notranslate"><span class="pre">Queue</span></code> holds.</p>
+<p>These are the “I already know the kind, or I’m willing to find out by
+exception” accessors. <a class="reference internal" href="generic-access.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code>/<code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code></span></a> are the
+template-based equivalent, and <a class="reference internal" href="visit.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">visit</span></code></span></a> avoids the kind check
+entirely by handling every kind in one call.</p>
+<p>This is also how most <code class="docutils literal notranslate"><span class="pre">Queue</span></code> work actually gets done: <code class="docutils literal notranslate"><span class="pre">Queue</span></code> itself only
+has a handful of methods, but <code class="docutils literal notranslate"><span class="pre">series()</span></code>/<code class="docutils literal notranslate"><span class="pre">note()</span></code>/<code class="docutils literal notranslate"><span class="pre">timeline()</span></code>/<code class="docutils literal notranslate"><span class="pre">duration()</span></code>
+hand back the real, full <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">Duration</span></code> object, with
+its entire own method surface – not a restricted or <code class="docutils literal notranslate"><span class="pre">Queue</span></code>-specific view
+of it. Chaining straight off the accessor, as in <code class="docutils literal notranslate"><span class="pre">q.series().mean()</span></code> or
+<code class="docutils literal notranslate"><span class="pre">q.note().upper()</span></code>, is the ordinary way to call any method those four types
+have; <a class="reference internal" href="invoke.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">invoke</span></code></span></a> is the alternative for when the method name
+itself is only known at runtime.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>None.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p>A reference to the held payload, typed as <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> according to which accessor was called.</p>
+</section>
+<section id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Link to this heading">¶</a></h2>
+<p>Throws (an exception derived from <code class="docutils literal notranslate"><span class="pre">std::exception</span></code>) when the <code class="docutils literal notranslate"><span class="pre">Queue</span></code>’s
+actual <code class="docutils literal notranslate"><span class="pre">kind()</span></code> does not match the accessor called. The
+message names the accessor and the actual kind, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;Queue.as_note():</span> <span class="pre">payload</span> <span class="pre">kind</span> <span class="pre">is</span> <span class="pre">Series&quot;</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Calling the matching accessor succeeds; calling a mismatched one
+throws with a message naming the actual kind.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;q.series().numel(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">series</span><span class="p">().</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">q</span><span class="p">.</span><span class="n">note</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;q.note(): did not throw</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;q.note() threw: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>q.series().numel(): 2
+q.note() threw: Queue.as_note(): payload kind is Series
+</pre></div>
+</div>
+<p>Example 2. The non-<code class="docutils literal notranslate"><span class="pre">const</span></code> overload gives a mutable reference, so the
+payload’s own in-place methods mutate the value the <code class="docutils literal notranslate"><span class="pre">Queue</span></code> holds.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">mutable_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}));</span>
+<span class="n">mutable_q</span><span class="p">.</span><span class="n">series</span><span class="p">().</span><span class="n">add_</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;mutated through non-const series(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mutable_q</span><span class="p">.</span><span class="n">series</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mutated through non-const series(): 11
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">add_</span></code> is <code class="docutils literal notranslate"><span class="pre">Series</span></code>’s own in-place addition. Calling it through
+<code class="docutils literal notranslate"><span class="pre">mutable_q.series()</span></code> changes the value stored inside <code class="docutils literal notranslate"><span class="pre">mutable_q</span></code> itself,
+not a detached copy. This is the <em>only</em> way to mutate a <code class="docutils literal notranslate"><span class="pre">Queue</span></code>’s held
+value – <a class="reference internal" href="invoke.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">invoke</span></code></span></a> cannot reach an in-place method by name;
+see its Example 5.</p>
+<p>Example 3. A couple of ordinary, non-mutating method calls chained directly
+off each accessor, one pair per kind. This is a small sample, not the whole
+surface – see each type’s own reference for the rest.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">series_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;series().mean(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">series_q</span><span class="p">.</span><span class="n">series</span><span class="p">().</span><span class="n">mean</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;series().sum(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">series_q</span><span class="p">.</span><span class="n">series</span><span class="p">().</span><span class="n">sum</span><span class="p">().</span><span class="n">item</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">note_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;  Ab  &quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;note().strip(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">note_q</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;note().upper(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">note_q</span><span class="p">.</span><span class="n">note</span><span class="p">().</span><span class="n">upper</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">timeline_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;1999-04-17T21:15:23Z&quot;</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;timeline().year(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">timeline_q</span><span class="p">.</span><span class="n">timeline</span><span class="p">().</span><span class="n">year</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;timeline().add_days(1): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">timeline_q</span><span class="p">.</span><span class="n">timeline</span><span class="p">().</span><span class="n">add_days</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">duration_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">hours</span><span class="p">(</span><span class="mi">-5</span><span class="p">));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;duration().abs(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">duration_q</span><span class="p">.</span><span class="n">duration</span><span class="p">().</span><span class="n">abs</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;duration().total().hours(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">duration_q</span><span class="p">.</span><span class="n">duration</span><span class="p">().</span><span class="n">total</span><span class="p">().</span><span class="n">hours</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>series().mean(): 2.5
+series().sum(): 10
+note().strip(): Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;Ab&quot;]
+note().upper(): Note(shape=[1], dim=1, numel=1, encoding=utf8)
+[&quot;  AB  &quot;]
+timeline().year(): Series(shape=[], strides=[], dtype=int32, platform=cpu, numel=1, contiguous=true)
+data=1999
+timeline().add_days(1): Timeline(shape=[], tz=UTC)
+1999-04-18 21:15:23
+duration().abs(): Duration(shape=[], dim=0, numel=1)
+0 days 05:00:00.000000000
+duration().total().hours(): Series(shape=[], strides=[], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=-5.0000
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">strip()</span></code> and <code class="docutils literal notranslate"><span class="pre">upper()</span></code> are both non-mutating – each returns a new <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+rather than changing the one <code class="docutils literal notranslate"><span class="pre">note_q</span></code> holds, which is why <code class="docutils literal notranslate"><span class="pre">note().upper()</span></code>
+still shows the original, unstripped <code class="docutils literal notranslate"><span class="pre">&quot;</span>&#160; <span class="pre">Ab</span>&#160; <span class="pre">&quot;</span></code> rather than building on
+<code class="docutils literal notranslate"><span class="pre">strip()</span></code>’s result. The same is true of <code class="docutils literal notranslate"><span class="pre">abs()</span></code>: <code class="docutils literal notranslate"><span class="pre">duration_q</span></code> itself is
+untouched, so the later <code class="docutils literal notranslate"><span class="pre">duration().total().hours()</span></code> call still reports
+<code class="docutils literal notranslate"><span class="pre">-5</span></code>, the original value, not the absolute one. Chaining off an accessor
+calls that method the same way it would be called directly on the type –
+it does not change what the accessor returns next time, unless the method
+is one of the in-place, <code class="docutils literal notranslate"><span class="pre">_</span></code>-suffixed ones, as in Example 2.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind</span></code></span></a>: check the kind before calling the matching accessor,
+to avoid the exception path entirely.</p></li>
+<li><p><a class="reference internal" href="generic-access.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">generic-access</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code>, which throws
+<code class="docutils literal notranslate"><span class="pre">std::bad_variant_access</span></code> instead of a named message on a kind mismatch.</p></li>
+<li><p><a class="reference internal" href="../../series_api_reference.html"><span class="std std-doc">Series API Reference</span></a>,
+<a class="reference internal" href="../../note_api_reference.html"><span class="std std-doc">Note API Reference</span></a>,
+<a class="reference internal" href="../../timeline_api_reference.html"><span class="std std-doc">Timeline API Reference</span></a>, and
+<a class="reference internal" href="../../duration_api_reference.html"><span class="std std-doc">Duration API Reference</span></a>: the full method
+surface each accessor hands back.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../queue_api_reference.html">Queue API Reference</a><ul>
+      <li>Previous: <a href="kind.html" title="previous chapter">Queue::kind, Queue::Kind, Queue::kind_name, is_series, is_note, is_timeline, is_duration</a></li>
+      <li>Next: <a href="state.html" title="next chapter">Queue::defined, Queue::dim, Queue::numel</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/queue/accessors.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

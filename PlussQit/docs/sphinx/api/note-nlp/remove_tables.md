@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_tables
+# Note::NlpAccessor::remove_tables
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_tables() const
+Note Note::NlpAccessor::remove_tables() const
 ```
 
 ## Remove Markdown Table Blocks

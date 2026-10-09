@@ -16,7 +16,7 @@ DataFrame::bfill(const FillOptions& options) const -> DataFrame
 ## What It Does
 
 Backward-fills missing values: each null cell is replaced by the next *observed* value
-below it in the same feature, propagating upward. `bfill()` works on every `Thread`
+below it in the same feature, propagating upward. `bfill()` works on every `Slate`
 kind PlussMic supports — `Series`, `Note`, `Timeline`, and `TimeIndex` — not just
 numeric features, since propagating an existing observation doesn't require numeric
 semantics the way interpolation does.
@@ -58,7 +58,7 @@ using namespace pluss::table;
 
 auto city_valid = pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool);
 auto orders = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "", "", "Tema", "", "Kumasi"}), city_valid)},
+    {"city", Slate(pluss::make_note({"Accra", "", "", "Tema", "", "Kumasi"}), city_valid)},
 });
 
 std::cout << orders;

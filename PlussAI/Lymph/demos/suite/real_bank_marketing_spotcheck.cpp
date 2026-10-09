@@ -18,30 +18,30 @@ int main() {
   enc.max_categories = 32;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"age", "job", "marital", "education", "default", "balance", "housing", "loan", "contact",
                  "day", "month", "duration", "campaign", "pdays", "previous", "poutcome"})
       .label("y")
       .note(lymph::DataNotePolicy::Factorize);
 
   lymph::Workflow design = lymph::workflow::make(
-      lymph::Policy{},
+      lymph::workflow::Policy{},
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"age", "balance", "day", "duration", "campaign", "pdays", "previous"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
           lymph::workflow::branch("cat", {"job", "marital", "education", "default", "housing", "loan", "contact", "month", "poutcome"}, {
-              {"encode", lymph::stage::one_hot_encoder(enc)},
+              {"encode", lymph::prep::stage::one_hot_encoder(enc)},
           }),
       });
 
   lymph::Builder models = lymph::builder::build({
-      {"logistic", lymph::model::logistic_regression({.regularization_strength = 0.02})},
-      {"forest", lymph::model::random_forest_classifier({.learners = 40, .subsample = 0.8})},
-      {"boost", lymph::model::gradient_boost_classifier({.learners = 50, .learning_rate = 0.05})},
+      {"logistic", lymph::models::logistic_regression({.regularization_strength = 0.02})},
+      {"forest", lymph::models::random_forest_classifier({.learners = 40, .subsample = 0.8})},
+      {"boost", lymph::models::gradient_boost_classifier({.learners = 50, .learning_rate = 0.05})},
   });
 
-  lymph::metrics::CrossValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
   cv.shuffle = true;

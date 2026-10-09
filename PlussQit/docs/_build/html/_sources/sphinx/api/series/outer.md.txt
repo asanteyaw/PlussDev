@@ -114,7 +114,7 @@ With `g = ones(2, 3)`, `dL/da = g @ b = [3+4+5, 3+4+5] = [12, 12]`.
 - [`Series::ger`](ger.md): the BLAS-named alias.
 - [`Series::addr`](addr.md): add a scaled outer product to an existing matrix.
 - [`Series::inner`](inner.md): the complementary contraction to a scalar.
-- [`SeriesLinearAlgAccessor::dot`](../series-linearalg/dot.md): the vector inner
+- [`Series::LinearAlgAccessor::dot`](../series-linearalg/dot.md): the vector inner
   product.
 
 <div class="pluss-inline-prev-next">

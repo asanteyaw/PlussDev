@@ -17,7 +17,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -71,10 +71,10 @@ DataFrame make_factorize_train_frame() {
   const auto color = pluss::make_note({"red", "green", "blue", "red", "green", "blue", "red", "green"});
   const Series y = pluss::make_series(std::vector<double>{0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0}, {8}, f64());
   return DataFrame({
-      {"x0", Thread(x0)},
-      {"x1", Thread(x1)},
-      {"color", Thread(color)},
-      {"target", Thread(y)},
+      {"x0", Slate(x0)},
+      {"x1", Slate(x1)},
+      {"color", Slate(color)},
+      {"target", Slate(y)},
   });
 }
 
@@ -83,9 +83,9 @@ DataFrame make_factorize_known_frame() {
   const Series x1 = pluss::make_series(std::vector<double>{0.2, 0.2, 0.1}, {3}, f64());
   const auto color = pluss::make_note({"blue", "green", "red"});
   return DataFrame({
-      {"x0", Thread(x0)},
-      {"x1", Thread(x1)},
-      {"color", Thread(color)},
+      {"x0", Slate(x0)},
+      {"x1", Slate(x1)},
+      {"color", Slate(color)},
   });
 }
 
@@ -94,9 +94,9 @@ DataFrame make_factorize_unseen_frame() {
   const Series x1 = pluss::make_series(std::vector<double>{0.2, 0.2, 0.1}, {3}, f64());
   const auto color = pluss::make_note({"blue", "purple", "red"});
   return DataFrame({
-      {"x0", Thread(x0)},
-      {"x1", Thread(x1)},
-      {"color", Thread(color)},
+      {"x0", Slate(x0)},
+      {"x1", Slate(x1)},
+      {"color", Slate(color)},
   });
 }
 

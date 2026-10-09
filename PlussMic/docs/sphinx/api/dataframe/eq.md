@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 86d8621b0095 -->
+<!-- pluss-signature-hash: 7a93509856dc -->
 
 # DataFrame::eq
 
@@ -12,9 +12,9 @@ DataFrame::eq(double other) const -> DataFrame
 DataFrame::eq(std::string_view other) const -> DataFrame
 DataFrame::eq(const DataFrame& other) const -> DataFrame
 DataFrame::eq(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::eq(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::eq(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::eq(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::eq(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::eq(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::eq(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ DataFrame::eq(const Thread& other, const AlignOptions& options, Axis axis = Axis
 The named-method form of elementwise equality, returning a boolean-valued frame the
 same shape as the source. `eq()` is one of six comparison methods
 (`eq`, [`ne`](ne.md), [`lt`](lt.md), [`le`](le.md), `gt`, `ge`) that share the same
-overload set — a scalar, a string, another `DataFrame`, or a `Thread` broadcast by
+overload set — a scalar, a string, another `DataFrame`, or a `Slate` broadcast by
 `axis` — mirroring the arithmetic family's shape (see [`add()`](add.md)), except every
 comparison method returns a `Series<bool>` per feature instead of a numeric result.
 
@@ -40,17 +40,17 @@ The right-hand operand, in one of three shapes:
   Comparing a non-`Note` feature against a string is not a supported combination.
 - `const DataFrame&`: another frame, compared feature-by-feature and case-by-case
   after the two frames are aligned.
-- `const Thread&`: one column of values, broadcast according to `axis`.
+- `const Slate&`: one column of values, broadcast according to `axis`.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
-Controls how a `Thread` right-hand operand is broadcast — identical meaning to
+Controls how a `Slate` right-hand operand is broadcast — identical meaning to
 [`add()`](add.md)'s `axis`: `Axis::Feature` (the default) supplies one value per
 feature; `Axis::Case` supplies one value per case.
 
 **options** (`AlignOptions`, optional)
 
-Controls how the `DataFrame` or `Thread` right-hand operand is aligned to the current
+Controls how the `DataFrame` or `Slate` right-hand operand is aligned to the current
 frame before the comparison runs. Same meaning as [`add()`](add.md)'s `options`.
 
 ## Returns
@@ -158,13 +158,13 @@ s3   | false  true
 Only `s3`'s `quiz` value differs between `scores` (`84`) and `changed` (`83`) — every
 other cell still compares equal.
 
-Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+Example 4. Compare against a `Slate` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
-auto out_thread = scores.eq(thresholds);
-std::cout << out_thread;
+auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
+auto out_slate = scores.eq(thresholds);
+std::cout << out_slate;
 ```
 
 ### Output

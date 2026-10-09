@@ -17,7 +17,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace pluss::tils {
+namespace pluss::loader {
 
 class Sampler {
 public:
@@ -33,7 +33,7 @@ public:
 class SequentialSampler final : public Sampler {
 public:
   std::vector<std::int64_t> sample(std::int64_t size, std::uint64_t /*epoch_seed*/) const override {
-    PLUSS_CHECK(size >= 0, "pluss::tils::SequentialSampler: size must be >= 0");
+    PLUSS_CHECK(size >= 0, "pluss::loader::SequentialSampler: size must be >= 0");
     std::vector<std::int64_t> order(static_cast<std::size_t>(size));
     std::iota(order.begin(), order.end(), std::int64_t{0});
     return order;
@@ -49,7 +49,7 @@ public:
       : replacement_(replacement), num_samples_(num_samples) {}
 
   std::vector<std::int64_t> sample(std::int64_t size, std::uint64_t epoch_seed) const override {
-    PLUSS_CHECK(size > 0, "pluss::tils::RandomSampler: size must be > 0");
+    PLUSS_CHECK(size > 0, "pluss::loader::RandomSampler: size must be > 0");
     const std::int64_t n = num_samples_ >= 0 ? num_samples_ : size;
     std::mt19937_64 rng(epoch_seed);
     std::vector<std::int64_t> out(static_cast<std::size_t>(n));
@@ -59,7 +59,7 @@ public:
     } else {
       PLUSS_CHECK(
           n <= size,
-          "pluss::tils::RandomSampler: num_samples must be <= size when replacement=false");
+          "pluss::loader::RandomSampler: num_samples must be <= size when replacement=false");
       std::vector<std::int64_t> pool(static_cast<std::size_t>(size));
       std::iota(pool.begin(), pool.end(), std::int64_t{0});
       std::shuffle(pool.begin(), pool.end(), rng);
@@ -92,14 +92,14 @@ class WeightedRandomSampler final : public Sampler {
 public:
   explicit WeightedRandomSampler(std::vector<double> weights, std::int64_t num_samples, bool replacement = true)
       : weights_(std::move(weights)), num_samples_(num_samples), replacement_(replacement) {
-    PLUSS_CHECK(!weights_.empty(), "pluss::tils::WeightedRandomSampler: weights must not be empty");
-    PLUSS_CHECK(num_samples_ > 0, "pluss::tils::WeightedRandomSampler: num_samples must be > 0");
+    PLUSS_CHECK(!weights_.empty(), "pluss::loader::WeightedRandomSampler: weights must not be empty");
+    PLUSS_CHECK(num_samples_ > 0, "pluss::loader::WeightedRandomSampler: num_samples must be > 0");
   }
 
   std::vector<std::int64_t> sample(std::int64_t size, std::uint64_t epoch_seed) const override {
     PLUSS_CHECK(
         static_cast<std::int64_t>(weights_.size()) == size,
-        "pluss::tils::WeightedRandomSampler: weights size must match dataset size");
+        "pluss::loader::WeightedRandomSampler: weights size must match dataset size");
     std::mt19937_64 rng(epoch_seed);
     std::vector<std::int64_t> out(static_cast<std::size_t>(num_samples_));
     if (replacement_) {
@@ -110,7 +110,7 @@ public:
 
     PLUSS_CHECK(
         num_samples_ <= size,
-        "pluss::tils::WeightedRandomSampler: num_samples must be <= size when replacement=false");
+        "pluss::loader::WeightedRandomSampler: num_samples must be <= size when replacement=false");
     std::vector<double> remaining = weights_;
     std::vector<std::int64_t> pool(static_cast<std::size_t>(size));
     std::iota(pool.begin(), pool.end(), std::int64_t{0});
@@ -130,12 +130,4 @@ private:
   bool replacement_;
 };
 
-} // namespace pluss::tils
-
-namespace pluss::loader {
-using tils::Sampler;
-using tils::SequentialSampler;
-using tils::RandomSampler;
-using tils::SubsetRandomSampler;
-using tils::WeightedRandomSampler;
 } // namespace pluss::loader

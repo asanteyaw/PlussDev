@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_macro
+# Note::TexAccessor::strip_macro
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_macro(std::string_view name) const
+Note Note::TexAccessor::strip_macro(std::string_view name) const
 ```
 
 ## Remove One Macro's Declarations

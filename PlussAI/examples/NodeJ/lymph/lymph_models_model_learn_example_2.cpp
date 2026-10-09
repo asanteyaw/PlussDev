@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,7 +15,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   // A template held by const: it must never become trained itself.
   const lymph::models::Model blueprint = lymph::models::logistic_regression();
@@ -38,9 +38,9 @@ int main() {
   // Hard predictions can agree while the underlying decision scores differ,
   // which is how you see the two fitted models really are distinct values.
   const DataFrame compare({
-      {"actual", Thread(y)},
-      {"score_800_iters", Thread(fitted_converged.infer_scores(x))},
-      {"score_2_iters", Thread(fitted_hurried.infer_scores(x))},
+      {"actual", Slate(y)},
+      {"score_800_iters", Slate(fitted_converged.infer_scores(x))},
+      {"score_2_iters", Slate(fitted_hurried.infer_scores(x))},
   });
   std::cout << compare;
 

@@ -4,10 +4,11 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
-  using pluss::ai::nodeb::embed::ContextualEmbedOptions;
-  using pluss::ai::nodeb::embed::ContextualEmbedder;
-  using pluss::ai::nodeb::embed::Embedder;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
+  using nlp_api::embed::ContextualEmbedOptions;
+  using nlp_api::embed::ContextualEmbedder;
+  using nlp_api::embed::Embedder;
 
   std::vector<std::string> corpus{};
   for (int i = 0; i < 40; ++i) {
@@ -61,7 +62,7 @@ int main() {
     return 1;
   }
 
-  std::cout << "== NodeB Contextual Embeddings and Generation ==\n";
+  std::cout << "== PlussAI NLP Contextual Embeddings and Generation ==\n";
   std::cout << "cross-context similarity(bank_financial, bank_geographic)="
             << bank_similarity << "\n";
   std::cout << "prompt: the bank raised interest\n";

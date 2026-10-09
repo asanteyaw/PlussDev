@@ -72,7 +72,7 @@ The first value splits cleanly. The second has no `=` — its
 - Always literal (no regex) and always stops at the *first* occurrence
   — for a regex-aware or multi-way split, use [`split()`](split.md).
 - Always produces exactly three output features.
-- An empty `separator` throws `"Thread::partition: separator cannot be
+- An empty `separator` throws `"Slate::partition: separator cannot be
   empty"`.
 - Requires the slot to be `Note`-kind — a non-`Note` slot throws.
 

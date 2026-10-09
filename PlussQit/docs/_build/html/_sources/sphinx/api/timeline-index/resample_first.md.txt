@@ -1,18 +1,18 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::resample_first
+# Timeline::TimelineIndexAccessor::resample_first
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_first(
+pluss::Series Timeline::TimelineIndexAccessor::resample_first(
     const pluss::Series& values,
     std::string_view freq,
     std::int64_t step = 1) const
 
-pluss::Series TimelineIndexAccessor::resample_first(
+pluss::Series Timeline::TimelineIndexAccessor::resample_first(
     const pluss::Series& values,
     const ResampleOptions& options) const
 ```
@@ -58,11 +58,11 @@ can.
 Example 1. Select each hour's opening value.
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
 
 std::cout << pluss::series::print(index.resample_first(values, "H")) << "\n";
@@ -92,10 +92,10 @@ Example 3. The first lane is `NaN`, so the first valid lane is selected. The
 unobserved middle hour stays absent.
 
 ```cpp
-auto sparse = pluss::timeindex::make({
+auto sparse = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:10:00Z",
     "2024-11-01T00:20:00Z", "2024-11-01T02:00:00Z",
-});
+}).index();
 auto readings = pluss::make_series(std::vector<double>{
     std::numeric_limits<double>::quiet_NaN(), 3.0, 1.0, 7.0});
 
@@ -128,10 +128,10 @@ Example 5. Right closure includes the exact `01:00` observation in the first
 bin, but the first value there remains the midnight value.
 
 ```cpp
-pluss::TimelineIndexAccessor::ResampleOptions options;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions options;
 options.freq = "H";
-options.closed = pluss::TimelineIndexAccessor::ResampleClosed::Right;
-options.label = pluss::TimelineIndexAccessor::ResampleLabel::Right;
+options.closed = pluss::Timeline::TimelineIndexAccessor::ResampleClosed::Right;
+options.label = pluss::Timeline::TimelineIndexAccessor::ResampleLabel::Right;
 
 std::cout << pluss::series::print(index.resample_first(values, options)) << "\n";
 ```
@@ -168,9 +168,9 @@ not overwrite it. Neither the index nor `values` is mutated.
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_last`](resample_last.md)
-- [`TimelineIndexAccessor::resample_min`](resample_min.md)
-- [`TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
+- [`Timeline::TimelineIndexAccessor::resample_last`](resample_last.md)
+- [`Timeline::TimelineIndexAccessor::resample_min`](resample_min.md)
+- [`Timeline::TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_count.html">

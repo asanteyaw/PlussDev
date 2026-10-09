@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TimelineIndexAccessor::is_monotonic_increasing &#8212; PlussQit  documentation</title>
+    <title>Timeline::TimelineIndexAccessor::is_monotonic_increasing &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimelineIndexAccessor::is_unique" href="is_unique.html" />
-    <link rel="prev" title="TimelineIndexAccessor::is_monotonic_decreasing" href="is_monotonic_decreasing.html" />
+    <link rel="next" title="Timeline::TimelineIndexAccessor::is_unique" href="is_unique.html" />
+    <link rel="prev" title="Timeline::TimelineIndexAccessor::is_monotonic_decreasing" href="is_monotonic_decreasing.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,12 +36,12 @@
 
           <div class="body" role="main">
             
-  <section id="timelineindexaccessor-is-monotonic-increasing">
-<h1>TimelineIndexAccessor::is_monotonic_increasing<a class="headerlink" href="#timelineindexaccessor-is-monotonic-increasing" title="Link to this heading">¶</a></h1>
+  <section id="timeline-timelineindexaccessor-is-monotonic-increasing">
+<h1>Timeline::TimelineIndexAccessor::is_monotonic_increasing<a class="headerlink" href="#timeline-timelineindexaccessor-is-monotonic-increasing" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_index_accessor_api_reference.html"><span class="doc std std-doc">Back to Timeline Index Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">is_monotonic_increasing</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">is_monotonic_increasing</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -63,13 +63,13 @@ adjacent pair violates increasing order.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. A standard ascending axis is monotonic increasing.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
-<span class="p">});</span>
+<span class="p">}).</span><span class="n">index</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;idx.is_monotonic_increasing() = &quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">idx</span><span class="p">.</span><span class="n">is_monotonic_increasing</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -81,13 +81,13 @@ adjacent pair violates increasing order.</p>
 </div>
 <p>Example 2. A descending axis fails the increasing check when construction-time
 order enforcement is intentionally disabled.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">descending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">descending</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
-<span class="p">},</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="p">}).</span><span class="n">index</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;descending.is_monotonic_increasing() = &quot;</span>
 <span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">descending</span><span class="p">.</span><span class="n">is_monotonic_increasing</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
@@ -103,7 +103,7 @@ order enforcement is intentionally disabled.</p>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Most production <code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor</span></code> usage should stay monotonic increasing.</p></li>
+<li><p>Most production <code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor</span></code> usage should stay monotonic increasing.</p></li>
 <li><p>Use <a class="reference internal" href="is_monotonic_decreasing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_monotonic_decreasing()</span></code></span></a> when a
 newest-first axis is intentional.</p></li>
 <li><p>A non-monotonic index is not just a cosmetic issue. It changes the meaning of
@@ -113,8 +113,8 @@ ordered lookup and can invalidate assumptions in time-aware code.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="searchsorted.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::searchsorted</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="asof.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::asof</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="searchsorted.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::searchsorted</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="asof.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::asof</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="is_monotonic_decreasing.html">
@@ -162,7 +162,6 @@ ordered lookup and can invalidate assumptions in time-aware code.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -170,8 +169,8 @@ ordered lookup and can invalidate assumptions in time-aware code.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -181,8 +180,8 @@ ordered lookup and can invalidate assumptions in time-aware code.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_index_accessor_api_reference.html">Timeline Index Accessor API Reference</a><ul>
-      <li>Previous: <a href="is_monotonic_decreasing.html" title="previous chapter">TimelineIndexAccessor::is_monotonic_decreasing</a></li>
-      <li>Next: <a href="is_unique.html" title="next chapter">TimelineIndexAccessor::is_unique</a></li>
+      <li>Previous: <a href="is_monotonic_decreasing.html" title="previous chapter">Timeline::TimelineIndexAccessor::is_monotonic_decreasing</a></li>
+      <li>Next: <a href="is_unique.html" title="next chapter">Timeline::TimelineIndexAccessor::is_unique</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

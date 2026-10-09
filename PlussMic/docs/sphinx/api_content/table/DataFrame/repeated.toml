@@ -5,8 +5,8 @@ Build a boolean repeated-group mask.
 """
 
 returns = """
-`Thread`
-    Boolean-like thread with one value per row. `true` means the row belongs to a group that appears more than once.
+`Slate`
+    Boolean-like slate with one value per row. `true` means the row belongs to a group that appears more than once.
 """
 
 see_also = [

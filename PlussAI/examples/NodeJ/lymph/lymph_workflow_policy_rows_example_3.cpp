@@ -14,15 +14,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const double nan_val = std::numeric_limits<double>::quiet_NaN();
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, nan_val, 1.8, 2.2}, {4}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, nan_val, 0.9}, {4}, f64))},
+      {"income", Slate(pluss::make_series({1.0, nan_val, 1.8, 2.2}, {4}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, nan_val, 0.9}, {4}, f64))},
   });
 
   // Sweep every column: both NaN rows go.

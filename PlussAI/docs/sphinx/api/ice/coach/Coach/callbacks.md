@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: fadb87dd75d2 -->
 # `pluss::ai::ice::Coach::callbacks`
 
 [Back to `pluss::ai::ice::Coach`](../Coach.md)
@@ -8,54 +7,66 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] const std::vector<std::shared_ptr<pluss::ai::ice::Callback>>&
+pluss::ai::ice::Coach::callbacks() const noexcept;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Returns the callbacks added to this `Coach` -- via its own
+[two-argument constructor](../Coach.md) or
+[`add_callback`](add_callback.md) -- in the order they were added.
+This list is exactly what gets passed into
+[`learn`](learn.md)/[`infer`](infer.md)/[`assess`](assess.md); it never
+includes a built-in [`EarlyStopCallback`](../../callback/EarlyStopCallback.md)
+`learn` adds automatically under its own conditions -- that instance
+lives only inside the
+[`CallbackChain`](../../callback/CallbackChain.md) `learn` assembles
+for one call, and is never written back here.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`const std::vector<std::shared_ptr<Callback>>&` -- a reference into
+this `Coach`'s own storage.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: empty before any callback is added, populated through
+the two-argument constructor directly, and confirming the auto-added
+`EarlyStopCallback` never shows up here even after a `learn` call that
+triggers it.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class NoopCallback final : public pluss::ai::ice::Callback {};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Coach coach;
+  std::cout << "before: callbacks().size() = " << coach.callbacks().size() << "\n";
+
+  coach.add_callback(std::make_shared<NoopCallback>());
+  std::cout << "after:  callbacks().size() = " << coach.callbacks().size() << "\n";
 
   return 0;
 }
@@ -64,27 +75,34 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+before: callbacks().size() = 0
+after:  callbacks().size() = 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <memory>
+#include <vector>
+
+namespace {
+
+class NoopCallback final : public pluss::ai::ice::Callback {};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  std::vector<std::shared_ptr<ice::Callback>> seeded{
+      std::make_shared<NoopCallback>(), std::make_shared<NoopCallback>()};
+
+  const ice::Coach coach(ice::TrainOptions{}, seeded);
+  std::cout << "callbacks().size() = " << coach.callbacks().size() << "\n";
 
   return 0;
 }
@@ -93,27 +111,38 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+callbacks().size() = 2
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 1;
+  options.validation.split_ratio = 0.5;  // triggers an auto-added EarlyStopCallback
+
+  ice::Coach coach(options);
+  std::cout << "before learn: callbacks().size() = " << coach.callbacks().size() << "\n";
+  coach.learn(model, x, y);
+
+  // The auto-added EarlyStopCallback lives only in the CallbackChain Coach
+  // assembles internally for that one call -- it never touches
+  // Coach::callbacks() itself.
+  std::cout << "after learn:  callbacks().size() = " << coach.callbacks().size() << "\n";
 
   return 0;
 }
@@ -122,12 +151,20 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+before learn: callbacks().size() = 0
+after learn:  callbacks().size() = 0
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`add_callback`](add_callback.md) -- the only way entries get added
+  (besides the constructor).
+- [`EarlyStopCallback`](../../callback/EarlyStopCallback.md) -- the
+  built-in callback that never shows up here.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

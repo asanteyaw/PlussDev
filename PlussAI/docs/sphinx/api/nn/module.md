@@ -40,20 +40,40 @@ This is why layers are copyable, default-constructible into an empty
 
 ## How To Call It
 
+Put a fusion layer in evaluation mode, count its defined parameters, and roll it back to a snapshot. The program prints each check.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::Fusion layer(3, 2);                 // in_features=3, out_features=2
-layer.train(false);                     // ModuleHolder forwards to Module::train
-bool training = layer.is_training();    // false
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-for (Series* p : layer.parameters()) {  // ModuleHolder forwards to Module::parameters
-  // p->defined() is true for weight and bias
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::Fusion layer(3, 2);
+  layer.train(false);
+  std::cout << "training = " << (layer.is_training() ? "true" : "false") << "\n";
+  int parameters = 0;
+  for (pluss::Series* p : layer.parameters()) {
+    if (p->defined()) ++parameters;
+  }
+  std::cout << "defined parameters = " << parameters << "\n";
+  pluss::nn::Module::Snapshot snap = layer.snapshot();
+  layer.restore(snap);
+  std::cout << "restored\n";
+  return 0;
 }
+```
 
-Module::Snapshot snap = layer.snapshot();
-// ... mutate layer's weights ...
-layer.restore(snap);                    // roll back to the snapshot
+Output
+
+```text
+training = false
+defined parameters = 2
+restored
 ```
 
 ## Related Pages

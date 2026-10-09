@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::logcdf
+# Series::StatAccessor::logcdf
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::logcdf() const
-Series SeriesStatAccessor::logcdf(double sigma) const
-Series SeriesStatAccessor::logcdf(double mu, double sigma) const
+Series Series::StatAccessor::logcdf() const
+Series Series::StatAccessor::logcdf(double sigma) const
+Series Series::StatAccessor::logcdf(double mu, double sigma) const
 Series SeriesStatProxy::logcdf() const
 Series SeriesStatProxy::logcdf(double sigma) const
 Series SeriesStatProxy::logcdf(double mu, double sigma) const

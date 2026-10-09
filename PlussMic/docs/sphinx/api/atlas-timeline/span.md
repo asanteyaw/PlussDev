@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e7dae7b5b44c -->
+<!-- pluss-signature-hash: ce73c098046c -->
 
 # AtlasTimelineAccessor::span
 
@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-AtlasTimelineAccessor::span(const Thread& other, const TimelineSpanOptions& options = {}) const -> Atlas
-AtlasTimelineAccessor::span(const Thread& other, TimeUnit unit) const -> Atlas
+AtlasTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const -> Atlas
+AtlasTimelineAccessor::span(const Slate& other, TimeUnit unit) const -> Atlas
 AtlasTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const -> Atlas
 AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -> Atlas
 ```
@@ -24,7 +24,7 @@ frame, broadcast across the whole `Atlas` via [`map_frames()`](../atlas/map_fram
 ```{important} No Atlas overload — the same `other` is applied to every frame
 Unlike [`DataFrameTimelineAccessor::span`](../dataframe-timeline/span.md), which has a
 `const DataFrame&` overload pairing each frame against its own matching `other` frame,
-this accessor has **no `Atlas` overload**. Only a single `Thread` or `pluss::Timeline`
+this accessor has **no `Atlas` overload**. Only a single `Slate` or `pluss::Timeline`
 is accepted as `other`, and that *same* value is used as the right-hand side for
 **every** frame in the stack — there is no way to pair each frame against a different
 per-frame `other` in one call.
@@ -32,7 +32,7 @@ per-frame `other` in one call.
 
 ## Parameters
 
-**other** (`const Thread&` / `const pluss::Timeline&`)
+**other** (`const Slate&` / `const pluss::Timeline&`)
     The right-hand timestamp(s), applied identically to every frame in the stack — see
     the important callout above.
 
@@ -60,11 +60,11 @@ value.
 ```cpp
 using namespace pluss::table;
 
-auto s1 = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
-auto s2 = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
+auto s1 = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto s2 = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
 auto atlas = Atlas({s1, s2});
 
-auto other = Thread(pluss::make_timeline({"2024-02-01T00:00:00Z"}));
+auto other = Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"}));
 auto out = atlas.tl().span(other, TimeUnit::Days);
 std::cout << out.frame(0) << "\n" << out.frame(1);
 ```

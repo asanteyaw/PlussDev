@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor API Reference
+# Series::LinearAlgAccessor API Reference
 
 [Back to Series API Reference](series_api_reference.md)
 
 This page is the landing page for the linear-algebra workflow entered through
 [`Series::linearalg`](api/series/linearalg.md) and continued through
-`SeriesLinearAlgAccessor`. The accessor groups operations whose shapes are
+`Series::LinearAlgAccessor`. The accessor groups operations whose shapes are
 governed by vector, matrix, and batched-matrix rules rather than ordinary
 elementwise broadcasting.
 
@@ -100,7 +100,7 @@ announce that an operation follows linear-algebra shape rules.
 - [`lu_solve`](api/series-linearalg/lu_solve.md): solve a general nonsingular
   square system
 
-The handwritten reference now covers the complete `SeriesLinearAlgAccessor`
+The handwritten reference now covers the complete `Series::LinearAlgAccessor`
 surface.
 
 ## Choosing A Product

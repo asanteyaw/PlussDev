@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e20888f7fa1e -->
+<!-- pluss-signature-hash: 45abd6aab321 -->
 
 # Catalog::cast
 
@@ -9,9 +9,9 @@
 
 ```cpp
 Catalog::cast() const -> CatalogCastAccessor
-Catalog::cast(const pluss::table::ThreadCastOptions& options) const -> CatalogCastAccessor
-Catalog::cast(pluss::table::ThreadCastTarget target,
-              const pluss::table::ThreadCastOptions& options = {}) const -> Catalog
+Catalog::cast(const pluss::table::SlateCastOptions& options) const -> CatalogCastAccessor
+Catalog::cast(pluss::table::SlateCastTarget target,
+              const pluss::table::SlateCastOptions& options = {}) const -> Catalog
 ```
 
 ## What It Does
@@ -22,9 +22,9 @@ Casting now has two entry styles:
 - direct root overload: `ct.cast(target, options)`
 
 Both apply each stream's own cast machinery uniformly across the catalog. This is the
-whole-catalog counterpart to [`Thread::cast()`](../thread/cast.md); see that page for
-the full explanation of what each `ThreadCastTarget` means and how
-`ThreadCastOptions` (dtype selection, parse-failure handling) affects the conversion.
+whole-catalog counterpart to [`Slate::cast()`](../thread/cast.md); see that page for
+the full explanation of what each `SlateCastTarget` means and how
+`SlateCastOptions` (dtype selection, parse-failure handling) affects the conversion.
 
 ```{important} Preferred surface
 Prefer the accessor form in new code: `ct.cast().timeline()` or
@@ -44,18 +44,18 @@ you call rather than a `target` argument.
 
 ## Parameters
 
-**options** (`const pluss::table::ThreadCastOptions&`, optional)
+**options** (`const pluss::table::SlateCastOptions&`, optional)
     For the accessor overload, stores conversion policy on the accessor before you pick
     the terminal target with `.series()` / `.note()` / `.timeline()` / `.timeindex()`.
 
-**target** (`pluss::table::ThreadCastTarget`)
+**target** (`pluss::table::SlateCastTarget`)
     For the direct root overload, the payload kind to cast every stream to — `Series`,
     `Note`, `Timeline`, or `TimeIndex`.
 
-**options** (`const pluss::table::ThreadCastOptions&`, optional)
+**options** (`const pluss::table::SlateCastOptions&`, optional)
     For the direct root overload, conversion policy — `series_dtype` picks the numeric
     dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
-    [`Thread::cast`](../thread/cast.md) for the full breakdown.
+    [`Slate::cast`](../thread/cast.md) for the full breakdown.
 
 ## Returns
 
@@ -118,14 +118,14 @@ ts                       | Timeline     | Timeline         | 2       | [2024-01-
 ========================================================================================================================
 ```
 
-Example 3. Request a specific numeric dtype via `ThreadCastOptions`.
+Example 3. Request a specific numeric dtype via `SlateCastOptions`.
 
 ```cpp
 auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_note({"1", "2", "3"})),
 });
 
-pluss::table::ThreadCastOptions options;
+pluss::table::SlateCastOptions options;
 options.series_dtype = pluss::codem::ScalarType::Int64;
 
 auto out = ct.cast(options).series();
@@ -151,14 +151,14 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
 - `Catalog::cast(target, options)` and `Catalog::cast(options).series()` are equivalent
   in result; they differ only in surface style.
 - Requires a defined catalog; throws `"Catalog: undefined handle"` otherwise.
-- Follows the same per-target conversion rules as [`Thread::cast`](../thread/cast.md),
-  including its documented quirk that `ThreadCastOptions::invalid` only actually takes
+- Follows the same per-target conversion rules as [`Slate::cast`](../thread/cast.md),
+  including its documented quirk that `SlateCastOptions::invalid` only actually takes
   effect for the `Timeline` target.
 
 ## See Also
 
 - [`Catalog::astype`](astype.md): the shorthand for `cast(Series, {.series_dtype = dtype})`.
-- [`Thread::cast`](../thread/cast.md): the underlying single-stream conversion this method
+- [`Slate::cast`](../thread/cast.md): the underlying single-stream conversion this method
   applies uniformly.
 - [`Catalog::keys`](keys.md): scope a cast to specific streams instead of the whole
   catalog, via its own `cast()` accessor.

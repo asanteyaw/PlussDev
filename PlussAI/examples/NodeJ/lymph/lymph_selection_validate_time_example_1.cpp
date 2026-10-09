@@ -10,7 +10,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -19,12 +19,12 @@ int main() {
       {10., 12., 13., 15., 16., 18., 19., 21., 22., 24., 25., 27.}, {12}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1}, {12}, f64);
-  const Thread when(pluss::make_timeline({
+  const Slate when(pluss::make_timeline({
       "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z",
       "2026-01-04T00:00:00Z", "2026-01-05T00:00:00Z", "2026-01-06T00:00:00Z",
       "2026-01-07T00:00:00Z", "2026-01-08T00:00:00Z", "2026-01-09T00:00:00Z",
       "2026-01-10T00:00:00Z", "2026-01-11T00:00:00Z", "2026-01-12T00:00:00Z"}));
-  const DataFrame frame({{"demand", Thread(demand)}, {"target", Thread(y)},
+  const DataFrame frame({{"demand", Slate(demand)}, {"target", Slate(y)},
                          {"when", when}});
 
   // folds = 3, horizon (test rows per fold) = 2.

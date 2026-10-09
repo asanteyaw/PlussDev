@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_ge
+# Series::TraverseAccessor::find_ge
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_ge(double rhs) const;
-TraverseMatch SeriesTraverseAccessor::find_ge(const Series& rhs) const;
+TraverseMatch Series::TraverseAccessor::find_ge(double rhs) const;
+TraverseMatch Series::TraverseAccessor::find_ge(const Series& rhs) const;
 
 TraverseMatch SeriesTraverseProxy::find_ge(double rhs) const;
 TraverseMatch SeriesTraverseProxy::find_ge(const Series& rhs) const;

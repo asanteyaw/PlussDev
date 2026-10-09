@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_emails
+# Note::NlpAccessor::mask_emails
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_emails() const
+Note Note::NlpAccessor::mask_emails() const
 ```
 
 ## Hide Mailboxes Without Hiding Nearby Handles

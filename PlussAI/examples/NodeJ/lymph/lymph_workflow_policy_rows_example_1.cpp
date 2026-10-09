@@ -12,15 +12,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const double nan_val = std::numeric_limits<double>::quiet_NaN();
   const DataFrame raw({
-      {"label", Thread(pluss::make_series({0.0, nan_val, 1.0, 1.0, nan_val, 0.0}, {6}, f64))},
-      {"income", Thread(pluss::make_series({1.0, 1.4, nan_val, 2.2, 3.8, 4.2}, {6}, f64))},
+      {"label", Slate(pluss::make_series({0.0, nan_val, 1.0, 1.0, nan_val, 0.0}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, nan_val, 2.2, 3.8, 4.2}, {6}, f64))},
   });
 
   // Reject rows missing the label only; the NaN in income survives (an

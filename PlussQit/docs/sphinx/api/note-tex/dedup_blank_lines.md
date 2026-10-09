@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::dedup_blank_lines
+# Note::TexAccessor::dedup_blank_lines
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::dedup_blank_lines() const
+Note Note::TexAccessor::dedup_blank_lines() const
 ```
 
 ## Cap Vertical Whitespace Without Reflowing Source

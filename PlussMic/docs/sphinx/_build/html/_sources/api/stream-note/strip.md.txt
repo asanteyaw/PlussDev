@@ -21,11 +21,11 @@ trims any of the given characters, in any order, from either end.
 
 ```{important} StreamNoteAccessor requires the bound stream to be Note-kind
 Every method on this accessor — not just strip() — routes through
-`Thread::strip()` (or the equivalent) for the bound stream. If the stream isn't
+`Slate::strip()` (or the equivalent) for the bound stream. If the stream isn't
 Note-kind (`Series`, `Timeline`, `TimeIndex`), the call throws
-`"Thread::strip is only valid for Note payload"` (the exact message names
+`"Slate::strip is only valid for Note payload"` (the exact message names
 whichever method actually ran). Cast first with
-[`Stream::cast(ThreadCastTarget::Note)`](../stream/cast.md) if the stream isn't
+[`Stream::cast(SlateCastTarget::Note)`](../stream/cast.md) if the stream isn't
 already text.
 ```
 
@@ -102,7 +102,7 @@ try {
 ### Output
 
 ```text
-Thread::strip is only valid for Note payload
+Slate::strip is only valid for Note payload
 ```
 
 ## Notes

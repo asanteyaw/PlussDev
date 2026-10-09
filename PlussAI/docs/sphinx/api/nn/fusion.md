@@ -17,15 +17,34 @@ everything else in this reference, carrying two learnable parameters
 
 ## How To Call It
 
+Build a two-layer network whose second layer has no bias, then run two rows through it. The program prints the output shape.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-nn::Schedule net;
-net.append("fc1", nn::Fusion(784, 128));
-net.append("act1", nn::ReLU());
-net.append("fc2", nn::Fusion(128, 10, /*bias=*/false));
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-const Series y = net.forward(x);
+int main() {
+  namespace nn = pluss::ai::nn;
+  nn::Schedule net;
+  net.append("fc1", nn::Fusion(784, 128));
+  net.append("act1", nn::ReLU());
+  net.append("fc2", nn::Fusion(128, 10, /*bias=*/false));
+  const pluss::Series x = pluss::make_series(std::vector<double>(2 * 784, 0.5), {2, 784});
+  const pluss::Series y = net.forward(x);
+  std::cout << "output = " << y.sizes()[0] << " x " << y.sizes()[1] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+output = 2 x 10
 ```
 
 `Fusion` composes into a [`Schedule`](module/Schedule.md) the same way any

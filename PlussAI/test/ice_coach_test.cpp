@@ -6,7 +6,10 @@
 #include <pluss/pluss.h>
 
 #include <cmath>
+#include <filesystem>
 #include <iostream>
+#include <memory>
+#include <string>
 #include <vector>
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -88,15 +91,77 @@ bool run_ice_coach_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+// Regression for a dangling-string_view bug in maybe_save_checkpoint_:
+// the save_last call site passes state.last_checkpoint_path itself as
+// `path`, and the function used to reassign that same field (and
+// state.checkpoint_path) to a fresh std::string *before* forwarding
+// `path` to on_checkpoint_save -- once the reassignment reallocated the
+// string's heap buffer, `path` dangled and the callback observed
+// corrupted bytes instead of the real filepath.
+class CaptureCheckpointSaveCallback final : public ice::Callback {
+ public:
+  int fire_count = 0;
+  std::string last_filepath{};
+  void on_checkpoint_save(ice::RunState& state, std::string_view filepath) override {
+    ++fire_count;
+    last_filepath = std::string(filepath);
+    static_cast<void>(state);
+  }
+};
+
+bool run_ice_coach_checkpoint_callback_checks(std::ostream* err = nullptr) {
+  const auto data = make_regression_data(32, 11);
+  auto model = ice::Outline(pluss::nn::Fusion(3, 1));
+
+  const auto dirpath =
+      (std::filesystem::temp_directory_path() / "ice_coach_checkpoint_callback_test").string();
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 2;
+  options.batch_size = 32;
+  options.learning_rate = 0.05;
+  options.validation.split_ratio = 0.0;
+  options.checkpoint.enabled = true;
+  options.checkpoint.save_last = true;
+  options.checkpoint.dirpath = dirpath;
+  options.checkpoint.filename = "demo";
+
+  const auto expected_path = (std::filesystem::path(dirpath) / "demo-last.ckpt").string();
+
+  const auto capture = std::make_shared<CaptureCheckpointSaveCallback>();
+  ice::Coach coach(options);
+  coach.add_callback(capture);
+  coach.learn(model, data.x, data.y);
+
+  if (capture->fire_count != options.execution.max_epochs) {
+    if (err) *err << "on_checkpoint_save should fire once per epoch when save_last is set\n";
+    return false;
+  }
+  if (capture->last_filepath != expected_path) {
+    if (err) *err << "on_checkpoint_save received a corrupted/stale filepath: \""
+                  << capture->last_filepath << "\" (expected \"" << expected_path << "\")\n";
+    return false;
+  }
+
+  std::filesystem::remove_all(dirpath);
+  return true;
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
 TEST_CASE("ice Coach centralizes model learn infer and assess", "[ai][ice][coach]") {
   REQUIRE(run_ice_coach_checks());
 }
+
+TEST_CASE("ice Coach on_checkpoint_save receives the real filepath, not a dangling view",
+          "[ai][ice][coach][callback]") {
+  REQUIRE(run_ice_coach_checkpoint_callback_checks());
+}
 #else
 int main() {
   if (!run_ice_coach_checks(&std::cerr)) return 1;
+  if (!run_ice_coach_checkpoint_callback_checks(&std::cerr)) return 1;
   std::cout << "ice_coach_test passed\n";
   return 0;
 }

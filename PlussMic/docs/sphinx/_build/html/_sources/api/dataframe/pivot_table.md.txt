@@ -207,7 +207,7 @@ struct PivotTableOptions {
   std::vector<std::string> values{};
   std::vector<GroupOp> aggfuncs{GroupOp::Mean};
   std::vector<PivotValueSpec> specs{};
-  std::optional<ThreadValue::HostAny> fill_value{std::nullopt};
+  std::optional<SlateValue::HostAny> fill_value{std::nullopt};
   bool margins{false};
   std::string margins_name{"All"};
   bool dropna{true};
@@ -381,9 +381,9 @@ Example 1. Classic one-row-key, one-column-key pivot using the legacy overload.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"product", Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Phone"}))},
-    {"units",   Thread(pluss::make_series({2.0, 4.0, 1.0, 3.0, 5.0}))},
+    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"product", Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Phone"}))},
+    {"units",   Slate(pluss::make_series({2.0, 4.0, 1.0, 3.0, 5.0}))},
 });
 
 auto out = sales.pivot_table("city", "product", "units", DataFrame::GroupOp::Sum);
@@ -432,11 +432,11 @@ Example 3. Multiple row keys and multiple value features with one uniform aggreg
 
 ```cpp
 auto detailed = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"quarter", Thread(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
-    {"product", Thread(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
-    {"units",   Thread(pluss::make_series({2.0, 3.0, 4.0, 1.0, 5.0}))},
-    {"revenue", Thread(pluss::make_series({20.0, 30.0, 40.0, 10.0, 50.0}))},
+    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"quarter", Slate(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
+    {"product", Slate(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"units",   Slate(pluss::make_series({2.0, 3.0, 4.0, 1.0, 5.0}))},
+    {"revenue", Slate(pluss::make_series({20.0, 30.0, 40.0, 10.0, 50.0}))},
 });
 
 DataFrame::PivotTableOptions options;
@@ -505,10 +505,10 @@ Example 5. Use explicit `specs` when different value features need different red
 
 ```cpp
 auto events = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Tema"}))},
-    {"channel", Thread(pluss::make_note({"Card", "Cash", "Card", "Card", "Cash"}))},
-    {"amount",  Thread(pluss::make_series({20.0, 35.0, 10.0, 50.0, 40.0}))},
-    {"status",  Thread(pluss::make_note({"ok", "ok", "retry", "ok", "retry"}))},
+    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Tema"}))},
+    {"channel", Slate(pluss::make_note({"Card", "Cash", "Card", "Card", "Cash"}))},
+    {"amount",  Slate(pluss::make_series({20.0, 35.0, 10.0, 50.0, 40.0}))},
+    {"status",  Slate(pluss::make_note({"ok", "ok", "retry", "ok", "retry"}))},
 });
 
 DataFrame::PivotTableOptions mixed;
@@ -542,7 +542,7 @@ numeric aggregation.
 Example 6. `fill_value` and `margins` make the result closer to a spreadsheet pivot.
 
 ```cpp
-options.fill_value = ThreadValue::HostAny::floating(0.0);
+options.fill_value = SlateValue::HostAny::floating(0.0);
 options.margins = true;
 
 auto totaled = detailed.pivot_table(options);
@@ -573,9 +573,9 @@ Example 7. `dropna=false` keeps null key groups instead of discarding them.
 
 ```cpp
 auto null_keys = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}), {true, false, true, true})},
-    {"product", Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Phone"}))},
-    {"units",   Thread(pluss::make_series({2.0, 4.0, 5.0, 1.0}))},
+    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}), {true, false, true, true})},
+    {"product", Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Phone"}))},
+    {"units",   Slate(pluss::make_series({2.0, 4.0, 5.0, 1.0}))},
 });
 
 auto keep_null = null_keys.pivot_table("city",

@@ -1,50 +1,72 @@
 # `pluss::ai::ice::models::TextJudgeOptions`
 
-Hidden width, dropout, and tokenization toggles (lemmas/punctuation/casing) for TextJudge.
-
-<!-- one paragraph on the role of this bag: which call consumes it and when -->
+Hidden width, dropout, and tokenization toggles (lemmas/punctuation/
+casing) for [`TextJudge`](TextJudge.md)'s constructor.
 
 ## Fields
 
 ### `width`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`std::int64_t width = 64`
+: Hidden width of the text classifier.
 
 ### `dropout`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`double dropout = 0.1`
+: Dropout strength, fixed at construction. Overridable per training
+  run via
+  [`TextJudgeTrainOptions::architecture_regularization.dropout`](TextJudgeTrainOptions.md)
+  -- see
+  [`ArchitectureRegularization`'s own Guidance](../options/ArchitectureRegularization.md)
+  for exactly how the two interact.
 
 ### `use_lemmas`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`bool use_lemmas = true`
+: Tokenize on lemmas rather than raw surface forms.
 
 ### `skip_punct`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`bool skip_punct = true`
+: Drop punctuation tokens before they reach the model. Set to `false`
+  when punctuation itself is a meaningful signal -- see
+  [`TextJudge::learn`'s own Example 3](TextJudge/learn.md#example-3)
+  for a label pair that is only distinguishable by punctuation.
 
 ### `lowercase`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`bool lowercase = true`
+: Lowercase every token before tokenization.
 
 ### `cfg`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`Config cfg = Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU)`
+: Dtype and platform the model's own parameters are constructed on.
 
 ### `seed`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`std::uint64_t seed = 0`
+: Seeds the model's own parameter initialization -- independent of
+  [`TextJudgeTrainOptions::seed`](TextJudgeTrainOptions.md), which
+  seeds shuffling/the train-validation split instead.
 
 ## Guidance
 
-<!-- how the defaults fit together; which fields to touch only with a reason -->
+Leave every field at its default for a first run against clean,
+casing-insensitive English text. Set `use_lemmas = false`/
+`skip_punct = false`/`lowercase = false` individually when the task's
+labels actually depend on surface form, punctuation, or casing --
+see [`TextJudge::learn`'s own Example 3](TextJudge/learn.md#example-3)
+for a worked punctuation-sensitive case. Unlike every `models_ts`
+catalog entry's own `Options`, `TextJudgeOptions` has no `from_data`/
+`from_dataset` factory -- `TextJudge` sizes itself from whatever text
+it sees at `learn()` time instead of from a pre-built dataset.
 
 ## See Also
 
-<!-- the consuming symbol(s) -->
+- [`TextJudge`](TextJudge.md) -- the constructor this configures.
+- [`TextJudgeTrainOptions`](TextJudgeTrainOptions.md) -- the
+  per-training-run counterpart, including the `dropout` override.
+- [`ArchitectureRegularization`](../options/ArchitectureRegularization.md)
+  -- exactly how `TextJudgeTrainOptions::architecture_regularization.dropout`
+  overrides this type's own `dropout`.

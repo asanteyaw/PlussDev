@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e2fdd8c2f9e1 -->
 # `pluss::ai::ice::Model::forward`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -171,3 +173,16 @@ forward(x) == forward(batch)? diff = 0
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="eval.html">
+    <span class="label">Previous</span>
+    <span class="title">eval</span>
+  </a>
+  <a class="next-link" href="infer.html">
+    <span class="label">Next</span>
+    <span class="title">infer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

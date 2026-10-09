@@ -13,13 +13,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame frame({
-      {"score", Thread(pluss::make_series(
+      {"score", Slate(pluss::make_series(
           {1.0, 2.0, std::nan(""), 4.0, 5.0}, {5}, f64))},
   });
 

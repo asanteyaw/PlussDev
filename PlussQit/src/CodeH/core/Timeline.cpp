@@ -1,6 +1,6 @@
 
 #include "CodeH/core/Timeline.h"
-#include "CodeH/core/TimeIndex.h"
+#include "CodeH/core/TimelineIndexAccessor.h"
 
 #include <algorithm>
 #include <array>
@@ -2342,7 +2342,7 @@ Timeline TimelineBase::period_start(std::string_view unit) const {
 }
 
 TimelineIndexAccessor TimelineBase::index(bool require_sorted) const {
-  return ::pluss::codeh::_compat::invoke<TimeIndex>("make_timeindex",
+  return ::pluss::codeh::_compat::invoke<TimelineIndexAccessor>("make_index_accessor",
                                                      as_timeline(*this),
                                                      {require_sorted});
 }

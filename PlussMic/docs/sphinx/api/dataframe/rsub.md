@@ -86,7 +86,7 @@ opposite sign, since `frame - other` and `other - frame` are not the same operat
 - `rsub(other)` computes `other - frame`; [`sub(other)`](sub.md) computes
   `frame - other`. The two are only equal when the frame's values are `0`.
 - Like all reflected methods, `rsub()` only accepts a scalar `double` — see
-  [`radd()`](radd.md) for why there is no reflected `DataFrame` or `Thread` overload.
+  [`radd()`](radd.md) for why there is no reflected `DataFrame` or `Slate` overload.
 
 ## See Also
 

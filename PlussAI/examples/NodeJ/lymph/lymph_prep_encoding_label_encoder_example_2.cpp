@@ -9,12 +9,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"grade", Thread(pluss::make_series({10., 20., 30., 20., 10., 30.}, {6}, f64))}});
-  const DataFrame later({{"grade", Thread(pluss::make_series({30., 30., 10.}, {3}, f64))}});
+  const DataFrame train({{"grade", Slate(pluss::make_series({10., 20., 30., 20., 10., 30.}, {6}, f64))}});
+  const DataFrame later({{"grade", Slate(pluss::make_series({30., 30., 10.}, {3}, f64))}});
 
   lymph::prep::LabelEncoder encoder;
   std::cout << "learned before = " << std::boolalpha << encoder.learned() << "\n";

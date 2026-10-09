@@ -1,12 +1,12 @@
-# TimelineIndexAccessor::resample_count
+# Timeline::TimelineIndexAccessor::resample_count
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_count(const ResampleOptions& options) const
-pluss::Series TimelineIndexAccessor::resample_count(std::string_view freq, std::int64_t step = 1) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_count(const ResampleOptions& options) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_count(std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does
@@ -84,8 +84,8 @@ data=[5]
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_bins`](resample_bins.md)
-- [`TimelineIndexAccessor::resample_sum`](resample_sum.md)
+- [`Timeline::TimelineIndexAccessor::resample_bins`](resample_bins.md)
+- [`Timeline::TimelineIndexAccessor::resample_sum`](resample_sum.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_bins.html">

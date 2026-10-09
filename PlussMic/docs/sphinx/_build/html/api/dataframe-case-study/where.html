@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor API Reference" href="../../dataframe_note_accessor_api_reference.html" />
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d7be2519010e -->
+<!-- pluss-signature-hash: 2d6e6d1aa081 -->
 <section id="dataframecasestudyaccessor-where">
 <h1>DataFrameCaseStudyAccessor::where<a class="headerlink" href="#dataframecasestudyaccessor-where" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_case_study_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameCaseStudyAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">where</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">where</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameCaseStudyAccessor</span><span class="o">::</span><span class="n">where</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
@@ -56,9 +56,9 @@ source order, all frame metadata and structured case labels are filtered with th
 and every feature is retained until an optional chained <code class="docutils literal notranslate"><span class="pre">features(...)</span></code> projection.</p>
 <p>The two overloads differ in alignment. A bare <code class="docutils literal notranslate"><span class="pre">Series</span></code> is strictly positional: it must
 be 1D, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype, and contain exactly one value per source case, or the call
-throws. A <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is a table-aware mask: its case labels are aligned to the frame’s
+throws. A <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is a table-aware mask: its case labels are aligned to the frame’s
 case axis before filtering, and invalid mask lanes are treated as <code class="docutils literal notranslate"><span class="pre">false</span></code>. Prefer the
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> form when the predicate came from a frame feature or another labeled table
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> form when the predicate came from a frame feature or another labeled table
 operation; prefer the <code class="docutils literal notranslate"><span class="pre">Series</span></code> form when an exact positional match is the intended
 contract and a length mismatch should be a hard error rather than silently aligned.</p>
 <p><code class="docutils literal notranslate"><span class="pre">where()</span></code> is the case-selection spelling within this accessor. Root <code class="docutils literal notranslate"><span class="pre">filter()</span></code> is the
@@ -67,8 +67,8 @@ the same filtering kernel.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code>)
-The Boolean mask. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload must be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind with <code class="docutils literal notranslate"><span class="pre">Bool</span></code> dtype
+<p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> / <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Series&amp;</span></code>)
+The Boolean mask. The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload must be <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind with <code class="docutils literal notranslate"><span class="pre">Bool</span></code> dtype
 and is aligned to the frame’s case axis before filtering (a lane with no aligned
 source value is treated as <code class="docutils literal notranslate"><span class="pre">false</span></code>). The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload must be 1D, <code class="docutils literal notranslate"><span class="pre">Bool</span></code>
 dtype, and exactly <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> long, or the call throws.</p>
@@ -82,12 +82,12 @@ feature schema.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. A <code class="docutils literal notranslate"><span class="pre">Thread</span></code> mask built from a frame feature’s own comparison — the common
+<p>Example 1. A <code class="docutils literal notranslate"><span class="pre">Slate</span></code> mask built from a frame feature’s own comparison — the common
 case, since the mask and the frame already share a case axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))},</span>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">busy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">where</span><span class="p">(</span><span class="n">frame</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;units&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
@@ -154,7 +154,7 @@ to audit.</p>
 </pre></div>
 </div>
 <p>Example 5. The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload’s length must match <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> exactly — unlike the
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload’s case-label alignment, a shorter or longer mask is a hard error,
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload’s case-label alignment, a shorter or longer mask is a hard error,
 never silently truncated or padded.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">frame</span><span class="p">.</span><span class="n">case_study</span><span class="p">().</span><span class="n">where</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
@@ -176,7 +176,7 @@ never silently truncated or padded.</p>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Series</span></code> overload is strictly positional: 1D, <code class="docutils literal notranslate"><span class="pre">Bool</span></code> dtype, exactly <code class="docutils literal notranslate"><span class="pre">ncases()</span></code>
 elements, or it throws. It never aligns by case label and never silently resizes.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload aligns by case label instead of requiring an exact length
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload aligns by case label instead of requiring an exact length
 match; a mask lane with no corresponding source case is simply treated as <code class="docutils literal notranslate"><span class="pre">false</span></code>.
 Prefer it when the mask came from the frame itself (a comparison, another table
 operation) rather than a hand-built buffer.</p></li>

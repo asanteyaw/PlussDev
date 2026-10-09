@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::intersect_symbols
+# Note::NlpAccessor::intersect_symbols
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::intersect_symbols(const Note& other) const
+TokenBatch Note::NlpAccessor::intersect_symbols(const Note& other) const
 ```
 
 ## Shared Math Symbols Between Two Notes
@@ -39,8 +39,8 @@ Note `batch.offsets()` has length `numel + 1` and marks each cell's run.
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::intersect_symbols requires a UTF-8 text Note (lhs is bytes)` (or
-`rhs`); a numel mismatch raises `NoteNlpAccessor::intersect_symbols expects equal
+`Note::NlpAccessor::intersect_symbols requires a UTF-8 text Note (lhs is bytes)` (or
+`rhs`); a numel mismatch raises `Note::NlpAccessor::intersect_symbols expects equal
 numel or scalar broadcast`.
 
 ## Example 1: Shared Operators And Commands
@@ -72,13 +72,13 @@ printer escapes it.)
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_symbols`](jaccard_symbols.md) /
-  [`NoteNlpAccessor::overlap_symbols`](overlap_symbols.md): score the
+- [`Note::NlpAccessor::jaccard_symbols`](jaccard_symbols.md) /
+  [`Note::NlpAccessor::overlap_symbols`](overlap_symbols.md): score the
   shared-symbol overlap.
-- [`NoteNlpAccessor::intersect_tokens`](intersect_tokens.md) /
-  [`NoteNlpAccessor::intersect_terms`](intersect_terms.md) /
-  [`NoteNlpAccessor::intersect_acronyms`](intersect_acronyms.md) /
-  [`NoteNlpAccessor::intersect_citations`](intersect_citations.md): other set kinds.
+- [`Note::NlpAccessor::intersect_tokens`](intersect_tokens.md) /
+  [`Note::NlpAccessor::intersect_terms`](intersect_terms.md) /
+  [`Note::NlpAccessor::intersect_acronyms`](intersect_acronyms.md) /
+  [`Note::NlpAccessor::intersect_citations`](intersect_citations.md): other set kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="intersect_citations.html"><span class="label">Previous</span><span class="title">intersect_citations</span></a>

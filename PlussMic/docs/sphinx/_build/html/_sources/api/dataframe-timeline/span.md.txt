@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d01b4d17f804 -->
+<!-- pluss-signature-hash: efe2b15e584b -->
 
 # DataFrameTimelineAccessor::span
 
@@ -12,8 +12,8 @@ DataFrameTimelineAccessor::span(const DataFrame& other, const TimelineSpanOption
 DataFrameTimelineAccessor::span(const DataFrame& other, TimeUnit unit) const -> DataFrame
 DataFrameTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const -> DataFrame
 DataFrameTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -> DataFrame
-DataFrameTimelineAccessor::span(const Thread& other, const TimelineSpanOptions& options = {}) const -> DataFrame
-DataFrameTimelineAccessor::span(const Thread& other, TimeUnit unit) const -> DataFrame
+DataFrameTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const -> DataFrame
+DataFrameTimelineAccessor::span(const Slate& other, TimeUnit unit) const -> DataFrame
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrameTimelineAccessor::span(const Thread& other, TimeUnit unit) const -> Dat
 Replaces every selected `Timeline` feature with the elapsed
 distance between it and `other`, in `options.unit` (or plain `unit`) — same
 feature name, now a numeric `Series`. `other` can be another `DataFrame`
-(paired feature-by-feature, by matching name), a bare `Thread`, or a
+(paired feature-by-feature, by matching name), a bare `Slate`, or a
 `pluss::Timeline`.
 
 Fixed-duration units (`Nanos`/`Micros`/`Millis`/`Seconds`/`Days`/`Weeks`) are
@@ -32,7 +32,7 @@ completed calendar periods or crossed calendar boundaries, per
 
 ## Parameters
 
-**other** (`const DataFrame&` / `const Thread&` / `const pluss::Timeline&`)
+**other** (`const DataFrame&` / `const Slate&` / `const pluss::Timeline&`)
 
 The right-hand timestamp(s). For the `DataFrame` overload, every selected
 feature name on `*this` must also exist on `other`; each is paired by name.
@@ -66,13 +66,13 @@ Example 1. Fixed-duration span in whole days.
 using namespace pluss::table;
 
 auto starts = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T00:00:00Z",
           "2024-02-29T00:00:00Z",
           "2024-01-01T00:00:00Z",
       }))}});
 auto ends = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-02-01T00:00:00Z",
           "2025-02-28T00:00:00Z",
           "2024-01-05T00:00:00Z",
@@ -130,8 +130,8 @@ non-leap-affected 365-day span.
 Example 2. Calendar-month span: `Complete` vs `Boundary` mode.
 
 ```cpp
-auto start = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
-auto end   = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
+auto start = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
+auto end   = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
 
 TimelineSpanOptions months;
 months.unit = TimeUnit::Months;
@@ -176,8 +176,8 @@ precedes `*this`.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
 std::cout << self;
 std::cout << other;
 
@@ -239,22 +239,22 @@ std::cout << unsigned_out;
 default signed result is negative, `-31`. With `signed_result = false`, the
 same span comes back as the plain magnitude, `31`.
 
-Example 4. Pass `other` as a bare `Thread` or a raw `pluss::Timeline`, instead
+Example 4. Pass `other` as a bare `Slate` or a raw `pluss::Timeline`, instead
 of wrapping it in a `DataFrame`.
 
 ```cpp
 using namespace pluss::table;
 
-auto self = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto self = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
 
-auto via_thread = self.tl().span(Thread(pluss::make_timeline({"2024-02-01T00:00:00Z"})), TimeUnit::Days);
+auto via_thread = self.tl().span(Slate(pluss::make_timeline({"2024-02-01T00:00:00Z"})), TimeUnit::Days);
 std::cout << via_thread;
 
 auto via_timeline = self.tl().span(pluss::make_timeline({"2024-02-01T00:00:00Z"}), TimeUnit::Days);
 std::cout << via_timeline;
 ```
 
-### Output (Thread overload)
+### Output (Slate overload)
 
 ```text
 ===========
@@ -286,8 +286,8 @@ without a holiday in the range.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-12T00:00:00Z"}))}});
+auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-12T00:00:00Z"}))}});
 std::cout << self;
 std::cout << other;
 
@@ -363,8 +363,8 @@ count as a completed month, even though their days-of-month don't match.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}});
+auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}});
 std::cout << self;
 std::cout << other;
 
@@ -436,8 +436,8 @@ mismatched timezones, to see the call throw.
 ```cpp
 using namespace pluss::table;
 
-auto self  = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
-auto other = DataFrame({{"ts", Thread(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}})
+auto self  = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))}});
+auto other = DataFrame({{"ts", Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"}))}})
                  .tl().tz("America/New_York");
 
 try {

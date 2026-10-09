@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5c7c12ce7704 -->
+<!-- pluss-signature-hash: 96e580d40ede -->
 
 # Atlas::axis0_labels
 
@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-Atlas::axis0_labels() const -> const std::optional<Thread>&
+Atlas::axis0_labels() const -> const std::optional<Slate>&
 ```
 
 ## What It Does
 
 Returns the labels attached to the depth axis — the name given to each stacked frame's
 position, the same role a `DataFrame`'s case labels play for rows. Unlike case labels,
-depth labels are **optional**: an `Atlas` constructed without an explicit label `Thread`
+depth labels are **optional**: an `Atlas` constructed without an explicit label `Slate`
 has `axis0_labels()` return an empty `std::optional`, and every depth-label-aware method
 (`loc()`, [`sort_depth()`](sort_depth.md), [`align_depth()`](align_depth.md)) either
 requires labels to be set first or falls back to plain integer positions. This is the raw
@@ -27,7 +27,7 @@ accessor; [`label()`](label.md) wraps it with a friendlier get/set/sort/align su
 
 ## Returns
 
-`const std::optional<Thread>&`
+`const std::optional<Slate>&`
     The depth-axis labels, if any were set; an empty `std::optional` otherwise.
 
 ## Examples
@@ -37,9 +37,9 @@ Example 1. An atlas constructed with explicit depth labels.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
-auto atlas = Atlas({q1, q2}, Thread(pluss::make_note({"2024Q1", "2024Q2"})));
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto atlas = Atlas({q1, q2}, Slate(pluss::make_note({"2024Q1", "2024Q2"})));
 
 std::cout << atlas.axis0_labels().has_value() << "\n";
 std::cout << *atlas.axis0_labels();
@@ -59,8 +59,8 @@ empty `std::optional`, not a default integer range.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 std::cout << atlas.axis0_labels().has_value();
@@ -89,7 +89,7 @@ std::cout << atlas.axis0_labels().has_value();
   — `values()` defaults to integer labels instead of throwing or requiring a manual
   `has_value()` check.
 - [`Atlas::relabel_depth`](relabel_depth.md): replace the depth labels with a new
-  `Thread`.
+  `Slate`.
 - [`Atlas::sort_depth`](sort_depth.md) / [`Atlas::align_depth`](align_depth.md): reorder
   the stack using these labels.
 

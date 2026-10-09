@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-enum class ThemePreset3D : std::uint8_t { Paper, Ocean, Slate, Mist };
+enum class ThemePreset3D : std::uint8_t { Paper, Ocean, Graphite, Mist };
 
 Pane& flash::theme_preset3d(Pane& pane, ThemePreset3D preset)
 ```
@@ -17,7 +17,7 @@ Pane& flash::theme_preset3d(Pane& pane, ThemePreset3D preset)
 Applies one of four named theme presets to a pane via
 [`Pane::theme_tokens()`](../pane/theme_tokens.md). `Paper` and `Ocean` assign the
 existing [`Theme::paper()`](../studio/theme.md)/`Theme::ocean()` factories directly;
-`Slate` and `Mist` are new, 3D-specific dark/light variants built by copying the pane's
+`Graphite` and `Mist` are new, 3D-specific dark/light variants built by copying the pane's
 *current* theme's accents and surface palette but overriding its background/foreground
 colors to a fixed pair.
 
@@ -25,15 +25,15 @@ colors to a fixed pair.
 |---|---|---|---|
 | `Paper` | `Theme::paper()` | (theme default) | (theme default) |
 | `Ocean` | `Theme::ocean()` | (theme default) | (theme default) |
-| `Slate` | current theme's accents/surface palette | `Rgba::from_u8(30, 36, 46)` (dark) | `Rgba::from_u8(232, 237, 243)` (light) |
+| `Graphite` | current theme's accents/surface palette | `Rgba::from_u8(30, 36, 46)` (dark) | `Rgba::from_u8(232, 237, 243)` (light) |
 | `Mist` | current theme's accents/surface palette | `Rgba::from_u8(245, 248, 252)` (light) | `Rgba::from_u8(42, 52, 66)` (dark) |
 
-```{important} Slate/Mist read the pane's CURRENT theme before overwriting it
+```{important} Graphite/Mist read the pane's CURRENT theme before overwriting it
 Unlike Paper/Ocean (which assign a complete, independent Theme factory value outright),
-Slate and Mist first read pane.theme_tokens() to capture whatever accents()/
+Graphite and Mist first read pane.theme_tokens() to capture whatever accents()/
 surface_palette() the pane already has, then construct a NEW Theme reusing those two
 pieces alongside their own fixed background/foreground pair. Calling theme_preset3d
-with Slate/Mist on a pane that already has a heavily customized theme carries that
+with Graphite/Mist on a pane that already has a heavily customized theme carries that
 customization's accents/surface palette forward; Paper/Ocean do not (they fully replace
 the theme).
 ```
@@ -67,7 +67,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-theme-preset3d-1-paper.svg)
 
-Example 2 (verification, not a distinct rendering). `Slate` renders genuinely
+Example 2 (verification, not a distinct rendering). `Graphite` renders genuinely
 differently from `Paper`, confirmed via direct SVG comparison.
 
 ```cpp
@@ -81,21 +81,21 @@ flash::theme_preset3d(pane1, flash::ThemePreset3D::Paper);
 auto fig2 = studio("flash_theme_preset3d_slate");
 auto& pane2 = fig2.pane3();
 pane2.sheet(std::vector<double>{0.0, 1.0, 2.0, 3.0}, std::vector<double>{0.0, 1.0, 2.0, 3.0}, pluss::series::linspace(0.0, 1.0, 16, pluss::ScalarType::Float64).reshape({4, 4}));
-flash::theme_preset3d(pane2, flash::ThemePreset3D::Slate);
+flash::theme_preset3d(pane2, flash::ThemePreset3D::Graphite);
 
-std::cout << "theme_preset3d Paper vs Slate differ: " << (fig1.to_svg() != fig2.to_svg()) << "\n";
+std::cout << "theme_preset3d Paper vs Graphite differ: " << (fig1.to_svg() != fig2.to_svg()) << "\n";
 fig2.show();
 ```
 
 Output:
 
 ```text
-theme_preset3d Paper vs Slate differ: 1
+theme_preset3d Paper vs Graphite differ: 1
 ```
 
 ![Output of Example 2](img/flash-theme-preset3d-2-slate.svg)
 
-Example 3. `Mist` gives you the light preset counterpart to `Slate`: bright background,
+Example 3. `Mist` gives you the light preset counterpart to `Graphite`: bright background,
 dark foreground, but still keeping the pane's existing accent and surface palette.
 
 ```cpp
@@ -119,9 +119,9 @@ fig.show();
 ## Notes
 
 - Not `noexcept`.
-- `Slate`/`Mist` construct a new `Theme` with an explicit name (`"flash3d_slate"` /
+- `Graphite`/`Mist` construct a new `Theme` with an explicit name (`"flash3d_graphite"` /
   `"flash3d_mist"`), separate from whatever the source theme's own name was.
-- See the important callout above — `Slate`/`Mist` carry the current theme's
+- See the important callout above — `Graphite`/`Mist` carry the current theme's
   accents/surface palette forward; `Paper`/`Ocean` replace the theme entirely.
 
 ## See Also

@@ -19,10 +19,8 @@ using namespace pluss::pl::flash;
 Series make_grid_surface(std::int64_t rows, std::int64_t cols) {
   const auto x_axis = series::linspace(-3.0, 3.0, cols, ScalarType::Float64).reshape({1, cols});
   const auto y_axis = series::linspace(-3.0, 3.0, rows, ScalarType::Float64).reshape({rows, 1});
-  const std::array<std::int64_t, 2> x_tile{rows, 1};
-  const std::array<std::int64_t, 2> y_tile{1, cols};
-  const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
-  const auto y = y_axis.tile(std::span<const std::int64_t>(y_tile.data(), y_tile.size()));
+  const auto x = x_axis.repeat({rows, 1});
+  const auto y = y_axis.repeat({1, cols});
   return x.mul(0.6).sin().add(y.mul(0.7).cos());
 }
 
@@ -983,7 +981,7 @@ bool render_case(std::string_view key, const std::filesystem::path& out_svg) {
     const auto gx = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gy = series::linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
-    theme_preset3d(pane, ThemePreset3D::Slate);
+    theme_preset3d(pane, ThemePreset3D::Graphite);
     sheet(pane, gx, gy, gz).label("theme_preset3d");
     save(fig);
     return true;

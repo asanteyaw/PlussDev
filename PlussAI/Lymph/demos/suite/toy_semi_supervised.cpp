@@ -27,13 +27,13 @@ int main() {
   labels[20] = 1.0;
   labels[21] = 1.0;
 
-  lymph::semi::Options options{};
-  options.select = lymph::semi::SelectKind::TopK;
+  lymph::models::semi::Options options{};
+  options.select = lymph::models::semi::SelectKind::TopK;
   options.top_k = 8;
   options.max_rounds = 2;
 
-  const lymph::semi::Result result =
-      lymph::semi::model(lymph::model::gaussian_nb_classifier())
+  const lymph::models::semi::Result result =
+      lymph::models::semi::model(lymph::models::gaussian_nb_classifier())
           .run(lymph::LabeledBatch{
                    .features = lymph::FeatureBatch{
                        .x = pluss::make_series(x, {40, 2}, f64),

@@ -20,7 +20,7 @@ when `periods > 0`, a lead when `periods < 0`). A position is `NULL` wherever
 rather than throwing.
 
 ```{important} StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
-Every method on this accessor routes through `Thread::ts()` for the bound
+Every method on this accessor routes through `Slate::ts()` for the bound
 stream. If the stream isn't a numeric `Series`, the call throws — e.g.
 `"TimeSeriesAccessor::diff: source must be Series"` for a `Note`-kind stream.
 ```
@@ -104,7 +104,7 @@ TimeSeriesAccessor::diff: source must be Series
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::diff`](../catalog-ts/diff.md): the
   whole-catalog equivalent.
-- [`TimeSeriesAccessor::diff`](../thread-ts/diff.md): the underlying
+- [`TimeSeriesAccessor::diff`](../slate-ts/diff.md): the underlying
   single-thread engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">

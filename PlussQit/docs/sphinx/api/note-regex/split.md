@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteRegexAccessor::split
+# Note::RegexAccessor::split
 
 [Back to Note Regex Accessor API Reference](../../note_regex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteRegexAccessor::split(std::string_view pattern,
+TokenBatch Note::RegexAccessor::split(std::string_view pattern,
                                     std::int64_t limit = -1) const
 ```
 
@@ -154,10 +154,10 @@ regex().split: The expression contained mismatched ( and ).
 
 ## See Also
 
-- [`NoteRegexAccessor::findall`](findall.md): return the matching spans rather than the text between them.
+- [`Note::RegexAccessor::findall`](findall.md): return the matching spans rather than the text between them.
 - [`Note::split`](../note/split.md): split on one literal delimiter.
 - [`Note::split_whitespace`](../note/split_whitespace.md): split on whitespace runs without compiling a pattern.
-- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): identify language-oriented word tokens.
+- [`Note::NlpAccessor::tokens`](../note-nlp/tokens.md): identify language-oriented word tokens.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="search.html"><span class="label">Previous</span><span class="title">search</span></a>

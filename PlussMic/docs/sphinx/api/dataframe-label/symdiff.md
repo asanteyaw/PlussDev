@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 049fcfc26858 -->
+<!-- pluss-signature-hash: d9dfbce0d97e -->
 
 # DataFrameLabelAccessor::symdiff
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::symdiff(const Thread& other) const -> Thread
+DataFrameLabelAccessor::symdiff(const Slate& other) const -> Slate
 ```
 
 ## What It Does
@@ -19,13 +19,13 @@ deduplicated, in this accessor's first-occurrence order followed by `other`'s.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
 
 The values to compare against.
 
 ## Returns
 
-`Thread`
+`Slate`
     The distinct values found in exactly one of the two sides, `display_name`
     `"symdiff"`.
 
@@ -38,11 +38,11 @@ set.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
-auto other = Thread(pluss::make_note({"west", "south"}));
+auto other = Slate(pluss::make_note({"west", "south"}));
 auto out = labeled.label().symdiff(other);
 std::cout << out;
 ```

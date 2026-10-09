@@ -3,14 +3,11 @@
 // `let` -- an immutable binding for Pluss core value types, deliberately opt-in.
 //
 //   #include <pluss/tils/let.h>
-//   let s1 = pluss::make_series({1.0, 2.0, 3.0});   // CTAD -> let<Series>, bare name
-//   let n1 = pluss::note::make({"a", "b"});         // let<Note>
+//   pluss::tils::let s1 = pluss::make_series({1.0, 2.0, 3.0});
+//   pluss::tils::let n1 = pluss::note::make({"a", "b"});
 //
-// This header is NOT pulled in by <pluss/tils.h>; including it is how you ask
-// for `let`. It contributes exactly one name to the global namespace -- `let`,
-// as a using-declaration for `pluss::tils::let` -- so the bare spelling works
-// with no `using` on your side. Code that wants to avoid the global name simply
-// does not include this header and writes `pluss::tils::let<T>` explicitly.
+// This header is NOT pulled in by <pluss/tils.h>; including it opts into the
+// utility without injecting a name into the global namespace.
 //
 // Semantics (vs plain `auto`):
 //   * The binding cannot be rebound: `s1 = other;` does not compile.
@@ -120,7 +117,3 @@ template <class T>
 let(T) -> let<std::remove_cvref_t<T>>;
 
 }  // namespace pluss::tils
-
-// The one global-scope name this header contributes. Including <pluss/tils/let.h>
-// *is* the opt-in; nothing else pulls it in.
-using ::pluss::tils::let;

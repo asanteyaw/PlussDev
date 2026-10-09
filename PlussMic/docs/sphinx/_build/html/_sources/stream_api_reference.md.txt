@@ -56,7 +56,7 @@ api/stream/ffill
 api/stream/fillnull
 api/stream/filter
 api/stream/freq
-api/stream/from_thread
+api/stream/from_slate
 api/stream/has_label
 api/stream/has_meta
 api/stream/head
@@ -90,8 +90,8 @@ api/stream/tail
 api/stream/take
 api/stream/tl
 api/stream/to_json
+api/stream/to_slate
 api/stream/to_string
-api/stream/to_thread
 api/stream/ts
 api/stream/unique
 api/stream/var

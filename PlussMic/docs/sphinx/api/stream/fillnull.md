@@ -20,12 +20,12 @@ Stream::fillnull(const pluss::Duration& value) const -> Stream
 Replaces every `NULL` cell in the stream with `value`, returning a new stream. `value`'s
 C++ type must match the stream's own payload kind exactly — `double` for `Series`,
 `std::string_view`/`const char*` for `Note`, `pluss::Timeline` for `Timeline`,
-`pluss::Duration` for `Duration`. Delegates straight to `Thread::fillnull()`.
+`pluss::Duration` for `Duration`. Delegates straight to `Slate::fillnull()`.
 
 ```{important} Kind mismatch throws here — unlike Catalog::fillnull()'s silent skip
 `Stream::fillnull()` operates on a single, already-typed stream, so a kind mismatch throws
 immediately (e.g. calling the `string_view` overload on a `Series`-kind stream throws
-`"Thread::fillnull(string) is only valid for Note payload"`). This is the opposite of
+`"Slate::fillnull(string) is only valid for Note payload"`). This is the opposite of
 [`Catalog::fillnull()`](../catalog/fillnull.md), which silently skips any stream whose kind
 doesn't match `value`'s type across the whole collection — there, kind selection is the
 point; here, on a single stream, a mismatch is a caller error worth surfacing.
@@ -102,11 +102,11 @@ auto stream = pluss::kindle::Stream(
     pluss::duration::nanos({1'000'000'000LL, pluss::Duration::kNaT, -2'000'000'000LL}));
 
 auto out = stream.fillnull(pluss::duration::nanos(9));
-assert(out.to_thread().as_duration().host() ==
+assert(out.to_slate().as_duration().host() ==
        std::vector<std::int64_t>({1'000'000'000LL, 9, -2'000'000'000LL}));
 ```
 
-Same mechanics as [`Thread::fillnull(Duration)`](../thread/fillnull.md) — it also clears
+Same mechanics as [`Slate::fillnull(Duration)`](../slate/fillnull.md) — it also clears
 intrinsic `NaT` lanes, not just validity-mask-flagged ones.
 
 Example 4. Calling the `string_view` overload on a `Series`-kind stream throws — a kind
@@ -126,7 +126,7 @@ try {
 ### Output
 
 ```text
-Thread::fillnull(string) is only valid for Note pay
+Slate::fillnull(string) is only valid for Note pay
 ```
 
 ## Notes

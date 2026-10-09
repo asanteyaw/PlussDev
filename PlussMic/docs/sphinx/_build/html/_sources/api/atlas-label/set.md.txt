@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 81bff079e559 -->
+<!-- pluss-signature-hash: 33cca46a8434 -->
 
 # AtlasLabelAccessor::set
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::set(const Thread& labels) const -> Atlas
+AtlasLabelAccessor::set(const Slate& labels) const -> Atlas
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ labels of a single frame instead.
 
 ## Parameters
 
-**labels** (`const Thread&`)
+**labels** (`const Slate&`)
     The new depth labels. Its length must equal `depth()`.
 
 ## Returns
@@ -34,16 +34,16 @@ Example 1. Set depth labels on an atlas that was constructed without any.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto atlas = pluss::table::Atlas({q1, q2});
 
 std::cout << "has before: " << atlas.label().has() << "\n";
 
-auto labeled = atlas.label().set(pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto labeled = atlas.label().set(pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 std::cout << labeled.label().values();
 ```
 
@@ -60,7 +60,7 @@ ptype: Note
 
 - The original atlas is left unchanged — `set()` returns a new `Atlas`, like every other
   method on this accessor.
-- Passing a `labels` `Thread` whose length doesn't equal `depth()` throws (mirroring
+- Passing a `labels` `Slate` whose length doesn't equal `depth()` throws (mirroring
   [`Atlas::relabel_depth`](../atlas/relabel_depth.md), which this accessor delegates to
   internally).
 

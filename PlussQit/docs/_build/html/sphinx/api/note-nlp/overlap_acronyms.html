@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>NoteNlpAccessor::overlap_acronyms &#8212; PlussQit  documentation</title>
+    <title>Note::NlpAccessor::overlap_acronyms &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="NoteNlpAccessor::overlap_citations" href="overlap_citations.html" />
-    <link rel="prev" title="NoteNlpAccessor::numbers" href="numbers.html" />
+    <link rel="next" title="Note::NlpAccessor::overlap_citations" href="overlap_citations.html" />
+    <link rel="prev" title="Note::NlpAccessor::numbers" href="numbers.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -37,12 +37,12 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<section id="notenlpaccessor-overlap-acronyms">
-<h1>NoteNlpAccessor::overlap_acronyms<a class="headerlink" href="#notenlpaccessor-overlap-acronyms" title="Link to this heading">¶</a></h1>
+<section id="note-nlpaccessor-overlap-acronyms">
+<h1>Note::NlpAccessor::overlap_acronyms<a class="headerlink" href="#note-nlpaccessor-overlap-acronyms" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_nlp_accessor_api_reference.html"><span class="doc std std-doc">Back to Note NLP Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">NoteNlpAccessor</span><span class="o">::</span><span class="n">overlap_acronyms</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">NlpAccessor</span><span class="o">::</span><span class="n">overlap_acronyms</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -67,8 +67,8 @@ trailing zeros trimmed.</p>
 <h3>Shape, pairing, and rejections<a class="headerlink" href="#shape-pairing-and-rejections" title="Link to this heading">¶</a></h3>
 <p>Per cell and pairwise; equal <a class="reference internal" href="../note/numel.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">numel</span></code></span></a> or a
 scalar (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code>) broadcast. Bytes-mode input raises
-<code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_acronyms</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(lhs</span> <span class="pre">is</span> <span class="pre">bytes)</span></code> (or
-<code class="docutils literal notranslate"><span class="pre">rhs</span></code>); a numel mismatch raises <code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_acronyms</span> <span class="pre">expects</span> <span class="pre">equal</span> <span class="pre">numel</span> <span class="pre">or</span> <span class="pre">scalar</span> <span class="pre">broadcast</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::overlap_acronyms</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(lhs</span> <span class="pre">is</span> <span class="pre">bytes)</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">rhs</span></code>); a numel mismatch raises <code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::overlap_acronyms</span> <span class="pre">expects</span> <span class="pre">equal</span> <span class="pre">numel</span> <span class="pre">or</span> <span class="pre">scalar</span> <span class="pre">broadcast</span></code>.</p>
 </section>
 </section>
 <section id="example-1-smaller-set-fully-contained">
@@ -91,14 +91,14 @@ scalar (<code class="docutils literal notranslate"><span class="pre">numel()</sp
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="jaccard_acronyms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::jaccard_acronyms</span></code></span></a>: the mutual-similarity
+<li><p><a class="reference internal" href="jaccard_acronyms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::jaccard_acronyms</span></code></span></a>: the mutual-similarity
 score over the same sets.</p></li>
-<li><p><a class="reference internal" href="intersect_acronyms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::intersect_acronyms</span></code></span></a>: the shared acronyms
+<li><p><a class="reference internal" href="intersect_acronyms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::intersect_acronyms</span></code></span></a>: the shared acronyms
 themselves.</p></li>
-<li><p><a class="reference internal" href="overlap_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_tokens</span></code></span></a> /
-<a class="reference internal" href="overlap_terms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_terms</span></code></span></a> /
-<a class="reference internal" href="overlap_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_citations</span></code></span></a> /
-<a class="reference internal" href="overlap_symbols.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::overlap_symbols</span></code></span></a>: other set kinds.</p></li>
+<li><p><a class="reference internal" href="overlap_tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::overlap_tokens</span></code></span></a> /
+<a class="reference internal" href="overlap_terms.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::overlap_terms</span></code></span></a> /
+<a class="reference internal" href="overlap_citations.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::overlap_citations</span></code></span></a> /
+<a class="reference internal" href="overlap_symbols.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::overlap_symbols</span></code></span></a>: other set kinds.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="numbers.html"><span class="label">Previous</span><span class="title">numbers</span></a>
@@ -140,7 +140,6 @@ themselves.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -148,8 +147,8 @@ themselves.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -160,8 +159,8 @@ themselves.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
   <li><a href="../../note_nlp_accessor_api_reference.html">Note NLP Accessor API Reference</a><ul>
-      <li>Previous: <a href="numbers.html" title="previous chapter">NoteNlpAccessor::numbers</a></li>
-      <li>Next: <a href="overlap_citations.html" title="next chapter">NoteNlpAccessor::overlap_citations</a></li>
+      <li>Previous: <a href="numbers.html" title="previous chapter">Note::NlpAccessor::numbers</a></li>
+      <li>Next: <a href="overlap_citations.html" title="next chapter">Note::NlpAccessor::overlap_citations</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -47,8 +47,8 @@ Example 1. A freshly constructed atlas is its own sole owner.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 std::cout << atlas.unique();
@@ -66,7 +66,7 @@ as both are alive.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
 auto atlas1 = Atlas({q1});
 std::cout << "atlas1.unique() before copy: " << atlas1.unique() << "\n";
 
@@ -88,7 +88,7 @@ Example 3. Once the sharing copy goes out of scope, `unique()` returns to `true`
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
 auto atlas1 = Atlas({q1});
 {
   auto atlas2 = atlas1;

@@ -59,6 +59,7 @@ parameters and modules together.
 | `save(filepath)` | `void` | [`save`](Model/save.md) |
 | `load(filepath)` | `void` | [`load`](Model/load.md) |
 | `ready()` | `bool` | [`ready`](Model/ready.md) |
+| `training_report()` | `const TrainingReport&` | [`training_report`](Model/training_report.md) |
 | `is_training()` | `bool` | [`is_training`](Model/is_training.md) |
 | `train(enabled = true)` | `void` | [`train`](Model/train.md) |
 | `eval()` | `void` | [`eval`](Model/eval.md) |
@@ -91,6 +92,7 @@ Model/save
 Model/test_step
 Model/to
 Model/train
+Model/training_report
 Model/valid_step
 ```
 <!-- apiref:toctree:end -->

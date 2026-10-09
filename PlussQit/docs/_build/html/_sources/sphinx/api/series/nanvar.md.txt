@@ -2,7 +2,7 @@
 
 # Series::nanvar
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference)
 
 ## Signature
 

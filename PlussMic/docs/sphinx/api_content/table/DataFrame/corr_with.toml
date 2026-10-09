@@ -5,7 +5,7 @@ This is the cross-frame correlation surface to use when you want one correlation
 """
 
 returns = """
-`Thread`
+`Slate`
     Returned when you correlate against one other frame. Each value corresponds to one shared numeric feature.
 
 `DataFrame`
@@ -26,7 +26,7 @@ name = "other"
 body = """
 One peer frame to compare against.
 
-The result is a one-dimensional thread with one correlation value per shared numeric feature.
+The result is a one-dimensional slate with one correlation value per shared numeric feature.
 """
 
 [[parameters]]

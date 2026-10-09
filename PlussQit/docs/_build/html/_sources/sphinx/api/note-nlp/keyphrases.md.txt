@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::keyphrases
+# Note::NlpAccessor::keyphrases
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::keyphrases(std::int64_t count) const
+TokenBatch Note::NlpAccessor::keyphrases(std::int64_t count) const
 ```
 
 ## Rank Frequent Two-Word Phrases

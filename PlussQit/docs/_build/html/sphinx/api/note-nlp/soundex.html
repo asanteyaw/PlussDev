@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>NoteNlpAccessor::soundex &#8212; PlussQit  documentation</title>
+    <title>Note::NlpAccessor::soundex &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="NoteNlpAccessor::spam_score" href="spam_score.html" />
-    <link rel="prev" title="NoteNlpAccessor::sort_tokens" href="sort_tokens.html" />
+    <link rel="next" title="Note::NlpAccessor::spam_score" href="spam_score.html" />
+    <link rel="prev" title="Note::NlpAccessor::sort_tokens" href="sort_tokens.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -37,12 +37,12 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<section id="notenlpaccessor-soundex">
-<h1>NoteNlpAccessor::soundex<a class="headerlink" href="#notenlpaccessor-soundex" title="Link to this heading">¶</a></h1>
+<section id="note-nlpaccessor-soundex">
+<h1>Note::NlpAccessor::soundex<a class="headerlink" href="#note-nlpaccessor-soundex" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_nlp_accessor_api_reference.html"><span class="doc std std-doc">Back to Note NLP Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">NoteNlpAccessor</span><span class="o">::</span><span class="n">soundex</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">NlpAccessor</span><span class="o">::</span><span class="n">soundex</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -76,7 +76,7 @@ separator), each word is coded, and the codes are joined with a single space.
 <code class="docutils literal notranslate"><span class="pre">&quot;John</span> <span class="pre">Smith&quot;</span></code> → <code class="docutils literal notranslate"><span class="pre">&quot;J500</span> <span class="pre">S530&quot;</span></code>. A cell with no word yields an empty string; a
 word that is a single letter codes as that letter plus <code class="docutils literal notranslate"><span class="pre">000</span></code>.</p>
 <p>The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode <code class="docutils literal notranslate"><span class="pre">Note</span></code> is rejected with <code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::soundex</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(not</span> <span class="pre">bytes)</span></code>), and returns a fresh UTF-8 <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Non-ASCII
+(a bytes-mode <code class="docutils literal notranslate"><span class="pre">Note</span></code> is rejected with <code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::soundex</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(not</span> <span class="pre">bytes)</span></code>), and returns a fresh UTF-8 <code class="docutils literal notranslate"><span class="pre">Note</span></code>. Non-ASCII
 letters are not decoded — run <a class="reference internal" href="to_ascii.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">to_ascii</span></code></span></a>
 first if the input has accents.</p>
 </section>
@@ -164,11 +164,11 @@ repeats <code class="docutils literal notranslate"><span class="pre">P</span></c
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="metaphone.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::metaphone</span></code></span></a>: a consonant-skeleton
+<li><p><a class="reference internal" href="metaphone.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::metaphone</span></code></span></a>: a consonant-skeleton
 key that keeps more of the word’s shape than a four-character Soundex code.</p></li>
-<li><p><a class="reference internal" href="to_ascii.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::to_ascii</span></code></span></a>: fold accents to
+<li><p><a class="reference internal" href="to_ascii.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::to_ascii</span></code></span></a>: fold accents to
 ASCII before coding.</p></li>
-<li><p><a class="reference internal" href="tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::tokens</span></code></span></a>: the word split used per cell.</p></li>
+<li><p><a class="reference internal" href="tokens.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::tokens</span></code></span></a>: the word split used per cell.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sort_tokens.html"><span class="label">Previous</span><span class="title">sort_tokens</span></a>
@@ -210,7 +210,6 @@ ASCII before coding.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -218,8 +217,8 @@ ASCII before coding.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -230,8 +229,8 @@ ASCII before coding.</p></li>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
   <li><a href="../../note_nlp_accessor_api_reference.html">Note NLP Accessor API Reference</a><ul>
-      <li>Previous: <a href="sort_tokens.html" title="previous chapter">NoteNlpAccessor::sort_tokens</a></li>
-      <li>Next: <a href="spam_score.html" title="next chapter">NoteNlpAccessor::spam_score</a></li>
+      <li>Previous: <a href="sort_tokens.html" title="previous chapter">Note::NlpAccessor::sort_tokens</a></li>
+      <li>Next: <a href="spam_score.html" title="next chapter">Note::NlpAccessor::spam_score</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

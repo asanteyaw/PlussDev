@@ -16,7 +16,7 @@ DataFrame::ffill(const FillOptions& options) const -> DataFrame
 ## What It Does
 
 Forward-fills missing values: each null cell is replaced by the last *observed* value
-above it in the same feature, propagating downward. `ffill()` works on every `Thread`
+above it in the same feature, propagating downward. `ffill()` works on every `Slate`
 kind PlussMic supports — `Series`, `Note`, `Timeline`, and `TimeIndex` — not just
 numeric features.
 

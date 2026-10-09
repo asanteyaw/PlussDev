@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "pluss/coden/coden.h"
-#include "table/Thread.h"
+#include "table/Slate.h"
 
 namespace pluss::table {
 class DataFrame;
@@ -165,8 +165,8 @@ struct CsvRawBatch {
 
 // Neutral CSV ingest payload (no DataFrame ownership).
 struct CsvBatch {
-  std::vector<std::pair<std::string, pluss::table::Thread>> features{};
-  std::optional<pluss::table::Thread> cases{};
+  std::vector<std::pair<std::string, pluss::table::Slate>> features{};
+  std::optional<pluss::table::Slate> cases{};
 };
 
 CsvRawBatch read_csv_records_raw_batch(const std::vector<std::vector<std::string>>& records,

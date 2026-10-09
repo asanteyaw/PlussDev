@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5bc0dec7ca53 -->
+<!-- pluss-signature-hash: 091847478bfe -->
 
 # DataFrame::kurtosis
 
@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-DataFrame::kurtosis(Axis axis = Axis::Case, std::int64_t min_count = 4) const -> Thread
+DataFrame::kurtosis(Axis axis = Axis::Case, std::int64_t min_count = 4) const -> Slate
 ```
 
 ## What It Does
 
 Reduces every numeric feature to its (bias-adjusted) sample **excess** kurtosis — a
 measure of how heavy a distribution's tails are relative to a normal distribution —
-returning one `Thread` whose entries line up with the frame's numeric feature names,
+returning one `Slate` whose entries line up with the frame's numeric feature names,
 the same shape [`skew()`](skew.md) returns. Because this is *excess* kurtosis (not raw
 kurtosis), a normal distribution scores `0`: a positive value describes heavier tails
 and a sharper peak than normal, a negative value describes lighter tails and a flatter
@@ -43,7 +43,7 @@ always enforces `max(4, min_count)` — but passing a larger value raises the ba
 
 ## Returns
 
-`Thread`
+`Slate`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's sample excess kurtosis.
 
@@ -56,10 +56,10 @@ Example 1. Compute the excess kurtosis of every numeric feature, the default
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto kurt = orders.kurtosis();

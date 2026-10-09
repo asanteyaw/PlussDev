@@ -171,9 +171,8 @@ int main() {
   show_timeline("factory arange(datetime, datetime, duration_step)", t_arange_datetimes);
 
   // --------------------------------------------------------------------------
-  // Factory methods: TimeIndex (1D axis only), reached via Timeline::index()
-  // now that TimeIndex itself is CodeH's private implementation detail.
-  // TimeIndex is always 1D, even for scalar input -- unlike Timeline itself,
+  // Index accessor construction (1D axis only), reached via Timeline::index().
+  // TimelineIndexAccessor is always 1D, even for scalar input -- unlike Timeline itself,
   // which is happy to be 0D -- so a scalar source is wrapped in a
   // single-element list/span below rather than passed bare.
   // --------------------------------------------------------------------------
@@ -202,16 +201,16 @@ int main() {
   const auto idx_epoch_span = pluss::timeline::from_epoch(std::span<const std::int64_t>(idx_epoch)).index(true);
   const auto idx_epoch_vec = pluss::timeline::from_epoch(idx_epoch).index(true);
 
-  show_timeline("factory timeindex::make(Timeline)", idx_from_timeline.timeline());
-  show_timeline("factory timeindex::make(string_view)", idx_scalar_sv.timeline());
-  show_timeline("factory timeindex::make(const char*)", idx_scalar_c.timeline());
-  show_timeline("factory timeindex::make(span<string_view>)", idx_span.timeline());
-  show_timeline("factory timeindex::make(vector<string_view>)", idx_vecsv.timeline());
-  show_timeline("factory timeindex::make(vector<string>)", idx_vecstr.timeline());
-  show_timeline("factory timeindex::make(init_list<const char*>)", idx_init.timeline());
-  show_timeline("factory timeindex::make(nested literal 1D)", idx_nested.timeline());
-  show_timeline("factory timeindex::make(span<epoch_nanos>)", idx_epoch_span.timeline());
-  show_timeline("factory timeindex::make(vector<epoch_nanos>)", idx_epoch_vec.timeline());
+  show_timeline("index from Timeline", idx_from_timeline.timeline());
+  show_timeline("index from string_view Timeline", idx_scalar_sv.timeline());
+  show_timeline("index from const char* Timeline", idx_scalar_c.timeline());
+  show_timeline("index from span<string_view> Timeline", idx_span.timeline());
+  show_timeline("index from vector<string_view> Timeline", idx_vecsv.timeline());
+  show_timeline("index from vector<string> Timeline", idx_vecstr.timeline());
+  show_timeline("index from initializer-list Timeline", idx_init.timeline());
+  show_timeline("index from nested literal Timeline", idx_nested.timeline());
+  show_timeline("index from span<epoch_nanos> Timeline", idx_epoch_span.timeline());
+  show_timeline("index from vector<epoch_nanos> Timeline", idx_epoch_vec.timeline());
 
   // --------------------------------------------------------------------------
   // Non-generated Timeline methods (TimelineBase + manual surface)
@@ -245,7 +244,13 @@ int main() {
   std::cout << "to_string => " << scalar.to_string() << "\n";
   show_series("to_Series()", scalar.to_Series());
 
-  show_timeline("set_year", scalar.set_year(2030));
+  try {
+    (void)scalar.set_year(2030);
+  } catch (const pluss::Error&) {
+    std::cout << "\n== set_year strict leap-day validation ==\n"
+              << "2030-02-29 is not a valid calendar date\n";
+  }
+  show_timeline("set_year", scalar2.set_year(2030));
   show_timeline("set_month", scalar.set_month(12));
   show_timeline("set_day", scalar.set_day(15));
   show_timeline("set_hour", scalar.set_hour(8));
@@ -352,7 +357,7 @@ int main() {
             << " ticks size=" << copied_vec.size() << "\n";
 
   // --------------------------------------------------------------------------
-  // Non-generated TimeIndex methods
+  // Non-generated TimelineIndexAccessor methods
   // --------------------------------------------------------------------------
   const auto idx = pluss::timeline::make({
       "2024-11-01T00:00:00Z",
@@ -361,7 +366,7 @@ int main() {
       "2024-11-01T01:00:00Z",
       "2024-11-01T01:20:00Z",
   }).index();
-  std::cout << "\n== TimeIndex non-generated methods ==\n";
+  std::cout << "\n== TimelineIndexAccessor non-generated methods ==\n";
   std::cout << "size=" << idx.size() << "\n";
   show_timeline("timeline()", idx.timeline());
 

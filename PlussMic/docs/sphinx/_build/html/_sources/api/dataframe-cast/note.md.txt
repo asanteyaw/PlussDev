@@ -28,6 +28,6 @@ feature names and case labels.
 ## See Also
 
 - [`DataFrame::cast`](../dataframe/cast.md): enters the accessor and supplies shared
-  `ThreadCastOptions`.
+  `SlateCastOptions`.
 - [`DataFrameCastAccessor::series`](series.md),
   [`DataFrameCastAccessor::timeline`](timeline.md): the other payload-family targets.

@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -44,8 +44,8 @@ FeatureBatch anomaly_batch() {
 DataFrame anomaly_frame() {
   const Series x = anomaly_batch().x;
   return DataFrame({
-      {"x0", Thread(x.narrow_copy(1, 0, 1).reshape({26}))},
-      {"x1", Thread(x.narrow_copy(1, 1, 1).reshape({26}))},
+      {"x0", Slate(x.narrow_copy(1, 0, 1).reshape({26}))},
+      {"x1", Slate(x.narrow_copy(1, 1, 1).reshape({26}))},
   });
 }
 
@@ -57,13 +57,13 @@ bool run_detect_checks(std::ostream* err) {
     options.gamma = 0.7;
     options.nu = 0.2;
 
-    const detect::Result found = detect::model(models::one_class_svm(options)).run(anomaly_batch());
+    const models::detect::Result found = models::detect::model(models::one_class_svm(options)).run(anomaly_batch());
     if (!(found.has_model()
           && !found.has_scores()
           && found.labels().numel() == 26
           && found.flagged().numel() == 26
           && found.board().ncases() == 4)) {
-      if (err) *err << "detect::model(...).run should return labels and summary for one-class models\n";
+      if (err) *err << "models::detect::model(...).run should return labels and summary for one-class models\n";
       return false;
     }
   }
@@ -78,13 +78,13 @@ bool run_detect_checks(std::ostream* err) {
     options.random.seed = 19;
     options.random.deterministic = true;
 
-    const detect::Result found = detect::model(models::isolation_detector(options)).run(anomaly_frame());
+    const models::detect::Result found = models::detect::model(models::isolation_detector(options)).run(anomaly_frame());
     if (!(found.has_model()
           && !found.has_scores()
           && found.labels().numel() == 26
           && found.flagged_count() > 0
           && found.board().ncases() == 4)) {
-      if (err) *err << "detect::model(models::isolation_detector(...)).run should return labels and summary\n";
+      if (err) *err << "models::detect::model(models::isolation_detector(...)).run should return labels and summary\n";
       return false;
     }
   }

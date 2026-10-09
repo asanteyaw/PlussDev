@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_space
+# Note::TexAccessor::strip_space
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_space() const
+Note Note::TexAccessor::strip_space() const
 ```
 
 ## Remove Explicit TeX Spacing Syntax

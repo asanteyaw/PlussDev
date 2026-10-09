@@ -81,10 +81,10 @@ trace per row.
 using namespace pluss::table;
 
 auto flowers = DataFrame({
-    {"sepal_length", Thread(pluss::make_series({5.1, 6.7, 5.8, 6.3}))},
-    {"sepal_width",  Thread(pluss::make_series({3.5, 3.0, 2.7, 3.3}))},
-    {"petal_length", Thread(pluss::make_series({1.4, 5.2, 5.1, 6.0}))},
-    {"species",      Thread(pluss::make_note({"setosa", "virginica", "virginica", "virginica"}))},
+    {"sepal_length", Slate(pluss::make_series({5.1, 6.7, 5.8, 6.3}))},
+    {"sepal_width",  Slate(pluss::make_series({3.5, 3.0, 2.7, 3.3}))},
+    {"petal_length", Slate(pluss::make_series({1.4, 5.2, 5.1, 6.0}))},
+    {"species",      Slate(pluss::make_note({"setosa", "virginica", "virginica", "virginica"}))},
 });
 
 auto chart = flowers.plot().parallel();
@@ -133,9 +133,9 @@ Example 4. `class_feature` accepts a numeric feature too — unlike `scatter()`'
 
 ```cpp
 auto numeric_class = DataFrame({
-    {"x1",   Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
-    {"x2",   Thread(pluss::make_series({4.0, 3.0, 2.0, 1.0}))},
-    {"code", Thread(pluss::make_series({1.0, 1.0, 2.0, 2.0}))},
+    {"x1",   Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"x2",   Slate(pluss::make_series({4.0, 3.0, 2.0, 1.0}))},
+    {"code", Slate(pluss::make_series({1.0, 1.0, 2.0, 2.0}))},
 });
 
 auto chart = numeric_class.plot().parallel({"x1", "x2"}, "code");

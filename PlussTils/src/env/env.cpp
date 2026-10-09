@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -86,10 +87,11 @@ double get_double(std::string_view key, double fallback) {
   const std::string token = trim_ascii(*raw);
   if (token.empty()) return fallback;
 
-  char* parse_end = nullptr;
-  const double parsed = std::strtod(token.c_str(), &parse_end);
-  if (parse_end == token.c_str()) return fallback;
-  if (parse_end == nullptr || *parse_end != '\0') return fallback;
+  double parsed = fallback;
+  const char* begin = token.data();
+  const char* end = token.data() + token.size();
+  const auto result = std::from_chars(begin, end, parsed, std::chars_format::general);
+  if (result.ec != std::errc{} || result.ptr != end) return fallback;
   if (!std::isfinite(parsed)) return fallback;
   return parsed;
 }
@@ -102,6 +104,10 @@ int get_int_clamped(std::string_view key, int fallback, int min_value, int max_v
 
 double get_double_clamped(
     std::string_view key, double fallback, double min_value, double max_value) {
+  if (!std::isfinite(fallback) || !std::isfinite(min_value) || !std::isfinite(max_value)) {
+    throw std::invalid_argument(
+        "pluss::tils::env::get_double_clamped: fallback and bounds must be finite");
+  }
   if (min_value > max_value) std::swap(min_value, max_value);
   const double parsed = get_double(key, fallback);
   return std::clamp(parsed, min_value, max_value);

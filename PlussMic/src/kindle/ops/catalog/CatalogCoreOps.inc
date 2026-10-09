@@ -92,7 +92,7 @@ Catalog Catalog::query(const QueryFn& fn) const {
   return filter(mask);
 }
 
-Catalog Catalog::select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+Catalog Catalog::select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
                         pluss::msharp::RangeView::Of<Catalog> choices,
                         const Catalog& default_value) {
   PLUSS_CHECK(!choices.empty(), "Catalog::select: at least one choice is required");
@@ -298,9 +298,9 @@ Catalog Catalog::fillnull(const pluss::Duration& value) const {
 
 Catalog Catalog::dropnull() const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  std::optional<pluss::table::Thread> keep;
+  std::optional<pluss::table::Slate> keep;
   for (std::size_t i = 0; i < impl_ref_().keys_.size(); ++i) {
-    const auto valid = impl_ref_().streams_[i].notnull().to_thread();
+    const auto valid = impl_ref_().streams_[i].notnull().to_slate();
     keep = keep.has_value() ? keep->land(valid) : valid;
   }
   if (!keep.has_value()) return *this;
@@ -371,8 +371,8 @@ Catalog Catalog::invalid() const {
   return Catalog(std::move(out));
 }
 
-Catalog Catalog::cast(pluss::table::ThreadCastTarget target,
-                      const pluss::table::ThreadCastOptions& options) const {
+Catalog Catalog::cast(pluss::table::SlateCastTarget target,
+                      const pluss::table::SlateCastOptions& options) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
   std::vector<std::pair<std::string, Stream>> out;
   out.reserve(static_cast<std::size_t>(nstreams()));
@@ -383,8 +383,8 @@ Catalog Catalog::cast(pluss::table::ThreadCastTarget target,
 }
 
 Catalog Catalog::astype(pluss::codem::ScalarType dtype) const {
-  return cast(pluss::table::ThreadCastTarget::Series,
-              pluss::table::ThreadCastOptions{.series_dtype = dtype});
+  return cast(pluss::table::SlateCastTarget::Series,
+              pluss::table::SlateCastOptions{.series_dtype = dtype});
 }
 
 Catalog Catalog::distinct(DistinctOptions options) const {
@@ -419,22 +419,6 @@ Catalog Catalog::ndistinct(DistinctOptions options) const {
 
 std::int64_t Catalog::count() const {
   return nrows();
-}
-
-Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_view how) const {
-  PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  PLUSS_CHECK(other.defined(), "Catalog::merge: other catalog is undefined");
-  const auto how_norm = lowercase_copy(trim_copy(how));
-  PLUSS_CHECK(how_norm == "inner",
-              "Catalog::merge currently supports only how='inner'");
-  const auto key = trim_copy(on);
-  PLUSS_CHECK(!key.empty(), "Catalog::merge: key cannot be empty");
-
-  const auto left = tabelize();
-  const auto right = other.tabelize();
-  PLUSS_CHECK(left.get(key).has_value(), "Catalog::merge: left key not found '" + key + "'");
-  PLUSS_CHECK(right.get(key).has_value(), "Catalog::merge: right key not found '" + key + "'");
-  return left.unify(key, right, key).kindelize();
 }
 
 Catalog Catalog::map(const std::function<Stream(const Stream&)>& fn) const {

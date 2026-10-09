@@ -30,15 +30,49 @@ the family's own honest limitations (no search-strategy concept, several
 
 ## How To Call It
 
+Build a four-entry sparse matrix, train a sparse binary classifier on it, and predict. The program prints the prediction count.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-const cls::SparseTripletMatrix x =
-    cls::make_sparse_triplet(rows, cols, row_indices, column_indices, values).value();
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-cls::SparseLinearBinaryClassifier model;
-model.learn(x, y);  // a fresh LinearFamilyOptions{} is implied here
-const cls::StatusOr<pluss::Series> predicted = model.infer(x);
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const cls::SparseTripletMatrix x = cls::make_sparse_triplet(
+      4, 2, {0, 1, 2, 3}, {0, 1, 0, 1}, {1.0, 2.0, 3.0, 4.0}).value();
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 1, 1}, {4}, cfg);
+  cls::SparseLinearBinaryClassifier model;
+  model.learn(x, y);
+  const cls::StatusOr<pluss::Series> predicted = model.infer(x);
+  std::cout << "predictions = " << predicted.value().numel() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+predictions = 4
 ```
 
 ## Related Pages

@@ -44,7 +44,7 @@ Example 1. Character count of a plain ASCII text feature.
 using namespace pluss::table;
 
 auto cities = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << cities;
 
@@ -86,7 +86,7 @@ character still counts as just the characters a person would see.
 
 ```cpp
 auto labels = DataFrame({
-    {"label", Thread(pluss::make_note({"Price: \xE2\x82\xAC""50", "Cost: $20", "Fee: \xC2\xA3""5"}))},
+    {"label", Slate(pluss::make_note({"Price: \xE2\x82\xAC""50", "Cost: $20", "Fee: \xC2\xA3""5"}))},
 });
 
 auto out2 = labels.nt().length();

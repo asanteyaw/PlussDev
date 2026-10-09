@@ -24,6 +24,7 @@ target_sources(PlussMic PRIVATE
 )
 
 add_subdirectory(src/loader)
+add_subdirectory(src/relational)
 add_subdirectory(src/kindle)
 add_subdirectory(src/bundle)
 add_subdirectory(src/scribble)

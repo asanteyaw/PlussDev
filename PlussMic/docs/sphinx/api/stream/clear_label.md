@@ -32,10 +32,10 @@ rather than throwing.
 Example 1. Clear a label that was previously set.
 
 ```cpp
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 auto labeled = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}))
-                   .with_label(Thread(pluss::make_note({"a", "b", "c"})));
+                   .with_label(Slate(pluss::make_note({"a", "b", "c"})));
 
 auto cleared = labeled.clear_label();
 std::cout << "labeled has_label: " << labeled.has_label() << "\n";

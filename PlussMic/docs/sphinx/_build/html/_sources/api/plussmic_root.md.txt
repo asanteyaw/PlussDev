@@ -2,7 +2,7 @@
 
 PlussMic is organized by public surface first, so you can enter through the exact family of objects you are using.
 
-- `table` covers tabular analysis surfaces such as `DataFrame`, `Thread`, and `Atlas`.
+- `table` covers tabular analysis surfaces such as `DataFrame`, `Slate`, and `Atlas`.
 - `kindle` covers aligned stream containers such as `Stream`, `Catalog`, and `Archive`.
 - `bundle` covers multi-table workspace surfaces such as `Nexus`,
   `NexusTraverse`, and `NexusQuery`.

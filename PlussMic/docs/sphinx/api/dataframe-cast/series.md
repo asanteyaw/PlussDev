@@ -13,7 +13,7 @@ DataFrameCastAccessor::series() const -> DataFrame
 ## What It Does
 
 Casts every feature currently bound on the accessor to `Series`, using the shared
-`ThreadCastOptions` that were supplied at `DataFrame::cast(...)` entry time.
+`SlateCastOptions` that were supplied at `DataFrame::cast(...)` entry time.
 
 ## Returns
 
@@ -30,6 +30,6 @@ Casts every feature currently bound on the accessor to `Series`, using the share
 ## See Also
 
 - [`DataFrame::cast`](../dataframe/cast.md): enters the accessor and supplies shared
-  `ThreadCastOptions`.
+  `SlateCastOptions`.
 - [`DataFrameCastAccessor::timeline`](timeline.md),
   [`DataFrameCastAccessor::note`](note.md): the other payload-family targets.

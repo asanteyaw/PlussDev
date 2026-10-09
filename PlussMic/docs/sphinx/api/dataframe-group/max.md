@@ -45,8 +45,8 @@ Example 1. Largest loan amount per region.
 using namespace pluss::table;
 
 auto loans = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"amount", Slate(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
 });
 
 auto out = loans.features({"region", "amount"})
@@ -75,9 +75,9 @@ Example 2. Max only one selected feature on a wider value side.
 
 ```cpp
 auto wide = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"amount", Thread(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
-    {"units", Thread(pluss::make_series({5.0, 1.0, 3.0, 4.0}))},
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"amount", Slate(pluss::make_series({100.0, 250.0, 80.0, 120.0}))},
+    {"units", Slate(pluss::make_series({5.0, 1.0, 3.0, 4.0}))},
 });
 
 auto out2 = wide.group().by({"region"}).max({"units"});

@@ -20,7 +20,7 @@ namespace pluss::codeh {
 namespace _compat { namespace detail { struct Access; } }
 
 class Timeline;
-class TimeIndex;
+class TimelineIndexAccessor;
 struct CalendarOffset;
 
 namespace ops_internal {
@@ -83,11 +83,7 @@ public:
 
   Timeline() = delete; // construction via factories only
 
-  // Option/result types for the ordered-axis operations reachable through
-  // index() (searchsorted/asof/resample_bins/...). Canonically defined here
-  // rather than on TimeIndex, since TimeIndex is becoming Timeline::index()'s
-  // private implementation detail; TimeIndex::ResampleOptions/AsofDirection
-  // alias these for source compatibility while callers migrate.
+  // Canonical policies for ordered-axis operations reached through index().
   enum class ResampleClosed : std::uint8_t {
     Left = 0,
     Right = 1,
@@ -115,10 +111,7 @@ public:
 
   enum class AsofDirection { Backward, Forward, Nearest };
 
-  // Public name for whatever index() returns (the ordered-axis accessor
-  // behind searchsorted/asof/resample_bins/...). TimeIndex remains CodeH's
-  // private implementation detail, not nameable outside CodeH; this is the
-  // spelling external callers use when they need to name the type itself.
+  // The accessor belongs to Timeline's public surface; it is not a root value type.
   using TimelineIndexAccessor = pluss::codeh::TimelineIndexAccessor;
 
   using TimelineBase::weekday_name;
@@ -135,7 +128,7 @@ public:
 #endif
 
 private:
-  friend class TimeIndex;
+  friend class ::pluss::codeh::TimelineIndexAccessor;
   friend struct ::pluss::codeh::_compat::detail::Access; // internal bridge
 
   friend Timeline pluss::codeh::ops_internal::timeline_from_utf8(std::span<const std::string_view>,

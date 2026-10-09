@@ -43,9 +43,9 @@ untouched.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Thread(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.label().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
@@ -135,7 +135,7 @@ Example 3. Call `rename()` on an unstructured frame, to see it throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales", Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
 try {
   auto out = orders.label().rename({{"region", "area"}});

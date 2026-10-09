@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e409b2934e55 -->
 # `pluss::ai::ice::Model::compute_loss`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -190,3 +192,16 @@ loss defined = 1
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="assess.html">
+    <span class="label">Previous</span>
+    <span class="title">assess</span>
+  </a>
+  <a class="next-link" href="eval.html">
+    <span class="label">Next</span>
+    <span class="title">eval</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

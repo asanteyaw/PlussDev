@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::vdot
+# Series::LinearAlgAccessor::vdot
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::vdot(const Series& other) const
+Series Series::LinearAlgAccessor::vdot(const Series& other) const
 Series SeriesLinearAlgProxy::vdot() const
 Series Series::vdot(const Series& other) const
 ```
@@ -199,8 +199,8 @@ vdot: inputs must have the same length
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::dot`](dot.md): non-conjugating vector inner product.
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): vector, matrix, and batched
+- [`Series::LinearAlgAccessor::dot`](dot.md): non-conjugating vector inner product.
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): vector, matrix, and batched
   product.
 
 <div class="pluss-inline-prev-next">

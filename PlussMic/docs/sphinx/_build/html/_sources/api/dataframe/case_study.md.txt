@@ -42,7 +42,7 @@ case levels, and failures.
 
 Use positions when row location itself is meaningful. Use labels when the case axis
 is the durable identity. Use `where()` when the decision is already expressed as a
-Boolean `Thread` or `Series`. Use `pick()` only after named levels have been created
+Boolean `Slate` or `Series`. Use `pick()` only after named levels have been created
 with `label().set(...)`.
 
 The closest root alternatives are intentionally narrower: `filter()` performs only
@@ -57,8 +57,8 @@ Select one physical case and retain the result as a frame:
 ```cpp
 using namespace pluss::table;
 auto orders = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units", Thread(pluss::make_series({10, 7, 12}))},
+    {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Slate(pluss::make_series({10, 7, 12}))},
 });
 
 auto last = orders.case_study().at(-1);
@@ -69,7 +69,7 @@ Select by case label, retaining all duplicate matches:
 
 ```cpp
 auto labeled = orders.label().set(
-    Thread(pluss::make_note({"south", "coast", "coast"})));
+    Slate(pluss::make_note({"south", "coast", "coast"})));
 auto coast = labeled.case_study().label("coast");
 assert(coast.ncases() == 2);
 ```

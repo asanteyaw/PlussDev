@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::max_length
+# Note::NlpAccessor::max_length
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::max_length(std::int64_t length) const
+TokenBatch Note::NlpAccessor::max_length(std::int64_t length) const
 ```
 
 ## Keep Tokens At Or Below A Length

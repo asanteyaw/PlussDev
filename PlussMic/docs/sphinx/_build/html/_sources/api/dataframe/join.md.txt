@@ -61,14 +61,14 @@ overlapping feature names.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units",    Thread(pluss::make_series({2, 1, 4}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Slate(pluss::make_series({2, 1, 4}))},
 });
 
 auto logistics = DataFrame({
-    {"warehouse",  Thread(pluss::make_note({"WH-Accra", "WH-Tema", "WH-Kumasi"}))},
-    {"ship_days",  Thread(pluss::make_series({2, 3, 5}))},
+    {"warehouse",  Slate(pluss::make_note({"WH-Accra", "WH-Tema", "WH-Kumasi"}))},
+    {"ship_days",  Slate(pluss::make_series({2, 3, 5}))},
 });
 
 auto out = orders.join(logistics);
@@ -101,14 +101,14 @@ Example 2. Feature name collisions get the suffix.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units",    Thread(pluss::make_series({2, 1, 4}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Slate(pluss::make_series({2, 1, 4}))},
 });
 
 auto region_lookup = DataFrame({
-    {"city",       Thread(pluss::make_note({"Accra Region", "Tema Region", "Kumasi Region"}))},
-    {"ship_days",  Thread(pluss::make_series({2, 3, 5}))},
+    {"city",       Slate(pluss::make_note({"Accra Region", "Tema Region", "Kumasi Region"}))},
+    {"ship_days",  Slate(pluss::make_series({2, 3, 5}))},
 });
 
 auto out = orders.join(region_lookup);  // collision_suffix defaults to "_right"

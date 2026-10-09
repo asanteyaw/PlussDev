@@ -25,14 +25,43 @@ Nothing here trains or predicts. [`estimators`](estimators.md) is where a
 
 ## How To Call It
 
+Build a linear classifier from a model spec with a small regularization strength. The program prints whether the classifier was constructed.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::LinearFamilyOptions options{};
-options.regularization_strength = 1e-3;
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-cls::ModelSpec spec{cls::TaskKind::Classification, cls::ModelFamily::Linear, options};
-cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> classifier = cls::make_classifier(spec);
+int main() {
+  cls::LinearFamilyOptions options{};
+  options.regularization_strength = 1e-3;
+  cls::ModelSpec spec{cls::TaskKind::Classification, cls::ModelFamily::Linear, options};
+  cls::StatusOr<std::unique_ptr<cls::ClassifierBase>> classifier = cls::make_classifier(spec);
+  std::cout << "built = " << (classifier.ok() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+built = true
 ```
 
 `.family` and the alternative held in `.options` must agree — see

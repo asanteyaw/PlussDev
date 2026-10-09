@@ -53,7 +53,7 @@ using pluss::Platform;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 namespace ice = pluss::ai::ice;
 namespace data = pluss::ai::ice::data;
 namespace fs = std::filesystem;
@@ -176,9 +176,9 @@ int main() {
     const Series label = x0.add(x1).gt(0.0).to(ScalarType::Float32);
 
     const DataFrame df({
-        {"x0", Thread(x0)},
-        {"x1", Thread(x1)},
-        {"label", Thread(label)},
+        {"x0", Slate(x0)},
+        {"x1", Slate(x1)},
+        {"label", Slate(label)},
     });
 
     ice::Outline model_c(
@@ -615,13 +615,13 @@ int main() {
       }
     }
     const DataFrame panel({
-        {"series", Thread(pluss::make_note(series_col))},
-        {"region", Thread(pluss::make_note(region_col))},
-        {"t", Thread(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, cfg))},
-        {"level", Thread(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, cfg))},
-        {"position", Thread(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, cfg))},
-        {"noisy_level", Thread(pluss::make_series(noisy_col, {static_cast<std::int64_t>(noisy_col.size())}, cfg))},
-        {"y", Thread(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, cfg))},
+        {"series", Slate(pluss::make_note(series_col))},
+        {"region", Slate(pluss::make_note(region_col))},
+        {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, cfg))},
+        {"level", Slate(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, cfg))},
+        {"position", Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, cfg))},
+        {"noisy_level", Slate(pluss::make_series(noisy_col, {static_cast<std::int64_t>(noisy_col.size())}, cfg))},
+        {"y", Slate(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, cfg))},
     });
 
     data::TimeSeriesDataSetOptions ds_options{};

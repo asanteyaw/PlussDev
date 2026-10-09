@@ -12,7 +12,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::nodej;
 
 Config f64() {
@@ -43,17 +43,17 @@ DataFrame make_frame() {
           1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
       {6},
       Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-  const Thread ts = Thread(epoch_nanos).cast().timeline();
+  const Slate ts = Slate(epoch_nanos).cast().timeline();
   const Series y = x0.mul(2.0).sub(x1.mul(0.5)).add(1.0);
   const Series w = pluss::make_series(std::vector<double>{1.0, 1.0, 0.8, 1.2, 1.0, 0.9}, {6}, f64());
 
   return DataFrame({
-      {"x0", Thread(x0)},
-      {"x1", Thread(x1)},
-      {"category", Thread(category)},
+      {"x0", Slate(x0)},
+      {"x1", Slate(x1)},
+      {"category", Slate(category)},
       {"ts", ts},
-      {"target", Thread(y)},
-      {"weight", Thread(w)},
+      {"target", Slate(y)},
+      {"weight", Slate(w)},
   });
 }
 
@@ -69,7 +69,7 @@ int main() {
   options.label_feature = "target";
   options.sample_weight_feature = "weight";
   options.note_policy = DataNotePolicy::Hash;
-  options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
 
   auto batch_or = labeled_batch_from_dataframe(frame, options);
   if (!require_ok(batch_or, "labeled_batch_from_dataframe")) return 1;

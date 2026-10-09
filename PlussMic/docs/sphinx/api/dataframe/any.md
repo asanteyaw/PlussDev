@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 86e72d299fa1 -->
+<!-- pluss-signature-hash: e9435c30dfad -->
 
 # DataFrame::any
 
@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::any(bool skipnull = true) const -> Thread
-DataFrame::any(Axis axis, bool skipnull = true) const -> Thread
+DataFrame::any(bool skipnull = true) const -> Slate
+DataFrame::any(Axis axis, bool skipnull = true) const -> Slate
 ```
 
 ## What It Does
@@ -50,7 +50,7 @@ whether that computed result is trusted:
 
 ## Returns
 
-`Thread`
+`Slate`
     One `Bool` entry per participating feature (`Axis::Case`, the default) or per case
     (`Axis::Feature`), holding whether at least one value was `true`.
 
@@ -62,9 +62,9 @@ Example 1. Check whether each flag ever fires across all cases, the default axis
 using namespace pluss::table;
 
 auto checks = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"in_stock", Thread(pluss::make_series({true, true, false, true, false, true}, pluss::ScalarType::Bool))},
-    {"paid",     Thread(pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"in_stock", Slate(pluss::make_series({true, true, false, true, false, true}, pluss::ScalarType::Bool))},
+    {"paid",     Slate(pluss::make_series({true, false, false, true, false, true}, pluss::ScalarType::Bool))},
 });
 
 auto ever_true = checks.features({"in_stock", "paid"}).any();
@@ -112,7 +112,7 @@ Example 3. See how `skipnull` affects a reduction that includes a missing value.
 ```cpp
 auto priority_valid = pluss::make_series({true, true, false, true}, pluss::ScalarType::Bool);
 auto flags = DataFrame({
-    {"is_priority", Thread(pluss::make_series({true, false, false, false}, pluss::ScalarType::Bool), priority_valid)},
+    {"is_priority", Slate(pluss::make_series({true, false, false, false}, pluss::ScalarType::Bool), priority_valid)},
 });
 
 auto lenient = flags.any();

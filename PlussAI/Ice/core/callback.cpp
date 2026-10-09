@@ -5,7 +5,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iomanip>
+#include <iostream>
 #include <limits>
+#include <sstream>
 
 namespace pluss::ai::ice {
 
@@ -154,12 +157,104 @@ void CallbackChain::on_exception(RunState& state) {
   for_each_callback_(callbacks_, [&](Callback& callback) { callback.on_exception(state); });
 }
 
+namespace {
+
+void validate_progress_policy_(const ProgressPolicy& policy) {
+  PLUSS_CHECK(policy.log_every_n_epochs > 0,
+              "pluss::ai::ice::EpochLoggerCallback: log_every_n_epochs must be positive.");
+  PLUSS_CHECK(policy.bar_width > 0,
+              "pluss::ai::ice::EpochLoggerCallback: bar_width must be positive.");
+  PLUSS_CHECK(policy.precision >= 0,
+              "pluss::ai::ice::EpochLoggerCallback: precision must be non-negative.");
+  PLUSS_CHECK(policy.output == ProgressOutput::Stdout || policy.output == ProgressOutput::Stderr,
+              "pluss::ai::ice::EpochLoggerCallback: output must be Stdout or Stderr.");
+  for (const auto& metric : policy.metrics) {
+    PLUSS_CHECK(!metric.empty(),
+                "pluss::ai::ice::EpochLoggerCallback: metric names must not be empty.");
+  }
+}
+
+[[nodiscard]] std::ostream& progress_stream_(ProgressOutput output) {
+  return output == ProgressOutput::Stderr ? std::cerr : std::cout;
+}
+
+} // namespace
+
+EpochLoggerCallback::EpochLoggerCallback(ProgressPolicy policy)
+    : policy_(std::move(policy)), output_(&progress_stream_(policy_.output)) {
+  validate_progress_policy_(policy_);
+}
+
+EpochLoggerCallback::EpochLoggerCallback(ProgressPolicy policy, std::ostream& output)
+    : policy_(std::move(policy)), output_(&output) {
+  validate_progress_policy_(policy_);
+}
+
+void EpochLoggerCallback::on_epoch_end(RunState& state) {
+  if (state.stage != StepStage::Learn) return;
+
+  const std::int64_t completed = state.epoch + 1;
+  const std::int64_t total = state.recipe == nullptr ? 0 : state.recipe->execution.max_epochs;
+  const bool scheduled = completed % policy_.log_every_n_epochs == 0;
+  const bool fast_dev_complete = state.recipe != nullptr &&
+                                 state.recipe->execution.fast_dev_batches > 0 && completed >= 1;
+  const bool final_epoch = (total > 0 && completed >= total) || fast_dev_complete;
+  if (!scheduled && !final_epoch && !state.stop_requested) return;
+
+  std::ostringstream line{};
+  line << std::setprecision(static_cast<int>(policy_.precision));
+  if (policy_.progress_bar) {
+    const double fraction = total > 0
+                                ? std::clamp(static_cast<double>(completed) / static_cast<double>(total), 0.0, 1.0)
+                                : 0.0;
+    const auto filled = static_cast<std::int64_t>(fraction * static_cast<double>(policy_.bar_width));
+    line << '\r' << '[';
+    for (std::int64_t i = 0; i < policy_.bar_width; ++i) {
+      line << (i < filled ? '=' : ' ');
+    }
+    line << "] " << static_cast<int>(fraction * 100.0) << "% ";
+  }
+
+  line << "epoch " << completed;
+  if (total > 0) line << '/' << total;
+
+  bool first_metric = true;
+  for (const auto& name : policy_.metrics) {
+    const auto value = state.metric(name);
+    if (!value.has_value()) continue;
+    line << (first_metric ? ": " : ", ") << name << '=' << *value;
+    first_metric = false;
+  }
+  if (state.stop_requested && !state.stop_reason.empty()) {
+    line << (first_metric ? ": " : ", ") << "stopped=" << state.stop_reason;
+  }
+
+  const bool finish = !policy_.progress_bar || final_epoch || state.stop_requested;
+  line << (finish ? '\n' : '\r');
+  *output_ << line.str() << std::flush;
+  line_open_ = policy_.progress_bar && !finish;
+}
+
+void EpochLoggerCallback::finish_line_() {
+  if (!line_open_) return;
+  *output_ << '\n' << std::flush;
+  line_open_ = false;
+}
+
+void EpochLoggerCallback::on_run_end(RunState&) {
+  finish_line_();
+}
+
+void EpochLoggerCallback::on_exception(RunState&) {
+  finish_line_();
+}
+
 void EarlyStopCallback::on_run_begin(RunState& state) {
   static_cast<void>(state);
-  if (loaded_from_checkpoint_) {
-    loaded_from_checkpoint_ = false;
-    return;
-  }
+  // Checkpoint resume (if any) restores these fields via load_state(),
+  // which Coach::learn calls after this hook -- so a resumed run's reset
+  // here is always overwritten with the real values before any epoch runs;
+  // nothing here needs to special-case resuming.
   best_value_ = std::nullopt;
   best_epoch_ = -1;
   stopped_epoch_ = -1;
@@ -171,7 +266,13 @@ void EarlyStopCallback::on_epoch_end(RunState& state) {
   if (state.stage != StepStage::Learn) return;
   if (state.epoch < validation_.start_from_epoch) return;
 
+  // Validation runs on the coach's cadence: every `every_n_epochs` epochs
+  // counted from `start_from_epoch`. Between those epochs the monitored
+  // metric is absent by design, so the run neither improves nor ages.
+  const bool evaluation_epoch =
+      (state.epoch - validation_.start_from_epoch) % validation_.every_n_epochs == 0;
   const auto current = state.metric(validation_.monitor);
+  if (!evaluation_epoch && !current.has_value()) return;
   PLUSS_CHECK(current.has_value(),
               "pluss::ai::ice::EarlyStopCallback: monitored metric '" + validation_.monitor +
                   "' was not produced for this epoch.");
@@ -253,7 +354,6 @@ void EarlyStopCallback::load_state(const std::unordered_map<std::string, std::st
   stopped_epoch_ = std::stoll(find_or("stopped_epoch", "-1"));
   wait_count_ = std::stoll(find_or("wait_count", "0"));
   best_parameters_.clear();
-  loaded_from_checkpoint_ = true;
 }
 
 } // namespace pluss::ai::ice

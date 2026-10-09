@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_urls
+# Note::NlpAccessor::remove_urls
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_urls() const
+Note Note::NlpAccessor::remove_urls() const
 ```
 
 ## Delete Web URLs From Each Cell
@@ -93,10 +93,10 @@ touch it.
 
 ## See Also
 
-- [`NoteNlpAccessor::mask_pii`](mask_pii.md): replace URLs (and other
+- [`Note::NlpAccessor::mask_pii`](mask_pii.md): replace URLs (and other
   identifying spans) with named placeholders instead of deleting them.
 - [`Note::remove_all`](../note/remove_all.md): delete a known literal substring.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): pull the URLs out for
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): pull the URLs out for
   inspection or an allow-list.
 
 <div class="pluss-inline-prev-next">

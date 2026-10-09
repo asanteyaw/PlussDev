@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>NoteNlpAccessor::to_cyrillic &#8212; PlussQit  documentation</title>
+    <title>Note::NlpAccessor::to_cyrillic &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="NoteNlpAccessor::to_greek" href="to_greek.html" />
-    <link rel="prev" title="NoteNlpAccessor::to_ascii" href="to_ascii.html" />
+    <link rel="next" title="Note::NlpAccessor::to_greek" href="to_greek.html" />
+    <link rel="prev" title="Note::NlpAccessor::to_ascii" href="to_ascii.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -37,12 +37,12 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<section id="notenlpaccessor-to-cyrillic">
-<h1>NoteNlpAccessor::to_cyrillic<a class="headerlink" href="#notenlpaccessor-to-cyrillic" title="Link to this heading">¶</a></h1>
+<section id="note-nlpaccessor-to-cyrillic">
+<h1>Note::NlpAccessor::to_cyrillic<a class="headerlink" href="#note-nlpaccessor-to-cyrillic" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../note_nlp_accessor_api_reference.html"><span class="doc std std-doc">Back to Note NLP Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">NoteNlpAccessor</span><span class="o">::</span><span class="n">to_cyrillic</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Note</span><span class="w"> </span><span class="n">Note</span><span class="o">::</span><span class="n">NlpAccessor</span><span class="o">::</span><span class="n">to_cyrillic</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -68,7 +68,7 @@ and so on) are <strong>not</strong> in the table and pass through unchanged.</p>
 <p>Any non-Cyrillic character — Latin letters, digits, punctuation, spaces —
 passes through unchanged, so mixed-script text keeps its non-Cyrillic parts.</p>
 <p>The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode <code class="docutils literal notranslate"><span class="pre">Note</span></code> is rejected with <code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::to_cyrillic</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(not</span> <span class="pre">bytes)</span></code>), and returns a fresh UTF-8 <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
+(a bytes-mode <code class="docutils literal notranslate"><span class="pre">Note</span></code> is rejected with <code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::to_cyrillic</span> <span class="pre">requires</span> <span class="pre">a</span> <span class="pre">UTF-8</span> <span class="pre">text</span> <span class="pre">Note</span> <span class="pre">(not</span> <span class="pre">bytes)</span></code>), and returns a fresh UTF-8 <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
 </section>
 </section>
 <section id="example-1-names-and-multi-letter-sounds">
@@ -120,9 +120,9 @@ untouched.</p>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="to_greek.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::to_greek</span></code></span></a>: the same idea for
+<li><p><a class="reference internal" href="to_greek.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::to_greek</span></code></span></a>: the same idea for
 Greek.</p></li>
-<li><p><a class="reference internal" href="to_ascii.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor::to_ascii</span></code></span></a>: fold Latin accents
+<li><p><a class="reference internal" href="to_ascii.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor::to_ascii</span></code></span></a>: fold Latin accents
 and replace anything else with <code class="docutils literal notranslate"><span class="pre">?</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -165,7 +165,6 @@ and replace anything else with <code class="docutils literal notranslate"><span 
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -173,8 +172,8 @@ and replace anything else with <code class="docutils literal notranslate"><span 
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -185,8 +184,8 @@ and replace anything else with <code class="docutils literal notranslate"><span 
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../note_api_reference.html">Note API Reference</a><ul>
   <li><a href="../../note_nlp_accessor_api_reference.html">Note NLP Accessor API Reference</a><ul>
-      <li>Previous: <a href="to_ascii.html" title="previous chapter">NoteNlpAccessor::to_ascii</a></li>
-      <li>Next: <a href="to_greek.html" title="next chapter">NoteNlpAccessor::to_greek</a></li>
+      <li>Previous: <a href="to_ascii.html" title="previous chapter">Note::NlpAccessor::to_ascii</a></li>
+      <li>Next: <a href="to_greek.html" title="next chapter">Note::NlpAccessor::to_greek</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

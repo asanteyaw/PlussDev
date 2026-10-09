@@ -15,7 +15,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -26,7 +26,7 @@ DataFrame make_frame() {
   // timeseries_split (behind Plan::splits / Plan::last) requires an actual
   // timeline/timeindex column -- eight consecutive days, ascending like the old
   // {1..8} row index so the ordered-fold assertions below are unchanged.
-  const Thread timestamp(pluss::make_timeline({
+  const Slate timestamp(pluss::make_timeline({
       "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z",
       "2026-01-04T00:00:00Z", "2026-01-05T00:00:00Z", "2026-01-06T00:00:00Z",
       "2026-01-07T00:00:00Z", "2026-01-08T00:00:00Z"}));
@@ -35,10 +35,10 @@ DataFrame make_frame() {
   const Series y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1}, {8}, f64());
   return DataFrame({
       {"timestamp", timestamp},
-      {"x1", Thread(x1)},
-      {"x2", Thread(x2)},
-      {"category", Thread(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
-      {"y", Thread(y)},
+      {"x1", Slate(x1)},
+      {"x2", Slate(x2)},
+      {"category", Slate(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
+      {"y", Slate(y)},
   });
 }
 

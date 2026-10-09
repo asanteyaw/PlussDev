@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::macro_use
+# Note::TexAccessor::macro_use
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::macro_use() const
+TokenBatch Note::TexAccessor::macro_use() const
 ```
 
 ## Build A Per-Cell Control-Word Vocabulary

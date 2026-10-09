@@ -27,11 +27,11 @@ int main() {
   }, make_note({"r1", "r2", "r3"})).title("base");
 
   block("DF_ALIGN_1",
-        base.align(Thread(make_note({"r2", "missing", "r1"}))).to_string());
+        base.align(Slate(make_note({"r2", "missing", "r1"}))).to_string());
 
   block("DF_ALIGN_2",
         base.align(DataFrame::AlignSpec{
-            .caselbl = Thread(make_note({"r2", "missing", "r1"})),
+            .caselbl = Slate(make_note({"r2", "missing", "r1"})),
             .fill = 0.0,
         }).to_string());
 
@@ -42,13 +42,13 @@ int main() {
 
   block("DF_ALIGN_4",
         base.align(DataFrame::AlignSpec{
-            .caselbl = Thread(make_note({"r3", "r1"})),
+            .caselbl = Slate(make_note({"r3", "r1"})),
             .features = {"B", "C", "A"},
         }).to_string());
 
   block("DF_ALIGN_5",
         base.align(DataFrame::AlignSpec{
-            .caselbl = Thread(make_note({"r3", "r1"})),
+            .caselbl = Slate(make_note({"r3", "r1"})),
             .features = {"B", "C", "A"},
             .fill = 0.0,
         }).to_string());
@@ -65,31 +65,31 @@ int main() {
 
   block("DF_ALIGN_8", base.align(base.caselbl()).to_string());
 
-  auto labeled = Thread(make_series({10.0, 20.0, 30.0}))
-                     .caselbl(Thread(make_note({"b", "a", "c"})));
-  block("THREAD_ALIGN_1",
+  auto labeled = Slate(make_series({10.0, 20.0, 30.0}))
+                     .caselbl(Slate(make_note({"b", "a", "c"})));
+  block("SLATE_ALIGN_1",
         labeled.align(
-                   Thread(make_note({"a", "b", "d"})),
+                   Slate(make_note({"a", "b", "d"})),
                    AlignOptions{.align = AlignBy::Caselbl})
             .to_string());
 
-  block("THREAD_ALIGN_2",
+  block("SLATE_ALIGN_2",
         labeled.align(
-                   Thread(make_note({"a", "b", "d"})),
+                   Slate(make_note({"a", "b", "d"})),
                    AlignOptions{.align = AlignBy::Caselbl, .fill = 0.0})
             .to_string());
 
-  auto feature_thread = Thread(make_series({1.5, 2.5}))
-                            .caselbl(Thread(make_note({"A2", "A1"})));
-  block("THREAD_ALIGN_3",
-        feature_thread.align(
-                          Thread(make_note({"A1", "A2"})),
+  auto feature_slate = Slate(make_series({1.5, 2.5}))
+                            .caselbl(Slate(make_note({"A2", "A1"})));
+  block("SLATE_ALIGN_3",
+        feature_slate.align(
+                          Slate(make_note({"A1", "A2"})),
                           AlignOptions{.align = AlignBy::Feature})
             .to_string());
 
-  block("THREAD_ALIGN_4",
+  block("SLATE_ALIGN_4",
         labeled.align(
-                   Thread(make_note({"x", "y", "z"})),
+                   Slate(make_note({"x", "y", "z"})),
                    AlignOptions{.align = AlignBy::Pos})
             .to_string());
 
@@ -141,30 +141,30 @@ int main() {
   block("DF_EXTEND_3",
         left_extend.extend(right_extend, FrameMatchRule::Unite, true).to_string());
 
-  auto thread_nums = Thread(make_series({10.0, 20.0, 30.0}));
-  block("THREAD_DIV_1", thread_nums.div(10.0).to_string());
-  block("THREAD_DIV_2",
-        thread_nums.div(Thread(make_series({2.0, 4.0, 5.0}))).to_string());
+  auto slate_nums = Slate(make_series({10.0, 20.0, 30.0}));
+  block("SLATE_DIV_1", slate_nums.div(10.0).to_string());
+  block("SLATE_DIV_2",
+        slate_nums.div(Slate(make_series({2.0, 4.0, 5.0}))).to_string());
 
-  auto urls = Thread(make_note({"A B", "C&D", "email@example.com"}));
-  block("THREAD_ENCODE_1", urls.encode("base64").to_string());
-  block("THREAD_ENCODE_2", urls.encode("hex").to_string());
-  block("THREAD_ENCODE_3", urls.encode("url").to_string());
+  auto urls = Slate(make_note({"A B", "C&D", "email@example.com"}));
+  block("SLATE_ENCODE_1", urls.encode("base64").to_string());
+  block("SLATE_ENCODE_2", urls.encode("hex").to_string());
+  block("SLATE_ENCODE_3", urls.encode("url").to_string());
 
-  auto names = Thread(make_note({"Ada.csv", "Bola.txt", "Chen.csv"}));
-  block("THREAD_ENDS_1", names.ends(".csv").to_string());
+  auto names = Slate(make_note({"Ada.csv", "Bola.txt", "Chen.csv"}));
+  block("SLATE_ENDS_1", names.ends(".csv").to_string());
 
-  block("THREAD_EQ_1", thread_nums.eq(20.0).to_string());
-  block("THREAD_EQ_2", names.eq("Bola.txt").to_string());
-  block("THREAD_EQ_3",
-        thread_nums.eq(Thread(make_series({10.0, 0.0, 30.0}))).to_string());
+  block("SLATE_EQ_1", slate_nums.eq(20.0).to_string());
+  block("SLATE_EQ_2", names.eq("Bola.txt").to_string());
+  block("SLATE_EQ_3",
+        slate_nums.eq(Slate(make_series({10.0, 0.0, 30.0}))).to_string());
 
-  block("THREAD_EXP_1", Thread(make_series({0.0, 1.0, 2.0})).exp().to_string());
+  block("SLATE_EXP_1", Slate(make_series({0.0, 1.0, 2.0})).exp().to_string());
 
-  auto parts = Thread(make_note({"A-100", "B-205", "C", "D-400"}));
-  block("THREAD_EXTRACT_1",
+  auto parts = Slate(make_note({"A-100", "B-205", "C", "D-400"}));
+  block("SLATE_EXTRACT_1",
         parts.extract("([A-Z])-([0-9]+)", {"code", "id"}).to_string());
-  block("THREAD_EXTRACT_2",
+  block("SLATE_EXTRACT_2",
         parts.extract("([A-Z])-([0-9]+)").to_string());
 
   return 0;

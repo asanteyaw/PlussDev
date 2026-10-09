@@ -1,14 +1,14 @@
 pluss::table::DataFrame Catalog::tabelize(const TabelizePolicy& policy) const {
   PLUSS_CHECK(defined(), "Catalog: undefined handle");
-  if (empty()) return pluss::table::DataFrame(std::vector<std::pair<std::string, pluss::table::Thread>>{});
+  if (empty()) return pluss::table::DataFrame(std::vector<std::pair<std::string, pluss::table::Slate>>{});
 
   const auto plan = build_alignment_plan(impl_ref_().keys_, impl_ref_().streams_, policy);
   auto case_axis = plan.label_axis;
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> out_cols;
+  std::vector<std::pair<std::string, pluss::table::Slate>> out_cols;
   out_cols.reserve(impl_ref_().streams_.size());
   for (std::size_t i = 0; i < impl_ref_().streams_.size(); ++i) {
-    auto t = build_aligned_thread(impl_ref_().streams_[i], plan.source_index_by_stream[i], policy);
+    auto t = build_aligned_slate(impl_ref_().streams_[i], plan.source_index_by_stream[i], policy);
     out_cols.emplace_back(impl_ref_().keys_[i], std::move(t));
   }
 
@@ -67,4 +67,10 @@ detail::CatalogImpl& Catalog::mut_impl_() {
     impl_ = pluss::msharp::make_intrusive<detail::CatalogImpl>(std::move(copied));
   }
   return *impl_;
+}
+
+pluss::table::DataFrame Catalog::tabelize(const RaggedPolicy& policy) const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  (void)RaggedLayout::of(*this, policy, "Catalog::tabelize");  // Exact / loss = Error are enforced here
+  return tabelize(to_tabelize(policy, "Catalog::tabelize"));
 }

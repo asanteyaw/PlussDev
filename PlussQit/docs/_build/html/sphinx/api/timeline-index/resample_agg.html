@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TimelineIndexAccessor::resample_agg &#8212; PlussQit  documentation</title>
+    <title>Timeline::TimelineIndexAccessor::resample_agg &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimelineIndexAccessor::resample_bins" href="resample_bins.html" />
-    <link rel="prev" title="TimelineIndexAccessor operators" href="operators.html" />
+    <link rel="next" title="Timeline::TimelineIndexAccessor::resample_bins" href="resample_bins.html" />
+    <link rel="prev" title="Timeline::TimelineIndexAccessor operators" href="operators.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,12 +36,12 @@
 
           <div class="body" role="main">
             
-  <section id="timelineindexaccessor-resample-agg">
-<h1>TimelineIndexAccessor::resample_agg<a class="headerlink" href="#timelineindexaccessor-resample-agg" title="Link to this heading">¶</a></h1>
+  <section id="timeline-timelineindexaccessor-resample-agg">
+<h1>Timeline::TimelineIndexAccessor::resample_agg<a class="headerlink" href="#timeline-timelineindexaccessor-resample-agg" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_index_accessor_api_reference.html"><span class="doc std std-doc">Back to Timeline Index Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">resample_agg</span><span class="p">(</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">resample_agg</span><span class="p">(</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">ResampleOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">,</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
@@ -91,7 +91,7 @@ A 1D numeric <code class="docutils literal notranslate"><span class="pre">Series
 <p>Example 1. Drive the aggregation rule from a runtime string.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">});</span>
 
-<span class="n">pluss</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">ResampleOptions</span><span class="w"> </span><span class="n">opts</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">ResampleOptions</span><span class="w"> </span><span class="n">opts</span><span class="p">;</span>
 <span class="n">opts</span><span class="p">.</span><span class="n">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;H&quot;</span><span class="p">;</span>
 <span class="n">opts</span><span class="p">.</span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 
@@ -139,9 +139,9 @@ the choice is known ahead of time.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="resample_sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::resample_sum</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="resample_mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::resample_mean</span></code></span></a></p></li>
-<li><p><a class="reference internal" href="resample_ohlc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::resample_ohlc</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="resample_sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::resample_sum</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="resample_mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::resample_mean</span></code></span></a></p></li>
+<li><p><a class="reference internal" href="resample_ohlc.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::resample_ohlc</span></code></span></a></p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="operators.html">
@@ -189,7 +189,6 @@ the choice is known ahead of time.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -197,8 +196,8 @@ the choice is known ahead of time.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -208,8 +207,8 @@ the choice is known ahead of time.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_index_accessor_api_reference.html">Timeline Index Accessor API Reference</a><ul>
-      <li>Previous: <a href="operators.html" title="previous chapter">TimelineIndexAccessor operators</a></li>
-      <li>Next: <a href="resample_bins.html" title="next chapter">TimelineIndexAccessor::resample_bins</a></li>
+      <li>Previous: <a href="operators.html" title="previous chapter">Timeline::TimelineIndexAccessor operators</a></li>
+      <li>Next: <a href="resample_bins.html" title="next chapter">Timeline::TimelineIndexAccessor::resample_bins</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

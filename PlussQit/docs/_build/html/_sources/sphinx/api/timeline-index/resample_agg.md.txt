@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::resample_agg
+# Timeline::TimelineIndexAccessor::resample_agg
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor::resample_agg(
+Timeline::TimelineIndexAccessor::resample_agg(
     const pluss::Series& values,
     const ResampleOptions& options,
     std::string_view op) const -> pluss::Series
@@ -66,7 +66,7 @@ Example 1. Drive the aggregation rule from a runtime string.
 ```cpp
 auto values = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0});
 
-pluss::TimelineIndexAccessor::ResampleOptions opts;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions opts;
 opts.freq = "H";
 opts.step = 1;
 
@@ -112,9 +112,9 @@ data=[3.0000, 5.0000]
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_sum`](resample_sum.md)
-- [`TimelineIndexAccessor::resample_mean`](resample_mean.md)
-- [`TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
+- [`Timeline::TimelineIndexAccessor::resample_sum`](resample_sum.md)
+- [`Timeline::TimelineIndexAccessor::resample_mean`](resample_mean.md)
+- [`Timeline::TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="operators.html">

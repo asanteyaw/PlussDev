@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamTimeSeriesAccessor::zscore_rolling" href="zscore_rolling.html" />
@@ -131,7 +131,7 @@ and <code class="docutils literal notranslate"><span class="pre">2s</span></code
 always part of its own window. With <code class="docutils literal notranslate"><span class="pre">Left</span></code> or <code class="docutils literal notranslate"><span class="pre">Neither</span></code>, it never is.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">axis</span></code> must be non-missing and sorted ascending, or it throws.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">axis</span></code> must be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>, or an <code class="docutils literal notranslate"><span class="pre">Int64</span></code> nanoseconds <code class="docutils literal notranslate"><span class="pre">Series</span></code>,
-or it throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::timed:</span> <span class="pre">axis</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline,</span> <span class="pre">TimeIndex,</span> <span class="pre">or</span> <span class="pre">Int64</span> <span class="pre">nanoseconds&quot;</span></code>.</p></li>
+or it throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::timed:</span> <span class="pre">axis</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">Timeline,</span> <span class="pre">TimeIndex,</span> <span class="pre">or</span> <span class="pre">Int64</span> <span class="pre">nanoseconds&quot;</span></code>.</p></li>
 <li><p>Only <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">Mean</span></code>, <code class="docutils literal notranslate"><span class="pre">Var</span></code>, and <code class="docutils literal notranslate"><span class="pre">Std</span></code> are supported.</p></li>
 <li><p>A pre-existing missing entry in the bound stream (not the axis) is skipped
 within any window that contains it, the same as <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>.</p></li>
@@ -146,7 +146,7 @@ overload of <code class="docutils literal notranslate"><span class="pre">rolling
 <li><p><a class="reference internal" href="grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::grouped</span></code></span></a>: a fixed-row-count window
 computed independently per group, rather than a duration-based window.</p></li>
 <li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>
-<li><p><a class="reference internal" href="../thread-ts/timed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::timed</span></code></span></a>: the underlying
+<li><p><a class="reference internal" href="../slate-ts/timed.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::timed</span></code></span></a>: the underlying
 single-thread engine, with additional edge-case examples (a non-monotonic
 axis throw).</p></li>
 </ul>

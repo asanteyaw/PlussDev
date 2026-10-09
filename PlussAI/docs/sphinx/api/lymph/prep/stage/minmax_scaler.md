@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::minmax_scaler`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `minmax_scaler` builds an attachable [`prep::Stage`](Stage.md) that rescales each
 routed numeric column onto a fixed range — by default `[0, 1]`. It is the
@@ -84,7 +84,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -93,7 +93,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series ratio = pluss::make_series({0.9, 1.1, 0.7, 1.3, 0.6, 1.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"ratio", Thread(ratio)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
 
@@ -107,10 +107,10 @@ int main() {
   std::cout << "trained     = " << std::boolalpha << model.trained() << "\n\n";
 
   const DataFrame review({
-      {"amount", Thread(amount)},
-      {"ratio", Thread(ratio)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"amount", Slate(amount)},
+      {"ratio", Slate(ratio)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 
@@ -153,13 +153,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series price = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}, {5}, f64);
-  const DataFrame frame({{"price", Thread(price)}});
+  const DataFrame frame({{"price", Slate(price)}});
 
   // lower / upper set the target range. The default is [0, 1]; here a second
   // scaler targets [-1, 1]. The stage factory and the standalone object take
@@ -225,7 +225,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -234,8 +234,8 @@ int main() {
   // of the learned range.
   const pluss::Series train = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}, {5}, f64);
   const pluss::Series later = pluss::make_series({0.0, 25.0, 50.0, 75.0}, {4}, f64);
-  const DataFrame train_df({{"v", Thread(train)}});
-  const DataFrame later_df({{"v", Thread(later)}});
+  const DataFrame train_df({{"v", Slate(train)}});
+  const DataFrame later_df({{"v", Slate(later)}});
 
   // clip = false (default): out-of-range inputs map outside [0, 1].
   lymph::prep::MinMaxScaler open{lymph::options::MinMaxScaler{}};
@@ -296,7 +296,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -304,7 +304,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
 
   // One step among several: minmax on the numeric column, one-hot on the
   // categorical one, passed as a single batch to append. Fully qualified
@@ -318,10 +318,10 @@ int main() {
 
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
   const DataFrame review({
-      {"amount", Thread(amount)},
-      {"region", Thread(region)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"amount", Slate(amount)},
+      {"region", Slate(region)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 

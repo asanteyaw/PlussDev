@@ -101,7 +101,7 @@ and `2s` itself, so its window is `(10, 20, 30)` → mean `20`.
   always part of its own window. With `Left` or `Neither`, it never is.
 - `axis` must be non-missing and sorted ascending, or it throws.
 - `axis` must be `Timeline`, `TimeIndex`, or an `Int64` nanoseconds `Series`,
-  or it throws `"Thread::timed: axis must be Timeline, TimeIndex, or Int64
+  or it throws `"Slate::timed: axis must be Timeline, TimeIndex, or Int64
   nanoseconds"`.
 - Only `Sum`, `Mean`, `Var`, and `Std` are supported.
 - A pre-existing missing entry in the bound stream (not the axis) is skipped
@@ -115,7 +115,7 @@ and `2s` itself, so its window is `(10, 20, 30)` → mean `20`.
 - [`StreamTimeSeriesAccessor::grouped`](grouped.md): a fixed-row-count window
   computed independently per group, rather than a duration-based window.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::timed`](../thread-ts/timed.md): the underlying
+- [`TimeSeriesAccessor::timed`](../slate-ts/timed.md): the underlying
   single-thread engine, with additional edge-case examples (a non-monotonic
   axis throw).
 

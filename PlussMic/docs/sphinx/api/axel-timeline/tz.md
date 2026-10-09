@@ -16,7 +16,7 @@ Axel AxelTimelineAccessor::tz(std::string_view name) const
 Relabels each bound field's timestamp *display* timezone to `name`, in
 every registry frame, without changing the underlying instant — the
 same operation as
-[`Thread::tl().tz()`](../thread-timeline/tz.md)/
+[`Slate::tl().tz()`](../slate-timeline/tz.md)/
 [`DataFrame::tl().tz()`](../dataframe-timeline/tz.md) at the table
 layer. Applies
 [`RegistryTimelineAccessor::tz`](../registry-timeline/tz.md) to every
@@ -61,7 +61,7 @@ std::cout << std::get<pluss::Note>(fmted.registry(0).fields("ts").at(0)).at(0);
 
 `04:15:30` is the `"America/New_York"`-relative reading of the same
 instant (a `-5:00` offset in January) — matching what
-[`Thread::tl().tz()`](../thread-timeline/tz.md) produces on the same
+[`Slate::tl().tz()`](../slate-timeline/tz.md) produces on the same
 input.
 
 ## Notes

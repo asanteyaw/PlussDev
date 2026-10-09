@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5fb87d6679fd -->
+<!-- pluss-signature-hash: 5a50b74c43d4 -->
 
 # DataFrameTsAccessor::timed
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrameTsAccessor::timed(std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> DataFrame
-DataFrameTsAccessor::timed(const Thread& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> DataFrame
+DataFrameTsAccessor::timed(const Slate& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> DataFrame
 ```
 
 ## What It Does
@@ -29,7 +29,7 @@ is **included**. `Left` flips which end is inclusive; `Both` includes both bound
 ticks; `Neither` excludes both.
 
 The no-`axis` overload uses this accessor's own time axis (the frame's case labels,
-or an explicit `TsOptions.axis`); the `axis` overload takes an explicit `Thread`
+or an explicit `TsOptions.axis`); the `axis` overload takes an explicit `Slate`
 instead, useful when the desired time axis isn't the frame's own case labels. Groups
 (`TsOptions.group`) are not supported here — use [`rolling(duration)`](rolling.md)
 instead for grouped calendar-duration windows.
@@ -40,9 +40,9 @@ instead for grouped calendar-duration windows.
 
 The trailing window width, in nanoseconds. Must be positive.
 
-**axis** (`const Thread&`, explicit-axis overload)
+**axis** (`const Slate&`, explicit-axis overload)
 
-A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Thread`, the same length as the
+A `Timeline`, `TimeIndex`, or `Int64`-nanoseconds `Slate`, the same length as the
 frame's case count, sorted ascending, with no missing values — used as the time axis
 instead of this accessor's own.
 
@@ -76,8 +76,8 @@ Example 1. A 2-day trailing sum, using the default `Right` closure.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"load", Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0, 25.0}))}},
-    Thread(pluss::make_timeline({
+    {{"load", Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0, 25.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z",
         "2024-01-04T00:00:00Z", "2024-01-05T00:00:00Z"})));
 std::cout << readings;

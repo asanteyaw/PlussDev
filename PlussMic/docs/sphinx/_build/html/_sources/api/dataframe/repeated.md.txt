@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: aa5018ebea46 -->
+<!-- pluss-signature-hash: 3405b32a79cb -->
 
 # DataFrame::repeated
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::repeated() const -> Thread
+DataFrame::repeated() const -> Slate
 ```
 
 ## What It Does
@@ -32,7 +32,7 @@ some features should form the composite key.
 
 ## Returns
 
-`Thread`
+`Slate`
     A boolean `Series`, one entry per case, labeled `"repeated"`. `true` marks every
     row belonging to a key that occurs more than once anywhere in the frame; `false`
     marks a row whose key is unique.
@@ -45,7 +45,7 @@ Example 1. Flag every row belonging to a repeated student group.
 using namespace pluss::table;
 
 auto roster = DataFrame({
-    {"student", Thread(pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"}))},
+    {"student", Slate(pluss::make_note({"Ada", "Bola", "Ada", "Chen", "Bola"}))},
 });
 std::cout << roster;
 ```

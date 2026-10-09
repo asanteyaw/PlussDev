@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 920dc1db6ab9 -->
+<!-- pluss-signature-hash: a33f5933cfb4 -->
 
 # DataFrameLabelAccessor::part
 
@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::part(std::string_view name) const -> Thread
-DataFrameLabelAccessor::part(std::int64_t position) const -> Thread
+DataFrameLabelAccessor::part(std::string_view name) const -> Slate
+DataFrameLabelAccessor::part(std::int64_t position) const -> Slate
 ```
 
 ## What It Does
@@ -30,7 +30,7 @@ The level's position (0-based; negative counts back from the end).
 
 ## Returns
 
-`Thread`
+`Slate`
     That level's own values — not the composite case label, just this one
     level's contribution to it.
 
@@ -43,9 +43,9 @@ position.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Thread(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.label().set({"region", "city"}, true, "/");
 
 auto region_by_name = grouped.label().part("region");
@@ -104,7 +104,7 @@ Example 3. Call `part()` on an unstructured frame, to see it throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales", Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 std::cout << orders.label().has();
 
 try {
@@ -150,8 +150,8 @@ asking for `"country"` throws rather than returning an empty or null result.
 
 - Throws if the frame isn't structured (`has()` is `false`) — there's no level
   to read from a flat or default case axis.
-- The returned `Thread` carries no display labels of its own; it prints with a
-  plain default integer index, same as any other freestanding `Thread`.
+- The returned `Slate` carries no display labels of its own; it prints with a
+  plain default integer index, same as any other freestanding `Slate`.
 
 ## See Also
 

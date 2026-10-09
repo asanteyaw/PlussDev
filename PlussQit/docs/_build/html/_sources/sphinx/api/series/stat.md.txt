@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-SeriesStatAccessor Series::stat
+Series::StatAccessor Series::stat
 SeriesStatProxy Series::stat() const
 SeriesStatProxy Series::stat(const Series& other) const
 SeriesStatProxy Series::stat(std::initializer_list<Series> others) const
@@ -20,7 +20,7 @@ SeriesStatProxy Series::stat(std::span<const Series> others) const
 it does not copy values or perform a calculation; the terminal method selects
 the operation.
 
-Open the dedicated [SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+Open the dedicated [Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 for the complete method index and guided comparisons.
 
 ## Direct And Proxy Calls
@@ -93,7 +93,7 @@ the same accessor does not imply the same output geometry.
 
 ## See Also
 
-- [SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md):
+- [Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md):
   all 23 accessor methods, each with its own page.
 - [`Series::linearalg`](linearalg.md): linear-algebra accessor entrypoint.
 

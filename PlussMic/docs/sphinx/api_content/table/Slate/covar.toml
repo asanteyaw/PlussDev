@@ -1,0 +1,34 @@
+summary = """
+Compute the covariance between two numeric slates.
+"""
+
+returns = """
+`SlateValue`
+    Scalar-like covariance result.
+"""
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand numeric slate.
+"""
+
+[[parameters]]
+name = "options"
+body = """
+Statistic policy options such as denominator correction and minimum valid pair count.
+"""
+
+[[examples]]
+title = "Compute covariance between two numeric slates."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto other = Slate(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
+
+auto out = scores.covar(other);
+"""
+output = """
+216.667
+"""

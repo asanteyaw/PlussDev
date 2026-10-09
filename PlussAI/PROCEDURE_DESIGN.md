@@ -71,7 +71,7 @@ NodeB
 
 Procedure
   Production deployment graph over all of the above, plus raw Pluss functions
-  built on Series/DataFrame/Note/Thread/Timeline.
+  built on Series/DataFrame/Note/Slate/Timeline.
 ```
 
 Do not put the full system in `PlussTils` now. A production Procedure will need
@@ -231,7 +231,7 @@ FeatureBatch
 LabeledBatch
 DataFrame
 Note
-Thread
+Slate
 Timeline / time metadata when available
 lymph::Payload
 lymph::MetricReport

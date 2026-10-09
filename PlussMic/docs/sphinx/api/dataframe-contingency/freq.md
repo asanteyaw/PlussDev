@@ -38,8 +38,8 @@ Example 1. Convert a global-share table back to raw counts before rendering.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
 });
 
 auto out = df.contingency("city", "channel")

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_bullets
+# Note::NlpAccessor::remove_bullets
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_bullets() const
+Note Note::NlpAccessor::remove_bullets() const
 ```
 
 ## Keep List Items While Removing Their Markers
@@ -111,8 +111,8 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 ## See Also
 
 - [`remove_boilerplate`](remove_boilerplate.md): delete entire recognized policy lines.
-- `NoteNlpAccessor::remove_headers`: delete entire heading lines rather than retaining their text.
-- `NoteNlpAccessor::remove_markdown`: remove a wider Markdown syntax surface.
+- `Note::NlpAccessor::remove_headers`: delete entire heading lines rather than retaining their text.
+- `Note::NlpAccessor::remove_markdown`: remove a wider Markdown syntax surface.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="remove_brackets.html"><span class="label">Previous</span><span class="title">remove_brackets</span></a>

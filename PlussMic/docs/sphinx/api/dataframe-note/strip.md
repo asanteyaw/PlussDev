@@ -32,7 +32,7 @@ Every method on `DataFrameNoteAccessor` — `strip()` included — applies to
 **every feature the accessor was built with**, not just one. When reached the
 ordinary way, through [`DataFrame::nt()`](../dataframe/nt.md), that means
 every feature on the (already all-`Note`) frame the accessor was constructed
-from. A cell that is already null on the underlying `Thread` stays null;
+from. A cell that is already null on the underlying `Slate` stays null;
 `strip()` never turns a missing cell into an empty string or vice versa.
 
 ```{tip} A second way to reach the accessor: construct it directly
@@ -68,12 +68,12 @@ Example 1. The default overload trims ASCII whitespace from both ends of
 using namespace pluss::table;
 
 auto catalog = DataFrame({
-    {"sku",  Thread(
+    {"sku",  Slate(
         pluss::make_note({"  SKU-1001\n", "\tSKU-1002", "SKU-1003   ", "SKU-1004"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
-    {"name", Thread(pluss::make_note({
+    {"name", Slate(pluss::make_note({
         " Wireless Mouse ", "USB-C Cable\t", "  Mechanical Keyboard", "Clearance Bin"}))},
-}, Thread(pluss::make_note({"p1", "p2", "p3", "p4"})));
+}, Slate(pluss::make_note({"p1", "p2", "p3", "p4"})));
 
 auto out = catalog.nt().strip();
 std::cout << out;
@@ -109,7 +109,7 @@ characters that never appear together as the literal text `"[]()"`.
 
 ```cpp
 auto codes = DataFrame({
-    {"code", Thread(pluss::make_note({"[[[SKU-1001]]]", "((SKU-1002))", "SKU-1003"}))},
+    {"code", Slate(pluss::make_note({"[[[SKU-1001]]]", "((SKU-1002))", "SKU-1003"}))},
 });
 std::cout << codes;
 
@@ -157,8 +157,8 @@ when the named feature doesn't exist.
 
 ```cpp
 auto mixed = DataFrame({
-    {"id",   Thread(pluss::make_series({1, 2, 3}))},
-    {"city", Thread(pluss::make_note({"  Accra", "Tema ", " Kumasi "}))},
+    {"id",   Slate(pluss::make_series({1, 2, 3}))},
+    {"city", Slate(pluss::make_note({"  Accra", "Tema ", " Kumasi "}))},
 });
 
 auto direct = DataFrameNoteAccessor(mixed, {"city"});

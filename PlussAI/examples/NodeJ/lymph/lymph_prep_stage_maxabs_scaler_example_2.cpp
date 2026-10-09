@@ -7,14 +7,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   // A column with both signs and a zero. The largest magnitude is 8.
   const pluss::Series v = pluss::make_series({-8.0, -2.0, 0.0, 1.0, 4.0, 6.0}, {6}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   // maxabs divides by max(|value|) = 8. Signs are kept, zero stays zero, and
   // every result lands in [-1, 1]. The stage factory and the standalone object

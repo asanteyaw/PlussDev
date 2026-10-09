@@ -16,11 +16,59 @@ estimator core.
 The type is `lymph::selection::search::Search`, re-exported one scope up as
 `lymph::selection::Search`. Both names are the same type.
 
-```cpp
-namespace lymph = pluss::ai::lymph;
+Run a grid search over one regularization axis with two-fold cross-validation, keeping both fitted candidates. The program prints whether the best model trained and how many top models came back.
 
-lymph::selection::Search a = lymph::selection::grid(axes, cv);
-lymph::selection::search::Search b = lymph::selection::search::random(axes, 20, cv);
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const lymph::LabeledBatch batch = fixture_batch(cfg);
+  const std::vector<lymph::selection::GridAxis> axes = {
+      lymph::selection::GridAxis{.name = "regularization", .values = {0.0, 1.0}},
+  };
+  lymph::selection::CrossValOptions cv{};
+  cv.folds = 2;
+  lymph::selection::Search search = lymph::selection::grid(axes, cv);
+  auto make = [](const lymph::selection::GridPoint& point) {
+    lymph::LinearFamilyOptions options{};
+    options.regularization_strength = point.at("regularization");
+    return lymph::models::logistic_regression(options);
+  };
+  lymph::selection::FitOptions fit{};
+  fit.fit_top = 2;
+  const auto result = search.run(make, batch, {}, {}, lymph::MetricKind::Accuracy, lymph::TuneObjectivePolicy::Auto, fit);
+  std::cout << "best trained = " << (result.best().trained() ? "true" : "false") << "\n";
+  std::cout << "top models = " << result.top(2).size() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+best trained = true
+top models = 2
 ```
 
 ## Construction

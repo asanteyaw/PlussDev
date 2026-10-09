@@ -123,9 +123,9 @@ Example 1. Group by one key and aggregate explicitly.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"city",   Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"units",  Thread(pluss::make_series({2, 5, 1, 3}))},
-    {"price",  Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
+    {"city",   Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"units",  Slate(pluss::make_series({2, 5, 1, 3}))},
+    {"price",  Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0}))},
 });
 
 auto by_city = orders.group({.dropnull = true})

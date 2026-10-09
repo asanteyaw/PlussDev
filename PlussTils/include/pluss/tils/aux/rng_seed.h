@@ -1,7 +1,7 @@
 #pragma once
 
-#include <atomic>
 #include <cstdint>
+#include <mutex>
 
 namespace pluss::tils {
 namespace detail {
@@ -16,35 +16,45 @@ inline std::uint64_t splitmix64_(std::uint64_t x) noexcept {
   return z ^ (z >> 31);
 }
 
-inline std::atomic<std::uint64_t>& rng_seed_state_() noexcept {
-  static std::atomic<std::uint64_t> state{kDefaultSeed};
-  return state;
-}
+struct rng_seed_state {
+  std::mutex mutex{};
+  std::uint64_t base{kDefaultSeed};
+  std::uint64_t counter{0};
+};
 
-inline std::atomic<std::uint64_t>& rng_seed_stream_counter_() noexcept {
-  static std::atomic<std::uint64_t> counter{0};
-  return counter;
+inline rng_seed_state& rng_seed_state_() noexcept {
+  static rng_seed_state state{};
+  return state;
 }
 
 } // namespace detail
 
-inline void rng_seed(std::uint64_t seed) noexcept {
-  detail::rng_seed_state_().store(seed, std::memory_order_relaxed);
-  detail::rng_seed_stream_counter_().store(0, std::memory_order_relaxed);
+inline void rng_seed(std::uint64_t seed) {
+  auto& state = detail::rng_seed_state_();
+  const std::scoped_lock lock(state.mutex);
+  state.base = seed;
+  state.counter = 0;
 }
 
-inline std::uint64_t rng_seed() noexcept {
-  return detail::rng_seed_state_().load(std::memory_order_relaxed);
+inline std::uint64_t rng_seed() {
+  auto& state = detail::rng_seed_state_();
+  const std::scoped_lock lock(state.mutex);
+  return state.base;
 }
 
-inline std::uint64_t next_rng_seed() noexcept {
-  const std::uint64_t base = rng_seed();
-  const std::uint64_t offset =
-      detail::rng_seed_stream_counter_().fetch_add(1, std::memory_order_relaxed) + 1ULL;
+inline std::uint64_t next_rng_seed() {
+  std::uint64_t base;
+  std::uint64_t offset;
+  {
+    auto& state = detail::rng_seed_state_();
+    const std::scoped_lock lock(state.mutex);
+    base = state.base;
+    offset = ++state.counter;
+  }
   return detail::splitmix64_(base + offset);
 }
 
-inline std::uint64_t seed_or_next(std::uint64_t seed) noexcept {
+inline std::uint64_t seed_or_next(std::uint64_t seed) {
   return seed == 0 ? next_rng_seed() : seed;
 }
 

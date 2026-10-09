@@ -34,7 +34,7 @@ Example 1. Extract the day-of-month from every row of a `Timeline` feature.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -83,7 +83,7 @@ day-of-month.
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if the source frame has
   other kinds mixed in.
-- A `NaT` row (or one already null on the underlying `Thread`) displays as
+- A `NaT` row (or one already null on the underlying `Slate`) displays as
   `"NULL"`.
 - Reads the local calendar day relative to the `Timeline`'s current timezone.
 

@@ -208,8 +208,8 @@ Group `"A"` (positions `0`, `1`) windows independently from group `"B"`
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::rolling`](../catalog-ts/rolling.md): the
   whole-catalog equivalent, with only the fixed-window overload.
-- [`TimeSeriesAccessor::rolling`](../thread-ts/rolling.md): the underlying
-  single-thread engine.
+- [`TimeSeriesAccessor::rolling`](../slate-ts/rolling.md): the underlying
+  single-slate engine.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

@@ -1,4 +1,4 @@
-Atlas::Atlas(std::vector<DataFrame> frames, std::optional<Thread> axis0_labels)
+Atlas::Atlas(std::vector<DataFrame> frames, std::optional<Slate> axis0_labels)
     : impl_(pluss::msharp::make_intrusive<detail::AtlasImpl>(std::move(frames), std::move(axis0_labels))) {}
 
 Atlas::Atlas() = default;
@@ -30,7 +30,7 @@ std::int64_t Atlas::ncases() const { return impl_ref_().nrows_; }
 std::int64_t Atlas::nfeatures() const { return impl_ref_().ncols_; }
 
 const std::vector<std::string>& Atlas::column_names() const { return impl_ref_().names_; }
-const std::optional<Thread>& Atlas::axis0_labels() const { return impl_ref_().axis0_labels_; }
+const std::optional<Slate>& Atlas::axis0_labels() const { return impl_ref_().axis0_labels_; }
 const std::vector<DataFrame>& Atlas::frames() const { return impl_ref_().frames_; }
 
 DataFrame Atlas::frame(std::int64_t index) const {
@@ -72,7 +72,7 @@ AtlasLabelAccessor::AtlasLabelAccessor(Atlas atlas)
   PLUSS_CHECK(atlas_.defined(), "Atlas::label: atlas is undefined");
 }
 
-Thread AtlasLabelAccessor::values() const {
+Slate AtlasLabelAccessor::values() const {
   const auto& src = atlas_.impl_ref_();
   if (src.axis0_labels_.has_value()) {
     return *src.axis0_labels_;
@@ -84,7 +84,7 @@ bool AtlasLabelAccessor::has() const {
   return atlas_.impl_ref_().axis0_labels_.has_value();
 }
 
-Atlas AtlasLabelAccessor::set(const Thread& labels) const {
+Atlas AtlasLabelAccessor::set(const Slate& labels) const {
   return atlas_.relabel_depth(labels);
 }
 
@@ -100,44 +100,44 @@ Atlas AtlasLabelAccessor::sort(bool ascending, bool nulls_last) const {
   return atlas_.sort_depth(ascending, nulls_last);
 }
 
-Atlas AtlasLabelAccessor::align(const Thread& labels) const {
+Atlas AtlasLabelAccessor::align(const Slate& labels) const {
   return atlas_.align_depth(labels);
 }
 
-Thread AtlasLabelAccessor::label_index_() const {
+Slate AtlasLabelAccessor::label_index_() const {
   const auto labels = values();
   return labels.label().set(labels);
 }
 
-Thread AtlasLabelAccessor::unite(const Thread& other) const {
+Slate AtlasLabelAccessor::unite(const Slate& other) const {
   return label_index_().label().unite(other);
 }
 
-Thread AtlasLabelAccessor::intersect(const Thread& other) const {
+Slate AtlasLabelAccessor::intersect(const Slate& other) const {
   return label_index_().label().intersect(other);
 }
 
-Thread AtlasLabelAccessor::diff(const Thread& other) const {
+Slate AtlasLabelAccessor::diff(const Slate& other) const {
   return label_index_().label().diff(other);
 }
 
-Thread AtlasLabelAccessor::symdiff(const Thread& other) const {
+Slate AtlasLabelAccessor::symdiff(const Slate& other) const {
   return label_index_().label().symdiff(other);
 }
 
-Thread AtlasLabelAccessor::find(const Thread& targets) const {
+Slate AtlasLabelAccessor::find(const Slate& targets) const {
   return label_index_().label().find(targets);
 }
 
-Thread AtlasLabelAccessor::pos(double value) const {
+Slate AtlasLabelAccessor::pos(double value) const {
   return label_index_().label().pos(value);
 }
 
-Thread AtlasLabelAccessor::pos(std::string_view value) const {
+Slate AtlasLabelAccessor::pos(std::string_view value) const {
   return label_index_().label().pos(value);
 }
 
-Thread AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const {
+Slate AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const {
   return label_index_().label().slice(start, stop);
 }
 
@@ -400,14 +400,14 @@ Atlas AtlasTimelineAccessor::epoch(TimeUnit unit) const {
 }
 
 Atlas AtlasTimelineAccessor::span(
-    const Thread& other,
+    const Slate& other,
     const TimelineSpanOptions& options) const {
   return map_([this, other, options](const DataFrame& frame) {
     return atlas_frame_tl_(frame, features_).span(other, options);
   }, "Atlas::tl().span");
 }
 
-Atlas AtlasTimelineAccessor::span(const Thread& other, TimeUnit unit) const {
+Atlas AtlasTimelineAccessor::span(const Slate& other, TimeUnit unit) const {
   TimelineSpanOptions options;
   options.unit = unit;
   return span(other, options);
@@ -416,7 +416,7 @@ Atlas AtlasTimelineAccessor::span(const Thread& other, TimeUnit unit) const {
 Atlas AtlasTimelineAccessor::span(
     const pluss::Timeline& other,
     const TimelineSpanOptions& options) const {
-  return span(Thread(other), options);
+  return span(Slate(other), options);
 }
 
 Atlas AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const {
@@ -505,7 +505,7 @@ Atlas Atlas::slice_frames(std::int64_t start, std::int64_t stop) const {
     out_frames.push_back(src.frames_[static_cast<std::size_t>(i)]);
   }
 
-  std::optional<Thread> out_labels = std::nullopt;
+  std::optional<Slate> out_labels = std::nullopt;
   if (src.axis0_labels_.has_value()) {
     out_labels = src.axis0_labels_->slice(s, e);
   }
@@ -533,18 +533,18 @@ Atlas Atlas::sort_depth(bool ascending, bool nulls_last) const {
     out_frames.push_back(src.frames_[static_cast<std::size_t>(i)]);
   }
 
-  std::optional<Thread> out_labels = std::nullopt;
+  std::optional<Slate> out_labels = std::nullopt;
   if (src.axis0_labels_.has_value()) {
     out_labels = src.axis0_labels_->take(idx);
   }
   return Atlas(std::move(out_frames), std::move(out_labels));
 }
 
-Atlas Atlas::relabel_depth(const Thread& labels) const {
+Atlas Atlas::relabel_depth(const Slate& labels) const {
   return Atlas(impl_ref_().frames_, labels);
 }
 
-Atlas Atlas::align_depth(const Thread& labels) const {
+Atlas Atlas::align_depth(const Slate& labels) const {
   const auto& src = impl_ref_();
   PLUSS_CHECK(src.axis0_labels_.has_value(),
               "Atlas::align_depth: current atlas has no depth labels");
@@ -584,7 +584,7 @@ Atlas Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) co
 }
 
 Atlas Atlas::map(
-    const std::function<ThreadValue(const ThreadValue&)>& fn) const {
+    const std::function<SlateValue(const SlateValue&)>& fn) const {
   PLUSS_CHECK(static_cast<bool>(fn),
               "Atlas::map: callback is empty");
   return map_frames(
@@ -623,7 +623,7 @@ pluss::kindle::Archive Atlas::kindelize(const pluss::kindle::KindelizePolicy& po
 
   std::optional<pluss::kindle::Stream> depth_labels = std::nullopt;
   if (axis0_labels().has_value()) {
-    depth_labels = pluss::kindle::Stream::from_thread(*axis0_labels());
+    depth_labels = pluss::kindle::Stream::from_slate(*axis0_labels());
   }
   return pluss::kindle::Archive(std::move(catalogs), std::move(depth_labels));
 }

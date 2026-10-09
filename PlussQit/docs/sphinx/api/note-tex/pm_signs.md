@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::pm_signs
+# Note::TexAccessor::pm_signs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::pm_signs() const
+Note Note::TexAccessor::pm_signs() const
 ```
 
 ## Render Paired-Sign Control Words As Plain Text

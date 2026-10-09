@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::diff_words
+# Note::NlpAccessor::diff_words
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::diff_words(const Note& other) const
+TokenBatch Note::NlpAccessor::diff_words(const Note& other) const
 ```
 
 ## Word-Level Difference Between Two Notes
@@ -60,9 +60,9 @@ same [`numel`](../note/numel.md), or one of them may be a
 other; shape beyond the cell count is ignored, and `offsets()` follows the
 non-scalar side. Two rejections, both raising `pluss::Error`:
 
-- `self` in bytes mode → `NoteNlpAccessor::diff_words requires a UTF-8 text Note (lhs is
+- `self` in bytes mode → `Note::NlpAccessor::diff_words requires a UTF-8 text Note (lhs is
   bytes)`.
-- unequal `numel` with neither side a scalar → `NoteNlpAccessor::diff_words expects
+- unequal `numel` with neither side a scalar → `Note::NlpAccessor::diff_words expects
   equal numel or scalar broadcast`.
 
 The alignment is `O(m · n)` in words per cell and fully deterministic: on a
@@ -193,18 +193,18 @@ try {
 ### Output
 
 ```text
-NoteNlpAccessor::diff_words expects equal numel or scalar broadcast
-NoteNlpAccessor::diff_words requires a UTF-8 text Note (lhs is bytes)
+Note::NlpAccessor::diff_words expects equal numel or scalar broadcast
+Note::NlpAccessor::diff_words requires a UTF-8 text Note (lhs is bytes)
 ```
 
 ## See Also
 
-- [`NoteNlpAccessor::align_tokens`](align_tokens.md): the same alignment, keeping the
+- [`Note::NlpAccessor::align_tokens`](align_tokens.md): the same alignment, keeping the
   unchanged words as `=` tokens.
 - [`Note::diff_lines`](../note/diff_lines.md) / [`Note::diff_chars`](../note/diff_chars.md):
   coarser and finer change views.
-- [`NoteNlpAccessor::align_sentences`](align_sentences.md): sentence-level alignment.
-- [`NoteNlpAccessor::tokens`](tokens.md): the word tokenizer and the
+- [`Note::NlpAccessor::align_sentences`](align_sentences.md): sentence-level alignment.
+- [`Note::NlpAccessor::tokens`](tokens.md): the word tokenizer and the
   `TokenBatch` shape.
 
 <div class="pluss-inline-prev-next">

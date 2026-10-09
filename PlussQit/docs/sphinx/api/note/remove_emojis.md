@@ -47,7 +47,7 @@ empty.
 
 - [`Note::keep_ascii`](keep_ascii.md): a blunter clean — drop **all**
   non-ASCII, not just emoji.
-- [`NoteNlpAccessor::clean`](../note-nlp/clean.md): a broader user-text cleanup pass.
+- [`Note::NlpAccessor::clean`](../note-nlp/clean.md): a broader user-text cleanup pass.
 - [`Note::strip`](strip.md) / `pluss::coden::Note::collapse_whitespace`:
   tidy the spacing left behind.
 

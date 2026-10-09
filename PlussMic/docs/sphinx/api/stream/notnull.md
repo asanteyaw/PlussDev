@@ -15,7 +15,7 @@ Stream::notnull() const -> Stream
 
 Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which rows
 have a value — the exact logical complement of [`isnull()`](isnull.md). Works uniformly
-across all four payload kinds; delegates to `Thread::notnull()`.
+across all four payload kinds; delegates to `Slate::notnull()`.
 
 ## Parameters
 

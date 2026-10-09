@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_neq
+# Series::TraverseAccessor::find_neq
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_neq(double rhs) const;
-TraverseMatch SeriesTraverseAccessor::find_neq(const Series& rhs) const;
+TraverseMatch Series::TraverseAccessor::find_neq(double rhs) const;
+TraverseMatch Series::TraverseAccessor::find_neq(const Series& rhs) const;
 
 TraverseMatch SeriesTraverseProxy::find_neq(double rhs) const;
 TraverseMatch SeriesTraverseProxy::find_neq(const Series& rhs) const;

@@ -47,7 +47,7 @@ Example 1. Check a filenames feature for a literal, case-sensitive suffix.
 using namespace pluss::table;
 
 auto files = DataFrame({
-    {"filename", Thread(pluss::make_note(
+    {"filename", Slate(pluss::make_note(
         {"report.pdf", "notes.PDF", "summary.docx", "invoice.pdf"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -146,7 +146,7 @@ std::cout << trivial;
 - Changes the feature's payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
 - Pairs naturally with `DataFrame::filter()` (via `.features(name)` to pull
-  the single-column `Thread` result out) to keep only matching rows — see
+  the single-column `Slate` result out) to keep only matching rows — see
   [`starts()`](starts.md)'s Example 2 for the pattern.
 
 ## See Also

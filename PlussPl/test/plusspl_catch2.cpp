@@ -533,7 +533,7 @@ TEST_CASE("PlussPl flash facade maps flash-like names to PlussPl traces", "[plus
   const auto tips = load_dataset("tips");
   REQUIRE(tips.has_value());
   REQUIRE(tips->numeric("tip").has_value());
-  REQUIRE(tips->note("day").has_value());
+  REQUIRE(tips->text("day").has_value());
   REQUIRE(tips->feature_order.has_value());
   REQUIRE(tips->feature_kinds.has_value());
   REQUIRE(tips->feature_order->numel() == 9);

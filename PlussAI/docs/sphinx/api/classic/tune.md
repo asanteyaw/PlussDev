@@ -22,17 +22,56 @@ on [`metrics::cross_assess`](metrics.md): a "trial" is one
 
 ## How To Call It
 
+Compare two linear candidates on a held-out split and report the index of the best one. The candidates differ only in regularization strength.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-const std::vector<cls::ModelSpec> candidates = {
-    cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear_a},
-    cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear_b},
-};
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-const cls::StatusOr<cls::TuneReport> report =
-    cls::sweep(candidates, batch, split, {}, {}, cls::MetricKind::Accuracy);
-std::cout << "best candidate index = " << report.value().best_index << "\n";
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const cls::LabeledBatch batch = fixture_batch(cfg);
+  cls::LinearFamilyOptions linear_a{};
+  linear_a.objective = cls::LinearObjective::Logistic;
+  cls::LinearFamilyOptions linear_b = linear_a;
+  linear_b.regularization_strength = 1.0;
+  const std::vector<cls::ModelSpec> candidates = {
+      cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear_a},
+      cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, linear_b},
+  };
+  cls::SplitOptions split_options{};
+  split_options.holdout_fraction = 0.25;
+  const cls::StatusOr<cls::TuneReport> report =
+      cls::sweep(candidates, batch, split_options, {}, {}, cls::MetricKind::Accuracy);
+  std::cout << "best candidate index = " << report.value().best_index << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+best candidate index = 0
 ```
 
 Every trial's own `cross_assess` failure (a mismatched spec, an objective

@@ -52,7 +52,7 @@
 //
 // PlussTils is intentionally opt-in:
 // - include <pluss/tils.h> for utility helpers (aux + view utilities), including:
-//   - pluss::tils::transmit(...), pluss::tils::transform_axis(...)
+//   - pluss::tils::transmit(...), pluss::tils::map_axis(...)
 //   - pluss::loader::DataLoader + pluss::loader::* helpers
 //   - pluss::tils::to_scalar<T>(series) + pluss::tils::as_f64/as_f32/as_i64/... helpers
 //   - pluss::view::* utilities

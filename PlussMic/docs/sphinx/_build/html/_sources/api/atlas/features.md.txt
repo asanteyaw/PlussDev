@@ -41,14 +41,14 @@ Example 1. Select a single feature from every frame.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
-    {"score", pluss::table::Thread(pluss::make_series({9.5, 8.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"score", pluss::table::Slate(pluss::make_series({9.5, 8.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({3.0, 4.0}))},
-    {"score", pluss::table::Thread(pluss::make_series({7.5, 6.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({3.0, 4.0}))},
+    {"score", pluss::table::Slate(pluss::make_series({7.5, 6.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 
 auto out = atlas.features("id");
 std::cout << out.dloc(0);
@@ -70,9 +70,9 @@ Example 2. Select several features with an inline list.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema"}))},
-    {"score", pluss::table::Thread(pluss::make_series({9.5, 8.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema"}))},
+    {"score", pluss::table::Slate(pluss::make_series({9.5, 8.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 
@@ -96,7 +96,7 @@ Example 3. Selecting a feature missing from a frame throws.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 

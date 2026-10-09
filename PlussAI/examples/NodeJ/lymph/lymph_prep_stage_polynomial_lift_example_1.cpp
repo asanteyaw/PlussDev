@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -18,15 +18,15 @@ int main() {
   const pluss::Series a = pluss::make_series({-2., -1., 0., 1., 2., 3.}, {6}, f64);
   const pluss::Series b = pluss::make_series({1., 0., -1., 0., 1., 2.}, {6}, f64);
   const pluss::Series y = pluss::make_series({1, 0, 0, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame x({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::polynomial_lift(), lymph::prep::route::names({"a", "b"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"a", Thread(a)}, {"b", Thread(b)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"a", Slate(a)}, {"b", Slate(b)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

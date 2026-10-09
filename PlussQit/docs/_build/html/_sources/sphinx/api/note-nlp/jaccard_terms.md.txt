@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::jaccard_terms
+# Note::NlpAccessor::jaccard_terms
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::jaccard_terms(const Note& other) const
+Note Note::NlpAccessor::jaccard_terms(const Note& other) const
 ```
 
 ## Content-Word Similarity Score Between Two Notes
@@ -34,8 +34,8 @@ zeros trimmed (`1.0`, `0.5`).
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::jaccard_terms requires a UTF-8 text Note (lhs is bytes)` (or `rhs`); a
-numel mismatch raises `NoteNlpAccessor::jaccard_terms expects equal numel or scalar
+`Note::NlpAccessor::jaccard_terms requires a UTF-8 text Note (lhs is bytes)` (or `rhs`); a
+numel mismatch raises `Note::NlpAccessor::jaccard_terms expects equal numel or scalar
 broadcast`.
 
 ## Example 1: Only Content Words Count
@@ -59,11 +59,11 @@ shared out of four distinct → `0.5`.
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_tokens`](jaccard_tokens.md): the same score with no content
+- [`Note::NlpAccessor::jaccard_tokens`](jaccard_tokens.md): the same score with no content
   filter.
-- [`NoteNlpAccessor::overlap_terms`](overlap_terms.md): the containment score over the
+- [`Note::NlpAccessor::overlap_terms`](overlap_terms.md): the containment score over the
   same sets.
-- [`NoteNlpAccessor::intersect_terms`](intersect_terms.md): the shared terms themselves.
+- [`Note::NlpAccessor::intersect_terms`](intersect_terms.md): the shared terms themselves.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="jaccard_symbols.html"><span class="label">Previous</span><span class="title">jaccard_symbols</span></a>

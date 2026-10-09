@@ -38,12 +38,13 @@ notes. This page is the curated entry point into them.
 - [Duration Factory API Reference](sphinx/duration_factory_api_reference.md):
   exact unit construction, progressions, shape-first allocation, sampling, and
   rendering in `pluss::duration`.
+- [Queue API Reference](sphinx/queue_api_reference.md): the handwritten
+  per-method reference for `Queue` — a dynamic holder over `Series`, `Note`,
+  `Timeline`, or `Duration`, for code that doesn't know which of the four it
+  has until runtime.
 - [Timeline Index Accessor API Reference](sphinx/timeline_index_accessor_api_reference.md):
   the ordered-axis methods entered through `Timeline::index()` for search,
   slicing, resampling, rolling windows, and alignment.
-- [TimeIndex Factory API Reference](sphinx/timeindex_factory_api_reference.md):
-  ordered-axis construction, regular ranges, buffer ownership, and rendering
-  in `pluss::timeindex`.
 - [Method Index](coden_method_index.md): a flat cross-referenced index of the whole
   surface, documented and not-yet-documented alike.
 
@@ -60,8 +61,8 @@ sphinx/timeline_api_reference
 sphinx/timeline_factory_api_reference
 sphinx/duration_api_reference
 sphinx/duration_factory_api_reference
+sphinx/queue_api_reference
 sphinx/timeline_index_accessor_api_reference
-sphinx/timeindex_factory_api_reference
 ```
 
 The family references are the public documentation. Historical omnibus pages,

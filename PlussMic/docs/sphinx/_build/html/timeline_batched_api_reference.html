@@ -13,11 +13,11 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=af5a0516"></script>
-    <script src="_static/layout.js?v=6be133a8"></script>
+    <script src="_static/api_nav.js?v=e742a746"></script>
+    <script src="_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Thread And Atlas Guide" href="thread_atlas.html" />
+    <link rel="next" title="Slate And Atlas Guide" href="slate_atlas.html" />
     <link rel="prev" title="Time-Series Accessor Guide" href="time_series_accessor_guide.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -42,7 +42,7 @@
 delegation path added for multi-feature DataFrame operations.</p>
 <section id="api-signature">
 <h2>API Signature<a class="headerlink" href="#api-signature" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Thread::tl()</span> <span class="pre">-&gt;</span> <span class="pre">ThreadTimelineAccessor</span></code><br />
+<p><code class="docutils literal notranslate"><span class="pre">Slate::tl()</span> <span class="pre">-&gt;</span> <span class="pre">SlateTimelineAccessor</span></code><br />
 <code class="docutils literal notranslate"><span class="pre">DataFrame::tl(feature:</span> <span class="pre">string_view)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameTimelineAccessor</span></code><br />
 <code class="docutils literal notranslate"><span class="pre">DataFrame::tl(features:</span> <span class="pre">initializer_list&lt;string_view&gt;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameTimelineAccessor</span></code><br />
 <code class="docutils literal notranslate"><span class="pre">DataFrame::tl(features:</span> <span class="pre">RangeView&lt;string_view&gt;</span> <span class="pre">=</span> <span class="pre">{})</span> <span class="pre">-&gt;</span> <span class="pre">DataFrameTimelineAccessor</span></code><br />
@@ -77,7 +77,7 @@ current frame is Timeline/TimeIndex, for example
 <section id="output">
 <h2>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Thread-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<li><p>Slate-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 <li><p>DataFrame-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with selected features replaced
 by the transformed result.</p></li>
 <li><p>Atlas-level <code class="docutils literal notranslate"><span class="pre">tl()</span></code> returns an <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> after applying the DataFrame operation
@@ -100,8 +100,8 @@ to each frame.</p></li>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<section id="example-1-thread-timeline-extraction">
-<h3>Example 1: Thread timeline extraction<a class="headerlink" href="#example-1-thread-timeline-extraction" title="Link to this heading">¶</a></h3>
+<section id="example-1-slate-timeline-extraction">
+<h3>Example 1: Slate timeline extraction<a class="headerlink" href="#example-1-slate-timeline-extraction" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">year</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">iso</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">iso</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">tl</span><span class="p">().</span><span class="n">epoch</span><span class="p">(</span><span class="n">TimeUnit</span><span class="o">::</span><span class="n">Seconds</span><span class="p">);</span>
@@ -109,21 +109,21 @@ to each frame.</p></li>
 </div>
 <p>Expected output:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">years</span></code> is a numeric Thread containing calendar years.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">iso</span></code> is a Note Thread containing formatted ISO-like datetime strings.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code> is a numeric Thread containing epoch seconds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">years</span></code> is a numeric Slate containing calendar years.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iso</span></code> is a Note Slate containing formatted ISO-like datetime strings.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code> is a numeric Slate containing epoch seconds.</p></li>
 </ul>
 </section>
-<section id="example-2-thread-reduction-preserves-timeline-payload">
-<h3>Example 2: Thread reduction preserves timeline payload<a class="headerlink" href="#example-2-thread-reduction-preserves-timeline-payload" title="Link to this heading">¶</a></h3>
+<section id="example-2-slate-reduction-preserves-timeline-payload">
+<h3>Example 2: Slate reduction preserves timeline payload<a class="headerlink" href="#example-2-slate-reduction-preserves-timeline-payload" title="Link to this heading">¶</a></h3>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">first_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">min</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">last_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;event_time&quot;</span><span class="p">).</span><span class="n">max</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Expected output:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">first_time</span></code> is a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> wrapping a one-element Timeline payload.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">last_time</span></code> is a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> wrapping a one-element Timeline payload.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first_time</span></code> is a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> wrapping a one-element Timeline payload.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last_time</span></code> is a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> wrapping a one-element Timeline payload.</p></li>
 </ul>
 </section>
 <section id="example-3-dataframe-timeline-transformation">
@@ -184,7 +184,7 @@ matrix batch, multiplied once, and unpacked.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">compared</span></code> is a boolean DataFrame using the same batched scalar comparison
 path where dtype/platform compatibility allows it.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">combined</span></code> uses the DataFrame-vs-DataFrame batched pair path for compatible
-numeric feature groups, falling back per Thread for mixed payloads.</p></li>
+numeric feature groups, falling back per Slate for mixed payloads.</p></li>
 </ul>
 </section>
 </section>
@@ -242,7 +242,7 @@ numeric feature groups, falling back per Thread for mixed payloads.</p></li>
   <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
       <li>Previous: <a href="time_series_accessor_guide.html" title="previous chapter">Time-Series Accessor Guide</a></li>
-      <li>Next: <a href="thread_atlas.html" title="next chapter">Thread And Atlas Guide</a></li>
+      <li>Next: <a href="slate_atlas.html" title="next chapter">Slate And Atlas Guide</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

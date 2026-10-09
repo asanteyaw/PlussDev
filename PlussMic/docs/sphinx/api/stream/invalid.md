@@ -15,8 +15,8 @@ Stream::invalid() const -> Stream
 
 Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which rows
 are invalid — the same shape and, in every case tested here, the same result as
-[`isnull()`](isnull.md). Delegates to `Thread::invalid()` (a distinct underlying method from
-`Thread::isnull()`), works uniformly across all four payload kinds.
+[`isnull()`](isnull.md). Delegates to `Slate::invalid()` (a distinct underlying method from
+`Slate::isnull()`), works uniformly across all four payload kinds.
 
 ## Parameters
 
@@ -83,8 +83,8 @@ label        | value
 ## Notes
 
 - Works on every payload kind — no `Series`-only restriction.
-- Calls a distinct underlying `Thread::invalid()` method from
-  [`isnull()`](isnull.md)/`Thread::isnull()`, but has produced an identical result in every
+- Calls a distinct underlying `Slate::invalid()` method from
+  [`isnull()`](isnull.md)/`Slate::isnull()`, but has produced an identical result in every
   case checked here, including both mask-based `NULL`s and unmarked numeric `NaN`.
 - The result is always `Series`-kind (`Series[bool]`), regardless of the receiver's own
   kind.

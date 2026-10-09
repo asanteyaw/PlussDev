@@ -1,12 +1,12 @@
-# TimelineIndexAccessor::resample_ohlc
+# Timeline::TimelineIndexAccessor::resample_ohlc
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_ohlc(const pluss::Series& values, const ResampleOptions& options) const
-pluss::Series TimelineIndexAccessor::resample_ohlc(const pluss::Series& values, std::string_view freq, std::int64_t step = 1) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_ohlc(const pluss::Series& values, const ResampleOptions& options) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_ohlc(const pluss::Series& values, std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does
@@ -87,14 +87,14 @@ data=
 - Column order is fixed: open, high, low, close.
 - `open` and `close` come from first/last within the bin.
 - `high` and `low` come from max/min over the same bin membership.
-- This is one of the few `TimelineIndexAccessor` resampling methods whose output is 2D.
+- This is one of the few `Timeline::TimelineIndexAccessor` resampling methods whose output is 2D.
 - If you need only one aggregation component, the scalar-output resample methods
   are simpler.
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_sum`](resample_sum.md)
-- [`TimelineIndexAccessor::resample_agg`](resample_agg.md)
+- [`Timeline::TimelineIndexAccessor::resample_sum`](resample_sum.md)
+- [`Timeline::TimelineIndexAccessor::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_min.html">

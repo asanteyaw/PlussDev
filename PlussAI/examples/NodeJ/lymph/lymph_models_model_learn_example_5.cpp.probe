@@ -3,19 +3,19 @@
 #include <iostream>
 int main() {
   namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType; using pluss::table::DataFrame; using pluss::table::Thread;
+  using pluss::ScalarType; using pluss::table::DataFrame; using pluss::table::Slate;
   const pluss::Config f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const pluss::Series a = pluss::make_series({1.0,1.3,1.7,2.1,3.6,4.0,4.4,4.9},{8},f64);
   const pluss::Series b = pluss::make_series({0.2,0.4,0.5,0.9,1.9,2.2,2.5,2.8},{8},f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1},{8},f64);
-  const DataFrame x({{"income",Thread(a)},{"balance",Thread(b)}});
+  const DataFrame x({{"income",Slate(a)},{"balance",Slate(b)}});
   lymph::models::Model m1 = lymph::models::logistic_regression();
   lymph::options::Train t1{}; t1.max_iterations = 2;
   m1.learn_(x,y,t1);
   lymph::models::Model m2 = lymph::models::logistic_regression();
   lymph::options::Train t2{}; t2.max_iterations = 800;
   m2.learn_(x,y,t2);
-  std::cout << "scores @2 iters:\n" << Thread(m1.infer_scores(x)) << "\n";
-  std::cout << "scores @800 iters:\n" << Thread(m2.infer_scores(x)) << "\n";
+  std::cout << "scores @2 iters:\n" << Slate(m1.infer_scores(x)) << "\n";
+  std::cout << "scores @800 iters:\n" << Slate(m2.infer_scores(x)) << "\n";
   return 0;
 }

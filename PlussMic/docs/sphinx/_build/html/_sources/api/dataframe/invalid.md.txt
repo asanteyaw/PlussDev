@@ -47,9 +47,9 @@ Example 1. Contrast `invalid()` against `isnull()` on a frame with both an unmas
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"a", Thread(pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 3.0, 0.0}),
+    {"a", Slate(pluss::make_series({1.0, std::numeric_limits<double>::quiet_NaN(), 3.0, 0.0}),
                 pluss::make_series({true, true, true, false}, pluss::ScalarType::Bool))},
-    {"b", Thread(pluss::make_note({"x", "y", "", "z"}),
+    {"b", Slate(pluss::make_note({"x", "y", "", "z"}),
                 pluss::make_series({true, true, false, true}, pluss::ScalarType::Bool))},
 });
 std::cout << readings;

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1f6493e426ea -->
+<!-- pluss-signature-hash: 940c3266beb4 -->
 
 # DataFrameLabelAccessor::freq
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const -> Thread
+DataFrameLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const -> Slate
 ```
 
 ## What It Does
@@ -33,20 +33,20 @@ Whether to exclude a null case label from the tally.
 
 ## Returns
 
-`Thread`
+`Slate`
     `Int64` counts, one per distinct case-label value, sorted descending by
     count (ties keep first-occurrence order), `display_name` `"freq"`.
 
 ## Examples
 
-Example 1. Tally a case-label thread with one repeated value.
+Example 1. Tally a case-label slate with one repeated value.
 
 ```cpp
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().freq();
@@ -73,8 +73,8 @@ Example 2. Cap the result to the 2 most frequent values with `top_n = 2`.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}))}},
-    Thread(pluss::make_note({"east", "west", "east", "north", "east", "south"})));
+    {{"sales", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}))}},
+    Slate(pluss::make_note({"east", "west", "east", "north", "east", "south"})));
 std::cout << orders;
 
 auto full = orders.label().freq();
@@ -129,8 +129,8 @@ Example 3. Pass `dropnull = false` to include a null case label in the tally.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sales", Thread(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Thread(pluss::make_series({10.0, 10.0, std::numeric_limits<double>::quiet_NaN()})));
+    {{"sales", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Slate(pluss::make_series({10.0, 10.0, std::numeric_limits<double>::quiet_NaN()})));
 std::cout << readings;
 
 auto without_null = readings.label().freq();

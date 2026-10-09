@@ -26,6 +26,10 @@ workflow::Workflow workflow::restore(const lymph::io::FlowBundle& bundle,
                                      workflow::Policy policy = {});
 ```
 
+## What It Does
+
+`lymph::io::load` reads a bundle file and returns it as a `FlowBundle` value without rebuilding anything. The model and workflow `load` functions are the usual entry points; this one is for inspecting a bundle, or for assembling a workflow with a policy of your choice. The result is a `StatusOr`, so an unreadable file is reported as a status.
+
 ## Parameters
 
 `path`
@@ -80,7 +84,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -88,7 +92,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const std::string path =
       (std::filesystem::temp_directory_path() / "lymph_io_load_example_1.flow").string();
@@ -134,16 +138,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"customer_id", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
-      {"income", Thread(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"customer_id", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   lymph::options::DFBatch data_options{};
@@ -165,9 +169,9 @@ int main() {
   std::cout << "loaded.policy().drop_columns.size() = " << loaded.policy().drop_columns.size() << "\n";
 
   const DataFrame incoming({
-      {"customer_id", Thread(pluss::make_series({9, 10, 11}, {3}, f64))},
-      {"income", Thread(pluss::make_series({1.2, 4.2, 1.6}, {3}, f64))},
-      {"balance", Thread(pluss::make_series({0.3, 2.2, 0.5}, {3}, f64))},
+      {"customer_id", Slate(pluss::make_series({9, 10, 11}, {3}, f64))},
+      {"income", Slate(pluss::make_series({1.2, 4.2, 1.6}, {3}, f64))},
+      {"balance", Slate(pluss::make_series({0.3, 2.2, 0.5}, {3}, f64))},
   });
   std::cout << "pred = " << loaded.infer(incoming, data_options) << "\n";
 
@@ -203,7 +207,7 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -211,7 +215,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.3, 1.7, 2.1, 3.6, 4.0, 4.4, 4.9}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.2, 0.4, 0.5, 0.9, 1.9, 2.2, 2.5, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const std::string path =
       (std::filesystem::temp_directory_path() / "lymph_io_load_example_3.flow").string();

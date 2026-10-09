@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesAntidiffAccessor::trapezoid
+# Series::AntidiffAccessor::trapezoid
 
-[Back to SeriesAntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
+[Back to Series::AntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesAntidiffAccessor::trapezoid(const Series& x, std::int64_t dim = -1) const
-Series SeriesAntidiffAccessor::trapezoid(double dx, std::int64_t dim = -1) const
-Series SeriesAntidiffAccessor::trapezoid(std::int64_t dim = -1) const
+Series Series::AntidiffAccessor::trapezoid(const Series& x, std::int64_t dim = -1) const
+Series Series::AntidiffAccessor::trapezoid(double dx, std::int64_t dim = -1) const
+Series Series::AntidiffAccessor::trapezoid(std::int64_t dim = -1) const
 
 Series SeriesAntidiffProxy::trapezoid(const Series& x, std::int64_t dim = -1) const
 Series SeriesAntidiffProxy::trapezoid(double dx, std::int64_t dim = -1) const
@@ -273,7 +273,7 @@ not data you already have in hand.
 
 ## See Also
 
-- [`SeriesAntidiffAccessor::cumulative_trapezoid`](cumulative_trapezoid.md):
+- [`Series::AntidiffAccessor::cumulative_trapezoid`](cumulative_trapezoid.md):
   the running form of this same computation.
 - [`Series::diff`](../series/diff.md): the discrete forward difference this
   accessor reverses.
@@ -283,7 +283,7 @@ not data you already have in hand.
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="../../series_antidiff_accessor_api_reference.html">
     <span class="label">Previous</span>
-    <span class="title">SeriesAntidiffAccessor</span>
+    <span class="title">Series::AntidiffAccessor</span>
   </a>
   <a class="next-link" href="cumulative_trapezoid.html">
     <span class="label">Next</span>

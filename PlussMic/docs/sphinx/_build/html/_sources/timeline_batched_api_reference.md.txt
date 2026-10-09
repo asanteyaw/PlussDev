@@ -5,7 +5,7 @@ delegation path added for multi-feature DataFrame operations.
 
 ## API Signature
 
-`Thread::tl() -> ThreadTimelineAccessor`  
+`Slate::tl() -> SlateTimelineAccessor`  
 `DataFrame::tl(feature: string_view) -> DataFrameTimelineAccessor`  
 `DataFrame::tl(features: initializer_list<string_view>) -> DataFrameTimelineAccessor`  
 `DataFrame::tl(features: RangeView<string_view> = {}) -> DataFrameTimelineAccessor`  
@@ -37,7 +37,7 @@ alignment.
 
 ## Output
 
-- Thread-level `tl()` returns a `Thread`.
+- Slate-level `tl()` returns a `Slate`.
 - DataFrame-level `tl()` returns a `DataFrame` with selected features replaced
   by the transformed result.
 - Atlas-level `tl()` returns an `Atlas` after applying the DataFrame operation
@@ -60,7 +60,7 @@ TimelineLocalizeOptions{.tz = "UTC", .fold = 0, .nonexistent = "raise"}
 
 ## Examples
 
-### Example 1: Thread timeline extraction
+### Example 1: Slate timeline extraction
 
 ```cpp
 auto years = df.features("event_time").tl().year();
@@ -70,11 +70,11 @@ auto seconds = df.features("event_time").tl().epoch(TimeUnit::Seconds);
 
 Expected output:
 
-- `years` is a numeric Thread containing calendar years.
-- `iso` is a Note Thread containing formatted ISO-like datetime strings.
-- `seconds` is a numeric Thread containing epoch seconds.
+- `years` is a numeric Slate containing calendar years.
+- `iso` is a Note Slate containing formatted ISO-like datetime strings.
+- `seconds` is a numeric Slate containing epoch seconds.
 
-### Example 2: Thread reduction preserves timeline payload
+### Example 2: Slate reduction preserves timeline payload
 
 ```cpp
 auto first_time = df.features("event_time").min();
@@ -83,8 +83,8 @@ auto last_time = df.features("event_time").max();
 
 Expected output:
 
-- `first_time` is a `ThreadValue` wrapping a one-element Timeline payload.
-- `last_time` is a `ThreadValue` wrapping a one-element Timeline payload.
+- `first_time` is a `SlateValue` wrapping a one-element Timeline payload.
+- `last_time` is a `SlateValue` wrapping a one-element Timeline payload.
 
 ### Example 3: DataFrame timeline transformation
 
@@ -145,4 +145,4 @@ Expected output:
 - `compared` is a boolean DataFrame using the same batched scalar comparison
   path where dtype/platform compatibility allows it.
 - `combined` uses the DataFrame-vs-DataFrame batched pair path for compatible
-  numeric feature groups, falling back per Thread for mixed payloads.
+  numeric feature groups, falling back per Slate for mixed payloads.

@@ -1,0 +1,31 @@
+summary = """
+Report whether the slate currently owns a usable backing payload.
+
+This is the object-level integrity check for `Slate` itself.
+
+It tells you whether the slate object exists as a real typed vector container, not whether every entry is non-missing.
+"""
+
+returns = """
+`bool`
+    `true` when the slate object is defined and can participate in ordinary slate operations.
+"""
+
+notes = [
+  """
+`defined()` is about object validity. Use `isnull()`, `notnull()`, `dropnull()`, or payload-aware validity checks when your question is about missing entries inside the slate.
+"""
+]
+
+[[examples]]
+title = "Check whether a slate object is defined."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.defined();
+"""
+output = """
+true
+"""

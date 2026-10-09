@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_mentions
+# Note::NlpAccessor::remove_mentions
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_mentions() const
+Note Note::NlpAccessor::remove_mentions() const
 ```
 
 ## Remove Social Mentions

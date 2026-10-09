@@ -17,7 +17,7 @@ Reports whether the stream owns a concrete payload. A default-constructed `Strea
 none — `defined()` returns `false`, and calling most other methods on it (e.g.
 [`size()`](size.md)) throws `"Stream: undefined handle"`. Every `Stream` built from a
 `Series`/`Note`/`Timeline`/`TimeIndex` constructor, or from
-[`from_thread()`](from_thread.md), is defined immediately.
+[`from_slate()`](from_slate.md), is defined immediately.
 
 ## Parameters
 

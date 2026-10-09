@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 2c7e03a76a51 -->
 # `pluss::ai::ice::Model::is_training`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -8,54 +7,49 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+bool pluss::ai::ice::Model::is_training() const noexcept;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Reports whether the model is in training mode ([`train`](train.md)) or
+evaluation mode ([`eval`](eval.md)/`train(false)`). `true` by default on
+a freshly constructed model, matching every registered `nn::Module`'s
+own default. [`Coach::learn`](../../coach/Coach.md) sets this around the
+training/validation passes it runs; [`infer`](infer.md)/[`assess`](assess.md)
+set it to `false` for their own duration.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`bool`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None. `is_training` is `noexcept` and never throws.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the default, after `eval()`, and after `train()`.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  std::cout << "is_training() default = " << model.is_training() << "\n";
 
   return 0;
 }
@@ -64,27 +58,25 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+is_training() default = 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  model.eval();
+  std::cout << "is_training() after eval() = " << model.is_training() << "\n";
 
   return 0;
 }
@@ -93,27 +85,26 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+is_training() after eval() = 0
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  model.eval();
+  model.train();
+  std::cout << "is_training() after train() = " << model.is_training() << "\n";
 
   return 0;
 }
@@ -122,12 +113,18 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+is_training() after train() = 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`train`](train.md) / [`eval`](eval.md) -- set this flag.
+- [`ready`](ready.md) -- a different, independent flag (whether `learn`/
+  `load` has run at all).
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

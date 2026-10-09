@@ -1,0 +1,40 @@
+summary = """
+Compute one correlation value and return it as a scalar-like slate value.
+"""
+
+returns = """
+`SlateValue`
+    Scalar-like holder of the computed correlation.
+"""
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand numeric slate.
+"""
+
+[[parameters]]
+name = "method"
+body = """
+Correlation method to use.
+"""
+
+[[parameters]]
+name = "min_count"
+body = """
+Minimum number of valid paired observations required before a value is returned.
+"""
+
+[[examples]]
+title = "Return one correlation result in a scalar-like slate value."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto other = Slate(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
+
+auto out = scores.corr_with(other, SlateCorrMethod::Pearson, 1);
+"""
+output = """
+0.943119
+"""

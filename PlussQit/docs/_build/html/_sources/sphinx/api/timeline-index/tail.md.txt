@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::tail
+# Timeline::TimelineIndexAccessor::tail
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::tail(std::int64_t n = 5) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::tail(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -22,14 +22,14 @@ How many timestamps to keep from the back.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The tail slice.
 
 ## Examples
 
 ```cpp
 auto out = base.tail(2);
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -43,7 +43,7 @@ Example 2. Use the default when you only need a quick trailing preview.
 
 ```cpp
 auto preview = base.tail();
-std::cout << pluss::timeindex::print(preview) << "\n";
+std::cout << pluss::timeline::print(preview.timeline()) << "\n";
 ```
 
 ## Notes
@@ -52,8 +52,8 @@ std::cout << pluss::timeindex::print(preview) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::head`](head.md)
-- [`TimelineIndexAccessor::slice_index`](slice_index.md)
+- [`Timeline::TimelineIndexAccessor::head`](head.md)
+- [`Timeline::TimelineIndexAccessor::slice_index`](slice_index.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sort.html">

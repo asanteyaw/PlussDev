@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 35a223690431 -->
+<!-- pluss-signature-hash: 27895befc63a -->
 
 # DataFrame::has
 
@@ -10,7 +10,7 @@
 ```cpp
 DataFrame::has(double value) const -> DataFrame
 DataFrame::has(std::string_view value) const -> DataFrame
-DataFrame::has(const Thread& values) const -> DataFrame
+DataFrame::has(const Slate& values) const -> DataFrame
 ```
 
 ## What It Does
@@ -21,11 +21,11 @@ source.
 ```{important} has(double) and has(string_view) are just eq() by another name
 `has(84.0)` and `has("Ada")` are implemented as plain calls to
 [`eq(84.0)`](eq.md)/`eq("Ada")` — there is no added value over calling `eq()`
-directly for a single value. The real reason to reach for `has()` is the `Thread`
+directly for a single value. The real reason to reach for `has()` is the `Slate`
 overload below, which `eq()` cannot do.
 ```
 
-`has(const Thread& values)` is the genuinely distinct overload: it checks each cell
+`has(const Slate& values)` is the genuinely distinct overload: it checks each cell
 against a whole **set** of candidate values, marking `true` if the cell matches *any*
 of them — an "is this value one of these?" check, rather than "does this value equal
 one specific thing?".
@@ -38,7 +38,7 @@ A single value, broadcast against every numeric (for `double`) or `Note`-kind (f
 `std::string_view`) feature. Equivalent to calling [`eq()`](eq.md) with the same
 argument.
 
-**values** (`const Thread&`)
+**values** (`const Slate&`)
 
 A set of candidate values to check membership against. Each cell in the frame reports
 `true` if it equals *any* valid (non-null) entry in `values`; null entries in
@@ -61,7 +61,7 @@ auto orders = DataFrame({
     {"status", pluss::make_note({"shipped", "pending", "cancelled", "shipped", "returned"})},
 }, pluss::make_note({"o1", "o2", "o3", "o4", "o5"}));
 
-auto closed_states = Thread(pluss::make_note({"shipped", "cancelled"}));
+auto closed_states = Slate(pluss::make_note({"shipped", "cancelled"}));
 auto out = orders.has(closed_states);
 std::cout << out;
 ```
@@ -113,7 +113,7 @@ s3   | true
 
 - `has(double)`/`has(std::string_view)` are plain aliases for [`eq()`](eq.md) — prefer
   calling `eq()` directly for single-value checks; reach for `has()` specifically for
-  the `Thread` (set-membership) overload.
+  the `Slate` (set-membership) overload.
 - A null entry in the `values` candidate set never matches anything, including a
   null cell — nulls in `values` are simply skipped.
 - A null cell in the source frame produces `NULL` in the result, not `false`, matching

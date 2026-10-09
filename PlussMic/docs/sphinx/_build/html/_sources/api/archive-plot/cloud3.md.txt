@@ -51,7 +51,7 @@ Example 1. A default 3-key cloud across `temp_c`/`humidity`/`pressure`.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -83,7 +83,7 @@ Example 2. The same cloud with `Scatter3DPlotOptions`, tuning marker size and sc
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {

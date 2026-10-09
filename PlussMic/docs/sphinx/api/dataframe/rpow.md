@@ -92,7 +92,7 @@ particular value, not a general property of exponentiation.
   single batched matrix operation internally — an implementation detail with no
   observable effect on the result.
 - Only accepts a scalar `double` — see [`radd()`](radd.md) for why there is no
-  reflected `DataFrame` or `Thread` overload.
+  reflected `DataFrame` or `Slate` overload.
 
 ## See Also
 

@@ -7,13 +7,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series price = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}, {5}, f64);
-  const DataFrame frame({{"price", Thread(price)}});
+  const DataFrame frame({{"price", Slate(price)}});
 
   // lower / upper set the target range. The default is [0, 1]; here a second
   // scaler targets [-1, 1]. The stage factory and the standalone object take

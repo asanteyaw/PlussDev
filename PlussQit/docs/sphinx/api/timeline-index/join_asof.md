@@ -1,12 +1,12 @@
-# TimelineIndexAccessor::join_asof
+# Timeline::TimelineIndexAccessor::join_asof
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor::join_asof(
-    const TimelineIndexAccessor& right,
+Timeline::TimelineIndexAccessor::join_asof(
+    const Timeline::TimelineIndexAccessor& right,
     AsofDirection direction = AsofDirection::Backward,
     const Duration* tolerance = nullptr,
     bool allow_exact_matches = true) const -> pluss::Series
@@ -20,7 +20,7 @@ For every timestamp in `self`, `join_asof()` returns the matching position in th
 right index, or `-1` when no valid match exists under the requested direction
 and tolerance rules.
 
-This is one of the most practical `TimelineIndexAccessor` methods because it powers:
+This is one of the most practical `Timeline::TimelineIndexAccessor` methods because it powers:
 
 - event-to-market-state alignment
 - quote-to-trade matching
@@ -87,19 +87,19 @@ Example 1. Backward as-of matching: the latest right timestamp less than or
 equal to each left timestamp.
 
 ```cpp
-auto left = pluss::timeindex::make({
+auto left = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
-auto right = pluss::timeindex::make({
+auto right = pluss::timeline::make({
     "2024-11-01T00:05:00Z",
     "2024-11-01T00:30:00Z",
     "2024-11-01T01:10:00Z",
-});
+}).index();
 
 auto map = left.join_asof(right);
 std::cout << pluss::series::print(map) << "\n";
@@ -119,7 +119,7 @@ with `tolerance`.
 auto tol = pluss::duration::minutes(25);
 auto map = left.join_asof(
     right,
-    pluss::TimelineIndexAccessor::AsofDirection::Nearest,
+    pluss::Timeline::TimelineIndexAccessor::AsofDirection::Nearest,
     &tol,
     true);
 std::cout << pluss::series::print(map) << "\n";
@@ -137,7 +137,7 @@ Example 3. Switch to forward matching when the left axis should look ahead.
 ```cpp
 auto map = left.join_asof(
     right,
-    pluss::TimelineIndexAccessor::AsofDirection::Forward);
+    pluss::Timeline::TimelineIndexAccessor::AsofDirection::Forward);
 std::cout << pluss::series::print(map) << "\n";
 ```
 
@@ -161,8 +161,8 @@ data=[0, 1, 2, 2, -1]
 
 ## See Also
 
-- [`TimelineIndexAccessor::asof`](asof.md): scalar backward lookup.
-- [`TimelineIndexAccessor::align_union`](align_union.md): union-style alignment rather than
+- [`Timeline::TimelineIndexAccessor::asof`](asof.md): scalar backward lookup.
+- [`Timeline::TimelineIndexAccessor::align_union`](align_union.md): union-style alignment rather than
   nearest-key matching.
 
 <div class="pluss-inline-prev-next">

@@ -41,7 +41,7 @@ Axel AxelFieldAxisAccessor::empty() const { return kind(SlotKind::Empty); }
 
 AxelCastAccessor::AxelCastAccessor(Axel base,
                                    std::vector<std::string> keys,
-                                   pluss::table::ThreadCastOptions options)
+                                   pluss::table::SlateCastOptions options)
     : base_(std::move(base)), keys_(std::move(keys)), options_(std::move(options)) {}
 
 Axel AxelCastAccessor::series() const {

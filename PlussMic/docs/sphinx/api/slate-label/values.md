@@ -1,0 +1,83 @@
+<!-- pluss-hand-authored -->
+
+# SlateLabelAccessor::values
+
+[Back to SlateLabelAccessor API Reference](../../slate_label_accessor_api_reference)
+
+## Signature
+
+```cpp
+SlateLabelAccessor::values() const -> Slate
+```
+
+## What It Does
+
+Returns the bound slate's case labels as a standalone `Slate` — a direct
+forward to `Slate::caselbl()`. Case labels are a separate companion
+sequence of row labels that can ride alongside a slate's own values (the same
+concept `DataFrameLabelAccessor` exposes for a whole frame's leftmost display
+column, just here attached to a single `Slate`).
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Slate`
+    The case labels, as a bare `Slate`. If no case labels have ever been set,
+    this is the default integer range (`0, 1, 2, ...`).
+
+## Examples
+
+Example 1. Read the default range labels back, then attach custom labels and
+read those instead.
+
+```cpp
+using namespace pluss::table;
+
+auto sales = Slate(pluss::make_series({100.0, 200.0, 150.0}));
+std::cout << sales.label().values();
+
+auto tagged = sales.label().set(Slate(pluss::make_note({"a", "b", "c"})));
+std::cout << tagged.label().values();
+```
+
+### Output (default range labels)
+
+```text
+0  0
+1  1
+2  2
+
+ptype: Series
+```
+
+### Output (after set())
+
+```text
+0  a
+1  b
+2  c
+
+ptype: Note
+```
+
+## Notes
+
+- Always defined: every slate has case labels of some kind, even if they're
+  just the default integer range.
+- Identical to calling `Slate::caselbl()` directly.
+
+## See Also
+
+- [`SlateLabelAccessor::set`](set.md): attach new case labels.
+- [`SlateLabelAccessor::has`](has.md): whether case labels have been
+  explicitly set at all.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="unite.html">
+    <span class="label">Previous</span>
+    <span class="title">unite</span>
+  </a>
+</div>

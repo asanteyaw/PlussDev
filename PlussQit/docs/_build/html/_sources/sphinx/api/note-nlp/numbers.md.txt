@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::numbers
+# Note::NlpAccessor::numbers
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::numbers() const
+TokenBatch Note::NlpAccessor::numbers() const
 ```
 
 ## Extract Number-Like Spans

@@ -75,7 +75,7 @@ value.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"amount", Thread(pluss::make_series({5.0, 15.0, 25.0, 35.0, 45.0, 100.0}))},
+    {"amount", Slate(pluss::make_series({5.0, 15.0, 25.0, 35.0, 45.0, 100.0}))},
 });
 std::cout << readings;
 ```
@@ -126,7 +126,7 @@ see how a boundary value moves between buckets.
 
 ```cpp
 auto readings2 = DataFrame({
-    {"amount", Thread(pluss::make_series({0.0, 10.0, 20.0, 30.0}))},
+    {"amount", Slate(pluss::make_series({0.0, 10.0, 20.0, 30.0}))},
 });
 
 auto bucketed2 = readings2.bucketize(
@@ -161,9 +161,9 @@ with [`update()`](update.md).
 
 ```cpp
 auto orders = DataFrame({
-    {"amount", Thread(pluss::make_series({5.0, 15.0, 25.0, 35.0}))},
-    {"weight", Thread(pluss::make_series({8.0, 22.0, 12.0, 38.0}))},
-    {"region", Thread(pluss::make_note({"north", "south", "north", "east"}))},
+    {"amount", Slate(pluss::make_series({5.0, 15.0, 25.0, 35.0}))},
+    {"weight", Slate(pluss::make_series({8.0, 22.0, 12.0, 38.0}))},
+    {"region", Slate(pluss::make_note({"north", "south", "north", "east"}))},
 });
 
 auto bucketed_pair = orders.features({"amount", "weight"}).bucketize({0.0, 10.0, 20.0, 30.0, 40.0});
@@ -213,7 +213,7 @@ lowest edge fall out of every bucket.
 
 ```cpp
 auto edge_case = DataFrame({
-    {"amount", Thread(pluss::make_series({0.0, 10.0, 25.0}))},
+    {"amount", Slate(pluss::make_series({0.0, 10.0, 25.0}))},
 });
 
 auto default_lowest = edge_case.bucketize({0.0, 10.0, 20.0, 30.0});
@@ -272,7 +272,7 @@ try {
 ### Output
 
 ```text
-Thread::bucketize: bin edges must be strictly increasing
+Slate::bucketize: bin edges must be strictly increasing
 ```
 
 `20.0` followed by `10.0` decreases, violating the strictly-increasing

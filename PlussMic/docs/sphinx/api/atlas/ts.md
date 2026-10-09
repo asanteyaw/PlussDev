@@ -65,7 +65,7 @@ Example 1. Compute period-over-period returns across every frame.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 

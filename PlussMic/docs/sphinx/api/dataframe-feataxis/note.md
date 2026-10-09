@@ -13,7 +13,7 @@ DataFrameFeatureAxisAccessor::note() const -> DataFrame
 
 ## What It Does
 
-Selects every feature whose `Thread` kind is `Note` (text) — dropping numeric
+Selects every feature whose `Slate` kind is `Note` (text) — dropping numeric
 (`Series`) and temporal (`Timeline`/`TimeIndex`) features. Case labels and row
 order are preserved unchanged.
 
@@ -31,9 +31,9 @@ Example 1. Keep only the text feature out of a mixed frame.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))},
-     {"city",        Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))},
+     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
 std::cout << orders;
 
 auto out = orders.feataxis().note();
@@ -72,8 +72,8 @@ Example 2. Call `note()` on a frame with no `Note`-kind feature at all.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))}});
 
 auto out = readings.feataxis().note();
 std::cout << out;

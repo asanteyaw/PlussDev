@@ -21,7 +21,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame x({{"x1", pluss::table::Thread(x1)}, {"x2", pluss::table::Thread(x2)}});
+  const DataFrame x({{"x1", pluss::table::Slate(x1)}, {"x2", pluss::table::Slate(x2)}});
 
   const std::vector<lymph::selection::GridAxis> axes = {
       {.name = "regularization_strength", .values = {0.01, 1.0}},

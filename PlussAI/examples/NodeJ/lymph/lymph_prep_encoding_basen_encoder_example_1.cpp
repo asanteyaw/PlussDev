@@ -7,13 +7,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   // Five categories 10, 20, 30, 40, 50.
-  const DataFrame train({{"code", Thread(pluss::make_series({10., 20., 30., 40., 50., 10., 30.}, {7}, f64))}});
-  const DataFrame later({{"code", Thread(pluss::make_series({50., 20., 10.}, {3}, f64))}});
+  const DataFrame train({{"code", Slate(pluss::make_series({10., 20., 30., 40., 50., 10., 30.}, {7}, f64))}});
+  const DataFrame later({{"code", Slate(pluss::make_series({50., 20., 10.}, {3}, f64))}});
 
   // BaseNEncoder ordinal-codes each category (1..K, 0 reserved for unseen), then
   // writes that code in radix `base` across a fixed set of digit columns.

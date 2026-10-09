@@ -8,6 +8,10 @@ set(NODEB_EXAMPLES
   nodeb_contextual_generation_end_to_end
   nodeb_vectorize_end_to_end
   nodeb_full_nlp_workflow_demo
+  nodeb_docs_reference
+  nodeb_core_docs_reference
+  nodeb_tasks_docs_reference
+  nodeb_embed_docs_reference
 )
 
 foreach(demo ${NODEB_EXAMPLES})

@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
   using DataFrame = pluss::table::DataFrame;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   using namespace pluss::ai::nodej;
   namespace lymph = pluss::ai::lymph;
 
@@ -78,20 +78,20 @@ int main(int argc, char** argv) {
     const Series month_centered_sq = month_centered.square();
     const Series weather_sq = s_weather.square();
 
-    frame.set("temp_sq") = Thread(temp_sq);
-    frame.set("atemp_sq") = Thread(atemp_sq);
-    frame.set("humidity_sq") = Thread(humidity_sq);
-    frame.set("windspeed_sq") = Thread(windspeed_sq);
-    frame.set("temp_humidity_interaction") = Thread(temp_humidity_interaction);
-    frame.set("temp_windspeed_interaction") = Thread(temp_windspeed_interaction);
-    frame.set("atemp_humidity_interaction") = Thread(atemp_humidity_interaction);
-    frame.set("atemp_windspeed_interaction") = Thread(atemp_windspeed_interaction);
-    frame.set("temp_minus_atemp") = Thread(temp_minus_atemp);
-    frame.set("hour_centered") = Thread(hour_centered);
-    frame.set("hour_centered_sq") = Thread(hour_centered_sq);
-    frame.set("month_centered") = Thread(month_centered);
-    frame.set("month_centered_sq") = Thread(month_centered_sq);
-    frame.set("weather_sq") = Thread(weather_sq);
+    frame.set("temp_sq") = Slate(temp_sq);
+    frame.set("atemp_sq") = Slate(atemp_sq);
+    frame.set("humidity_sq") = Slate(humidity_sq);
+    frame.set("windspeed_sq") = Slate(windspeed_sq);
+    frame.set("temp_humidity_interaction") = Slate(temp_humidity_interaction);
+    frame.set("temp_windspeed_interaction") = Slate(temp_windspeed_interaction);
+    frame.set("atemp_humidity_interaction") = Slate(atemp_humidity_interaction);
+    frame.set("atemp_windspeed_interaction") = Slate(atemp_windspeed_interaction);
+    frame.set("temp_minus_atemp") = Slate(temp_minus_atemp);
+    frame.set("hour_centered") = Slate(hour_centered);
+    frame.set("hour_centered_sq") = Slate(hour_centered_sq);
+    frame.set("month_centered") = Slate(month_centered);
+    frame.set("month_centered_sq") = Slate(month_centered_sq);
+    frame.set("weather_sq") = Slate(weather_sq);
 
     //========== missingness diagnostics ========
     // This section checks NA patterns before preprocessing to verify data quality.
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
     const auto missing_rate = missing_binary.mean(pluss::table::Axis::Case, false);
     const DataFrame missing_rate_table(
         {{"missing_rate", missing_rate}},
-        Thread(pluss::make_note(missing_binary.features())));
+        Slate(pluss::make_note(missing_binary.features())));
     missing_rate_table.save_csv((out_dir / "missing_rate.csv").string());
 
     //========== exploratory data analysis (EDA) ========
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
 
     //========== train/test split ========
     // This section creates a deterministic holdout split for final validation.
-    const auto holdout = lymph::validate::holdout()
+    const auto holdout = lymph::selection::validate::holdout()
                              .test_size(0.2)
                              .shuffle(true)
                              .seed(42)
@@ -279,12 +279,12 @@ int main(int argc, char** argv) {
 
     // This section stores compact preprocessing state snapshots as CSV.
     DataFrame prep_state_frame({
-        {"simple_imputer_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(simple_imp_summary.feature_names.size())}, {1}))},
-        {"knn_imputer_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(knn_imp_summary.feature_names.size())}, {1}))},
-        {"iter_imputer_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(iter_imp_summary.feature_names.size())}, {1}))},
-        {"standard_scaler_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(z_summary.feature_names.size())}, {1}))},
-        {"robust_scaler_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(robust_summary.feature_names.size())}, {1}))},
-        {"maxabs_scaler_state_cols", Thread(pluss::make_series(std::vector<double>{static_cast<double>(maxabs_summary.feature_names.size())}, {1}))},
+        {"simple_imputer_state_cols", Slate(pluss::make_series(std::vector<double>{static_cast<double>(simple_imp_summary.feature_names.size())}, {1}))},
+        {"knn_imputer_state_cols", Slate(pluss::make_series(std::vector<double>{static_cast<double>(knn_imp_summary.feature_names.size())}, {1}))},
+        {"iter_imputer_state_cols", Slate(pluss::make_series(std::vector<double>{static_cast<double>(iter_imp_summary.feature_names.size())}, {1}))},
+        {"standard_scaler_state_cols", Slate(pluss::make_series(std::vector<double>{static_cast<double>(z_summary.feature_names.size())}, {1}))},
+        {"robust_scaler_state_cols", Slate(pluss::make_series(std::vector<double>{static_cast<double>(robust_summary.feature_names.size())}, {1}))},
+        {"maxabs_scaler_state_cols", Slate(pluss::make_series(std::vector<double>{static_cast<double>(maxabs_summary.feature_names.size())}, {1}))},
     });
     prep_state_frame.save_csv((out_dir / "prep_state_summary.csv").string());
 
@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
     AssessOptions assess_options{};
     assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
-    lymph::metrics::CrossValidationOptions cv_options{};
+    lymph::selection::CrossValOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.stratified = false;
@@ -809,7 +809,7 @@ int main(int argc, char** argv) {
     const fs::path final_model_path = model_dir / "lymph_hour_end_to_end_final.bin";
     final_workflow.save(final_model_path.string(), train_x, train_y, train_options);
 
-    const auto restored_workflow = lymph::Model::load(final_model_path.string());
+    const auto restored_workflow = lymph::models::Model::load(final_model_path.string());
     const Series restored_pred = restored_workflow.infer(test_x);
     const double restored_max_abs_diff = lymph::max_abs_diff(test_pred, restored_pred);
 
@@ -827,12 +827,12 @@ int main(int argc, char** argv) {
     const Series sq_error_cpu = residual_cpu.square();
 
     DataFrame pred_frame({
-        {"y_true", Thread(y_true_cpu)},
-        {"y_pred", Thread(y_pred_cpu)},
-        {"y_score", Thread(y_score_cpu)},
-        {"residual", Thread(residual_cpu)},
-        {"abs_error", Thread(abs_error_cpu)},
-        {"sq_error", Thread(sq_error_cpu)},
+        {"y_true", Slate(y_true_cpu)},
+        {"y_pred", Slate(y_pred_cpu)},
+        {"y_score", Slate(y_score_cpu)},
+        {"residual", Slate(residual_cpu)},
+        {"abs_error", Slate(abs_error_cpu)},
+        {"sq_error", Slate(sq_error_cpu)},
     });
 
     pred_frame.save_csv((out_dir / "final_test_predictions.csv").string());
@@ -863,16 +863,16 @@ int main(int argc, char** argv) {
     //========== run summary ========
     // This section writes compact run metadata for quick reproducibility checks.
     DataFrame run_summary({
-        {"n_rows_loaded", Thread(pluss::make_series(std::vector<double>{static_cast<double>(frame.ncases())}, {1}))},
-        {"n_features_used", Thread(pluss::make_series(std::vector<double>{static_cast<double>(model_features.size())}, {1}))},
-        {"holdout_train_rows", Thread(pluss::make_series(std::vector<double>{static_cast<double>(train_x.ncases())}, {1}))},
-        {"holdout_test_rows", Thread(pluss::make_series(std::vector<double>{static_cast<double>(test_x.ncases())}, {1}))},
-        {"broad_candidates", Thread(pluss::make_series(std::vector<double>{static_cast<double>(broad_tune.report.trials.size())}, {1}))},
-        {"tuned_candidates", Thread(pluss::make_series(std::vector<double>{static_cast<double>(tuned_final.report.trials.size())}, {1}))},
-        {"final_rmse", Thread(final_metrics.rmse)},
-        {"final_r2", Thread(final_metrics.r2)},
-        {"final_mae", Thread(final_metrics.mae)},
-        {"restored_max_abs_diff", Thread(pluss::make_series(std::vector<double>{restored_max_abs_diff}, {1}))},
+        {"n_rows_loaded", Slate(pluss::make_series(std::vector<double>{static_cast<double>(frame.ncases())}, {1}))},
+        {"n_features_used", Slate(pluss::make_series(std::vector<double>{static_cast<double>(model_features.size())}, {1}))},
+        {"holdout_train_rows", Slate(pluss::make_series(std::vector<double>{static_cast<double>(train_x.ncases())}, {1}))},
+        {"holdout_test_rows", Slate(pluss::make_series(std::vector<double>{static_cast<double>(test_x.ncases())}, {1}))},
+        {"broad_candidates", Slate(pluss::make_series(std::vector<double>{static_cast<double>(broad_tune.report.trials.size())}, {1}))},
+        {"tuned_candidates", Slate(pluss::make_series(std::vector<double>{static_cast<double>(tuned_final.report.trials.size())}, {1}))},
+        {"final_rmse", Slate(final_metrics.rmse)},
+        {"final_r2", Slate(final_metrics.r2)},
+        {"final_mae", Slate(final_metrics.mae)},
+        {"restored_max_abs_diff", Slate(pluss::make_series(std::vector<double>{restored_max_abs_diff}, {1}))},
     });
     run_summary.save_csv((out_dir / "run_summary.csv").string());
 

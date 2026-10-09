@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::labels
+# Note::TexAccessor::labels
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::labels() const
+TokenBatch Note::TexAccessor::labels() const
 ```
 
 ## Extract Authored Cross-Reference Anchors

@@ -18,22 +18,39 @@ and the safe way to flip it for a scope, lives here.
 
 ## How To Call It
 
+Turn gradient recording off by hand, read the state, and restore it. Then do the same with the scoped guard. The program prints the recording state at each point.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-// the manual form -- exists, but see AutoGradMode/NoGradGuard below for why
-// this is rarely what you actually want to write:
-const bool previous = nn::GradMode::is_enabled();
-nn::GradMode::set_enabled(false);
-// ... work with recording disabled ...
-nn::GradMode::set_enabled(previous);
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-// the guard form -- the same effect, but the restore cannot be skipped by
-// an early return or an exception:
-{
-  const nn::NoGradGuard no_grad;
-  // ... work with recording disabled ...
-}  // restored here, unconditionally
+int main() {
+  namespace nn = pluss::ai::nn;
+  const bool previous = nn::GradMode::is_enabled();
+  nn::GradMode::set_enabled(false);
+  const bool inside = nn::GradMode::is_enabled();
+  nn::GradMode::set_enabled(previous);
+  std::cout << "grad enabled inside = " << (inside ? "true" : "false") << "\n";
+  {
+    const nn::NoGradGuard no_grad;
+    std::cout << "grad enabled inside guard = " << (nn::GradMode::is_enabled() ? "true" : "false") << "\n";
+  }
+  std::cout << "grad restored = " << (nn::GradMode::is_enabled() == previous ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+grad enabled inside = false
+grad enabled inside guard = false
+grad restored = true
 ```
 
 `GradMode` is a plain global switch with no owned state of its own to

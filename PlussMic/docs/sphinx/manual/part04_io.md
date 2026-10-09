@@ -58,7 +58,7 @@ CSV loading has five stages:
 2. Decide the header and feature names.
 3. Decide which input columns become features.
 4. Decide whether one input column becomes the case axis.
-5. Convert selected columns into typed `Thread` values.
+5. Convert selected columns into typed `Slate` values.
 
 Most surprising loading behavior comes from mixing up stages 3 and 4. If a
 column is selected as `case_col`, it becomes the DataFrame case axis and is not
@@ -268,7 +268,7 @@ Important CSV options:
 | `sep` | explicit separator |
 | `auto_detect_sep` | infer separator when `sep` is not explicit |
 | `engine` | `Auto`, `Parallel`, or `Serial` |
-| `parallel_threads` | requested parallel parse threads |
+| `parallel_threads` | requested parallel parse slates |
 | `profile` | emit parser timing diagnostics |
 | `header`, `header_row`, `names` | header handling |
 | `usefeats`, `usefeats_idx` | select input features |
@@ -284,7 +284,7 @@ Important CSV options:
 ## Type inference and explicit dtypes
 
 CSV data starts as text. PlussMic converts each selected column into a typed
-Thread. Common inferred outputs are:
+Slate. Common inferred outputs are:
 
 - integer Series for integral values;
 - floating Series for decimal values;
@@ -328,7 +328,7 @@ options.na_values.insert("N/A");
 `na_filter = false` disables missing-value detection. `keep_default_na = true`
 keeps the built-in missing tokens. `na_values` adds project-specific tokens.
 
-Missingness becomes a Thread validity mask. That means a numeric feature can
+Missingness becomes a Slate validity mask. That means a numeric feature can
 still have an integer or floating dtype even when some rows display as `NA`.
 
 ## Bad lines
@@ -459,7 +459,7 @@ auto batch = pluss::loader::read_csv_batch("data.csv", {{"ncases", 100}});
 ```
 
 Raw batches keep strings/notes close to file contents. Neutral batches carry
-`Thread` values but do not own a frame.
+`Slate` values but do not own a frame.
 
 ## `CsvCaseReader::next`
 

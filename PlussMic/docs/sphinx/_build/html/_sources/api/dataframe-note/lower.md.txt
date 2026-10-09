@@ -54,11 +54,11 @@ preserved.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"city", Thread(
+    {"city", Slate(
         pluss::make_note({"Accra", "TEMA", "Kumasi"}),
         pluss::make_series(std::vector<bool>{true, true, false}))},
-    {"code", Thread(pluss::make_note({"GH-001", "Gh-002", "gh-003"}))},
-}, Thread(pluss::make_note({"p1", "p2", "p3"})));
+    {"code", Slate(pluss::make_note({"GH-001", "Gh-002", "gh-003"}))},
+}, Slate(pluss::make_note({"p1", "p2", "p3"})));
 std::cout << orders;
 
 auto out = orders.nt().lower();

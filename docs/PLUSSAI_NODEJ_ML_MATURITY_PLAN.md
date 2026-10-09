@@ -172,7 +172,7 @@ Current status (in progress):
     - `Reject` (strict),
     - `Drop` (feature omission),
     - `Hash` (deterministic numeric hash encoding)
-  - temporal columns (`Timeline`/`TimeIndex`) remain routable via `DataThreadPolicy::CastTemporalToSeries`
+  - temporal columns (`Timeline`/`TimeIndex`) remain routable via `DataSlatePolicy::CastTemporalToSeries`
   - `Flow` supports DataFrame-native `learn` / `infer` / `infer_scores` / `assess` overloads through the NodeJ adapter
   - PlussMic DataFrame now exposes `matrix()` for grouped typed matrix extraction (`Series`, `Note`, `Timeline`, `TimeIndex`)
 

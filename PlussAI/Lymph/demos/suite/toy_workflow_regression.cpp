@@ -9,7 +9,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const Series x = pluss::series::linspace(-3.0, 3.0, 96, ScalarType::Float64);
   const Series wave = x.sin().add(x.mul(0.7).cos().mul(0.35));
@@ -17,10 +17,10 @@ int main() {
   const Series target = wave.add(trend).add(2.0);
 
   const DataFrame raw({
-      {"x", Thread(x)},
-      {"wave", Thread(wave)},
-      {"trend", Thread(trend)},
-      {"target", Thread(target)},
+      {"x", Slate(x)},
+      {"wave", Slate(wave)},
+      {"trend", Slate(trend)},
+      {"target", Slate(target)},
   });
 
   lymph::prep::SimpleImputerOptions fill{};
@@ -29,19 +29,19 @@ int main() {
   lymph::WorkflowOptions flow{};
   flow.workers = 2;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"x", "wave", "trend"})
       .label("target");
 
   lymph::Workflow design = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"x", "wave", "trend"}, {
-              {"fill", lymph::stage::simple_imputer(fill)},
-              {"scale", lymph::stage::standard_scaler()},
-              {"shape", lymph::stage::power_map()},
+              {"fill", lymph::prep::stage::simple_imputer(fill)},
+              {"scale", lymph::prep::stage::standard_scaler()},
+              {"shape", lymph::prep::stage::power_map()},
           }),
       },
-      lymph::model::random_forest_regressor({.learners = 31, .subsample = 1.0}),
+      lymph::models::random_forest_regressor({.learners = 31, .subsample = 1.0}),
       flow);
 
   lymph::TrainOptions train{};

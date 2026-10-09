@@ -132,7 +132,12 @@ Example 6. Overflow is a checked failure.
 auto high = pluss::duration::nanos(
     (std::numeric_limits<std::int64_t>::max)());
 auto one = pluss::duration::nanos(1);
-auto invalid = high + one;
+try {
+  (void)(high + one);
+} catch (const pluss::Error& error) {
+  const std::string message = error.what();
+  std::cout << message.substr(0, message.find('\n')) << "\n";
+}
 ```
 
 ### Output
@@ -148,4 +153,3 @@ The dedicated [`add`](add.md), [`sub`](sub.md), [`neg`](neg.md),
 isolation. [`eq`](eq.md) through [`ge`](ge.md) do the same for comparisons.
 `floordiv()` and `mod()` are named methods because C++ has no distinct operator
 for floor division and the public remainder takes a nanosecond integer.
-

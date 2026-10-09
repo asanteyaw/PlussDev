@@ -126,10 +126,10 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
 ## See Also
 
 - [`Note::split_lines`](split_lines.md): the line split used here.
-- [`NoteNlpAccessor::diff_words`](../note-nlp/diff_words.md) / [`Note::diff_chars`](diff_chars.md):
+- [`Note::NlpAccessor::diff_words`](../note-nlp/diff_words.md) / [`Note::diff_chars`](diff_chars.md):
   finer-grained change views.
-- [`NoteNlpAccessor::align_tokens`](../note-nlp/align_tokens.md) /
-  [`NoteNlpAccessor::align_sentences`](../note-nlp/align_sentences.md): equal-included transcripts.
+- [`Note::NlpAccessor::align_tokens`](../note-nlp/align_tokens.md) /
+  [`Note::NlpAccessor::align_sentences`](../note-nlp/align_sentences.md): equal-included transcripts.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="diff_chars.html">

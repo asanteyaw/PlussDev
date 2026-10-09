@@ -11,14 +11,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame x({
-      {"a", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
-      {"b", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+      {"a", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"b", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
   });
   const pluss::Series y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
 

@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::is_monotonic_increasing
+# Timeline::TimelineIndexAccessor::is_monotonic_increasing
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-bool TimelineIndexAccessor::is_monotonic_increasing() const
+bool Timeline::TimelineIndexAccessor::is_monotonic_increasing() const
 ```
 
 ## What It Does
@@ -30,13 +30,13 @@ adjacent pair violates increasing order.
 Example 1. A standard ascending axis is monotonic increasing.
 
 ```cpp
-auto idx = pluss::timeindex::make({
+auto idx = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 std::cout << "idx.is_monotonic_increasing() = "
           << (idx.is_monotonic_increasing() ? "true" : "false") << "\n";
 ```
@@ -51,13 +51,13 @@ Example 2. A descending axis fails the increasing check when construction-time
 order enforcement is intentionally disabled.
 
 ```cpp
-auto descending = pluss::timeindex::make({
+auto descending = pluss::timeline::make({
     "2024-11-01T01:20:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:00:00Z",
-}, false);
+}).index(false);
 std::cout << "descending.is_monotonic_increasing() = "
           << (descending.is_monotonic_increasing() ? "true" : "false") << "\n";
 ```
@@ -70,7 +70,7 @@ descending.is_monotonic_increasing() = false
 
 ## Notes
 
-- Most production `TimelineIndexAccessor` usage should stay monotonic increasing.
+- Most production `Timeline::TimelineIndexAccessor` usage should stay monotonic increasing.
 - Use [`is_monotonic_decreasing()`](is_monotonic_decreasing.md) when a
   newest-first axis is intentional.
 - A non-monotonic index is not just a cosmetic issue. It changes the meaning of
@@ -78,8 +78,8 @@ descending.is_monotonic_increasing() = false
 
 ## See Also
 
-- [`TimelineIndexAccessor::searchsorted`](searchsorted.md)
-- [`TimelineIndexAccessor::asof`](asof.md)
+- [`Timeline::TimelineIndexAccessor::searchsorted`](searchsorted.md)
+- [`Timeline::TimelineIndexAccessor::asof`](asof.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="is_monotonic_decreasing.html">

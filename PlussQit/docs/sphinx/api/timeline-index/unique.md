@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::unique
+# Timeline::TimelineIndexAccessor::unique
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::unique() const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::unique() const
 ```
 
 ## What It Does
@@ -17,22 +17,22 @@ This gives you the canonical exact-time set represented by the axis.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     A deduplicated index.
 
 ## Examples
 
 ```cpp
-auto dup = pluss::timeindex::make({
+auto dup = pluss::timeline::make({
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T01:00:00Z",
-}, false);
+}).index(false);
 
 auto out = dup.unique();
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -47,7 +47,7 @@ operations or exact alignment.
 
 ```cpp
 auto vocab = dup.unique();
-std::cout << pluss::timeindex::print(vocab) << "\n";
+std::cout << pluss::timeline::print(vocab.timeline()) << "\n";
 ```
 
 ## Notes
@@ -59,8 +59,8 @@ std::cout << pluss::timeindex::print(vocab) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::is_unique`](is_unique.md)
-- [`TimelineIndexAccessor::sort`](sort.md)
+- [`Timeline::TimelineIndexAccessor::is_unique`](is_unique.md)
+- [`Timeline::TimelineIndexAccessor::sort`](sort.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="union_.html">

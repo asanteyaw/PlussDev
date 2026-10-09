@@ -20,7 +20,7 @@ each `Timeline`-kind key with a `Bool` `Series` key.
 Every method on this accessor — not just `isnat()` — routes through `Stream::tl()`
 for each bound key. `tl()` requires every bound key to be `Timeline`-kind; if any
 bound key is not (`Series`, `Note`, `Mixed`, `Null`, or `Empty`), the call throws
-`"Thread::tl: expected Timeline payload"`.
+`"Slate::tl: expected Timeline payload"`.
 Since [`Catalog::tl()`](../catalog/tl.md) binds *every* key of the catalog by
 default, project down to just the timestamp keys first with
 [`Catalog::keys(names)`](../catalog/keys.md) or
@@ -88,7 +88,7 @@ try {
 ### Output
 
 ```text
-Thread::tl: expected Timeline payload
+Slate::tl: expected Timeline payload
 ```
 
 ## Notes

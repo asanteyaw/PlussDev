@@ -22,14 +22,14 @@ namespace {
 [[nodiscard]] std::string hex_decode(std::string_view value) {
   if ((value.size() & 1U) != 0U) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::hex_decode: invalid hex payload length.");
+        "nlp::detail::hex_decode: invalid hex payload length.");
   }
   auto from_hex = [](char ch) -> unsigned char {
     if (ch >= '0' && ch <= '9') return static_cast<unsigned char>(ch - '0');
     if (ch >= 'a' && ch <= 'f') return static_cast<unsigned char>(10 + ch - 'a');
     if (ch >= 'A' && ch <= 'F') return static_cast<unsigned char>(10 + ch - 'A');
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::hex_decode: invalid hex payload.");
+        "nlp::detail::hex_decode: invalid hex payload.");
   };
   std::string out;
   out.reserve(value.size() / 2U);
@@ -187,7 +187,7 @@ TaskBackend parse_task_backend(std::string_view value) {
   if (value == "Classic") return TaskBackend::Classic;
   if (value == "Sequence") return TaskBackend::Sequence;
   ::pluss::ai::nodeb::detail::fail(
-      "nodeb::detail::parse_task_backend: unknown backend '" + std::string(value) + "'.");
+      "nlp::detail::parse_task_backend: unknown backend '" + std::string(value) + "'.");
 }
 
 SequenceHead parse_sequence_head(std::string_view value) {
@@ -195,14 +195,14 @@ SequenceHead parse_sequence_head(std::string_view value) {
   if (value == "BiLstm") return SequenceHead::BiLstm;
   if (value == "Transformer") return SequenceHead::Transformer;
   ::pluss::ai::nodeb::detail::fail(
-      "nodeb::detail::parse_sequence_head: unknown head '" + std::string(value) + "'.");
+      "nlp::detail::parse_sequence_head: unknown head '" + std::string(value) + "'.");
 }
 
 SequencePooling parse_sequence_pooling(std::string_view value) {
   if (value == "Mean") return SequencePooling::Mean;
   if (value == "Last") return SequencePooling::Last;
   ::pluss::ai::nodeb::detail::fail(
-      "nodeb::detail::parse_sequence_pooling: unknown pooling '" + std::string(value) + "'.");
+      "nlp::detail::parse_sequence_pooling: unknown pooling '" + std::string(value) + "'.");
 }
 
 QuantizationHint parse_quantization_hint(std::string_view value) {
@@ -210,7 +210,7 @@ QuantizationHint parse_quantization_hint(std::string_view value) {
   if (value == "Float16Ready") return QuantizationHint::Float16Ready;
   if (value == "Int8Ready") return QuantizationHint::Int8Ready;
   ::pluss::ai::nodeb::detail::fail(
-      "nodeb::detail::parse_quantization_hint: unknown hint '" + std::string(value) + "'.");
+      "nlp::detail::parse_quantization_hint: unknown hint '" + std::string(value) + "'.");
 }
 
 DistillationHint parse_distillation_hint(std::string_view value) {
@@ -218,7 +218,7 @@ DistillationHint parse_distillation_hint(std::string_view value) {
   if (value == "Teacher") return DistillationHint::Teacher;
   if (value == "Student") return DistillationHint::Student;
   ::pluss::ai::nodeb::detail::fail(
-      "nodeb::detail::parse_distillation_hint: unknown hint '" + std::string(value) + "'.");
+      "nlp::detail::parse_distillation_hint: unknown hint '" + std::string(value) + "'.");
 }
 
 void initialize_sequence_state(SequenceTaskState& state,
@@ -236,7 +236,7 @@ void initialize_sequence_state(SequenceTaskState& state,
   const auto learn = state.indexer.learn(docs);
   if (!learn.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::initialize_sequence_state: " + learn.message);
+        "nlp::detail::initialize_sequence_state: " + learn.message);
   }
   state.table = runtime::EmbeddingTable(runtime::EmbeddingOptions{
       .width = width,
@@ -260,12 +260,12 @@ std::vector<std::vector<std::vector<double>>> encode_docs(
   PLUSS_CALL_GUARD();
   if (!state.ready) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::encode_docs: sequence state is not ready.");
+        "nlp::detail::encode_docs: sequence state is not ready.");
   }
   const auto batch_or = state.indexer.batch(docs);
   if (!batch_or.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::encode_docs: " + batch_or.status().message);
+        "nlp::detail::encode_docs: " + batch_or.status().message);
   }
   const auto batch = batch_or.value();
   const auto embedded = state.table.forward(batch).to(pluss::pCPU, pluss::ScalarType::Float64);
@@ -302,7 +302,7 @@ std::vector<double> pool_span_rows(const std::vector<std::vector<double>>& rows,
   if (token_end <= token_start) return {};
   if (token_start < 0 || token_end > static_cast<std::int64_t>(rows.size())) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::pool_span_rows: span is out of range.");
+        "nlp::detail::pool_span_rows: span is out of range.");
   }
   std::vector<std::vector<double>> slice;
   slice.reserve(static_cast<std::size_t>(token_end - token_start));
@@ -404,7 +404,7 @@ void load_sequence_state_lines(const char* prefix,
       state.indexer.load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(indexer_views));
   if (!indexer_status.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::load_sequence_state_lines[indexer]: " + indexer_status.message);
+        "nlp::detail::load_sequence_state_lines[indexer]: " + indexer_status.message);
   }
   std::vector<std::string_view> table_views;
   table_views.reserve(table_lines.size());
@@ -413,7 +413,7 @@ void load_sequence_state_lines(const char* prefix,
       state.table.load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(table_views));
   if (!table_status.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::load_sequence_state_lines[table]: " + table_status.message);
+        "nlp::detail::load_sequence_state_lines[table]: " + table_status.message);
   }
 }
 

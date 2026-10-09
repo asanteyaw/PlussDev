@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slate::transform &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Slate::truediv" href="truediv.html" />
+    <link rel="prev" title="Slate::top" href="top.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9aaa2fec980c -->
+<section id="slate-transform">
+<h1>Slate::transform<a class="headerlink" href="#slate-transform" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../slate_api_reference.html"><span class="doc std std-doc">Back to Slate API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="w"> </span><span class="n">Slate</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">SlateValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">SlateValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Slate</span><span class="w"> </span><span class="n">Slate</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Slate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span>
+<span class="w">    </span><span class="n">ResultShape</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Preserve</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">transform()</span></code> is the common entry point for two different callback granularities. The
+callback type determines whether the operation visits individual values or receives the
+entire slate:</p>
+<ul class="simple">
+<li><p>A callback taking <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">SlateValue&amp;</span></code> runs once for each valid row. This overload has
+the same contract as <a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">map()</span></code></span></a>: invalid rows bypass the callback, every callback
+result must contain one value, and all returned values must have the same payload kind.</p></li>
+<li><p>A callback taking <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> runs exactly once with the complete slate. This
+overload has the same contract as <a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fold()</span></code></span></a>, except that <code class="docutils literal notranslate"><span class="pre">transform()</span></code> defaults
+<code class="docutils literal notranslate"><span class="pre">shape</span></code> to <code class="docutils literal notranslate"><span class="pre">ResultShape::Preserve</span></code>. A whole-thread transform is therefore expected to
+retain the input row count unless the caller explicitly requests reduction or an
+unconstrained result.</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The whole-thread default is Preserve, not Reduce
+<code class="docutils literal notranslate"><span class="pre">fold(slate_fn)</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">ResultShape::Reduce</span></code>, but <code class="docutils literal notranslate"><span class="pre">transform(slate_fn)</span></code> defaults to
+<code class="docutils literal notranslate"><span class="pre">ResultShape::Preserve</span></code>. The implementations share the same validation kernel; only their
+public defaults differ. Write <code class="docutils literal notranslate"><span class="pre">transform(fn,</span> <span class="pre">ResultShape::Reduce)</span></code> when a transform should
+produce one row. Omitting the policy while returning one row from a longer input is an
+error rather than an implicit reduction.</p>
+</div>
+<p>This distinction keeps ordinary transformations safe: a callback cannot accidentally
+remove or add rows while its result is about to be assigned back into a frame. Use
+<code class="docutils literal notranslate"><span class="pre">ResultShape::Infer</span></code> or <code class="docutils literal notranslate"><span class="pre">ResultShape::Expand</span></code> when a deliberately shape-changing callback
+needs no row-count constraint. Those two policies currently perform the same validation
+(none), but communicate different intent at the call site.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>fn</strong>
+Either a per-value callback with the form <code class="docutils literal notranslate"><span class="pre">SlateValue(const</span> <span class="pre">SlateValue&amp;)</span></code>, or a
+whole-slate callback with the form <code class="docutils literal notranslate"><span class="pre">Slate(const</span> <span class="pre">Slate&amp;)</span></code>. State the lambda parameter
+type explicitly when both forms could be inferred through a generic lambda; it makes
+overload selection unambiguous and records the intended granularity.</p>
+<p><strong>shape</strong> (<code class="docutils literal notranslate"><span class="pre">ResultShape</span></code>, default <code class="docutils literal notranslate"><span class="pre">Preserve</span></code>, whole-thread overload only)
+Validates the row count returned by the callback. <code class="docutils literal notranslate"><span class="pre">Preserve</span></code> requires the input row
+count; <code class="docutils literal notranslate"><span class="pre">Reduce</span></code> requires exactly one row; <code class="docutils literal notranslate"><span class="pre">Infer</span></code> and <code class="docutils literal notranslate"><span class="pre">Expand</span></code> accept any row count.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
+A newly produced thread. The value callback assembles one output lane per input lane;
+the whole-thread callback returns its thread after the requested shape check. Neither
+overload mutates the receiver.</p>
+</section>
+<section id="validation-and-cost">
+<h2>Validation And Cost<a class="headerlink" href="#validation-and-cost" title="Link to this heading">¶</a></h2>
+<p>The per-value overload pays for one callback invocation and one single-row wrapper per
+valid lane, so a native vectorized <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+operation is preferable when it can express the work. The whole-slate overload invokes
+the callback once and performs only constant-time definition and size checks around the
+callback’s own work.</p>
+<p>An empty callback, an undefined callback result, a per-value result whose size is not one,
+mixed per-value payload kinds, or a whole-thread result that violates <code class="docutils literal notranslate"><span class="pre">shape</span></code> throws before
+an invalid result is returned.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> callback selects the per-value overload. Each valid value is
+doubled independently and the four results are assembled in their original order.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">SlateValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">SlateValue</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">slate</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  20
+1  40
+2  60
+3  80
+ptype: Series
+</pre></div>
+</div>
+<p>Example 2. A <code class="docutils literal notranslate"><span class="pre">Slate</span></code> callback selects the whole-slate overload. Omitting <code class="docutils literal notranslate"><span class="pre">shape</span></code> applies
+the <code class="docutils literal notranslate"><span class="pre">Preserve</span></code> default, so this four-row result is accepted.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span>
+<span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10.5
+1  20.5
+2  30.5
+3  40.5
+ptype: Series
+</pre></div>
+</div>
+<p>Example 3. Reduction is explicit. <code class="docutils literal notranslate"><span class="pre">ResultShape::Reduce</span></code> accepts the one-row total that the
+default <code class="docutils literal notranslate"><span class="pre">Preserve</span></code> policy would reject.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">t</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">to_dbl</span><span class="p">()}));</span>
+<span class="p">},</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Reduce</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  100
+ptype: Series
+</pre></div>
+</div>
+<p>Example 4. <code class="docutils literal notranslate"><span class="pre">Infer</span></code> and <code class="docutils literal notranslate"><span class="pre">Expand</span></code> both permit deliberate row-count changes. The names carry
+intent even though the current validator imposes no size rule for either policy.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">inferred</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">8.0</span><span class="p">}));</span>
+<span class="p">},</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Infer</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">expanded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
+<span class="p">},</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Expand</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">inferred</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">expanded</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  7
+1  8
+ptype: Series
+
+0  1
+1  2
+2  3
+3  4
+4  5
+ptype: Series
+</pre></div>
+</div>
+<p>Example 5. Returning a reduction while relying on the default policy fails. The callback
+runs once and creates a valid one-row <code class="docutils literal notranslate"><span class="pre">Slate</span></code>; the error is specifically that one row does
+not preserve the four-row input shape.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">transform</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">t</span><span class="p">.</span><span class="n">sum</span><span class="p">().</span><span class="n">to_dbl</span><span class="p">()}));</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">message</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::fold: Preserve requires input length
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transform(value_fn)</span></code> delegates to <code class="docutils literal notranslate"><span class="pre">map(value_fn)</span></code>. <code class="docutils literal notranslate"><span class="pre">transform(slate_fn,</span> <span class="pre">shape)</span></code>
+delegates to <code class="docutils literal notranslate"><span class="pre">fold(slate_fn,</span> <span class="pre">shape)</span></code>, but supplies <code class="docutils literal notranslate"><span class="pre">Preserve</span></code> when the caller omits
+<code class="docutils literal notranslate"><span class="pre">shape</span></code>; calling <code class="docutils literal notranslate"><span class="pre">fold(slate_fn)</span></code> directly instead supplies <code class="docutils literal notranslate"><span class="pre">Reduce</span></code>.</p></li>
+<li><p>Overload selection is compile-time and depends on the callback signature, not a runtime
+mode.</p></li>
+<li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::flow</span></code></span></a> is a related whole-thread transform but is <strong>not</strong> one of
+<code class="docutils literal notranslate"><span class="pre">transform()</span></code>’s targets. It accepts any returned size without asking the caller to state
+a shape policy.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="map.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::map</span></code></span></a>: what the <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>-callback overload forwards to — row-by-row
+transformation.</p></li>
+<li><p><a class="reference internal" href="fold.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::fold</span></code></span></a>: what the <code class="docutils literal notranslate"><span class="pre">Slate</span></code>-callback overload forwards to — whole-thread
+transformation with a size check.</p></li>
+<li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::flow</span></code></span></a>: whole-thread transformation with no size check at all, not
+reachable through <code class="docutils literal notranslate"><span class="pre">transform()</span></code>.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="top.html">
+    <span class="label">Previous</span>
+    <span class="title">top</span>
+  </a>
+  <a class="next-link" href="truediv.html">
+    <span class="label">Next</span>
+    <span class="title">truediv</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../slate_api_reference.html">Slate API Reference</a><ul>
+      <li>Previous: <a href="top.html" title="previous chapter">Slate::top</a></li>
+      <li>Next: <a href="truediv.html" title="next chapter">Slate::truediv</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/slate/transform.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

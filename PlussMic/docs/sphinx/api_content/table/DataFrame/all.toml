@@ -5,7 +5,7 @@ Return whether every participating value is truthy along the requested axis.
 """
 
 returns = """
-`Thread`
+`Slate`
     Boolean reduction result.
 
     - With the default feature-wise reduction, the output contains one boolean per participating feature.
@@ -14,7 +14,7 @@ returns = """
 
 see_also = [
   "<a href=\"#any\"><code>DataFrame::any</code></a>: require only one truthy value instead of all of them.",
-  "<a href=\"thread_api_reference.html#all\"><code>Thread::all</code></a>: reduce one boolean thread to one truth result."
+  "<a href=\"slate_api_reference.html#all\"><code>Slate::all</code></a>: reduce one boolean slate to one truth result."
 ]
 
 notes = [

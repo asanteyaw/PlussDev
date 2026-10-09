@@ -164,8 +164,8 @@ split: delimiter must be non-empty
 - [`Note::split_whitespace`](split_whitespace.md): split on runs of
   whitespace, dropping empty fields.
 - [`Note::split_lines`](split_lines.md): split on line breaks.
-- [`NoteRegexAccessor::split`](../note-regex/split.md): split on a regular expression.
-- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): word tokens rather than
+- [`Note::RegexAccessor::split`](../note-regex/split.md): split on a regular expression.
+- [`Note::NlpAccessor::tokens`](../note-nlp/tokens.md): word tokens rather than
   delimiter fields.
 
 <div class="pluss-inline-prev-next">

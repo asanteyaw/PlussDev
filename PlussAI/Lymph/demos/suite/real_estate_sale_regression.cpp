@@ -17,22 +17,22 @@ int main() {
   enc.max_categories = 64;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"List Year", "Town", "Assessed Value", "Sales Ratio", "Property Type", "Residential Type"})
       .label("Sale Amount")
       .note(lymph::DataNotePolicy::Factorize);
 
   lymph::Workflow wf = lymph::workflow::make(
-      lymph::Policy{.drop_columns = {"Serial Number", "Address", "Assessor Remarks", "OPM remarks", "Location"},
+      lymph::workflow::Policy{.drop_columns = {"Serial Number", "Address", "Assessor Remarks", "OPM remarks", "Location"},
                     .reject_missing = {"Sale Amount"}},
       std::vector<lymph::WorkflowBranchSpec>{
-          lymph::workflow::branch("cat", {"Town", "Property Type", "Residential Type"}, {{"encode", lymph::stage::one_hot_encoder(enc)}}),
+          lymph::workflow::branch("cat", {"Town", "Property Type", "Residential Type"}, {{"encode", lymph::prep::stage::one_hot_encoder(enc)}}),
           lymph::workflow::branch("num", {"List Year", "Assessed Value", "Sales Ratio"}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"scale", lymph::stage::robust_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"scale", lymph::prep::stage::robust_scaler()},
           }),
       },
-      lymph::model::gradient_boost_regressor({.learners = 80, .learning_rate = 0.04}));
+      lymph::models::gradient_boost_regressor({.learners = 80, .learning_rate = 0.04}));
 
   wf.learn_(data);
   std::cout << "real-estate mae: " << wf.assess(data).mae.item<double>() << "\n";

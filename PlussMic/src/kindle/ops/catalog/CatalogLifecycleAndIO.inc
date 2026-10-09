@@ -141,6 +141,18 @@ Catalog Catalog::from_json(std::string_view json_text) {
 }
 
 bool Catalog::defined() const noexcept { return static_cast<bool>(impl_); }
+const void* Catalog::identity() const noexcept { return impl_.get(); }
+
+std::uint64_t Catalog::fingerprint() const {
+  PLUSS_CHECK(defined(), "Catalog: undefined handle");
+  std::uint64_t h = 0xcbf29ce484222325ULL;
+  const auto mix = [&](std::uint64_t v) { h = (h ^ v) * 0x100000001b3ULL; h ^= h >> 29; };
+  for (const auto& key : keys()) {
+    mix(std::hash<std::string>{}(key));
+    mix(this->keys(key).fingerprint());
+  }
+  return h;
+}
 bool Catalog::unique() const noexcept { return defined() && impl_.use_count() == 1; }
 
 std::int64_t Catalog::nstreams() const {

@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::movmax
+# Series::StatAccessor::movmax
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::movmax() const
-Series SeriesStatAccessor::movmax(std::int64_t window) const
-Series SeriesStatAccessor::movmax(std::int64_t window, std::int64_t dim) const
+Series Series::StatAccessor::movmax() const
+Series Series::StatAccessor::movmax(std::int64_t window) const
+Series Series::StatAccessor::movmax(std::int64_t window, std::int64_t dim) const
 Series SeriesStatProxy::movmax() const
 Series SeriesStatProxy::movmax(std::int64_t window) const
 Series SeriesStatProxy::movmax(std::int64_t window, std::int64_t dim) const

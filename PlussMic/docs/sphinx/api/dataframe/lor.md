@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ad326720cf90 -->
+<!-- pluss-signature-hash: f1868f5719e8 -->
 
 # DataFrame::lor
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame::lor(const DataFrame& other) const -> DataFrame
-DataFrame::lor(const Thread& other) const -> DataFrame
+DataFrame::lor(const Slate& other) const -> DataFrame
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ Does" for the full explanation of the two overloads and the constraints on `othe
 **other**
 
 `const DataFrame&` (same feature names in order, same case count, matched
-positionally) or `const Thread&` (one boolean thread applied identically to every
+positionally) or `const Slate&` (one boolean slate applied identically to every
 feature). See [`land()`](land.md) for the full breakdown.
 
 ## Returns
@@ -71,13 +71,13 @@ the one position where **both** operands (`left`'s `false` and `right`'s `false`
 false at once. Every other cell has at least one `true` operand on either side, so OR
 reports `true`.
 
-Example 2. OR a frame against a single shared `Thread`, applied identically to every
+Example 2. OR a frame against a single shared `Slate`, applied identically to every
 feature.
 
 ```cpp
-auto mask = Thread(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_thread = left.lor(mask);
-std::cout << out_thread;
+auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_slate = left.lor(mask);
+std::cout << out_slate;
 ```
 
 ### Output
@@ -95,7 +95,7 @@ r    | true  false
 
 The same three-value `mask` is combined against **both** `a` and `b` at matching
 positions — there is no way to supply a different mask per feature in one call,
-unlike [`add()`](add.md)'s `Axis::Feature` `Thread` overload.
+unlike [`add()`](add.md)'s `Axis::Feature` `Slate` overload.
 
 ## Notes
 

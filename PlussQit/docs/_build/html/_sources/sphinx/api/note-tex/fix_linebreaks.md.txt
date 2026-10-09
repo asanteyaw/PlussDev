@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::fix_linebreaks
+# Note::TexAccessor::fix_linebreaks
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::fix_linebreaks() const
+Note Note::TexAccessor::fix_linebreaks() const
 ```
 
 ## Canonicalize Physical Lines

@@ -48,7 +48,7 @@ Example 1. Localize naive-looking readings to `"America/New_York"`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-07-15T09:15:30Z",
       }))}});
@@ -127,7 +127,7 @@ during New York's fall-back transition.
 using namespace pluss::table;
 
 auto reading = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-11-03T01:30:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-11-03T01:30:00Z"}))}});
 
 TimelineLocalizeOptions fold0;
 fold0.tz = "America/New_York";
@@ -179,7 +179,7 @@ transition day, which never actually occurs).
 using namespace pluss::table;
 
 auto reading = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-03-10T02:30:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-03-10T02:30:00Z"}))}});
 
 TimelineLocalizeOptions options;
 options.tz = "America/New_York";
@@ -210,7 +210,7 @@ spring-forward-gap reading, to see it throw instead.
 using namespace pluss::table;
 
 auto reading = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-03-10T02:30:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-03-10T02:30:00Z"}))}});
 
 TimelineLocalizeOptions options;
 options.tz = "America/New_York";
@@ -239,7 +239,7 @@ any DST transition window.
 using namespace pluss::table;
 
 auto reading = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T10:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T10:00:00Z"}))}});
 
 TimelineLocalizeOptions options;
 options.tz = "Europe/London";

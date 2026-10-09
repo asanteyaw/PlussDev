@@ -20,7 +20,7 @@ when `periods > 0`, a lead when `periods < 0`). A position is `NULL` wherever
 non-finite.
 
 ```{important} StreamTimeSeriesAccessor requires the bound stream to be numeric Series-kind
-Every method on this accessor routes through `Thread::ts()` for the bound
+Every method on this accessor routes through `Slate::ts()` for the bound
 stream. If the stream isn't a numeric `Series` (`Note`, `Timeline`,
 `TimeIndex`, or a non-numeric `Series`), the call throws — see
 [`Stream::ts`](../stream/ts.md)'s own important callout for the exact throw
@@ -111,8 +111,8 @@ subsp::stats::ts::returns: periods cannot be zero
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::returns`](../catalog-ts/returns.md): the
   whole-catalog equivalent.
-- [`TimeSeriesAccessor::returns`](../thread-ts/returns.md): the underlying
-  single-thread engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::returns`](../slate-ts/returns.md): the underlying
+  single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="log_returns.html">

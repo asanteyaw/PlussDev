@@ -20,7 +20,7 @@ exclude_patterns = [
     'Patch*.md',
     # Internal authoring and contract records are not end-user pages.
     'API_Doc_Authoring_Standard.md', 'Series_Doc_Authoring_Standard.md',
-    'NOTE_CLOSED_TYPE_CONTRACT.md', 'README.md',
+    'NOTE_CLOSED_TYPE_CONTRACT.md', 'TEMPORAL_CORE_MIGRATION.md', 'README.md',
 ]
 
 html_theme = 'alabaster'

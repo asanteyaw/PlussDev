@@ -1,7 +1,7 @@
 # Part XII: Scribble: Slot, Registry, and Axel
 
 Scribble is PlussMic's heterogeneous record model. It is useful when values are
-not naturally represented as one typed `Thread`.
+not naturally represented as one typed `Slate`.
 
 ## Slot
 

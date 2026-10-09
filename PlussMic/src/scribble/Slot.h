@@ -96,7 +96,7 @@ public:
   Slot freq(pluss::kindle::FreqOptions options = {}) const;
   Slot ndistinct(pluss::kindle::DistinctOptions options = {}) const;
   SlotCastAccessor cast() const;
-  SlotCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  SlotCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   Slot astype(pluss::codem::ScalarType dtype) const;
   SlotNoteAccessor nt() const;
   SlotTimelineAccessor tl() const;
@@ -108,7 +108,7 @@ public:
   // Conversion for bridge paths (throws when slot is not stream-compatible).
   pluss::kindle::Stream kindelize() const;
   // 1D counterpart to Registry::tabelize()/Axel::tabelize().
-  pluss::table::Thread tabelize() const;
+  pluss::table::Slate tabelize() const;
 
   std::string to_string() const;
   std::string to_json() const;
@@ -120,8 +120,8 @@ private:
   explicit Slot(pluss::msharp::intrusive_ptr<detail::SlotImpl> impl);
   bool is_stream_compatible() const;
   void ensure_stream_compatible(std::string_view where = "Slot") const;
-  Slot cast(pluss::table::ThreadCastTarget target,
-            const pluss::table::ThreadCastOptions& options) const;
+  Slot cast(pluss::table::SlateCastTarget target,
+            const pluss::table::SlateCastOptions& options) const;
   const detail::SlotImpl& impl_ref_() const;
   detail::SlotImpl& mut_impl_();
 
@@ -130,7 +130,7 @@ private:
 
 class SlotCastAccessor {
 public:
-  explicit SlotCastAccessor(Slot base, pluss::table::ThreadCastOptions options = {});
+  explicit SlotCastAccessor(Slot base, pluss::table::SlateCastOptions options = {});
 
   Slot series() const;
   Slot note() const;
@@ -139,7 +139,7 @@ public:
 
 private:
   Slot base_{};
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class SlotNoteAccessor {

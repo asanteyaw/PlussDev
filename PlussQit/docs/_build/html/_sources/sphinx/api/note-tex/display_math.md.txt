@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::display_math
+# Note::TexAccessor::display_math
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::display_math() const
+TokenBatch Note::TexAccessor::display_math() const
 ```
 
 ## Extract Block-Math Fragments

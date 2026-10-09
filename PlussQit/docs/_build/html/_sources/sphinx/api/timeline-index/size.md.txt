@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::size
+# Timeline::TimelineIndexAccessor::size
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-std::int64_t TimelineIndexAccessor::size() const
+std::int64_t Timeline::TimelineIndexAccessor::size() const
 ```
 
 ## What It Does
@@ -13,7 +13,7 @@ std::int64_t TimelineIndexAccessor::size() const
 Returns how many timestamps are stored in the index.
 
 This is the case-axis length. If you are resampling, joining, slicing, or
-aligning another object against a `TimelineIndexAccessor`, this is the number of original
+aligning another object against a `Timeline::TimelineIndexAccessor`, this is the number of original
 observations on that axis.
 
 In practice, `size()` is the first integrity check before you attach an
@@ -29,13 +29,13 @@ independent payload to the axis.
 Example 1. Basic length check before resampling external values.
 
 ```cpp
-auto idx = pluss::timeindex::make({
+auto idx = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
 auto n = idx.size();
 std::cout << "n = " << n << "\n";
@@ -67,9 +67,9 @@ if (values.numel() != idx.size()) {
 
 ## See Also
 
-- [`TimelineIndexAccessor::host`](host.md): materialize the underlying epoch-nanosecond
+- [`Timeline::TimelineIndexAccessor::host`](host.md): materialize the underlying epoch-nanosecond
   ticks on the host.
-- [`TimelineIndexAccessor::timeline`](timeline.md): expose the underlying `Timeline`.
+- [`Timeline::TimelineIndexAccessor::timeline`](timeline.md): expose the underlying `Timeline`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="searchsorted.html">

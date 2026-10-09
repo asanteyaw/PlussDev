@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::prime_norm
+# Note::TexAccessor::prime_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::prime_norm() const
+Note Note::TexAccessor::prime_norm() const
 ```
 
 ## Rewrite Trailing `'` Marks As An Explicit `^{\prime...}` Superscript

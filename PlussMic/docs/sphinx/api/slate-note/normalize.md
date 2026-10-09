@@ -1,0 +1,122 @@
+<!-- pluss-hand-authored -->
+
+# SlateNoteAccessor::normalize
+
+[Back to SlateNoteAccessor API Reference](../../slate_note_accessor_api_reference)
+
+## Signature
+
+```cpp
+SlateNoteAccessor::normalize(UnicodeForm form = UnicodeForm::NFC) const -> Slate
+```
+
+## What It Does
+
+Rewrites each cell of the bound slate into a canonical Unicode normalization
+form — the standard fix for text that looks identical on screen but compares
+unequal because it was encoded with a different sequence of combining characters
+(e.g. `"é"` as one precomposed codepoint vs. `"e"` + a combining acute accent). A
+direct forward to [`Slate::normalize()`](../slate/normalize.md). Requires the
+bound slate to be `Note`-kind.
+
+## Parameters
+
+**form** (`UnicodeForm`, default `UnicodeForm::NFC`)
+
+Which of the four standard Unicode normalization forms to apply: `NFC`
+(canonical composition — the default, and the one most comparisons want), `NFD`
+(canonical decomposition), `NFKC` (compatibility composition), or `NFKD`
+(compatibility decomposition).
+
+## Returns
+
+`Slate`
+    A new `Note`-kind slate, same length as the bound slate, with each cell
+    rewritten into the requested normalization form.
+
+## Examples
+
+Example 1. Two visually identical strings, encoded differently, become
+byte-for-byte identical after normalization.
+
+```cpp
+using namespace pluss::table;
+
+// "café" - "e" + a combining acute accent (decomposed form)
+auto decomposed = Slate(pluss::make_note({"café"}));
+auto out = decomposed.nt().normalize();  // -> "café" as one precomposed codepoint
+std::cout << (out == Slate(pluss::make_note({"café"})));
+```
+
+### Output
+
+```text
+0  true
+
+ptype: Series
+```
+
+Example 2. Requesting `NFD` explicitly decomposes precomposed characters instead.
+
+```cpp
+auto precomposed = Slate(pluss::make_note({"café"}));
+auto out2 = precomposed.nt().normalize(UnicodeForm::NFD);
+std::cout << (out2 == decomposed);
+```
+
+### Output
+
+```text
+0  true
+
+ptype: Series
+```
+
+Example 3. A non-`Note` slate throws — the same message
+[`Slate::normalize()`](../slate/normalize.md) produces directly.
+
+```cpp
+auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}));
+try {
+  auto bad = numbers.nt().normalize();
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+Slate::normalize: expected Note payload
+```
+
+## Notes
+
+- `SlateNoteAccessor::normalize()` is a one-line forward to
+  [`Slate::normalize()`](../slate/normalize.md) — identical behavior and throws.
+- Requires the optional Unicode backend (GNU libunistring) to be linked into this
+  build; without it, non-ASCII normalization is unavailable.
+- A null cell on input stays null on output.
+- Normalizing is a good idea before any equality comparison, `has()`/`matches()`
+  search, or grouping key built from user-entered or externally-sourced text.
+
+## See Also
+
+- [`Slate::normalize`](../slate/normalize.md): the direct, non-accessor form
+  this method forwards to.
+- [`SlateNoteAccessor::casefold`](casefold.md): case-insensitive comparison
+  normalization — a complementary, not overlapping, concern.
+- [`SlateNoteAccessor::encode`](encode.md): byte-level re-encoding, distinct
+  from Unicode form normalization.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="matches.html">
+    <span class="label">Previous</span>
+    <span class="title">matches</span>
+  </a>
+  <a class="next-link" href="pad.html">
+    <span class="label">Next</span>
+    <span class="title">pad</span>
+  </a>
+</div>

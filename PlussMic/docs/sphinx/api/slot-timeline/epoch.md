@@ -66,7 +66,7 @@ try {
 ### Output
 
 ```text
-Thread::tl().epoch: unit is span-only; use Thread::tl().span
+Slate::tl().epoch: unit is span-only; use Slate::tl().span
 ```
 
 ## Notes

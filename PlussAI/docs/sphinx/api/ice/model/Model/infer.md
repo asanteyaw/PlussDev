@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6d6668e8a8a2 -->
 # `pluss::ai::ice::Model::infer`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -178,12 +180,12 @@ ice::Outline trained_model() {
 
 int main() {
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   ice::Outline model = trained_model();
   const DataFrame df({
-      {"a", Thread(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
-      {"b", Thread(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
+      {"a", Slate(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
+      {"b", Slate(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
   });
 
   const auto predictions = model.infer(df);
@@ -258,3 +260,16 @@ shape = [4,1]
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="forward.html">
+    <span class="label">Previous</span>
+    <span class="title">forward</span>
+  </a>
+  <a class="next-link" href="infer_step.html">
+    <span class="label">Next</span>
+    <span class="title">infer_step</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

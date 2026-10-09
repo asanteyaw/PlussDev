@@ -76,9 +76,9 @@ Example 1. No explicit features: every numeric feature in the frame is included.
 using namespace pluss::table;
 
 auto metrics = DataFrame({
-    {"revenue",   Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0, 130.0}))},
-    {"cost",      Thread(pluss::make_series({60.0, 80.0, 55.0, 95.0, 85.0}))},
-    {"headcount", Thread(pluss::make_series({12.0, 14.0, 11.0, 16.0, 15.0}))},
+    {"revenue",   Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0, 130.0}))},
+    {"cost",      Slate(pluss::make_series({60.0, 80.0, 55.0, 95.0, 85.0}))},
+    {"headcount", Slate(pluss::make_series({12.0, 14.0, 11.0, 16.0, 15.0}))},
 });
 
 auto chart = metrics.plot().scatter_matrix();
@@ -146,7 +146,7 @@ Example 6. Fewer than two numeric features throws.
 
 ```cpp
 auto single = DataFrame({
-    {"revenue", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"revenue", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
 });
 
 try {

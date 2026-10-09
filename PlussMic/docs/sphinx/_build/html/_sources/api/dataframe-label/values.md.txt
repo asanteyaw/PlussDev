@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 870ea23630f1 -->
+<!-- pluss-signature-hash: 4d8f2d518021 -->
 
 # DataFrameLabelAccessor::values
 
@@ -8,20 +8,20 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::values() const -> Thread
+DataFrameLabelAccessor::values() const -> Slate
 ```
 
 ## What It Does
 
-Returns the frame's flat case labels as a `Thread` — the same composite,
+Returns the frame's flat case labels as a `Slate` — the same composite,
 displayed value shown in the leftmost column of the frame's own printed
 table, whether the frame is structured (multi-level), a plain custom axis, or
 just the default integer index.
 
 ## Returns
 
-`Thread`
-    The case labels, as a bare `Thread`.
+`Slate`
+    The case labels, as a bare `Slate`.
 
 ## Examples
 
@@ -31,8 +31,8 @@ Example 1. Read the case labels back out after promoting a feature to them.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().values();
@@ -51,7 +51,7 @@ ptype: Note
 
 This is exactly the same sequence shown as `labeled`'s own case-label column
 when printing `labeled` directly — `values()` just gives it to you as a
-standalone `Thread`.
+standalone `Slate`.
 
 ## Notes
 

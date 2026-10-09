@@ -36,7 +36,7 @@ void save_plot(const pluss::pl::Studio& figure, std::string_view stem) {
 pluss::kindle::Stream labeled_series(std::vector<double> values, std::vector<std::string> labels) {
   const auto n = static_cast<std::int64_t>(values.size());
   const std::array<std::int64_t, 1> shape{n};
-  auto label = pluss::table::Thread(pluss::make_note(std::move(labels), shape));
+  auto label = pluss::table::Slate(pluss::make_note(std::move(labels), shape));
   return pluss::kindle::Stream(pluss::make_series(std::move(values), {n}), std::nullopt, std::move(label));
 }
 

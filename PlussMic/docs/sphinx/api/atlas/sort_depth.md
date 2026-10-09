@@ -37,12 +37,12 @@ depth-index 0.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({100.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({100.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({200.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({200.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"b", "a"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"b", "a"})));
 
 auto sorted = atlas.sort_depth();
 std::cout << "sorted labels:\n" << sorted.label().values();

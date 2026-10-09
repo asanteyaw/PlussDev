@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4194293fc150 -->
+<!-- pluss-signature-hash: 8d55339ab7b4 -->
 
 # DataFrameLabelAccessor::fillnull
 
@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::fillnull(double value) const -> Thread
-DataFrameLabelAccessor::fillnull(std::string_view value) const -> Thread
-DataFrameLabelAccessor::fillnull(const char* value) const -> Thread
-DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const -> Thread
+DataFrameLabelAccessor::fillnull(double value) const -> Slate
+DataFrameLabelAccessor::fillnull(std::string_view value) const -> Slate
+DataFrameLabelAccessor::fillnull(const char* value) const -> Slate
+DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const -> Slate
 ```
 
 ## What It Does
@@ -34,7 +34,7 @@ own kind.
 
 ## Returns
 
-`Thread`
+`Slate`
     The case-label values with nulls replaced — not yet applied back to the
     frame.
 
@@ -46,8 +46,8 @@ Example 1. Fill a null in a numeric case-label axis.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Thread(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
+    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
 std::cout << readings;
 
 auto filled = readings.label().fillnull(0.0);
@@ -76,7 +76,7 @@ NULL | 2
 ptype: Series
 ```
 
-`filled` is a bare `Thread` — the middle case label's `NULL` became `0`, but
+`filled` is a bare `Slate` — the middle case label's `NULL` became `0`, but
 `readings` itself is unchanged unless you call
 `readings.label().set(filled)` to apply it.
 
@@ -87,8 +87,8 @@ Example 2. Fill a `NaT` in a `Timeline` case-label axis, using the
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Thread(pluss::make_timeline({"2024-01-01T00:00:00Z", "", "2024-01-03T00:00:00Z"})));
+    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Slate(pluss::make_timeline({"2024-01-01T00:00:00Z", "", "2024-01-03T00:00:00Z"})));
 std::cout << readings;
 
 auto filled = readings.label().fillnull(pluss::make_timeline("2024-01-02T00:00:00Z"));
@@ -126,7 +126,7 @@ value, `2024-01-02`. As in Example 1, this is still just the filled values —
 
 - Returns values only; chain into [`set()`](set.md) to actually update the
   frame's case labels.
-- Choose the overload matching the case labels' `ThreadKind` — passing a
+- Choose the overload matching the case labels' `SlateKind` — passing a
   `double` to a `Note` axis (or vice versa) doesn't fit any overload and won't
   compile.
 - The `std::string_view`/`const char*` overloads work the same way as

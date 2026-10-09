@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_latex
+# Note::NlpAccessor::remove_latex
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_latex() const
+Note Note::NlpAccessor::remove_latex() const
 ```
 
 ## Remove LaTeX Markup And Math

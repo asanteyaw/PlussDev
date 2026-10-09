@@ -134,7 +134,7 @@ data=[[10, 20, 30],
 
 - [`Series::outer`](outer.md): the vector special case (`[m] ⊗ [n]`, up to a
   reshape).
-- [`SeriesLinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
+- [`Series::LinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
   ordinary matrix product.
 - [`Series::repeat`](repeat.md): plain tiling without the per-block scaling.
 

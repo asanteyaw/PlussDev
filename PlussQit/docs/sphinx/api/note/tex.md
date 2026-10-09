@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-NoteTexAccessor Note::tex() const noexcept
+Note::TexAccessor Note::tex() const noexcept
 ```
 
 ## Enter The TeX/LaTeX Operation Surface

@@ -12,15 +12,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   // Only "income" is routed to a branch; "tenure" is the remainder.
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"tenure", Thread(pluss::make_series({7., 8., 9., 10.}, {4}, f64))},
+      {"income", Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"tenure", Slate(pluss::make_series({7., 8., 9., 10.}, {4}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"income", "tenure"}).feature_batch();

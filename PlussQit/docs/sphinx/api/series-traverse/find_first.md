@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_first
+# Series::TraverseAccessor::find_first
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_first(const Series& mask,
+TraverseMatch Series::TraverseAccessor::find_first(const Series& mask,
                                                  std::int64_t dim = -1,
                                                  bool per_batch = false) const;
 TraverseMatch SeriesTraverseProxy::find_first(const Series& mask,

@@ -13,12 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=d45ea178"></script>
-    <script src="_static/layout.js?v=e199898b"></script>
+    <script src="_static/api_nav.js?v=47991f43"></script>
+    <script src="_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Series derivative coverage" href="derivative_coverage.html" />
-    <link rel="prev" title="Temporal Core Migration" href="TEMPORAL_CORE_MIGRATION.html" />
+    <link rel="prev" title="Timeline::TimelineIndexAccessor::unique" href="sphinx/api/timeline-index/unique.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -436,7 +436,7 @@ Semantics are described at a high level; see the corresponding header for exact 
 <section id="tex-latex-1-accessor">
 <h2>TeX / LaTeX (1 accessor)<a class="headerlink" href="#tex-latex-1-accessor" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">NoteTexAccessor</span> <span class="pre">tex()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note::TexAccessor</span> <span class="pre">tex()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
 </ul>
 <p>The former flat <code class="docutils literal notranslate"><span class="pre">Note::tex_*</span></code> spellings have been removed. TeX operations
 live on <code class="docutils literal notranslate"><span class="pre">note.tex()</span></code>; use the <a class="reference internal" href="sphinx/note_tex_accessor_api_reference.html"><span class="std std-doc">Note TeX Accessor API Reference</span></a> for the
@@ -445,8 +445,8 @@ canonical method inventory and per-operation teaching pages.</p>
 <section id="accessors-2">
 <h2>Accessors (2)<a class="headerlink" href="#accessors-2" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">NoteNlpAccessor</span> <span class="pre">nlp()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">NoteRegexAccessor</span> <span class="pre">regex()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note::NlpAccessor</span> <span class="pre">nlp()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Note::RegexAccessor</span> <span class="pre">regex()</span> <span class="pre">const</span> <span class="pre">noexcept</span></code></p></li>
 </ul>
 </section>
 <section id="tokenization-splitting-4">
@@ -603,8 +603,8 @@ canonical method inventory and per-operation teaching pages.</p>
 </ul>
 </section>
 </section>
-<section id="notenlpaccessor-method-index">
-<h1>NoteNlpAccessor method index<a class="headerlink" href="#notenlpaccessor-method-index" title="Link to this heading">¶</a></h1>
+<section id="note-nlpaccessor-method-index">
+<h1>Note::NlpAccessor method index<a class="headerlink" href="#note-nlpaccessor-method-index" title="Link to this heading">¶</a></h1>
 <p>The accessor returned by <code class="docutils literal notranslate"><span class="pre">Note::nlp()</span></code> owns the linguistic surface. Its 100
 canonical methods intentionally omit forwarding aliases.</p>
 <section id="cleanup-analysis-masking-and-extraction">
@@ -718,8 +718,8 @@ canonical methods intentionally omit forwarding aliases.</p>
 </ul>
 </section>
 </section>
-<section id="noteregexaccessor-method-index">
-<h1>NoteRegexAccessor method index<a class="headerlink" href="#noteregexaccessor-method-index" title="Link to this heading">¶</a></h1>
+<section id="note-regexaccessor-method-index">
+<h1>Note::RegexAccessor method index<a class="headerlink" href="#note-regexaccessor-method-index" title="Link to this heading">¶</a></h1>
 <p>The accessor returned by <code class="docutils literal notranslate"><span class="pre">Note::regex()</span></code> owns the six canonical pattern
 operations. Default arguments cover the former convenience overloads.</p>
 <ul class="simple">
@@ -761,7 +761,6 @@ operations. Default arguments cover the former convenience overloads.</p>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">PlussQit API Reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#chord-method-index">Chord method index</a><ul>
@@ -792,13 +791,13 @@ operations. Default arguments cover the former convenience overloads.</p>
 <li class="toctree-l2"><a class="reference internal" href="#other-33">Other (33)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#notenlpaccessor-method-index">NoteNlpAccessor method index</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="#note-nlpaccessor-method-index">Note::NlpAccessor method index</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#cleanup-analysis-masking-and-extraction">Cleanup, analysis, masking, and extraction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#token-transforms-and-representations">Token transforms and representations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#linguistic-comparison-and-alignment">Linguistic comparison and alignment</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -806,7 +805,7 @@ operations. Default arguments cover the former convenience overloads.</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="TEMPORAL_CORE_MIGRATION.html" title="previous chapter">Temporal Core Migration</a></li>
+      <li>Previous: <a href="sphinx/api/timeline-index/unique.html" title="previous chapter">Timeline::TimelineIndexAccessor::unique</a></li>
       <li>Next: <a href="derivative_coverage.html" title="next chapter">Series derivative coverage</a></li>
   </ul></li>
 </ul>

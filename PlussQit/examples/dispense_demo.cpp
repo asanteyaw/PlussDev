@@ -30,9 +30,9 @@ int main() {
   auto n = pluss::make_note({"apple", "banana", "apricot"});
   auto starts_with_a = pluss::dispense(n, &pluss::Note::starts_with, std::make_tuple("a"));
   std::cout << "Note starts_with(\"a\"): ["
-            << static_cast<int>(starts_with_a[0]) << ", "
-            << static_cast<int>(starts_with_a[1]) << ", "
-            << static_cast<int>(starts_with_a[2]) << "]\n";
+            << static_cast<int>(starts_with_a.bools()[0]) << ", "
+            << static_cast<int>(starts_with_a.bools()[1]) << ", "
+            << static_cast<int>(starts_with_a.bools()[2]) << "]\n";
 
   auto t = pluss::timeline::make("2024-01-15T10:11:12Z");
   auto t_floor = pluss::dispense(t, &pluss::codeh::Timeline::floor, std::make_tuple("D"));

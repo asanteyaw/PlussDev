@@ -73,7 +73,7 @@ path = "ice/options"
 page = "api/ice/options.md"
 title = "options"
 maxdepth = 2
-children = ["options/Introduction", "options/TrainOptions", "options/ValidationPolicy", "options/ArchitectureRegularization", "options/ObjectiveRegularization", "options/LoopRegularization", "options/CheckpointPolicy", "options/ExecutionPolicy", "options/AssessReport"]
+children = ["options/Introduction", "options/TrainOptions", "options/ValidationPolicy", "options/ArchitectureRegularization", "options/ObjectiveRegularization", "options/LoopRegularization", "options/CheckpointPolicy", "options/ExecutionPolicy", "options/ProgressPolicy", "options/AssessReport", "options/TrainingReport", "options/EpochReport"]
 
 [[family]]
 path = "ice/step"
@@ -115,7 +115,7 @@ path = "ice/callback"
 page = "api/ice/callback.md"
 title = "callback"
 maxdepth = 2
-children = ["callback/Introduction", "callback/RunState", "callback/Callback", "callback/CallbackChain", "callback/EarlyStopCallback"]
+children = ["callback/Introduction", "callback/RunState", "callback/Callback", "callback/CallbackChain", "callback/EarlyStopCallback", "callback/EpochLoggerCallback"]
 
 [[family]]
 path = "ice/coach"
@@ -237,11 +237,35 @@ summary = "Gradient clipping, epoch/accumulation/dev-batch limits, non-finite fa
 fields = ["grad_clip", "max_epochs", "accumulation_steps", "fast_dev_batches", "max_train_batches", "max_valid_batches", "fail_on_non_finite", "deterministic", "precision", "platform"]
 
 [[symbol]]
+qualname = "pluss::ai::ice::ProgressPolicy"
+kind = "options"
+family = "ice/options"
+page = "api/ice/options/ProgressPolicy.md"
+summary = "Live epoch reporting policy: automatic logging, cadence, progress-bar rendering, destination stream, displayed metrics, width, and numeric precision."
+fields = ["verbose", "log_every_n_epochs", "progress_bar", "output", "metrics", "bar_width", "precision"]
+
+[[symbol]]
 qualname = "pluss::ai::ice::AssessReport"
 kind = "class"
 family = "ice/options"
 page = "api/ice/options/AssessReport.md"
 summary = "The loss and a loss-appropriate metric (accuracy for classification losses, RMSE for MSE) returned by Model::assess/Coach::assess."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::TrainingReport"
+kind = "class"
+family = "ice/options"
+page = "api/ice/options/TrainingReport.md"
+summary = "What the most recent Model::learn call did: one EpochReport per epoch, the optimizer step count, and why the run stopped early."
+methods = []
+
+[[symbol]]
+qualname = "pluss::ai::ice::EpochReport"
+kind = "class"
+family = "ice/options"
+page = "api/ice/options/EpochReport.md"
+summary = "One epoch of a training run: its index, mean training loss, and validation loss when the epoch validated."
 methods = []
 
 # --- step ----------------------------------------------------------------
@@ -276,7 +300,7 @@ kind = "class"
 family = "ice/model"
 page = "api/ice/model/Model.md"
 summary = "The generic escape hatch: define parameters plus forward/compute_loss, get learn/infer/assess/save/load, gradient clipping, and non-finite diagnostics for free."
-methods = ["forward", "compute_loss", "learn_step", "valid_step", "test_step", "infer_step", "learn", "infer", "assess", "save", "load", "ready", "is_training", "train", "eval", "to"]
+methods = ["forward", "compute_loss", "learn_step", "valid_step", "test_step", "infer_step", "learn", "infer", "assess", "save", "load", "ready", "training_report", "is_training", "train", "eval", "to"]
 
 # --- outline ----------------------------------------------------------------
 [[symbol]]
@@ -337,6 +361,14 @@ family = "ice/callback"
 page = "api/ice/callback/EarlyStopCallback.md"
 summary = "The built-in early-stopping Callback, driven by ValidationPolicy/LoopRegularization -- tracks the best monitored metric and requests a stop once patience is exhausted."
 methods = ["monitor", "best_value", "best_epoch", "stopped_epoch", "wait_count"]
+
+[[symbol]]
+qualname = "pluss::ai::ice::EpochLoggerCallback"
+kind = "class"
+family = "ice/callback"
+page = "api/ice/callback/EpochLoggerCallback.md"
+summary = "Built-in epoch reporter used automatically by TrainOptions::progress and reusable explicitly with a caller-owned output stream."
+methods = ["policy"]
 
 # --- coach ----------------------------------------------------------------
 [[symbol]]
@@ -535,8 +567,8 @@ qualname = "pluss::ai::ice::models::AutoregressiveTrainOptions"
 kind = "options"
 family = "ice/models_ts"
 page = "api/ice/models_ts/AutoregressiveTrainOptions.md"
-summary = "Batch size, learning rate, optimizer, shuffle/seed, and the shared validation/regularization/checkpoint/execution policies for AutoregressiveForecaster::learn."
-fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "validation", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
+summary = "Batch size, learning rate, optimizer, shuffle/seed, live progress, and the shared validation/regularization/checkpoint/execution policies for AutoregressiveForecaster::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "progress", "validation", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
 owner = "pluss::ai::ice::models::AutoregressiveForecaster"
 
 [[symbol]]
@@ -577,8 +609,8 @@ qualname = "pluss::ai::ice::models::TFTTrainOptions"
 kind = "options"
 family = "ice/models_ts"
 page = "api/ice/models_ts/TFTTrainOptions.md"
-summary = "Batch size, learning rate, optimizer, shuffle/seed, and the shared validation/regularization/checkpoint/execution policies for TemporalFusionTransformer::learn."
-fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "validation", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
+summary = "Batch size, learning rate, optimizer, shuffle/seed, live progress, and the shared validation/regularization/checkpoint/execution policies for TemporalFusionTransformer::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "seed", "progress", "validation", "objective_regularization", "loop_regularization", "checkpoint", "execution"]
 owner = "pluss::ai::ice::models::TemporalFusionTransformer"
 
 [[symbol]]
@@ -655,8 +687,8 @@ qualname = "pluss::ai::ice::models::ActionValueTrainOptions"
 kind = "options"
 family = "ice/models_rl"
 page = "api/ice/models_rl/ActionValueTrainOptions.md"
-summary = "Batch size, learning rate, optimizer, shuffle/seed, the Huber-vs-MSE TD-error loss toggle, and the shared validation/regularization/execution policies for ActionValueAgent::learn."
-fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "use_huber", "seed", "validation", "objective_regularization", "loop_regularization", "execution"]
+summary = "Batch size, learning rate, optimizer, shuffle/seed, live progress, the Huber-vs-MSE TD-error loss toggle, and the shared validation/regularization/execution policies for ActionValueAgent::learn."
+fields = ["batch_size", "learning_rate", "optimizer", "shuffle", "use_huber", "seed", "progress", "validation", "objective_regularization", "loop_regularization", "execution"]
 owner = "pluss::ai::ice::models::ActionValueAgent"
 
 [[symbol]]

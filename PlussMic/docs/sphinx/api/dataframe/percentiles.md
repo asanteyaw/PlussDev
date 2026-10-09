@@ -14,7 +14,7 @@ DataFrame::percentiles(pluss::RangeView<double> points = {0.25, 0.5, 0.75}, std:
 ## What It Does
 
 Computes one or more quantile points for every numeric feature, returning a new
-`DataFrame` — not a `Thread` — with one row per requested point and one column per
+`DataFrame` — not a `Slate` — with one row per requested point and one column per
 participating numeric feature. This is the one statistical reducer in this family
 whose result is boxed and multi-column rather than a bare labeled `Series`, because it
 naturally produces a small table (points × features) rather than a single value per
@@ -57,10 +57,10 @@ Example 1. Compute the default quartiles for every numeric feature.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto quartiles = orders.percentiles();
@@ -135,7 +135,7 @@ the ones that would have needed the missing observation.
 ## Notes
 
 - Unlike every other reducer documented alongside it (`sum`, `mean`, `std`, `var`,
-  `skew`, `kurtosis`), `percentiles()` returns a `DataFrame`, not a `Thread` — because
+  `skew`, `kurtosis`), `percentiles()` returns a `DataFrame`, not a `Slate` — because
   its result is inherently a small table (points × features), not one value per
   feature.
 - Non-numeric features never appear in the result; they are neither computed as an
@@ -153,7 +153,7 @@ the ones that would have needed the missing observation.
 - [`DataFrame::describe`](describe.md): reports the default quartiles from this method
   alongside count, mean, std, min, and max.
 - [`DataFrame::mode`](mode.md): the other numeric reducer in this family that returns a
-  `DataFrame` rather than a `Thread`.
+  `DataFrame` rather than a `Slate`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="observe.html">

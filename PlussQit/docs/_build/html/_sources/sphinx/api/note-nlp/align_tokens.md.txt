@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::align_tokens
+# Note::NlpAccessor::align_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::align_tokens(const Note& other) const
+TokenBatch Note::NlpAccessor::align_tokens(const Note& other) const
 ```
 
 ## Word-Level Alignment Of Two Notes
@@ -58,9 +58,9 @@ Comparison is per cell and pairwise. `self` and `other` must share the same
 (`numel() == 1`) broadcast against every cell of the other. Rejections raise
 `pluss::Error`:
 
-- bytes-mode `self` → `NoteNlpAccessor::align_tokens requires a UTF-8 text Note (lhs is
+- bytes-mode `self` → `Note::NlpAccessor::align_tokens requires a UTF-8 text Note (lhs is
   bytes)`.
-- unequal `numel`, neither side scalar → `NoteNlpAccessor::align_tokens expects equal
+- unequal `numel`, neither side scalar → `Note::NlpAccessor::align_tokens expects equal
   numel or scalar broadcast`.
 
 The alignment is `O(m · n)` in words per cell and deterministic: on a tie the
@@ -131,11 +131,11 @@ Cell 0's alignment is `tokens()[0..3)` (`b` deleted); cell 1's is
 
 ## See Also
 
-- [`NoteNlpAccessor::diff_words`](diff_words.md): the same alignment without the `=`
+- [`Note::NlpAccessor::diff_words`](diff_words.md): the same alignment without the `=`
   tokens.
-- [`NoteNlpAccessor::align_sentences`](align_sentences.md): alignment at sentence
+- [`Note::NlpAccessor::align_sentences`](align_sentences.md): alignment at sentence
   granularity.
-- [`NoteNlpAccessor::tokens`](tokens.md): the word tokenizer and the
+- [`Note::NlpAccessor::tokens`](tokens.md): the word tokenizer and the
   `TokenBatch` shape.
 
 <div class="pluss-inline-prev-next">

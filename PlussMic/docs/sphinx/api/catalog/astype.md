@@ -14,7 +14,7 @@ Catalog::astype(pluss::codem::ScalarType dtype) const -> Catalog
 ## What It Does
 
 A single-argument shorthand for [`cast()`](cast.md), applied across every stream:
-`astype(dtype)` is exactly `cast(ThreadCastTarget::Series, {.series_dtype = dtype})`.
+`astype(dtype)` is exactly `cast(SlateCastTarget::Series, {.series_dtype = dtype})`.
 Everything documented on `cast()`'s page — including the important callout that it applies
 uniformly to every stream, not just the ones that obviously need it — applies here too.
 
@@ -67,7 +67,7 @@ id                       | Series       | Series[int64]    | 3       | [1, 2, 3]
 
 - [`Catalog::cast`](cast.md): the full, target-configurable casting method this is a
   shorthand for.
-- [`Thread::astype`](../thread/astype.md): the underlying single-stream conversion this
+- [`Slate::astype`](../slate/astype.md): the underlying single-stream conversion this
   method applies uniformly.
 
 <div class="pluss-inline-prev-next">

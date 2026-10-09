@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::slice_time
+# Timeline::TimelineIndexAccessor::slice_time
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::slice_time(std::string_view start_iso, std::string_view end_iso) const
+pluss::Series Timeline::TimelineIndexAccessor::slice_time(std::string_view start_iso, std::string_view end_iso) const
 ```
 
 ## What It Does
@@ -80,8 +80,8 @@ configuration, or user-facing text input.
 
 ## See Also
 
-- [`TimelineIndexAccessor::slice`](slice.md): same semantics, but scalar `Timeline` bounds.
-- [`TimelineIndexAccessor::asof`](asof.md): nearest previous timestamp position instead of a
+- [`Timeline::TimelineIndexAccessor::slice`](slice.md): same semantics, but scalar `Timeline` bounds.
+- [`Timeline::TimelineIndexAccessor::asof`](asof.md): nearest previous timestamp position instead of a
   full range.
 
 <div class="pluss-inline-prev-next">

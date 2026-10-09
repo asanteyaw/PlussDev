@@ -184,11 +184,11 @@ common labels in one pass.
 using namespace pluss::kindle::literals;
 
 auto x_stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))
-    .with_label(pluss::table::Thread(pluss::make_note({"a", "b", "c", "d", "e"})));
+    .with_label(pluss::table::Slate(pluss::make_note({"a", "b", "c", "d", "e"})));
 auto y_stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0, 40.0}))
-    .with_label(pluss::table::Thread(pluss::make_note({"b", "c", "d", "e"})));
+    .with_label(pluss::table::Slate(pluss::make_note({"b", "c", "d", "e"})));
 auto z_stream = pluss::kindle::Stream(pluss::make_series({100.0, 200.0, 300.0}))
-    .with_label(pluss::table::Thread(pluss::make_note({"c", "d", "e"})));
+    .with_label(pluss::table::Slate(pluss::make_note({"c", "d", "e"})));
 auto labeled = pluss::kindle::Catalog({
     "x_metric"_k = x_stream, "y_metric"_k = y_stream, "z_metric"_k = z_stream,
 });

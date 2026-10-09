@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::sup_norm
+# Note::TexAccessor::sup_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::sup_norm() const
+Note Note::TexAccessor::sup_norm() const
 ```
 
 ## Brace Every Bare Superscript

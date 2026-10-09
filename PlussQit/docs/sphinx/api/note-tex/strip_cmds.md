@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_cmds
+# Note::TexAccessor::strip_cmds
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_cmds() const
+Note Note::TexAccessor::strip_cmds() const
 ```
 
 ## Remove Control Words And Their Attached Groups

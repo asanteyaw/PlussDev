@@ -28,13 +28,51 @@ Every entry point is a free function under `metrics::classification::` or
 `metrics::regression::`, taking the truth `Series` and the prediction (or score)
 `Series` directly:
 
+Build a confusion table, a classification summary, and a two-metric report from the same truth and prediction vectors. The program prints the accuracy from the summary and how many metrics the report carries.
+
 ```cpp
-lymph::metrics::classification::confusion_table(truth, pred);
-lymph::metrics::classification::summary(truth, pred);
-lymph::metrics::classification::report(truth, pred, {MetricKind::F1, MetricKind::Mcc});
-lymph::metrics::classification::score_report(scores, labels, {MetricKind::RocAuc, MetricKind::Brier});
-lymph::metrics::classification::threshold(scores, labels).best();
-lymph::metrics::regression::report(truth, pred, {MetricKind::Rmse, MetricKind::R2});
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const pluss::Series truth = pluss::make_series(std::vector<double>{0, 0, 1, 1, 1, 0}, {6}, cfg);
+  const pluss::Series pred = pluss::make_series(std::vector<double>{0, 1, 1, 1, 0, 0}, {6}, cfg);
+  const lymph::ConfusionTable table = lymph::metrics::classification::confusion_table(truth, pred);
+  (void)table;
+  const lymph::ClassReport summary = lymph::metrics::classification::summary(truth, pred);
+  std::cout << "accuracy = " << summary.accuracy.item<double>() << "\n";
+  const lymph::MetricReport report = lymph::metrics::classification::report(
+      truth, pred, {lymph::MetricKind::F1, lymph::MetricKind::Mcc});
+  std::cout << "requested metrics = " << report.values.numel() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+accuracy = 0.666667
+requested metrics = 2
 ```
 
 `report` scores hard labels; `score_report` takes a probability `Series` (or a

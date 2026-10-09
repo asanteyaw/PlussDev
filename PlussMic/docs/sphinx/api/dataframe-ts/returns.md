@@ -40,8 +40,8 @@ Example 1. Compute the one-period return of a numeric feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 std::cout << readings;
 ```
@@ -121,8 +121,8 @@ infinity.
 using namespace pluss::table;
 
 auto zero_base = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3}))},
-    {"delta",     Thread(pluss::make_series({10.0, 0.0, 20.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3}))},
+    {"delta",     Slate(pluss::make_series({10.0, 0.0, 20.0}))},
 });
 
 auto out2 = zero_base.features({"delta"}).ts().returns(1);

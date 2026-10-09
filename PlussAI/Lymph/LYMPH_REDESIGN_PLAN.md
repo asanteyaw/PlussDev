@@ -604,7 +604,7 @@ to the next; nothing lands half-working.
   `.best()`/`.top(k)` insufficient.
 - **Phase 5 Search family advanced.** `Search` is now the public object for model-aware
   hyperparameter search: factories under `lymph::search::` create it, and `.run(...)` executes
-  against `LabeledBatch`, `(DataFrame, Series)`, `(DataFrame, Thread)`, or raw-frame plus
+  against `LabeledBatch`, `(DataFrame, Series)`, `(DataFrame, Slate)`, or raw-frame plus
   `DataFrameBatchOptions`. Search factories accept either `SplitOptions` or
   `CrossValidationOptions`; when constructed with `CrossValidationOptions`, the object keeps
   that CV intent and resolves task-aware reliability defaults at run time, so classification

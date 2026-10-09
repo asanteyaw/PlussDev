@@ -38,7 +38,7 @@ this same asymmetry.
 Calling any method on this accessor with a non-numeric stream (`Note`,
 `Timeline`, `TimeIndex`) throws — the exact message names whichever method
 actually ran, e.g. `"TimeSeriesAccessor::diff: source must be Series"`. Cast
-first with [`Stream::cast(ThreadCastTarget::Series)`](cast.md) if the stream
+first with [`Stream::cast(SlateCastTarget::Series)`](cast.md) if the stream
 isn't already numeric.
 ```
 
@@ -115,13 +115,13 @@ TimeSeriesAccessor::diff: source must be Series
 - [`Stream::cast`](cast.md): convert a non-numeric stream to `Series` first.
 - [`Catalog::ts`](../catalog/ts.md): the whole-catalog equivalent, with a much
   smaller method surface — see the important callout above.
-- [`TimeSeriesAccessor` (Thread)](../thread-ts/returns.md): the underlying
+- [`TimeSeriesAccessor` (Slate)](../slate-ts/returns.md): the underlying
   single-column engine this accessor's methods delegate to.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_thread.html">
+  <a class="prev-link" href="to_slate.html">
     <span class="label">Previous</span>
-    <span class="title">to_thread</span>
+    <span class="title">to_slate</span>
   </a>
   <a class="next-link" href="unique.html">
     <span class="label">Next</span>

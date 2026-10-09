@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::normalize_numbers
+# Note::NlpAccessor::normalize_numbers
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::normalize_numbers() const
+Note Note::NlpAccessor::normalize_numbers() const
 ```
 
 ## Replace Each Numeric Run With A Canonical Zero

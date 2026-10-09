@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::render
+# Note::TexAccessor::render
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::render(std::int64_t max_passes = 1) const
+Note Note::TexAccessor::render(std::int64_t max_passes = 1) const
 ```
 
 ## Build A Readable Unicode Projection

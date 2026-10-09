@@ -4,7 +4,8 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow nlp{
       .lang = Language::English,

@@ -65,8 +65,8 @@ Example 1. Compute a running maximum — a null is a gap, not a break (the defau
 using namespace pluss::table;
 
 auto scores = DataFrame({
-    {"student", Thread(pluss::make_note({"Ada", "Bola", "Chen", "Dede"}))},
-    {"score",   Thread(pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN(), 5.0}))},
+    {"student", Slate(pluss::make_note({"Ada", "Bola", "Chen", "Dede"}))},
+    {"score",   Slate(pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN(), 5.0}))},
 });
 std::cout << scores;
 ```

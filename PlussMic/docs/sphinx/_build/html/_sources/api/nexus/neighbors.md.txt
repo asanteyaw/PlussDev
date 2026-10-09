@@ -53,16 +53,16 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 2.0}))},
+    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0}))},
 });
 auto payments = DataFrame({
-    {"payment_id", Thread(pluss::make_series({9001.0, 9002.0}))},
-    {"order_id",   Thread(pluss::make_series({101.0, 102.0}))},
+    {"payment_id", Slate(pluss::make_series({9001.0, 9002.0}))},
+    {"order_id",   Slate(pluss::make_series({101.0, 102.0}))},
 });
 
 auto biz = Nexus({
@@ -109,7 +109,7 @@ declaration ran the other way.
 Example 2. A table with no relationships declared to or from it returns an empty frame.
 
 ```cpp
-auto standalone = DataFrame({{"note", Thread(pluss::make_note({"unrelated"}))}});
+auto standalone = DataFrame({{"note", Slate(pluss::make_note({"unrelated"}))}});
 auto with_standalone = linked.inject("standalone", standalone);
 
 std::cout << with_standalone.neighbors("standalone").ncases();

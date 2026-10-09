@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: f7770f19b5b2 -->
+<!-- pluss-signature-hash: 698d2993d041 -->
 
 # DataFrame::fold
 
@@ -8,29 +8,29 @@
 ## Signature
 
 ```cpp
-DataFrame::fold(const std::function<Thread(const DataFrame&)>& fn, ResultShape shape = ResultShape::Reduce) const -> Thread
+DataFrame::fold(const std::function<Slate(const DataFrame&)>& fn, ResultShape shape = ResultShape::Reduce) const -> Slate
 ```
 
 ## What It Does
 
 A plain escape hatch for a custom reduction that isn't already one of the built-in
 aggregates ([`sum()`](sum.md), [`mean()`](mean.md), and so on). `fold()` calls `fn`
-with the current frame and returns whatever `Thread` `fn` produces, optionally checking
+with the current frame and returns whatever `Slate` `fn` produces, optionally checking
 that the result's size matches what `shape` expects. [`flow()`](flow.md) is the sibling
-hook for a callback that returns a whole `DataFrame` instead of a `Thread`.
+hook for a callback that returns a whole `DataFrame` instead of a `Slate`.
 
 ## Parameters
 
-**fn** (`const std::function<Thread(const DataFrame&)>&`)
+**fn** (`const std::function<Slate(const DataFrame&)>&`)
 
 The callback to run. It receives the current frame by `const` reference and must
-return a defined `Thread`. Throws `"DataFrame::fold: callback is empty"` if `fn` holds
+return a defined `Slate`. Throws `"DataFrame::fold: callback is empty"` if `fn` holds
 no target, and `"DataFrame::fold: callback returned undefined"` if it returns an
 undefined thread.
 
 **shape** (`ResultShape`, default `ResultShape::Reduce`)
 
-Governs what size the returned `Thread` is checked against:
+Governs what size the returned `Slate` is checked against:
 
 - **`Reduce`** (the default): the result must have exactly one entry — a single
   aggregate value, the same shape [`sum()`](sum.md) or [`mean()`](mean.md) produce for
@@ -42,7 +42,7 @@ Governs what size the returned `Thread` is checked against:
 
 ## Returns
 
-`Thread`
+`Slate`
     Exactly whatever `fn` returned, after the `shape` check (if any) passes.
 
 ## Examples
@@ -53,9 +53,9 @@ Example 1. `ResultShape::Reduce` — compute a single custom aggregate value.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"units",      Thread(pluss::make_series({2, 5, 1}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0}))},
-}, Thread(pluss::make_note({"o1", "o2", "o3"})));
+    {"units",      Slate(pluss::make_series({2, 5, 1}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0}))},
+}, Slate(pluss::make_note({"o1", "o2", "o3"})));
 
 auto avg_price = orders.fold([](const DataFrame& f) {
   return f.features({"unit_price"}).mean();
@@ -114,12 +114,12 @@ Each case keeps the case label carried by `features("units")` (`o1`, `o2`, `o3`)
 ## See Also
 
 - [`DataFrame::flow`](flow.md): the sibling hook for a callback that returns a whole
-  `DataFrame` instead of a `Thread`.
+  `DataFrame` instead of a `Slate`.
 - [`DataFrame::sum`](sum.md), [`DataFrame::mean`](mean.md): built-in reductions to
   reach for first, before writing a custom `fold()` callback for something they
   already compute.
 - [`DataFrame::transform`](transform.md): apply a function per-feature across the
-  frame and get a `DataFrame` back, rather than reducing to a single `Thread`.
+  frame and get a `DataFrame` back, rather than reducing to a single `Slate`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="flow.html">

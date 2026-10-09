@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::math_blocks
+# Note::TexAccessor::math_blocks
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::math_blocks(std::int64_t max_count) const
+TokenBatch Note::TexAccessor::math_blocks(std::int64_t max_count) const
 ```
 
 ## Extract One Source-Ordered Stream Of Math Regions

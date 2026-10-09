@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::lower_tokens
+# Note::NlpAccessor::lower_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::lower_tokens() const
+TokenBatch Note::NlpAccessor::lower_tokens() const
 ```
 
 ## Tokenize And Lowercase

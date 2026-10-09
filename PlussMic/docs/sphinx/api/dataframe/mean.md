@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 6683526b0e89 -->
+<!-- pluss-signature-hash: de19af708478 -->
 
 # DataFrame::mean
 
@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-DataFrame::mean(Axis axis = Axis::Case, bool skipnull = true) const -> Thread
+DataFrame::mean(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
 ```
 
 ## What It Does
 
-Reduces every numeric feature to its arithmetic mean, returning one `Thread` whose
+Reduces every numeric feature to its arithmetic mean, returning one `Slate` whose
 entries line up with the frame's numeric feature names — the column-wise mean, one
 number per feature, the same shape `DataFrame::sum()` returns. Non-numeric features are
 skipped entirely rather than averaged into a meaningless result.
@@ -37,7 +37,7 @@ Controls how a missing value affects that feature's mean:
 
 ## Returns
 
-`Thread`
+`Slate`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's mean.
 
@@ -49,10 +49,10 @@ Example 1. Average every numeric feature, skipping missing values (the default).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto averages = orders.mean();

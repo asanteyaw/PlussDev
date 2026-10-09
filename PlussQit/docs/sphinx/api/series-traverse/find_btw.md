@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_btw
+# Series::TraverseAccessor::find_btw
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_btw(double lo, double hi,
+TraverseMatch Series::TraverseAccessor::find_btw(double lo, double hi,
                                                bool inclusive = true) const;
-TraverseMatch SeriesTraverseAccessor::find_btw(const Series& lo, const Series& hi,
+TraverseMatch Series::TraverseAccessor::find_btw(const Series& lo, const Series& hi,
                                                bool inclusive = true) const;
 
 TraverseMatch SeriesTraverseProxy::find_btw(double lo, double hi,

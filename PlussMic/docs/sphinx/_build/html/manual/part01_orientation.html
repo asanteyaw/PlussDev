@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part II: Installation, Includes, and Build Setup" href="part02_installation.html" />
@@ -79,11 +79,11 @@ time-series operations, and conversions into more general record models.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>one typed column</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>a 2D table of named <code class="docutils literal notranslate"><span class="pre">Thread</span></code> features</p></td>
+<td><p>a 2D table of named <code class="docutils literal notranslate"><span class="pre">Slate</span></code> features</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataFrameView</span></code></p></td>
 <td><p>a display-oriented frame result returned by preview/summary operations</p></td>
@@ -170,11 +170,11 @@ related frames with reusable join logic, auditing, and saved workspace plans.</p
 <section id="the-core-table-model">
 <h2>The core table model<a class="headerlink" href="#the-core-table-model" title="Link to this heading">¶</a></h2>
 <p>PlussMic uses this table hierarchy:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Atlas -&gt; DataFrame -&gt; Thread -&gt; Series / Note / Timeline / TimeIndex
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Atlas -&gt; DataFrame -&gt; Slate -&gt; Series / Note / Timeline / TimeIndex
 </pre></div>
 </div>
 <p>A <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> owns feature names and feature columns. Each feature is a
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>. A <code class="docutils literal notranslate"><span class="pre">Thread</span></code> wraps one core PlussQit payload kind:</p>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code>. A <code class="docutils literal notranslate"><span class="pre">Slate</span></code> wraps one core PlussQit payload kind:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code> for numeric and boolean data;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Note</span></code> for text data;</p></li>

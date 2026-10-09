@@ -95,7 +95,7 @@ TimeSeriesAccessor::lag_block: expected at least one lag
 - [`StreamTimeSeriesAccessor::rolling_block`](rolling_block.md): the
   equivalent "several at once" pattern for rolling window statistics.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::lag_block`](../thread-ts/lag_block.md): the
+- [`TimeSeriesAccessor::lag_block`](../slate-ts/lag_block.md): the
   underlying single-thread engine.
 
 <div class="pluss-inline-prev-next">

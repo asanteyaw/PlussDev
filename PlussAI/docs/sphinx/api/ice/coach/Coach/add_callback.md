@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 23cbea6cb377 -->
 # `pluss::ai::ice::Coach::add_callback`
 
 [Back to `pluss::ai::ice::Coach`](../Coach.md)
@@ -8,54 +7,62 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+pluss::ai::ice::Coach& pluss::ai::ice::Coach::add_callback(std::shared_ptr<pluss::ai::ice::Callback> callback);
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Appends `callback` to this `Coach`'s own list -- the primary way to
+observe or steer a run from the inside, since
+[`Model::learn`](../../model/Model/learn.md)'s own convenience
+overloads always run through a fresh `Coach` that can install configured
+built-ins but cannot receive caller-supplied callbacks (see
+[`callback`'s own family page](../../callback.md)). A `nullptr`
+argument is silently skipped, same as
+[`CallbackChain::add`](../../callback/CallbackChain/add.md).
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`std::shared_ptr<Callback> callback`
+: The callback to append. Shared ownership -- keep your own
+  `shared_ptr` to the same instance to read whatever state it
+  accumulates after the run.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`Coach&` -- `*this`, so calls chain.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None -- `nullptr` is accepted and simply ignored.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the returned reference confirming it really is
+`*this`, chaining several calls in one expression, and a null argument
+being silently skipped.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class NoopCallback final : public pluss::ai::ice::Callback {};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Coach coach;
+  ice::Coach& ref = coach.add_callback(std::make_shared<NoopCallback>());
+  std::cout << "add_callback returns *this: " << (&ref == &coach) << "\n";
 
   return 0;
 }
@@ -64,27 +71,34 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+add_callback returns *this: 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class NoopCallback final : public pluss::ai::ice::Callback {};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  // add_callback returns Coach& specifically so calls chain.
+  ice::Coach coach;
+  coach.add_callback(std::make_shared<NoopCallback>())
+      .add_callback(std::make_shared<NoopCallback>())
+      .add_callback(std::make_shared<NoopCallback>());
+
+  std::cout << "callbacks().size() = " << coach.callbacks().size() << "\n";
 
   return 0;
 }
@@ -93,27 +107,23 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+callbacks().size() = 3
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Coach coach;
+  coach.add_callback(nullptr);
+  std::cout << "callbacks().size() after add_callback(nullptr) = " << coach.callbacks().size() << "\n";
 
   return 0;
 }
@@ -122,12 +132,18 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+callbacks().size() after add_callback(nullptr) = 0
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`callbacks`](callbacks.md) -- read the list this appends to.
+- [`CallbackChain::add`](../../callback/CallbackChain/add.md) -- the
+  same null-skipping shape, one level down.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: fb5bcf01977a -->
+<!-- pluss-signature-hash: 73cc523eaf32 -->
 
 # DataFrame::insert
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::insert(std::int64_t feature_index, std::string name, const Thread& feature_value) const -> DataFrame
+DataFrame::insert(std::int64_t feature_index, std::string name, const Slate& feature_value) const -> DataFrame
 ```
 
 ## What It Does
@@ -36,7 +36,7 @@ both throw (`"DataFrame::insert: feature name cannot be empty"` and
 [`assign()`](assign.md) instead when you want to *replace* an existing
 feature's values rather than add a new one.
 
-**feature_value** (`const Thread&`)
+**feature_value** (`const Slate&`)
 
 The new feature's values. Must be defined, and — unless the frame currently has zero
 features — must have exactly `ncases()` entries; throws
@@ -56,8 +56,8 @@ Example 1. Insert a new feature in the middle of the frame.
 using namespace pluss::table;
 
 auto students = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"score", Thread(pluss::make_series({88.5, 92.0, 79.5}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"score", Slate(pluss::make_series({88.5, 92.0, 79.5}))},
 });
 std::cout << students;
 ```
@@ -76,7 +76,7 @@ std::cout << students;
 ```
 
 ```cpp
-auto with_grade = students.insert(1, "grade", Thread(pluss::make_note({"B", "A", "C"})));
+auto with_grade = students.insert(1, "grade", Slate(pluss::make_note({"B", "A", "C"})));
 std::cout << with_grade;
 ```
 
@@ -100,7 +100,7 @@ Example 2. An out-of-range index is clamped, not rejected — `0` prepends, and 
 past the end appends.
 
 ```cpp
-auto prepended = students.insert(0, "region", Thread(pluss::make_note({"East", "West", "East"})));
+auto prepended = students.insert(0, "region", Slate(pluss::make_note({"East", "West", "East"})));
 std::cout << prepended;
 ```
 
@@ -118,7 +118,7 @@ std::cout << prepended;
 ```
 
 ```cpp
-auto appended = students.insert(100, "flag", Thread(pluss::make_series({true, false, true})));
+auto appended = students.insert(100, "flag", Slate(pluss::make_series({true, false, true})));
 std::cout << appended;
 ```
 

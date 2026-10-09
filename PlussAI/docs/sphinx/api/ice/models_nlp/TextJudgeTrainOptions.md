@@ -1,65 +1,91 @@
 # `pluss::ai::ice::models::TextJudgeTrainOptions`
 
-Batch size, learning rate, optimizer, shuffle/seed, and the shared validation/architecture-and-objective-regularization/execution policies for TextJudge::learn.
-
-<!-- one paragraph on the role of this bag: which call consumes it and when -->
+Batch size, learning rate, optimizer, shuffle/seed, and the shared
+validation/architecture-and-objective-regularization/execution
+policies for [`TextJudge::learn`](TextJudge/learn.md).
 
 ## Fields
 
 ### `batch_size`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`std::int64_t batch_size = 32`
+: How many examples each mini-batch targets.
 
 ### `learning_rate`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`double learning_rate = 1e-3`
+: The optimizer's step size.
 
 ### `optimizer`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`OptimizerKind optimizer = OptimizerKind::Adam`
+: Which `nn::optim` algorithm backs training.
 
 ### `shuffle`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`bool shuffle = true`
+: Whether each epoch's mini-batches are drawn in a fresh random
+  permutation.
 
 ### `seed`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+`std::uint64_t seed = 0`
+: Seeds `shuffle`'s permutation and the internal train/validation
+  split (when `validation.split_ratio > 0`) -- independent of
+  [`TextJudgeOptions::seed`](TextJudgeOptions.md), which seeds
+  parameter initialization instead.
 
 ### `validation`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+[`ValidationPolicy`](../options/ValidationPolicy.md) `validation = {}`
+: Validation split ratio, evaluation cadence, and the monitored
+  metric name/direction.
 
 ### `architecture_regularization`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+[`ArchitectureRegularization`](../options/ArchitectureRegularization.md) `architecture_regularization = {}`
+: `dropout > 0.0` overrides
+  [`TextJudgeOptions::dropout`](TextJudgeOptions.md) for this
+  training run specifically -- the one catalog entry that reads this
+  field at all; see
+  [`ArchitectureRegularization`'s own Guidance](../options/ArchitectureRegularization.md).
 
 ### `objective_regularization`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+[`ObjectiveRegularization`](../options/ObjectiveRegularization.md) `objective_regularization = {}`
+: Weight decay, L1/L2 penalties, and label smoothing applied to the
+  training objective.
 
 ### `loop_regularization`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+[`LoopRegularization`](../options/LoopRegularization.md) `loop_regularization = {}`
+: Early stopping, patience, minimum delta, and best-weight
+  restoration.
 
 ### `execution`
 
-<!-- type + name, what it controls, default value, what changes when
-     it is toggled, and when to prefer one setting over another -->
+[`ExecutionPolicy`](../options/ExecutionPolicy.md) `execution = {}`
+: Gradient clipping, epoch/accumulation/dev-batch limits, non-finite
+  failure, determinism, precision, and platform -- all-defaults,
+  unlike the `models_ts` catalog's own `*TrainOptions`, which arrive
+  with gradient clipping and non-finite failure pre-wired.
 
 ## Guidance
 
-<!-- how the defaults fit together; which fields to touch only with a reason -->
+Leave every field at its default for a reasonable first run. There is
+no `checkpoint` field here -- unlike `models_ts`'s two
+`*TrainOptions`, `TextJudge::learn` does not support mid-training
+checkpointing. Set `validation.split_ratio > 0` together with
+`loop_regularization` for early stopping. Reach for
+`architecture_regularization.dropout` only to override
+[`TextJudgeOptions::dropout`](TextJudgeOptions.md) for one particular
+training run without reconstructing the model.
 
 ## See Also
 
-<!-- the consuming symbol(s) -->
+- [`TextJudge::learn`](TextJudge/learn.md) -- the consumer.
+- [`TextJudgeOptions`](TextJudgeOptions.md) -- the model-construction
+  counterpart, including the `dropout` this type's own
+  `architecture_regularization` can override.
+- [`TrainOptions`](../options/TrainOptions.md) -- the generic
+  equivalent most of these fields mirror.

@@ -8,7 +8,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const Series x = pluss::series::linspace(-2.5, 2.5, 72, ScalarType::Float64);
   const Series energy = x.square().add(x.sin());
@@ -16,11 +16,11 @@ int main() {
   const Series target = risk.gt(0.8).to(ScalarType::Float64);
 
   const DataFrame raw({
-      {"x", Thread(x)},
-      {"energy", Thread(energy)},
-      {"segment", Thread(pluss::make_note({"low", "low", "low", "low", "mid", "mid", "mid", "mid",
+      {"x", Slate(x)},
+      {"energy", Slate(energy)},
+      {"segment", Slate(pluss::make_note({"low", "low", "low", "low", "mid", "mid", "mid", "mid",
                                             "high", "high", "high", "high"}).repeat({6}))},
-      {"target", Thread(target)},
+      {"target", Slate(target)},
   });
 
   lymph::prep::SimpleImputerOptions mode{};
@@ -29,7 +29,7 @@ int main() {
   unknown.max_categories = 8;
   unknown.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"x", "energy", "segment"})
       .label("target")
       .note(lymph::DataNotePolicy::Factorize);
@@ -37,14 +37,14 @@ int main() {
   lymph::Workflow wf = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"x", "energy"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
           lymph::workflow::branch("cat", {"segment"}, {
-              {"fill", lymph::stage::simple_imputer(mode)},
-              {"encode", lymph::stage::one_hot_encoder(unknown)},
+              {"fill", lymph::prep::stage::simple_imputer(mode)},
+              {"encode", lymph::prep::stage::one_hot_encoder(unknown)},
           }),
       },
-      lymph::model::logistic_regression({.regularization_strength = 0.02}));
+      lymph::models::logistic_regression({.regularization_strength = 0.02}));
 
   wf.learn_(data);
   const lymph::MetricReport score = wf.assess(data);

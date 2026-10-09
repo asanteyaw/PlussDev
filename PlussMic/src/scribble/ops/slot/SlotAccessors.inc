@@ -1,20 +1,20 @@
-SlotCastAccessor::SlotCastAccessor(Slot base, pluss::table::ThreadCastOptions options)
+SlotCastAccessor::SlotCastAccessor(Slot base, pluss::table::SlateCastOptions options)
     : base_(std::move(base)), options_(std::move(options)) {}
 
 Slot SlotCastAccessor::series() const {
-  return base_.cast(pluss::table::ThreadCastTarget::Series, options_);
+  return base_.cast(pluss::table::SlateCastTarget::Series, options_);
 }
 
 Slot SlotCastAccessor::note() const {
-  return base_.cast(pluss::table::ThreadCastTarget::Note, options_);
+  return base_.cast(pluss::table::SlateCastTarget::Note, options_);
 }
 
 Slot SlotCastAccessor::timeline() const {
-  return base_.cast(pluss::table::ThreadCastTarget::Timeline, options_);
+  return base_.cast(pluss::table::SlateCastTarget::Timeline, options_);
 }
 
 Slot SlotCastAccessor::duration() const {
-  return base_.cast(pluss::table::ThreadCastTarget::Duration, options_);
+  return base_.cast(pluss::table::SlateCastTarget::Duration, options_);
 }
 
 SlotNoteAccessor::SlotNoteAccessor(Slot base) : base_(std::move(base)) {}

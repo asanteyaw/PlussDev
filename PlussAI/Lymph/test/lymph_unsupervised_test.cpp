@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -63,8 +63,8 @@ DataFrame cluster_frame() {
   const Series c0 = x.narrow_copy(1, 0, 1).reshape({40});
   const Series c1 = x.narrow_copy(1, 1, 1).reshape({40});
   return DataFrame({
-      {"x0", Thread(c0)},
-      {"x1", Thread(c1)},
+      {"x0", Slate(c0)},
+      {"x1", Slate(c1)},
   });
 }
 

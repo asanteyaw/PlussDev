@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::mv
+# Series::LinearAlgAccessor::mv
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::mv(const Series& vector) const
+Series Series::LinearAlgAccessor::mv(const Series& vector) const
 Series SeriesLinearAlgProxy::mv() const
 Series Series::mv(const Series& vector) const
 ```
@@ -170,9 +170,9 @@ vector positions and returns one value per matrix row.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): rank-polymorphic products.
-- [`SeriesLinearAlgAccessor::mm`](mm.md): strict matrix-matrix products.
-- [`SeriesLinearAlgAccessor::dot`](dot.md): strict vector inner products.
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): rank-polymorphic products.
+- [`Series::LinearAlgAccessor::mm`](mm.md): strict matrix-matrix products.
+- [`Series::LinearAlgAccessor::dot`](dot.md): strict vector inner products.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mm.html">

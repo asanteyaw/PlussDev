@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ced3c4e077ad -->
+<!-- pluss-signature-hash: 63ce27fb8892 -->
 
 # AtlasLabelAccessor::unite
 
@@ -8,24 +8,24 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::unite(const Thread& other) const -> Thread
+AtlasLabelAccessor::unite(const Slate& other) const -> Slate
 ```
 
 ## What It Does
 
 Returns the set union of the atlas's current depth labels and `other` — every distinct
 label that appears in either, with duplicates collapsed. This is a pure set operation:
-it returns a `Thread` of labels, not a new `Atlas`, and does not touch the bound atlas's
+it returns a `Slate` of labels, not a new `Atlas`, and does not touch the bound atlas's
 frames.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
     The other set of labels to union with the atlas's current depth labels.
 
 ## Returns
 
-`Thread`
+`Slate`
     The union of the two label sets, named `"unite"`.
 
 ## Examples
@@ -34,16 +34,16 @@ Example 1. Union the depth labels of two atlases that only partially overlap.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
 });
-auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
-auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"feb", "mar", "apr"})));
+auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
+auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"feb", "mar", "apr"})));
 
 std::cout << a1.label().unite(a2.label().values());
 ```
@@ -60,9 +60,9 @@ Name: unite, ptype: Note
 
 ## Notes
 
-- Pure set operation — returns a `Thread`, not an `Atlas`; it doesn't select or reorder
+- Pure set operation — returns a `Slate`, not an `Atlas`; it doesn't select or reorder
   the bound atlas's own frames.
-- The result is named `"unite"` regardless of the input `Thread`'s own name.
+- The result is named `"unite"` regardless of the input `Slate`'s own name.
 
 ## See Also
 

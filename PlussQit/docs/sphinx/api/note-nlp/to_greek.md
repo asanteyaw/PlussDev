@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::to_greek
+# Note::NlpAccessor::to_greek
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::to_greek() const
+Note Note::NlpAccessor::to_greek() const
 ```
 
 ## Romanize Greek Letters Into ASCII
@@ -34,7 +34,7 @@ punctuation — passes through unchanged, so mixed-script text keeps its
 non-Greek parts intact.
 
 The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode `Note` is rejected with `NoteNlpAccessor::to_greek requires a
+(a bytes-mode `Note` is rejected with `Note::NlpAccessor::to_greek requires a
 UTF-8 text Note (not bytes)`), and returns a fresh UTF-8 `Note`.
 
 ## Example 1: Accented Words
@@ -101,9 +101,9 @@ splits it into `α` plus two combining marks; `to_greek` maps the
 
 ## See Also
 
-- [`NoteNlpAccessor::to_cyrillic`](to_cyrillic.md): the same idea
+- [`Note::NlpAccessor::to_cyrillic`](to_cyrillic.md): the same idea
   for the Cyrillic alphabet.
-- [`NoteNlpAccessor::to_ascii`](to_ascii.md): fold Latin accents
+- [`Note::NlpAccessor::to_ascii`](to_ascii.md): fold Latin accents
   and replace anything else with `?`.
 - [`Note::to_nfd`](../note/to_nfd.md): decompose accents so polytonic Greek
   transliterates cleanly.

@@ -96,7 +96,7 @@ rolling mean(2) is `30`, `35`, `50`.
 - Every position with a missing `groups` entry shares one common bucket,
   windowed together in original relative order.
 - `groups` must be the same length as the bound stream, or it throws
-  `"Thread::grouped: group length mismatch"`.
+  `"Slate::grouped: group length mismatch"`.
 - A pre-existing missing entry in the values stream (as opposed to `groups`)
   is skipped within any window that contains it, the same as
   [`rolling()`](rolling.md).
@@ -109,8 +109,8 @@ rolling mean(2) is `30`, `35`, `50`.
 - [`StreamTimeSeriesAccessor::expanding`](expanding.md): a growing (not
   fixed-width) window, applied to the whole stream.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::grouped`](../thread-ts/grouped.md): the underlying
-  single-thread engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::grouped`](../slate-ts/grouped.md): the underlying
+  single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fill_gaps.html">

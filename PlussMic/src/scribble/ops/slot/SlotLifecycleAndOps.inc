@@ -192,33 +192,33 @@ Slot Slot::invalid() const {
 Slot Slot::fillnull(double value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::ThreadCastTarget::Series,
+      pluss::table::SlateCastTarget::Series,
       "Slot::fillnull(double)",
-      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Series, value, {}, nullptr, nullptr));
+      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Series, value, {}, nullptr, nullptr));
 }
 
 Slot Slot::fillnull(std::string_view value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::ThreadCastTarget::Note,
+      pluss::table::SlateCastTarget::Note,
       "Slot::fillnull(string)",
-      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Note, 0.0, value, nullptr, nullptr));
+      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Note, 0.0, value, nullptr, nullptr));
 }
 
 Slot Slot::fillnull(const pluss::Timeline& value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::ThreadCastTarget::Timeline,
+      pluss::table::SlateCastTarget::Timeline,
       "Slot::fillnull(Timeline)",
-      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Timeline, 0.0, {}, &value, nullptr));
+      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Timeline, 0.0, {}, &value, nullptr));
 }
 
 Slot Slot::fillnull(const pluss::Duration& value) const {
   return fill_slot_nulls(
       *this,
-      pluss::table::ThreadCastTarget::Duration,
+      pluss::table::SlateCastTarget::Duration,
       "Slot::fillnull(Duration)",
-      scalar_fill_value_for_target(pluss::table::ThreadCastTarget::Duration,
+      scalar_fill_value_for_target(pluss::table::SlateCastTarget::Duration,
                                    0.0, {}, nullptr, &value));
 }
 
@@ -252,7 +252,7 @@ SlotCastAccessor Slot::cast() const {
   return SlotCastAccessor(*this, {});
 }
 
-SlotCastAccessor Slot::cast(const pluss::table::ThreadCastOptions& options) const {
+SlotCastAccessor Slot::cast(const pluss::table::SlateCastOptions& options) const {
   return SlotCastAccessor(*this, options);
 }
 
@@ -264,13 +264,13 @@ SlotTimelineAccessor Slot::tl() const {
   return SlotTimelineAccessor(*this);
 }
 
-Slot Slot::cast(pluss::table::ThreadCastTarget target,
-                const pluss::table::ThreadCastOptions& options) const {
+Slot Slot::cast(pluss::table::SlateCastTarget target,
+                const pluss::table::SlateCastOptions& options) const {
   PLUSS_CHECK(defined(), "Slot: undefined handle");
   if (is_stream_compatible()) {
     return kindelize().cast(target, options).scribbelize();
   }
-  if (target == pluss::table::ThreadCastTarget::Note) {
+  if (target == pluss::table::SlateCastTarget::Note) {
     std::vector<Value> out;
     out.reserve(values().size());
     for (const auto& value : values()) out.push_back(slot_value_to_note(value));
@@ -352,27 +352,27 @@ Slot Slot::cast(pluss::table::ThreadCastTarget target,
   for (const auto pos : slow_positions) {
     const auto& value = at(pos);
     const auto casted = [&]() {
-      const auto thread = thread_from_slot_value(value);
+      const auto slate = slate_from_slot_value(value);
       switch (target) {
-        case pluss::table::ThreadCastTarget::Series:
-          return thread.cast(options).series();
-        case pluss::table::ThreadCastTarget::Note:
-          return thread.cast(options).note();
-        case pluss::table::ThreadCastTarget::Timeline:
-          return thread.cast(options).timeline();
-        case pluss::table::ThreadCastTarget::Duration:
-          return thread.cast(options).duration();
+        case pluss::table::SlateCastTarget::Series:
+          return slate.cast(options).series();
+        case pluss::table::SlateCastTarget::Note:
+          return slate.cast(options).note();
+        case pluss::table::SlateCastTarget::Timeline:
+          return slate.cast(options).timeline();
+        case pluss::table::SlateCastTarget::Duration:
+          return slate.cast(options).duration();
       }
-      return thread;
+      return slate;
     }();
-    out[static_cast<std::size_t>(pos)] = slot_value_from_thread_payload(casted);
+    out[static_cast<std::size_t>(pos)] = slot_value_from_slate_payload(casted);
   }
   return Slot(std::move(out));
 }
 
 Slot Slot::astype(pluss::codem::ScalarType dtype) const {
-  return cast(pluss::table::ThreadCastTarget::Series,
-              pluss::table::ThreadCastOptions{.series_dtype = dtype});
+  return cast(pluss::table::SlateCastTarget::Series,
+              pluss::table::SlateCastOptions{.series_dtype = dtype});
 }
 
 Slot Slot::sum() const {
@@ -415,8 +415,8 @@ pluss::kindle::Stream Slot::kindelize() const {
 
   if (profile.kind == SlotKind::Series) {
     // A single scalar value is stored as a 0D Series (numel() == 1, dim() ==
-    // 0) -- every kindle::Stream payload must be strictly 1D (see Thread's
-    // constructor-time checks in ThreadInternals.inc), the same invariant the
+    // 0) -- every kindle::Stream payload must be strictly 1D (see Slate's
+    // constructor-time checks in SlateInternals.inc), the same invariant the
     // N>1 path below already produces via make_series(out, {n}). reshape()
     // is a pure metadata change here (numel is already 1), so this is exact:
     // no dtype round-trip, no precision loss, unlike the N>1 non-Bool/Int64
@@ -515,6 +515,6 @@ pluss::kindle::Stream Slot::kindelize() const {
   throw pluss::Error("Slot::kindelize: unsupported slot kind");
 }
 
-pluss::table::Thread Slot::tabelize() const {
+pluss::table::Slate Slot::tabelize() const {
   return kindelize().tabelize();
 }

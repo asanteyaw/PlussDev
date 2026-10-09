@@ -70,8 +70,8 @@ Example 1. Build a compact summary row from three different reductions.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"region", Thread(pluss::make_note({"East", "West", "East", "West", "East"}))},
-    {"amount", Thread(pluss::make_series({120.0, 85.0, 200.0, 60.0, 95.0}))},
+    {"region", Slate(pluss::make_note({"East", "West", "East", "West", "East"}))},
+    {"amount", Slate(pluss::make_series({120.0, 85.0, 200.0, 60.0, 95.0}))},
 });
 
 auto summary = orders.aggregate({

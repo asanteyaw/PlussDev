@@ -79,12 +79,12 @@ Example 1. Inspect a frame with mixed dtypes and missing values right after buil
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",    Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 orders.info();
@@ -121,7 +121,7 @@ Two rows have a missing value somewhere (`Null Case Rows | 2`): row 5 is missing
 inspecting a single value directly, because the feature inventory shows `unit_price` and
 `discount` each sitting at `5` non-null cases against `6` total.
 
-Note that `PTypes` reports **logical** thread kinds, not numeric precision — `order_id`,
+Note that `PTypes` reports **logical** slate kinds, not numeric precision — `order_id`,
 `units`, `unit_price`, and `discount` are all `Series`, whether they hold `int64` or
 `double` underneath. If you need the concrete scalar dtype per feature (`int64`,
 `float64`, and so on), use [`dtypes()`](dtypes.md) instead; `info()` intentionally keeps
@@ -142,12 +142,12 @@ orders.info(log);
 rough memory estimate — a structural summary, not a value-level one. Two design choices
 worth knowing up front:
 
-- The `PType` column reports the **logical** Pluss thread kind — `Series`, `Note`,
+- The `PType` column reports the **logical** Pluss slate kind — `Series`, `Note`,
   `Timeline`, or `TimeIndex` — rather than a concrete scalar dtype, because a single
   `Series` column can already carry any numeric scalar type underneath. Pair `info()`
   with [`dtypes()`](dtypes.md) when you need the concrete per-column scalar type.
 - `Case Range` reports the frame's case axis span, but the case axis is not always a
-  plain integer range — it can be a `Note`, `Timeline`, or `TimeIndex` label thread, in
+  plain integer range — it can be a `Note`, `Timeline`, or `TimeIndex` label slate, in
   which case `Case Range` shows the first and last case *values* rather than positions.
 
 ## Notes

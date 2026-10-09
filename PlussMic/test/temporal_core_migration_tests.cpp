@@ -50,13 +50,13 @@ void test_timeline_index_entry() {
   expect(unordered.index(false).size() == 2,
          "Timeline::index(false) must preserve an unchecked rank-one axis");
 
-  const pluss::table::Thread migrated(timeline);
-  expect(migrated.kind() == pluss::table::ThreadKind::Timeline,
-         "Thread must canonicalize legacy TimeIndex input as Timeline");
+  const pluss::table::Slate migrated(timeline);
+  expect(migrated.kind() == pluss::table::SlateKind::Timeline,
+         "Slate must canonicalize legacy TimeIndex input as Timeline");
   expect(migrated.as_timeline().ticks() == timeline.ticks(),
-         "TimeIndex-to-Thread migration must preserve every timestamp");
+         "TimeIndex-to-Slate migration must preserve every timestamp");
   expect(migrated.as_timeline().index().timeline().ticks() == timeline.ticks(),
-         "Thread Timeline payload must expose ordered indexing through Timeline::index");
+         "Slate Timeline payload must expose ordered indexing through Timeline::index");
 
   const pluss::kindle::Stream stream(timeline);
   expect(stream.kind() == pluss::kindle::StreamKind::Timeline,
@@ -70,9 +70,9 @@ void test_timeline_index_entry() {
   expect(stream.to_json().find("TimeIndex") == std::string::npos,
          "Stream serialization must not emit the legacy TimeIndex kind");
 
-  const auto round_trip = pluss::kindle::Stream::from_thread(migrated).to_thread();
-  expect(round_trip.kind() == pluss::table::ThreadKind::Timeline,
-         "Thread and Stream round trips must not reintroduce TimeIndex storage");
+  const auto round_trip = pluss::kindle::Stream::from_slate(migrated).to_slate();
+  expect(round_trip.kind() == pluss::table::SlateKind::Timeline,
+         "Slate and Stream round trips must not reintroduce TimeIndex storage");
 
   const auto ticks = timeline.ticks();
   const auto first = pluss::timeline::from_epoch(
@@ -92,11 +92,11 @@ void test_timeline_index_entry() {
          "Slot serialization must emit canonical Timeline cells");
   expect(slot.to_json().find("TimeIndex") == std::string::npos,
          "Slot serialization must not emit legacy TimeIndex cells");
-  const auto slot_round_trip = slot.kindelize().to_thread();
-  expect(slot_round_trip.kind() == pluss::table::ThreadKind::Timeline,
-         "Slot, Stream, and Thread round trips must preserve canonical Timeline kind");
+  const auto slot_round_trip = slot.kindelize().to_slate();
+  expect(slot_round_trip.kind() == pluss::table::SlateKind::Timeline,
+         "Slot, Stream, and Slate round trips must preserve canonical Timeline kind");
   expect(slot_round_trip.as_timeline().ticks() == ticks,
-         "Slot, Stream, and Thread round trips must preserve timestamp order");
+         "Slot, Stream, and Slate round trips must preserve timestamp order");
 
   const pluss::kindle::Catalog catalog(
       std::vector<std::pair<std::string, pluss::kindle::Stream>>{{"when", stream}});
@@ -104,74 +104,74 @@ void test_timeline_index_entry() {
          "Catalog serialization must not reintroduce the legacy TimeIndex kind");
 }
 
-void test_duration_thread_foundation() {
+void test_duration_slate_foundation() {
   const auto values = pluss::duration::nanos(std::vector<std::int64_t>{
       1'000'000'000LL,
       pluss::Duration::kNaT,
       -2'000'000'000LL,
   });
-  const pluss::table::Thread thread(values);
+  const pluss::table::Slate slate(values);
 
-  expect(thread.kind() == pluss::table::ThreadKind::Duration,
-         "Thread must preserve Duration as its own runtime kind");
-  expect(thread.ptype() == "Duration", "Thread must report the Duration public type");
-  expect(thread.dtype() == "duration64[ns]", "Thread must report nanosecond duration dtype");
-  expect(thread.as_duration().host() == values.host(),
-         "Thread must not convert Duration storage to another core type");
+  expect(slate.kind() == pluss::table::SlateKind::Duration,
+         "Slate must preserve Duration as its own runtime kind");
+  expect(slate.ptype() == "Duration", "Slate must report the Duration public type");
+  expect(slate.dtype() == "duration64[ns]", "Slate must report nanosecond duration dtype");
+  expect(slate.as_duration().host() == values.host(),
+         "Slate must not convert Duration storage to another core type");
 
-  const auto numeric = thread.cast().series();
-  expect(numeric.kind() == pluss::table::ThreadKind::Series,
-         "Duration-to-Series cast must produce a numeric Thread");
+  const auto numeric = slate.cast().series();
+  expect(numeric.kind() == pluss::table::SlateKind::Series,
+         "Duration-to-Series cast must produce a numeric Slate");
   expect(numeric.as_series().scalar_type() == pluss::codem::ScalarType::Int64,
          "Duration-to-Series cast must preserve nanoseconds as Int64");
   expect(numeric.as_series().host<std::int64_t>().vector() == values.host(),
          "Duration-to-Series cast must preserve exact signed nanoseconds and NaT");
 
   const auto restored = numeric.cast().duration();
-  expect(restored.kind() == pluss::table::ThreadKind::Duration,
+  expect(restored.kind() == pluss::table::SlateKind::Duration,
          "Int64 Series-to-Duration cast must restore the temporal kind");
   expect(restored.as_duration().host() == values.host(),
          "Int64 Series-to-Duration cast must preserve every nanosecond");
 
-  const auto rendered = thread.cast().note();
-  expect(rendered.kind() == pluss::table::ThreadKind::Note,
+  const auto rendered = slate.cast().note();
+  expect(rendered.kind() == pluss::table::SlateKind::Note,
          "Duration-to-Note cast must produce text");
   expect(rendered.as_note().vector() == values.to_note_iso().vector(),
          "Duration-to-Note cast must use duration notation");
 
-  expect_throw([&] { (void)thread.cast().timeline(); },
+  expect_throw([&] { (void)slate.cast().timeline(); },
                "Duration must not be reinterpreted as epoch timestamps");
 
-  const auto selected = thread.take(std::vector<std::int64_t>{2, 0});
-  expect(selected.kind() == pluss::table::ThreadKind::Duration,
-         "Thread::take must preserve Duration kind");
+  const auto selected = slate.take(std::vector<std::int64_t>{2, 0});
+  expect(selected.kind() == pluss::table::SlateKind::Duration,
+         "Slate::take must preserve Duration kind");
   expect(selected.as_duration().host() ==
              std::vector<std::int64_t>{-2'000'000'000LL, 1'000'000'000LL},
-         "Thread::take must preserve requested Duration order");
+         "Slate::take must preserve requested Duration order");
 
-  const pluss::table::Thread scalar(
+  const pluss::table::Slate scalar(
       pluss::duration::nanos(std::vector<std::int64_t>{1'500'000'000LL}));
   expect(scalar.value().host().kind() ==
-             pluss::table::ThreadValue::HostAny::Kind::Duration,
-         "ThreadValue must distinguish duration nanoseconds from epoch nanoseconds");
+             pluss::table::SlateValue::HostAny::Kind::Duration,
+         "SlateValue must distinguish duration nanoseconds from epoch nanoseconds");
   expect(scalar.value().to_int() == 1'500'000'000LL,
-         "ThreadValue must expose exact duration nanoseconds");
+         "SlateValue must expose exact duration nanoseconds");
   expect(scalar.value().to_str() == scalar.as_duration().to_note_iso().scalar(),
-         "ThreadValue must use Duration formatting rather than timestamp formatting");
+         "SlateValue must use Duration formatting rather than timestamp formatting");
 
   expect_throw(
       [] {
-        (void)pluss::table::Thread(pluss::duration::nanos(
+        (void)pluss::table::Slate(pluss::duration::nanos(
             std::vector<std::int64_t>{1, 2},
             std::vector<std::int64_t>{1, 2}));
       },
-      "Thread must reject non-rank-one Duration payloads");
+      "Slate must reject non-rank-one Duration payloads");
 
-  const pluss::table::Thread floating(pluss::make_series({1.0, 2.0}));
+  const pluss::table::Slate floating(pluss::make_series({1.0, 2.0}));
   expect_throw([&] { (void)floating.cast().duration(); },
                "floating-point Series must not silently truncate into Duration");
 
-  const pluss::table::Thread decimal_text(
+  const pluss::table::Slate decimal_text(
       pluss::make_note({" -3000000001 ", "0", "4500000002"}));
   const auto parsed = decimal_text.cast().duration();
   expect(parsed.as_duration().host() ==
@@ -179,11 +179,11 @@ void test_duration_thread_foundation() {
          "Note-to-Duration cast must parse exact signed decimal nanoseconds");
   expect_throw(
       [&] {
-        (void)pluss::table::Thread(pluss::make_note({"1s"})).cast().duration();
+        (void)pluss::table::Slate(pluss::make_note({"1s"})).cast().duration();
       },
       "Note-to-Duration cast must not guess units from formatted duration text");
 
-  const auto nullable = pluss::table::Thread(
+  const auto nullable = pluss::table::Slate(
       pluss::make_note({"12", "invalid", "-9"}))
                             .cast({.invalid = pluss::table::ParseInvalid::Null})
                             .duration();
@@ -192,10 +192,10 @@ void test_duration_thread_foundation() {
   expect(pluss::table::detail::validity_mask(nullable)->to_vec<bool>() ==
              std::vector<bool>{true, false, true},
          "nulling Duration parse must invalidate only malformed lanes");
-  expect(thread.info_string().find("Kind: Duration") != std::string::npos,
-         "Thread diagnostics must identify Duration explicitly");
+  expect(slate.info_string().find("Kind: Duration") != std::string::npos,
+         "Slate diagnostics must identify Duration explicitly");
 
-  const auto filled = thread.fillnull(pluss::duration::nanos(9));
+  const auto filled = slate.fillnull(pluss::duration::nanos(9));
   expect(filled.as_duration().host() ==
              std::vector<std::int64_t>{1'000'000'000LL, 9, -2'000'000'000LL},
          "Duration fillnull must replace intrinsic NaT without changing observed lanes");
@@ -213,14 +213,14 @@ void test_duration_thread_foundation() {
              std::vector<bool>{true, false, true},
          "Duration replace-to-null must update validity without changing payload kind");
 
-  const pluss::table::Thread repeated(pluss::duration::nanos({7, -2, 7, 4}));
+  const pluss::table::Slate repeated(pluss::duration::nanos({7, -2, 7, 4}));
   expect(repeated.mode().as_duration().host() == std::vector<std::int64_t>{7},
          "Duration mode must preserve the Duration kind and exact winning value");
 }
 
 void test_duration_io_boundary() {
   const pluss::table::DataFrame frame({
-      {"elapsed", pluss::table::Thread(pluss::duration::nanos(
+      {"elapsed", pluss::table::Slate(pluss::duration::nanos(
           std::vector<std::int64_t>{-3'000'000'001LL, 0, 4'500'000'002LL}))},
   });
 
@@ -257,15 +257,15 @@ void test_duration_stream_boundary() {
   expect(stream.as_duration().host() == values.host(),
          "Stream must retain exact signed duration nanoseconds");
 
-  const auto round_trip = stream.to_thread();
-  expect(round_trip.kind() == pluss::table::ThreadKind::Duration,
-         "Stream-to-Thread conversion must preserve Duration kind");
+  const auto round_trip = stream.to_slate();
+  expect(round_trip.kind() == pluss::table::SlateKind::Duration,
+         "Stream-to-Slate conversion must preserve Duration kind");
   expect(round_trip.as_duration().host() == values.host(),
-         "Stream-to-Thread conversion must preserve Duration values");
+         "Stream-to-Slate conversion must preserve Duration values");
 
-  const auto rebuilt = pluss::kindle::Stream::from_thread(round_trip);
+  const auto rebuilt = pluss::kindle::Stream::from_slate(round_trip);
   expect(rebuilt.kind() == pluss::kindle::StreamKind::Duration,
-         "Thread-to-Stream conversion must preserve Duration kind");
+         "Slate-to-Stream conversion must preserve Duration kind");
   expect(rebuilt.take(std::vector<std::int64_t>{2, 0}).as_duration().host() ==
              std::vector<std::int64_t>{4'500'000'000LL, -3'000'000'000LL},
          "row selection must preserve Duration values and order");
@@ -309,33 +309,33 @@ void test_duration_stream_boundary() {
              std::vector<std::int64_t>{1, 7, 3},
          "Stream duration fill must replace intrinsic NaT exactly");
 
-  const auto appended = stream.to_thread().append(pluss::table::Thread(
+  const auto appended = stream.to_slate().append(pluss::table::Slate(
       pluss::duration::nanos(std::vector<std::int64_t>{2'000'000'000LL})));
-  expect(appended.kind() == pluss::table::ThreadKind::Duration,
-         "Thread::append must preserve Duration kind");
+  expect(appended.kind() == pluss::table::SlateKind::Duration,
+         "Slate::append must preserve Duration kind");
   expect(appended.as_duration().host() ==
              std::vector<std::int64_t>{
                  -3'000'000'000LL, 0, 4'500'000'000LL, 2'000'000'000LL},
-         "Thread::append must preserve exact Duration order");
+         "Slate::append must preserve exact Duration order");
 
   const auto sorted = appended.arrange();
   expect(sorted.as_duration().host() ==
              std::vector<std::int64_t>{
                  -3'000'000'000LL, 0, 2'000'000'000LL, 4'500'000'000LL},
-         "Thread::arrange must order Duration by signed nanoseconds");
+         "Slate::arrange must order Duration by signed nanoseconds");
   expect(appended.min().as_duration().host() ==
              std::vector<std::int64_t>{-3'000'000'000LL},
-         "Thread::min must return a Duration scalar");
+         "Slate::min must return a Duration scalar");
   expect(appended.max().as_duration().host() ==
              std::vector<std::int64_t>{4'500'000'000LL},
-         "Thread::max must return a Duration scalar");
+         "Slate::max must return a Duration scalar");
 
-  const auto labeled = stream.to_thread().label().set(
-      pluss::table::Thread(pluss::make_note({"b", "a", "c"})));
+  const auto labeled = stream.to_slate().label().set(
+      pluss::table::Slate(pluss::make_note({"b", "a", "c"})));
   const auto aligned = labeled.align(
-      pluss::table::Thread(pluss::make_note({"c", "b", "d"})),
+      pluss::table::Slate(pluss::make_note({"c", "b", "d"})),
       pluss::table::AlignOptions{.align = pluss::table::AlignBy::Caselbl});
-  expect(aligned.kind() == pluss::table::ThreadKind::Duration,
+  expect(aligned.kind() == pluss::table::SlateKind::Duration,
          "label alignment must preserve Duration kind");
   const auto aligned_values = aligned.as_duration().host();
   expect(aligned_values.size() == 3 &&
@@ -349,9 +349,9 @@ void test_duration_stream_boundary() {
 
 void test_duration_dataframe_boundary() {
   const pluss::table::DataFrame frame({
-      {"elapsed", pluss::table::Thread(pluss::duration::nanos(
+      {"elapsed", pluss::table::Slate(pluss::duration::nanos(
           std::vector<std::int64_t>{1, 2, 3}))},
-      {"lag", pluss::table::Thread(pluss::duration::nanos(
+      {"lag", pluss::table::Slate(pluss::duration::nanos(
           std::vector<std::int64_t>{10, 20, 30}))},
   });
 
@@ -369,16 +369,16 @@ void test_duration_dataframe_boundary() {
          "DataFrame duration feature selection must preserve feature order");
 
   const pluss::table::DataFrame encoded({
-      {"elapsed", pluss::table::Thread(pluss::make_note({"-3", "0", "9"}))},
+      {"elapsed", pluss::table::Slate(pluss::make_note({"-3", "0", "9"}))},
   });
   expect(encoded.cast().duration().features("elapsed").as_duration().host() ==
              std::vector<std::int64_t>{-3, 0, 9},
          "DataFrame duration cast must parse exact decimal nanoseconds");
 
   const pluss::table::DataFrame absent({
-      {"elapsed", pluss::table::Thread(pluss::duration::nanos(
+      {"elapsed", pluss::table::Slate(pluss::duration::nanos(
           std::vector<std::int64_t>{1, pluss::Duration::kNaT, 3}))},
-      {"name", pluss::table::Thread(pluss::make_note({"a", "b", "c"}))},
+      {"name", pluss::table::Slate(pluss::make_note({"a", "b", "c"}))},
   });
   const auto filled = absent.fillnull(pluss::duration::nanos(8));
   expect(filled.features("elapsed").as_duration().host() ==
@@ -397,13 +397,13 @@ void test_duration_dataframe_boundary() {
 
 void test_dataframe_case_study_accessor() {
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const auto frame = DataFrame({
-      {"city", Thread(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
-      {"units", Thread(pluss::make_series({10, 7, 12, 5}))},
-      {"active", Thread(pluss::make_series({true, false, true, false}))},
-  }).label().set(Thread(pluss::make_note({"A", "B", "B", "D"})));
+      {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi", "Tamale"}))},
+      {"units", Slate(pluss::make_series({10, 7, 12, 5}))},
+      {"active", Slate(pluss::make_series({true, false, true, false}))},
+  }).label().set(Slate(pluss::make_note({"A", "B", "B", "D"})));
 
   expect(frame.case_study().at(-1).features("city").as_note().at(0) == "Tamale",
          "case_study().at must normalize negative positions");
@@ -436,10 +436,10 @@ void test_dataframe_case_study_accessor() {
          "case_study().span must cover all duplicate endpoint labels");
   expect(frame.case_study().span("D", "A").ncases() == 0,
          "case_study().span must return an empty frame for reversed endpoints");
-  const Thread start(pluss::make_note({"A"}));
-  const Thread stop(pluss::make_note({"B"}));
+  const Slate start(pluss::make_note({"A"}));
+  const Slate stop(pluss::make_note({"B"}));
   expect(frame.case_study().span(start, stop).ncases() == 3,
-         "case_study().span must accept scalar Thread endpoints");
+         "case_study().span must accept scalar Slate endpoints");
   expect(frame.case_study().where(frame.features("active")).features({"city", "units"}).shape() ==
              std::pair<std::int64_t, std::int64_t>{2, 2},
          "case_study().where must compose with ordinary feature projection");
@@ -447,9 +447,9 @@ void test_dataframe_case_study_accessor() {
          "case_study().where must accept a positional Bool Series");
 
   const auto structured = DataFrame({
-      {"region", Thread(pluss::make_note({"West", "West", "East"}))},
-      {"account", Thread(pluss::make_note({"101", "102", "201"}))},
-      {"sales", Thread(pluss::make_series({3, 5, 8}))},
+      {"region", Slate(pluss::make_note({"West", "West", "East"}))},
+      {"account", Slate(pluss::make_note({"101", "102", "201"}))},
+      {"sales", Slate(pluss::make_series({3, 5, 8}))},
   }).label().set({"region", "account"});
   expect(structured.case_study().pick(
              DataFrame::CasePick{.label = "region", .value = "West"}).ncases() == 2,
@@ -472,8 +472,8 @@ void test_dataframe_case_study_accessor() {
   expect_throw([&] { (void)frame.case_study().where(pluss::make_series({true, false})); },
                "case_study().where must reject length-mismatched masks");
 
-  const auto numbered = DataFrame({{"v", Thread(pluss::make_series({4, 9, 16, 25}))}})
-      .label().set(Thread(pluss::make_series({10, 20, 30, 40})));
+  const auto numbered = DataFrame({{"v", Slate(pluss::make_series({4, 9, 16, 25}))}})
+      .label().set(Slate(pluss::make_series({10, 20, 30, 40})));
   expect(numbered.case_study().labels(20).features("v").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>{9},
          "case_study().labels must accept integer labels");
@@ -486,7 +486,7 @@ void test_dataframe_case_study_accessor() {
 
 int main() {
   test_timeline_index_entry();
-  test_duration_thread_foundation();
+  test_duration_slate_foundation();
   test_duration_io_boundary();
   test_duration_stream_boundary();
   test_duration_dataframe_boundary();

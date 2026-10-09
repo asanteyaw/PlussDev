@@ -17,7 +17,7 @@ int main() {
   enc.max_categories = 16;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"Usage_kWh", "Lagging_Current_Reactive.Power_kVarh", "Leading_Current_Reactive_Power_kVarh",
                  "CO2(tCO2)", "Lagging_Current_Power_Factor", "Leading_Current_Power_Factor",
                  "NSM", "WeekStatus", "Day_of_week"})
@@ -28,13 +28,13 @@ int main() {
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"Usage_kWh", "Lagging_Current_Reactive.Power_kVarh", "Leading_Current_Reactive_Power_kVarh",
                                           "CO2(tCO2)", "Lagging_Current_Power_Factor", "Leading_Current_Power_Factor", "NSM"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
           lymph::workflow::branch("cat", {"WeekStatus", "Day_of_week"}, {
-              {"encode", lymph::stage::one_hot_encoder(enc)},
+              {"encode", lymph::prep::stage::one_hot_encoder(enc)},
           }),
       },
-      lymph::model::gradient_boost_classifier({.learners = 70, .learning_rate = 0.05}));
+      lymph::models::gradient_boost_classifier({.learners = 70, .learning_rate = 0.05}));
 
   wf.learn_(data);
   std::cout << "steel balanced accuracy: " << wf.assess(data).balanced_accuracy.item<double>() << "\n";

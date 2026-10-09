@@ -21,6 +21,10 @@ lymph::workflow::Policy& lymph::workflow::Policy::forbid(std::vector<std::string
 lymph::workflow::Policy& lymph::workflow::Policy::forbid(std::initializer_list<std::string> names);
 ```
 
+## What It Does
+
+The column rules of a policy. `drop` removes columns before modeling, `require` asserts that a column exists in the raw schema, and `forbid` fails when a column reaches the model, so leakage is caught. None of them change rows; each appends to a name list on the policy.
+
 ## Parameters
 
 `names` (`drop`)
@@ -70,16 +74,16 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"customer_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}, {6}, f64))},
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1}, {6}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1}, {6}, f64))},
+      {"customer_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1}, {6}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1}, {6}, f64))},
   });
 
   workflow::Policy policy{};
@@ -118,15 +122,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1}, {6}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1}, {6}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1}, {6}, f64))},
   });
 
   workflow::Policy ok{};
@@ -169,15 +173,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
-      {"future_outcome", Thread(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
+      {"future_outcome", Slate(pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1}, {6}, f64))},
   });
 
   workflow::Policy strict{};

@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::commands
+# Note::TexAccessor::commands
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TokenBatch NoteTexAccessor::commands() const
-TokenBatch NoteTexAccessor::commands(bool with_args) const
+TokenBatch Note::TexAccessor::commands() const
+TokenBatch Note::TexAccessor::commands(bool with_args) const
 ```
 
 ## Extract Complete Control-Word Lexemes

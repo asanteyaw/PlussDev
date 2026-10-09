@@ -12,7 +12,7 @@ a SQL query, or an aggregation object. It plots from a `DataFrame` or `Atlas`.
 That means all the table skills from the earlier chapters still apply:
 
 1. Load the data into a `DataFrame`.
-2. Convert columns to the correct `Thread` kind.
+2. Convert columns to the correct `Slate` kind.
 3. Clean missing values deliberately.
 4. Filter, aggregate, pivot, or assign features.
 5. Call `plot()`, `plot3d()`, or `Atlas::plot()`.
@@ -34,7 +34,7 @@ The plotting classes used most often are:
 
 ```cpp
 pluss::table::DataFrame;
-pluss::table::Thread;
+pluss::table::Slate;
 pluss::table::DataFramePlotOptions;
 pluss::table::LinePlotOptions;
 pluss::table::ScatterPlotOptions;
@@ -88,10 +88,10 @@ simulation paths, or model versions.
 
 ## What PlussMic expects from the data
 
-Plotting methods use `Thread` kinds to decide how a feature can participate in a
+Plotting methods use `Slate` kinds to decide how a feature can participate in a
 plot.
 
-| Thread kind | Plotting role |
+| Slate kind | Plotting role |
 | --- | --- |
 | `Series` | Numeric y-values, x-values, histogram input, heatmap values, correlation input, 3D coordinates. |
 | `Note` | Labels, categories, hue groups, case labels, and tick labels. |
@@ -536,7 +536,7 @@ auto fig = df.plot(options).scatter("temperature", "sales");
 ```
 
 When hue is used, PlussMic creates one `Cloud` trace per hue label. Hue features
-should be `Note`, `Timeline`, or `TimeIndex` threads. The typical hue feature is
+should be `Note`, `Timeline`, or `TimeIndex` slates. The typical hue feature is
 a `Note` category such as region, class, symbol, status, or cohort.
 
 `ScatterPlotOptions` contains:
@@ -1202,7 +1202,7 @@ An `Atlas` is a stack of frames. Plotting an atlas is useful when the depth
 dimension is meaningful:
 
 ```cpp
-Thread scenarios = pluss::make_note({"base", "stress", "upside"});
+Slate scenarios = pluss::make_note({"base", "stress", "upside"});
 pluss::table::Atlas atlas({base, stressed, optimistic}, scenarios);
 
 auto fig = atlas.plot().line("revenue", "date");
@@ -1291,8 +1291,8 @@ Before sending a plot to users, check:
 
 - The frame is sorted when the plot depends on order.
 - Missing values are intentionally dropped, filled, or left as gaps.
-- Numeric features are really `Series` threads.
-- Categorical labels are `Note` threads or are safely convertible to labels.
+- Numeric features are really `Series` slates.
+- Categorical labels are `Note` slates or are safely convertible to labels.
 - Large datasets are sampled or aggregated before high-density plots.
 - Long category labels use rotated ticks or horizontal bars.
 - `width`, `height`, and tight layout are set for the target document.

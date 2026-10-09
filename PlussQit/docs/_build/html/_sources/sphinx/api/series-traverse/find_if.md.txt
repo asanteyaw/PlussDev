@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_if
+# Series::TraverseAccessor::find_if
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_if(const Series& mask) const;
+TraverseMatch Series::TraverseAccessor::find_if(const Series& mask) const;
 TraverseMatch SeriesTraverseProxy::find_if(const Series& mask) const;
 ```
 

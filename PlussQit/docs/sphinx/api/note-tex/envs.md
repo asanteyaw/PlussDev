@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::envs
+# Note::TexAccessor::envs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::envs() const
+TokenBatch Note::TexAccessor::envs() const
 ```
 
 ## Extract Complete Environment Regions

@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::cholesky
+# Series::LinearAlgAccessor::cholesky
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::cholesky(bool upper = false) const
+Series Series::LinearAlgAccessor::cholesky(bool upper = false) const
 Series SeriesLinearAlgProxy::cholesky(bool upper = false) const
 ```
 
@@ -113,6 +113,6 @@ preserving batches and supporting reverse mode.
 - [`cholesky_inverse`](cholesky_inverse.md): invert from an existing factor.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../series_linearalg_accessor_api_reference.html"><span class="label">Previous</span><span class="title">SeriesLinearAlgAccessor</span></a>
+  <a class="prev-link" href="../../series_linearalg_accessor_api_reference.html"><span class="label">Previous</span><span class="title">Series::LinearAlgAccessor</span></a>
   <a class="next-link" href="cholesky_inverse.html"><span class="label">Next</span><span class="title">cholesky_inverse</span></a>
 </div>

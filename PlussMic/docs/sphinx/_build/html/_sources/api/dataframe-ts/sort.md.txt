@@ -44,8 +44,8 @@ Example 1. Sort a frame whose case labels are an out-of-order `Timeline`.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({30.0, 10.0, 20.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({30.0, 10.0, 20.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-03T00:00:00Z",
         "2024-01-01T00:00:00Z",
         "2024-01-02T00:00:00Z",
@@ -119,8 +119,8 @@ axis position sorts.
 
 ```cpp
 auto with_nat = DataFrame(
-    {{"value", Thread(pluss::make_series({99.0, 20.0, 10.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({99.0, 20.0, 10.0}))}},
+    Slate(pluss::make_timeline({
         "",
         "2024-01-02T00:00:00Z",
         "2024-01-01T00:00:00Z",
@@ -186,7 +186,7 @@ index, with no explicit `TsOptions.axis`, to see it throw.
 using namespace pluss::table;
 
 auto untimed = DataFrame(
-    {{"value", Thread(pluss::make_series({30.0, 10.0, 20.0}))}});
+    {{"value", Slate(pluss::make_series({30.0, 10.0, 20.0}))}});
 
 try {
   auto out = untimed.ts().sort();

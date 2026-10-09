@@ -6,7 +6,7 @@
 ## Signature
 
 ```cpp
-NoteRegexAccessor Note::regex() const noexcept
+Note::RegexAccessor Note::regex() const noexcept
 ```
 
 ## Enter The Pattern Operation Surface

@@ -27,7 +27,7 @@ second frame later.
 
 **feature** (`std::string_view`)
 
-The feature to factor. Works on any `Thread` kind — "distinct value" is determined by
+The feature to factor. Works on any `Slate` kind — "distinct value" is determined by
 the same string-key comparison used throughout the categorical-encoding surface
 (`unify_key_parts`), not restricted to `Note` text.
 
@@ -46,16 +46,16 @@ otherwise has no way to communicate.
 
 This determines which value gets code `0`, `1`, `2`, and so on — and, since `levels[i]`
 and code `i` always correspond, it also determines the order of the returned `levels`
-thread.
+slate.
 
 ## Returns
 
 `CategoryEncoding`
-    A plain struct with three fields: `codes` (`Thread`, `Int64`, one entry per case,
-    `NULL` wherever `feature` itself was missing), `levels` (`Thread`, the distinct
+    A plain struct with three fields: `codes` (`Slate`, `Int64`, one entry per case,
+    `NULL` wherever `feature` itself was missing), `levels` (`Slate`, the distinct
     values in code order — code `i` corresponds to `levels[i]`), and `ordered` (`bool`,
     the value passed in). `CategoryEncoding` also exposes a `.decode()` method that
-    reconstructs a `Thread` of original values from `codes` and `levels`.
+    reconstructs a `Slate` of original values from `codes` and `levels`.
 
 ## Examples
 
@@ -66,8 +66,8 @@ missing value.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",   Thread(pluss::make_series({1, 2, 3, 4, 5}))},
-    {"city", Thread(pluss::make_note({"Tema", "Accra", "Tema", "Kumasi", ""}),
+    {"id",   Slate(pluss::make_series({1, 2, 3, 4, 5}))},
+    {"city", Slate(pluss::make_note({"Tema", "Accra", "Tema", "Kumasi", ""}),
                     pluss::make_series({true, true, true, true, false}, pluss::ScalarType::Bool))},
 });
 std::cout << orders;
@@ -152,7 +152,7 @@ that might encounter their distinct values in a different order.
 ## Notes
 
 - `codes` carries no case labels or display name of its own; it prints with a plain
-  `0, 1, 2, ...` index, the same as a fresh `Thread` built directly from a `Series`.
+  `0, 1, 2, ...` index, the same as a fresh `Slate` built directly from a `Series`.
 - A missing `feature` value always produces a `NULL` code — it is never assigned to an
   implicit "unknown" level, and it never appears in `levels`.
 - [`encode(feature, EncodeMode::Ordinal, options)`](encode.md) is equivalent to
@@ -160,7 +160,7 @@ that might encounter their distinct values in a different order.
   frame at `feature`'s original position — use `encode()` directly when you only need
   the codes back inside the frame and don't need `levels`.
 - `CategoryEncoding::decode()` reverses the process: given `codes` and `levels`, it
-  reconstructs a `Thread` equal to the original `feature` (missing codes decode back to
+  reconstructs a `Slate` equal to the original `feature` (missing codes decode back to
   `NULL`).
 
 ## See Also

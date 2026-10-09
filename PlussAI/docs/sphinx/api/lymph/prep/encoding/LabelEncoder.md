@@ -13,7 +13,7 @@ The type is `lymph::prep::LabelEncoder`. It takes an
 `prep::LabelEncoderOptions`) at construction, default-constructed if omitted. It
 shares its whole method surface with [`prep::OneHotEncoder`](OneHotEncoder.md) —
 `features` / `learn` / `map` / `learn_map` / `learned` / `summary`, plus the
-single-column `Thread` overloads and the `categories_` / `mapped_names_`
+single-column `Slate` overloads and the `categories_` / `mapped_names_`
 attributes.
 
 ## Construction
@@ -51,13 +51,13 @@ signatures, semantics, and per-method examples.
 | [`learned()`](OneHotEncoder.md#learned) | has `learn` run yet? |
 | [`summary()`](OneHotEncoder.md#summary) | fitted category list as a `TransformerSummary` |
 
-Plus the single-column [`Thread` overloads](OneHotEncoder.md#single-column-overloads).
+Plus the single-column [`Slate` overloads](OneHotEncoder.md#single-column-overloads).
 
 ## Practical Examples
 
 ### Example 1
 
-The single-column `Thread` overload on a text column: one `Thread` in, one
+The single-column `Slate` overload on a text column: one `Slate` in, one
 `Series` of `0..K-1` codes out.
 
 ```cpp
@@ -68,16 +68,16 @@ The single-column `Thread` overload on a text column: one `Thread` in, one
 
 int main() {
   namespace lymph = pluss::ai::lymph;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  const Thread grade(pluss::make_note({"bronze", "silver", "gold", "silver", "bronze", "gold"}));
+  const Slate grade(pluss::make_note({"bronze", "silver", "gold", "silver", "bronze", "gold"}));
 
   lymph::prep::LabelEncoder encoder;
   const pluss::Series codes = encoder.learn_map(grade);
   std::cout << "codes (0-based):\n" << codes << "\n";
 
   std::cout << "map(new):\n"
-            << encoder.map(Thread(pluss::make_note({"gold", "bronze"}))) << "\n";
+            << encoder.map(Slate(pluss::make_note({"gold", "bronze"}))) << "\n";
   std::cout << "mapped_names_[0] = " << encoder.mapped_names_[0] << "\n";
 
   return 0;
@@ -102,7 +102,7 @@ data=[[1],
 mapped_names_[0] = feature_0_label
 ```
 
-The `Thread` overload names the pseudo-feature `feature_0`, so `mapped_names_`
+The `Slate` overload names the pseudo-feature `feature_0`, so `mapped_names_`
 reads `feature_0_label`; on the `DataFrame` path it would be `<column>_label`.
 
 ### Example 2
@@ -120,12 +120,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"grade", Thread(pluss::make_series({10., 20., 30., 20., 10., 30.}, {6}, f64))}});
-  const DataFrame later({{"grade", Thread(pluss::make_series({30., 30., 10.}, {3}, f64))}});
+  const DataFrame train({{"grade", Slate(pluss::make_series({10., 20., 30., 20., 10., 30.}, {6}, f64))}});
+  const DataFrame later({{"grade", Slate(pluss::make_series({30., 30., 10.}, {3}, f64))}});
 
   lymph::prep::LabelEncoder encoder;
   std::cout << "learned before = " << std::boolalpha << encoder.learned() << "\n";
@@ -191,12 +191,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"grade", Thread(pluss::make_series({10., 20., 30., 20., 10., 30.}, {6}, f64))}});
-  const DataFrame later({{"grade", Thread(pluss::make_series({20., 77.}, {2}, f64))}});
+  const DataFrame train({{"grade", Slate(pluss::make_series({10., 20., 30., 20., 10., 30.}, {6}, f64))}});
+  const DataFrame later({{"grade", Slate(pluss::make_series({20., 77.}, {2}, f64))}});
 
   lymph::prep::LabelEncoder encoder;
   std::cout << "learn_map(train):\n" << encoder.features({"grade"}).learn_map(train) << "\n";

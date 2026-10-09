@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::lu_solve
+# Series::LinearAlgAccessor::lu_solve
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::lu_solve(const Series& b) const
+Series Series::LinearAlgAccessor::lu_solve(const Series& b) const
 Series SeriesLinearAlgProxy::lu_solve() const
 ```
 

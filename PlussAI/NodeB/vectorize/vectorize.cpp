@@ -1,6 +1,7 @@
 #include "pluss/ai/nodeb/vectorize.h"
 
 #include "pluss/codem/series_factory.h"
+#include "CodeN/native/cpu/TextKernels.h"
 
 #include <algorithm>
 #include <unordered_map>
@@ -30,6 +31,33 @@ namespace {
   return out;
 }
 
+// The vectorizer's term rule, shared by describe() so a summary counts exactly
+// what the mapper counts: lowercase, split on the same word-like spans, and
+// keep punctuation marks only when the document options ask for them.
+[[nodiscard]] std::vector<std::string> feature_terms(const std::string& text, bool keep_punct) {
+  const std::string lower = ::pluss::coden::native::cpu::lower_ascii(text);
+  const auto spans = keep_punct ? ::pluss::coden::native::cpu::split_nlp_token_spans(lower, true)
+                                : ::pluss::coden::native::cpu::split_word_spans(lower);
+  std::vector<std::string> terms{};
+  terms.reserve(spans.size());
+  for (const auto& [start, len] : spans) {
+    terms.push_back(lower.substr(start, len));
+  }
+  return terms;
+}
+
+[[nodiscard]] nodej::LexiconMapOptions with_doc_policy(nodej::LexiconMapOptions options,
+                                                       const DocMapOptions& doc_options) {
+  options.keep_punct = !doc_options.skip_punct;
+  return options;
+}
+
+[[nodiscard]] nodej::HashMapOptions with_doc_policy(nodej::HashMapOptions options,
+                                                    const DocMapOptions& doc_options) {
+  options.keep_punct = !doc_options.skip_punct;
+  return options;
+}
+
 [[nodiscard]] std::vector<std::string> texts_to_owned(pluss::msharp::RangeView::Of<std::string_view> texts) {
   std::vector<std::string> out;
   out.reserve(texts.size());
@@ -43,7 +71,7 @@ namespace {
 
 Mapper::Mapper(nodej::LexiconMapOptions map_options,
                DocMapOptions doc_options)
-    : mapper_(map_options),
+    : mapper_(with_doc_policy(map_options, doc_options)),
       doc_options_(doc_options) {}
 
 nodej::Status Mapper::learn(const std::vector<Doc>& docs) {
@@ -115,7 +143,7 @@ nodej::Status Mapper::load_state(const nodej::LexiconMapperState& state) {
 
 Hasher::Hasher(nodej::HashMapOptions map_options,
                DocMapOptions doc_options)
-    : mapper_(map_options),
+    : mapper_(with_doc_policy(map_options, doc_options)),
       doc_options_(doc_options) {}
 
 nodej::StatusOr<nodej::FeatureBatch> Hasher::dense(const std::vector<Doc>& docs) const {
@@ -156,20 +184,13 @@ CorpusStats describe(const std::vector<Doc>& docs,
   doc_unique_counts.reserve(docs.size());
 
   std::unordered_map<std::string, std::int64_t> df{};
-  for (const auto& doc : docs) {
+  const auto feature_docs = docs_to_feature_text(docs, options);
+  for (std::size_t i = 0; i < docs.size(); ++i) {
+    const auto& doc = docs[i];
     out.sentence_count += static_cast<std::int64_t>(doc.sentences.size());
     out.phrase_count += static_cast<std::int64_t>(doc.phrases.size());
 
-    std::vector<std::string> terms{};
-    terms.reserve(doc.tokens.size());
-    for (const auto& token : doc.tokens) {
-      if (options.skip_punct && token.is_punct) continue;
-      const std::string_view piece =
-          (options.use_lemmas && !token.lemma.empty()) ? std::string_view(token.lemma)
-                                                       : std::string_view(token.orth);
-      if (piece.empty()) continue;
-      terms.emplace_back(piece);
-    }
+    std::vector<std::string> terms = feature_terms(feature_docs[i], !options.skip_punct);
     out.token_count += static_cast<std::int64_t>(terms.size());
     doc_token_counts.push_back(static_cast<double>(terms.size()));
 

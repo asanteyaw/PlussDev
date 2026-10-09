@@ -38,13 +38,13 @@ Example 1. Daily mean across two frames sharing the same gapped date range.
 using namespace pluss::table;
 
 auto q1 = DataFrame(
-    {{"value", Thread(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T08:00:00Z", "2024-01-01T20:00:00Z",
         "2024-01-03T10:00:00Z", "2024-01-03T15:00:00Z"})));
 auto q2 = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T08:00:00Z", "2024-01-01T20:00:00Z",
         "2024-01-03T10:00:00Z", "2024-01-03T15:00:00Z"})));
 auto atlas = Atlas({q1, q2});

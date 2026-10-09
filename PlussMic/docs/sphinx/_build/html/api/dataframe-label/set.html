@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameLabelAccessor::slice" href="slice.html" />
@@ -37,26 +37,43 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ac6cf74e8b2b -->
+<!-- pluss-signature-hash: a3790a4d275c -->
 <section id="dataframelabelaccessor-set">
 <h1>DataFrameLabelAccessor::set<a class="headerlink" href="#dataframelabelaccessor-set" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_label_accessor_api_reference.html"><span class="doc std std-doc">Back to DataFrameLabelAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature_name</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">feature_names</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\x1F</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">feature_names</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\x1F</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SetLabelOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">feature_name</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">feature_names</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\x1F</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">feature_names</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\x1F</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="n">detail</span><span class="o">::</span><span class="n">StringViewNameRange</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&gt;</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">NameRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">feature_names</span><span class="p">,</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">drop_features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">separator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\x1F</span><span class="s">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">DataFrame</span><span class="w"> </span><span class="n">DataFrameLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SetLabelOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Two entirely different mechanisms share this name:</p>
+<p>Two label sources share this name:</p>
 <ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">set(const</span> <span class="pre">Thread&amp;)</span></code></strong> replaces the case labels directly with an arbitrary
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> — no structure is created; <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> is <code class="docutils literal notranslate"><span class="pre">false</span></code> afterward.</p></li>
+<li><p><strong>The direct-label overloads</strong> replace the flat case labels from a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> or <code class="docutils literal notranslate"><span class="pre">Note</span></code>.
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> is the general form and can carry any supported label payload; <code class="docutils literal notranslate"><span class="pre">Note</span></code> is the
+convenience form for any closed <code class="docutils literal notranslate"><span class="pre">Note</span></code> dtype and is exactly equivalent to first wrapping
+that <code class="docutils literal notranslate"><span class="pre">Note</span></code> in a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. Neither form creates named levels, so <a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> is
+<code class="docutils literal notranslate"><span class="pre">false</span></code> afterward.</p></li>
 <li><p><strong>The feature-name overloads</strong> (single name, multiple names, or the full
 <code class="docutils literal notranslate"><span class="pre">SetLabelOptions</span></code>) promote one or more existing features to <strong>structured</strong>
 case labels — a real <code class="docutils literal notranslate"><span class="pre">case_axis_</span></code> with one named level per promoted feature.
@@ -67,23 +84,31 @@ disappear from the ordinary feature columns.</p></li>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>drop defaults to true — pandas set_index() semantics, not “keep everything”
+<p>Promotion removes the source feature by default
 Promoting a feature to the case-label axis <strong>removes it from the frame’s ordinary
-columns by default</strong>, exactly like pandas’ <code class="docutils literal notranslate"><span class="pre">set_index(keys,</span> <span class="pre">drop=True)</span></code>. Pass
-<code class="docutils literal notranslate"><span class="pre">drop_feature(s)</span> <span class="pre">=</span> <span class="pre">false</span></code> (or <code class="docutils literal notranslate"><span class="pre">SetLabelOptions{.drop</span> <span class="pre">=</span> <span class="pre">false}</span></code>) explicitly if you want the
-promoted feature to remain accessible as a regular column <em>in addition to</em> becoming the
-case label. This mirrors <a class="reference internal" href="../dataframe/unstack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">unstack()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">UnstackOptions::drop</span></code>,
-which also defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code>; it is the opposite of <a class="reference internal" href="reset.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></span></a>’s
-<code class="docutils literal notranslate"><span class="pre">ResetLabelOptions::drop</span></code>, which defaults to <code class="docutils literal notranslate"><span class="pre">false</span></code> (reset’s job is to <em>materialize</em> the
-label back into a column, so keeping it there by default is the natural counterpart).</p>
+columns by default</strong>. Pass <code class="docutils literal notranslate"><span class="pre">drop_feature(s)</span> <span class="pre">=</span> <span class="pre">false</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">SetLabelOptions{.drop</span> <span class="pre">=</span> <span class="pre">false}</span></code>) explicitly if the promoted feature should remain
+accessible as an ordinary column as well. This matches
+<a class="reference internal" href="../dataframe/unstack.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">unstack()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">UnstackOptions::drop</span> <span class="pre">=</span> <span class="pre">true</span></code> default and is the
+counterpart to <a class="reference internal" href="reset.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></span></a>, whose job is to materialize labels back into columns.</p>
 </div>
+<p>Every overload returns a new frame. The receiver is not mutated, and the feature payloads
+are shared or reused according to normal <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> value semantics; changing labels does
+not recalculate the ordinary feature values.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>, one overload)</p>
-<p>Replacement case labels, used as-is. Does not create structured levels.</p>
+<p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::Note&amp;</span></code>)</p>
+<p>Replacement flat case labels. Their element count must equal <code class="docutils literal notranslate"><span class="pre">ncases()</span></code>. The <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+overload accepts any <code class="docutils literal notranslate"><span class="pre">Note</span></code> dtype; use the general <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload for <code class="docutils literal notranslate"><span class="pre">Series</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">Duration</span></code>, or already-threaded nullable labels. Neither overload creates
+structured levels.</p>
 <p><strong>feature_name</strong> / <strong>feature_names</strong> (feature-name overloads)</p>
-<p>The existing feature(s) to promote to case labels.</p>
+<p>The existing feature or features to promote to case labels. Multiple names may be supplied
+as an initializer list, an explicit <code class="docutils literal notranslate"><span class="pre">RangeView</span></code>, or any input range whose elements convert
+to <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, such as <code class="docutils literal notranslate"><span class="pre">std::array&lt;std::string_view,</span> <span class="pre">N&gt;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::string&gt;</span></code>. The range is consumed during the call; the result owns the
+level names and does not borrow them.</p>
 <p><strong>drop_feature</strong> / <strong>drop_features</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
 <p>Whether the promoted feature(s) are removed from the ordinary feature columns
 after promotion. Defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code> — see the important callout above.</p>
@@ -99,7 +124,8 @@ aren’t unique).</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
-A new frame with the requested case labels.</p>
+A new frame with the requested flat labels or structured case-label levels. Shape and
+row order are unchanged unless <code class="docutils literal notranslate"><span class="pre">SetLabelOptions.sort</span></code> requests ordering.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -108,8 +134,8 @@ removed from the ordinary feature columns.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">}))},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">150.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;region&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
@@ -156,9 +182,9 @@ opt-in case, not the default.</p>
 <p>Example 3. Promote two features into one composite, structured case label with a custom
 separator, keeping the default drop behavior.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">}))},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Boston&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;NYC&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;LA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SF&quot;</span><span class="p">}))},</span>
-<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))}});</span>
+<span class="w">    </span><span class="p">{{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;east&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;west&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Boston&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;NYC&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;LA&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SF&quot;</span><span class="p">}))},</span>
+<span class="w">     </span><span class="p">{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}))}});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">grouped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">({</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;city&quot;</span><span class="p">},</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">grouped</span><span class="p">;</span>
@@ -204,10 +230,10 @@ west/SF     | west    SF      40
 [4 cs x 3 feat]
 </pre></div>
 </div>
-<p>Example 5. <code class="docutils literal notranslate"><span class="pre">set(const</span> <span class="pre">Thread&amp;)</span></code> — a raw axis replacement with no structure at all, and no
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">set(const</span> <span class="pre">Slate&amp;)</span></code> — a raw axis replacement with no structure at all, and no
 <code class="docutils literal notranslate"><span class="pre">drop</span></code> parameter (there is nothing to drop, since it isn’t sourced from an existing
 column).</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r4&quot;</span><span class="p">})));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;r1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r4&quot;</span><span class="p">})));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">tagged</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -226,18 +252,65 @@ r4   | north   90
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">tagged.label().has()</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> here — this overload never creates a
-<code class="docutils literal notranslate"><span class="pre">case_axis_</span></code>, regardless of the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>’s own kind or origin. Both <code class="docutils literal notranslate"><span class="pre">region</span></code> and <code class="docutils literal notranslate"><span class="pre">sales</span></code>
+<code class="docutils literal notranslate"><span class="pre">case_axis_</span></code>, regardless of the <code class="docutils literal notranslate"><span class="pre">Slate</span></code>’s own kind or origin. Both <code class="docutils literal notranslate"><span class="pre">region</span></code> and <code class="docutils literal notranslate"><span class="pre">sales</span></code>
 remain as ordinary columns since this overload doesn’t source the labels from a column at
 all.</p>
-<p>Example 6. <code class="docutils literal notranslate"><span class="pre">SetLabelOptions{.sort</span> <span class="pre">=</span> <span class="pre">true}</span></code> — promote (dropping by default, same as
+<p>Example 6. Pass an existing <code class="docutils literal notranslate"><span class="pre">Note</span></code> directly; this example uses text labels. The overload is
+equivalent to <code class="docutils literal notranslate"><span class="pre">set(Slate(labels))</span></code> and does not turn the <code class="docutils literal notranslate"><span class="pre">Note</span></code> into a frame feature or a
+structured level.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tamale&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;south&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;middle&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;north&quot;</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">,</span><span class="w"> </span><span class="mf">12.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;price&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">})},</span>
+<span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;row-a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;row-b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;row-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;row-d&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labeled</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>====================================
+      | city    region  units  price
+------------------------------------
+row-a | Accra   south   10     3
+row-b | Tema    south   7      4
+row-c | Kumasi  middle  12     2.5
+row-d | Tamale  north   5      5
+------------------------------------
+[4 cs x 4 feat]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">labeled.label().has()</span></code> remains <code class="docutils literal notranslate"><span class="pre">false</span></code>: these are flat case labels, even though their
+storage is a <code class="docutils literal notranslate"><span class="pre">Note</span></code>.</p>
+<p>Example 7. Direct labels must match the frame’s case count. Validation occurs before a
+result is returned.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sales</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;row-a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;row-b&quot;</span><span class="p">}));</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">message</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrameLabelAccessor::set: label count must match the frame&#39;s case count
+</pre></div>
+</div>
+<p>Example 8. <code class="docutils literal notranslate"><span class="pre">SetLabelOptions{.sort</span> <span class="pre">=</span> <span class="pre">true}</span></code> — promote (dropping by default, same as
 <code class="docutils literal notranslate"><span class="pre">SetLabelOptions</span></code>’s own <code class="docutils literal notranslate"><span class="pre">drop</span></code> default) and immediately sort by the new label.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SetLabelOptions</span><span class="p">{.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sorted</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
-<section id="id5">
-<h3>Output<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============
       | sales
 -------------
@@ -253,7 +326,7 @@ west  | 200
 <code class="docutils literal notranslate"><span class="pre">&quot;north&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;west&quot;</span></code>) as part of the same call — equivalent to
 <code class="docutils literal notranslate"><span class="pre">set(&quot;region&quot;).label().sort()</span></code>. <code class="docutils literal notranslate"><span class="pre">region</span></code> is dropped from the columns since
 <code class="docutils literal notranslate"><span class="pre">SetLabelOptions.drop</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">true</span></code>, same as every feature-name overload.</p>
-<p>Example 7. <code class="docutils literal notranslate"><span class="pre">SetLabelOptions{.drop</span> <span class="pre">=</span> <span class="pre">false,</span> <span class="pre">.sort</span> <span class="pre">=</span> <span class="pre">true}</span></code> — keep the column and sort, both
+<p>Example 9. <code class="docutils literal notranslate"><span class="pre">SetLabelOptions{.drop</span> <span class="pre">=</span> <span class="pre">false,</span> <span class="pre">.sort</span> <span class="pre">=</span> <span class="pre">true}</span></code> — keep the column and sort, both
 explicit.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sorted_kept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span>
 <span class="w">    </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SetLabelOptions</span><span class="p">{.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">.</span><span class="n">drop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">sort</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
@@ -261,8 +334,8 @@ explicit.</p>
 </pre></div>
 </div>
 </section>
-<section id="id6">
-<h3>Output<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id8">
+<h3>Output<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
       | region  sales
 ---------------------
@@ -274,7 +347,7 @@ west  | west    200
 [4 cs x 2 feat]
 </pre></div>
 </div>
-<p>Example 8. <code class="docutils literal notranslate"><span class="pre">SetLabelOptions.verify</span> <span class="pre">=</span> <span class="pre">true</span></code> throws when the resulting case labels aren’t
+<p>Example 10. <code class="docutils literal notranslate"><span class="pre">SetLabelOptions.verify</span> <span class="pre">=</span> <span class="pre">true</span></code> throws when the resulting case labels aren’t
 unique.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">verified</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">SetLabelOptions</span><span class="p">{.</span><span class="n">features</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;region&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">.</span><span class="n">verify</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">});</span>
@@ -285,8 +358,8 @@ unique.</p>
 </pre></div>
 </div>
 </section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Output<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DataFrame::set_caselbl: duplicate structured case-label key found; set verify=false to allow duplicates
 </pre></div>
 </div>
@@ -301,9 +374,9 @@ instead rejects the duplicate outright — independent of, and unaffected by, <c
 <li><p><code class="docutils literal notranslate"><span class="pre">drop_feature</span></code>/<code class="docutils literal notranslate"><span class="pre">drop_features</span></code>/<code class="docutils literal notranslate"><span class="pre">SetLabelOptions.drop</span></code> all default to <code class="docutils literal notranslate"><span class="pre">true</span></code> — promoting a
 feature to the case-label axis removes it from the ordinary columns unless you pass
 <code class="docutils literal notranslate"><span class="pre">false</span></code> explicitly. See the important callout above.</p></li>
-<li><p>Only the feature-name overloads create a structured <code class="docutils literal notranslate"><span class="pre">case_axis_</span></code>;
-<code class="docutils literal notranslate"><span class="pre">set(const</span> <span class="pre">Thread&amp;)</span></code> never does, no matter what, and has no <code class="docutils literal notranslate"><span class="pre">drop</span></code> concept since it isn’t
-sourced from an existing column.</p></li>
+<li><p>Only the feature-name overloads create a structured <code class="docutils literal notranslate"><span class="pre">case_axis_</span></code>. The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> and <code class="docutils literal notranslate"><span class="pre">Note</span></code>
+overloads never do and have no <code class="docutils literal notranslate"><span class="pre">drop</span></code> concept because their labels are not sourced from
+an existing feature.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">separator</span></code> only affects the displayed composite string. It’s preserved
 across operations that rebuild that string from the levels — including
 <a class="reference internal" href="order.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">order()</span></code></span></a>, <a class="reference internal" href="swap.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">swap()</span></code></span></a>, <a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop()</span></code></span></a>, and

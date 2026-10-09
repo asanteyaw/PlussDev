@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Catalog::set" href="set.html" />
@@ -37,19 +37,19 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 61bfa25297dc -->
+<!-- pluss-signature-hash: 684340c92453 -->
 <section id="catalog-select">
 <h1>Catalog::select<a class="headerlink" href="#catalog-select" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../catalog_api_reference.html"><span class="doc std std-doc">Back to Catalog API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">Catalog</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
 
 <span class="k">static</span><span class="w"> </span><span class="n">Catalog</span><span class="w"> </span><span class="n">Catalog</span><span class="o">::</span><span class="n">select</span><span class="p">(</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conditions</span><span class="p">,</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Catalog</span><span class="o">&gt;</span><span class="w"> </span><span class="n">choices</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Catalog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">default_value</span><span class="p">)</span>
 </pre></div>
@@ -57,7 +57,7 @@
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Chooses row-wise between whole catalogs, using boolean <code class="docutils literal notranslate"><span class="pre">Thread</span></code> masks as the conditions.</p>
+<p>Chooses row-wise between whole catalogs, using boolean <code class="docutils literal notranslate"><span class="pre">Slate</span></code> masks as the conditions.</p>
 <p>Every choice catalog and the default catalog must have the same keys in the same order.
 For each key, <code class="docutils literal notranslate"><span class="pre">Catalog::select(...)</span></code> delegates to <a class="reference internal" href="../stream/select.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::select</span></code></span></a>.</p>
 <p>To keep only named keys, do <strong>not</strong> use this method anymore. Project them with

@@ -1,18 +1,18 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::resample_last
+# Timeline::TimelineIndexAccessor::resample_last
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_last(
+pluss::Series Timeline::TimelineIndexAccessor::resample_last(
     const pluss::Series& values,
     std::string_view freq,
     std::int64_t step = 1) const
 
-pluss::Series TimelineIndexAccessor::resample_last(
+pluss::Series Timeline::TimelineIndexAccessor::resample_last(
     const pluss::Series& values,
     const ResampleOptions& options) const
 ```
@@ -24,7 +24,7 @@ inside each bin. It answers “what was the final known state during this
 interval?”, which is different from asking for the greatest value. A closing
 reading may be lower than the interval peak and still be the correct result.
 
-Chronology comes from the monotonic increasing `TimelineIndexAccessor`. `values[i]` belongs
+Chronology comes from the monotonic increasing `Timeline::TimelineIndexAccessor`. `values[i]` belongs
 to timestamp `i`, and the output contains one lane per generated bin. Floating
 `NaN` lanes are ignored, so a trailing missing reading does not erase the last
 valid state. A bin with no valid lane returns `NaN`.
@@ -54,11 +54,11 @@ origin. Calendar boundaries use local civil time in the index timezone.
 Example 1. Select the closing reading in each hour.
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
 
 std::cout << pluss::series::print(index.resample_last(values, "H")) << "\n";
@@ -87,10 +87,10 @@ data=[5.0000]
 Example 3. Missing values are skipped, and an unobserved hour remains absent.
 
 ```cpp
-auto sparse = pluss::timeindex::make({
+auto sparse = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:10:00Z",
     "2024-11-01T00:20:00Z", "2024-11-01T02:00:00Z",
-});
+}).index();
 auto readings = pluss::make_series(std::vector<double>{
     std::numeric_limits<double>::quiet_NaN(), 3.0, 1.0, 7.0});
 
@@ -107,10 +107,10 @@ data=[1.0000, nan, 7.0000]
 Example 4. Contrast closing state with interval peak.
 
 ```cpp
-auto sample = pluss::timeindex::make({
+auto sample = pluss::timeline::make({
     "2025-01-01T00:00:00Z", "2025-01-01T00:20:00Z",
     "2025-01-01T00:40:00Z",
-});
+}).index();
 auto load = pluss::make_series({2.0, 9.0, 4.0});
 
 std::cout << pluss::series::print(sample.resample_last(load, "H")) << "\n";
@@ -130,10 +130,10 @@ Example 5. Right closure moves the exact `01:00` value into the first bin, so
 that value becomes the first bin's close.
 
 ```cpp
-pluss::TimelineIndexAccessor::ResampleOptions options;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions options;
 options.freq = "H";
-options.closed = pluss::TimelineIndexAccessor::ResampleClosed::Right;
-options.label = pluss::TimelineIndexAccessor::ResampleLabel::Right;
+options.closed = pluss::Timeline::TimelineIndexAccessor::ResampleClosed::Right;
+options.label = pluss::Timeline::TimelineIndexAccessor::ResampleLabel::Right;
 
 std::cout << pluss::series::print(index.resample_last(values, options)) << "\n";
 ```
@@ -159,7 +159,7 @@ try {
 ### Output
 
 ```text
-TimelineIndexAccessor: unsupported freq (expected fixed units like S/min/H/D, weekly W, monthly M, yearly Y)
+Timeline::TimelineIndexAccessor: unsupported freq (expected fixed units like S/min/H/D, weekly W, monthly M, yearly Y)
 ```
 
 ## Validation And Cost
@@ -171,9 +171,9 @@ bin's candidate whenever a later valid lane is encountered.
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_first`](resample_first.md)
-- [`TimelineIndexAccessor::resample_max`](resample_max.md)
-- [`TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
+- [`Timeline::TimelineIndexAccessor::resample_first`](resample_first.md)
+- [`Timeline::TimelineIndexAccessor::resample_max`](resample_max.md)
+- [`Timeline::TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_first.html">

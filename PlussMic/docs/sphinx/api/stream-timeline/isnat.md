@@ -18,10 +18,10 @@ replacing it with a `Bool` `Series` stream.
 
 ```{important} StreamTimelineAccessor requires the bound stream to be Timeline-kind
 Every method on this accessor — not just `isnat()` — routes through
-`Thread::tl()` for the bound stream. `tl()` requires the stream to be
+`Slate::tl()` for the bound stream. `tl()` requires the stream to be
 `Timeline`-kind; if it is not, the call throws
-`"Thread::tl: expected Timeline payload"`. Cast first with
-[`Stream::cast(ThreadCastTarget::Timeline)`](../stream/cast.md) if the stream
+`"Slate::tl: expected Timeline payload"`. Cast first with
+[`Stream::cast(SlateCastTarget::Timeline)`](../stream/cast.md) if the stream
 isn't already a timestamp.
 ```
 
@@ -80,7 +80,7 @@ try {
 ### Output
 
 ```text
-Thread::tl: expected Timeline payload
+Slate::tl: expected Timeline payload
 ```
 
 ## Notes

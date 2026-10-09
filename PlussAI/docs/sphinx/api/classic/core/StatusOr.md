@@ -18,10 +18,47 @@ for `Series`, an empty vector, …), not a sentinel that flags itself as invalid
 Reading `.value()` without checking `.ok()` first compiles, runs, and hands you
 a silently wrong answer instead of a crash. The only correct pattern is:
 
+Check a `StatusOr` before reading its value. The success branch prints the value.
+
 ```cpp
-cls::StatusOr<T> result = some_call(...);
-if (!result.ok()) { /* handle result.status() */ }
-else { /* use result.value() */ }
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
+namespace cls = pluss::ai::classic;
+
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
+
+int main() {
+  cls::StatusOr<int> result = cls::StatusOr<int>(42);
+  if (!result.ok()) {
+    std::cout << "failed: " << result.status().message << "\n";
+  } else {
+    std::cout << "value = " << result.value() << "\n";
+  }
+  return 0;
+}
+```
+
+Output
+
+```text
+value = 42
 ```
 
 ## Signature

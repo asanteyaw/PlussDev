@@ -45,5 +45,5 @@ auto timed = df.features("score").ts().timed(
 ```
 
 Direct `DataFrame::moving`, `DataFrame::growing`, `DataFrame::decay`,
-`DataFrame::grouped`, `DataFrame::timed`, and direct `Thread` variants are not
+`DataFrame::grouped`, `DataFrame::timed`, and direct `Slate` variants are not
 part of the public API. Select intentional time-series values and use `.ts()`.

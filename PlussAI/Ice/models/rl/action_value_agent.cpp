@@ -1,6 +1,7 @@
 #include "pluss/ai/ice/models/rl/action_value_agent.h"
 
 #include "pluss/ai/ice/io.h"
+#include "pluss/ai/ice/callback.h"
 #include "pluss/ai/ice/io/kv_artifact.h"
 #include "pluss/ai/ice/no_grad.h"
 #include "pluss/ai/ice/optim.h"
@@ -34,6 +35,7 @@ constexpr std::int64_t kSchema = 1;
   out.optimizer = options.optimizer;
   out.shuffle = options.shuffle;
   out.seed = options.seed;
+  out.progress = options.progress;
   out.validation = options.validation;
   out.objective_regularization = options.objective_regularization;
   out.loop_regularization = options.loop_regularization;
@@ -385,7 +387,8 @@ void ActionValueAgent::learn(const ActionValueBatch& train,
   sync_target_(impl_->target, impl_->online);
 
   auto parameters = impl_->parameters();
-  auto optimizer = make_optimizer(parameters, recipe_(options));
+  const TrainOptions runtime_options = recipe_(options);
+  auto optimizer = make_optimizer(parameters, runtime_options);
 
   ActionValueBatch train_batch = move_batch_(train, impl_->platform);
   ActionValueBatch val_batch = use_validation ? move_batch_(val, impl_->platform) : ActionValueBatch{};
@@ -395,9 +398,32 @@ void ActionValueAgent::learn(const ActionValueBatch& train,
   std::int64_t stale = 0;
   std::vector<std::int64_t> order(static_cast<std::size_t>(train_batch.observation.sizes()[0]));
   std::iota(order.begin(), order.end(), 0);
+  CallbackChain callbacks{};
+  if (options.progress.verbose) {
+    callbacks.add(std::make_shared<EpochLoggerCallback>(options.progress));
+  }
+  RunState state{
+      .model = nullptr,
+      .stage = StepStage::Learn,
+      .target_platform = impl_->platform,
+      .epoch = -1,
+      .batch_index = -1,
+      .global_step = 0,
+      .rows = 0,
+      .metrics = {},
+      .parameters = &parameters,
+      .recipe = &runtime_options,
+  };
 
   try {
+    callbacks.on_run_begin(state);
     for (std::int64_t epoch = 0; epoch < options.execution.max_epochs; ++epoch) {
+      state.epoch = epoch;
+      state.batch_index = -1;
+      state.metrics.clear();
+      callbacks.on_epoch_begin(state);
+      double train_weighted_loss_sum = 0.0;
+      std::int64_t train_total_rows = 0;
       if (options.shuffle) {
         std::mt19937_64 rng(options.seed + static_cast<std::uint64_t>(epoch));
         std::shuffle(order.begin(), order.end(), rng);
@@ -417,40 +443,59 @@ void ActionValueAgent::learn(const ActionValueBatch& train,
                                         : pluss::nn::losses::MSE(q_taken, target_value);
         loss = apply_penalties_(loss, parameters, options.objective_regularization);
 
+        if (options.progress.verbose) {
+          const auto rows = static_cast<std::int64_t>(end - begin);
+          train_weighted_loss_sum += loss.item<double>() * static_cast<double>(rows);
+          train_total_rows += rows;
+        }
+
         optimizer->clear();
         loss.reverse();
         optimizer->step();
 
         ++impl_->update_steps;
+        ++state.global_step;
         if (impl_->update_steps % options_.target_sync_every == 0) {
           sync_target_(impl_->target, impl_->online);
         }
       }
 
-      if (!use_validation ||
-          ((epoch + 1) % options.validation.every_n_epochs != 0) ||
-          epoch < options.validation.start_from_epoch) {
-        continue;
+      state.metrics.clear();
+      if (train_total_rows > 0) {
+        state.put_metric("loss", train_weighted_loss_sum / static_cast<double>(train_total_rows));
       }
 
-      impl_->online.train(false);
-      impl_->target.train(false);
-      const auto report = assess_impl_(impl_->online, impl_->target, options_, val_batch, options.use_huber);
-      if (report.loss + options.loop_regularization.min_delta < best_metric) {
-        best_metric = report.loss;
-        stale = 0;
-        if (options.loop_regularization.restore_best_weights) {
-          best_parameters = clone_parameters_(parameters);
-        }
-      } else {
-        ++stale;
-        if (options.loop_regularization.early_stopping &&
-            stale >= options.loop_regularization.patience) {
-          break;
+      const bool should_validate =
+          use_validation && epoch >= options.validation.start_from_epoch &&
+          ((epoch - options.validation.start_from_epoch) % options.validation.every_n_epochs == 0);
+      if (should_validate) {
+        impl_->online.train(false);
+        impl_->target.train(false);
+        const auto report = assess_impl_(impl_->online, impl_->target, options_, val_batch, options.use_huber);
+        state.put_metric("val_loss", report.loss);
+        state.put_metric("mean_q", report.mean_q);
+        if (report.loss + options.loop_regularization.min_delta < best_metric) {
+          best_metric = report.loss;
+          stale = 0;
+          if (options.loop_regularization.restore_best_weights) {
+            best_parameters = clone_parameters_(parameters);
+          }
+        } else {
+          ++stale;
+          if (options.loop_regularization.early_stopping &&
+              stale >= options.loop_regularization.patience) {
+            state.stop_requested = true;
+            state.stop_reason = "early_stopping";
+          }
         }
       }
+      callbacks.on_epoch_end(state);
+      if (state.stop_requested) break;
     }
+    callbacks.on_run_end(state);
   } catch (const std::exception& e) {
+    state.exception_message = e.what();
+    callbacks.on_exception(state);
     PLUSS_FAIL(std::string("pluss::ai::ice::models::ActionValueAgent::learn: training became numerically unstable: ") +
                e.what());
   }

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::ndistinct" href="ndistinct.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the number of cases (rows) in the frame. This is the same count that appears
 as the first number in a printed frame’s <code class="docutils literal notranslate"><span class="pre">[N</span> <span class="pre">cs</span> <span class="pre">x</span> <span class="pre">M</span> <span class="pre">feat]</span></code> footer, and the length
-every case-aligned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> argument (the <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> side of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>,
+every case-aligned <code class="docutils literal notranslate"><span class="pre">Slate</span></code> argument (the <code class="docutils literal notranslate"><span class="pre">Axis::Case</span></code> side of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>,
 <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>, and similar methods) is checked against.</p>
 </section>
 <section id="parameters">
@@ -91,7 +91,7 @@ The number of cases in the frame.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">ncases()</span></code> counts rows, not distinct case labels — a frame is not required to have
 unique case labels, so <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> can exceed the number of <em>distinct</em> labels
 reported by <a class="reference internal" href="ndistinct.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ndistinct()</span></code></span></a> on the case axis.</p></li>
-<li><p>Every feature <code class="docutils literal notranslate"><span class="pre">Thread</span></code> in the frame has exactly <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> elements; this is an
+<li><p>Every feature <code class="docutils literal notranslate"><span class="pre">Slate</span></code> in the frame has exactly <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> elements; this is an
 invariant the frame maintains internally.</p></li>
 </ul>
 </section>

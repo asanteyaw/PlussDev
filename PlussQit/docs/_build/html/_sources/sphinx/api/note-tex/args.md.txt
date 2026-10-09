@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::args
+# Note::TexAccessor::args
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::args(std::string_view cmd) const
+TokenBatch Note::TexAccessor::args(std::string_view cmd) const
 ```
 
 ## Select One Command's Required Arguments

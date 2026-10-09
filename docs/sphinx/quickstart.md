@@ -156,7 +156,7 @@ enriched.save_csv("outputs/enriched.csv");
 
 The important conventions are:
 
-- `features("name")` returns one column as a `Thread`.
+- `features("name")` returns one column as a `Slate`.
 - `features({"a", "b"})` returns a smaller `DataFrame`.
 - `query(...)` filters cases with a string expression.
 - `assign(...)` derives new features.
@@ -170,7 +170,7 @@ The important conventions are:
 | `Note` | Text and byte-vector data |
 | `Timeline` | Date/time values |
 | `TimeIndex` | 1D time index operations |
-| `Thread` | A typed table column over `Series`, `Note`, `Timeline`, or `TimeIndex` |
+| `Slate` | A typed table column over `Series`, `Note`, `Timeline`, or `TimeIndex` |
 | `DataFrame` | 2D table of named features over cases |
 | `Atlas` | Stack of related `DataFrame` objects |
 | `Type` | Runtime union over `Series`, `Note`, `Timeline`, and `TimeIndex` |

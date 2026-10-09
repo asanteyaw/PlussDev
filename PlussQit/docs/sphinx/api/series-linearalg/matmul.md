@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::matmul
+# Series::LinearAlgAccessor::matmul
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::matmul(const Series& other) const
+Series Series::LinearAlgAccessor::matmul(const Series& other) const
 Series SeriesLinearAlgProxy::matmul() const
 Series Series::matmul(const Series& other) const
 ```
@@ -294,9 +294,9 @@ expect the shared inner dimension to disappear through summation.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::mm`](mm.md): strict matrix-matrix product.
-- [`SeriesLinearAlgAccessor::mv`](mv.md): strict matrix-vector product.
-- [`SeriesLinearAlgAccessor::dot`](dot.md): inner product of two vectors.
+- [`Series::LinearAlgAccessor::mm`](mm.md): strict matrix-matrix product.
+- [`Series::LinearAlgAccessor::mv`](mv.md): strict matrix-vector product.
+- [`Series::LinearAlgAccessor::dot`](dot.md): inner product of two vectors.
 - [`Series::mul`](../series/mul.md): elementwise multiplication.
 
 <div class="pluss-inline-prev-next">

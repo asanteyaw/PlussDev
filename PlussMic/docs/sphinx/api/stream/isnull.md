@@ -15,7 +15,7 @@ Stream::isnull() const -> Stream
 
 Returns a new `Bool`-dtype `Series` stream, same length as the receiver, marking which
 rows are `NULL` (validity-masked as invalid, or an unmarked `NaN` in a numeric payload).
-Delegates to `Thread::isnull()`; works uniformly across all four payload kinds — unlike the
+Delegates to `Slate::isnull()`; works uniformly across all four payload kinds — unlike the
 elementwise math family, `isnull()` never throws based on kind.
 
 ## Parameters
@@ -85,7 +85,7 @@ label        | value
 - The result is always `Series`-kind (`Series[bool]`), regardless of the receiver's own
   kind.
 - In every case tested here, produces the same result as [`invalid()`](invalid.md) — the
-  two call different underlying `Thread` methods but agree in ordinary use.
+  two call different underlying `Slate` methods but agree in ordinary use.
 
 ## See Also
 

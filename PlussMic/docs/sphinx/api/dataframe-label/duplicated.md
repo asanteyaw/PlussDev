@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 7d6a6af3658e -->
+<!-- pluss-signature-hash: 051f8ce6a6b0 -->
 
 # DataFrameLabelAccessor::duplicated
 
@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const -> Thread
-DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const -> Thread
-DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const -> Thread
+DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const -> Slate
+DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const -> Slate
+DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const -> Slate
 ```
 
 ## What It Does
@@ -42,8 +42,8 @@ If `true`, the *last* occurrence is spared instead; every earlier one is
 
 ## Returns
 
-`Thread`
-    A boolean thread, one entry per row, `display_name` `"duplicated"`,
+`Slate`
+    A boolean slate, one entry per row, `display_name` `"duplicated"`,
     displayed against the case label(s) it was computed from.
 
 ## Examples
@@ -54,8 +54,8 @@ Example 1. Mark duplicates on the full case label, with one repeated value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().duplicated();
@@ -80,9 +80,9 @@ Example 2. Key the check on just one level of a structured, multi-level frame.
 
 ```cpp
 auto readings = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Thread(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.label().set({"region", "city"}, true, "/");
 
 auto out2 = grouped.label().duplicated({"region"});
@@ -111,8 +111,8 @@ Example 3. Spare the *last* occurrence instead of the first, with
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().duplicated(false, true);
@@ -142,8 +142,8 @@ the call throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 try {
@@ -157,7 +157,7 @@ try {
 ### Output
 
 ```text
-Thread::duplicated: keep_first and keep_last cannot both be true
+Slate::duplicated: keep_first and keep_last cannot both be true
 ```
 
 Sparing both the first *and* the last occurrence isn't a coherent request, so

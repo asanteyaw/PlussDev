@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::is_monotonic_decreasing
+# Timeline::TimelineIndexAccessor::is_monotonic_decreasing
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-bool TimelineIndexAccessor::is_monotonic_decreasing() const
+bool Timeline::TimelineIndexAccessor::is_monotonic_decreasing() const
 ```
 
 ## What The Predicate Proves
@@ -22,7 +22,7 @@ of readings may be newest-first and still be well ordered, even though most
 ordered lookup and resampling operations require the opposite, increasing
 direction. This method lets a caller distinguish that deliberate reverse order
 from a genuinely scrambled axis without sorting or allocating another
-`TimelineIndexAccessor`.
+`Timeline::TimelineIndexAccessor`.
 
 The result is a native C++ `bool`, not a one-element container. Empty and
 single-element axes return `true`: neither contains an adjacent pair that
@@ -34,11 +34,11 @@ timezone used to display those instants cannot change the answer.
 Example 1. An ordinary increasing axis is not decreasing.
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
-});
+}).index();
 
 std::cout << std::boolalpha
           << index.is_monotonic_decreasing() << "\n";
@@ -54,13 +54,13 @@ Example 2. Build a newest-first axis with construction-time order enforcement
 disabled, then validate its intended direction explicitly.
 
 ```cpp
-auto newest_first = pluss::timeindex::make({
+auto newest_first = pluss::timeline::make({
     "2024-11-01T01:20:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:00:00Z",
-}, false);
+}).index(false);
 
 std::cout << std::boolalpha
           << newest_first.is_monotonic_decreasing() << "\n";
@@ -76,12 +76,12 @@ Example 3. Equal neighbors satisfy both monotonic directions. They affect
 uniqueness, not ordering.
 
 ```cpp
-auto tied = pluss::timeindex::make({
+auto tied = pluss::timeline::make({
     "2025-01-03T00:00:00Z",
     "2025-01-02T00:00:00Z",
     "2025-01-02T00:00:00Z",
     "2025-01-01T00:00:00Z",
-}, false);
+}).index(false);
 
 std::cout << std::boolalpha
           << "decreasing=" << tied.is_monotonic_decreasing() << "\n"
@@ -98,8 +98,8 @@ unique=false
 Example 4. Trivial axes are monotonically decreasing by definition.
 
 ```cpp
-auto one = pluss::timeindex::make("2025-01-01T00:00:00Z");
-auto none = pluss::timeindex::make(std::vector<std::int64_t>{});
+auto one = pluss::timeline::make({"2025-01-01T00:00:00Z"}).index();
+auto none = pluss::timeline::epoch(std::vector<std::int64_t>{}).index();
 
 std::cout << std::boolalpha
           << "one=" << one.is_monotonic_decreasing() << "\n"
@@ -121,11 +121,11 @@ is constant, and it neither mutates nor copies the axis.
 
 ## See Also
 
-- [`TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md): validate
+- [`Timeline::TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md): validate
   the order required by ordered lookup and resampling.
-- [`TimelineIndexAccessor::is_unique`](is_unique.md): detect repeated instants independently
+- [`Timeline::TimelineIndexAccessor::is_unique`](is_unique.md): detect repeated instants independently
   of direction.
-- [`TimelineIndexAccessor::sort`](sort.md): produce an increasing axis when reordering is
+- [`Timeline::TimelineIndexAccessor::sort`](sort.md): produce an increasing axis when reordering is
   appropriate.
 
 <div class="pluss-inline-prev-next">

@@ -5,7 +5,8 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow tokenizer{
       .lang = Language::English,
@@ -29,16 +30,25 @@ int main() {
   }
   for (std::size_t i = 0; i < gold_docs.size(); ++i) {
     auto& doc = gold_docs[i];
-    if (doc.tokens.size() != 5) {
-      std::cerr << "unexpected tokenization shape in training corpus\n";
+    const bool tech = labels[i] == "tech";
+    const std::size_t expected_tokens = tech ? 6 : 5;
+    if (doc.tokens.size() != expected_tokens) {
+      std::cerr << "unexpected tokenization shape in training corpus: "
+                << doc.tokens.size() << " tokens\n";
       return 1;
     }
 
     doc.tokens[0].pos = "PROPN";
-    doc.tokens[1].pos = (labels[i] == "tech") ? "VERB" : "VERB";
-    doc.tokens[2].pos = (labels[i] == "tech") ? "NOUN" : "NOUN";
-    doc.tokens[3].pos = "ADP";
-    doc.tokens[4].pos = "PROPN";
+    doc.tokens[1].pos = "VERB";
+    doc.tokens[2].pos = "NOUN";
+    if (tech) {
+      doc.tokens[3].pos = "NOUN";
+      doc.tokens[4].pos = "ADP";
+      doc.tokens[5].pos = "PROPN";
+    } else {
+      doc.tokens[3].pos = "ADP";
+      doc.tokens[4].pos = "PROPN";
+    }
 
     doc.entities.push_back(Span{
         .token_start = 0,
@@ -46,9 +56,9 @@ int main() {
         .label = "PERSON",
     });
     doc.entities.push_back(Span{
-        .token_start = 4,
-        .token_end = 5,
-        .label = (labels[i] == "tech") ? "ORG" : "FAC",
+        .token_start = static_cast<std::int64_t>(expected_tokens - 1),
+        .token_end = static_cast<std::int64_t>(expected_tokens),
+        .label = tech ? "ORG" : "FAC",
     });
   }
 
@@ -101,7 +111,7 @@ int main() {
   const std::string probe = "Laurel reviews compiler warnings at Acme";
   const auto doc = nlp.infer(probe);
 
-  std::cout << "== NodeB Full NLP Workflow ==\n";
+  std::cout << "== PlussAI NLP Full Workflow ==\n";
   std::cout << "text: " << probe << "\n";
   std::cout << "doc_label=" << doc.doc_label << " score=" << doc.doc_score << "\n\n";
 

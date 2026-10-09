@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::cholesky_solve
+# Series::LinearAlgAccessor::cholesky_solve
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::cholesky_solve(const Series& b, bool upper = false) const
+Series Series::LinearAlgAccessor::cholesky_solve(const Series& b, bool upper = false) const
 Series SeriesLinearAlgProxy::cholesky_solve(bool upper = false) const
 ```
 

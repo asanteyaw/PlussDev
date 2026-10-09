@@ -47,8 +47,8 @@ values.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 std::cout << labeled.label().monotonic();
@@ -75,8 +75,8 @@ Example 2. Use `strict = true` to reject equal adjacent case labels.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "north", "west"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "north", "west"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 std::cout << labeled.label().monotonic();
@@ -101,8 +101,8 @@ Example 3. Pass `ascending = false` to check for descending order instead.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"west", "north", "east"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0}))}});
+    {{"region", Slate(pluss::make_note({"west", "north", "east"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0}))}});
 auto labeled = orders.label().set("region");
 
 std::cout << labeled.label().monotonic();
@@ -127,8 +127,8 @@ expected to sort.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Thread(pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN()})));
+    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Slate(pluss::make_series({10.0, 20.0, std::numeric_limits<double>::quiet_NaN()})));
 std::cout << readings;
 
 std::cout << readings.label().monotonic();

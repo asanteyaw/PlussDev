@@ -354,12 +354,12 @@ namespace models::builder {
   const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
   const auto row_n = static_cast<std::int64_t>(count);
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
+  std::vector<std::pair<std::string, pluss::table::Slate>> columns{};
   columns.reserve(4);
-  columns.emplace_back("name", pluss::table::Thread(pluss::make_note(names_col)));
-  columns.emplace_back("task_kind", pluss::table::Thread(pluss::make_note(task_kinds)));
-  columns.emplace_back("trained", pluss::table::Thread(pluss::make_note(trained)));
-  columns.emplace_back("stage_count", pluss::table::Thread(pluss::make_series(stage_counts, {row_n}, i64_cfg)));
+  columns.emplace_back("name", pluss::table::Slate(pluss::make_note(names_col)));
+  columns.emplace_back("task_kind", pluss::table::Slate(pluss::make_note(task_kinds)));
+  columns.emplace_back("trained", pluss::table::Slate(pluss::make_note(trained)));
+  columns.emplace_back("stage_count", pluss::table::Slate(pluss::make_series(stage_counts, {row_n}, i64_cfg)));
 
   return pluss::table::DataFrame(std::move(columns)).title("Builder");
 }

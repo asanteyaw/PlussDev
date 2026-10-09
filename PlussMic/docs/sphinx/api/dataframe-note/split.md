@@ -64,7 +64,7 @@ demonstration with identical data under both overloads.
 **delimiter** / **pattern** (`std::string_view`)
     The literal delimiter (first overload) or literal/regex pattern (second
     overload, depending on `options.regex`) to split on. An empty delimiter
-    throws `"Thread::split: delimiter cannot be empty"`.
+    throws `"Slate::split: delimiter cannot be empty"`.
 
 **limit** (`std::int64_t`, first overload, default `-1`)
     Maximum number of splits to perform (producing at most `limit + 1`
@@ -96,7 +96,7 @@ prefix, and a row with no delimiter at all.
 using namespace pluss::table;
 
 auto paths = DataFrame({
-    {"path", Thread(pluss::make_note(
+    {"path", Slate(pluss::make_note(
         {"a/b/c", "x/y", "solo", "z"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -169,7 +169,7 @@ optional surrounding whitespace) and a custom column prefix.
 
 ```cpp
 auto rows = DataFrame({
-    {"csv", Thread(pluss::make_note(
+    {"csv", Slate(pluss::make_note(
         {"a, b,c", "x , y", "single", "z"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -220,7 +220,7 @@ options)` overload ignores that row entirely.
 
 ```cpp
 auto mixed = DataFrame({
-    {"path", Thread(pluss::make_note({"a/b", "x", "1/2/3/4"}),
+    {"path", Slate(pluss::make_note({"a/b", "x", "1/2/3/4"}),
         pluss::make_series(std::vector<bool>{true, true, false}))},
 });
 std::cout << mixed;
@@ -281,7 +281,7 @@ would expect from looking at the printed `path` column alone.
 ## Notes
 
 - Requires the accessor to be built from exactly **one** feature.
-- An empty delimiter/pattern throws `"Thread::split: delimiter cannot be
+- An empty delimiter/pattern throws `"Slate::split: delimiter cannot be
   empty"`.
 - `limit` caps the *number of splits*, not the *number of output columns*
   directly — the capped remainder stays joined in the last piece (Example 2).

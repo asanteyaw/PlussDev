@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::shuffle_tokens
+# Note::NlpAccessor::shuffle_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::shuffle_tokens() const
+TokenBatch Note::NlpAccessor::shuffle_tokens() const
 ```
 
 ## Deterministically Permute Tokens

@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::cdf
+# Series::StatAccessor::cdf
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::cdf() const
-Series SeriesStatAccessor::cdf(double sigma) const
-Series SeriesStatAccessor::cdf(double mu, double sigma) const
+Series Series::StatAccessor::cdf() const
+Series Series::StatAccessor::cdf(double sigma) const
+Series Series::StatAccessor::cdf(double mu, double sigma) const
 Series SeriesStatProxy::cdf() const
 Series SeriesStatProxy::cdf(double sigma) const
 Series SeriesStatProxy::cdf(double mu, double sigma) const
@@ -113,6 +113,6 @@ data=[0.24197072, 0.39894228, 0.24197072]
 - [`logcdf`](logcdf.md): stable logarithmic lower-tail probability.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="../../series_stat_accessor_api_reference.html"><span class="label">Previous</span><span class="title">SeriesStatAccessor</span></a>
+  <a class="prev-link" href="../../series_stat_accessor_api_reference.html"><span class="label">Previous</span><span class="title">Series::StatAccessor</span></a>
   <a class="next-link" href="cdist.html"><span class="label">Next</span><span class="title">cdist</span></a>
 </div>

@@ -61,7 +61,7 @@ Archive ArchiveLabelAccessor::sort(bool ascending, bool nulls_last) const {
   std::iota(idx.begin(), idx.end(), 0);
 
   if (archive_.impl_ref_().depth_labels_.has_value()) {
-    const auto labels = archive_.impl_ref_().depth_labels_->to_thread();
+    const auto labels = archive_.impl_ref_().depth_labels_->to_slate();
     std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
       const auto cmp = pluss::table::detail::compare_rows(labels, a, b, nulls_last);
       return ascending ? (cmp < 0) : (cmp > 0);
@@ -154,7 +154,7 @@ ArchiveCastAccessor ArchiveKeyAccessor::cast() const {
   return ArchiveCastAccessor(archive_, keys_, {});
 }
 
-ArchiveCastAccessor ArchiveKeyAccessor::cast(const pluss::table::ThreadCastOptions& options) const {
+ArchiveCastAccessor ArchiveKeyAccessor::cast(const pluss::table::SlateCastOptions& options) const {
   return ArchiveCastAccessor(archive_, keys_, options);
 }
 
@@ -218,7 +218,7 @@ Archive ArchiveKeyAccessor::ndistinct(DistinctOptions options) const {
 
 ArchiveCastAccessor::ArchiveCastAccessor(Archive archive,
                                          std::vector<std::string> keys,
-                                         pluss::table::ThreadCastOptions options)
+                                         pluss::table::SlateCastOptions options)
     : keysel_(std::move(archive), std::move(keys)), options_(std::move(options)) {}
 
 Archive ArchiveCastAccessor::series() const {
@@ -347,9 +347,9 @@ ArchivePlotAccessor::ArchivePlotAccessor(Archive archive, pluss::table::AtlasPlo
 
 namespace {
 
-std::optional<pluss::table::Thread> archive_depth_labels_as_thread(const Archive& archive) {
+std::optional<pluss::table::Slate> archive_depth_labels_as_slate(const Archive& archive) {
   if (!archive.label().has()) return std::nullopt;
-  return archive.label().values().to_thread();
+  return archive.label().values().to_slate();
 }
 
 std::vector<pluss::table::DataFrame> archive_tabelized_frames(const Archive& archive) {
@@ -375,7 +375,7 @@ std::vector<pluss::table::DataFrame> archive_tabelized_frames(const Archive& arc
 pluss::table::AtlasPlotAccessor archive_plot_accessor(const Archive& archive,
                                                       const pluss::table::AtlasPlotOptions& options) {
   auto frames = archive_tabelized_frames(archive);
-  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_thread(archive), options);
+  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_slate(archive), options);
 }
 
 pluss::table::AtlasPlotAccessor archive_plot_accessor_scoped(const Archive& archive,
@@ -383,7 +383,7 @@ pluss::table::AtlasPlotAccessor archive_plot_accessor_scoped(const Archive& arch
                                                              const pluss::table::AtlasPlotOptions& options) {
   const auto scoped = archive.keys(keys);
   auto frames = archive_tabelized_frames(scoped);
-  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_thread(scoped), options);
+  return pluss::table::AtlasPlotAccessor(std::move(frames), archive_depth_labels_as_slate(scoped), options);
 }
 
 pluss::table::AtlasPlotAccessor archive_plot_accessor_scoped(const Archive& archive,

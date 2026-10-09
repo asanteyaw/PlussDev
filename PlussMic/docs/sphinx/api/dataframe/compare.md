@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 9625712967b3 -->
+<!-- pluss-signature-hash: 37257b69b99d -->
 
 # DataFrame::compare
 
@@ -11,9 +11,9 @@
 DataFrame::compare(double other) const -> DataFrame
 DataFrame::compare(const DataFrame& other) const -> DataFrame
 DataFrame::compare(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::compare(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::compare(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::compare(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::compare(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::compare(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::compare(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -36,11 +36,11 @@ evaluate — it is hardwired to not-equal. For any other relation, call
 **other**
 
 The right-hand operand: `double` (numeric scalar), `const DataFrame&` (aligned
-frame-to-frame), or `const Thread&` (broadcast per `axis`). Identical in every respect
+frame-to-frame), or `const Slate&` (broadcast per `axis`). Identical in every respect
 to [`ne()`](ne.md)'s `other` — there is no `std::string_view` overload for
 `compare()`, unlike `ne()`, `eq()`, `lt()`, `le()`, `gt()`, and `ge()`.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -105,12 +105,12 @@ s3   | false  true
 Same call arguments, same output — `compare(84.0)` is `ne(84.0)` under a different
 name, with nothing distinguishing the two at the result level.
 
-Example 2. The `Thread` overload's `axis` parameter, left at its default
+Example 2. The `Slate` overload's `axis` parameter, left at its default
 `Axis::Feature`: one threshold value per feature, broadcast down every case in
 that column.
 
 ```cpp
-auto per_feature = Thread(pluss::make_series({84.0, 88.0}));
+auto per_feature = Slate(pluss::make_series({84.0, 88.0}));
 auto out_feature = scores.compare(per_feature);
 std::cout << out_feature;
 ```
@@ -133,11 +133,11 @@ With `axis` defaulted to `Axis::Feature`, `per_feature`'s two values pair up wit
 (`false, true, false`), and every row's `final` is checked against `88` (`true,
 false, true`), independent of one another.
 
-Example 3. The same `Thread` overload with `axis = Axis::Case`: one threshold
+Example 3. The same `Slate` overload with `axis = Axis::Case`: one threshold
 value per case instead, broadcast across every feature in that row.
 
 ```cpp
-auto per_case = Thread(pluss::make_series({84.0, 90.0, 72.0}));
+auto per_case = Slate(pluss::make_series({84.0, 90.0, 72.0}));
 auto out_case = scores.compare(per_case, Axis::Case);
 std::cout << out_case;
 ```
@@ -175,7 +175,7 @@ using the exact same two-argument overload.
   to reach for.
 - [`DataFrame::eq`](eq.md): the full explanation of this comparison family's shared
   operand shapes.
-- `Thread::compare`: the lower-level typed comparison surface this ultimately reduces
+- `Slate::compare`: the lower-level typed comparison surface this ultimately reduces
   to on each column.
 
 <div class="pluss-inline-prev-next">

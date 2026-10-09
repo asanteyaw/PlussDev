@@ -108,6 +108,9 @@ many there are (at least two — see `## Errors`).
   (only the binary classifier computes them); requesting them, or
   `RocAuc`/`Gini`/`AveragePrecision`, fails with `Status::not_implemented`.
 
+`loss_history()`
+: The loss after each gradient iteration of the last `learn` call. For more than two classes the fit trains one binary model per class, so the history lists each class's iterations in class order. Empty before `learn`.
+
 `dump_state()` / `load_state(state)`
 : `[metadata, class_values, weights]` — **three** tensors, one more than
   [`SparseLinearBinaryClassifier`'s two](SparseLinearBinaryClassifier.md#methods) —
@@ -373,6 +376,45 @@ Output
 ```text
 ok = false
 message = "SparseLinearMultiClassifier::assess supports hard-label / Mcc / CohenKappa multiclass classification metrics (Gini / AveragePrecision / Brier need a dense classifier)."
+```
+
+### Example 7
+
+With three classes the history holds one run of losses per class, one after another. The program prints the total step count and the first and last losses across all of them.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+
+#include <iostream>
+
+int main() {
+  namespace cls = pluss::ai::classic;
+
+  const cls::SparseTripletMatrix x = cls::make_sparse_triplet(
+      6, 2, {0, 1, 2, 3, 4, 5}, {0, 0, 1, 1, 0, 1}, {1.0, 2.0, 1.0, 2.0, 1.0, 2.0}).value();
+  const pluss::Series y = pluss::make_series(
+      {0.0, 0.0, 1.0, 1.0, 2.0, 2.0}, {6}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU));
+
+  cls::SparseLinearMultiClassifier model;
+  model.learn(x, y);
+
+  const std::vector<double> history = model.loss_history();
+  std::cout << "steps = " << history.size() << "\n";
+  std::cout << "first loss = " << history.front() << "\n";
+  std::cout << "last loss = " << history.back() << "\n";
+  std::cout << "midpoint loss = " << history[history.size() / 2] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+steps = 2271
+first loss = 0.693147
+last loss = 0.623595
+midpoint loss = 0.434218
 ```
 
 ## Changelog

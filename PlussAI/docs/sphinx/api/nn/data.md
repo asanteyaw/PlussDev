@@ -23,20 +23,39 @@ because it is the data-loading half of the same training story
 
 ## How To Call It
 
+Batch four rows into groups of two with shuffling enabled. The program counts the batches the loader yields.
+
 ```cpp
-namespace loader = pluss::loader;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4, 1});
-const pluss::Series y = pluss::make_series({0.0, 1.0, 1.0, 0.0}, {4, 1});
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-loader::DataLoaderOptions options{};
-options.batch_size = 2;
-options.shuffle = true;
-
-loader::DataLoader data_loader({x, y}, options);
-for (auto batch : data_loader) {
-  // batch.x() / batch.y() -- one Fusion forward + loss + optimizer.step() per batch
+int main() {
+  namespace loader = pluss::loader;
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4, 1});
+  const pluss::Series y = pluss::make_series({0.0, 1.0, 1.0, 0.0}, {4, 1});
+  loader::DataLoaderOptions options{};
+  options.batch_size = 2;
+  options.shuffle = true;
+  loader::DataLoader data_loader({x, y}, options);
+  int batches = 0;
+  for (auto batch : data_loader) {
+    ++batches;
+    (void)batch;
+  }
+  std::cout << "batches = " << batches << "\n";
+  return 0;
 }
+```
+
+Output
+
+```text
+batches = 2
 ```
 
 Every training example throughout this reference's [`optim`](optim.md)

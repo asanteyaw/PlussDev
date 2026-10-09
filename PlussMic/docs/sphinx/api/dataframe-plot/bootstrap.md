@@ -81,7 +81,7 @@ Example 1. Default options: bootstrap the mean, 300 resamples, same-size draws.
 using namespace pluss::table;
 
 auto scores = DataFrame({
-    {"score", Thread(pluss::make_series({71.0, 85.0, 90.0, 63.0, 78.0, 82.0, 95.0, 68.0}))},
+    {"score", Slate(pluss::make_series({71.0, 85.0, 90.0, 63.0, 78.0, 82.0, 95.0, 68.0}))},
 });
 
 auto chart = scores.plot().bootstrap("score");
@@ -156,7 +156,7 @@ Example 6. Fewer than two rows throws.
 
 ```cpp
 auto single_row = DataFrame({
-    {"score", Thread(pluss::make_series({71.0}))},
+    {"score", Slate(pluss::make_series({71.0}))},
 });
 
 try {

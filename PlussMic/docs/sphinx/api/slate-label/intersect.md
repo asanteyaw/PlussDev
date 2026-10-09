@@ -1,0 +1,82 @@
+<!-- pluss-hand-authored -->
+
+# SlateLabelAccessor::intersect
+
+[Back to SlateLabelAccessor API Reference](../../slate_label_accessor_api_reference)
+
+## Signature
+
+```cpp
+SlateLabelAccessor::intersect(const Slate& other) const -> Slate
+```
+
+## What It Does
+
+Treats the bound slate's case labels and `other` as two sets of values, and
+returns the values present in **both** — deduplicated, in the case labels'
+own first-occurrence order.
+
+## Parameters
+
+**other** (`const Slate&`)
+
+The values to intersect with.
+
+## Returns
+
+`Slate`
+    The distinct case-label values also found in `other`, in first-occurrence
+    order, `display_name` `"intersect"`.
+
+## Examples
+
+Example 1. Intersect case labels with a repeat against a target set.
+
+```cpp
+using namespace pluss::table;
+
+auto tagged = Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))
+                  .label().set(Slate(pluss::make_note({"east", "west", "east", "north"})));
+
+auto other = Slate(pluss::make_note({"west", "south", "north"}));
+auto out = tagged.label().intersect(other);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  west
+1  north
+
+ptype: Note
+```
+
+`"east"` doesn't appear in `other`, so it's excluded even though it's the
+case labels' most frequent value; `"west"` and `"north"` are shared, in the
+order they first appear on the left side.
+
+## Notes
+
+- Symmetric in *content* but not in *order*: `a.label().intersect(b)` and
+  `b.intersect(a)` (thought of as sets) contain the same values, ordered by
+  whichever side's first-occurrence order you called it from.
+- Duplicates on either side are collapsed; the result never repeats a value.
+
+## See Also
+
+- [`SlateLabelAccessor::unite`](unite.md),
+  [`SlateLabelAccessor::diff`](diff.md),
+  [`SlateLabelAccessor::symdiff`](symdiff.md): the other set-algebra
+  operations over case-label values.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="has.html">
+    <span class="label">Previous</span>
+    <span class="title">has</span>
+  </a>
+  <a class="next-link" href="isnull.html">
+    <span class="label">Next</span>
+    <span class="title">isnull</span>
+  </a>
+</div>

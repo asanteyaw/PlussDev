@@ -22,12 +22,51 @@ across several cross-validation folds rather than one train/test split.
 
 ## How To Call It
 
+Summarize predictions against truth labels. The macro average is laid out as precision, recall, and F1, so the program reads those three values from the report.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-const cls::StatusOr<cls::ClassReport> report =
-    cls::classification_summary(truth_labels, predicted_labels);
-std::cout << "macro F1 = " << report.value().macro_average << "\n";
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
+
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const pluss::Series truth = pluss::make_series(std::vector<double>{0, 0, 1, 1, 1, 0}, {6}, cfg);
+  const pluss::Series predicted = pluss::make_series(std::vector<double>{0, 1, 1, 1, 0, 0}, {6}, cfg);
+  const cls::StatusOr<cls::ClassReport> report = cls::classification_summary(truth, predicted);
+  const std::vector<double> macro = report.value().macro_average.to(pluss::pCPU, pluss::ScalarType::Float64).reshape({3}).to_vec<double>();
+  std::cout << "macro precision = " << macro[0] << "\n";
+  std::cout << "macro recall = " << macro[1] << "\n";
+  std::cout << "macro F1 = " << macro[2] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+macro precision = 0.666667
+macro recall = 0.666667
+macro F1 = 0.666667
 ```
 
 Every function in this family that takes `truth`/`predicted` label vectors

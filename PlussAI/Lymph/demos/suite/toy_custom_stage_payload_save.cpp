@@ -9,15 +9,15 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const Series x = pluss::series::linspace(0.1, 5.0, 60, ScalarType::Float64);
   const Series y = x.log().mul(3.0).add(x.sqrt());
-  const DataFrame raw({{"x", Thread(x)}, {"y", Thread(y)}});
+  const DataFrame raw({{"x", Slate(x)}, {"y", Slate(y)}});
 
-  lymph::Payload data = lymph::payload::make(raw).features({"x"}).label("y");
-  lymph::Workflow wf = lymph::workflow::make(lymph::model::linear_regression());
-  wf.add(lymph::stage::custom("log1p_all", [](const Series& input) {
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x"}).label("y");
+  lymph::Workflow wf = lymph::workflow::make(lymph::models::linear_regression());
+  wf.add(lymph::prep::stage::custom("log1p_all", [](const Series& input) {
     return input.add(1.0).log();
   }));
 

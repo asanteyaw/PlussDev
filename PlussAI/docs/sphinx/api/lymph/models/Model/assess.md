@@ -18,7 +18,7 @@ lymph::MetricReport lymph::models::Model::assess(
 
 lymph::MetricReport lymph::models::Model::assess(
     const pluss::table::DataFrame& x,
-    const pluss::table::Thread& y,
+    const pluss::table::Slate& y,
     const lymph::options::Assess& options = {}) const;
 
 lymph::MetricReport lymph::models::Model::assess(
@@ -46,7 +46,7 @@ resampling policy belongs to the `selection` family and to
 [`Builder`](../builder/Builder.md).
 
 The input shapes mirror `learn` and `infer`: features plus a label `Series` or
-`Thread`, one frame plus a `DFBatch` that names the label column, or a
+`Slate`, one frame plus a `DFBatch` that names the label column, or a
 pre-assembled `LabeledBatch`.
 
 ## The `MetricReport`
@@ -68,8 +68,8 @@ The four `(features, label)` shapes mirror [`learn`](learn.md):
 `const pluss::table::DataFrame& x, const pluss::Series& y`
 : Feature columns in a frame, label in a numeric `Series`.
 
-`const pluss::table::DataFrame& x, const pluss::table::Thread& y`
-: Same, with the label as a `Thread`.
+`const pluss::table::DataFrame& x, const pluss::table::Slate& y`
+: Same, with the label as a `Slate`.
 
 `const pluss::table::DataFrame& frame, const lymph::options::DFBatch& data_options`
 : One frame carrying features and the label column; `data_options` names the
@@ -138,7 +138,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -149,7 +149,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.6, 2.2, 2.8, 3.0, 3.6, 4.2, 4.8}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.4, 0.8, 1.2, 1.5, 1.6, 2.0, 2.4, 2.8}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 0, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 
@@ -193,7 +193,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -201,7 +201,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.6, 2.2, 2.8, 3.4, 4.0, 4.6, 5.2}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.4, 0.9, 1.3, 1.6, 2.0, 2.4, 2.8, 3.2}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 0, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 
@@ -251,7 +251,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -259,7 +259,7 @@ int main() {
   // A regression target: roughly 2*hours + 1 with mild noise.
   const pluss::Series hours = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}, f64);
   const pluss::Series score = pluss::make_series({3.2, 4.8, 7.1, 8.9, 11.2, 12.8, 15.3, 16.9}, {8}, f64);
-  const DataFrame x_train({{"hours", Thread(hours)}});
+  const DataFrame x_train({{"hours", Slate(hours)}});
 
   const lymph::models::Model model = lymph::models::linear_regression().learn(x_train, score);
 
@@ -273,7 +273,7 @@ int main() {
   // The same model measured against rows it never saw.
   const pluss::Series holdout_hours = pluss::make_series({2.5, 5.5, 9.0}, {3}, f64);
   const pluss::Series holdout_score = pluss::make_series({6.0, 11.8, 19.2}, {3}, f64);
-  const DataFrame x_holdout({{"hours", Thread(holdout_hours)}});
+  const DataFrame x_holdout({{"hours", Slate(holdout_hours)}});
   const lymph::MetricReport on_holdout = model.assess(x_holdout, holdout_score, options);
 
   std::cout << "on training rows:  rmse = " << on_train.rmse.item<double>()

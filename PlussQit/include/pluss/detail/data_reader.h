@@ -147,7 +147,7 @@ struct DataReader final {
 
   // Supports the `{68.0, std::nullopt, 72.0}` null-gap construction pattern for
   // floating-point data. `std::nullopt` maps to NaN, the existing null-sentinel
-  // convention for raw (validity-mask-less) numeric Series/Thread values. Deliberately
+  // convention for raw (validity-mask-less) numeric Series/Slate values. Deliberately
   // NOT templated on T: template argument deduction for `std::initializer_list<T>`
   // requires every element to independently deduce the *same* T, which a mix of
   // `double` and `std::nullopt_t` elements can never satisfy. Making the element type
@@ -327,10 +327,11 @@ struct DataReader final {
   }
 
   DataReader& with_config(Config cfg) noexcept {
-    if (cfg.dtype != ScalarType::Float32) {
-      with_dtype(cfg.dtype);
-    }
-    with_platform(cfg.platform);
+    // Apply only the fields the caller actually set. Config defaults to
+    // Float32/CPU, so comparing against the default would drop an explicit
+    // Float32 request on double data.
+    if (cfg.has_dtype()) with_dtype(cfg.dtype);
+    if (cfg.has_platform()) with_platform(cfg.platform);
     return *this;
   }
 

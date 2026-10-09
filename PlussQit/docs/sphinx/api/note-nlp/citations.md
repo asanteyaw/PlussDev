@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::citations
+# Note::NlpAccessor::citations
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::citations() const
+TokenBatch Note::NlpAccessor::citations() const
 ```
 
 ## Extract Compact Citation Markers

@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::logpdf
+# Series::StatAccessor::logpdf
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::logpdf() const
-Series SeriesStatAccessor::logpdf(double sigma) const
-Series SeriesStatAccessor::logpdf(double mu, double sigma) const
+Series Series::StatAccessor::logpdf() const
+Series Series::StatAccessor::logpdf(double sigma) const
+Series Series::StatAccessor::logpdf(double mu, double sigma) const
 Series SeriesStatProxy::logpdf() const
 Series SeriesStatProxy::logpdf(double sigma) const
 Series SeriesStatProxy::logpdf(double mu, double sigma) const

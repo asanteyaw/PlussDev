@@ -106,7 +106,7 @@ TEST_CASE("Timeline buffer bridge honors strides and owns through its deleter",
   REQUIRE(released);
 }
 
-TEST_CASE("Timeline promotion to TimeIndex enforces the requested invariant",
+TEST_CASE("Timeline promotion to TimelineIndexAccessor enforces the requested invariant",
           "[timeline-storage]") {
   const auto sorted = pluss::timeline::make({
       "2024-01-01T00:00:00Z", "2024-01-01T01:00:00Z",

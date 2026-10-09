@@ -38,7 +38,7 @@ Data shapes accepted, each with and without the explicit `split` argument:
 |-------|-------|
 | `(frame, data_options)` | column-named frame + `DataFrameBatchOptions` |
 | `(x, y)` — `y` a `Series` | features-only frame, label series |
-| `(x, y)` — `y` a `Thread` | same, label as a `Thread` |
+| `(x, y)` — `y` a `Slate` | same, label as a `Slate` |
 | `LabeledBatch` | pre-split features / labels (GPU-resident data) |
 | `(workflow::Workflow design, workflow::Payload payload)` | each trial's model is wrapped in `design` before the run |
 
@@ -125,7 +125,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -137,7 +137,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame frame({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x1", "x2"};
@@ -209,7 +209,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -221,7 +221,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame frame({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x1", "x2"};
@@ -307,7 +307,7 @@ int main() {
        850., 3300., 1000., 2900., 950., 3500., 1050., 3050.}, {16}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}, {16}, f64);
-  const DataFrame x({{"x1", pluss::table::Thread(x1)}, {"x2", pluss::table::Thread(x2)}});
+  const DataFrame x({{"x1", pluss::table::Slate(x1)}, {"x2", pluss::table::Slate(x2)}});
 
   const std::vector<lymph::selection::GridAxis> axes = {
       {.name = "regularization_strength", .values = {0.01, 1.0}},

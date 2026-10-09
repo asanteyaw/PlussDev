@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::figures
+# Note::TexAccessor::figures
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::figures() const
+TokenBatch Note::TexAccessor::figures() const
 ```
 
 ## Extract Complete Figure Regions

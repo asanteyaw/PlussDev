@@ -68,9 +68,9 @@ numeric columns are affected, not just one.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"temp",     Thread(pluss::make_series({68.5, std::numeric_limits<double>::quiet_NaN(), 71.2}),
+    {"temp",     Slate(pluss::make_series({68.5, std::numeric_limits<double>::quiet_NaN(), 71.2}),
                         pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
-    {"humidity", Thread(pluss::make_series({30.0, 40.0, std::numeric_limits<double>::quiet_NaN()}),
+    {"humidity", Slate(pluss::make_series({30.0, 40.0, std::numeric_limits<double>::quiet_NaN()}),
                         pluss::make_series({true, true, false}, pluss::ScalarType::Bool))},
 });
 std::cout << readings;
@@ -115,9 +115,9 @@ completely alone, since it isn't the kind this overload targets.
 
 ```cpp
 auto orders = DataFrame({
-    {"city",  Thread(pluss::make_note({"Accra", "", "Tema"}),
+    {"city",  Slate(pluss::make_note({"Accra", "", "Tema"}),
                      pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
-    {"score", Thread(pluss::make_series({88.5, std::numeric_limits<double>::quiet_NaN(), 79.5}),
+    {"score", Slate(pluss::make_series({88.5, std::numeric_limits<double>::quiet_NaN(), 79.5}),
                      pluss::make_series({true, false, true}, pluss::ScalarType::Bool))},
 });
 std::cout << orders;

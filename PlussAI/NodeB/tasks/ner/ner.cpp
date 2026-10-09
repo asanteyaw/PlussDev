@@ -14,6 +14,25 @@ namespace pluss::ai::nodeb {
 
 namespace {
 
+void validate_pattern(const EntityPattern& pattern) {
+  if (pattern.label.empty()) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::NerStage: entity-pattern labels must not be empty.");
+  }
+  if (pattern.tokens.empty()) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::NerStage: entity patterns must contain at least one token.");
+  }
+  if (std::ranges::any_of(pattern.tokens, &std::string::empty)) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::NerStage: entity-pattern tokens must not be empty.");
+  }
+}
+
+void validate_patterns(const std::vector<EntityPattern>& patterns) {
+  for (const auto& pattern : patterns) validate_pattern(pattern);
+}
+
 using EntityCounts = std::unordered_map<std::string, std::int64_t>;
 
 [[nodiscard]] std::string hex_encode(std::string_view value) {
@@ -30,14 +49,14 @@ using EntityCounts = std::unordered_map<std::string, std::int64_t>;
 [[nodiscard]] std::string hex_decode(std::string_view value) {
   if ((value.size() & 1U) != 0U) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::NerStage: invalid hex payload length.");
+        "nlp::NerStage: invalid hex payload length.");
   }
   auto from_hex = [](char ch) -> unsigned char {
     if (ch >= '0' && ch <= '9') return static_cast<unsigned char>(ch - '0');
     if (ch >= 'a' && ch <= 'f') return static_cast<unsigned char>(10 + ch - 'a');
     if (ch >= 'A' && ch <= 'F') return static_cast<unsigned char>(10 + ch - 'A');
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::NerStage: invalid hex payload.");
+        "nlp::NerStage: invalid hex payload.");
   };
   std::string out;
   out.reserve(value.size() / 2U);
@@ -175,6 +194,7 @@ struct NerStage::Impl {
   std::unordered_map<std::int64_t, std::unordered_map<std::string, std::string>> phrase_best{};
   detail::TokenClassifierState sequence{};
   std::int64_t max_width = 0;
+  std::int64_t doc_count = 0;
   bool trained = false;
 };
 
@@ -182,13 +202,17 @@ NerStage::NerStage(std::vector<EntityPattern> patterns,
                    NerOptions options)
     : impl_(std::make_shared<Impl>()),
       patterns_(std::move(patterns)),
-      options_(options) {}
+      options_(options) {
+  validate_patterns(patterns_);
+}
 
 NerStage::NerStage(std::initializer_list<EntityPattern> patterns,
                    NerOptions options)
     : impl_(std::make_shared<Impl>()),
       patterns_(patterns),
-      options_(options) {}
+      options_(options) {
+  validate_patterns(patterns_);
+}
 
 std::string_view NerStage::name() const noexcept {
   return "ner";
@@ -196,6 +220,7 @@ std::string_view NerStage::name() const noexcept {
 
 NerStage& NerStage::add_pattern(EntityPattern pattern) {
   PLUSS_CALL_GUARD();
+  validate_pattern(pattern);
   patterns_.push_back(std::move(pattern));
   return *this;
 }
@@ -204,6 +229,7 @@ void NerStage::learn(const std::vector<Doc>& docs,
                      const TrainOptions&) {
   PLUSS_CALL_GUARD();
   auto next = std::make_shared<Impl>();
+  next->doc_count = static_cast<std::int64_t>(docs.size());
   std::unordered_map<std::int64_t, std::unordered_map<std::string, EntityCounts>> counts{};
 
   for (const auto& doc : docs) {
@@ -254,6 +280,18 @@ void NerStage::learn(const std::vector<Doc>& docs,
                                    });
   }
   impl_ = std::move(next);
+}
+
+TrainingReport NerStage::training_report() const {
+  PLUSS_CALL_GUARD();
+  TrainingReport report{};
+  if (!impl_ || !impl_->trained) return report;
+  report.doc_count = impl_->doc_count;
+  for (const auto& [width, phrases] : impl_->phrase_best) {
+    report.entry_count += static_cast<std::int64_t>(phrases.size());
+  }
+  report.loss_history = impl_->sequence.loss_history;
+  return report;
 }
 
 void NerStage::apply(Doc& doc) const {
@@ -378,13 +416,10 @@ std::vector<std::string> NerStage::dump_state_lines() const {
       std::string("use_heuristics=") + (options_.use_heuristics ? "1" : "0"),
       std::string("prefer_learned=") + (options_.prefer_learned ? "1" : "0"),
       "backend=" + std::string(detail::to_string(options_.backend)),
-      "sequence_head=" + std::string(detail::to_string(options_.sequence_head)),
       "sequence_width=" + std::to_string(options_.sequence_width),
       "sequence_max_span_width=" + std::to_string(options_.sequence_max_span_width),
       "sequence_min_score=" + std::to_string(options_.sequence_min_score),
       "sequence_seed=" + std::to_string(options_.sequence_seed),
-      "quantization=" + std::string(detail::to_string(options_.quantization)),
-      "distillation=" + std::string(detail::to_string(options_.distillation)),
       std::string("trained=") + ((impl_ && impl_->trained) ? "1" : "0"),
       "pattern_count=" + std::to_string(patterns_.size()),
   };
@@ -440,7 +475,7 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
     const auto eq = line.find('=');
     if (eq == std::string_view::npos) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::NerStage::load_state_lines: expected key=value line.");
+          "nlp::NerStage::load_state_lines: expected key=value line.");
     }
     const std::string key(line.substr(0, eq));
     const std::string_view value = line.substr(eq + 1);
@@ -449,13 +484,12 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
     if (key == "use_heuristics") { options_.use_heuristics = value == "1"; continue; }
     if (key == "prefer_learned") { options_.prefer_learned = value == "1"; continue; }
     if (key == "backend") { options_.backend = detail::parse_task_backend(value); continue; }
-    if (key == "sequence_head") { options_.sequence_head = detail::parse_sequence_head(value); continue; }
+    if (key == "sequence_head") { continue; }
     if (key == "sequence_width") { options_.sequence_width = std::stoll(std::string(value)); continue; }
     if (key == "sequence_max_span_width") { options_.sequence_max_span_width = std::stoll(std::string(value)); continue; }
     if (key == "sequence_min_score") { options_.sequence_min_score = std::stod(std::string(value)); continue; }
     if (key == "sequence_seed") { options_.sequence_seed = static_cast<std::uint64_t>(std::stoull(std::string(value))); continue; }
-    if (key == "quantization") { options_.quantization = detail::parse_quantization_hint(value); continue; }
-    if (key == "distillation") { options_.distillation = detail::parse_distillation_hint(value); continue; }
+    if (key == "quantization" || key == "distillation") { continue; }
     if (key == "trained") { impl_->trained = value == "1"; continue; }
     if (key == "pattern_count") {
       pattern_count = std::stoll(std::string(value));
@@ -469,7 +503,7 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(14)));
       if (idx >= labels.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::NerStage::load_state_lines: pattern label index out of range.");
+            "nlp::NerStage::load_state_lines: pattern label index out of range.");
       }
       labels[idx] = hex_decode(value);
       continue;
@@ -479,7 +513,7 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(19)));
       if (idx >= use_lemmas.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::NerStage::load_state_lines: pattern use_lemmas index out of range.");
+            "nlp::NerStage::load_state_lines: pattern use_lemmas index out of range.");
       }
       use_lemmas[idx] = value == "1";
       continue;
@@ -489,7 +523,7 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(15)));
       if (idx >= tokens.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::NerStage::load_state_lines: pattern token index out of range.");
+            "nlp::NerStage::load_state_lines: pattern token index out of range.");
       }
       const auto encoded = split_csv(value);
       auto& dest = tokens[idx];
@@ -513,7 +547,7 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
       const auto second = value.find('|', first == std::string_view::npos ? first : first + 1);
       if (first == std::string_view::npos || second == std::string_view::npos) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::NerStage::load_state_lines: malformed learned row.");
+            "nlp::NerStage::load_state_lines: malformed learned row.");
       }
       const auto width = std::stoll(std::string(value.substr(0, first)));
       const auto label = hex_decode(value.substr(first + 1, second - first - 1));
@@ -525,19 +559,21 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
       continue;
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::NerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
+        "nlp::NerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
   }
 
   if (pattern_count < 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::NerStage::load_state_lines: missing pattern_count.");
+        "nlp::NerStage::load_state_lines: missing pattern_count.");
   }
   for (std::size_t i = 0; i < labels.size(); ++i) {
-    patterns_.push_back(EntityPattern{
+    EntityPattern pattern{
         .label = labels[i],
         .tokens = tokens[i],
         .use_lemmas = use_lemmas[i],
-    });
+    };
+    validate_pattern(pattern);
+    patterns_.push_back(std::move(pattern));
   }
   if (learned_count >= 0 &&
       static_cast<std::int64_t>([&]() {
@@ -549,7 +585,7 @@ void NerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view> l
         return total;
       }()) != learned_count) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::NerStage::load_state_lines: learned pattern count mismatch.");
+        "nlp::NerStage::load_state_lines: learned pattern count mismatch.");
   }
   detail::load_token_classifier_state_lines("sequence", lines, impl_->sequence);
 }

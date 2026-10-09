@@ -619,13 +619,13 @@ std::string series_scalar_text(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-bool row_is_valid(const Thread& thread, std::int64_t row) {
-  if (detail::has_validity_mask(thread) &&
-      !detail::validity_mask(thread)->to_vec<bool>()[static_cast<std::size_t>(row)]) {
+bool row_is_valid(const Slate& slate, std::int64_t row) {
+  if (detail::has_validity_mask(slate) &&
+      !detail::validity_mask(slate)->to_vec<bool>()[static_cast<std::size_t>(row)]) {
     return false;
   }
-  return thread.kind() != ThreadKind::Duration ||
-         thread.as_duration().host()[static_cast<std::size_t>(row)] !=
+  return slate.kind() != SlateKind::Duration ||
+         slate.as_duration().host()[static_cast<std::size_t>(row)] !=
              pluss::Duration::kNaT;
 }
 
@@ -639,15 +639,15 @@ void bind_sqlite_text(sqlite3_stmt* stmt, const int index, const std::string& te
               "DataFrame::sql().execute: sqlite bind text failed");
 }
 
-void bind_thread_value(sqlite3_stmt* stmt, const int index, const Thread& thread, const std::int64_t row) {
-  if (!row_is_valid(thread, row)) {
+void bind_slate_value(sqlite3_stmt* stmt, const int index, const Slate& slate, const std::int64_t row) {
+  if (!row_is_valid(slate, row)) {
     bind_sqlite_null(stmt, index);
     return;
   }
 
-  switch (thread.kind()) {
-    case ThreadKind::Series: {
-      const auto& series = thread.as_series();
+  switch (slate.kind()) {
+    case SlateKind::Series: {
+      const auto& series = slate.as_series();
       const auto* base = series.raw_data();
       switch (series.scalar_type()) {
         case pluss::codem::ScalarType::Bool:
@@ -711,33 +711,33 @@ void bind_thread_value(sqlite3_stmt* stmt, const int index, const Thread& thread
           return;
       }
     }
-    case ThreadKind::Note:
-      bind_sqlite_text(stmt, index, std::string(thread.as_note().at(row)));
+    case SlateKind::Note:
+      bind_sqlite_text(stmt, index, std::string(slate.as_note().at(row)));
       return;
-    case ThreadKind::Timeline:
+    case SlateKind::Timeline:
       PLUSS_CHECK(sqlite3_bind_int64(
                       stmt,
                       index,
-                      static_cast<sqlite3_int64>(thread.as_timeline().ticks()[static_cast<std::size_t>(row)]))
+                      static_cast<sqlite3_int64>(slate.as_timeline().ticks()[static_cast<std::size_t>(row)]))
                       == SQLITE_OK,
                   "DataFrame::sql().execute: sqlite bind timeline failed");
       return;
-    case ThreadKind::Duration:
+    case SlateKind::Duration:
       PLUSS_CHECK(sqlite3_bind_int64(
                       stmt,
                       index,
                       static_cast<sqlite3_int64>(
-                          thread.as_duration().host()[static_cast<std::size_t>(row)]))
+                          slate.as_duration().host()[static_cast<std::size_t>(row)]))
                       == SQLITE_OK,
                   "DataFrame::sql().execute: sqlite bind duration failed");
       return;
   }
 }
 
-std::string sqlite_declared_type(const Thread& thread) {
-  switch (thread.kind()) {
-    case ThreadKind::Series: {
-      const auto dt = thread.as_series().dtype();
+std::string sqlite_declared_type(const Slate& slate) {
+  switch (slate.kind()) {
+    case SlateKind::Series: {
+      const auto dt = slate.as_series().dtype();
       if (dt.scalar == pluss::codem::ScalarType::Bool || dt.is_integral()) {
         return "INTEGER";
       }
@@ -746,10 +746,10 @@ std::string sqlite_declared_type(const Thread& thread) {
       }
       return "TEXT";
     }
-    case ThreadKind::Timeline:
-    case ThreadKind::Duration:
+    case SlateKind::Timeline:
+    case SlateKind::Duration:
       return "INTEGER";
-    case ThreadKind::Note:
+    case SlateKind::Note:
       return "TEXT";
   }
 }
@@ -797,7 +797,7 @@ bool declared_type_is_float(std::string_view decl) {
          || low.find("decimal") != std::string::npos;
 }
 
-Thread build_column_thread(const ColumnCollector& collector) {
+Slate build_column_slate(const ColumnCollector& collector) {
   bool saw_text = false;
   bool saw_double = false;
   bool saw_int = false;
@@ -839,7 +839,7 @@ Thread build_column_thread(const ColumnCollector& collector) {
         values.emplace_back();
       }
     }
-    return valid_mask.has_value() ? Thread(pluss::make_note(values), *valid_mask) : Thread(pluss::make_note(values));
+    return valid_mask.has_value() ? Slate(pluss::make_note(values), *valid_mask) : Slate(pluss::make_note(values));
   }
 
   if (saw_double) {
@@ -854,7 +854,7 @@ Thread build_column_thread(const ColumnCollector& collector) {
         values.push_back(0.0);
       }
     }
-    return valid_mask.has_value() ? Thread(pluss::make_series(values), *valid_mask) : Thread(pluss::make_series(values));
+    return valid_mask.has_value() ? Slate(pluss::make_series(values), *valid_mask) : Slate(pluss::make_series(values));
   }
 
   std::vector<std::int64_t> values;
@@ -868,7 +868,7 @@ Thread build_column_thread(const ColumnCollector& collector) {
       values.push_back(0);
     }
   }
-  return valid_mask.has_value() ? Thread(pluss::make_series(values), *valid_mask) : Thread(pluss::make_series(values));
+  return valid_mask.has_value() ? Slate(pluss::make_series(values), *valid_mask) : Slate(pluss::make_series(values));
 }
 
 std::int64_t estimate_frame_bytes(const DataFrame& frame) {
@@ -957,22 +957,22 @@ void load_source(sqlite3* db,
                 "DataFrame::sql().execute: sqlite clear bindings failed");
     int bind_index = 1;
     for (const auto& feature_name : feature_names) {
-      bind_thread_value(stmt.get(), bind_index++, frame.features(feature_name), row);
+      bind_slate_value(stmt.get(), bind_index++, frame.features(feature_name), row);
     }
 
     std::string case_text;
     if (row_is_valid(labels, row)) {
       switch (labels.kind()) {
-        case ThreadKind::Series:
+        case SlateKind::Series:
           case_text = series_scalar_text(labels.as_series(), row);
           break;
-        case ThreadKind::Note:
+        case SlateKind::Note:
           case_text = std::string(labels.as_note().at(row));
           break;
-        case ThreadKind::Timeline:
+        case SlateKind::Timeline:
           case_text = fmt::format("{}", labels.as_timeline().ticks()[static_cast<std::size_t>(row)]);
           break;
-        case ThreadKind::Duration:
+        case SlateKind::Duration:
           case_text = fmt::format(
               "{}", labels.as_duration().host()[static_cast<std::size_t>(row)]);
           break;
@@ -1151,7 +1151,7 @@ DataFrame build_result_frame(std::vector<ColumnCollector> collectors,
   }
 
   std::unordered_map<std::string, std::size_t> name_to_pos;
-  std::vector<std::pair<std::string, Thread>> cols;
+  std::vector<std::pair<std::string, Slate>> cols;
   cols.reserve(filtered.size());
   for (auto& collector : filtered) {
     auto out_name = collector.name;
@@ -1161,7 +1161,7 @@ DataFrame build_result_frame(std::vector<ColumnCollector> collectors,
         case DataFrame::SqlOptions::CollisionPolicy::Error:
           PLUSS_FAIL("DataFrame::sql().execute: duplicate projected column name '" + out_name + "'");
         case DataFrame::SqlOptions::CollisionPolicy::Overwrite:
-          cols[it->second].second = build_column_thread(collector);
+          cols[it->second].second = build_column_slate(collector);
           continue;
         case DataFrame::SqlOptions::CollisionPolicy::Suffix: {
           std::size_t k = 2;
@@ -1177,7 +1177,7 @@ DataFrame build_result_frame(std::vector<ColumnCollector> collectors,
     }
 
     name_to_pos.emplace(out_name, cols.size());
-    cols.emplace_back(out_name, build_column_thread(collector));
+    cols.emplace_back(out_name, build_column_slate(collector));
   }
 
   auto out = DataFrame(std::move(cols));

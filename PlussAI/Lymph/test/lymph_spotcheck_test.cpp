@@ -14,7 +14,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -44,10 +44,10 @@ LabeledBatch batch() {
 
 DataFrame frame() {
   return DataFrame({
-      {"timestamp", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}, f64()))},
-      {"x0", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 7.0, 8.0, 9.0, 10.0}, {8}, f64()))},
-      {"x1", Thread(pluss::make_series(std::vector<double>{1.0, 1.0, 2.0, 2.0, 8.0, 8.0, 9.0, 9.0}, {8}, f64()))},
-      {"y", Thread(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64()))},
+      {"timestamp", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}, f64()))},
+      {"x0", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 7.0, 8.0, 9.0, 10.0}, {8}, f64()))},
+      {"x1", Slate(pluss::make_series(std::vector<double>{1.0, 1.0, 2.0, 2.0, 8.0, 8.0, 9.0, 9.0}, {8}, f64()))},
+      {"y", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64()))},
   });
 }
 

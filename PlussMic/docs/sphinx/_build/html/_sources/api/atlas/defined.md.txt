@@ -55,10 +55,10 @@ removed by slicing.
 using namespace pluss::table;
 
 auto q1 = DataFrame({
-    {"sales", Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = DataFrame({
-    {"sales", Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto atlas = Atlas({q1, q2});
 std::cout << "defined: " << atlas.defined() << "\n";

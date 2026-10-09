@@ -38,7 +38,7 @@ int main() {
       {0.0, 1.5, 3.0, 4.5, 6.0, std::numeric_limits<double>::infinity()},
       {1, 2, 3, 4, 5});
 
-  auto split = lymph::make_holdout_indices(
+  auto split = lymph::prep::make_holdout_indices(
       housing,
       lymph::HoldoutSplitOptions{
           .test_size = 0.2,
@@ -108,11 +108,11 @@ int main() {
   out_opts.contamination_auto = true;
 
   auto isolator = lymph::prep::outlier_isolator(out_opts);
-  auto labels_thread = isolator.learn_infer(train_df.feataxis().series());
-  auto scores_thread = isolator.score_samples(train_df.feataxis().series());
+  auto labels_slate = isolator.learn_infer(train_df.feataxis().series());
+  auto scores_slate = isolator.score_samples(train_df.feataxis().series());
 
-  auto labels = labels_thread.as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
-  auto scores = scores_thread.as_series().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
+  auto labels = labels_slate.as_series().to(pluss::pCPU, ScalarType::Int64).to_vec<std::int64_t>();
+  auto scores = scores_slate.as_series().to(pluss::pCPU, ScalarType::Float64).to_vec<double>();
 
   std::int64_t inliers = 0;
   std::int64_t outliers = 0;

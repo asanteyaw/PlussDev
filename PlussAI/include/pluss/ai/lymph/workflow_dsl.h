@@ -8,8 +8,8 @@ namespace pluss::ai::lymph {
 namespace detail {
 
 struct FeatureSelectorOptions_ {
-  std::vector<pluss::table::ThreadKind> include{};
-  std::vector<pluss::table::ThreadKind> exclude{};
+  std::vector<pluss::table::SlateKind> include{};
+  std::vector<pluss::table::SlateKind> exclude{};
 };
 
 [[nodiscard]] inline std::vector<std::string> make_feature_selector_(const pluss::table::DataFrame& frame,
@@ -18,7 +18,7 @@ struct FeatureSelectorOptions_ {
   std::vector<std::string> selected{};
   selected.reserve(names.size());
 
-  const auto has_kind = [](pluss::msharp::RangeView::Of<pluss::table::ThreadKind> kinds, pluss::table::ThreadKind kind) {
+  const auto has_kind = [](pluss::msharp::RangeView::Of<pluss::table::SlateKind> kinds, pluss::table::SlateKind kind) {
     return std::find(kinds.begin(), kinds.end(), kind) != kinds.end();
   };
 
@@ -33,7 +33,7 @@ struct FeatureSelectorOptions_ {
 
 [[nodiscard]] inline std::vector<std::string> temporal_features_(const pluss::table::DataFrame& frame) {
   return make_feature_selector_(frame, FeatureSelectorOptions_{
-                                           .include = {pluss::table::ThreadKind::Timeline},
+                                           .include = {pluss::table::SlateKind::Timeline},
                                            .exclude = {},
                                        });
 }

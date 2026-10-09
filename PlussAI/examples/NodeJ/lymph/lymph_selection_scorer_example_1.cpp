@@ -14,7 +14,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -25,7 +25,7 @@ int main() {
       {2., 1., 4., 3., 6., 5., 8., 7., 9., 11., 10., 13., 12., 15., 14., 16.}, {16}, f64);
   const Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}, {16}, f64);
-  const DataFrame frame({{"x0", Thread(x0)}, {"x1", Thread(x1)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x0", Slate(x0)}, {"x1", Slate(x1)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"x0", "x1"};

@@ -53,7 +53,7 @@ A second overload takes any range of string views in place of the braced list.
 Pin the categorical columns the encoder acts on, and fix their order. Returns
 `*this`, so it chains into `learn`. **Required** on the `DataFrame` path — an
 encoder with no pinned columns raises rather than guessing which columns are
-categorical. (The single-column [`Thread` overloads](#single-column-overloads)
+categorical. (The single-column [`Slate` overloads](#single-column-overloads)
 need no pin.)
 
 ### `learn`
@@ -80,7 +80,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -88,8 +88,8 @@ int main() {
   // region is an integer-coded category (0, 1, 2). The standalone encoder holds
   // its fitted category layout; pin the column with features(), fit with
   // learn() (which returns *this so it chains), then map() any later frame.
-  const DataFrame train({{"region", Thread(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
-  const DataFrame later({{"region", Thread(pluss::make_series({2., 0., 1.}, {3}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({2., 0., 1.}, {3}, f64))}});
 
   lymph::prep::OneHotEncoder encoder;
   std::cout << "learned before = " << std::boolalpha << encoder.learned() << "\n";
@@ -192,14 +192,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const DataFrame train({{"region", Thread(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
   // Row 1 carries category 9, never seen at fit time.
-  const DataFrame later({{"region", Thread(pluss::make_series({1., 9.}, {2}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({1., 9.}, {2}, f64))}});
 
   lymph::prep::OneHotEncoder encoder;
   encoder.features({"region"}).learn(train);
@@ -299,11 +299,11 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"region", Thread(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
 
   lymph::prep::OneHotEncoder encoder;
   encoder.features({"region"}).learn(train);
@@ -335,12 +335,12 @@ mapped_names_  : region_0 region_1 region_2 region_unknown
 ## Single-column overloads
 
 `OneHotEncoder`, `OrdinalEncoder`, `LabelEncoder` and `FrequencyEncoder` add a
-`Thread`-in / `Series`-out overload of each of `learn` / `map` / `learn_map`:
+`Slate`-in / `Series`-out overload of each of `learn` / `map` / `learn_map`:
 
 ```cpp
-OneHotEncoder& learn(const pluss::table::Thread& feature, const TrainOptions& = {});
-Series         map(const pluss::table::Thread& feature, const InferOptions& = {}) const;
-Series         learn_map(const pluss::table::Thread& feature,
+OneHotEncoder& learn(const pluss::table::Slate& feature, const TrainOptions& = {});
+Series         map(const pluss::table::Slate& feature, const InferOptions& = {}) const;
+Series         learn_map(const pluss::table::Slate& feature,
                          const TrainOptions& = {}, const InferOptions& = {});
 ```
 
@@ -356,16 +356,16 @@ column hashes them instead.
 
 int main() {
   namespace lymph = pluss::ai::lymph;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  const Thread region(pluss::make_note({"north", "west", "north", "south", "east"}));
+  const Slate region(pluss::make_note({"north", "west", "north", "south", "east"}));
 
   lymph::prep::OneHotEncoder encoder;
   const pluss::Series indicators = encoder.learn_map(region);
   std::cout << "one-hot matrix (rows x categories, last column is unknown):\n"
             << indicators << "\n";
 
-  const Thread query(pluss::make_note({"south", "north"}));
+  const Slate query(pluss::make_note({"south", "north"}));
   std::cout << "map(query):\n" << encoder.map(query) << "\n";
   std::cout << "column labels: ";
   for (const auto& n : encoder.mapped_names_) std::cout << n << " ";
@@ -421,7 +421,7 @@ The `DataFrame` returned by `map` names its columns positionally (`<name>_0`,
 ## Changelog
 
 - **0.1** — standalone `OneHotEncoder` with `features` / `learn` / `map` /
-  `learn_map` / `learned` / `summary`, the single-column `Thread` overloads, and
+  `learn_map` / `learned` / `summary`, the single-column `Slate` overloads, and
   the `categories_` / `mapped_names_` attributes.
 
 <!-- apiref:toctree:start -->

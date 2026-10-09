@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::overlap_citations
+# Note::NlpAccessor::overlap_citations
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::overlap_citations(const Note& other) const
+Note Note::NlpAccessor::overlap_citations(const Note& other) const
 ```
 
 ## Citation-Set Containment Score Between Two Notes
@@ -33,8 +33,8 @@ trailing zeros trimmed.
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::overlap_citations requires a UTF-8 text Note (lhs is bytes)` (or
-`rhs`); a numel mismatch raises `NoteNlpAccessor::overlap_citations expects equal numel
+`Note::NlpAccessor::overlap_citations requires a UTF-8 text Note (lhs is bytes)` (or
+`rhs`); a numel mismatch raises `Note::NlpAccessor::overlap_citations expects equal numel
 or scalar broadcast`.
 
 ## Example 1: One Reference List Inside Another
@@ -57,14 +57,14 @@ Note(shape=[1], dim=1, numel=1, dtype=Float64)
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_citations`](jaccard_citations.md): the mutual-similarity
+- [`Note::NlpAccessor::jaccard_citations`](jaccard_citations.md): the mutual-similarity
   score over the same sets.
-- [`NoteNlpAccessor::intersect_citations`](intersect_citations.md): the shared markers
+- [`Note::NlpAccessor::intersect_citations`](intersect_citations.md): the shared markers
   themselves.
-- [`NoteNlpAccessor::overlap_tokens`](overlap_tokens.md) /
-  [`NoteNlpAccessor::overlap_terms`](overlap_terms.md) /
-  [`NoteNlpAccessor::overlap_acronyms`](overlap_acronyms.md) /
-  [`NoteNlpAccessor::overlap_symbols`](overlap_symbols.md): other set kinds.
+- [`Note::NlpAccessor::overlap_tokens`](overlap_tokens.md) /
+  [`Note::NlpAccessor::overlap_terms`](overlap_terms.md) /
+  [`Note::NlpAccessor::overlap_acronyms`](overlap_acronyms.md) /
+  [`Note::NlpAccessor::overlap_symbols`](overlap_symbols.md): other set kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="overlap_acronyms.html"><span class="label">Previous</span><span class="title">overlap_acronyms</span></a>

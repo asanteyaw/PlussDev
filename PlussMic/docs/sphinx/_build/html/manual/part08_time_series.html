@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part IX: Plotting" href="part09_plotting.html" />
@@ -41,11 +41,11 @@
 <p>Time-series work in PlussMic is built from two ideas:</p>
 <ol class="arabic simple">
 <li><p>A time axis is data, usually a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> stored in a
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 <li><p>Time-series calculations are ordinary table transformations that return
-either a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> or a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
+either a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> or a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
 </ol>
-<p>Use the Thread accessor when you are working on one numeric value stream:</p>
+<p>Use the Slate accessor when you are working on one numeric value stream:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -67,8 +67,8 @@ streams.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
 <span class="w">        </span><span class="s">&quot;date_text&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span>
-<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="p">{</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span>
+<span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastOptions</span><span class="p">{</span>
 <span class="w">            </span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%Y-%m-%d&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">}},</span>
 <span class="p">});</span>
@@ -122,12 +122,12 @@ semantics even though both can be represented internally as arrays.</p>
 <p>If a column loaded as text or as a numeric <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> series, cast it:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">with_time</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
-<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
 <span class="p">});</span>
 </pre></div>
 </div>
 <p>The current source supports conversion of integer <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> values through
-<code class="docutils literal notranslate"><span class="pre">cast(...,</span> <span class="pre">ThreadCastTarget::Timeline)</span></code>, which is useful for market-data files that store dates as
+<code class="docutils literal notranslate"><span class="pre">cast(...,</span> <span class="pre">SlateCastTarget::Timeline)</span></code>, which is useful for market-data files that store dates as
 <code class="docutils literal notranslate"><span class="pre">19900102</span></code> instead of ISO strings.</p>
 </section>
 <section id="sorting-is-your-responsibility">
@@ -143,18 +143,18 @@ return, lag, rolling mean, or line plot.</p>
 <p>This matters in production. A return computed on unsorted prices is not a
 slightly messy return; it is a different calculation.</p>
 </section>
-<section id="thread-time-series-accessor">
-<h2>Thread time-series accessor<a class="headerlink" href="#thread-time-series-accessor" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Thread::ts()</span></code> creates a <code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code> for one numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload:</p>
+<section id="slate-time-series-accessor">
+<h2>Slate time-series accessor<a class="headerlink" href="#slate-time-series-accessor" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Slate::ts()</span></code> creates a <code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor</span></code> for one numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payload:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">close</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The source thread must be defined, must be <code class="docutils literal notranslate"><span class="pre">ThreadKind::Series</span></code>, and must be
+<p>The source thread must be defined, must be <code class="docutils literal notranslate"><span class="pre">SlateKind::Series</span></code>, and must be
 numeric. If you call <code class="docutils literal notranslate"><span class="pre">ts()</span></code> on a <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or non-numeric payload, the
 operation throws when you call the accessor method.</p>
-<section id="thread-accessor-methods">
-<h3>Thread accessor methods<a class="headerlink" href="#thread-accessor-methods" title="Link to this heading">¶</a></h3>
+<section id="slate-accessor-methods">
+<h3>Slate accessor methods<a class="headerlink" href="#slate-accessor-methods" title="Link to this heading">¶</a></h3>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -164,43 +164,43 @@ operation throws when you call the accessor method.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">returns(periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Fractional return over <code class="docutils literal notranslate"><span class="pre">periods</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_returns(periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Log return over <code class="docutils literal notranslate"><span class="pre">periods</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diff(periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Difference from the value <code class="docutils literal notranslate"><span class="pre">periods</span></code> rows earlier.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag(periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Shift values backward by <code class="docutils literal notranslate"><span class="pre">periods</span></code>; early rows become undefined numeric positions.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lead(periods)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Shift values forward by <code class="docutils literal notranslate"><span class="pre">periods</span></code>; trailing rows become undefined numeric positions.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling(window,</span> <span class="pre">statistic,</span> <span class="pre">options)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Observation-count rolling/window statistic.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expanding(statistic,</span> <span class="pre">options)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Expanding statistic.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ewm(alpha,</span> <span class="pre">statistic,</span> <span class="pre">...)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Exponentially weighted statistic.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zscore_rolling(window,</span> <span class="pre">min_periods,</span> <span class="pre">epsilon)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Rolling z-score.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fill_gaps(mode,</span> <span class="pre">constant)</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate</span></code></p></td>
 <td><p>Fill numeric gaps according to a gap-fill mode.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resample(axis,</span> <span class="pre">freq,</span> <span class="pre">op,</span> <span class="pre">step)</span></code></p></td>
@@ -209,11 +209,11 @@ operation throws when you call the accessor method.</p>
 </tr>
 </tbody>
 </table>
-<p>The return type is important. <code class="docutils literal notranslate"><span class="pre">Thread::ts()</span></code> methods return <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, except
+<p>The return type is important. <code class="docutils literal notranslate"><span class="pre">Slate::ts()</span></code> methods return <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, except
 for <code class="docutils literal notranslate"><span class="pre">resample</span></code>, which returns:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">TimeSeriesResample</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="n">labels</span><span class="p">;</span>
-<span class="w">  </span><span class="n">Thread</span><span class="w"> </span><span class="n">values</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Slate</span><span class="w"> </span><span class="n">labels</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Slate</span><span class="w"> </span><span class="n">values</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -299,7 +299,7 @@ Use a domain-appropriate value if your data scale is unusual.</p>
 </section>
 <section id="gap-filling">
 <h2>Gap filling<a class="headerlink" href="#gap-filling" title="Link to this heading">¶</a></h2>
-<p>The Thread and DataFrame accessors expose <code class="docutils literal notranslate"><span class="pre">fill_gaps</span></code>:</p>
+<p>The Slate and DataFrame accessors expose <code class="docutils literal notranslate"><span class="pre">fill_gaps</span></code>:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">close</span><span class="p">.</span><span class="n">ts</span><span class="p">().</span><span class="n">fill_gaps</span><span class="p">(</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">subsp</span><span class="o">::</span><span class="n">stats</span><span class="o">::</span><span class="n">ts</span><span class="o">::</span><span class="n">GapFillMode</span><span class="o">::</span><span class="n">Forward</span><span class="p">);</span>
 
@@ -613,12 +613,12 @@ the output columns are <code class="docutils literal notranslate"><span class="p
 <h2>Timeline spans<a class="headerlink" href="#timeline-spans" title="Link to this heading">¶</a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">.tl().span(...)</span></code> when you need elapsed calendar distances between timeline
 values:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-01-31T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-02-29T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2025-02-28T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-01-05T00:00:00Z&quot;</span><span class="p">}));</span>
@@ -877,7 +877,7 @@ lag block:
 <td><p><code class="docutils literal notranslate"><span class="pre">df.features({&quot;x&quot;,</span> <span class="pre">&quot;y&quot;}).ts()</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Resample one value stream and handle labels manually</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Thread::ts().resample(axis,</span> <span class="pre">...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Slate::ts().resample(axis,</span> <span class="pre">...)</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Resample several value streams into a new frame</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">df.label().set(&quot;date&quot;).features({...}).ts().resample(...)</span></code></p></td>
@@ -921,7 +921,7 @@ replaced it as cases.</p></li>
 <h2>Common mistakes<a class="headerlink" href="#common-mistakes" title="Link to this heading">¶</a></h2>
 <section id="calling-the-wrong-accessor">
 <h3>Calling the wrong accessor<a class="headerlink" href="#calling-the-wrong-accessor" title="Link to this heading">¶</a></h3>
-<p>This returns a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>:</p>
+<p>This returns a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;close&quot;</span><span class="p">).</span><span class="n">ts</span><span class="p">().</span><span class="n">returns</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -950,7 +950,7 @@ return. Resample first when the calendar interval matters.</p>
 <p>Fix the schema first:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">fixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">cast</span><span class="p">({</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="o">::</span><span class="n">CastSpec</span><span class="p">{</span>
-<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
+<span class="w">        </span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="o">::</span><span class="n">Timeline</span><span class="p">,</span><span class="w"> </span><span class="p">{}},</span>
 <span class="p">});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">daily</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fixed</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="s">&quot;date&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">).</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;close&quot;</span><span class="p">}).</span><span class="n">ts</span><span class="p">().</span><span class="n">resample</span><span class="p">(</span><span class="s">&quot;D&quot;</span><span class="p">).</span><span class="n">mean</span><span class="p">();</span>
 </pre></div>

@@ -17,8 +17,8 @@ int g_failures = 0;
 
 static_assert(!std::is_constructible_v<pluss::codeh::Timeline, pluss::codem::Series, std::string>,
               "Timeline should not be publicly constructible from raw core storage");
-static_assert(!std::is_constructible_v<pluss::codeh::TimeIndex, pluss::codeh::Timeline>,
-              "TimeIndex should not be publicly constructible from Timeline");
+static_assert(!std::is_constructible_v<pluss::codeh::TimelineIndexAccessor, pluss::codeh::Timeline>,
+              "TimelineIndexAccessor should not be publicly constructible from Timeline");
 
 void expect_true(bool cond, const std::string& msg) {
   if (!cond) {
@@ -324,7 +324,7 @@ void test_dataframe_datetime_tranche() {
   expect_true(idx.size() == 3, "Timeline::index bridge");
   const auto key = pluss::timeline::make("2024-01-03T11:06:09Z");
   const auto pos = idx.searchsorted(key, false);
-  expect_true(pos >= 1 && pos <= 2, "TimeIndex searchsorted on Timeline-built index");
+  expect_true(pos >= 1 && pos <= 2, "TimelineIndexAccessor searchsorted on Timeline-built index");
 }
 
 void test_factory_rank_and_printing() {
@@ -473,7 +473,7 @@ void test_factory_rank_and_printing() {
   }).index();
   expect_true(idx.size() == 3, "Timeline::index 1D literal axis");
 
-  bool timeindex_freed = false;
+  bool index_storage_freed = false;
   {
     auto* raw = static_cast<std::int64_t*>(std::malloc(sizeof(std::int64_t) * 3));
     raw[0] = 0;
@@ -486,7 +486,7 @@ void test_factory_rank_and_printing() {
         sizes,
         strides,
         [&](void* p) {
-          timeindex_freed = true;
+          index_storage_freed = true;
           std::free(p);
         },
         "UTC").index();
@@ -495,7 +495,7 @@ void test_factory_rank_and_printing() {
                   std::vector<std::int64_t>{0, 1'000'000'000LL, 2'000'000'000LL},
                   "Timeline::index preserves borrowed data");
   }
-  expect_true(timeindex_freed, "timeindex::from_buffer deleter called");
+  expect_true(index_storage_freed, "Timeline::index borrowed-buffer deleter called");
 
   pluss::codeh::TimelinePrintOptions popt;
   popt.max_rows = 4;
@@ -526,9 +526,9 @@ void test_factory_rank_and_printing() {
       "Timeline::index rejects 2D input");
 }
 
-void test_generated_timeindex_dataframe_family() {
+void test_generated_timeline_index_family() {
   using pluss::codeh::Timeline;
-  std::cout << "[RUN] codeh:timeindex_generated_df\n";
+  std::cout << "[RUN] codeh:timeline_index_generated\n";
 
   const auto t = pluss::timeline::make({
       "2024-01-01T00:00:00Z",
@@ -710,7 +710,7 @@ int main() {
   test_base_static_and_legacy_surface();
   test_dataframe_datetime_tranche();
   test_factory_rank_and_printing();
-  test_generated_timeindex_dataframe_family();
+  test_generated_timeline_index_family();
   test_3d_non_generated_timeline_support();
   test_queue_dynamic_dispatch();
   test_dynamic_dispense_utility();

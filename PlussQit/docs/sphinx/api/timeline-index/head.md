@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::head
+# Timeline::TimelineIndexAccessor::head
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::head(std::int64_t n = 5) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::head(std::int64_t n = 5) const
 ```
 
 ## What It Does
@@ -22,14 +22,14 @@ How many timestamps to keep from the front.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The front slice.
 
 ## Examples
 
 ```cpp
 auto out = base.head(3);
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -43,13 +43,13 @@ Example 2. Use the default when you only want a small front preview.
 
 ```cpp
 auto preview = base.head();
-std::cout << pluss::timeindex::print(preview) << "\n";
+std::cout << pluss::timeline::print(preview.timeline()) << "\n";
 ```
 
 ## See Also
 
-- [`TimelineIndexAccessor::tail`](tail.md)
-- [`TimelineIndexAccessor::slice_index`](slice_index.md)
+- [`Timeline::TimelineIndexAccessor::tail`](tail.md)
+- [`Timeline::TimelineIndexAccessor::slice_index`](slice_index.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="freq.html">

@@ -65,7 +65,7 @@ private:
     std::vector<std::string> out;
     for (const auto& name : df.features()) {
       if (blocked.contains(name)) continue;
-      if (df.features(name).kind() == ThreadKind::Series) out.push_back(name);
+      if (df.features(name).kind() == SlateKind::Series) out.push_back(name);
     }
     return out;
   }

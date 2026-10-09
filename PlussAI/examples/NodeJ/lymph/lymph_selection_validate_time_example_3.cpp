@@ -10,7 +10,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -22,7 +22,7 @@ int main() {
   const pluss::Series demand = pluss::make_series(
       {12., 13.5, 15., 16.6, 18., 19.4, 21., 22.5, 24., 25.4,
        27., 28.6, 30., 31.5, 33., 34.4, 36., 37.5, 39., 40.6}, {20}, f64);
-  const DataFrame frame({{"step", Thread(step)}, {"demand", Thread(demand)}});
+  const DataFrame frame({{"step", Slate(step)}, {"demand", Slate(demand)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"step"};

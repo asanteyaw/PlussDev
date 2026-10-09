@@ -18,11 +18,45 @@ The type is `lymph::selection::validate::Plan`, re-exported one scope up as
 `lymph::selection::Plan`. Both names are the same type; the shorter one is the
 usual spelling.
 
-```cpp
-namespace lymph = pluss::ai::lymph;
+Build a cross-validation plan and a stratified plan, then read the fold count from each plan's options. Both default to five folds.
 
-lymph::selection::Plan a = lymph::selection::cross().folds(5);
-lymph::selection::validate::Plan b = lymph::selection::validate::stratified();
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  lymph::selection::Plan a = lymph::selection::cross().folds(5);
+  lymph::selection::validate::Plan b = lymph::selection::validate::stratified();
+  std::cout << "cross folds = " << a.options().folds << "\n";
+  std::cout << "stratified folds = " << b.options().folds << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+cross folds = 5
+stratified folds = 5
 ```
 
 ## Construction

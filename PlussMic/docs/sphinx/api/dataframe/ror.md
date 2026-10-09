@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: a57f6ea54077 -->
+<!-- pluss-signature-hash: f059f6e18132 -->
 
 # DataFrame::ror
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame::ror(const DataFrame& other) const -> DataFrame
-DataFrame::ror(const Thread& other) const -> DataFrame
+DataFrame::ror(const Slate& other) const -> DataFrame
 ```
 
 ## What It Does
@@ -26,7 +26,7 @@ since been fixed, and `ror()` shares the fix.
 
 **other**
 
-`const DataFrame&` or `const Thread&` — identical shape requirements to
+`const DataFrame&` or `const Slate&` — identical shape requirements to
 [`land()`](land.md).
 
 ## Returns
@@ -74,13 +74,13 @@ r    | true   true
 The values match [`left.lor(right)`](lor.md) exactly, and the case labels are `left`'s
 own (`p, q, r`) — `right`'s labels (`x, y, z`) never appear in the result.
 
-Example 2. OR against a single shared `Thread`, applied identically to every feature —
+Example 2. OR against a single shared `Slate`, applied identically to every feature —
 same result as [`left.lor(mask)`](lor.md).
 
 ```cpp
-auto mask = Thread(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
-auto out_thread = left.ror(mask);
-std::cout << out_thread;
+auto mask = Slate(pluss::make_series({false, true, false}, pluss::ScalarType::Bool));
+auto out_slate = left.ror(mask);
+std::cout << out_slate;
 ```
 
 ### Output

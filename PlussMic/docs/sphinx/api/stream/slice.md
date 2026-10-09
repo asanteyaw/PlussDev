@@ -14,7 +14,7 @@ Stream::slice(std::int64_t start, std::int64_t stop) const -> Stream
 ## What It Does
 
 Returns a new stream containing the contiguous half-open range `[start, stop)` — same
-convention as [`to_thread(start, stop)`](to_thread.md). `stop` beyond the stream's length
+convention as [`to_slate(start, stop)`](to_slate.md). `stop` beyond the stream's length
 clamps to the end rather than throwing.
 
 ## Parameters
@@ -91,8 +91,8 @@ label        | value
   end, instead of an arbitrary range.
 - [`Stream::take`](take.md): select arbitrary (possibly non-contiguous, possibly reordered)
   positions instead of a contiguous range.
-- [`Stream::to_thread`](to_thread.md): the two-argument overload uses the identical
-  `[start, stop)` convention, converting to `Thread` instead of `Stream`.
+- [`Stream::to_slate`](to_slate.md): the two-argument overload uses the identical
+  `[start, stop)` convention, converting to `Slate` instead of `Stream`.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="size.html">

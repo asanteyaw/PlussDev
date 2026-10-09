@@ -80,7 +80,7 @@ Example 1. The default: literal, case-sensitive, unlimited replacement.
 using namespace pluss::table;
 
 auto notes = DataFrame({
-    {"text", Thread(pluss::make_note(
+    {"text", Slate(pluss::make_note(
         {"cat and cat", "Cat there", "no match", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -156,7 +156,7 @@ already consumed one match.
 
 ```cpp
 auto words = DataFrame({
-    {"word", Thread(pluss::make_note(
+    {"word", Slate(pluss::make_note(
         {"banana", "aardvark", "xyz", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -206,7 +206,7 @@ using capture groups.
 
 ```cpp
 auto emails = DataFrame({
-    {"email", Thread(pluss::make_note(
+    {"email", Slate(pluss::make_note(
         {"alice@example", "bob@test", "invalid", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });

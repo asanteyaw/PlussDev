@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,7 +15,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.6, 2.2, 2.8, 3.4, 4.0, 4.6, 5.2}, {8}, f64);
   const pluss::Series balance = pluss::make_series({0.4, 0.9, 1.3, 1.6, 2.0, 2.4, 2.8, 3.2}, {8}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 0, 1, 1, 1}, {8}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b98f110557d5 -->
+<!-- pluss-signature-hash: 7519a44e084a -->
 
 # DataFrame::skew
 
@@ -8,13 +8,13 @@
 ## Signature
 
 ```cpp
-DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const -> Thread
+DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const -> Slate
 ```
 
 ## What It Does
 
 Reduces every numeric feature to its (bias-adjusted) sample skewness — a measure of how
-asymmetric the distribution of values is around its mean — returning one `Thread` whose
+asymmetric the distribution of values is around its mean — returning one `Slate` whose
 entries line up with the frame's numeric feature names, the same shape
 [`std()`](std.md) and [`var()`](var.md) return. A skewness of `0` describes a
 symmetric distribution; a positive value describes a right (long upper) tail; a
@@ -46,7 +46,7 @@ statistically-required minimum of three.
 
 ## Returns
 
-`Thread`
+`Slate`
     One entry per participating numeric feature, labeled by feature name, holding that
     feature's sample skewness.
 
@@ -58,10 +58,10 @@ Example 1. Compute the skewness of every numeric feature, the default `min_count
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto skewness = orders.skew();

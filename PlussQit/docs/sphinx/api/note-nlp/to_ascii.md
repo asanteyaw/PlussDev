@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::to_ascii
+# Note::NlpAccessor::to_ascii
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::to_ascii() const
+Note Note::NlpAccessor::to_ascii() const
 ```
 
 ## Force Text Down To Plain ASCII
@@ -36,7 +36,7 @@ still cannot rescue a non-Latin script; use
 [`to_cyrillic`](to_cyrillic.md) for those.
 
 The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode `Note` is rejected with `NoteNlpAccessor::to_ascii requires a
+(a bytes-mode `Note` is rejected with `Note::NlpAccessor::to_ascii requires a
 UTF-8 text Note (not bytes)`), and returns a fresh UTF-8 `Note`. A cell that
 is already ASCII is returned unchanged.
 
@@ -122,8 +122,8 @@ Note(shape=[1, 2], dim=2, numel=2, encoding=utf8)
   as UTF-8 (no `?` substitution).
 - [`Note::to_ascii`](../note/to_ascii.md): the plain cleanup that replaces non-ASCII
   with `?` **without** the accent fold.
-- [`NoteNlpAccessor::to_greek`](to_greek.md) /
-  [`NoteNlpAccessor::to_cyrillic`](to_cyrillic.md): romanize a
+- [`Note::NlpAccessor::to_greek`](to_greek.md) /
+  [`Note::NlpAccessor::to_cyrillic`](to_cyrillic.md): romanize a
   non-Latin script.
 - [`Note::to_latin1_lossy`](../note/to_latin1_lossy.md): keep the Latin-1 characters
   as bytes instead of folding to ASCII.

@@ -1,0 +1,41 @@
+summary = """
+Expose the underlying `pluss::Note` payload directly.
+
+`Slate::as_note()` is the escape hatch you use when `Slate` itself intentionally stays smaller than the full text-method surface. Once you have the `Note`, you can call Note-specific text operations and then wrap the result back into `Slate` only when a slate-aware API needs it again.
+"""
+
+returns = """
+`const pluss::Note&`
+    Reference to the underlying note payload.
+"""
+
+see_also = [
+  "<a href=\"#as_series\"><code>Slate::as_series</code></a>: expose the numeric payload directly.",
+  "<a href=\"#as_timeline\"><code>Slate::as_timeline</code></a>: expose the temporal payload directly.",
+  "<a href=\"#as_timeindex\"><code>Slate::as_timeindex</code></a>: expose the indexed temporal payload directly."
+]
+
+notes = [
+  """
+This method does not create a new slate by itself. It returns the underlying payload reference.
+""",
+  """
+If a downstream API expects `Slate`, wrap the transformed payload back as `Slate(note_result)`.
+"""
+]
+
+[[examples]]
+title = "Use the Note payload to run text cleanup and then wrap it back into a Slate."
+code = """
+using namespace pluss::table;
+
+auto names = Slate(pluss::make_note({" Ada ", "BOLA", " chen "}));
+
+auto out = Slate(names.as_note().strip().lower());
+"""
+output = """
+0  ada
+1  bola
+2  chen
+ptype: Note
+"""

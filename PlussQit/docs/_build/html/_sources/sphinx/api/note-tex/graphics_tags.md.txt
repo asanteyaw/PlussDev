@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::graphics_tags
+# Note::TexAccessor::graphics_tags
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::graphics_tags() const
+Note Note::TexAccessor::graphics_tags() const
 ```
 
 ## Retain Graphic Locations As Text

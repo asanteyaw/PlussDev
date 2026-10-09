@@ -218,8 +218,8 @@ Example 1. Build a classic two-way table, then render it.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
 });
 
 auto ct = df.contingency("city", "channel");
@@ -242,9 +242,9 @@ Example 2. Keep three dimensions, then choose a projection later.
 
 ```cpp
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto ct = df.contingency({"city", "channel", "weekend"});

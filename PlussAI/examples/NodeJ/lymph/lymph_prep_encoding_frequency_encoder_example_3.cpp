@@ -10,12 +10,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   //   city 1 x4,  city 2 x2,  city 3 x2   (8 rows)
-  const DataFrame train({{"city", Thread(pluss::make_series(
+  const DataFrame train({{"city", Slate(pluss::make_series(
       {1., 1., 1., 1., 2., 2., 3., 3.}, {8}, f64))}});
 
   lymph::prep::FrequencyEncoder encoder;

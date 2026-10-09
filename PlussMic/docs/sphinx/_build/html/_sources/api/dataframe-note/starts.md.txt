@@ -48,7 +48,7 @@ Example 1. Check a text feature for a literal prefix.
 using namespace pluss::table;
 
 auto catalog = DataFrame({
-    {"code", Thread(pluss::make_note(
+    {"code", Slate(pluss::make_note(
         {"SKU-1001", "sku-1002", "REF-2003", "SKU-1004"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b841fc52dfb6 -->
+<!-- pluss-signature-hash: e1fc19bc864e -->
 
 # DataFrame::freq
 
@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFrame::freq() const -> Thread
-DataFrame::freq(FreqOptions options) const -> Thread
+DataFrame::freq() const -> Slate
+DataFrame::freq(FreqOptions options) const -> Slate
 ```
 
 ## What It Does
 
-Counts distinct rows of the current frame and returns the result as a `Thread`.
+Counts distinct rows of the current frame and returns the result as a `Slate`.
 This is the features-first value-count surface:
 
 ```cpp
@@ -62,7 +62,7 @@ Keeps only the first `top` rows after ordering. `0` keeps every group.
 
 ## Returns
 
-`Thread`
+`Slate`
     A frequency series named `count` or `prop`.
 
 - With one grouping feature, labels are the distinct values of that feature.
@@ -77,8 +77,8 @@ Example 1. Count distinct combinations of two grouping features.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"default",  Thread(pluss::make_note({"yes", "yes", "yes", "no", "yes", "no"}))},
-    {"is_adult", Thread(pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
+    {"default",  Slate(pluss::make_note({"yes", "yes", "yes", "no", "yes", "no"}))},
+    {"is_adult", Slate(pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
 });
 
 auto counts = df.features({"default", "is_adult"}).freq();
@@ -120,8 +120,8 @@ Example 3. Keep missing grouping values instead of dropping them, and skip sorti
 
 ```cpp
 auto keep_null = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema"}))},
-    {"zone", Thread(pluss::make_note({"West", "", "North"}),
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema"}))},
+    {"zone", Slate(pluss::make_note({"West", "", "North"}),
                     pluss::make_series(std::vector<bool>{true, false, true}, pluss::ScalarType::Bool))},
 });
 
@@ -150,7 +150,7 @@ Name: count, ptype: Series
 ## See Also
 
 - [`DataFrame::tally`](tally.md)
-- [`Thread::freq`](../thread/freq.md)
+- [`Slate::freq`](../thread/freq.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="fold.html">

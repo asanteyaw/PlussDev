@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::word_ngrams
+# Note::NlpAccessor::word_ngrams
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::word_ngrams(std::int64_t width) const
+TokenBatch Note::NlpAccessor::word_ngrams(std::int64_t width) const
 ```
 
 ## Build Overlapping Word Windows

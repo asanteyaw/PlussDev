@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::env
+# Note::TexAccessor::env
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::env(std::string_view name) const
+TokenBatch Note::TexAccessor::env(std::string_view name) const
 ```
 
 ## Extract One Environment Kind

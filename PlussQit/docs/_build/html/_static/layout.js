@@ -90,7 +90,7 @@
   function currentApiPage() {
     // Generalized to work for any class registered in PLUSS_API_NAV (written
     // by generate_api_reference.py's write_api_nav_manifest), not just
-    // DataFrame/Thread. Adding a new per-method class (e.g. a DataFrame
+    // DataFrame/Slate. Adding a new per-method class (e.g. a DataFrame
     // accessor) never requires touching this function -- it only needs an
     // entry in CLASS_CONFIG/PER_METHOD_CLASSES/METHOD_PAGE_DIR on the Python
     // side, since `slug` and `landing` for every class arrive here already

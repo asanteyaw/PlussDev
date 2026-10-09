@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"region", Thread(region)}});
+  const DataFrame x({{"income", Slate(income)}, {"region", Slate(region)}});
 
   // A model with two preparation stages plus the estimator.
   lymph::models::Model original = lymph::models::logistic_regression();
@@ -33,10 +33,10 @@ int main() {
   std::cout << "loaded   stage_count = " << loaded.stage_count() << "\n\n";
 
   const DataFrame check({
-      {"income", Thread(income)},
-      {"region", Thread(region)},
-      {"original", Thread(original.infer(x))},
-      {"loaded", Thread(loaded.infer(x))},
+      {"income", Slate(income)},
+      {"region", Slate(region)},
+      {"original", Slate(original.infer(x))},
+      {"loaded", Slate(loaded.infer(x))},
   });
   std::cout << check;
 

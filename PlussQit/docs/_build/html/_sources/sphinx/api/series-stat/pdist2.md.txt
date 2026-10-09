@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::pdist2
+# Series::StatAccessor::pdist2
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::pdist2(const Series& other) const
+Series Series::StatAccessor::pdist2(const Series& other) const
 Series SeriesStatProxy::pdist2() const
 Series SeriesStatProxy::pdist2(const Series& other) const
 ```

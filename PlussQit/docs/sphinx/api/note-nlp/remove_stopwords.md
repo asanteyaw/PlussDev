@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_stopwords
+# Note::NlpAccessor::remove_stopwords
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_stopwords(std::string_view language = "en") const
+Note Note::NlpAccessor::remove_stopwords(std::string_view language = "en") const
 ```
 
 ## Remove Common Function Words

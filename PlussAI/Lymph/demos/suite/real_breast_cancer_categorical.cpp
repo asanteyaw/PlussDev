@@ -20,7 +20,7 @@ int main() {
   enc.max_categories = 24;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"age", "menopause", "tumor_size", "inv_nodes", "node_caps", "deg_malig",
                  "breast", "breast_quad", "irradiat"})
       .label("class")
@@ -30,11 +30,11 @@ int main() {
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("cat", {"age", "menopause", "tumor_size", "inv_nodes", "node_caps",
                                           "breast", "breast_quad", "irradiat"}, {
-              {"encode", lymph::stage::one_hot_encoder(enc)},
+              {"encode", lymph::prep::stage::one_hot_encoder(enc)},
           }),
-          lymph::workflow::branch("ord", {"deg_malig"}, {{"scale", lymph::stage::standard_scaler()}}),
+          lymph::workflow::branch("ord", {"deg_malig"}, {{"scale", lymph::prep::stage::standard_scaler()}}),
       },
-      lymph::model::decision_tree_classifier({.max_depth = 5, .min_samples_leaf = 4}));
+      lymph::models::decision_tree_classifier({.max_depth = 5, .min_samples_leaf = 4}));
       
   wf.learn_(data);
   std::cout << "breast-cancer accuracy: " << wf.assess(data).accuracy.item<double>() << "\n";

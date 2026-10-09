@@ -13,7 +13,7 @@
 namespace pluss::codeh {
 class Timeline;
 class Duration;
-class TimeIndex;
+class TimelineIndexAccessor;
 struct CalendarOffset;
 } // namespace pluss::codeh
 namespace pluss::codem {
@@ -27,7 +27,7 @@ struct Arg {
       std::monostate,
       const ::pluss::codeh::Timeline*,
       const ::pluss::codeh::Duration*,
-      const ::pluss::codeh::TimeIndex*,
+      const ::pluss::codeh::TimelineIndexAccessor*,
       const ::pluss::codeh::CalendarOffset*,
       const ::pluss::codem::Series*,
       std::int64_t,
@@ -39,7 +39,7 @@ struct Arg {
   Arg() : v(std::monostate{}) {}
   Arg(const ::pluss::codeh::Timeline& x) : v(&x) {}
   Arg(const ::pluss::codeh::Duration& x) : v(&x) {}
-  Arg(const ::pluss::codeh::TimeIndex& x) : v(&x) {}
+  Arg(const ::pluss::codeh::TimelineIndexAccessor& x) : v(&x) {}
   Arg(const ::pluss::codeh::CalendarOffset& x) : v(&x) {}
   Arg(const ::pluss::codem::Series& x) : v(&x) {}
   Arg(std::int64_t x) : v(x) {}

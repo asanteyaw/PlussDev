@@ -7,14 +7,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"region", Thread(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"region", Slate(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   lymph::prep::OneHotEncoder encoder(lymph::prep::OneHotEncoderOptions{
@@ -26,7 +26,7 @@ int main() {
   const DataFrame encoded = encoder.learn_map(raw.features({"region"}));
   const lymph::prep::TransformerSummary summary = encoder.summary();
   const DataFrame inference({
-      {"region", Thread(pluss::make_note({"north", "west"}))},
+      {"region", Slate(pluss::make_note({"north", "west"}))},
   });
   const DataFrame mapped = encoder.map(inference);
 

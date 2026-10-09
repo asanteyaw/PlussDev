@@ -113,9 +113,9 @@ after s2 destroyed: 1
   handle has a payload at all, regardless of sharing.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="to_thread.html">
+  <a class="prev-link" href="to_slate.html">
     <span class="label">Previous</span>
-    <span class="title">to_thread</span>
+    <span class="title">to_slate</span>
   </a>
   <a class="next-link" href="var.html">
     <span class="label">Next</span>

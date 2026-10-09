@@ -96,8 +96,8 @@ count, not count `- 1`), same as [`zscore_rolling()`](zscore_rolling.md).
 - [`StreamTimeSeriesAccessor::zscore_rolling`](zscore_rolling.md): shares
   this method's underlying rolling-mean/rolling-std engine.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::rolling_block`](../thread-ts/rolling_block.md): the
-  underlying single-thread engine.
+- [`TimeSeriesAccessor::rolling_block`](../slate-ts/rolling_block.md): the
+  underlying single-slate engine.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling.html">

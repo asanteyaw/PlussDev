@@ -38,6 +38,34 @@ target_include_directories(PlussTils INTERFACE
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+add_executable(plusstils_core_env_reference
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tils/core_env_reference.cpp
+)
+target_link_libraries(plusstils_core_env_reference PRIVATE PlussTilsCore)
+target_compile_features(plusstils_core_env_reference PRIVATE cxx_std_20)
+
+add_executable(plusstils_core_seed_reference
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tils/core_seed_reference.cpp
+)
+target_link_libraries(plusstils_core_seed_reference PRIVATE PlussTilsCore)
+target_compile_features(plusstils_core_seed_reference PRIVATE cxx_std_20)
+
+if(BUILD_TESTING)
+    add_executable(plusstils_core_env_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/core_env_tests.cpp
+    )
+    target_link_libraries(plusstils_core_env_tests PRIVATE PlussTilsCore)
+    target_compile_features(plusstils_core_env_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_core_env COMMAND plusstils_core_env_tests)
+
+    add_executable(plusstils_core_seed_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/core_seed_tests.cpp
+    )
+    target_link_libraries(plusstils_core_seed_tests PRIVATE PlussTilsCore)
+    target_compile_features(plusstils_core_seed_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_core_seed COMMAND plusstils_core_seed_tests)
+endif()
+
 install(TARGETS PlussTilsCore PlussTils
     EXPORT PlussTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

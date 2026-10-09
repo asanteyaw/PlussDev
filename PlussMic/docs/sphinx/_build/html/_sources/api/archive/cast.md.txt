@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ecbe33da4857 -->
+<!-- pluss-signature-hash: 2e173f8feae0 -->
 
 # Archive::cast
 
@@ -9,8 +9,8 @@
 
 ```cpp
 Archive::cast() const -> ArchiveCastAccessor
-Archive::cast(const pluss::table::ThreadCastOptions& options) const -> ArchiveCastAccessor
-Archive::cast(pluss::table::ThreadCastTarget target, const pluss::table::ThreadCastOptions& options = {}) const -> Archive
+Archive::cast(const pluss::table::SlateCastOptions& options) const -> ArchiveCastAccessor
+Archive::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options = {}) const -> Archive
 ```
 
 ## What It Does
@@ -41,18 +41,18 @@ only want to cast specific streams, use [`Archive::keys(names)`](keys.md) follow
 
 ## Parameters
 
-**options** (`const pluss::table::ThreadCastOptions&`, optional)
+**options** (`const pluss::table::SlateCastOptions&`, optional)
     For the accessor overloads, stores conversion policy on the accessor before you pick
     the terminal target.
 
-**target** (`pluss::table::ThreadCastTarget`)
+**target** (`pluss::table::SlateCastTarget`)
     For the direct root overload, the payload kind to cast every stream to — `Series`,
     `Note`, `Timeline`, or `TimeIndex`.
 
-**options** (`const pluss::table::ThreadCastOptions&`, optional)
+**options** (`const pluss::table::SlateCastOptions&`, optional)
     For the direct root overload, conversion policy — `series_dtype` picks the numeric
     dtype for a `Series` target; `invalid` chooses parse-failure behavior. See
-    [`Thread::cast`](../thread/cast.md) for the full breakdown.
+    [`Slate::cast`](../thread/cast.md) for the full breakdown.
 
 ## Returns
 
@@ -100,7 +100,7 @@ score                    | Series       | Series[float64]  | 2       | [1.5, 2.5
   in result; they differ only in surface style.
 - Requires a defined archive; throws `"Archive: undefined handle"` otherwise.
 - Follows the same per-target conversion rules as
-  [`Catalog::cast`](../catalog/cast.md)/[`Thread::cast`](../thread/cast.md).
+  [`Catalog::cast`](../catalog/cast.md)/[`Slate::cast`](../thread/cast.md).
 
 ## See Also
 

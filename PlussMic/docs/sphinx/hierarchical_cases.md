@@ -19,9 +19,9 @@ look like joined strings, but operations use the structured case-label payloads.
 
 `DataFrame::label().names() -> vector<string>`
 
-`DataFrame::label().part(name: string_view) -> Thread`
+`DataFrame::label().part(name: string_view) -> Slate`
 
-`DataFrame::label().part(position: int64) -> Thread`
+`DataFrame::label().part(position: int64) -> Slate`
 
 `DataFrameCaseStudyAccessor::pick(const CasePick& pick) const -> DataFrame`
 
@@ -110,7 +110,7 @@ auto regions = indexed.caselbl("region");
 Expected output:
 
 - `names == {"region", "account", "quarter"}`
-- `regions` is a `Note` Thread with one value per case.
+- `regions` is a `Note` Slate with one value per case.
 
 ### Example 2: select by a partial case label
 

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Archive::loc" href="loc.html" />
@@ -74,7 +74,7 @@ Unlike <a class="reference internal" href="../stream/lbl.html"><span class="std 
 <p class="admonition-title">Important</p>
 <p>align() throws on any unmatched target label — it does not fill with NULL
 <code class="docutils literal notranslate"><span class="pre">align(target_labels)</span></code> requires every label in <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> to exist among the
-archive’s own depth labels; a target label with no match throws <code class="docutils literal notranslate"><span class="pre">&quot;Archive::label().align:</span> <span class="pre">label</span> <span class="pre">not</span> <span class="pre">found</span> <span class="pre">'&lt;label&gt;'&quot;</span></code>. This is stricter than <code class="docutils literal notranslate"><span class="pre">Thread::align</span></code>/<code class="docutils literal notranslate"><span class="pre">Stream::lbl().align()</span></code>,
+archive’s own depth labels; a target label with no match throws <code class="docutils literal notranslate"><span class="pre">&quot;Archive::label().align:</span> <span class="pre">label</span> <span class="pre">not</span> <span class="pre">found</span> <span class="pre">'&lt;label&gt;'&quot;</span></code>. This is stricter than <code class="docutils literal notranslate"><span class="pre">Slate::align</span></code>/<code class="docutils literal notranslate"><span class="pre">Stream::lbl().align()</span></code>,
 which fill unmatched positions with <code class="docutils literal notranslate"><span class="pre">NULL</span></code> (or a supplied <code class="docutils literal notranslate"><span class="pre">fill</span></code> value) instead of
 throwing.</p>
 </div>
@@ -224,7 +224,7 @@ actually inspect, set, reset, sort, or align.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">values()</span></code> throws rather than synthesizing a fallback when unlabeled — see the first
 important callout above. Check <a class="reference internal" href="#"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">has()</span></code></span></a> first.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">align()</span></code> throws on any unmatched target label rather than filling with <code class="docutils literal notranslate"><span class="pre">NULL</span></code> — see the
-second important callout above. This is stricter than <code class="docutils literal notranslate"><span class="pre">Thread</span></code>/<code class="docutils literal notranslate"><span class="pre">Stream</span></code>’s own <code class="docutils literal notranslate"><span class="pre">align()</span></code>.</p></li>
+second important callout above. This is stricter than <code class="docutils literal notranslate"><span class="pre">Slate</span></code>/<code class="docutils literal notranslate"><span class="pre">Stream</span></code>’s own <code class="docutils literal notranslate"><span class="pre">align()</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sort()</span></code>/<code class="docutils literal notranslate"><span class="pre">align()</span></code> both reorder the underlying catalogs together with the label stream —
 see Example 3.</p></li>
 </ul>

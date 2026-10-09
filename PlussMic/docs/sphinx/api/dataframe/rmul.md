@@ -63,7 +63,7 @@ same number.
 
 ## Notes
 
-- Only accepts a scalar `double`; there is no reflected `DataFrame` or `Thread`
+- Only accepts a scalar `double`; there is no reflected `DataFrame` or `Slate`
   overload — see [`radd()`](radd.md) for why.
 - Multiplication is commutative, so `rmul()` never differs from `mul()` in result,
   unlike [`rdiv()`](rdiv.md), [`rsub()`](rsub.md), and the rest of the non-commutative

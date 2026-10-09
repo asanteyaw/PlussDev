@@ -5,7 +5,7 @@ Internal BI exploration surface.
 
 The public-facing BI API should eventually live under:
   - include/pluss/bi/
-  - include/BI_tools/
+  - include/pluss/bi/detail/
 
 This file stays in src/PlussBI as the implementation-side entrypoint for
 architecture notes, development staging, and local experimentation while the

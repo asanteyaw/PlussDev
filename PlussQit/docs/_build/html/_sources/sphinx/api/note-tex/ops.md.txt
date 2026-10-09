@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::ops
+# Note::TexAccessor::ops
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::ops() const
+TokenBatch Note::TexAccessor::ops() const
 ```
 
 ## Extract Mathematical Operator Lexemes

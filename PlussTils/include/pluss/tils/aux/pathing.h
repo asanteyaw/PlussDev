@@ -14,7 +14,7 @@
 
 #include "CodeM/core/Errors.h"
 
-namespace pluss::tils {
+namespace pluss::loader {
 
 enum class RootResolve {
   WorkingDirectory,
@@ -25,7 +25,6 @@ struct PathPolicy {
   bool canonicalize_root{true};
   bool auto_create_dirs{false};
   bool force_replace_dirs{false};
-  bool strip_leading_separators{true};
 };
 
 struct PathOptions {
@@ -87,9 +86,7 @@ inline std::filesystem::path resolve_root_input_(std::filesystem::path root,
   return out;
 }
 
-inline std::filesystem::path sanitize_subpath_(const std::filesystem::path& subpath,
-                                               bool strip_leading_separators) {
-  (void)strip_leading_separators; // retained for source compatibility; separators are always stripped.
+inline std::filesystem::path sanitize_subpath_(const std::filesystem::path& subpath) {
   if (subpath.empty()) return {};
 
   auto normalized = subpath.lexically_normal();
@@ -159,7 +156,7 @@ inline std::filesystem::path resolve_root_relative_file_(const std::filesystem::
                "' is treated as a subpath under configured root");
   }
 
-  const auto rel = sanitize_subpath_(requested, policy.strip_leading_separators);
+  const auto rel = sanitize_subpath_(requested);
   PLUSS_CHECK(
       !rel.empty(),
       std::string(api_name) + ": path is empty after normalization; requested='" + requested.string() + "'");
@@ -181,7 +178,7 @@ inline std::filesystem::path resolve_root_relative_dir_(const std::filesystem::p
                "' is treated as a subpath under configured root");
   }
 
-  const auto rel = sanitize_subpath_(requested, policy.strip_leading_separators);
+  const auto rel = sanitize_subpath_(requested);
   const auto resolved = rel.empty() ? root : (root / rel).lexically_normal();
   PLUSS_CHECK(
       is_path_within_root_(root, resolved),
@@ -199,7 +196,7 @@ inline std::filesystem::path resolve_under_parent_file_(const std::filesystem::p
                "' is treated as a subpath under the current parent");
   }
 
-  const auto rel = sanitize_subpath_(requested, policy.strip_leading_separators);
+  const auto rel = sanitize_subpath_(requested);
   PLUSS_CHECK(
       !rel.empty(),
       std::string(api_name) + ": path is empty after normalization; requested='" + requested.string() + "'");
@@ -654,26 +651,4 @@ inline std::filesystem::path join_path(std::filesystem::path base,
   return base;
 }
 
-} // namespace pluss::tils
-
-namespace pluss::loader {
-using tils::DirRef;
-using tils::PathContext;
-using tils::PathOptions;
-using tils::PathPolicy;
-using tils::PathRef;
-using tils::RootResolve;
-using tils::UrlContext;
-using tils::UrlRef;
-using tils::absolute_path;
-using tils::file_dir;
-using tils::file_path;
-using tils::file_path_map;
-using tils::file_paths;
-using tils::join_path;
-using tils::path_policy;
-using tils::reset_root_path;
-using tils::root_path;
-using tils::set_path_policy;
-using tils::set_root_path;
 } // namespace pluss::loader

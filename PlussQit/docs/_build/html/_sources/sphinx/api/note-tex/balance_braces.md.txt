@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::balance_braces
+# Note::TexAccessor::balance_braces
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::balance_braces() const
+Note Note::TexAccessor::balance_braces() const
 ```
 
 ## Repair Structural Brace Counts Cell By Cell

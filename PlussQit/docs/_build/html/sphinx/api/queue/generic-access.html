@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Queue::is, Queue::as &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Queue::visit" href="visit.html" />
+    <link rel="prev" title="Queue::defined, Queue::dim, Queue::numel" href="state.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="queue-is-queue-as">
+<h1>Queue::is, Queue::as<a class="headerlink" href="#queue-is-queue-as" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../queue_api_reference.html"><span class="doc std std-doc">Back to Queue API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">is</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="p">;</span>
+
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
+<span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="o">&amp;</span><span class="w"> </span><span class="n">as</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
+<span class="n">T</span><span class="o">&amp;</span><span class="w"> </span><span class="n">as</span><span class="p">();</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code> and <code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code> are the template-based equivalents of
+<a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">is_series()</span></code>/<code class="docutils literal notranslate"><span class="pre">series()</span></code></span></a> and their three siblings, for generic
+code written against a type parameter instead of a hardcoded accessor
+name – <code class="docutils literal notranslate"><span class="pre">T</span></code> is one of <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">Duration</span></code>. <code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code>
+checks whether the held payload is exactly <code class="docutils literal notranslate"><span class="pre">T</span></code>; <code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code> returns a
+reference to it.</p>
+<p>The behavioral difference from the named accessors
+(<a class="reference internal" href="accessors.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">series()</span></code>/<code class="docutils literal notranslate"><span class="pre">note()</span></code>/<code class="docutils literal notranslate"><span class="pre">timeline()</span></code>/<code class="docutils literal notranslate"><span class="pre">duration()</span></code></span></a>) is in what
+happens on a kind mismatch: the named accessors throw a named failure
+naming both the method and the actual kind; <code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code> calls
+<code class="docutils literal notranslate"><span class="pre">std::get&lt;T&gt;</span></code> directly on the internal <code class="docutils literal notranslate"><span class="pre">std::variant</span></code> with no such check, so
+a mismatch throws a bare <code class="docutils literal notranslate"><span class="pre">std::bad_variant_access</span></code> instead, with no
+<code class="docutils literal notranslate"><span class="pre">Queue</span></code>-specific message.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>T</strong> (template parameter)</p>
+<p>One of <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::codeh::Timeline</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">pluss::codeh::Duration</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code> returns <code class="docutils literal notranslate"><span class="pre">bool</span></code>. <code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code> returns a reference to the payload,
+typed as <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+</section>
+<section id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code> throws <code class="docutils literal notranslate"><span class="pre">std::bad_variant_access</span></code> when <code class="docutils literal notranslate"><span class="pre">T</span></code> does not match the
+<code class="docutils literal notranslate"><span class="pre">Queue</span></code>’s actual <code class="docutils literal notranslate"><span class="pre">kind()</span></code>. Unlike the named accessors, the exception
+carries no message naming the actual kind – check <code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code> or <code class="docutils literal notranslate"><span class="pre">kind()</span></code>
+first if that information matters to the caller.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code> on a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-holding <code class="docutils literal notranslate"><span class="pre">Queue</span></code>, true for the matching
+type and false for a mismatched one.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;is&lt;pluss::Note&gt;(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">is</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;is&lt;pluss::Series&gt;(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">is</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;as&lt;pluss::Note&gt;().numel(): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">as</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Note</span><span class="o">&gt;</span><span class="p">().</span><span class="n">numel</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>is&lt;pluss::Note&gt;(): true
+is&lt;pluss::Series&gt;(): false
+as&lt;pluss::Note&gt;().numel(): 2
+</pre></div>
+</div>
+<p>Example 2. Calling <code class="docutils literal notranslate"><span class="pre">as&lt;T&gt;()</span></code> with the wrong <code class="docutils literal notranslate"><span class="pre">T</span></code> throws
+<code class="docutils literal notranslate"><span class="pre">std::bad_variant_access</span></code>, not a <code class="docutils literal notranslate"><span class="pre">Queue</span></code>-named message.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;q&quot;</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">q</span><span class="p">.</span><span class="n">as</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;as&lt;pluss::Series&gt;(): did not throw</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">bad_variant_access</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;as&lt;pluss::Series&gt;() threw std::bad_variant_access: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>as&lt;pluss::Series&gt;() threw std::bad_variant_access: bad_variant_access
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">std::bad_variant_access::what()</span></code> gives the generic library message
+<code class="docutils literal notranslate"><span class="pre">&quot;bad_variant_access&quot;</span></code>, with no mention of <code class="docutils literal notranslate"><span class="pre">Queue</span></code>, <code class="docutils literal notranslate"><span class="pre">Series</span></code>, or <code class="docutils literal notranslate"><span class="pre">Note</span></code> –
+check <code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code> first (as in Example 1) when the caller needs to know why
+the access would fail, rather than catching the exception to find out.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="accessors.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">accessors</span></code></span></a>: the named, non-templated equivalents, which
+throw a more informative message on a kind mismatch.</p></li>
+<li><p><a class="reference internal" href="kind.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kind</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">is_series()</span></code>/<code class="docutils literal notranslate"><span class="pre">is_note()</span></code>/<code class="docutils literal notranslate"><span class="pre">is_timeline()</span></code>/
+<code class="docutils literal notranslate"><span class="pre">is_duration()</span></code>, the non-templated equivalent of <code class="docutils literal notranslate"><span class="pre">is&lt;T&gt;()</span></code>.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../queue_api_reference.html">Queue API Reference</a><ul>
+      <li>Previous: <a href="state.html" title="previous chapter">Queue::defined, Queue::dim, Queue::numel</a></li>
+      <li>Next: <a href="visit.html" title="next chapter">Queue::visit</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/queue/generic-access.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::ids
+# Note::TexAccessor::ids
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::ids() const
+TokenBatch Note::TexAccessor::ids() const
 ```
 
 ## Extract ASCII Identifier Lexemes

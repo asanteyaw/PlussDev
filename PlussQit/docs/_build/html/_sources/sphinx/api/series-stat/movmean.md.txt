@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::movmean
+# Series::StatAccessor::movmean
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::movmean() const
-Series SeriesStatAccessor::movmean(std::int64_t window) const
-Series SeriesStatAccessor::movmean(std::int64_t window, std::int64_t dim) const
+Series Series::StatAccessor::movmean() const
+Series Series::StatAccessor::movmean(std::int64_t window) const
+Series Series::StatAccessor::movmean(std::int64_t window, std::int64_t dim) const
 Series SeriesStatProxy::movmean() const
 Series SeriesStatProxy::movmean(std::int64_t window) const
 Series SeriesStatProxy::movmean(std::int64_t window, std::int64_t dim) const

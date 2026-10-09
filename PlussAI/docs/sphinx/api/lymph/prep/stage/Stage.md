@@ -52,7 +52,7 @@ factory takes that transform's option struct, default-constructed if omitted:
 
 The option struct is the same one the standalone twin object takes, so
 `prep::stage::standard_scaler(opts)` and `prep::StandardScaler{opts}` do identical
-arithmetic (see [`prep::stage` overview](../stage_family.md)).
+arithmetic (see [`prep::stage` overview](../stage.md)).
 
 ## State
 
@@ -278,7 +278,7 @@ threshold_binarizer: pure function, no fitting
 transformer object. `prep::stage::standard_scaler(...)` returns a `Stage`;
 `prep::StandardScaler(...)` returns a reusable fitted object. They share option
 types but serve different roles — see the
-[`prep::stage` overview](../stage_family.md).
+[`prep::stage` overview](../stage.md).
 
 **Pairing.** `Stage` becomes meaningful only when paired with a `Route`. On its
 own it says what kind of transform exists, not which features it should touch.

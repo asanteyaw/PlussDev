@@ -20,10 +20,10 @@ DataFrame::LetSlots DataFrame::set(std::initializer_list<const char*> names)
 
 Adds a new feature or replaces an existing one's values through assignment-target
 helpers. `set(name)` returns a lightweight `LetSlot` proxy bound to `*this`;
-assigning a `Thread`, `ThreadValue`, `pluss::Series`/`Note`/`Timeline`/`TimeIndex`,
+assigning a `Slate`, `SlateValue`, `pluss::Series`/`Note`/`Timeline`/`TimeIndex`,
 or a single-feature `DataFrame` to that proxy mutates the calling frame in place.
 `set({"a", "b"}) = {...}` is the same idea for several features assigned together
-in one batch. A `ThreadValue` right-hand side broadcasts a single scalar to every row.
+in one batch. A `SlateValue` right-hand side broadcasts a single scalar to every row.
 
 [`set_(name, value)`](set_.md) is the direct one-line in-place counterpart when you
 do not want assignment syntax at the call site.
@@ -36,12 +36,12 @@ The feature name (or names) to create or overwrite.
 
 **value** / **values**
 
-The replacement data: anything assignable to a `LetSlot` (`Thread`, `ThreadValue`,
+The replacement data: anything assignable to a `LetSlot` (`Slate`, `SlateValue`,
 `pluss::Series`/`Note`/`Timeline`/`TimeIndex`, or a single-feature `DataFrame`).
 
 **options** (`const AlignOptions&`, optional)
 
-Controls how a right-hand `Thread` is aligned to the frame's case axis when it
+Controls how a right-hand `Slate` is aligned to the frame's case axis when it
 doesn't already match exactly.
 
 ## Returns
@@ -58,12 +58,12 @@ Example 1. The `df.set(name) = value` builder style, mutating the frame in place
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-orders.set("profit") = Thread(pluss::make_series({40.0, 35.0, 30.0}));
+orders.set("profit") = Slate(pluss::make_series({40.0, 35.0, 30.0}));
 std::cout << orders;
 ```
 
@@ -81,15 +81,15 @@ std::cout << orders;
 ```
 
 `orders` itself now has a fourth feature, `"profit"` — `set("profit")` returned a
-`LetSlot` bound to `orders`, and assigning a `Thread` to it wrote the new column back
+`LetSlot` bound to `orders`, and assigning a `Slate` to it wrote the new column back
 into `orders` directly.
 
 Example 2. Assign several new features together in one batch.
 
 ```cpp
 orders.set({"cost", "region"}) = {
-    Thread(pluss::make_series({60.0, 85.0, 60.0})),
-    Thread(pluss::make_note({"South", "North", "South"})),
+    Slate(pluss::make_series({60.0, 85.0, 60.0})),
+    Slate(pluss::make_note({"South", "North", "South"})),
 };
 std::cout << orders;
 ```
@@ -138,8 +138,8 @@ replaces the existing `sales` column directly.
 
 - `set(...)` is assignment-target only. To mutate in one call without `=`, use
   [`set_()`](set_.md).
-- Assigning a `ThreadValue` to a `LetSlot` broadcasts a single scalar to every row —
-  useful for `df.set("flag") = ThreadValue(true)`-style constant columns.
+- Assigning a `SlateValue` to a `LetSlot` broadcasts a single scalar to every row —
+  useful for `df.set("flag") = SlateValue(true)`-style constant columns.
 - Batch-assigning with `set({"a", "b"}) = {...}` performs at most one schema
   reindex pass total, rather than one per feature — prefer it over several separate
   single-name assignments when setting many features at once.
@@ -149,7 +149,7 @@ replaces the existing `sales` column directly.
 - [`DataFrame::set_`](set_.md): the direct one-line in-place counterpart to this
   page's assignment-target form.
 - [`DataFrame::assign`](assign.md): derive new features from expressions evaluated
-  against the frame itself, rather than assigning pre-built `Thread`s.
+  against the frame itself, rather than assigning pre-built `Slate`s.
 - [`DataFrame::insert`](insert.md), [`DataFrame::place`](place.md): position a new
   feature at a specific index or next to a named anchor, instead of appending it.
 

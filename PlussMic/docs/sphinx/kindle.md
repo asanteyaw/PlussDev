@@ -16,7 +16,7 @@ This is the right model when case alignment and stream-native transforms matter 
 auto metric = pluss::kindle::Stream(
     pluss::make_series({10.0, 20.0, 30.0}),
     std::nullopt,
-    pluss::table::Thread(pluss::make_note({"cs0", "cs1", "cs2"})));
+    pluss::table::Slate(pluss::make_note({"cs0", "cs1", "cs2"})));
 
 metric = metric.with_meta("source", "demo").with_meta("unit", "km");
 

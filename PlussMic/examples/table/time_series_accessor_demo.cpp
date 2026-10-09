@@ -7,7 +7,7 @@
 #include <vector>
 
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using pluss::table::TsAlignMode;
 using pluss::table::TsOptions;
 using pluss::table::TsReindexFill;
@@ -27,9 +27,9 @@ int main() {
       std::span<const std::int64_t>(shape.data(), shape.size()));
 
   DataFrame df({
-      {"date", Thread(t)},
-      {"adj_close", Thread(pluss::make_series(std::vector<double>{100.0, 102.0, 101.0, 105.0, 110.0, 112.0}))},
-      {"volume", Thread(pluss::make_series(std::vector<double>{10.0, 11.0, 13.0, 12.0, 15.0, 17.0}))},
+      {"date", Slate(t)},
+      {"adj_close", Slate(pluss::make_series(std::vector<double>{100.0, 102.0, 101.0, 105.0, 110.0, 112.0}))},
+      {"volume", Slate(pluss::make_series(std::vector<double>{10.0, 11.0, 13.0, 12.0, 15.0, 17.0}))},
   });
   const auto ts_opts = TsOptions{.axis = df.features("date")};
 
@@ -64,8 +64,8 @@ int main() {
   const auto target_t = pluss::codeh::ops_internal::timeline_from_utf8(
       std::span<const std::string_view>(target_iso.data(), target_iso.size()),
       std::span<const std::int64_t>(target_shape.data(), target_shape.size()));
-  auto aligned = df.features({"adj_close"}).ts(ts_opts).align_to(Thread(target_t), TsAlignMode::Nearest);
-  auto reindexed = df.features({"adj_close"}).ts(ts_opts).align_to(Thread(target_t), TsAlignMode::Exact, TsReindexFill::Forward);
+  auto aligned = df.features({"adj_close"}).ts(ts_opts).align_to(Slate(target_t), TsAlignMode::Nearest);
+  auto reindexed = df.features({"adj_close"}).ts(ts_opts).align_to(Slate(target_t), TsAlignMode::Exact, TsReindexFill::Forward);
 
   // One-liner assignment pattern.
   df.set("log_returns") = df.features({"adj_close"}).ts().log_returns();

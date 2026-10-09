@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::mm
+# Series::LinearAlgAccessor::mm
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::mm(const Series& other) const
+Series Series::LinearAlgAccessor::mm(const Series& other) const
 Series SeriesLinearAlgProxy::mm() const
 Series Series::mm(const Series& other) const
 ```
@@ -178,9 +178,9 @@ matrix against rows of the right and always returns a rank-2 matrix.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): vectors, matrices, and
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): vectors, matrices, and
   broadcast batches.
-- [`SeriesLinearAlgAccessor::mv`](mv.md): strict matrix-vector multiplication.
+- [`Series::LinearAlgAccessor::mv`](mv.md): strict matrix-vector multiplication.
 - [`Series::mul`](../series/mul.md): elementwise multiplication.
 
 <div class="pluss-inline-prev-next">

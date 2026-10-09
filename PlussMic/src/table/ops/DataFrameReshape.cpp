@@ -48,21 +48,21 @@ pluss::Note note_from_strings(const std::vector<std::string>& values) {
   return pluss::make_note(values, shape);
 }
 
-pluss::codem::Platform reshape_thread_platform(const Thread& thread) {
-  switch (thread.kind()) {
-    case ThreadKind::Series:
-      return thread.as_series().platform();
-    case ThreadKind::Timeline:
-      return thread.as_timeline().epoch_nanos().platform();
-    case ThreadKind::Duration:
-    case ThreadKind::Note:
+pluss::codem::Platform reshape_slate_platform(const Slate& slate) {
+  switch (slate.kind()) {
+    case SlateKind::Series:
+      return slate.as_series().platform();
+    case SlateKind::Timeline:
+      return slate.as_timeline().epoch_nanos().platform();
+    case SlateKind::Duration:
+    case SlateKind::Note:
       return pluss::codem::Platform::CPU;
   }
-  PLUSS_FAIL("DataFrame::lengthen: unsupported Thread kind");
+  PLUSS_FAIL("DataFrame::lengthen: unsupported Slate kind");
 }
 
 pluss::Series reshape_validity(
-    const std::vector<Thread>& blocks,
+    const std::vector<Slate>& blocks,
     const pluss::codem::Platform platform) {
   std::vector<pluss::Series> masks;
   masks.reserve(blocks.size());
@@ -82,26 +82,26 @@ pluss::Series reshape_validity(
   return masks.front().unite(tail, 0);
 }
 
-Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
+Slate concatenate_reshape_slates(const std::vector<Slate>& blocks) {
   PLUSS_CHECK(!blocks.empty(), "DataFrame::lengthen: no value features selected");
   const auto kind = blocks.front().kind();
-  const auto platform = reshape_thread_platform(blocks.front());
+  const auto platform = reshape_slate_platform(blocks.front());
   const bool any_missing = std::any_of(
       blocks.begin(),
       blocks.end(),
-      [](const Thread& block) { return detail::has_validity_mask(block); });
+      [](const Slate& block) { return detail::has_validity_mask(block); });
   for (const auto& block : blocks) {
     PLUSS_CHECK(
         block.kind() == kind,
-        "DataFrame::lengthen: value features must use the same Thread kind");
+        "DataFrame::lengthen: value features must use the same Slate kind");
     PLUSS_CHECK(
-        reshape_thread_platform(block) == platform,
+        reshape_slate_platform(block) == platform,
         "DataFrame::lengthen: value features must use the same platform");
   }
 
-  Thread output;
+  Slate output;
   switch (kind) {
-    case ThreadKind::Series: {
+    case SlateKind::Series: {
       const auto dtype = blocks.front().as_series().scalar_type();
       std::vector<pluss::Series> tail;
       tail.reserve(blocks.size() - 1);
@@ -111,10 +111,10 @@ Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
             "DataFrame::lengthen: numeric value features must use the same dtype");
         tail.push_back(blocks[i].as_series());
       }
-      output = Thread(blocks.front().as_series().unite(tail, 0));
+      output = Slate(blocks.front().as_series().unite(tail, 0));
       break;
     }
-    case ThreadKind::Note: {
+    case SlateKind::Note: {
       std::vector<std::string> values;
       values.reserve(static_cast<std::size_t>(
           blocks.front().size() * static_cast<std::int64_t>(blocks.size())));
@@ -123,24 +123,24 @@ Thread concatenate_reshape_threads(const std::vector<Thread>& blocks) {
           values.emplace_back(value);
         }
       }
-      output = Thread(pluss::make_note(values));
+      output = Slate(pluss::make_note(values));
       break;
     }
-    case ThreadKind::Timeline: {
+    case SlateKind::Timeline: {
       auto values = blocks.front().as_timeline();
       for (std::size_t i = 1; i < blocks.size(); ++i) {
         values = values.concat(blocks[i].as_timeline());
       }
-      output = Thread(values);
+      output = Slate(values);
       break;
     }
-    case ThreadKind::Duration: {
+    case SlateKind::Duration: {
       std::vector<std::int64_t> values;
       for (const auto& block : blocks) {
         const auto host = block.as_duration().host();
         values.insert(values.end(), host.begin(), host.end());
       }
-      output = Thread(pluss::duration::nanos(values));
+      output = Slate(pluss::duration::nanos(values));
       break;
     }
   }
@@ -159,12 +159,12 @@ std::string normalize_case_label(std::string raw) {
   return raw;
 }
 
-std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
+std::string case_label_from_axis(const Slate& axis, std::int64_t row) {
   if (!detail::valid_at(axis, row)) {
     return {};
   }
   switch (axis.kind()) {
-    case ThreadKind::Series: {
+    case SlateKind::Series: {
       const auto& s = axis.as_series();
       switch (s.scalar_type()) {
         case pluss::codem::ScalarType::Bool:
@@ -193,30 +193,30 @@ std::string case_label_from_axis(const Thread& axis, std::int64_t row) {
           return std::string(axis.cast().note().as_note().at(row));
       }
     }
-    case ThreadKind::Note:
+    case SlateKind::Note:
       return normalize_case_label(std::string(axis.as_note().at(row)));
-    case ThreadKind::Timeline:
+    case SlateKind::Timeline:
       return fmt::format("{}", axis.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case ThreadKind::Duration:
+    case SlateKind::Duration:
       return fmt::format("{}", axis.as_duration().host()[static_cast<std::size_t>(row)]);
   }
   PLUSS_FAIL("DataFrame::lengthen: unsupported case-label kind");
 }
 
-Thread null_singleton_like(const Thread& reference) {
+Slate null_singleton_like(const Slate& reference) {
   PLUSS_CHECK(reference.size() > 0, "DataFrame::unstack: cannot infer null payload from an empty feature");
   auto out = reference.take(pluss::msharp::RangeView::Int(std::initializer_list<std::int64_t>{0}));
   pluss::codem::Platform platform = pluss::codem::Platform::CPU;
-  if (reference.kind() == ThreadKind::Series) {
+  if (reference.kind() == SlateKind::Series) {
     platform = reference.as_series().platform();
-  } else if (reference.kind() == ThreadKind::Timeline) {
+  } else if (reference.kind() == SlateKind::Timeline) {
     platform = reference.as_timeline().epoch_nanos().platform();
   }
   return detail::with_validity_mask(out, pluss::Series::zeros(
       {1}, pluss::codem::ScalarType::Bool, platform));
 }
 
-std::string axis_value_key(const Thread& values, std::int64_t row) {
+std::string axis_value_key(const Slate& values, std::int64_t row) {
   return detail::valid_at(values, row) ? case_label_from_axis(values, row) : std::string("NULL");
 }
 
@@ -226,7 +226,7 @@ DataFrameView DataFrame::transpose(bool render) const {
   const auto rows = ncases();
   const auto cols = nfeatures();
 
-  std::vector<Thread> src_columns;
+  std::vector<Slate> src_columns;
   src_columns.reserve(features().size());
   for (const auto& name : features()) {
     src_columns.push_back(this->features(name));
@@ -240,7 +240,7 @@ DataFrameView DataFrame::transpose(bool render) const {
   std::unordered_set<std::string> used_names;
   used_names.reserve(static_cast<std::size_t>(std::max<std::int64_t>(8, rows * 2)));
 
-  std::vector<std::pair<std::string, Thread>> out_cols;
+  std::vector<std::pair<std::string, Slate>> out_cols;
   out_cols.reserve(static_cast<std::size_t>(rows));
 
   for (std::int64_t r = 0; r < rows; ++r) {
@@ -258,10 +258,10 @@ DataFrameView DataFrame::transpose(bool render) const {
       }
     }
 
-    out_cols.emplace_back(std::move(feature_name), Thread(note_from_strings(values)));
+    out_cols.emplace_back(std::move(feature_name), Slate(note_from_strings(values)));
   }
 
-  Thread out_cases(note_from_strings(features()));
+  Slate out_cases(note_from_strings(features()));
   auto out = DataFrame(std::move(out_cols), std::move(out_cases));
   return DataFrameView(std::move(out), render, "transpose", title());
 }
@@ -325,7 +325,7 @@ DataFrame DataFrame::lengthen(
         std::int64_t{0});
   }
 
-  std::vector<std::pair<std::string, Thread>> output;
+  std::vector<std::pair<std::string, Slate>> output;
   output.reserve(ids.size() + 2);
   for (const auto& id : ids) {
     output.emplace_back(id, features(id).take(tiled_rows));
@@ -339,17 +339,17 @@ DataFrame DataFrame::lengthen(
         static_cast<std::size_t>(ncases()),
         name);
   }
-  output.emplace_back(feature_name, Thread(pluss::make_note(feature_values)));
+  output.emplace_back(feature_name, Slate(pluss::make_note(feature_values)));
 
-  std::vector<Thread> value_blocks;
+  std::vector<Slate> value_blocks;
   value_blocks.reserve(values.size());
   for (const auto& name : values) {
     value_blocks.push_back(features(name));
   }
-  output.emplace_back(value_name, concatenate_reshape_threads(value_blocks));
+  output.emplace_back(value_name, concatenate_reshape_slates(value_blocks));
 
-  Thread output_cases = fresh_cases
-      ? Thread(pluss::Series::arange(
+  Slate output_cases = fresh_cases
+      ? Slate(pluss::Series::arange(
             0.0,
             static_cast<double>(tiled_rows.size()),
             1.0,
@@ -369,7 +369,7 @@ DataFrame DataFrame::stack(std::string feature_name,
   PLUSS_CHECK(nfeatures() > 0, "DataFrame::stack: expected at least one feature");
 
   std::vector<std::string> case_level_names;
-  std::vector<Thread> case_level_values;
+  std::vector<Slate> case_level_values;
   if (has_caselbls()) {
     case_level_names = caselbls();
     case_level_values.reserve(case_level_names.size());
@@ -402,7 +402,7 @@ DataFrame DataFrame::stack(std::string feature_name,
         std::int64_t{0});
   }
 
-  std::vector<std::pair<std::string, Thread>> output;
+  std::vector<std::pair<std::string, Slate>> output;
   output.reserve(case_level_names.size() + 2);
   for (std::size_t i = 0; i < case_level_names.size(); ++i) {
     output.emplace_back(case_level_names[i], case_level_values[i].take(tiled_rows));
@@ -416,14 +416,14 @@ DataFrame DataFrame::stack(std::string feature_name,
         static_cast<std::size_t>(ncases()),
         name);
   }
-  output.emplace_back(feature_name, Thread(pluss::make_note(feature_values)));
+  output.emplace_back(feature_name, Slate(pluss::make_note(feature_values)));
 
-  std::vector<Thread> value_blocks;
+  std::vector<Slate> value_blocks;
   value_blocks.reserve(features().size());
   for (const auto& name : features()) {
     value_blocks.push_back(this->features(name));
   }
-  output.emplace_back(value_name, concatenate_reshape_threads(value_blocks));
+  output.emplace_back(value_name, concatenate_reshape_slates(value_blocks));
 
   auto out = DataFrame(std::move(output));
   std::vector<std::string> case_features = case_level_names;
@@ -455,7 +455,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
   }
 
   const auto pivot_values = caselbl(options.label);
-  std::vector<Thread> remaining_values;
+  std::vector<Slate> remaining_values;
   remaining_values.reserve(remaining_levels.size());
   for (const auto& name : remaining_levels) {
     remaining_values.push_back(caselbl(name));
@@ -502,7 +502,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
     std::sort(column_keys.begin(), column_keys.end());
   }
 
-  std::vector<std::pair<std::string, Thread>> output;
+  std::vector<std::pair<std::string, Slate>> output;
   output.reserve(remaining_levels.size() + features().size() * column_keys.size());
   for (std::size_t i = 0; i < remaining_levels.size(); ++i) {
     output.emplace_back(remaining_levels[i], remaining_values[i].take(first_rows));
@@ -517,7 +517,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
   for (const auto& value_feature : features()) {
     const auto source = features(value_feature);
     for (std::size_t col = 0; col < column_keys.size(); ++col) {
-      std::vector<Thread> blocks;
+      std::vector<Slate> blocks;
       blocks.reserve(row_keys.size());
       for (std::size_t row = 0; row < row_keys.size(); ++row) {
         const auto key = fmt::format("{}\x1F{}", row, col);
@@ -535,7 +535,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
       }
       PLUSS_CHECK(out_names.insert(out_name).second,
                   "DataFrame::unstack: duplicate output feature '" + out_name + "'");
-      output.emplace_back(std::move(out_name), concatenate_reshape_threads(blocks));
+      output.emplace_back(std::move(out_name), concatenate_reshape_slates(blocks));
     }
   }
 

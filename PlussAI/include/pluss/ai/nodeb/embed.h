@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pluss/ai/nodeb/workflow.h"
-#include "pluss/ai/nodej/status.h"
+#include "pluss/ai/nodeb/status.h"
 
 #include <cstdint>
 #include <memory>
@@ -45,7 +45,7 @@ public:
   // already be tokenized (and lemmatized, if `options.use_lemmas` is set)
   // via a `Workflow`, e.g. `Workflow{.stages = {stage::tokenize(),
   // stage::lemmatize()}}.infer(texts)`.
-  [[nodiscard]] nodej::Status learn(const std::vector<Doc>& docs);
+  [[nodiscard]] Status learn(const std::vector<Doc>& docs);
 
   [[nodiscard]] bool ready() const noexcept;
   [[nodiscard]] std::int64_t width() const noexcept;
@@ -53,19 +53,19 @@ public:
   [[nodiscard]] bool contains(std::string_view token) const noexcept;
 
   // The learned static vector for a single vocabulary token.
-  [[nodiscard]] nodej::StatusOr<std::vector<double>> vector_of(std::string_view token) const;
+  [[nodiscard]] StatusOr<std::vector<double>> vector_of(std::string_view token) const;
 
   // Mean-pools the learned vectors of a document's in-vocabulary tokens
   // into a single document-level embedding.
-  [[nodiscard]] nodej::StatusOr<std::vector<double>> embed(const Doc& doc) const;
-  [[nodiscard]] nodej::StatusOr<std::vector<std::vector<double>>> embed(const std::vector<Doc>& docs) const;
+  [[nodiscard]] StatusOr<std::vector<double>> embed(const Doc& doc) const;
+  [[nodiscard]] StatusOr<std::vector<std::vector<double>>> embed(const std::vector<Doc>& docs) const;
 
   [[nodiscard]] static double similarity(const std::vector<double>& lhs,
                                          const std::vector<double>& rhs) noexcept;
 
   // The `k` vocabulary tokens whose vectors are most cosine-similar to
   // `token`'s, excluding `token` itself, ranked descending.
-  [[nodiscard]] nodej::StatusOr<std::vector<std::pair<std::string, double>>> nearest(
+  [[nodiscard]] StatusOr<std::vector<std::pair<std::string, double>>> nearest(
       std::string_view token, std::int64_t k = 10) const;
 
   void save(std::string_view filepath) const;
@@ -86,7 +86,6 @@ struct ContextualEmbedOptions {
   std::int64_t num_heads = 4;
   std::int64_t feedforward_width = 128;
   std::int64_t epochs = 30;
-  std::int64_t batch_size = 8;
   double learning_rate = 1e-3;
   std::uint64_t seed = 0;
 };
@@ -120,17 +119,17 @@ public:
   explicit ContextualEmbedder(ContextualEmbedOptions options = {});
 
   // See `Embedder::learn` for the expected shape of `docs`.
-  [[nodiscard]] nodej::Status learn(const std::vector<Doc>& docs);
+  [[nodiscard]] Status learn(const std::vector<Doc>& docs);
 
   [[nodiscard]] bool ready() const noexcept;
   [[nodiscard]] std::int64_t width() const noexcept;
 
   // Per-token contextual vectors for `doc`, one row per surviving
   // (non-punct, in-vocabulary) token, in document order.
-  [[nodiscard]] nodej::StatusOr<std::vector<std::vector<double>>> encode(const Doc& doc) const;
+  [[nodiscard]] StatusOr<std::vector<std::vector<double>>> encode(const Doc& doc) const;
 
   // Mean-pools `encode(doc)` into a single document-level vector.
-  [[nodiscard]] nodej::StatusOr<std::vector<double>> embed(const Doc& doc) const;
+  [[nodiscard]] StatusOr<std::vector<double>> embed(const Doc& doc) const;
 
   // Autoregressively continues `prompt` using the causal-LM objective
   // `learn()` trained: repeatedly encodes the sequence so far, projects the
@@ -140,7 +139,7 @@ public:
   // whichever comes first. Returns just the newly generated token strings
   // (not the prompt), in order; `prompt` may be empty (unconditional
   // generation, seeded with only the model's start-of-sequence token).
-  [[nodiscard]] nodej::StatusOr<std::vector<std::string>> generate(
+  [[nodiscard]] StatusOr<std::vector<std::string>> generate(
       const Doc& prompt, const GenerateOptions& options = {}) const;
 
   void save(std::string_view filepath) const;

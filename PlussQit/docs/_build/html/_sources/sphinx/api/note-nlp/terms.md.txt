@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::terms
+# Note::NlpAccessor::terms
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::terms() const
+TokenBatch Note::NlpAccessor::terms() const
 ```
 
 ## Extract Distinct Content Terms

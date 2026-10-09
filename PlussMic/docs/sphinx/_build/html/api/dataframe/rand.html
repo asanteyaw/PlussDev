@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::rank" href="rank.html" />
@@ -37,14 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 8c10bad972a7 -->
+<!-- pluss-signature-hash: 417519f4eff3 -->
 <section id="dataframe-rand">
 <h1>DataFrame::rand<a class="headerlink" href="#dataframe-rand" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">rand</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">rand</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">rand</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -61,7 +61,7 @@ An earlier revision of <code class="docutils literal notranslate"><span class="p
 <code class="docutils literal notranslate"><span class="pre">other.land(*this)</span></code>, which meant the result’s case labels and title came from
 <code class="docutils literal notranslate"><span class="pre">other</span></code> instead of from the frame the method was called on — a real, verified quirk
 that was documented here as a caution. That has since been fixed: <code class="docutils literal notranslate"><span class="pre">rand()</span></code> now zips
-<code class="docutils literal notranslate"><span class="pre">*this</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> directly (with <code class="docutils literal notranslate"><span class="pre">Thread::rand()</span></code> handling the per-cell operand
+<code class="docutils literal notranslate"><span class="pre">*this</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> directly (with <code class="docutils literal notranslate"><span class="pre">Slate::rand()</span></code> handling the per-cell operand
 order internally), so the result’s structure always comes from <code class="docutils literal notranslate"><span class="pre">*this</span></code>, matching
 <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a> and every other method in this family. If you’re working against
 an older build where this fix isn’t present, verify which behavior you’re actually
@@ -71,9 +71,9 @@ seeing before relying on either.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>other</strong></p>
-<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code> — identical shape requirements to
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">DataFrame&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code> — identical shape requirements to
 <a class="reference internal" href="land.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">land()</span></code></span></a>: same feature names in order and same case count for the
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> overload; one boolean thread matching <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> for the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p>
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> overload; one boolean thread matching <code class="docutils literal notranslate"><span class="pre">ncases()</span></code> for the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -136,8 +136,8 @@ r    | false  false
 from <code class="docutils literal notranslate"><span class="pre">left</span></code>, the frame both methods were called on), even though <code class="docutils literal notranslate"><span class="pre">right</span></code> uses a
 completely different set of case labels (<code class="docutils literal notranslate"><span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">z</span></code>) that never appear in either
 result.</p>
-<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload behaves identically, as it always has.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+<p>Example 2. The <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload behaves identically, as it always has.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">rand</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>

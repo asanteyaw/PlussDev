@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4a393c0dce9c -->
+<!-- pluss-signature-hash: 3c8124f99c94 -->
 
 # Atlas::map
 
@@ -8,20 +8,20 @@
 ## Signature
 
 ```cpp
-Atlas::map(const std::function<ThreadValue(const ThreadValue&)>& fn) const -> Atlas
+Atlas::map(const std::function<SlateValue(const SlateValue&)>& fn) const -> Atlas
 ```
 
 ## What It Does
 
 Applies `fn` to every cell of every feature, in every frame, one scalar value at a time —
 the whole-atlas analog of [`DataFrame::map`](../dataframe/map.md). `fn` receives one cell
-as a `ThreadValue` and must return one `ThreadValue` back. It is skipped entirely for
+as a `SlateValue` and must return one `SlateValue` back. It is skipped entirely for
 missing cells (a `NULL` cell stays `NULL` without `fn` ever being called), and every
 non-null cell within one feature's column must map to the same output kind.
 
 ## Parameters
 
-**fn** (`const std::function<ThreadValue(const ThreadValue&)>&`)
+**fn** (`const std::function<SlateValue(const SlateValue&)>&`)
     A callback receiving one cell and returning its replacement. Must not be empty.
 
 ## Returns
@@ -36,16 +36,16 @@ Example 1. Scale every numeric cell by 10, across every frame.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({4.0, 5.0, 6.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
-auto out = atlas.map([](const pluss::table::ThreadValue& v) {
+auto out = atlas.map([](const pluss::table::SlateValue& v) {
   const auto x = v.to_dbl();
-  return pluss::table::ThreadValue(pluss::table::Thread(pluss::make_series({x * 10.0})));
+  return pluss::table::SlateValue(pluss::table::Slate(pluss::make_series({x * 10.0})));
 });
 std::cout << out.dloc(0);
 ```
@@ -68,15 +68,15 @@ Example 2. `NULL` cells are skipped — `fn` is never called for them, and they 
 ```cpp
 auto mask = pluss::make_series(std::vector<bool>{true, false, true});
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}), mask)},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}), mask)},
 });
 auto atlas = pluss::table::Atlas({f0});
 
 int calls = 0;
-auto out = atlas.map([&calls](const pluss::table::ThreadValue& v) {
+auto out = atlas.map([&calls](const pluss::table::SlateValue& v) {
   ++calls;
   const auto x = v.to_dbl();
-  return pluss::table::ThreadValue(pluss::table::Thread(pluss::make_series({x * 10.0})));
+  return pluss::table::SlateValue(pluss::table::Slate(pluss::make_series({x * 10.0})));
 });
 std::cout << "calls: " << calls << "\n";
 std::cout << out.dloc(0);

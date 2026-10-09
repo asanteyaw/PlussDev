@@ -5,13 +5,13 @@
 [Back to PlussQit API Reference](../api_reference.md)
 
 This is the method reference for the ordered-axis workflow entered through
-[`Timeline::index()`](api/timeline/index.md). Each operation retains the
-existing verified TimeIndex teaching while presenting its canonical home on
-`Timeline`.
+[`Timeline::index()`](api/timeline/index.md). Each operation treats a
+one-dimensional Timeline as an axis while keeping temporal storage and index
+semantics in their proper layers.
 
-## What `TimelineIndexAccessor` Is
+## What `Timeline::TimelineIndexAccessor` Is
 
-`TimelineIndexAccessor` is a lightweight checked view of a one-dimensional
+`Timeline::TimelineIndexAccessor` is a lightweight checked view of a one-dimensional
 `Timeline`. It owns a cheap Timeline handle, so it is safe to retain after the
 expression that created it. Building the accessor validates rank and absent
 instants and, by default, scans once for nondecreasing order. Calls made through
@@ -23,15 +23,13 @@ intend to search, slice, align, resample, and join against.
 That is the main difference from `Timeline`:
 
 - `Timeline` is the general temporal payload. It can be scalar or N-D.
-- `TimelineIndexAccessor` is the 1D time axis surface. It is where ordered lookup semantics
+- `Timeline::TimelineIndexAccessor` is the 1D time axis surface. It is where ordered lookup semantics
   live.
 
-Enter this surface with `timeline.index()`. During the staged SDK migration,
-`TimelineIndexAccessor` is a source-level name for the existing public
-`TimeIndex` implementation. That preserves current binaries and downstream
-source while new code adopts the accessor spelling. The compatibility
-factories remain available temporarily, but they do not define a second set of
-index semantics.
+Enter this surface with `timeline.index()`. Timeline factories construct the
+temporal values; `index()` validates the axis contract once and returns the
+ordered operations that apply to those values. There is no separate public
+index value type or factory namespace.
 
 ## Includes
 
@@ -112,13 +110,13 @@ Other suffix styles are also common:
 
 ## Using This Reference
 
-- Use the left sidebar to open one `TimelineIndexAccessor` method page at a time.
+- Use the left sidebar to open one `Timeline::TimelineIndexAccessor` method page at a time.
 - The method pages cover what makes the accessor different from a general
   `Timeline`: searching, slicing, resampling, rolling windows, and time-aware
   alignment.
 - If you need broader temporal transforms such as formatting, timezone
   conversion, or field extraction, start with
-  [`TimelineIndexAccessor::timeline`](api/timeline-index/timeline.md) and then continue on the
+  [`Timeline::TimelineIndexAccessor::timeline`](api/timeline-index/timeline.md) and then continue on the
   returned `Timeline`.
 
 ```{toctree}
@@ -179,7 +177,7 @@ api/timeline-index/unique
 
 ## Coverage
 
-The current handwritten pass now covers the canonical `TimelineIndexAccessor` surface:
+The current handwritten pass now covers the canonical `Timeline::TimelineIndexAccessor` surface:
 
 - introspection and cadence: `size`, `freq`, `host`
 - ordering and uniqueness checks: monotonic predicates, uniqueness predicates

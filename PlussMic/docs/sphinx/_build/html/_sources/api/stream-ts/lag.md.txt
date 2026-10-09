@@ -65,7 +65,7 @@ Each position now shows the previous position's value; position `0` has no
 predecessor, so it's `nan`.
 
 ```{important} No top-level Stream::shift(periods) — this accessor is the only path
-Unlike [`Thread::shift(periods)`](../thread/shift.md), which exists as a
+Unlike [`Slate::shift(periods)`](../thread/shift.md), which exists as a
 direct top-level method, `Stream` has no positional-shift method of its
 own outside this accessor — `Stream::shift(periods, freq)` is a completely
 different, unrelated method on [`StreamTimelineAccessor`](../stream-timeline/shift.md)
@@ -79,7 +79,7 @@ by row count.
 - `lag(periods)` with a negative `periods` is exactly `lead(-periods)`.
 - Vacated positions become `NULL`, values shifted past the far edge are
   dropped, not wrapped around — the same semantics as
-  [`Thread::shift(periods)`](../thread/shift.md), the table-layer primitive
+  [`Slate::shift(periods)`](../thread/shift.md), the table-layer primitive
   this method's underlying engine shares.
 - A pre-existing missing entry in the source stream is honored, not just the
   `NULL`s the shift itself introduces.
@@ -92,7 +92,7 @@ by row count.
   lags of the same stream at once, each as its own `DataFrame` column.
 - [`StreamTimelineAccessor::shift`](../stream-timeline/shift.md): an
   unrelated, calendar-duration shift — see the important callout above.
-- [`Thread::shift`](../thread/shift.md): the table-layer positional-shift
+- [`Slate::shift`](../thread/shift.md): the table-layer positional-shift
   primitive, which (unlike `Stream`) is reachable directly, not only through
   `ts()`.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.

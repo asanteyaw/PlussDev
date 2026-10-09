@@ -36,7 +36,7 @@
 namespace pluss::table {
 class Atlas;
 class DataFrame;
-class Thread;
+class Slate;
 }
 
 namespace pluss::pl::flash {
@@ -76,7 +76,7 @@ struct TableColumns {
 
 template <class T>
 concept TableBackedValue =
-    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Thread> ||
+    std::same_as<std::remove_cvref_t<T>, ::pluss::table::Slate> ||
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::DataFrame> ||
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
 
@@ -2581,19 +2581,19 @@ struct BarPlotOptions {
   bool horizontal{false};
 };
 
-Trace& lineplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& lineplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& lineplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& lineplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& scatterplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& scatterplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& scatterplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& scatterplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& stepplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& stepplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& stepplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& stepplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& areaplot(Pane& pane, const ::pluss::table::Thread& values, double base = 0.0);
+Trace& areaplot(Pane& pane, const ::pluss::table::Slate& values, double base = 0.0);
 Trace& areaplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2605,7 +2605,7 @@ Trace& areaplot(
     const TableColumns& columns = {},
     double base = 0.0);
 
-Trace& histplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& histplot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
 Trace& histplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2617,7 +2617,7 @@ Trace& histplot(
     const TableColumns& columns = {},
     int bins = 12);
 
-Trace& displot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& displot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
 Trace& displot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2629,7 +2629,7 @@ Trace& displot(
     const TableColumns& columns = {},
     int bins = 12);
 
-Trace& kdeplot(Pane& pane, const ::pluss::table::Thread& values, std::int64_t points = 128);
+Trace& kdeplot(Pane& pane, const ::pluss::table::Slate& values, std::int64_t points = 128);
 Trace& kdeplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2641,11 +2641,11 @@ Trace& kdeplot(
     const TableColumns& columns = {},
     std::int64_t points = 128);
 
-Trace& ecdfplot(Pane& pane, const ::pluss::table::Thread& values);
+Trace& ecdfplot(Pane& pane, const ::pluss::table::Slate& values);
 Trace& ecdfplot(Pane& pane, const ::pluss::table::DataFrame& frame, const TableColumns& columns = {});
 Trace& ecdfplot(Pane& pane, const ::pluss::table::Atlas& atlas, const TableColumns& columns = {});
 
-Trace& rugplot(Pane& pane, const ::pluss::table::Thread& values, double height = 0.08);
+Trace& rugplot(Pane& pane, const ::pluss::table::Slate& values, double height = 0.08);
 Trace& rugplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2657,7 +2657,7 @@ Trace& rugplot(
     const TableColumns& columns = {},
     double height = 0.08);
 
-Trace& countplot(Pane& pane, const ::pluss::table::Thread& values, int bins = 12);
+Trace& countplot(Pane& pane, const ::pluss::table::Slate& values, int bins = 12);
 Trace& countplot(
     Pane& pane,
     const ::pluss::table::DataFrame& frame,
@@ -2671,7 +2671,7 @@ Trace& countplot(
 
 Trace& barplot(
     Pane& pane,
-    const ::pluss::table::Thread& values,
+    const ::pluss::table::Slate& values,
     const BarPlotOptions& options = {});
 Trace& barplot(
     Pane& pane,

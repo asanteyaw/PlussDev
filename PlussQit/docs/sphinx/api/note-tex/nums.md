@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::nums
+# Note::TexAccessor::nums
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::nums() const
+TokenBatch Note::TexAccessor::nums() const
 ```
 
 ## Extract Unsigned Decimal Lexemes

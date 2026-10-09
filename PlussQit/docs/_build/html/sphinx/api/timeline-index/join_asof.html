@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TimelineIndexAccessor::join_asof &#8212; PlussQit  documentation</title>
+    <title>Timeline::TimelineIndexAccessor::join_asof &#8212; PlussQit  documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
@@ -13,12 +13,12 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="TimelineIndexAccessor::max" href="max.html" />
-    <link rel="prev" title="TimelineIndexAccessor::is_unique" href="is_unique.html" />
+    <link rel="next" title="Timeline::TimelineIndexAccessor::max" href="max.html" />
+    <link rel="prev" title="Timeline::TimelineIndexAccessor::is_unique" href="is_unique.html" />
    
   <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
   
@@ -36,13 +36,13 @@
 
           <div class="body" role="main">
             
-  <section id="timelineindexaccessor-join-asof">
-<h1>TimelineIndexAccessor::join_asof<a class="headerlink" href="#timelineindexaccessor-join-asof" title="Link to this heading">¶</a></h1>
+  <section id="timeline-timelineindexaccessor-join-asof">
+<h1>Timeline::TimelineIndexAccessor::join_asof<a class="headerlink" href="#timeline-timelineindexaccessor-join-asof" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../timeline_index_accessor_api_reference.html"><span class="doc std std-doc">Back to Timeline Index Accessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">join_asof</span><span class="p">(</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">TimelineIndexAccessor</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">join_asof</span><span class="p">(</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">&amp;</span><span class="w"> </span><span class="n">right</span><span class="p">,</span>
 <span class="w">    </span><span class="n">AsofDirection</span><span class="w"> </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AsofDirection</span><span class="o">::</span><span class="n">Backward</span><span class="p">,</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">Duration</span><span class="o">*</span><span class="w"> </span><span class="n">tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">,</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">allow_exact_matches</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Series</span>
@@ -55,7 +55,7 @@
 <p>For every timestamp in <code class="docutils literal notranslate"><span class="pre">self</span></code>, <code class="docutils literal notranslate"><span class="pre">join_asof()</span></code> returns the matching position in the
 right index, or <code class="docutils literal notranslate"><span class="pre">-1</span></code> when no valid match exists under the requested direction
 and tolerance rules.</p>
-<p>This is one of the most practical <code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor</span></code> methods because it powers:</p>
+<p>This is one of the most practical <code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor</span></code> methods because it powers:</p>
 <ul class="simple">
 <li><p>event-to-market-state alignment</p></li>
 <li><p>quote-to-trade matching</p></li>
@@ -112,19 +112,19 @@ A 1D integer <code class="docutils literal notranslate"><span class="pre">Series
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. Backward as-of matching: the latest right timestamp less than or
 equal to each left timestamp.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:20:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:40:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:00:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:20:00Z&quot;</span><span class="p">,</span>
-<span class="p">});</span>
+<span class="p">}).</span><span class="n">index</span><span class="p">();</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeindex</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">({</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:05:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T00:30:00Z&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s">&quot;2024-11-01T01:10:00Z&quot;</span><span class="p">,</span>
-<span class="p">});</span>
+<span class="p">}).</span><span class="n">index</span><span class="p">();</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">join_asof</span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">map</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -141,7 +141,7 @@ with <code class="docutils literal notranslate"><span class="pre">tolerance</spa
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">tol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">minutes</span><span class="p">(</span><span class="mi">25</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">join_asof</span><span class="p">(</span>
 <span class="w">    </span><span class="n">right</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">AsofDirection</span><span class="o">::</span><span class="n">Nearest</span><span class="p">,</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">AsofDirection</span><span class="o">::</span><span class="n">Nearest</span><span class="p">,</span>
 <span class="w">    </span><span class="o">&amp;</span><span class="n">tol</span><span class="p">,</span>
 <span class="w">    </span><span class="nb">true</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">map</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -157,7 +157,7 @@ data=[0, 1, 1, 2, 2]
 <p>Example 3. Switch to forward matching when the left axis should look ahead.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">join_asof</span><span class="p">(</span>
 <span class="w">    </span><span class="n">right</span><span class="p">,</span>
-<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">AsofDirection</span><span class="o">::</span><span class="n">Forward</span><span class="p">);</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="o">::</span><span class="n">AsofDirection</span><span class="o">::</span><span class="n">Forward</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">map</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -186,8 +186,8 @@ established.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="asof.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::asof</span></code></span></a>: scalar backward lookup.</p></li>
-<li><p><a class="reference internal" href="align_union.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor::align_union</span></code></span></a>: union-style alignment rather than
+<li><p><a class="reference internal" href="asof.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::asof</span></code></span></a>: scalar backward lookup.</p></li>
+<li><p><a class="reference internal" href="align_union.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Timeline::TimelineIndexAccessor::align_union</span></code></span></a>: union-style alignment rather than
 nearest-key matching.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
@@ -236,7 +236,6 @@ nearest-key matching.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -244,8 +243,8 @@ nearest-key matching.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 
@@ -255,8 +254,8 @@ nearest-key matching.</p></li>
   <li><a href="../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
   <li><a href="../../timeline_index_accessor_api_reference.html">Timeline Index Accessor API Reference</a><ul>
-      <li>Previous: <a href="is_unique.html" title="previous chapter">TimelineIndexAccessor::is_unique</a></li>
-      <li>Next: <a href="max.html" title="next chapter">TimelineIndexAccessor::max</a></li>
+      <li>Previous: <a href="is_unique.html" title="previous chapter">Timeline::TimelineIndexAccessor::is_unique</a></li>
+      <li>Next: <a href="max.html" title="next chapter">Timeline::TimelineIndexAccessor::max</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

@@ -23,7 +23,7 @@ int main() {
       .heavy_tail_threshold = 2.0,
   });
 
-  lymph::Model model = lymph::model::linear_regression({.regularization_strength = 0.001});
+  lymph::models::Model model = lymph::models::linear_regression({.regularization_strength = 0.001});
   profile.plan({.skew_threshold = 0.75, .heavy_tail_threshold = 2.0}).apply(model);
   model.learn_(raw, data);
 

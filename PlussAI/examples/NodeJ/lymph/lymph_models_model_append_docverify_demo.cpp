@@ -7,16 +7,16 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"x1", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
-      {"x2", Thread(pluss::make_series({1000, 2000, 500, 4000, 1500, 3000, 800, 3500}, {8}, f64))},
-      {"category", Thread(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
-      {"y", Thread(pluss::make_series({0, 0, 0, 1, 0, 1, 0, 1}, {8}, f64))},
+      {"x1", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, f64))},
+      {"x2", Slate(pluss::make_series({1000, 2000, 500, 4000, 1500, 3000, 800, 3500}, {8}, f64))},
+      {"category", Slate(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
+      {"y", Slate(pluss::make_series({0, 0, 0, 1, 0, 1, 0, 1}, {8}, f64))},
   });
 
   const lymph::prep::Route categorical = lymph::prep::route::names({"category"});
@@ -43,7 +43,7 @@ int main() {
   model.learn_(raw, data_options);
   const pluss::Series predicted = model.infer(raw.drop({"y"}), data_options);
   const DataFrame prediction_frame({
-      {"predicted", Thread(predicted)},
+      {"predicted", Slate(predicted)},
   });
 
   std::cout << "== append_after_learn ==\n";

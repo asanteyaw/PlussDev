@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -18,7 +18,7 @@ int main() {
   // smoothing -- both still fit this clean signal.
   const pluss::Series region = pluss::make_series({0,0,0,0,1,1,1,1,2,3}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,1,0}, {10}, f64);
-  const DataFrame x({{"region", Thread(region)}});
+  const DataFrame x({{"region", Slate(region)}});
 
   for (double s : {1.0, 50.0}) {
     lymph::options::TargetEncoder o{};

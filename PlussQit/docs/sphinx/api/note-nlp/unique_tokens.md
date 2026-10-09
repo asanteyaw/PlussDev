@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::unique_tokens
+# Note::NlpAccessor::unique_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::unique_tokens() const
+TokenBatch Note::NlpAccessor::unique_tokens() const
 ```
 
 ## Keep First Token Occurrences

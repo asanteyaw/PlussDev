@@ -10,7 +10,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -20,7 +20,7 @@ int main() {
   //                             four positives only
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1}, {16}, f64);
-  const DataFrame frame({{"x", Thread(x)}, {"target", Thread(y)}});
+  const DataFrame frame({{"x", Slate(x)}, {"target", Slate(y)}});
 
   const lymph::prep::HoldoutSplit a =
       lymph::selection::holdout().test_size(0.25).stratify("target").seed(7).split(frame);

@@ -54,6 +54,10 @@ lymph::metrics::MetricReport lymph::metrics::classification::score_report(
 [`confusion_table`](confusion_table.md) and
 [`classification_summary`](classification_summary.md).
 
+## What It Does
+
+The `classification` group scores hard labels: a truth series and a prediction series that have already been produced. It builds confusion tables, per-class summaries, and scalar metric reports from them, and it scores ranked probabilities through `score_report`. No function here fits or runs a model, so the same functions serve predictions from any source.
+
 ## Parameters
 
 `truth_labels`

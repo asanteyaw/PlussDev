@@ -31,7 +31,7 @@ class OnlineLinearClassifier final {
   }
 
   OnlineLinearClassifier& learn_(const pluss::table::DataFrame& x,
-                                 const pluss::table::Thread& y,
+                                 const pluss::table::Slate& y,
                                  const TrainOptions& options = {}) {
     return learn_(x, as_stratify_series(y), options);
   }
@@ -51,7 +51,7 @@ class OnlineLinearClassifier final {
   }
 
   OnlineLinearClassifier& advance_(const pluss::table::DataFrame& x,
-                                   const pluss::table::Thread& y,
+                                   const pluss::table::Slate& y,
                                    const TrainOptions& options = {}) {
     return advance_(x, as_stratify_series(y), options);
   }
@@ -91,7 +91,7 @@ class OnlineLinearClassifier final {
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
-                                     const pluss::table::Thread& y,
+                                     const pluss::table::Slate& y,
                                      const AssessOptions& options = {}) const {
     return assess_series(x, as_stratify_series(y), options);
   }
@@ -107,7 +107,7 @@ class OnlineLinearClassifier final {
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
-                                    const pluss::table::Thread& y,
+                                    const pluss::table::Slate& y,
                                     const AssessOptions& options = {}) const {
     return metric_report_from_series_(assess_series(x, y, options), default_assess_metrics_(TaskKind::Classification, options));
   }
@@ -120,7 +120,7 @@ private:
     DataFrameBatchOptions options{};
     options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
-    options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+    options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
     return options;
   }
@@ -184,7 +184,7 @@ class OnlineLinearRegressor final {
   }
 
   OnlineLinearRegressor& learn_(const pluss::table::DataFrame& x,
-                                const pluss::table::Thread& y,
+                                const pluss::table::Slate& y,
                                 const TrainOptions& options = {}) {
     return learn_(x, as_stratify_series(y), options);
   }
@@ -204,7 +204,7 @@ class OnlineLinearRegressor final {
   }
 
   OnlineLinearRegressor& advance_(const pluss::table::DataFrame& x,
-                                  const pluss::table::Thread& y,
+                                  const pluss::table::Slate& y,
                                   const TrainOptions& options = {}) {
     return advance_(x, as_stratify_series(y), options);
   }
@@ -233,7 +233,7 @@ class OnlineLinearRegressor final {
   }
 
   [[nodiscard]] Series assess_series(const pluss::table::DataFrame& x,
-                                     const pluss::table::Thread& y,
+                                     const pluss::table::Slate& y,
                                      const AssessOptions& options = {}) const {
     return assess_series(x, as_stratify_series(y), options);
   }
@@ -249,7 +249,7 @@ class OnlineLinearRegressor final {
   }
 
   [[nodiscard]] MetricReport assess(const pluss::table::DataFrame& x,
-                                    const pluss::table::Thread& y,
+                                    const pluss::table::Slate& y,
                                     const AssessOptions& options = {}) const {
     return metric_report_from_series_(assess_series(x, y, options), default_assess_metrics_(TaskKind::Regression, options));
   }
@@ -262,7 +262,7 @@ private:
     DataFrameBatchOptions options{};
     options.feature_names = copy_range_values(feature_names);
     options.layout = ObservationLayout::Rows;
-    options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+    options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
     options.note_policy = DataNotePolicy::Reject;
     return options;
   }

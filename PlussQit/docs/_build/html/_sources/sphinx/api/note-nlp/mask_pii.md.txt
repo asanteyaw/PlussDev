@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_pii
+# Note::NlpAccessor::mask_pii
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_pii(std::int64_t flags = 0) const
+Note Note::NlpAccessor::mask_pii(std::int64_t flags = 0) const
 ```
 
 ## Replace Identifying Spans With Category Placeholders
@@ -207,11 +207,11 @@ pii Bytes: rejected
 
 ## See Also
 
-- [`NoteNlpAccessor::remove_urls`](remove_urls.md): delete URLs outright
+- [`Note::NlpAccessor::remove_urls`](remove_urls.md): delete URLs outright
   instead of replacing them with `[URL]`.
 - [`Note::replace`](../note/replace.md) / [`Note::remove_all`](../note/remove_all.md):
   literal, non-pattern rewriting when you know the exact string.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): extract the spans (for review
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): extract the spans (for review
   or an allow-list) rather than mask them.
 
 <div class="pluss-inline-prev-next">

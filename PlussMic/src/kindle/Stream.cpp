@@ -1,6 +1,8 @@
 #include "kindle/Stream.h"
 
 #include <algorithm>
+#include <unordered_set>
+#include <cmath>
 #include <ostream>
 #include <sstream>
 #include <span>
@@ -14,6 +16,7 @@
 #include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
+#include "MSharp/Parallel.h"
 #include "scribble/Slot.h"
 #include "kindle/display/Display.h"
 #include "pluss/codeh/timeline_factory.h"
@@ -77,45 +80,45 @@ void validate_mask_size(const std::optional<pluss::Series>& mask, std::int64_t n
   PLUSS_CHECK(mask->numel() == n, "Stream: validity mask length must match payload length");
 }
 
-void validate_label_size(const std::optional<pluss::table::Thread>& label, std::int64_t n) {
+void validate_label_size(const std::optional<pluss::table::Slate>& label, std::int64_t n) {
   if (!label.has_value()) return;
   PLUSS_CHECK(label->defined(), "Stream: label axis is undefined");
   PLUSS_CHECK(label->size() == n, "Stream: label axis length must match payload length");
 }
 
-std::optional<pluss::table::Thread> copy_label(const Stream& stream) {
+std::optional<pluss::table::Slate> copy_label(const Stream& stream) {
   if (!stream.has_label()) return std::nullopt;
   return *stream.label();
 }
 
-std::optional<pluss::table::Thread> thread_output_labels(const pluss::table::Thread& thread) {
-  if (thread.label().has()) return thread.label().values();
+std::optional<pluss::table::Slate> slate_output_labels(const pluss::table::Slate& slate) {
+  if (slate.label().has()) return slate.label().values();
   return std::nullopt;
 }
 
 template <typename Op>
 Stream unary_stream_same_label(const Stream& stream, Op&& op) {
-  const auto out = std::forward<Op>(op)(stream.to_thread());
-  return Stream::from_thread(out, copy_label(stream));
+  const auto out = std::forward<Op>(op)(stream.to_slate());
+  return Stream::from_slate(out, copy_label(stream));
 }
 
 template <typename Op>
-Stream thread_accessor_stream_result(const Stream& stream, Op&& op) {
-  const auto out = std::forward<Op>(op)(stream.to_thread());
-  auto labels = thread_output_labels(out);
+Stream slate_accessor_stream_result(const Stream& stream, Op&& op) {
+  const auto out = std::forward<Op>(op)(stream.to_slate());
+  auto labels = slate_output_labels(out);
   if (!labels.has_value() && out.size() == stream.size() && stream.has_label()) {
     labels = copy_label(stream);
   }
-  return Stream::from_thread(out, std::move(labels));
+  return Stream::from_slate(out, std::move(labels));
 }
 
 template <typename Op>
 Stream rowwise_stream_transform(const Stream& stream, Op&& op) {
-  const auto source = stream.to_thread();
+  const auto source = stream.to_slate();
   const auto out = std::forward<Op>(op)(source);
-  if (!stream.has_label()) return Stream::from_thread(out);
+  if (!stream.has_label()) return Stream::from_slate(out);
   const auto label_out = std::forward<Op>(op)(*stream.label());
-  return Stream::from_thread(out, label_out);
+  return Stream::from_slate(out, label_out);
 }
 } // namespace
 
@@ -125,14 +128,14 @@ public:
   using FieldValue = std::variant<
       Payload,
       pluss::Series,
-      pluss::table::Thread,
+      pluss::table::Slate,
       std::string,
       std::int64_t,
       std::uint8_t>;
 
   explicit StreamImpl(Payload payload,
                       std::optional<pluss::Series> validity_mask,
-                      std::optional<pluss::table::Thread> cases)
+                      std::optional<pluss::table::Slate> cases)
       : payload_(std::move(payload)),
         validity_mask_(std::move(validity_mask)),
         cases_(std::move(cases)),
@@ -156,7 +159,7 @@ public:
 
   Payload payload_;
   std::optional<pluss::Series> validity_mask_{std::nullopt};
-  std::optional<pluss::table::Thread> cases_{std::nullopt};
+  std::optional<pluss::table::Slate> cases_{std::nullopt};
   std::int64_t size_{0};
   StreamKind kind_{StreamKind::Series};
   std::string dtype_{};
@@ -168,7 +171,10 @@ public:
 
 #include "kindle/ops/stream/StreamLifecycleAndMeta.inc"
 #include "kindle/ops/stream/StreamCoreOps.inc"
+#include "kindle/ops/stream/StreamGather.inc"
+#include "kindle/ops/stream/StreamReduceGroups.inc"
 #include "kindle/ops/stream/StreamAccessors.inc"
 #include "kindle/ops/stream/StreamOperators.inc"
+#include "kindle/ops/stream/StreamRaggedBinary.inc"
 
 } // namespace pluss::kindle

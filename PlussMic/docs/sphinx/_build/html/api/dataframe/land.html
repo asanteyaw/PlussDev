@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::le" href="le.html" />
@@ -37,14 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 9bbe1129b4e7 -->
+<!-- pluss-signature-hash: c2fadfbe1fe9 -->
 <section id="dataframe-land">
 <h1>DataFrame::land<a class="headerlink" href="#dataframe-land" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">land</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">land</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">land</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -59,7 +59,7 @@ on boolean payloads, unlike the arithmetic and comparison families.</p>
 <p class="admonition-title">Important</p>
 <p>Both operands must already be Bool Series
 Every logical method requires each participating feature to be a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> with a genuine <code class="docutils literal notranslate"><span class="pre">Bool</span></code> scalar type. A numeric 0/1 column (even <code class="docutils literal notranslate"><span class="pre">int64</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> with a genuine <code class="docutils literal notranslate"><span class="pre">Bool</span></code> scalar type. A numeric 0/1 column (even <code class="docutils literal notranslate"><span class="pre">int64</span></code> or
 <code class="docutils literal notranslate"><span class="pre">float64</span></code>) is rejected — cast it first with
 <a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">astype(...,</span> <span class="pre">pluss::ScalarType::Bool)</span></code></span></a> if it isn’t already boolean.</p>
 </div>
@@ -68,7 +68,7 @@ Every logical method requires each participating feature to be a <code class="do
 <p>Much simpler overload shape than add()/eq()
 Unlike the arithmetic family (<a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>) or the comparison family
 (<a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a>), the logical methods take no <code class="docutils literal notranslate"><span class="pre">axis</span></code> and no <code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code> — there
-are exactly two overloads: another <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, or a single <code class="docutils literal notranslate"><span class="pre">Thread</span></code>. See “Parameters”
+are exactly two overloads: another <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, or a single <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. See “Parameters”
 below for what each one requires.</p>
 </div>
 </section>
@@ -81,9 +81,9 @@ below for what each one requires.</p>
 order</strong>, and the <strong>same number of cases</strong>. Values are combined position-by-position
 — there is no case-label alignment step; only the feature-name list and the case
 <em>count</em> are checked, not the case label values themselves.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>: a single boolean <code class="docutils literal notranslate"><span class="pre">Thread</span></code> whose length matches <code class="docutils literal notranslate"><span class="pre">ncases()</span></code>. The
+<li><p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>: a single boolean <code class="docutils literal notranslate"><span class="pre">Slate</span></code> whose length matches <code class="docutils literal notranslate"><span class="pre">ncases()</span></code>. The
 <em>same</em> thread is combined against <strong>every</strong> feature identically, position-by-position
-— there is no per-feature broadcast the way the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overloads of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>
+— there is no per-feature broadcast the way the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overloads of <a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>
 or <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a> support via <code class="docutils literal notranslate"><span class="pre">axis</span></code>.</p></li>
 </ul>
 </section>
@@ -162,9 +162,9 @@ and <code class="docutils literal notranslate"><span class="pre">right</span></c
 each have <code class="docutils literal notranslate"><span class="pre">3</span></code> cases and the same two feature names (<code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code>) in the same order, which
 is all <code class="docutils literal notranslate"><span class="pre">land(DataFrame)</span></code> requires — it never checks whether the case labels
 themselves match.</p>
-<p>Example 2. AND a frame against a single shared <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, applied identically to every
+<p>Example 2. AND a frame against a single shared <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, applied identically to every
 feature.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mask</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out_thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="p">.</span><span class="n">land</span><span class="p">(</span><span class="n">mask</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out_thread</span><span class="p">;</span>
 </pre></div>
@@ -184,7 +184,7 @@ r    | true   false
 </div>
 <p>The same three-value <code class="docutils literal notranslate"><span class="pre">mask</span></code> is combined against <strong>both</strong> <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> at matching
 positions — there is no way to supply a different mask per feature in one call, unlike
-<a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p>
+<a class="reference internal" href="add.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">add()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">Axis::Feature</span></code> <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload.</p>
 </section>
 </section>
 <section id="notes">

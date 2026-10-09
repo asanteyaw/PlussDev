@@ -19,17 +19,17 @@ pluss::Series column_from_matrix_(const pluss::Series& matrix, std::int64_t colu
 DataFrame frame_from_matrix_(const pluss::Series& matrix,
                              const pluss::Series& valid,
                              const std::vector<std::string>& names,
-                             const Thread& cases) {
+                             const Slate& cases) {
   PLUSS_CHECK(matrix.dim() == 2, "frame_from_matrix: expected a two-dimensional value matrix");
   PLUSS_CHECK(matrix.sizes()[1] == static_cast<std::int64_t>(names.size()),
               "frame_from_matrix: feature count mismatch");
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(names.size());
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto value_column = column_from_matrix_(matrix, static_cast<std::int64_t>(i));
     const auto valid_column =
         valid.dim() == 1 ? valid : column_from_matrix_(valid, static_cast<std::int64_t>(i));
-    columns.emplace_back(names[i], Thread(value_column, valid_column));
+    columns.emplace_back(names[i], Slate(value_column, valid_column));
   }
   return DataFrame(std::move(columns), cases);
 }
@@ -42,25 +42,25 @@ pluss::Series statistic_validity_(const ReduceMatrix_& matrix,
       static_cast<double>(min_count));
 }
 
-Thread labelled_statistic_(pluss::Series values,
+Slate labelled_statistic_(pluss::Series values,
                            pluss::Series valid,
                            const detail::DataFrameImpl& src,
                            const ReduceMatrix_& matrix,
                            std::int64_t axis) {
   return with_reduce_labels_(
-      Thread(std::move(values), std::move(valid)), src, matrix.names, axis);
+      Slate(std::move(values), std::move(valid)), src, matrix.names, axis);
 }
 
 template <class Operation>
-DataFrame delegate_numeric_threads_(const detail::DataFrameImpl& src,
+DataFrame delegate_numeric_slates_(const detail::DataFrameImpl& src,
                                     Operation&& operation) {
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
     columns.emplace_back(
         src.names_[i],
-        source.kind() == ThreadKind::Series &&
+        source.kind() == SlateKind::Series &&
                 is_numeric_series_type(source.as_series())
             ? operation(source)
             : source);
@@ -69,7 +69,7 @@ DataFrame delegate_numeric_threads_(const detail::DataFrameImpl& src,
 }
 
 template <class Operation>
-Thread reduce_numeric_threads_(const detail::DataFrameImpl& src,
+Slate reduce_numeric_slates_(const detail::DataFrameImpl& src,
                                Operation&& operation,
                                std::string_view where) {
   std::vector<std::string> names;
@@ -77,28 +77,28 @@ Thread reduce_numeric_threads_(const detail::DataFrameImpl& src,
   std::vector<pluss::Series> validity;
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() != ThreadKind::Series ||
+    if (source.kind() != SlateKind::Series ||
         !is_numeric_series_type(source.as_series())) {
       continue;
     }
-    auto reduced = operation(source).thread();
-    PLUSS_CHECK(reduced.kind() == ThreadKind::Series && reduced.size() == 1,
+    auto reduced = operation(source).slate();
+    PLUSS_CHECK(reduced.kind() == SlateKind::Series && reduced.size() == 1,
                 std::string(where) +
-                    ": Thread reduction must return one numeric value");
+                    ": Slate reduction must return one numeric value");
     names.push_back(src.names_[i]);
     values.push_back(reduced.as_series());
     validity.push_back(reduced.notnull().as_series());
   }
   PLUSS_CHECK(!values.empty(), std::string(where) + ": no numeric features");
-  return Thread(
+  return Slate(
              pluss::series::pile(values, 0).reshape(
                  {static_cast<std::int64_t>(values.size())}),
              pluss::series::pile(validity, 0).reshape(
                  {static_cast<std::int64_t>(validity.size())}))
-      .label().set(make_note_thread(names));
+      .label().set(make_note_slate(names));
 }
 
-Thread pad_modes_(const Thread& source, std::int64_t size) {
+Slate pad_modes_(const Slate& source, std::int64_t size) {
   PLUSS_CHECK(source.size() <= size, "pad_modes: invalid output size");
   if (source.size() == size) {
     return source;
@@ -106,18 +106,18 @@ Thread pad_modes_(const Thread& source, std::int64_t size) {
   const auto padding = size - source.size();
   auto valid_padding = pluss::Series::zeros(
       {padding}, pluss::codem::ScalarType::Bool);
-  if (source.kind() == ThreadKind::Series) {
+  if (source.kind() == SlateKind::Series) {
     const auto platform = source.as_series().platform();
     auto values = pluss::Series::zeros(
         {padding}, source.as_series().scalar_type(), platform);
     if (platform != pluss::codem::Platform::CPU) {
       valid_padding = valid_padding.to(platform);
     }
-    return Thread(
+    return Slate(
         source.as_series().unite({values}, 0, true),
         source.notnull().as_series().unite({valid_padding}, 0, true));
   }
-  if (source.kind() == ThreadKind::Timeline || source.kind() == ThreadKind::Duration) {
+  if (source.kind() == SlateKind::Timeline || source.kind() == SlateKind::Duration) {
     std::vector<std::int64_t> indices;
     indices.reserve(static_cast<std::size_t>(size));
     for (std::int64_t i = 0; i < source.size(); ++i) {
@@ -128,7 +128,7 @@ Thread pad_modes_(const Thread& source, std::int64_t size) {
     auto output_valid =
         source.notnull().as_series().unite(
             {valid_padding}, 0, true);
-    const auto platform = output.kind() == ThreadKind::Timeline
+    const auto platform = output.kind() == SlateKind::Timeline
                               ? output.as_timeline().epoch_nanos().platform()
                               : pluss::codem::Platform::CPU;
     if (output_valid.platform() != platform) {
@@ -142,7 +142,7 @@ Thread pad_modes_(const Thread& source, std::int64_t size) {
     padded.emplace_back(value);
   }
   padded.resize(static_cast<std::size_t>(size));
-  return Thread(
+  return Slate(
       pluss::make_note(padded),
       source.notnull().as_series().unite({valid_padding}, 0, true));
 }
@@ -153,11 +153,11 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
                              RunningOp_ op,
                              bool skip_nulls,
                              std::string_view where) {
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() != ThreadKind::Series ||
+    if (source.kind() != SlateKind::Series ||
         !is_numeric_series_type(source.as_series())) {
       columns.emplace_back(src.names_[i], source);
       continue;
@@ -185,7 +185,7 @@ DataFrame running_statistic_(const detail::DataFrameImpl& src,
                          : valid.to(pluss::codem::ScalarType::Int64)
                                .cummin(0)
                                .to(pluss::codem::ScalarType::Bool);
-    columns.emplace_back(src.names_[i], Thread(result, out_valid));
+    columns.emplace_back(src.names_[i], Slate(result, out_valid));
   }
   PLUSS_CHECK(!columns.empty(), std::string(where) + ": no features");
   return DataFrame(std::move(columns), src.cases_);
@@ -257,12 +257,12 @@ enum class MovingMomentOp_ : std::uint8_t {
   TailWeight,
 };
 
-Thread moving_statistic_(const Thread& source,
+Slate moving_statistic_(const Slate& source,
                          std::int64_t window,
                          const WindowOptions& options,
                          MovingOp_ op,
                          std::string_view where) {
-  PLUSS_CHECK(source.kind() == ThreadKind::Series,
+  PLUSS_CHECK(source.kind() == SlateKind::Series,
               std::string(where) + ": expected a Series feature");
   PLUSS_CHECK(is_numeric_series_type(source.as_series()),
               std::string(where) + ": expected a numeric feature");
@@ -276,7 +276,7 @@ Thread moving_statistic_(const Thread& source,
   const auto dtype = statistics_compute_type_(input);
   const auto platform = input.platform();
   if (n == 0) {
-    return Thread(
+    return Slate(
         pluss::Series::empty({0}, dtype, platform),
         pluss::Series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
@@ -338,11 +338,11 @@ Thread moving_statistic_(const Thread& source,
   if (options.centered && n > 0) {
     const auto offset = (window - 1) / 2;
     if (offset > 0) {
-      result = Thread(result, out_valid).shift(-offset).as_series();
-      out_valid = Thread(out_valid).shift(-offset).fillnull(0.0).as_series();
+      result = Slate(result, out_valid).shift(-offset).as_series();
+      out_valid = Slate(out_valid).shift(-offset).fillnull(0.0).as_series();
     }
   }
-  return Thread(result, out_valid);
+  return Slate(result, out_valid);
 }
 
 DataFrame moving_frame_(const detail::DataFrameImpl& src,
@@ -350,11 +350,11 @@ DataFrame moving_frame_(const detail::DataFrameImpl& src,
                         const WindowOptions& options,
                         MovingOp_ op,
                         std::string_view where) {
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() == ThreadKind::Series &&
+    if (source.kind() == SlateKind::Series &&
         is_numeric_series_type(source.as_series())) {
       columns.emplace_back(
           src.names_[i], moving_statistic_(source, window, options, op, where));
@@ -365,12 +365,12 @@ DataFrame moving_frame_(const detail::DataFrameImpl& src,
   return DataFrame(std::move(columns), src.cases_);
 }
 
-Thread moving_moment_(const Thread& source,
+Slate moving_moment_(const Slate& source,
                       std::int64_t window,
                       const WindowOptions& options,
                       MovingMomentOp_ op,
                       std::string_view where) {
-  PLUSS_CHECK(source.kind() == ThreadKind::Series &&
+  PLUSS_CHECK(source.kind() == SlateKind::Series &&
                   is_numeric_series_type(source.as_series()),
               std::string(where) + ": expected a numeric Series feature");
   PLUSS_CHECK(window > 0, std::string(where) + ": window must be > 0");
@@ -389,7 +389,7 @@ Thread moving_moment_(const Thread& source,
   const auto dtype = statistics_compute_type_(source.as_series());
   const auto platform = source.as_series().platform();
   if (n == 0) {
-    return Thread(
+    return Slate(
         pluss::Series::empty({0}, dtype, platform),
         pluss::Series::zeros(
             {0}, pluss::codem::ScalarType::Bool, platform));
@@ -436,12 +436,12 @@ Thread moving_moment_(const Thread& source,
   if (options.centered && n > 0) {
     const auto offset = (window - 1) / 2;
     if (offset > 0) {
-      result = Thread(result, output_valid).shift(-offset).as_series();
+      result = Slate(result, output_valid).shift(-offset).as_series();
       output_valid =
-          Thread(output_valid).shift(-offset).fillnull(0.0).as_series();
+          Slate(output_valid).shift(-offset).fillnull(0.0).as_series();
     }
   }
-  return Thread(result, output_valid);
+  return Slate(result, output_valid);
 }
 
 DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
@@ -449,11 +449,11 @@ DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
                                const WindowOptions& options,
                                MovingMomentOp_ op,
                                std::string_view where) {
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(src.names_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() == ThreadKind::Series &&
+    if (source.kind() == SlateKind::Series &&
         is_numeric_series_type(source.as_series())) {
       columns.emplace_back(
           src.names_[i], moving_moment_(source, window, options, op, where));
@@ -467,31 +467,31 @@ DataFrame moving_moment_frame_(const detail::DataFrameImpl& src,
 } // namespace
 
 DataFrame DataFrame::abs() const {
-  return delegate_numeric_threads_(impl_ref_(), [](const Thread& source) {
+  return delegate_numeric_slates_(impl_ref_(), [](const Slate& source) {
     return source.abs();
   });
 }
 
 DataFrame DataFrame::clip(double min_value, double max_value) const {
-  return delegate_numeric_threads_(impl_ref_(), [min_value, max_value](const Thread& source) {
+  return delegate_numeric_slates_(impl_ref_(), [min_value, max_value](const Slate& source) {
     return source.clip(min_value, max_value);
   });
 }
 
 DataFrame DataFrame::round(std::int64_t decimals) const {
-  return delegate_numeric_threads_(impl_ref_(), [decimals](const Thread& source) {
+  return delegate_numeric_slates_(impl_ref_(), [decimals](const Slate& source) {
     return source.round(decimals);
   });
 }
 
 DataFrame DataFrame::log() const {
-  return delegate_numeric_threads_(impl_ref_(), [](const Thread& source) {
+  return delegate_numeric_slates_(impl_ref_(), [](const Slate& source) {
     return source.log();
   });
 }
 
 DataFrame DataFrame::exp() const {
-  return delegate_numeric_threads_(impl_ref_(), [](const Thread& source) {
+  return delegate_numeric_slates_(impl_ref_(), [](const Slate& source) {
     return source.exp();
   });
 }
@@ -521,15 +521,15 @@ DataFrameView DataFrame::covar(const StatisticOptions& options, bool render) con
   const auto valid = counts.ge(static_cast<double>(
       std::max(options.min_count, options.ddof + 1)));
 
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(matrix.names.size());
   for (std::size_t i = 0; i < matrix.names.size(); ++i) {
     columns.emplace_back(
         matrix.names[i],
-        Thread(column_from_matrix_(covariance, static_cast<std::int64_t>(i)),
+        Slate(column_from_matrix_(covariance, static_cast<std::int64_t>(i)),
                column_from_matrix_(valid, static_cast<std::int64_t>(i))));
   }
-  auto result = DataFrame(std::move(columns), make_note_thread(matrix.names));
+  auto result = DataFrame(std::move(columns), make_note_slate(matrix.names));
   return DataFrameView(std::move(result), render, "covar", title());
 }
 
@@ -546,10 +546,10 @@ DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
   }
 
   const auto& src = impl_ref_();
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if (source.kind() != ThreadKind::Series ||
+    if (source.kind() != SlateKind::Series ||
         !is_numeric_series_type(source.as_series())) {
       continue;
     }
@@ -557,20 +557,20 @@ DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
         src.names_[i], source.percentiles(points, min_count));
   }
   PLUSS_CHECK(!columns.empty(), "DataFrame::percentiles: no numeric features");
-  return DataFrame(std::move(columns), make_note_thread(labels));
+  return DataFrame(std::move(columns), make_note_slate(labels));
 }
 
 DataFrame DataFrame::mode(bool drop_nulls) const {
   const auto& src = impl_ref_();
-  std::vector<std::pair<std::string, Thread>> modes;
+  std::vector<std::pair<std::string, Slate>> modes;
   std::int64_t output_size = 0;
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
     const auto& source = src.columns_[i];
-    if ((source.kind() == ThreadKind::Series &&
+    if ((source.kind() == SlateKind::Series &&
          is_numeric_series_type(source.as_series())) ||
-        source.kind() == ThreadKind::Note ||
-        source.kind() == ThreadKind::Timeline ||
-        source.kind() == ThreadKind::Duration) {
+        source.kind() == SlateKind::Note ||
+        source.kind() == SlateKind::Timeline ||
+        source.kind() == SlateKind::Duration) {
       auto values = source.mode(drop_nulls);
       output_size = std::max(output_size, values.size());
       modes.emplace_back(src.names_[i], std::move(values));
@@ -578,7 +578,7 @@ DataFrame DataFrame::mode(bool drop_nulls) const {
   }
   PLUSS_CHECK(!modes.empty(), "DataFrame::mode: no supported features");
 
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(modes.size());
   for (auto& [name, values] : modes) {
     columns.emplace_back(name, pad_modes_(values, output_size));
@@ -588,26 +588,26 @@ DataFrame DataFrame::mode(bool drop_nulls) const {
   for (std::int64_t i = 0; i < output_size; ++i) {
     case_labels.push_back(fmt::format("mode_{}", i));
   }
-  return DataFrame(std::move(columns), make_note_thread(case_labels));
+  return DataFrame(std::move(columns), make_note_slate(case_labels));
 }
 
 DataFrame DataFrame::rank(RankTieRule ties,
                           RankNullRule nulls,
                           bool ascending,
                           bool percentage) const {
-  return delegate_numeric_threads_(
-      impl_ref_(), [&](const Thread& source) {
+  return delegate_numeric_slates_(
+      impl_ref_(), [&](const Slate& source) {
         return source.rank(ties, nulls, ascending, percentage);
       });
 }
 
-Thread DataFrame::skew(Axis axis, std::int64_t min_count) const {
+Slate DataFrame::skew(Axis axis, std::int64_t min_count) const {
   const auto normalized = normalize_reduce_axis_(axis, "DataFrame::skew");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_threads_(
+    return reduce_numeric_slates_(
         src,
-        [min_count](const Thread& source) {
+        [min_count](const Slate& source) {
           return source.skew(min_count);
         },
         "DataFrame::skew");
@@ -629,13 +629,13 @@ Thread DataFrame::skew(Axis axis, std::int64_t min_count) const {
   return labelled_statistic_(std::move(skew), std::move(valid), src, matrix, normalized);
 }
 
-Thread DataFrame::kurtosis(Axis axis, std::int64_t min_count) const {
+Slate DataFrame::kurtosis(Axis axis, std::int64_t min_count) const {
   const auto normalized = normalize_reduce_axis_(axis, "DataFrame::kurtosis");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_threads_(
+    return reduce_numeric_slates_(
         src,
-        [min_count](const Thread& source) {
+        [min_count](const Slate& source) {
           return source.kurtosis(min_count);
         },
         "DataFrame::kurtosis");
@@ -659,7 +659,7 @@ Thread DataFrame::kurtosis(Axis axis, std::int64_t min_count) const {
   return labelled_statistic_(std::move(kurt), std::move(valid), src, matrix, normalized);
 }
 
-Thread DataFrame::var(
+Slate DataFrame::var(
     Axis axis,
     const StatisticOptions& options) const {
   const auto normalized =
@@ -668,9 +668,9 @@ Thread DataFrame::var(
               "DataFrame::var: ddof and min_count must be >= 0");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_threads_(
+    return reduce_numeric_slates_(
         src,
-        [&options](const Thread& source) {
+        [&options](const Slate& source) {
           return source.var(options);
         },
         "DataFrame::var");
@@ -695,17 +695,17 @@ Thread DataFrame::var(
       result.clamp_min(0.0), valid, src, matrix, normalized);
 }
 
-Thread DataFrame::std(
+Slate DataFrame::std(
     Axis axis,
     const StatisticOptions& options) const {
   const auto result = var(axis, options);
-  return Thread(
+  return Slate(
              result.as_series().clamp_min(0.0).sqrt(),
              result.validity_mask())
       .caselbl(detail::display_labels(result));
 }
 
-Thread DataFrame::se(Axis axis,
+Slate DataFrame::se(Axis axis,
                      ErrorTarget target,
                      const StatisticOptions& options) const {
   PLUSS_CHECK(target == ErrorTarget::Mean,
@@ -714,9 +714,9 @@ Thread DataFrame::se(Axis axis,
   PLUSS_CHECK(options.ddof >= 0, "DataFrame::se: ddof must be >= 0");
   const auto& src = impl_ref_();
   if (normalized == 0) {
-    return reduce_numeric_threads_(
+    return reduce_numeric_slates_(
         src,
-        [&options](const Thread& source) {
+        [&options](const Slate& source) {
           return source.se(ErrorTarget::Mean, options);
         },
         "DataFrame::se");
@@ -783,7 +783,7 @@ DataFrame DataFrame::cummax(Axis axis, bool skip_nulls) const {
   return scan(ScanStatistic::Maximum, axis, skip_nulls);
 }
 
-Thread DataFrame::corr_with(const DataFrame& other,
+Slate DataFrame::corr_with(const DataFrame& other,
                             CorrMethod method,
                             std::int64_t min_count) const {
   PLUSS_CHECK(min_count >= 1, "DataFrame::corr_with: min_count must be >= 1");
@@ -796,24 +796,24 @@ Thread DataFrame::corr_with(const DataFrame& other,
   std::vector<std::string> names;
   std::vector<pluss::Series> values;
   std::vector<pluss::Series> valid;
-  ThreadCorrMethod thread_method = ThreadCorrMethod::Pearson;
+  SlateCorrMethod slate_method = SlateCorrMethod::Pearson;
   if (method == CorrMethod::Spearman) {
-    thread_method = ThreadCorrMethod::Spearman;
+    slate_method = SlateCorrMethod::Spearman;
   } else if (method == CorrMethod::KendallTau) {
-    thread_method = ThreadCorrMethod::KendallTau;
+    slate_method = SlateCorrMethod::KendallTau;
   }
   for (const auto& name : matched.left.features()) {
     const auto left = matched.left.features(name);
     const auto right = matched.right.features(name);
-    if (left.kind() != ThreadKind::Series || right.kind() != ThreadKind::Series ||
+    if (left.kind() != SlateKind::Series || right.kind() != SlateKind::Series ||
         !is_numeric_series_type(left.as_series()) ||
         !is_numeric_series_type(right.as_series())) {
       continue;
     }
     names.push_back(name);
     const auto correlated =
-        left.corr_with(right, thread_method, min_count);
-    valid.push_back(correlated.thread().notnull().as_series());
+        left.corr_with(right, slate_method, min_count);
+    valid.push_back(correlated.slate().notnull().as_series());
     values.push_back(correlated.as_series());
   }
   PLUSS_CHECK(!names.empty(), "DataFrame::corr_with: no common numeric features");
@@ -821,14 +821,14 @@ Thread DataFrame::corr_with(const DataFrame& other,
       {static_cast<std::int64_t>(values.size())});
   auto output_valid = pluss::series::pile(valid, 0).reshape(
       {static_cast<std::int64_t>(valid.size())});
-  return Thread(output, output_valid).caselbl(make_note_thread(names));
+  return Slate(output, output_valid).caselbl(make_note_slate(names));
 }
 
 DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others,
                                CorrMethod method,
                                std::int64_t min_count) const {
   PLUSS_CHECK(others.size() > 0, "DataFrame::corr_with: expected at least one comparison frame");
-  std::vector<std::pair<std::string, Thread>> columns;
+  std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(others.size());
   for (std::size_t i = 0; i < others.size(); ++i) {
     columns.emplace_back(fmt::format("frame_{}", i), corr_with(others[i], method, min_count));

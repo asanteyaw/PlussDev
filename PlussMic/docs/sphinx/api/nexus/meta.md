@@ -48,8 +48,8 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 
 auto biz = Nexus({{"customers", customers}});
@@ -79,12 +79,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Thread(pluss::make_series({10.0, 11.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"ordered_at",  Thread(pluss::make_timeline({
+    {"order_id",    Slate(pluss::make_series({10.0, 11.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"ordered_at",  Slate(pluss::make_timeline({
         "2026-01-01T00:00:00Z",
         "2026-01-03T00:00:00Z",
     }))},

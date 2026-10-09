@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::headings
+# Note::TexAccessor::headings
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::headings(std::int64_t max_depth) const
+TokenBatch Note::TexAccessor::headings(std::int64_t max_depth) const
 ```
 
 ## Extract A Bounded Document Outline

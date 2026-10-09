@@ -31,12 +31,12 @@ int main() {
   };
 
   lymph::Builder candidates = lymph::builder::build({
-      {"bayes", lymph::model::gaussian_nb_classifier()},
-      {"tree", lymph::model::decision_tree_classifier({.max_depth = 2})},
-      {"knn", lymph::model::knn_classifier({.k = 3})},
+      {"bayes", lymph::models::gaussian_nb_classifier()},
+      {"tree", lymph::models::decision_tree_classifier({.max_depth = 2})},
+      {"knn", lymph::models::knn_classifier({.k = 3})},
   });
 
-  lymph::metrics::CrossValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.folds = 2;
   cv.shuffle = false;
   cv.max_parallel = 1;
@@ -62,7 +62,7 @@ int main() {
       {.name = "regularization_strength", .values = {0.01, 0.1, 1.0}},
   };
   const auto make_model = [](const lymph::GridPoint& point) {
-    lymph::Model model = lymph::model::logistic_regression({
+    lymph::models::Model model = lymph::models::logistic_regression({
         .regularization_strength = point.at("regularization_strength"),
         .fit_intercept = true,
     });
@@ -76,7 +76,7 @@ int main() {
                                        lymph::TuneObjectivePolicy::Maximize,
                                        lymph::selection::FitOptions{.fit_top = 2});
 
-  const double cv_mean = lymph::validate::stratified(cv).score(
+  const double cv_mean = lymph::selection::validate::stratified(cv).score(
       tuned.best(), batch, lymph::MetricKind::Accuracy, lymph::TrainOptions{}, assess);
 
   std::cout << "builder models: " << candidates.size() << "\n";

@@ -110,8 +110,8 @@ label        | value
 - [`StreamTimeSeriesAccessor::fill_gaps`](fill_gaps.md): the gap-fill step
   the `fill_mode`/`constant` overload applies automatically.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::align_to`](../thread-ts/align_to.md): the underlying
-  single-thread engine, with the full comparison of all four `mode`s and the
+- [`TimeSeriesAccessor::align_to`](../slate-ts/align_to.md): the underlying
+  single-slate engine, with the full comparison of all four `mode`s and the
   `fill_mode`/`constant` overload example.
 
 <div class="pluss-inline-prev-next">

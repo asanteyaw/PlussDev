@@ -96,8 +96,8 @@ Example 1. Replace a specific text value in one feature.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
 });
 
 auto out = orders.replace("Kumasi", "Kumasi City");
@@ -127,8 +127,8 @@ Example 2. Turn a specific sentinel value into a genuine null.
 
 ```cpp
 auto orders_with_price = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
 });
 
 // Suppose 42.0 was actually a placeholder for "price not yet set" upstream.
@@ -187,8 +187,8 @@ Example 4. Replace several distinct values in one call using the `Series`-range 
 
 ```cpp
 auto ids = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 42.0, 1150.0, 320.0}))},
 });
 
 // Renumber two specific order IDs in one call instead of two chained replace() calls.

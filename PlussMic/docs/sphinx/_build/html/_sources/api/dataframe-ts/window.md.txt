@@ -73,13 +73,13 @@ keeping the original feature alongside it.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 DataFrame::WindowSpec spec;
 spec.feature = "load";
-spec.op = ThreadWindowOp::RollingMean;
+spec.op = SlateWindowOp::RollingMean;
 spec.window = 2;
 
 auto out = readings.features({"load"}).ts().window({spec});
@@ -109,7 +109,7 @@ being replaced.
 ## Notes
 
 - The structured-specs overload only supports `Sum`/`Mean`/`Min`/`Max` (via
-  `ThreadWindowOp`), not the full `WindowStatistic` set
+  `SlateWindowOp`), not the full `WindowStatistic` set
   [`rolling()`](rolling.md)'s other overloads support.
 - The calendar-duration overload's output depends on frequency and calendar
   bucketing conventions outside this reference's current verified scope, so it

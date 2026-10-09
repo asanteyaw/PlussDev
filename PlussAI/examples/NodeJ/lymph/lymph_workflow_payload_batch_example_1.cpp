@@ -11,15 +11,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6}, {5}, f64))},
-      {"balance", Thread(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9}, {5}, f64))},
-      {"note_col", Thread(pluss::make_series({9.0, 9.0, 9.0, 9.0, 9.0}, {5}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 2.6}, {5}, f64))},
+      {"balance", Slate(pluss::make_series({0.6, 1.0, 1.3, 1.6, 1.9}, {5}, f64))},
+      {"note_col", Slate(pluss::make_series({9.0, 9.0, 9.0, 9.0, 9.0}, {5}, f64))},
   });
 
   const workflow::Payload payload =

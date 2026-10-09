@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 2639e614b78a -->
+<!-- pluss-signature-hash: 0f3b5ffd0411 -->
 
 # DataFrameLabelAccessor::distinct
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::distinct(bool dropnull = true) const -> Thread
+DataFrameLabelAccessor::distinct(bool dropnull = true) const -> Slate
 ```
 
 ## What It Does
@@ -27,7 +27,7 @@ Whether to exclude a null case label from the result. When `false`, at most one
 
 ## Returns
 
-`Thread`
+`Slate`
     The distinct case-label values, in first-occurrence order.
 
 ## Examples
@@ -38,8 +38,8 @@ Example 1. Case labels with one repeated value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().distinct();
@@ -65,8 +65,8 @@ excluding it.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({100.0, 150.0, 200.0, 90.0, 50.0}))}},
-    Thread(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(),
+    {{"value", Slate(pluss::make_series({100.0, 150.0, 200.0, 90.0, 50.0}))}},
+    Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(),
                                20.0, std::numeric_limits<double>::quiet_NaN(), 10.0})));
 std::cout << readings;
 
@@ -116,7 +116,7 @@ entirely, leaving only `10` and `20`. With `dropnull = false`, a single
 
 ## Notes
 
-- This operates on the flat case-label thread as a whole, even on a structured
+- This operates on the flat case-label slate as a whole, even on a structured
   (multi-level) frame — it does not distinguish per level. Use
   [`levels()`](levels.md) for per-level distinct values.
 - The result carries no display labels of its own; it prints with a plain

@@ -34,7 +34,7 @@ Example 1. Extract the minute from every row of a `Timeline` feature.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -82,7 +82,7 @@ minute-of-hour.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
-- A `NaT` row (or one already null on the underlying `Thread`) displays as
+- A `NaT` row (or one already null on the underlying `Slate`) displays as
   `"NULL"`.
 - Reads the local minute relative to the `Timeline`'s current timezone.
 

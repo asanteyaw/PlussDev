@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 11f42cde349a -->
 # `pluss::ai::ice::Source::valid_batches`
 
 [Back to `pluss::ai::ice::Source`](../Source.md)
@@ -8,54 +7,60 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] virtual const std::vector<pluss::ai::ice::data::Batch>& pluss::ai::ice::Source::valid_batches() const = 0;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Returns every validation batch, populated by [`prepare`](prepare.md).
+`Coach::learn`'s own loop runs this once per validated epoch. Optional
+for both built-in sources: [`TensorSource`](../TensorSource.md) only
+populates it when its four/five-argument constructor is given
+`x_valid`/`y_valid`; [`DataSetSource`](../DataSetSource.md) only when
+constructed with a `valid` `DataSet`.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`const std::vector<data::Batch>&` -- empty before
+[`prepare`](prepare.md), or if this source has no validation data.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: present only when `x_valid`/`y_valid` are given, always
+exactly one unshuffled batch regardless of the training `BatchPlan`,
+and the analogous optional `valid` `DataSet` on `DataSetSource`.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const pluss::Series x_train = pluss::make_series({0.0f, 0.0f, 1.0f, 0.0f}, {2, 2});
+  const pluss::Series y_train = pluss::make_series({0.0f, 1.0f}, {2, 1});
+  const pluss::Series x_val = pluss::make_series({1.0f, 1.0f}, {1, 2});
+  const pluss::Series y_val = pluss::make_series({2.0f}, {1, 1});
+
+  ice::TensorSource with_valid(x_train, y_train, x_val, y_val, ice::BatchPlan{});
+  with_valid.prepare();
+  std::cout << "with x_valid given: valid_batches().size() = " << with_valid.valid_batches().size() << "\n";
+
+  ice::TensorSource without_valid(x_train, y_train, std::nullopt, std::nullopt, ice::BatchPlan{});
+  without_valid.prepare();
+  std::cout << "without x_valid:    valid_batches().size() = " << without_valid.valid_batches().size() << "\n";
 
   return 0;
 }
@@ -64,27 +69,35 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+with x_valid given: valid_batches().size() = 1
+without x_valid:    valid_batches().size() = 0
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
+The training `BatchPlan` asks for 2-row batches, but `valid_batches()`
+is always one unshuffled batch holding every validation row --
+`TensorSource` never applies the training `BatchPlan` to validation
+data.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const pluss::Series x_train = pluss::make_series({0.0f, 0.0f}, {1, 2});
+  const pluss::Series y_train = pluss::make_series({0.0f}, {1, 1});
+  const pluss::Series x_val = pluss::make_series({0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {3, 2});
+  const pluss::Series y_val = pluss::make_series({0.0f, 1.0f, 2.0f}, {3, 1});
+
+  ice::TensorSource source(x_train, y_train, x_val, y_val, ice::BatchPlan{.batch_size = 2});
+  source.prepare();
+  std::cout << "valid_batches().size() = " << source.valid_batches().size() << "\n";
+  std::cout << "valid_batches()[0].size() = " << source.valid_batches()[0].size() << "\n";
 
   return 0;
 }
@@ -93,27 +106,31 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+valid_batches().size() = 1
+valid_batches()[0].size() = 3
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::data::Batch raw(ice::data::Layout::CrossSection);
+  raw.set("features", pluss::make_series({0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {3, 2}));
+  raw.set_target(pluss::make_series({0.0f, 1.0f, 2.0f}, {3, 1}));
+  const ice::data::DataSet train = ice::data::DataSet::from_batch(raw);
+
+  // Same optionality on DataSetSource -- the second constructor
+  // argument is std::nullopt by default.
+  ice::DataSetSource source(train);
+  source.prepare();
+  std::cout << "valid_batches().size() = " << source.valid_batches().size() << "\n";
 
   return 0;
 }
@@ -122,12 +139,18 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+valid_batches().size() = 0
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`prepare`](prepare.md) -- what populates this.
+- [`learn_batches`](learn_batches.md) -- the one accessor that is never
+  optional.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

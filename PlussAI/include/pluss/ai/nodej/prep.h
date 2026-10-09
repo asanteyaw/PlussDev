@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace pluss::table {
-class Thread;
+class Slate;
 }
 
 namespace pluss::ai::nodej::prep {
@@ -585,13 +585,13 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
-  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  Status learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
-  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
-  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
@@ -614,13 +614,13 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
-  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  Status learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
-  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
-  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
@@ -641,13 +641,13 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
-  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  Status learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
-  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
-  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
@@ -667,13 +667,13 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
-  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  Status learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
-  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
-  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
@@ -693,13 +693,13 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
-  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  Status learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
-  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
-  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;
@@ -721,13 +721,13 @@ public:
 
   [[nodiscard]] bool trained() const noexcept override;
   Status learn(const FeatureBatch& batch, const TrainOptions& options = {}) override;
-  Status learn(const pluss::table::Thread& feature, const TrainOptions& options = {});
+  Status learn(const pluss::table::Slate& feature, const TrainOptions& options = {});
   [[nodiscard]] StatusOr<Series> map(const FeatureBatch& batch, const InferOptions& options = {}) const override;
-  [[nodiscard]] StatusOr<Series> map(const pluss::table::Thread& feature, const InferOptions& options = {}) const;
+  [[nodiscard]] StatusOr<Series> map(const pluss::table::Slate& feature, const InferOptions& options = {}) const;
   [[nodiscard]] StatusOr<Series> learn_map(const FeatureBatch& batch,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {}) override;
-  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Thread& feature,
+  [[nodiscard]] StatusOr<Series> learn_map(const pluss::table::Slate& feature,
                                            const TrainOptions& learn_options = {},
                                            const InferOptions& infer_options = {});
   [[nodiscard]] StatusOr<std::vector<Series>> dump_state() const override;

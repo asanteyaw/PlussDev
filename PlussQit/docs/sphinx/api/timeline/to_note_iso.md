@@ -104,8 +104,8 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
     <span class="label">Previous</span>
     <span class="title">time</span>
   </a>
-  <a class="next-link" href="to_timeindex.html">
+  <a class="next-link" href="tz.html">
     <span class="label">Next</span>
-    <span class="title">to_timeindex</span>
+    <span class="title">tz</span>
   </a>
 </div>

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_delims
+# Note::TexAccessor::strip_delims
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_delims() const
+Note Note::TexAccessor::strip_delims() const
 ```
 
 ## Remove Math Markers, Retain Their Payload

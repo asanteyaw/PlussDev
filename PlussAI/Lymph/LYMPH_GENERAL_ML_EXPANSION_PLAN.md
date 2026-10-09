@@ -985,7 +985,7 @@ Current coverage:
   **Second follow-up (same day):** converted `Payload` and `Policy` from
   flat self-contained pages into full HUB pages (like `Workflow`) with
   indented method children in the sidebar. `Payload` -> `label` / `weights`
-  / `time` / `roles` (features/groups/note-layout-thread) / `batch`
+  / `time` / `roles` (features/groups/note-layout-slate) / `batch`
   (feature_batch/labeled_batch/with_frame); `Policy` -> `columns`
   (drop/require/forbid) / `rows` (reject/allow/reject_any_missing) /
   `apply` (apply/empty). Each child page has Signature + Parameters +

@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::logdet
+# Series::LinearAlgAccessor::logdet
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::logdet() const
+Series Series::LinearAlgAccessor::logdet() const
 Series SeriesLinearAlgProxy::logdet() const
 ```
 
@@ -204,9 +204,9 @@ the batch shape, and its gradient is the inverse transpose.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::slogdet`](slogdet.md): signed log-magnitude.
-- [`SeriesLinearAlgAccessor::det`](det.md): signed determinant value.
-- [`SeriesLinearAlgAccessor::inverse`](inverse.md): source of the gradient formula.
+- [`Series::LinearAlgAccessor::slogdet`](slogdet.md): signed log-magnitude.
+- [`Series::LinearAlgAccessor::det`](det.md): signed determinant value.
+- [`Series::LinearAlgAccessor::inverse`](inverse.md): source of the gradient formula.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="inverse.html">

@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,7 +15,7 @@ int main() {
   // Four categories with clearly different frequencies: 0 appears 4x, 1 3x,
   // 2 2x, 3 once.
   const pluss::Series tier = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 2, 2, 3}, {10}, f64);
-  const DataFrame frame({{"tier", Thread(tier)}});
+  const DataFrame frame({{"tier", Slate(tier)}});
 
   // max_categories caps how many real category columns are produced; overflow
   // says what happens to the rest. KeepMostFrequent keeps the top-N by count

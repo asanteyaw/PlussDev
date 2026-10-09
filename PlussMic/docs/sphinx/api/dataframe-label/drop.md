@@ -20,7 +20,7 @@ Has two entirely different behaviors depending on how it's called:
 - **The `names`-only overloads, and `drop(options)` with both `duplicated` and
   `repeated` left `false`**: drop **case-label levels** by name from a
   structured (multi-level) frame — not rows. The remaining levels are
-  rejoined into a new flat case-label thread. Feature columns are untouched.
+  rejoined into a new flat case-label slate. Feature columns are untouched.
 - **`drop(options)` with `duplicated = true` or `repeated = true`**: drop
   **rows** instead, filtering out whichever rows [`duplicated()`](duplicated.md)
   or [`repeated()`](repeated.md) (restricted to `options.names`, if given)
@@ -55,8 +55,8 @@ Example 1. Drop a level by name.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region", false);
 std::cout << labeled;
 

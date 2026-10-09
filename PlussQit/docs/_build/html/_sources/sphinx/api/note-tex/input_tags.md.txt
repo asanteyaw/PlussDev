@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::input_tags
+# Note::TexAccessor::input_tags
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::input_tags() const
+Note Note::TexAccessor::input_tags() const
 ```
 
 ## Turn External-Input Directives Into Visible Tags

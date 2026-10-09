@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::int_norm
+# Note::TexAccessor::int_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::int_norm() const
+Note Note::TexAccessor::int_norm() const
 ```
 
 ## Collapse Multi-Integral Commands To `\int`

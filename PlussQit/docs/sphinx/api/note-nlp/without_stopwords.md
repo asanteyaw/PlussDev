@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::without_stopwords
+# Note::NlpAccessor::without_stopwords
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::without_stopwords() const
+TokenBatch Note::NlpAccessor::without_stopwords() const
 ```
 
 ## Tokenize Without Common Function Words

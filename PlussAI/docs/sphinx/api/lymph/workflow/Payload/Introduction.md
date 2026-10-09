@@ -14,8 +14,51 @@ index. Every data verb on [`Workflow`](../Workflow.md) —
 It exists so a call that needs more than "features and a label" does not turn
 into a parameter list that grows every time a new role appears. Instead of
 
+Learn a workflow from a dataframe using named feature and label columns. The program prints whether the learned workflow reports itself trained.
+
 ```cpp
-workflow.learn(frame, feature_names, label_col, weight_col, group_col, time_col, note_policy);
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  DataFrame frame({
+      {"income", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}, {4}))},
+      {"balance", Slate(pluss::make_series(std::vector<double>{2.0, 1.0, 4.0, 3.0}, {4}))},
+      {"default", Slate(pluss::make_series(std::vector<double>{0.0, 0.0, 1.0, 1.0}, {4}))},
+  });
+  lymph::DataFrameBatchOptions options{};
+  options.feature_names = {"income", "balance"};
+  options.label_feature = "default";
+  const lymph::workflow::Workflow workflow = lymph::workflow::make(lymph::workflow::Policy{});
+  const lymph::workflow::Workflow learned = workflow.learn(frame, options);
+  std::cout << "learned = " << (learned.trained() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+learned = true
 ```
 
 you attach the roles once, by name, on the `Payload`:
@@ -57,7 +100,7 @@ Which shape a `Payload` holds is what `has_frame()` / `has_features()` /
 3. [`time`](time.md) — the time role, from a name, a full
    [`TimeOptions`](../TimeOptions.md), or a `Series`.
 4. [`roles`](roles.md) — `features(...)`, `groups(...)`, and the
-   `note`/`layout`/`thread` data-conversion shortcuts.
+   `note`/`layout`/`slate` data-conversion shortcuts.
 5. [`batch`](batch.md) — `feature_batch()` / `labeled_batch()` /
    `with_frame()`, the materialization step every verb runs internally.
 

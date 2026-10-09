@@ -12,7 +12,7 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -22,7 +22,7 @@ int main() {
        3.0, 3.2, 3.4, 3.6, 3.8, 6.0, 6.4, 6.8, 7.2, 7.6}, {20}, f64);
   const Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {20}, f64);
-  const DataFrame frame({{"score", Thread(score)}, {"target", Thread(y)}});
+  const DataFrame frame({{"score", Slate(score)}, {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"score"};

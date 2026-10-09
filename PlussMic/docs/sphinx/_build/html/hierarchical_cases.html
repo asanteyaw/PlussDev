@@ -13,12 +13,12 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=af5a0516"></script>
-    <script src="_static/layout.js?v=6be133a8"></script>
+    <script src="_static/api_nav.js?v=e742a746"></script>
+    <script src="_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="DataFrameSqlAccessor API Reference" href="dataframe_sql_accessor_api_reference.html" />
-    <link rel="prev" title="Thread And Atlas Guide" href="thread_atlas.html" />
+    <link rel="prev" title="Slate And Atlas Guide" href="slate_atlas.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -50,8 +50,8 @@ look like joined strings, but operations use the structured case-label payloads.
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().set(feature_names:</span> <span class="pre">initializer_list&lt;string_view&gt;,</span> <span class="pre">drop_features:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">true,</span> <span class="pre">separator:</span> <span class="pre">string_view</span> <span class="pre">=</span> <span class="pre">&quot;\x1F&quot;)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().has()</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().names()</span> <span class="pre">-&gt;</span> <span class="pre">vector&lt;string&gt;</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(name:</span> <span class="pre">string_view)</span> <span class="pre">-&gt;</span> <span class="pre">Thread</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(position:</span> <span class="pre">int64)</span> <span class="pre">-&gt;</span> <span class="pre">Thread</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(name:</span> <span class="pre">string_view)</span> <span class="pre">-&gt;</span> <span class="pre">Slate</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().part(position:</span> <span class="pre">int64)</span> <span class="pre">-&gt;</span> <span class="pre">Slate</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrameCaseStudyAccessor::pick(const</span> <span class="pre">CasePick&amp;</span> <span class="pre">pick)</span> <span class="pre">const</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::label().sort(options:</span> <span class="pre">SortLabelOptions)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame::group().by(keys:</span> <span class="pre">LabelGroup).agg(specs)</span> <span class="pre">-&gt;</span> <span class="pre">DataFrame</span></code></p>
@@ -132,7 +132,7 @@ look like joined strings, but operations use the structured case-label payloads.
 <p>Expected output:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">names</span> <span class="pre">==</span> <span class="pre">{&quot;region&quot;,</span> <span class="pre">&quot;account&quot;,</span> <span class="pre">&quot;quarter&quot;}</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">regions</span></code> is a <code class="docutils literal notranslate"><span class="pre">Note</span></code> Thread with one value per case.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">regions</span></code> is a <code class="docutils literal notranslate"><span class="pre">Note</span></code> Slate with one value per case.</p></li>
 </ul>
 </section>
 <section id="example-2-select-by-a-partial-case-label">
@@ -271,7 +271,7 @@ East   | 70          | 2
   <li><a href="api_reference.html">API Reference</a><ul>
   <li><a href="api/plussmic_root.html">PlussMic API Reference</a><ul>
   <li><a href="api/plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
-      <li>Previous: <a href="thread_atlas.html" title="previous chapter">Thread And Atlas Guide</a></li>
+      <li>Previous: <a href="slate_atlas.html" title="previous chapter">Slate And Atlas Guide</a></li>
       <li>Next: <a href="dataframe_sql_accessor_api_reference.html" title="next chapter">DataFrameSqlAccessor API Reference</a></li>
   </ul></li>
   </ul></li>

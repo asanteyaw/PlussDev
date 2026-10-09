@@ -73,7 +73,12 @@ int main() {
   optim::Adam optimizer(groups);
 
   for (int step = 0; step < 3; ++step) {
-    optimizer.step(std::vector<Series>{backbone.sub(target), head.sub(target)});
+    const Series backbone_residual = backbone.sub(target);
+    const Series head_residual = head.sub(target);
+    const float loss = backbone_residual.square().mul(0.5).item<float>() +
+                       head_residual.square().mul(0.5).item<float>();
+    optimizer.step(std::vector<Series>{backbone_residual, head_residual});
+    std::cout << "step " << step << ": loss = " << loss << "\n";
   }
   std::cout << "backbone (lr=1e-3): w = " << backbone.item<float>() << "\n";
   std::cout << "head (lr=0.5):      w = " << head.item<float>() << "\n";
@@ -85,6 +90,9 @@ int main() {
 Output
 
 ```text
+step 0: loss = 16
+step 1: loss = 14.121
+step 2: loss = 12.5005
 backbone (lr=1e-3): w = 4.997
 head (lr=0.5):      w = 3.5111
 ```

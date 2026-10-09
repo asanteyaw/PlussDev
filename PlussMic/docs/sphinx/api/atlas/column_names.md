@@ -37,12 +37,12 @@ Example 1. List the feature names shared across the stack.
 using namespace pluss::table;
 
 auto q1 = DataFrame({
-    {"sales",  Thread(pluss::make_series({100.0, 120.0}))},
-    {"orders", Thread(pluss::make_series({12.0, 15.0}))},
+    {"sales",  Slate(pluss::make_series({100.0, 120.0}))},
+    {"orders", Slate(pluss::make_series({12.0, 15.0}))},
 });
 auto q2 = DataFrame({
-    {"sales",  Thread(pluss::make_series({110.0, 90.0}))},
-    {"orders", Thread(pluss::make_series({14.0, 9.0}))},
+    {"sales",  Slate(pluss::make_series({110.0, 90.0}))},
+    {"orders", Slate(pluss::make_series({14.0, 9.0}))},
 });
 auto atlas = Atlas({q1, q2});
 

@@ -5,7 +5,8 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow nlp{
       .lang = Language::English,
@@ -30,7 +31,7 @@ int main() {
   const auto doc = nlp.infer(text);
   const auto report = nlp.assess(std::vector<std::string>{text}, AssessOptions{.require_sentences = true});
 
-  std::cout << "== NodeB Linguistics Overview ==\n";
+  std::cout << "== PlussAI NLP Linguistics Overview ==\n";
   std::cout << "docs=" << report.doc_count
             << " tokens=" << report.token_count
             << " sentences=" << report.sentence_count << "\n\n";

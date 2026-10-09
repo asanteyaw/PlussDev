@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::inverse
+# Series::LinearAlgAccessor::inverse
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::inverse() const
+Series Series::LinearAlgAccessor::inverse() const
 Series SeriesLinearAlgProxy::inverse() const
 ```
 
@@ -186,9 +186,9 @@ singular matrices whose lost directions cannot be recovered.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::det`](det.md): detect signed volume collapse.
-- [`SeriesLinearAlgAccessor::mm`](mm.md): verify or apply an inverse.
-- [`SeriesLinearAlgAccessor::slogdet`](slogdet.md): stable determinant sign and magnitude.
+- [`Series::LinearAlgAccessor::det`](det.md): detect signed volume collapse.
+- [`Series::LinearAlgAccessor::mm`](mm.md): verify or apply an inverse.
+- [`Series::LinearAlgAccessor::slogdet`](slogdet.md): stable determinant sign and magnitude.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="dot.html">

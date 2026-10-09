@@ -20,6 +20,25 @@ bool has_label(const Doc& doc, std::string_view label) {
 bool run_nodeb_textcat_checks(std::ostream* err = nullptr) {
   Workflow tokenizer{.lang = Language::English, .stages = {stage::tokenize(), stage::lemmatize()}};
 
+  // Classic backends report the probability of the selected label, not the
+  // positive-class probability or an unnormalized decision score.
+  Workflow classic{
+      .lang = Language::English,
+      .stages = {stage::tokenize(), stage::lemmatize(), stage::textcat()},
+  };
+  const std::vector<std::string> classic_docs = {
+      "compiler tests pass", "compiler builds pass",
+      "coastal flights depart", "coastal holidays begin",
+  };
+  const std::vector<std::string> classic_labels = {"tech", "tech", "travel", "travel"};
+  classic.learn(classic_docs, classic_labels);
+  for (const auto& doc : classic.infer(classic_docs)) {
+    if (doc.doc_label.empty() || !(doc.doc_score >= 0.5 && doc.doc_score <= 1.0)) {
+      if (err) *err << "nodeb classic textcat should report selected-label confidence in [0.5, 1]\n";
+      return false;
+    }
+  }
+
   // --- Sequence backend: real gradient-trained single-label classification ---
   Workflow single{
       .lang = Language::English,

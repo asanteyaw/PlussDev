@@ -10,7 +10,7 @@
 namespace {
 
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using Clock = std::chrono::steady_clock;
 
 template <class Fn>
@@ -33,11 +33,11 @@ DataFrame make_frame(std::int64_t rows, std::int64_t case_offset = 0) {
   }
   return DataFrame(
       {
-          {"key", Thread(pluss::make_series(keys))},
-          {"x", Thread(pluss::make_series(x))},
-          {"y", Thread(pluss::make_series(y))},
+          {"key", Slate(pluss::make_series(keys))},
+          {"x", Slate(pluss::make_series(x))},
+          {"y", Slate(pluss::make_series(y))},
       },
-      Thread(pluss::make_series(cases)));
+      Slate(pluss::make_series(cases)));
 }
 
 } // namespace
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
   });
   const auto windows = elapsed_ms([&] {
     const auto result = left.ts().rolling(
-        {{"x_roll_mean", "x", pluss::table::ThreadWindowOp::RollingMean, 128, 1}},
+        {{"x_roll_mean", "x", pluss::table::SlateWindowOp::RollingMean, 128, 1}},
         false);
     sink += result.ncases();
   });

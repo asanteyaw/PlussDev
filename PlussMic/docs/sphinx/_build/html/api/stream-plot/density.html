@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamPlotAccessor::hist" href="hist.html" />
@@ -52,7 +52,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Draws a kernel-density estimate for the bound stream’s values — always exactly one curve,
 since a <code class="docutils literal notranslate"><span class="pre">Stream</span></code> is always one series. Both overloads forward to
-<a class="reference internal" href="../thread-plot/density.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::density</span></code></span></a> after <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>.</p>
+<a class="reference internal" href="../slate-plot/density.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::density</span></code></span></a> after <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -81,7 +81,7 @@ A figure with one pane containing a single kernel-density curve, axes labeled
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 1" src="../../_images/density-12.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/density-13.svg" /></p>
 <p>Example 2. An explicit, finer point count.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -91,7 +91,7 @@ A figure with one pane containing a single kernel-density curve, axes labeled
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/density-22.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/density-23.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">DensityPlotOptions</span></code>, tuning point count and opacity.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -105,7 +105,7 @@ A figure with one pane containing a single kernel-density curve, axes labeled
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 3" src="../../_images/density-32.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/density-33.svg" /></p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
@@ -120,7 +120,7 @@ view or save the result.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../thread-plot/density.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::density</span></code></span></a>: the method this delegates to.</p></li>
+<li><p><a class="reference internal" href="../slate-plot/density.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::density</span></code></span></a>: the method this delegates to.</p></li>
 <li><p><a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::hist</span></code></span></a>: the same per-stream distribution idea, as binned
 counts instead of a smoothed curve.</p></li>
 </ul>

@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::svd_vh
+# Series::LinearAlgAccessor::svd_vh
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::svd_vh(bool full_matrices = true) const
+Series Series::LinearAlgAccessor::svd_vh(bool full_matrices = true) const
 Series SeriesLinearAlgProxy::svd_vh(bool full_matrices = true) const
 ```
 

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e99fe8bbd0ff -->
 # `pluss::ai::ice::Model::infer_step`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -162,3 +164,16 @@ threw: pluss::ai::ice::Model::forward(batch): batch.inputs must be defined.
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="infer.html">
+    <span class="label">Previous</span>
+    <span class="title">infer</span>
+  </a>
+  <a class="next-link" href="is_training.html">
+    <span class="label">Next</span>
+    <span class="title">is_training</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

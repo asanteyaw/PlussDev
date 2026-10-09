@@ -79,8 +79,10 @@ int main() {
   optim::RMSprop optimizer(std::vector<Series*>{&w}, optim::RMSpropOptions{.learning_rate = 0.5});
 
   for (int step = 0; step < 8; ++step) {
-    optimizer.step(std::vector<Series>{w.sub(target)});
-    std::cout << "step " << step << ": w = " << w.item<float>() << "\n";
+    const Series w_residual = w.sub(target);
+    const float w_loss = w_residual.square().mul(0.5).item<float>();
+    optimizer.step(std::vector<Series>{w_residual});
+    std::cout << "step " << step << ": loss = " << w_loss << ", w = " << w.item<float>() << "\n";
   }
 
   return 0;
@@ -90,14 +92,14 @@ int main() {
 Output
 
 ```text
-step 0: w = -2.38419e-06
-step 1: w = 1.21843
-step 2: w = 0.951331
-step 3: w = 1.01114
-step 4: w = 0.997381
-step 5: w = 1.00063
-step 6: w = 0.999844
-step 7: w = 1.00004
+step 0: loss = 8, w = -2.38419e-06
+step 1: loss = 0.500002, w = 1.21843
+step 2: loss = 0.023855, w = 0.951331
+step 3: loss = 0.00118433, w = 1.01114
+step 4: loss = 6.2047e-05, w = 0.997381
+step 5: loss = 3.42872e-06, w = 1.00063
+step 6: loss = 1.99667e-07, w = 0.999844
+step 7: loss = 1.22402e-08, w = 1.00004
 ```
 
 ### Example 2
@@ -132,9 +134,13 @@ int main() {
   optim::RMSprop centered(std::vector<Series*>{&w_centered}, optim::RMSpropOptions{.learning_rate = 0.1, .centered = true});
 
   for (int step = 0; step < 6; ++step) {
-    plain.step(std::vector<Series>{w_plain.sub(target)});
-    centered.step(std::vector<Series>{w_centered.sub(target)});
-    std::cout << "step " << step << ": centered=false w = " << w_plain.item<float>()
+    const Series w_plain_residual = w_plain.sub(target);
+    const float w_plain_loss = w_plain_residual.square().mul(0.5).item<float>();
+    plain.step(std::vector<Series>{w_plain_residual});
+    const Series w_centered_residual = w_centered.sub(target);
+    const float w_centered_loss = w_centered_residual.square().mul(0.5).item<float>();
+    centered.step(std::vector<Series>{w_centered_residual});
+    std::cout << "step " << step << ": loss(centered=false) = " << w_plain_loss << ", loss(centered=true) = " << w_centered_loss << ", centered=false w = " << w_plain.item<float>()
                << ", centered=true w = " << w_centered.item<float>() << "\n";
   }
 
@@ -145,12 +151,12 @@ int main() {
 Output
 
 ```text
-step 0: centered=false w = 4, centered=true w = 3.99496
-step 1: centered=false w = 3.39807, centered=true w = 3.38773
-step 2: centered=false w = 2.96272, centered=true w = 2.94739
-step 3: centered=false w = 2.62558, centered=true w = 2.60587
-step 4: centered=false w = 2.35538, centered=true w = 2.33207
-step 5: centered=false w = 2.13454, centered=true w = 2.10849
+step 0: loss(centered=false) = 8, loss(centered=true) = 8, centered=false w = 4, centered=true w = 3.99496
+step 1: loss(centered=false) = 4.5, loss(centered=true) = 4.4849, centered=false w = 3.39807, centered=true w = 3.38773
+step 2: loss(centered=false) = 2.87537, loss(centered=true) = 2.85062, centered=false w = 2.96272, centered=true w = 2.94739
+step 3: loss(centered=false) = 1.92614, loss(centered=true) = 1.89616, centered=false w = 2.62558, centered=true w = 2.60587
+step 4: loss(centered=false) = 1.32125, loss(centered=true) = 1.28941, centered=false w = 2.35538, centered=true w = 2.33207
+step 5: loss(centered=false) = 0.918524, loss(centered=true) = 0.887209, centered=false w = 2.13454, centered=true w = 2.10849
 ```
 
 ### Example 3

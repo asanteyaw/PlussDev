@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::add_math_delimiters
+# Note::TexAccessor::add_math_delimiters
 
 [Back to Note Tex Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::add_math_delimiters() const
+Note Note::TexAccessor::add_math_delimiters() const
 ```
 
 ## Make Each Cell A Complete Math Fragment

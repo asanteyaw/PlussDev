@@ -43,9 +43,9 @@ Example 1. Shuffle row order, then verify the same rows are still all present.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << orders;
 ```

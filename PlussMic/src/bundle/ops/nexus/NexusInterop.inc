@@ -10,7 +10,7 @@ Nexus Nexus::from_atlas(const pluss::table::Atlas& atlas) {
   return Nexus(std::move(out));
 }
 
-Nexus Nexus::from_atlas(const pluss::table::Atlas& atlas, const pluss::table::Thread& labels) {
+Nexus Nexus::from_atlas(const pluss::table::Atlas& atlas, const pluss::table::Slate& labels) {
   PLUSS_CHECK(labels.defined(), "Nexus::from_atlas: labels are undefined");
   PLUSS_CHECK(labels.size() == atlas.depth(), "Nexus::from_atlas: labels length must equal atlas depth");
 
@@ -61,12 +61,12 @@ Nexus& Nexus::inject_(const pluss::table::Atlas& atlas) {
 }
 
 pluss::table::Atlas Nexus::to_atlas(std::initializer_list<std::string_view> selected_keys,
-                      std::optional<pluss::table::Thread> labels) const {
+                      std::optional<pluss::table::Slate> labels) const {
   return to_atlas(pluss::msharp::RangeView::Of<std::string_view>(selected_keys), std::move(labels));
 }
 
 pluss::table::Atlas Nexus::to_atlas(pluss::msharp::RangeView::Of<std::string_view> selected_keys,
-                      std::optional<pluss::table::Thread> labels) const {
+                      std::optional<pluss::table::Slate> labels) const {
   const auto owned = normalize_requested_keys(selected_keys, "Nexus::to_atlas");
   const auto& src = impl_ref_();
   std::vector<pluss::table::DataFrame> out;

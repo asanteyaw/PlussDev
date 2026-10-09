@@ -89,8 +89,8 @@ Position `2`'s window is everything from position `0` through `2`:
   so far" statistic that weights recent observations more heavily instead of
   weighting every observation equally.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::expanding`](../thread-ts/expanding.md): the
-  underlying single-thread engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::expanding`](../slate-ts/expanding.md): the
+  underlying single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ewm.html">

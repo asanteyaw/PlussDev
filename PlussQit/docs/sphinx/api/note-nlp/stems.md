@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::stems
+# Note::NlpAccessor::stems
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::stems() const
+TokenBatch Note::NlpAccessor::stems() const
 ```
 
 ## Produce Mechanical Word Stems

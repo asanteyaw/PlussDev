@@ -39,8 +39,8 @@ The table layer has:
 
 | Type | Role |
 | --- | --- |
-| `Thread` | one typed column |
-| `DataFrame` | a 2D table of named `Thread` features |
+| `Slate` | one typed column |
+| `DataFrame` | a 2D table of named `Slate` features |
 | `DataFrameView` | a display-oriented frame result returned by preview/summary operations |
 | `Atlas` | a stack of related `DataFrame` objects |
 
@@ -88,11 +88,11 @@ related frames with reusable join logic, auditing, and saved workspace plans.
 PlussMic uses this table hierarchy:
 
 ```text
-Atlas -> DataFrame -> Thread -> Series / Note / Timeline / TimeIndex
+Atlas -> DataFrame -> Slate -> Series / Note / Timeline / TimeIndex
 ```
 
 A `DataFrame` owns feature names and feature columns. Each feature is a
-`Thread`. A `Thread` wraps one core PlussQit payload kind:
+`Slate`. A `Slate` wraps one core PlussQit payload kind:
 
 - `Series` for numeric and boolean data;
 - `Note` for text data;

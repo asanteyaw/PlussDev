@@ -35,24 +35,24 @@ void print_features(const DataFrame& frame) {
 // not a competing example universe.
 Nexus make_workspace() {
   auto customers = DataFrame({
-      {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-      {"region_id",   Thread(pluss::make_series({10.0, 20.0, 10.0}))},
+      {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+      {"region_id",   Slate(pluss::make_series({10.0, 20.0, 10.0}))},
   });
   auto regions = DataFrame({
-      {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
-      {"zone",      Thread(pluss::make_note({"west", "east"}))},
+      {"region_id", Slate(pluss::make_series({10.0, 20.0}))},
+      {"zone",      Slate(pluss::make_note({"west", "east"}))},
   });
   auto events = DataFrame({
-      {"event_id",    Thread(pluss::make_series({100.0, 101.0, 102.0, 103.0, 104.0}))},
-      {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0, 2.0, 2.0}))},
-      {"occurred_at", Thread(pluss::make_timeline({
+      {"event_id",    Slate(pluss::make_series({100.0, 101.0, 102.0, 103.0, 104.0}))},
+      {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0, 2.0, 2.0}))},
+      {"occurred_at", Slate(pluss::make_timeline({
           "2026-01-01T00:00:00Z",
           "2026-01-20T00:00:00Z",
           "2026-01-05T00:00:00Z",
           "2026-01-25T00:00:00Z",
           "2026-02-10T00:00:00Z",
       }))},
-      {"spend", Thread(pluss::make_series({10.0, 5.0, 2.0, 8.0, 4.0}))},
+      {"spend", Slate(pluss::make_series({10.0, 5.0, 2.0, 8.0, 4.0}))},
   });
 
   TableMeta customer_meta;
@@ -385,20 +385,20 @@ int main() {
   // the RangeView/NameRange sibling-overload retrofits.
   auto make_ordering_workspace = []() {
     auto customers = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto orders = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
     });
     auto payments = DataFrame({
-        {"payment_id", Thread(pluss::make_series({9001.0, 9002.0}))},
-        {"order_id",   Thread(pluss::make_series({101.0, 102.0}))},
+        {"payment_id", Slate(pluss::make_series({9001.0, 9002.0}))},
+        {"order_id",   Slate(pluss::make_series({101.0, 102.0}))},
     });
     auto refunds = DataFrame({
-        {"refund_id", Thread(pluss::make_series({77.0}))},
-        {"order_id",  Thread(pluss::make_series({102.0}))},
+        {"refund_id", Slate(pluss::make_series({77.0}))},
+        {"order_id",  Slate(pluss::make_series({102.0}))},
     });
     return Nexus({
         {"customers", customers},
@@ -466,8 +466,8 @@ int main() {
   print_section("Retrofit: detect_duplicates via named containers");
   {
     auto dup_orders = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
     });
     auto biz = Nexus({{"orders", dup_orders}});
     std::vector<std::string_view> as_vector = {"order_id"};
@@ -480,8 +480,8 @@ int main() {
   print_section("Retrofit: duplicates (alias) via named containers");
   {
     auto dup_orders = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
     });
     auto biz = Nexus({{"orders", dup_orders}});
     std::vector<std::string_view> as_vector = {"order_id"};
@@ -507,12 +507,12 @@ int main() {
     // same-shaped snapshots of "customers", not the mixed-schema
     // customers/orders/payments/refunds workspace.
     auto customers_q1 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto customers_q2 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto biz = Nexus({{"customers_q1", customers_q1}, {"customers_q2", customers_q2}});
 
@@ -563,18 +563,18 @@ int main() {
   print_section("pull.md Batched Maps Example");
   {
     auto customers2 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-        {"region_id",   Thread(pluss::make_series({10.0, 20.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+        {"region_id",   Slate(pluss::make_series({10.0, 20.0}))},
     });
     auto regions2 = DataFrame({
-        {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
-        {"zone",      Thread(pluss::make_note({"west", "east"}))},
+        {"region_id", Slate(pluss::make_series({10.0, 20.0}))},
+        {"zone",      Slate(pluss::make_note({"west", "east"}))},
     });
     auto events2 = DataFrame({
-        {"event_id",    Thread(pluss::make_series({100.0, 101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
-        {"spend",       Thread(pluss::make_series({10.0, 5.0, 8.0}))},
-        {"occurred_at", Thread(pluss::make_timeline({
+        {"event_id",    Slate(pluss::make_series({100.0, 101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
+        {"spend",       Slate(pluss::make_series({10.0, 5.0, 8.0}))},
+        {"occurred_at", Slate(pluss::make_timeline({
             "2026-01-01T00:00:00Z", "2026-01-20T00:00:00Z", "2026-01-25T00:00:00Z",
         }))},
     });
@@ -619,12 +619,12 @@ int main() {
   print_section("pull.md Range-Friendly Root Lists Example");
   {
     auto customers3 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-        {"region_id",   Thread(pluss::make_series({10.0, 20.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+        {"region_id",   Slate(pluss::make_series({10.0, 20.0}))},
     });
     auto regions3 = DataFrame({
-        {"region_id", Thread(pluss::make_series({10.0, 20.0}))},
-        {"zone",      Thread(pluss::make_note({"west", "east"}))},
+        {"region_id", Slate(pluss::make_series({10.0, 20.0}))},
+        {"zone",      Slate(pluss::make_note({"west", "east"}))},
     });
     Relationship rel3;
     rel3.name = "customer_region";
@@ -646,13 +646,13 @@ int main() {
   print_section("pull.md Example 11: pull(root, fields) via named containers");
   {
     auto customers4 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto orders4 = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0, 104.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 2.0, 1.0}))},
-        {"amount",      Thread(pluss::make_series({50.0, 75.0, 20.0, 30.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0, 104.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0, 1.0}))},
+        {"amount",      Slate(pluss::make_series({50.0, 75.0, 20.0, 30.0}))},
     });
     auto biz4 = Nexus({{"customers", customers4}, {"orders", orders4}});
     TableMeta customers_meta4;
@@ -678,13 +678,13 @@ int main() {
   print_section("pick.md/drop.md retrofit dataset via named containers");
   {
     auto customers5 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto orders5 = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 2.0}))},
-        {"amount",      Thread(pluss::make_series({50.0, 75.0, 20.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 2.0}))},
+        {"amount",      Slate(pluss::make_series({50.0, 75.0, 20.0}))},
     });
     auto biz5 = Nexus({{"customers", customers5}, {"orders", orders5}});
     Relationship rel5;
@@ -712,10 +712,10 @@ int main() {
   // ---- Verify the 7 pre-existing print-bug fixes' claimed output ----
   print_section("head.md Example 3: head(99) on a 4-table workspace");
   {
-    auto customers6 = DataFrame({{"customer_id", Thread(pluss::make_series({1.0}))}});
-    auto orders6 = DataFrame({{"order_id", Thread(pluss::make_series({1.0}))}});
-    auto payments6 = DataFrame({{"payment_id", Thread(pluss::make_series({1.0}))}});
-    auto refunds6 = DataFrame({{"refund_id", Thread(pluss::make_series({1.0}))}});
+    auto customers6 = DataFrame({{"customer_id", Slate(pluss::make_series({1.0}))}});
+    auto orders6 = DataFrame({{"order_id", Slate(pluss::make_series({1.0}))}});
+    auto payments6 = DataFrame({{"payment_id", Slate(pluss::make_series({1.0}))}});
+    auto refunds6 = DataFrame({{"refund_id", Slate(pluss::make_series({1.0}))}});
     auto biz6 = Nexus({
         {"customers", customers6}, {"orders", orders6},
         {"payments", payments6}, {"refunds", refunds6},
@@ -730,10 +730,10 @@ int main() {
 
   print_section("tail.md Example 3: tail(99) on the same 4-table workspace");
   {
-    auto customers6 = DataFrame({{"customer_id", Thread(pluss::make_series({1.0}))}});
-    auto orders6 = DataFrame({{"order_id", Thread(pluss::make_series({1.0}))}});
-    auto payments6 = DataFrame({{"payment_id", Thread(pluss::make_series({1.0}))}});
-    auto refunds6 = DataFrame({{"refund_id", Thread(pluss::make_series({1.0}))}});
+    auto customers6 = DataFrame({{"customer_id", Slate(pluss::make_series({1.0}))}});
+    auto orders6 = DataFrame({{"order_id", Slate(pluss::make_series({1.0}))}});
+    auto payments6 = DataFrame({{"payment_id", Slate(pluss::make_series({1.0}))}});
+    auto refunds6 = DataFrame({{"refund_id", Slate(pluss::make_series({1.0}))}});
     auto biz6 = Nexus({
         {"customers", customers6}, {"orders", orders6},
         {"payments", payments6}, {"refunds", refunds6},
@@ -748,10 +748,10 @@ int main() {
 
   print_section("inject.md Example 2: inject several named tables");
   {
-    auto customers7 = DataFrame({{"customer_id", Thread(pluss::make_series({1.0}))}});
-    auto orders7 = DataFrame({{"order_id", Thread(pluss::make_series({1.0}))}});
-    auto payments7 = DataFrame({{"payment_id", Thread(pluss::make_series({1.0}))}});
-    auto refunds7 = DataFrame({{"refund_id", Thread(pluss::make_series({1.0}))}});
+    auto customers7 = DataFrame({{"customer_id", Slate(pluss::make_series({1.0}))}});
+    auto orders7 = DataFrame({{"order_id", Slate(pluss::make_series({1.0}))}});
+    auto payments7 = DataFrame({{"payment_id", Slate(pluss::make_series({1.0}))}});
+    auto refunds7 = DataFrame({{"refund_id", Slate(pluss::make_series({1.0}))}});
     auto biz7 = Nexus({{"customers", customers7}});
     auto out = biz7.inject({
         {"orders", orders7}, {"payments", payments7}, {"refunds", refunds7},
@@ -777,28 +777,28 @@ int main() {
   print_section("rename.md Example 2: rename then inject unnamed table");
   {
     auto customers8 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto orders8 = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
     });
     auto payments8 = DataFrame({
-        {"payment_id", Thread(pluss::make_series({9001.0, 9002.0}))},
-        {"order_id",   Thread(pluss::make_series({101.0, 102.0}))},
+        {"payment_id", Slate(pluss::make_series({9001.0, 9002.0}))},
+        {"order_id",   Slate(pluss::make_series({101.0, 102.0}))},
     });
     auto refunds8 = DataFrame({
-        {"refund_id", Thread(pluss::make_series({77.0}))},
-        {"order_id",  Thread(pluss::make_series({102.0}))},
+        {"refund_id", Slate(pluss::make_series({77.0}))},
+        {"order_id",  Slate(pluss::make_series({102.0}))},
     });
     auto biz8 = Nexus({
         {"customers", customers8}, {"orders", orders8},
         {"payments", payments8}, {"refunds", refunds8},
     });
     auto shipments = DataFrame({
-        {"shipment_id", Thread(pluss::make_series({501.0, 502.0}))},
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0}))},
+        {"shipment_id", Slate(pluss::make_series({501.0, 502.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
     });
     auto out = biz8.rename("orders", "table_9").inject(shipments);
     for (std::int64_t i = 0; i < out.ntables(); ++i) {
@@ -811,8 +811,8 @@ int main() {
   print_section("show.md Example 1: biz.show() direct stdout write");
   {
     auto customers9 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto biz9 = Nexus({{"customers", customers9}});
     biz9.show();
@@ -820,9 +820,9 @@ int main() {
 
   print_section("flow.md Example 2: flow() composing rename+head");
   {
-    auto customers10 = DataFrame({{"customer_id", Thread(pluss::make_series({1.0}))}});
-    auto orders10 = DataFrame({{"order_id", Thread(pluss::make_series({1.0}))}});
-    auto payments10 = DataFrame({{"payment_id", Thread(pluss::make_series({1.0}))}});
+    auto customers10 = DataFrame({{"customer_id", Slate(pluss::make_series({1.0}))}});
+    auto orders10 = DataFrame({{"order_id", Slate(pluss::make_series({1.0}))}});
+    auto payments10 = DataFrame({{"payment_id", Slate(pluss::make_series({1.0}))}});
     auto biz10 = Nexus({
         {"customers", customers10}, {"orders", orders10}, {"payments", payments10},
     });
@@ -840,12 +840,12 @@ int main() {
   print_section("apply_ in-place mutation");
   {
     auto customers11 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto orders11 = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
     });
     auto biz11 = Nexus({{"customers", customers11}, {"orders", orders11}});
     std::cout << "before: " << biz11.frame("orders").ncases() << " rows\n";
@@ -859,12 +859,12 @@ int main() {
   print_section("add_relationships_ (plural, mutating)");
   {
     auto customers12 = DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
     });
     auto orders12 = DataFrame({
-        {"order_id",    Thread(pluss::make_series({101.0, 102.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
+        {"order_id",    Slate(pluss::make_series({101.0, 102.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
     });
     auto biz12 = Nexus({{"customers", customers12}, {"orders", orders12}});
     Relationship rel12;
@@ -886,7 +886,7 @@ int main() {
   // ---- to_string.md: operator<< vs output_render vs show(os) ----
   print_section("operator<< / output_render / show(os) equivalence");
   {
-    auto customers13 = DataFrame({{"customer_id", Thread(pluss::make_series({1.0, 2.0}))}});
+    auto customers13 = DataFrame({{"customer_id", Slate(pluss::make_series({1.0, 2.0}))}});
     auto biz13 = Nexus({{"customers", customers13}});
     std::ostringstream a, b, c;
     a << biz13;
@@ -905,19 +905,19 @@ int main() {
     fs::create_directories("/tmp/pluss_nexus_load_ex1");
 
     DataFrame({
-        {"account_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"balance",    Thread(pluss::make_series({100.0, 250.0, 75.0}))},
+        {"account_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"balance",    Slate(pluss::make_series({100.0, 250.0, 75.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex1/account.csv");
 
     DataFrame({
-        {"district_id", Thread(pluss::make_series({10.0, 20.0}))},
-        {"name",        Thread(pluss::make_note({"North", "South"}))},
+        {"district_id", Slate(pluss::make_series({10.0, 20.0}))},
+        {"name",        Slate(pluss::make_note({"North", "South"}))},
     }).save_json("/tmp/pluss_nexus_load_ex1/district.json");
 
     DataFrame({
-        {"trans_id",   Thread(pluss::make_series({1000.0, 1001.0}))},
-        {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
-        {"amount",     Thread(pluss::make_series({50.0, -20.0}))},
+        {"trans_id",   Slate(pluss::make_series({1000.0, 1001.0}))},
+        {"account_id", Slate(pluss::make_series({1.0, 2.0}))},
+        {"amount",     Slate(pluss::make_series({50.0, -20.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex1/trans.csv");
 
     auto nx = Nexus::load("/tmp/pluss_nexus_load_ex1");
@@ -933,16 +933,16 @@ int main() {
     fs::create_directories("/tmp/pluss_nexus_load_ex2");
 
     DataFrame({
-        {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+        {"account_id", Slate(pluss::make_series({1.0, 2.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex2/account.csv");
 
     DataFrame({
-        {"district_id", Thread(pluss::make_series({10.0}))},
+        {"district_id", Slate(pluss::make_series({10.0}))},
     }).save_json("/tmp/pluss_nexus_load_ex2/district.json");
 
     DataFrame({
-        {"loan_id",    Thread(pluss::make_series({500.0}))},
-        {"account_id", Thread(pluss::make_series({1.0}))},
+        {"loan_id",    Slate(pluss::make_series({500.0}))},
+        {"account_id", Slate(pluss::make_series({1.0}))},
     }).save_json("/tmp/pluss_nexus_load_ex2/loan.json");
 
     LoadOptions options;
@@ -960,15 +960,15 @@ int main() {
     fs::create_directories("/tmp/pluss_nexus_load_ex3");
 
     DataFrame({
-        {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+        {"account_id", Slate(pluss::make_series({1.0, 2.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex3/account.csv");
 
     DataFrame({
-        {"trans_id", Thread(pluss::make_series({1.0}))},
+        {"trans_id", Slate(pluss::make_series({1.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex3/trans.csv");
 
     DataFrame({
-        {"order_id", Thread(pluss::make_series({1.0}))},
+        {"order_id", Slate(pluss::make_series({1.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex3/order.csv");
 
     LoadOptions options;
@@ -985,13 +985,13 @@ int main() {
     fs::create_directories("/tmp/pluss_nexus_load_ex4/raw");
 
     DataFrame({
-        {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-        {"name",        Thread(pluss::make_note({"Ada", "Ben"}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+        {"name",        Slate(pluss::make_note({"Ada", "Ben"}))},
     }).save_csv("/tmp/pluss_nexus_load_ex4/raw/customers.csv");
 
     DataFrame({
-        {"event_id",    Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-        {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
+        {"event_id",    Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+        {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
     }).save_parquet("/tmp/pluss_nexus_load_ex4/raw/events.parquet");
 
     LoadOptions options;
@@ -1008,7 +1008,7 @@ int main() {
     fs::remove_all("/tmp/pluss_nexus_load_ex5");
     fs::create_directories("/tmp/pluss_nexus_load_ex5");
     DataFrame({
-        {"account_id", Thread(pluss::make_series({1.0}))},
+        {"account_id", Slate(pluss::make_series({1.0}))},
     }).save_csv("/tmp/pluss_nexus_load_ex5/account.csv");
 
     LoadOptions options;

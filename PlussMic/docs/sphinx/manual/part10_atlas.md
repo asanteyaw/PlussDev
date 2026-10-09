@@ -14,7 +14,7 @@ pluss::table::Atlas atlas({frame0, frame1});
 With depth labels:
 
 ```cpp
-pluss::table::Thread labels = pluss::make_note({"train", "valid"});
+pluss::table::Slate labels = pluss::make_note({"train", "valid"});
 pluss::table::Atlas atlas({train, valid}, labels);
 ```
 
@@ -24,7 +24,7 @@ pluss::table::Atlas atlas({train, valid}, labels);
 auto sales = sales_frame();
 auto south = sales.query("region == 'south'");
 auto other = sales.query("region != 'south'");
-Thread labels = pluss::make_note({"south", "other"});
+Slate labels = pluss::make_note({"south", "other"});
 
 pluss::table::Atlas atlas({south, other}, labels);
 std::cout << "depth=" << atlas.depth()

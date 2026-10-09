@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
 
-# SeriesAntidiffAccessor API Reference
+# Series::AntidiffAccessor API Reference
 
 [Back to Series API Reference](series_api_reference.md)
 
 This page is the landing page for the antiderivative workflow entered through
 [`Series::antidiff`](api/series/antidiff.md) and continued through
-`SeriesAntidiffAccessor`. The accessor groups sampled-data antidifferentiation
+`Series::AntidiffAccessor`. The accessor groups sampled-data antidifferentiation
 methods — composite-trapezoidal integration and its running form — under one
 namespace, the same way `linearalg` groups vector/matrix methods and `stat`
 groups descriptive statistics.
@@ -51,7 +51,7 @@ read off values a `Series` already holds. See
   running antiderivative, one value per sample point — torch parity with
   `torch.cumulative_trapezoid`
 
-The handwritten reference covers the complete `SeriesAntidiffAccessor`
+The handwritten reference covers the complete `Series::AntidiffAccessor`
 surface.
 
 ## Choosing Between Them

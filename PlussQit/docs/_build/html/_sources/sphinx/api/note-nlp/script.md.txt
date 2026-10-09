@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::script
+# Note::NlpAccessor::script
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::script() const
+Note Note::NlpAccessor::script() const
 ```
 
 ## Detect The Dominant Writing System

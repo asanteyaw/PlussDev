@@ -1,7 +1,7 @@
 summary = """
 Add or replace one or more features on a DataFrame and return the resulting frame.
 
-`DataFrame::assign(...)` is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. One overload accepts already-computed `Thread` values; the other accepts `DeriveSpec` expressions so PlussMic can compute the features inside the call.
+`DataFrame::assign(...)` is the main column-creation surface when you want a pipeline-friendly, non-mutating way to engineer features. One overload accepts already-computed `Slate` values; the other accepts `DeriveSpec` expressions so PlussMic can compute the features inside the call.
 """
 
 returns = """
@@ -12,14 +12,14 @@ returns = """
 """
 
 see_also = [
-  "<a href=\"#transform\"><code>DataFrame::transform</code></a>: compute one derived thread from a callback when you are working row-wise or feature-wise.",
-  "<a href=\"#set\"><code>DataFrame::set</code></a>: write one feature directly when you already have the final thread.",
+  "<a href=\"#transform\"><code>DataFrame::transform</code></a>: compute one derived slate from a callback when you are working row-wise or feature-wise.",
+  "<a href=\"#set\"><code>DataFrame::set</code></a>: write one feature directly when you already have the final slate.",
   "<a href=\"#put\"><code>DataFrame::put</code></a>: update selected cells rather than constructing whole derived features."
 ]
 
 notes = [
   """
-The `assignments` overload is best when you already computed the target `Thread` values before the call.
+The `assignments` overload is best when you already computed the target `Slate` values before the call.
 """,
   """
 The `DeriveSpec` overload evaluates specs from left to right against the progressively updated frame. That means later specs in the same call can depend on features created by earlier specs.
@@ -32,7 +32,7 @@ The `DeriveSpec` overload evaluates specs from left to right against the progres
 [[parameters]]
 name = "assignments"
 body = """
-Collection of `(feature_name, thread)` pairs.
+Collection of `(feature_name, slate)` pairs.
 
 - Use this overload when each output feature is already computed.
 - If a feature name already exists, the existing feature is replaced.
@@ -47,13 +47,13 @@ Collection of `DeriveSpec` instructions.
 Each spec provides:
 
 - `feature`: the output feature name.
-- `expr`: a callback that receives the current frame and returns the derived `Thread`.
+- `expr`: a callback that receives the current frame and returns the derived `Slate`.
 
 Use this overload when you want the frame to compute the derived features inside the `assign(...)` call itself.
 """
 
 [[examples]]
-title = "Assign a feature from a thread you already computed."
+title = "Assign a feature from a slate you already computed."
 code = """
 using namespace pluss::table;
 
@@ -68,7 +68,7 @@ auto total_grade = [](const DataFrame& df) {
 };
 
 auto out = grades.assign({
-    std::pair<std::string, pluss::table::Thread>{"total", total_grade(grades)},
+    std::pair<std::string, pluss::table::Slate>{"total", total_grade(grades)},
 });
 """
 output = """

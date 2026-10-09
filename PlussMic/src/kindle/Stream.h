@@ -12,7 +12,8 @@
 
 #include "MSharp/IntrusivePtr.h"
 #include "MSharp/RangeView.h"
-#include "table/Thread.h"
+#include "kindle/Ragged.h"
+#include "table/Slate.h"
 #include "table/plot/DataFramePlot.h"
 
 namespace pluss::pl {
@@ -47,6 +48,19 @@ Stream clear_validity_mask(const Stream& stream);
 Stream& clear_validity_mask_(Stream& stream);
 }
 
+// The reduction applied to each group of records by Stream::reduce_groups.
+enum class GroupReduce : std::uint8_t {
+  Count = 0,      // non-null values
+  Ndistinct = 1,  // distinct non-null values
+  Sum = 2,
+  Mean = 3,
+  Median = 4,     // even counts average the two middle values
+  Min = 5,
+  Max = 6,
+  Std = 7,
+  Var = 8,
+};
+
 enum class StreamKind : std::uint8_t {
   Series = 0,
   Note = 1,
@@ -75,24 +89,30 @@ public:
   Stream();
   Stream(const pluss::Series& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Thread> cases = std::nullopt);
+         std::optional<pluss::table::Slate> cases = std::nullopt);
   Stream(const pluss::Note& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Thread> cases = std::nullopt);
+         std::optional<pluss::table::Slate> cases = std::nullopt);
   Stream(const pluss::Timeline& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Thread> cases = std::nullopt);
+         std::optional<pluss::table::Slate> cases = std::nullopt);
   Stream(const pluss::Duration& data,
          std::optional<pluss::Series> validity_mask = std::nullopt,
-         std::optional<pluss::table::Thread> cases = std::nullopt);
+         std::optional<pluss::table::Slate> cases = std::nullopt);
   Stream(const Stream& other);
   Stream(Stream&& other) noexcept;
   Stream& operator=(const Stream& other);
   Stream& operator=(Stream&& other) noexcept;
   ~Stream();
 
-  static Stream from_thread(const pluss::table::Thread& thread,
-                            std::optional<pluss::table::Thread> cases = std::nullopt);
+  static Stream from_slate(const pluss::table::Slate& slate,
+                            std::optional<pluss::table::Slate> cases = std::nullopt);
+
+  // Changes whenever the stream's contents can have changed: a different handle
+  // (edits clone), or an in-place edit of the shared Series storage (storage
+  // version). Only meaningful while a copy of the stream is kept alive, since it
+  // folds in the handle's address. Used by caches keyed on stream contents.
+  std::uint64_t fingerprint() const;
 
   bool defined() const noexcept;
   bool unique() const noexcept;
@@ -104,12 +124,12 @@ public:
   std::string ptype() const;
   std::string dtype() const;
 
-  // Stream-native missing/predicate helpers (delegates to Thread).
+  // Stream-native missing/predicate helpers (delegates to Slate).
   Stream isnull() const;
   Stream notnull() const;
   Stream invalid() const;
 
-  // Stream-native transforms (delegates to Thread where applicable).
+  // Stream-native transforms (delegates to Slate where applicable).
   Stream fillnull(double value) const;
   Stream fillnull(std::string_view value) const;
   Stream fillnull(const char* value) const {
@@ -123,9 +143,9 @@ public:
   Stream exp() const;
 
   bool has_label() const;
-  const std::optional<pluss::table::Thread>& label() const;
-  Stream with_label(const pluss::table::Thread& label) const;
-  Stream& with_label_(const pluss::table::Thread& label);
+  const std::optional<pluss::table::Slate>& label() const;
+  Stream with_label(const pluss::table::Slate& label) const;
+  Stream& with_label_(const pluss::table::Slate& label);
   Stream clear_label() const;
   Stream& clear_label_();
 
@@ -140,9 +160,9 @@ public:
   Stream drop_meta(std::string_view key) const;
   Stream& drop_meta_(std::string_view key);
 
-  pluss::table::Thread to_thread() const;
-  pluss::table::Thread to_thread(std::int64_t start, std::int64_t stop) const;
-  pluss::table::Thread tabelize() const;
+  pluss::table::Slate to_slate() const;
+  pluss::table::Slate to_slate(std::int64_t start, std::int64_t stop) const;
+  pluss::table::Slate tabelize() const;
   pluss::scribble::Slot scribbelize() const;
 
   // 1D row-space operations.
@@ -150,6 +170,30 @@ public:
   Stream tail(std::int64_t n) const;
   Stream slice(std::int64_t start, std::int64_t stop) const;
   Stream take(std::span<const std::int64_t> indices) const;
+  // Rebuild the stream through one source record per output row. Record r of
+  // `source` is stream position r + shift (shift lets a tail-aligned catalog
+  // address its streams); the three ways a row can have no value are kept apart:
+  //   source[p] == -1                  no partner: an explicit null
+  //   position beyond the stream's end absent: trailing absence is trimmed when
+  //                                    trim_trailing, interior absence is a null
+  //   position before its start        absent (a null if it is not trailing)
+  // A record that exists keeps its own nullness. Never throws on a missing record.
+  Stream gather(const std::vector<std::int64_t>& source, std::int64_t shift = 0, bool trim_trailing = true) const;
+
+  // Reduce groups of records. Group g covers source[offsets[g] .. offsets[g+1]);
+  // each entry is a record index of this stream (its position is entry + shift),
+  // and entries outside the stream, null values and NaN are skipped. The result
+  // has one entry per group. A group with no usable value gives 0 for Count and
+  // Ndistinct and a null for every other reduction; Var/Std are null when the
+  // group has no more than `ddof` values (ddof = 1 when unbiased). Count and
+  // Ndistinct work on any kind of stream, the others need a numeric Series.
+  // Groups are processed in parallel; offsets must be non-decreasing, start at 0
+  // and end at source.size().
+  Stream reduce_groups(const std::vector<std::int64_t>& source,
+                       std::int64_t shift,
+                       const std::vector<std::int64_t>& offsets,
+                       GroupReduce op,
+                       bool unbiased = true) const;
   Stream filter(const pluss::Series& bool_mask) const;
   Stream dropnull() const;
   Stream ffill() const;
@@ -159,25 +203,25 @@ public:
   Stream ndistinct(DistinctOptions options = {}) const;
   Stream map(const std::function<Stream(const Stream&)>& fn) const;
 
-  static Stream select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+  static Stream select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
                        pluss::msharp::RangeView::Of<Stream> choices,
                        const Stream& default_value);
-  static Stream select(std::initializer_list<pluss::table::Thread> conditions,
+  static Stream select(std::initializer_list<pluss::table::Slate> conditions,
                        std::initializer_list<Stream> choices,
                        const Stream& default_value) {
     return select(
-        pluss::msharp::RangeView::Of<pluss::table::Thread>(conditions),
+        pluss::msharp::RangeView::Of<pluss::table::Slate>(conditions),
         pluss::msharp::RangeView::Of<Stream>(choices),
         default_value);
   }
 
   // Type conversion.
   StreamCastAccessor cast() const;
-  StreamCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
-  Stream cast(pluss::table::ThreadCastTarget target,
+  StreamCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  Stream cast(pluss::table::SlateCastTarget target,
               std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const;
-  Stream cast(pluss::table::ThreadCastTarget target,
-              const pluss::table::ThreadCastOptions& options) const;
+  Stream cast(pluss::table::SlateCastTarget target,
+              const pluss::table::SlateCastOptions& options) const;
   Stream astype(pluss::codem::ScalarType dtype) const;
 
   StreamNoteAccessor nt() const;
@@ -227,7 +271,7 @@ private:
 
 class StreamCastAccessor {
 public:
-  explicit StreamCastAccessor(Stream base, pluss::table::ThreadCastOptions options = {});
+  explicit StreamCastAccessor(Stream base, pluss::table::SlateCastOptions options = {});
 
   Stream series() const;
   Stream note() const;
@@ -236,7 +280,7 @@ public:
 
 private:
   Stream base_{};
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class StreamNoteAccessor {
@@ -405,12 +449,12 @@ public:
   Stream values() const;
   bool has() const;
   Stream set(const Stream& labels) const;
-  Stream set(const pluss::table::Thread& labels) const;
+  Stream set(const pluss::table::Slate& labels) const;
   Stream range() const;
   Stream reset() const;
   Stream align(const Stream& target_labels,
                const pluss::table::AlignOptions& options = {}) const;
-  Stream align(const pluss::table::Thread& target_labels,
+  Stream align(const pluss::table::Slate& target_labels,
                const pluss::table::AlignOptions& options = {}) const;
 
 private:
@@ -512,5 +556,14 @@ Stream operator>(const Stream& lhs, const Stream& rhs);
 Stream operator>=(const Stream& lhs, double rhs);
 Stream operator>=(double lhs, const Stream& rhs);
 Stream operator>=(const Stream& lhs, const Stream& rhs);
+
+// Elementwise `lhs op rhs` between streams that may differ in length, decided by
+// a RaggedPolicy (default: OpClass::Elementwise = longest domain, head aligned,
+// an absent operand makes the result null there; nothing dropped). op is one of
+// + - * / % == != < <= > >= (or add sub mul div mod eq ne lt le gt ge). Knobs:
+// domain Shortest/Exact, alignment Tail, absent Fill (uses policy.fill; numeric
+// streams, float result) / ForwardFill / BackwardFill / Error, loss Error.
+Stream ragged_binary(const Stream& lhs, const Stream& rhs, std::string_view op,
+                     const RaggedPolicy& policy = RaggedPolicy::defaults(OpClass::Elementwise));
 
 } // namespace pluss::kindle

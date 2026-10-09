@@ -137,9 +137,45 @@ matched by a `Route` (explicit names, or a `(name, dtype) -> bool` predicate)
 — and returns a `WorkflowRoute` you chain `.add(stage)` calls onto to build
 that branch's chain of prep stages:
 
+Route two column groups through separate stages with the workflow DSL. The program prints the branch count the workflow reports.
+
 ```cpp
-workflow.on({"income", "balance"}).add(prep::stage::standard_scaler());
-workflow.on("category", {"segment"}).add(prep::stage::one_hot_encoder());
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  namespace prep = lymph::prep;
+  lymph::workflow::Workflow workflow = lymph::workflow::make(lymph::workflow::Policy{});
+  workflow.on({"income", "balance"}).add(prep::stage::standard_scaler());
+  workflow.on("category", {"segment"}).add(prep::stage::one_hot_encoder());
+  std::cout << "branches = " << workflow.branch_count() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+branches = 2
 ```
 
 Every `.add(...)` call appends the stage straight onto the held `Model`'s own
@@ -183,7 +219,7 @@ re-typing it.
 `Policy::apply(...)` only ever sees a raw `DataFrame` argument — the
 `LabeledBatch` overload of every verb skips it entirely (a `LabeledBatch` is
 already past the raw-admission stage). The `(DataFrame x, Series y)` /
-`(DataFrame x, Thread y)` overloads apply `Policy` to `x` but reject a
+`(DataFrame x, Slate y)` overloads apply `Policy` to `x` but reject a
 `Policy` with `filter_nulls` set (dropping rows there would desynchronize `x`
 from the already-separate `y`) — use the `(frame, DataFrameBatchOptions)`
 overload instead when the policy needs to filter rows.

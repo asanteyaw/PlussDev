@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::matrix_exp
+# Series::LinearAlgAccessor::matrix_exp
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::matrix_exp() const
+Series Series::LinearAlgAccessor::matrix_exp() const
 Series SeriesLinearAlgProxy::matrix_exp() const
 ```
 
@@ -212,9 +212,9 @@ for numerical range, and differentiates through the full matrix coupling.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::matrix_power`](matrix_power.md): integer matrix powers.
+- [`Series::LinearAlgAccessor::matrix_power`](matrix_power.md): integer matrix powers.
 - [`Series::exp`](../series/exp.md): elementwise exponential.
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): matrix composition.
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): matrix composition.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="matmul.html">

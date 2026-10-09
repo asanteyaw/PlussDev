@@ -37,9 +37,9 @@ Example 1. Check and read back the depth labels via the accessor.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
-auto atlas = pluss::table::Atlas({f0}, pluss::table::Thread(pluss::make_note({"jan"})));
+auto atlas = pluss::table::Atlas({f0}, pluss::table::Slate(pluss::make_note({"jan"})));
 
 std::cout << "has(): " << atlas.label().has() << "\n";
 std::cout << atlas.label().values();

@@ -28,17 +28,44 @@ and `pick_features` order their reduced batches differently).
 
 ## How To Call It
 
+Keep only the strongest feature column with `pick_features`. The program prints how many columns the reduced batch keeps.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::LabeledBatch batch{};
-batch.features.x = x;
-batch.y = y;
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-cls::FeaturePickOptions options{};
-options.top_k = 10;
-const cls::FeaturePickResult picked = cls::pick_features(batch, options).value();
-// picked.reduced is a FeatureBatch with only the 10 strongest columns.
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  cls::LabeledBatch batch = fixture_batch(cfg);
+  cls::FeaturePickOptions options{};
+  options.top_k = 1;
+  const cls::FeaturePickResult picked = cls::pick_features(batch, options).value();
+  std::cout << "kept columns = " << picked.reduced.x.sizes()[1] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+kept columns = 1
 ```
 
 ## Related Pages

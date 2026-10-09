@@ -134,14 +134,14 @@ using LabelCounts = std::unordered_map<std::string, std::int64_t>;
 [[nodiscard]] std::string hex_decode(std::string_view value) {
   if ((value.size() & 1U) != 0U) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TaggerStage: invalid hex payload length.");
+        "nlp::TaggerStage: invalid hex payload length.");
   }
   auto from_hex = [](char ch) -> unsigned char {
     if (ch >= '0' && ch <= '9') return static_cast<unsigned char>(ch - '0');
     if (ch >= 'a' && ch <= 'f') return static_cast<unsigned char>(10 + ch - 'a');
     if (ch >= 'A' && ch <= 'F') return static_cast<unsigned char>(10 + ch - 'A');
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TaggerStage: invalid hex payload.");
+        "nlp::TaggerStage: invalid hex payload.");
   };
   std::string out;
   out.reserve(value.size() / 2U);
@@ -188,14 +188,14 @@ void load_best_table(const char* prefix,
     const auto pipe = value.find('|');
     if (pipe == std::string_view::npos) {
       ::pluss::ai::nodeb::detail::fail(
-          std::string("nodeb::TaggerStage::load_state_lines: malformed ") + prefix + " row.");
+          std::string("nlp::TaggerStage::load_state_lines: malformed ") + prefix + " row.");
     }
     const auto numeric = std::stoull(std::string(value.substr(0, pipe)));
     table.emplace(static_cast<StringId>(numeric), hex_decode(value.substr(pipe + 1)));
   }
   if (count >= 0 && static_cast<std::int64_t>(table.size()) != count) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::TaggerStage::load_state_lines: ") + prefix + " table size mismatch.");
+        std::string("nlp::TaggerStage::load_state_lines: ") + prefix + " table size mismatch.");
   }
 }
 
@@ -206,6 +206,7 @@ struct TaggerStage::Impl {
   std::unordered_map<StringId, std::string> suffix_best{};
   std::unordered_map<StringId, std::string> morph_best{};
   detail::TokenClassifierState sequence{};
+  std::int64_t doc_count = 0;
   bool trained = false;
 };
 
@@ -217,10 +218,22 @@ std::string_view TaggerStage::name() const noexcept {
   return "tagger";
 }
 
+TrainingReport TaggerStage::training_report() const {
+  PLUSS_CALL_GUARD();
+  TrainingReport report{};
+  if (!impl_ || !impl_->trained) return report;
+  report.doc_count = impl_->doc_count;
+  report.entry_count = static_cast<std::int64_t>(
+      impl_->form_best.size() + impl_->suffix_best.size() + impl_->morph_best.size());
+  report.loss_history = impl_->sequence.loss_history;
+  return report;
+}
+
 void TaggerStage::learn(const std::vector<Doc>& docs,
                         const TrainOptions&) {
   PLUSS_CALL_GUARD();
   auto next = std::make_shared<Impl>();
+  next->doc_count = static_cast<std::int64_t>(docs.size());
   std::unordered_map<StringId, LabelCounts> form_counts{};
   std::unordered_map<StringId, LabelCounts> suffix_counts{};
   std::unordered_map<StringId, LabelCounts> morph_counts{};
@@ -295,13 +308,17 @@ void TaggerStage::apply(Doc& doc) const {
       }
     }
 
-    if (options_.use_heuristics) {
-      token.pos = heuristic_tag(token, options_);
-    }
-
-    if (token.pos.empty() && token.index >= 0 &&
+    // The sequence model outranks the heuristics: selecting the Sequence
+    // backend must take effect even when heuristics are also enabled. The
+    // heuristics are the last resort and always produce a tag.
+    if (token.index >= 0 &&
         token.index < static_cast<std::int64_t>(sequence_predictions.size())) {
       token.pos = sequence_predictions[static_cast<std::size_t>(token.index)].first;
+      continue;
+    }
+
+    if (options_.use_heuristics) {
+      token.pos = heuristic_tag(token, options_);
     }
   }
 }
@@ -314,11 +331,8 @@ std::vector<std::string> TaggerStage::dump_state_lines() const {
       std::string("prefer_learned=") + (options_.prefer_learned ? "1" : "0"),
       std::string("use_heuristics=") + (options_.use_heuristics ? "1" : "0"),
       "backend=" + std::string(detail::to_string(options_.backend)),
-      "sequence_head=" + std::string(detail::to_string(options_.sequence_head)),
       "sequence_width=" + std::to_string(options_.sequence_width),
       "sequence_seed=" + std::to_string(options_.sequence_seed),
-      "quantization=" + std::string(detail::to_string(options_.quantization)),
-      "distillation=" + std::string(detail::to_string(options_.distillation)),
       std::string("trained=") + ((impl_ && impl_->trained) ? "1" : "0"),
   };
   if (!impl_ || !impl_->trained) {
@@ -354,11 +368,11 @@ void TaggerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_view
     if (line == "trained=1") { impl_->trained = true; continue; }
     if (line == "trained=0") { impl_->trained = false; continue; }
     if (line.rfind("backend=", 0) == 0) { options_.backend = detail::parse_task_backend(std::string_view(line).substr(8)); continue; }
-    if (line.rfind("sequence_head=", 0) == 0) { options_.sequence_head = detail::parse_sequence_head(std::string_view(line).substr(14)); continue; }
+    if (line.rfind("sequence_head=", 0) == 0) { continue; }
     if (line.rfind("sequence_width=", 0) == 0) { options_.sequence_width = std::stoll(std::string(std::string_view(line).substr(15))); continue; }
     if (line.rfind("sequence_seed=", 0) == 0) { options_.sequence_seed = static_cast<std::uint64_t>(std::stoull(std::string(std::string_view(line).substr(14)))); continue; }
-    if (line.rfind("quantization=", 0) == 0) { options_.quantization = detail::parse_quantization_hint(std::string_view(line).substr(13)); continue; }
-    if (line.rfind("distillation=", 0) == 0) { options_.distillation = detail::parse_distillation_hint(std::string_view(line).substr(13)); continue; }
+    if (line.rfind("quantization=", 0) == 0 ||
+        line.rfind("distillation=", 0) == 0) { continue; }
   }
   load_best_table("form", lines, impl_->form_best);
   load_best_table("suffix", lines, impl_->suffix_best);

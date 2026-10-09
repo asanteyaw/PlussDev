@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part X: Atlas" href="part10_atlas.html" />
@@ -49,7 +49,7 @@ a SQL query, or an aggregation object. It plots from a <code class="docutils lit
 That means all the table skills from the earlier chapters still apply:</p>
 <ol class="arabic simple">
 <li><p>Load the data into a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p></li>
-<li><p>Convert columns to the correct <code class="docutils literal notranslate"><span class="pre">Thread</span></code> kind.</p></li>
+<li><p>Convert columns to the correct <code class="docutils literal notranslate"><span class="pre">Slate</span></code> kind.</p></li>
 <li><p>Clean missing values deliberately.</p></li>
 <li><p>Filter, aggregate, pivot, or assign features.</p></li>
 <li><p>Call <code class="docutils literal notranslate"><span class="pre">plot()</span></code>, <code class="docutils literal notranslate"><span class="pre">plot3d()</span></code>, or <code class="docutils literal notranslate"><span class="pre">Atlas::plot()</span></code>.</p></li>
@@ -66,7 +66,7 @@ appropriate PlussPl trace objects.</p>
 </div>
 <p>The plotting classes used most often are:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFrame</span><span class="p">;</span>
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">DataFramePlotOptions</span><span class="p">;</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">LinePlotOptions</span><span class="p">;</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ScatterPlotOptions</span><span class="p">;</span>
@@ -116,11 +116,11 @@ simulation paths, or model versions.</p>
 </section>
 <section id="what-plussmic-expects-from-the-data">
 <h2>What PlussMic expects from the data<a class="headerlink" href="#what-plussmic-expects-from-the-data" title="Link to this heading">¶</a></h2>
-<p>Plotting methods use <code class="docutils literal notranslate"><span class="pre">Thread</span></code> kinds to decide how a feature can participate in a
+<p>Plotting methods use <code class="docutils literal notranslate"><span class="pre">Slate</span></code> kinds to decide how a feature can participate in a
 plot.</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Thread kind</p></th>
+<tr class="row-odd"><th class="head"><p>Slate kind</p></th>
 <th class="head"><p>Plotting role</p></th>
 </tr>
 </thead>
@@ -1628,7 +1628,7 @@ publication or product UI needs exact visual control.</p>
 <h2>Atlas plotting<a class="headerlink" href="#atlas-plotting" title="Link to this heading">¶</a></h2>
 <p>An <code class="docutils literal notranslate"><span class="pre">Atlas</span></code> is a stack of frames. Plotting an atlas is useful when the depth
 dimension is meaningful:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Thread</span><span class="w"> </span><span class="n">scenarios</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;base&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;stress&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;upside&quot;</span><span class="p">});</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="w"> </span><span class="n">scenarios</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;base&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;stress&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;upside&quot;</span><span class="p">});</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="nf">atlas</span><span class="p">({</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">stressed</span><span class="p">,</span><span class="w"> </span><span class="n">optimistic</span><span class="p">},</span><span class="w"> </span><span class="n">scenarios</span><span class="p">);</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">fig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">plot</span><span class="p">().</span><span class="n">line</span><span class="p">(</span><span class="s">&quot;revenue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;date&quot;</span><span class="p">);</span>

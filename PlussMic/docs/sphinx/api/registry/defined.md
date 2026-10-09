@@ -14,7 +14,7 @@ Registry::defined() const noexcept -> bool
 ## What It Does
 
 Reports whether the registry owns a concrete backing handle at all — the same
-undefined/defined distinction `Thread::defined()`, `DataFrame::defined()`, and
+undefined/defined distinction `Slate::defined()`, `DataFrame::defined()`, and
 `Catalog::defined()` make. A default-constructed `Registry` is **undefined**; almost
 every other method throws `"Registry: undefined handle"` if called on one. A
 `Registry` built from an explicit (even empty) field list is defined — `defined()`

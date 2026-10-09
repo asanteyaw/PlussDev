@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   using DataFrame = pluss::table::DataFrame;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   using namespace pluss::ai::nodej;
   namespace lymph = pluss::ai::lymph;
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         .headline("Bike demand vs temperature")
         .save_pdf((out_dir / "bike_demand_vs_temp.pdf").string());
 
-    const auto split = lymph::validate::holdout()
+    const auto split = lymph::selection::validate::holdout()
                            .test_size(0.2)
                            .shuffle(true)
                            .seed(42)
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     const Series linear_pred_series = linear_workflow.infer(test_x);
     const fs::path linear_model_path = model_dir / "bike_sharing_linear.bin";
     linear_workflow.save(linear_model_path.string(), train_x, train_y, train_options);
-    const auto linear_restored = lymph::Model::load(linear_model_path.string());
+    const auto linear_restored = lymph::models::Model::load(linear_model_path.string());
     const Series linear_pred_restored_series = linear_restored.infer(test_x);
     const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
 
@@ -122,9 +122,9 @@ int main(int argc, char** argv) {
     std::cout << "linear restored prediction max_abs_diff: " << linear_max_abs_diff << "\n";
 
     DataFrame linear_frame({
-        {"y_true", Thread(y_true)},
-        {"y_pred", Thread(linear_pred)},
-        {"residual", Thread(y_true.sub(linear_pred))},
+        {"y_true", Slate(y_true)},
+        {"y_pred", Slate(linear_pred)},
+        {"residual", Slate(y_true.sub(linear_pred))},
     });
     linear_frame.save_csv((out_dir / "bike_sharing_test_predictions_linear.csv").string());
     linear_frame.plot()
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
     const Series tree_pred_series = tree_workflow.infer(test_x);
     const fs::path tree_model_path = model_dir / "bike_sharing_tree.bin";
     tree_workflow.save(tree_model_path.string(), train_x, train_y, train_options);
-    const auto tree_restored = lymph::Model::load(tree_model_path.string());
+    const auto tree_restored = lymph::models::Model::load(tree_model_path.string());
     const Series tree_pred_restored_series = tree_restored.infer(test_x);
 
     const Series tree_pred = tree_pred_series.to(pluss::pCPU, ScalarType::Float64).reshape({tree_pred_series.numel()});
@@ -162,9 +162,9 @@ int main(int argc, char** argv) {
 
     // New Model
     DataFrame tree_frame({
-        {"y_true", Thread(y_true)},
-        {"y_pred", Thread(tree_pred)},
-        {"residual", Thread(y_true.sub(tree_pred))},
+        {"y_true", Slate(y_true)},
+        {"y_pred", Slate(tree_pred)},
+        {"residual", Slate(y_true.sub(tree_pred))},
     });
     tree_frame.save_csv((out_dir / "bike_sharing_test_predictions_tree.csv").string());
     tree_frame.plot()

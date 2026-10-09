@@ -14,7 +14,7 @@ Catalog::defined() const noexcept -> bool
 ## What It Does
 
 Reports whether the catalog owns a concrete backing handle at all — the same
-undefined/defined distinction `Thread::defined()` and `DataFrame::defined()` make. A
+undefined/defined distinction `Slate::defined()` and `DataFrame::defined()` make. A
 default-constructed `Catalog` is **undefined**; almost every other method throws
 `"Catalog: undefined handle"` if called on one. A `Catalog` built from an explicit (even
 empty) stream list is defined — `defined()` is about handle existence, not about whether

@@ -91,7 +91,7 @@ SITES: dict[str, Site] = {
     "plusstils": Site(
         key="plusstils",
         title="PlussTils",
-        docs_dir=REPO_ROOT / "PlussTils/view/docs",
+        docs_dir=REPO_ROOT / "PlussTils/docs/sphinx",
         scan_root=REPO_ROOT / "PlussTils",
         hub_slug="PlussTils",
     ),

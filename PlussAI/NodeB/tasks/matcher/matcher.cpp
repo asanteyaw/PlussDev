@@ -24,14 +24,14 @@ namespace {
 [[nodiscard]] std::string hex_decode(std::string_view value) {
   if ((value.size() & 1U) != 0U) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::MatcherStage: invalid hex payload length.");
+        "nlp::MatcherStage: invalid hex payload length.");
   }
   auto from_hex = [](char ch) -> unsigned char {
     if (ch >= '0' && ch <= '9') return static_cast<unsigned char>(ch - '0');
     if (ch >= 'a' && ch <= 'f') return static_cast<unsigned char>(10 + ch - 'a');
     if (ch >= 'A' && ch <= 'F') return static_cast<unsigned char>(10 + ch - 'A');
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::MatcherStage: invalid hex payload.");
+        "nlp::MatcherStage: invalid hex payload.");
   };
   std::string out;
   out.reserve(value.size() / 2U);
@@ -81,17 +81,48 @@ namespace {
   return normalize_token(base, lowercase);
 }
 
+void validate_pattern(const MatcherPattern& pattern) {
+  if (pattern.label.empty()) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::MatcherStage: pattern labels must not be empty.");
+  }
+  if (pattern.tokens.empty()) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::MatcherStage: patterns must contain at least one token.");
+  }
+  if (std::ranges::any_of(pattern.tokens, &std::string::empty)) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::MatcherStage: pattern tokens must not be empty.");
+  }
+}
+
+[[nodiscard]] bool intersects_any(const std::vector<Span>& spans,
+                                  std::int64_t token_start,
+                                  std::int64_t token_end) noexcept {
+  return std::ranges::any_of(spans, [&](const Span& span) {
+    return span.token_start < token_end && token_start < span.token_end;
+  });
+}
+
+void validate_patterns(const std::vector<MatcherPattern>& patterns) {
+  for (const auto& pattern : patterns) validate_pattern(pattern);
+}
+
 } // namespace
 
 MatcherStage::MatcherStage(std::vector<MatcherPattern> patterns,
                            MatcherOptions options)
     : patterns_(std::move(patterns)),
-      options_(options) {}
+      options_(options) {
+  validate_patterns(patterns_);
+}
 
 MatcherStage::MatcherStage(std::initializer_list<MatcherPattern> patterns,
                            MatcherOptions options)
     : patterns_(patterns),
-      options_(options) {}
+      options_(options) {
+  validate_patterns(patterns_);
+}
 
 std::string_view MatcherStage::name() const noexcept {
   return "matcher";
@@ -99,6 +130,7 @@ std::string_view MatcherStage::name() const noexcept {
 
 MatcherStage& MatcherStage::add_pattern(MatcherPattern pattern) {
   PLUSS_CALL_GUARD();
+  validate_pattern(pattern);
   patterns_.push_back(std::move(pattern));
   return *this;
 }
@@ -128,7 +160,9 @@ void MatcherStage::apply(Doc& doc) const {
           break;
         }
       }
-      if (match) {
+      // With overlap disallowed, a candidate is rejected when it intersects
+      // any match already accepted, including one from an earlier pattern.
+      if (match && (options_.allow_overlap || !intersects_any(doc.matches, i, i + width))) {
         doc.matches.push_back(Span{
             .token_start = i,
             .token_end = i + width,
@@ -182,7 +216,7 @@ void MatcherStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
     const auto eq = line.find('=');
     if (eq == std::string_view::npos) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::MatcherStage::load_state_lines: expected key=value line.");
+          "nlp::MatcherStage::load_state_lines: expected key=value line.");
     }
     const std::string key(line.substr(0, eq));
     const std::string_view value = line.substr(eq + 1);
@@ -206,7 +240,7 @@ void MatcherStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(14)));
       if (idx >= labels.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::MatcherStage::load_state_lines: pattern label index out of range.");
+            "nlp::MatcherStage::load_state_lines: pattern label index out of range.");
       }
       labels[idx] = hex_decode(value);
       continue;
@@ -216,7 +250,7 @@ void MatcherStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(19)));
       if (idx >= use_lemmas.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::MatcherStage::load_state_lines: pattern use_lemmas index out of range.");
+            "nlp::MatcherStage::load_state_lines: pattern use_lemmas index out of range.");
       }
       use_lemmas[idx] = value == "1";
       continue;
@@ -226,7 +260,7 @@ void MatcherStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(15)));
       if (idx >= tokens.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::MatcherStage::load_state_lines: pattern token index out of range.");
+            "nlp::MatcherStage::load_state_lines: pattern token index out of range.");
       }
       const auto encoded = split_csv(value);
       auto& dest = tokens[idx];
@@ -237,19 +271,21 @@ void MatcherStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       continue;
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::MatcherStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
+        "nlp::MatcherStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
   }
 
   if (pattern_count < 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::MatcherStage::load_state_lines: missing pattern_count.");
+        "nlp::MatcherStage::load_state_lines: missing pattern_count.");
   }
   for (std::size_t i = 0; i < labels.size(); ++i) {
-    patterns_.push_back(MatcherPattern{
+    MatcherPattern pattern{
         .label = labels[i],
         .tokens = tokens[i],
         .use_lemmas = use_lemmas[i],
-    });
+    };
+    validate_pattern(pattern);
+    patterns_.push_back(std::move(pattern));
   }
 }
 

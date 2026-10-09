@@ -36,12 +36,12 @@ Example 1. Sum a feature across every frame into a single-row summary frame.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 200.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 200.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({300.0, 400.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({300.0, 400.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 
 auto total = atlas.aggregate_over_frames([](const std::vector<pluss::table::DataFrame>& dfs) {
   double sum = 0.0;
@@ -50,7 +50,7 @@ auto total = atlas.aggregate_over_frames([](const std::vector<pluss::table::Data
     sum += s[0];
   }
   return pluss::table::DataFrame({
-      {"total_sales", pluss::table::Thread(pluss::make_series({sum}))},
+      {"total_sales", pluss::table::Slate(pluss::make_series({sum}))},
   });
 });
 std::cout << total;

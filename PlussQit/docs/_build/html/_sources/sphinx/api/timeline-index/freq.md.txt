@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::freq
+# Timeline::TimelineIndexAccessor::freq
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-std::string TimelineIndexAccessor::freq() const
+std::string Timeline::TimelineIndexAccessor::freq() const
 ```
 
 ## What It Does
@@ -29,13 +29,13 @@ operations must obey.
 Example 1. Infer the cadence of a regular minute-like axis.
 
 ```cpp
-auto idx = pluss::timeindex::make({
+auto idx = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
 auto f = idx.freq();
 std::cout << "f = \"" << f << "\"\n";
@@ -67,8 +67,8 @@ if (idx.freq().empty()) {
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_bins`](resample_bins.md)
-- [`TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md)
+- [`Timeline::TimelineIndexAccessor::resample_bins`](resample_bins.md)
+- [`Timeline::TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="floor.html">

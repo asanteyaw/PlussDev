@@ -44,8 +44,8 @@ Example 1. Attach per-city mean amount to every original row.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Thread(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Slate(pluss::make_series({100.0, 80.0, 50.0, 40.0}))},
 });
 
 auto city_mean = sales.group()

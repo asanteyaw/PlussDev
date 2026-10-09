@@ -9,20 +9,20 @@ add_executable(plussmic_dataframe_initial_demo
 add_executable(plussmic_dataframe_ab_reference_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_ab_reference_demo.cpp
 )
-add_executable(plussmic_thread_a_reference_demo
-  ${CMAKE_CURRENT_SOURCE_DIR}/thread_a_reference_demo.cpp
+add_executable(plussmic_slate_a_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/slate_a_reference_demo.cpp
 )
 add_executable(plussmic_dataframe_b_reference_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_b_reference_demo.cpp
 )
-add_executable(plussmic_thread_b_reference_demo
-  ${CMAKE_CURRENT_SOURCE_DIR}/thread_b_reference_demo.cpp
+add_executable(plussmic_slate_b_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/slate_b_reference_demo.cpp
 )
 add_executable(plussmic_dataframe_cd_reference_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_cd_reference_demo.cpp
 )
-add_executable(plussmic_thread_cd_reference_demo
-  ${CMAKE_CURRENT_SOURCE_DIR}/thread_cd_reference_demo.cpp
+add_executable(plussmic_slate_cd_reference_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/slate_cd_reference_demo.cpp
 )
 add_executable(plussmic_dataframe_view_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_view_demo.cpp
@@ -60,8 +60,8 @@ add_executable(plussmic_eda_us_accidents_demo
 add_executable(plussmic_dataframe_plot_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_plot_demo.cpp
 )
-add_executable(plussmic_dataframe_thread_values_demo
-  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_thread_values_demo.cpp
+add_executable(plussmic_dataframe_slate_values_demo
+  ${CMAKE_CURRENT_SOURCE_DIR}/dataframe_slate_values_demo.cpp
 )
 add_executable(plussmic_loader_saver_parity_demo
   ${CMAKE_CURRENT_SOURCE_DIR}/loader_saver_parity_demo.cpp
@@ -173,11 +173,11 @@ endif()
 
 target_link_libraries(plussmic_dataframe_initial_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_ab_reference_demo PRIVATE PlussMic)
-target_link_libraries(plussmic_thread_a_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_slate_a_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_b_reference_demo PRIVATE PlussMic)
-target_link_libraries(plussmic_thread_b_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_slate_b_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_cd_reference_demo PRIVATE PlussMic)
-target_link_libraries(plussmic_thread_cd_reference_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_slate_cd_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_view_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_describe_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_display_policy_demo PRIVATE PlussMic)
@@ -190,7 +190,7 @@ target_link_libraries(plussmic_dataframe_rich_reference_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_us_accidents_eda_verbs_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_eda_us_accidents_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_dataframe_plot_demo PRIVATE PlussMic)
-target_link_libraries(plussmic_dataframe_thread_values_demo PRIVATE PlussMic)
+target_link_libraries(plussmic_dataframe_slate_values_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_loader_saver_parity_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_bike_sharing_eda_dfplot_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_sp500_eda_ml_prep_notebook_demo PRIVATE PlussMic)
@@ -204,25 +204,28 @@ target_link_libraries(plussmic_hierarchical_cases_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_flash_dataset_bridge_demo PRIVATE PlussMic)
 target_link_libraries(plussmic_bi_demo_suite PRIVATE PlussMic)
 
+target_compile_definitions(plussmic_csv_engine_bench PRIVATE
+  PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
 target_compile_definitions(plussmic_dataframe_initial_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_ab_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
-target_compile_definitions(plussmic_thread_a_reference_demo PRIVATE
+target_compile_definitions(plussmic_slate_a_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_b_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
-target_compile_definitions(plussmic_thread_b_reference_demo PRIVATE
+target_compile_definitions(plussmic_slate_b_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_cd_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
-target_compile_definitions(plussmic_thread_cd_reference_demo PRIVATE
+target_compile_definitions(plussmic_slate_cd_reference_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_dataframe_view_demo PRIVATE
@@ -261,7 +264,7 @@ target_compile_definitions(plussmic_eda_us_accidents_demo PRIVATE
 target_compile_definitions(plussmic_dataframe_plot_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
-target_compile_definitions(plussmic_dataframe_thread_values_demo PRIVATE
+target_compile_definitions(plussmic_dataframe_slate_values_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_loader_saver_parity_demo PRIVATE

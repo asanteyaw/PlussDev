@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_fonts
+# Note::TexAccessor::strip_fonts
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_fonts() const
+Note Note::TexAccessor::strip_fonts() const
 ```
 
 ## Remove Wrapper And Declaration Font Syntax

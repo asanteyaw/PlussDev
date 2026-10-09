@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::timeline
+# Timeline::TimelineIndexAccessor::timeline
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-const Timeline& TimelineIndexAccessor::timeline() const
+const Timeline& Timeline::TimelineIndexAccessor::timeline() const
 ```
 
 ## What It Does
@@ -33,13 +33,13 @@ is, rather than where it sits on an ordered axis.
 Example 1. Expose the full time axis as a 1D `Timeline`.
 
 ```cpp
-auto idx = pluss::timeindex::make({
+auto idx = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
 auto axis = idx.timeline();
 std::cout << pluss::timeline::print(axis) << "\n";
@@ -57,25 +57,35 @@ index if you need ordered lookup semantics again.
 
 ```cpp
 auto local_axis = idx.timeline().floor("H");
-auto local_idx = pluss::timeindex::make(local_axis);
+auto local_idx = local_axis.index();
 std::cout << pluss::timeline::print(local_axis) << "\n";
+std::cout << "ordered=" << std::boolalpha
+          << local_idx.is_monotonic_increasing() << "\n";
+```
+
+### Output
+
+```text
+Timeline(shape=[5], tz=UTC)
+[ 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-11-01 00:00:00, 2024-11-01 01:00:00, 2024-11-01 01:00:00 ]
+ordered=true
 ```
 
 ## Notes
 
 - `timeline()` does not copy the time values by itself; it exposes the stored
   payload.
-- The returned object is still 1D because `TimelineIndexAccessor` itself is 1D.
+- The returned object is still 1D because `Timeline::TimelineIndexAccessor` itself is 1D.
 - Staying on `Timeline` makes sense for formatting, calendar extraction,
   timezone transforms, and temporal arithmetic.
 - If you need ordered lookup again after a `Timeline` transformation, rebuild a
-  `TimelineIndexAccessor` from the transformed timeline.
+  `Timeline::TimelineIndexAccessor` from the transformed timeline.
 
 ## See Also
 
-- [`TimelineIndexAccessor::searchsorted`](searchsorted.md): ordered insertion lookup on the
+- [`Timeline::TimelineIndexAccessor::searchsorted`](searchsorted.md): ordered insertion lookup on the
   index axis.
-- [`TimelineIndexAccessor::slice_time`](slice_time.md): label-based time slicing without
+- [`Timeline::TimelineIndexAccessor::slice_time`](slice_time.md): label-based time slicing without
   dropping down to `Timeline`.
 
 <div class="pluss-inline-prev-next">

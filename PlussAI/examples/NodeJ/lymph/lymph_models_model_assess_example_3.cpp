@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,7 +15,7 @@ int main() {
   // A regression target: roughly 2*hours + 1 with mild noise.
   const pluss::Series hours = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {8}, f64);
   const pluss::Series score = pluss::make_series({3.2, 4.8, 7.1, 8.9, 11.2, 12.8, 15.3, 16.9}, {8}, f64);
-  const DataFrame x_train({{"hours", Thread(hours)}});
+  const DataFrame x_train({{"hours", Slate(hours)}});
 
   const lymph::models::Model model = lymph::models::linear_regression().learn(x_train, score);
 
@@ -29,7 +29,7 @@ int main() {
   // The same model measured against rows it never saw.
   const pluss::Series holdout_hours = pluss::make_series({2.5, 5.5, 9.0}, {3}, f64);
   const pluss::Series holdout_score = pluss::make_series({6.0, 11.8, 19.2}, {3}, f64);
-  const DataFrame x_holdout({{"hours", Thread(holdout_hours)}});
+  const DataFrame x_holdout({{"hours", Slate(holdout_hours)}});
   const lymph::MetricReport on_holdout = model.assess(x_holdout, holdout_score, options);
 
   std::cout << "on training rows:  rmse = " << on_train.rmse.item<double>()

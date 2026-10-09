@@ -15,7 +15,7 @@ using pluss::pl::flash::FramePolicy;
 using pluss::pl::flash::FromFrameOptions;
 using pluss::pl::flash::ToFrameOptions;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 pluss::Series bool_mask(std::initializer_list<bool> flags) {
   auto out = pluss::Series::zeros({static_cast<std::int64_t>(flags.size())}, pluss::ScalarType::Bool);
@@ -63,9 +63,9 @@ void example_from_frame_basic() {
   std::cout << "== from_frame_basic ==\n";
   const auto mask = bool_mask({true, false, true});
   const auto frame = DataFrame({
-      {"city", Thread(make_note({"Accra", "", "Kumasi"}), mask)},
-      {"score", Thread(make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
-      {"stamp", Thread(make_timeline({
+      {"city", Slate(make_note({"Accra", "", "Kumasi"}), mask)},
+      {"score", Slate(make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
+      {"stamp", Slate(make_timeline({
           "2026-01-01T00:00:00Z",
           "2026-01-02T00:00:00Z",
           "2026-01-03T00:00:00Z",

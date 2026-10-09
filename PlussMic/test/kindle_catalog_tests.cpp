@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -111,16 +112,16 @@ DataFrame make_base_frame() {
       "2024-01-04T00:00:00Z",
       "2024-01-05T00:00:00Z",
   });
-  const auto cases = pluss::table::Thread(
+  const auto cases = pluss::table::Slate(
       pluss::make_note(std::vector<std::string>{"cs_0", "cs_1", "cs_2", "cs_3", "cs_4"}, shape));
 
   return DataFrame({
-                       {"id", pluss::table::Thread(ids)},
-                       {"metric", pluss::table::Thread(metric, metric_mask)},
-                       {"city", pluss::table::Thread(city)},
-                       {"text", pluss::table::Thread(text)},
-                       {"timestamp", pluss::table::Thread(timeline)},
-                       {"time_index", pluss::table::Thread(indexed_timeline)},
+                       {"id", pluss::table::Slate(ids)},
+                       {"metric", pluss::table::Slate(metric, metric_mask)},
+                       {"city", pluss::table::Slate(city)},
+                       {"text", pluss::table::Slate(text)},
+                       {"timestamp", pluss::table::Slate(timeline)},
+                       {"time_index", pluss::table::Slate(indexed_timeline)},
                    },
                    cases);
 }
@@ -133,7 +134,7 @@ Stream labeled_series(std::vector<double> values, std::vector<std::string> label
   const auto n = static_cast<std::int64_t>(values.size());
   expect(static_cast<std::int64_t>(labels.size()) == n, "labeled_series label size mismatch");
   const std::array<std::int64_t, 1> shape{n};
-  auto label = pluss::table::Thread(pluss::make_note(std::move(labels), shape));
+  auto label = pluss::table::Slate(pluss::make_note(std::move(labels), shape));
   return Stream(pluss::make_series(std::move(values), {n}), std::nullopt, std::move(label));
 }
 
@@ -141,7 +142,7 @@ Stream labeled_note(std::vector<std::string> values, std::vector<std::string> la
   const auto n = static_cast<std::int64_t>(values.size());
   expect(static_cast<std::int64_t>(labels.size()) == n, "labeled_note label size mismatch");
   const std::array<std::int64_t, 1> shape{n};
-  auto label = pluss::table::Thread(pluss::make_note(std::move(labels), shape));
+  auto label = pluss::table::Slate(pluss::make_note(std::move(labels), shape));
   return Stream(pluss::make_note(std::move(values), shape), std::nullopt, std::move(label));
 }
 
@@ -182,7 +183,7 @@ void test_stream_methods() {
   const auto taken = metric.take(std::vector<std::int64_t>{0, 2, 4});
   expect(taken.size() == 3, "take size mismatch");
   const auto picked = Stream::select(
-      {pluss::table::Thread(bool_mask({true, false, true}))},
+      {pluss::table::Slate(bool_mask({true, false, true}))},
       {labeled_series({10.0, 20.0, 30.0}, {"r0", "r1", "r2"})},
       labeled_series({1.0, 2.0, 3.0}, {"l0", "l1", "l2"}));
   expect(picked.as_series().to_vec<double>() == std::vector<double>({10.0, 2.0, 30.0}),
@@ -601,8 +602,8 @@ void test_catalog_accessors() {
       {"date_text", Stream(pluss::make_note(std::vector<std::string>{"2024-03-01", "2024-03-02"}, shape2))},
   });
   const auto parsed = note_dates.cast(
-      pluss::table::ThreadCastTarget::Timeline,
-      pluss::table::ThreadCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null});
+      pluss::table::SlateCastTarget::Timeline,
+      pluss::table::SlateCastOptions{.format = "%Y-%m-%d", .invalid = pluss::table::ParseInvalid::Null});
   expect(parsed.keys("date_text").kind() == StreamKind::Timeline,
          "Catalog::cast({}, Timeline, options) should forward full parse options");
 }
@@ -652,6 +653,558 @@ void test_catalog_reductions() {
         (void)make_base_catalog().keys({"id", "city"}).sum(ReduceAxis::Key);
       },
       "Catalog::sum(Key) should reject non-Series streams");
+}
+
+
+std::vector<double> stream_values(const Stream& s) {
+  return s.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+}
+
+// valid[i] == false where the reduction has no value at position i.
+std::vector<bool> stream_valid(const Stream& s) {
+  if (!pluss::kindle::detail::has_validity_mask(s)) return std::vector<bool>(stream_values(s).size(), true);
+  return pluss::kindle::detail::validity_mask(s)->to_vec<bool>();
+}
+
+bool near_all(const std::vector<double>& got, const std::vector<double>& want, double tol = 1e-9) {
+  if (got.size() != want.size()) return false;
+  for (std::size_t i = 0; i < got.size(); ++i) {
+    if (std::fabs(got[i] - want[i]) > tol * (1.0 + std::fabs(want[i]))) return false;
+  }
+  return true;
+}
+
+Stream dstream(const std::vector<double>& v) {
+  return Stream(pluss::make_series(v, {static_cast<std::int64_t>(v.size())}));
+}
+
+Stream with_nulls_stream(const std::vector<double>& v, const std::vector<bool>& valid) {
+  std::vector<double> mask;
+  for (const bool b : valid) mask.push_back(b ? 1.0 : 0.0);
+  return pluss::kindle::detail::with_validity_mask(
+      dstream(v), pluss::make_series(mask, {static_cast<std::int64_t>(mask.size())}).to(pluss::codem::ScalarType::Bool));
+}
+
+// Independent reference: reduce each position over the streams that have a usable value there.
+struct NaiveJagged {
+  std::vector<double> value;
+  std::vector<bool> valid;
+};
+
+NaiveJagged naive_jagged(const std::vector<std::vector<double>>& cols, const std::string& op, bool skipnull,
+                         bool unbiased, bool ended_null = false, bool tail = false, std::int64_t min_streams = 1,
+                         bool inner = false) {
+  std::size_t longest = 0, shortest = cols.empty() ? 0 : cols[0].size();
+  for (const auto& c : cols) {
+    longest = std::max(longest, c.size());
+    shortest = std::min(shortest, c.size());
+  }
+  // Common index space [0, longest); the policy keeps the window [begin, end).
+  const std::size_t begin = (inner && tail) ? longest - shortest : 0;
+  const std::size_t end = inner ? begin + shortest : longest;
+  NaiveJagged out;
+  out.value.assign(end - begin, 0.0);
+  out.valid.assign(end - begin, true);
+  for (std::size_t j = 0; j < end - begin; ++j) {
+    const std::size_t at = begin + j;
+    std::vector<double> xs;
+    bool poisoned = false;
+    std::size_t present = 0;
+    for (const auto& c : cols) {
+      const std::size_t off = tail ? longest - c.size() : 0;
+      if (at < off || at >= off + c.size()) continue;
+      ++present;
+      const double x = c[at - off];
+      if (std::isnan(x)) { poisoned = true; continue; }
+      xs.push_back(x);
+    }
+    bool ok = static_cast<std::int64_t>(xs.size()) >= min_streams && !(poisoned && !skipnull) &&
+              !(ended_null && present != cols.size());
+    double v = 0.0;
+    if (ok) {
+      double sum = 0.0;
+      for (double x : xs) sum += x;
+      const double cnt = static_cast<double>(xs.size());
+      if (op == "sum") v = sum;
+      else if (op == "mean") v = sum / cnt;
+      else if (op == "min") v = *std::min_element(xs.begin(), xs.end());
+      else if (op == "max") v = *std::max_element(xs.begin(), xs.end());
+      else {
+        const double ddof = unbiased ? 1.0 : 0.0;
+        ok = cnt - ddof > 0.0;
+        if (ok) {
+          double mean = sum / cnt, ss = 0.0;
+          for (double x : xs) ss += (x - mean) * (x - mean);
+          v = ss / (cnt - ddof);
+          if (op == "std") v = std::sqrt(v);
+        }
+      }
+    }
+    out.value[j] = ok ? v : 0.0;
+    out.valid[j] = ok;
+  }
+  return out;
+}
+
+Catalog jagged_catalog(const std::vector<std::vector<double>>& cols) {
+  std::vector<std::pair<std::string, Stream>> streams;
+  for (std::size_t i = 0; i < cols.size(); ++i) streams.emplace_back("s" + std::to_string(i), dstream(cols[i]));
+  return Catalog(std::move(streams));
+}
+
+Catalog reduce_by_name(const Catalog& c, const std::string& op, const CatalogReduceOptions& o) {
+  if (op == "sum") return c.sum(o);
+  if (op == "mean") return c.mean(o);
+  if (op == "min") return c.min(o);
+  if (op == "max") return c.max(o);
+  if (op == "var") return c.var(o);
+  return c.std(o);
+}
+
+void test_catalog_jagged_reductions() {
+  // The motivating example: three streams of length 3, 5 and 6.
+  const std::vector<std::vector<double>> cols = {
+      {2.3, 1.3, 2.5},
+      {2.6, 0.3, 1.9, 2.1, 3.7},
+      {3.6, 4.3, 0.9, 0.1, 3.1, 0.01},
+  };
+  const auto ragged = jagged_catalog(cols);
+  CatalogReduceOptions by_key;
+  by_key.axis = ReduceAxis::Key;
+
+  // Default: position i reduces over the streams that reach it.
+  expect(near_all(stream_values(ragged.sum(ReduceAxis::Key).keys("sum")), {8.5, 5.9, 5.3, 2.2, 6.8, 0.01}),
+         "sum over a ragged catalog should reduce only the streams present at each position");
+  expect(near_all(stream_values(ragged.mean(ReduceAxis::Key).keys("mean")),
+                  {8.5 / 3, 5.9 / 3, 5.3 / 3, 1.1, 3.4, 0.01}),
+         "mean should divide by the number of streams present, not the number of streams");
+  expect(near_all(stream_values(ragged.min(ReduceAxis::Key).keys("min")), {2.3, 0.3, 0.9, 0.1, 3.1, 0.01}),
+         "min should ignore ended streams");
+  expect(near_all(stream_values(ragged.max(ReduceAxis::Key).keys("max")), {3.6, 4.3, 2.5, 2.1, 3.7, 0.01}),
+         "max should ignore ended streams");
+  const auto var = ragged.var(ReduceAxis::Key).keys("var");
+  expect(std::fabs(stream_values(var)[3] - 2.0) < 1e-12, "unbiased variance of {2.1, 0.1} is 2");
+  expect(!stream_valid(var)[5], "variance at a position with one contributor is undefined (null)");
+  expect(stream_valid(var)[0] && stream_valid(var)[4], "variance is defined where two or more streams contribute");
+  expect(std::fabs(stream_values(ragged.std(ReduceAxis::Key).keys("std"))[3] - std::sqrt(2.0)) < 1e-12,
+         "std is the square root of the variance");
+  CatalogReduceOptions biased = by_key;
+  biased.unbiased = false;
+  expect(stream_valid(ragged.var(biased).keys("var"))[5] && stream_values(ragged.var(biased).keys("var"))[5] == 0.0,
+         "population variance of a single value is 0");
+
+  // The padded alignment options are still available explicitly.
+  CatalogReduceOptions strict = by_key;
+  strict.align = pluss::kindle::Align::Strict;
+  expect_throw([&] { (void)ragged.sum(strict); }, "Align::Strict should still reject ragged input");
+  CatalogReduceOptions inner = by_key;
+  inner.align = pluss::kindle::Align::Inner;
+  expect(near_all(stream_values(ragged.sum(inner).keys("sum")), {8.5, 5.9, 5.3}), "Align::Inner trims to the shortest stream");
+
+  // Nulls inside a stream are skipped like missing positions; skipnull=false lets them poison the position.
+  const auto with_nan = jagged_catalog({{1.0, std::nan(""), 3.0}, {10.0, 20.0}});
+  expect(near_all(stream_values(with_nan.sum(ReduceAxis::Key).keys("sum")), {11.0, 20.0, 3.0}),
+         "a NaN is skipped like an absent value");
+  CatalogReduceOptions keep_null = by_key;
+  keep_null.skipnull = false;
+  const auto poisoned = with_nan.sum(keep_null).keys("sum");
+  expect(stream_valid(poisoned)[0] && !stream_valid(poisoned)[1] && stream_valid(poisoned)[2],
+         "skipnull=false should null only the position that contains a null");
+
+  // Equal-length catalogs behave exactly as before.
+  const auto even = jagged_catalog({{1.0, 2.0}, {3.0, 4.0}});
+  expect(near_all(stream_values(even.sum(ReduceAxis::Key).keys("sum")), {4.0, 6.0}), "equal lengths reduce as before");
+
+  // ended = Null: a finished stream makes the result unknown from there on.
+  CatalogReduceOptions ended_null = by_key;
+  ended_null.ended = pluss::kindle::RaggedEnd::Null;
+  const auto nulled = ragged.sum(ended_null).keys("sum");
+  expect(stream_values(nulled).size() == 6, "ended=Null keeps the length of the longest stream");
+  expect(stream_valid(nulled) == std::vector<bool>({true, true, true, false, false, false}),
+         "ended=Null nulls every position after the shortest stream ends");
+  const auto nulled_values = stream_values(nulled);
+  expect(near_all(std::vector<double>(nulled_values.begin(), nulled_values.begin() + 3), {8.5, 5.9, 5.3}),
+         "ended=Null leaves the fully-supported positions intact");
+
+  // min_streams: require N contributing streams.
+  CatalogReduceOptions two = by_key;
+  two.min_streams = 2;
+  expect(stream_valid(ragged.sum(two).keys("sum")) == std::vector<bool>({true, true, true, true, true, false}),
+         "min_streams=2 nulls the position only one stream reaches");
+  CatalogReduceOptions all = by_key;
+  all.min_streams = 3;
+  expect(stream_valid(ragged.sum(all).keys("sum")) == std::vector<bool>({true, true, true, false, false, false}),
+         "min_streams equal to the stream count matches ended=Null for null-free data");
+
+  // anchor = Tail: line the last values up instead of the first.
+  const auto pair = jagged_catalog({{1.0, 2.0, 3.0}, {10.0, 20.0}});
+  CatalogReduceOptions tail = by_key;
+  tail.anchor = pluss::kindle::RaggedAnchor::Tail;
+  expect(near_all(stream_values(pair.sum(tail).keys("sum")), {1.0, 12.0, 23.0}), "anchor=Tail aligns the ends");
+  expect(near_all(stream_values(pair.sum(by_key).keys("sum")), {11.0, 22.0, 3.0}), "anchor=Head aligns the starts");
+
+  // The flags only apply to the jagged path; elsewhere they are an error, never ignored.
+  // Inner runs natively too, so the flags are valid with it: inside the shared
+  // window every stream is present, and ended=Null changes nothing.
+  CatalogReduceOptions inner_null = ended_null;
+  inner_null.align = pluss::kindle::Align::Inner;
+  const auto inner_nulled = ragged.sum(inner_null).keys("sum");
+  expect(near_all(stream_values(inner_nulled), {8.5, 5.9, 5.3}) &&
+             stream_valid(inner_nulled) == std::vector<bool>({true, true, true}),
+         "ended=Null with Align::Inner is valid and finds no absent records inside the window");
+  CatalogReduceOptions bad = ended_null;
+  bad.align_by = pluss::kindle::AlignBy::Label;
+  expect_throw([&] { (void)ragged.sum(bad); }, "ended=Null with label alignment (the padding path) should be rejected");
+  CatalogReduceOptions bad_fill = tail;
+  bad_fill.fill_scalar = 0.0;
+  expect_throw([&] { (void)ragged.sum(bad_fill); }, "anchor=Tail with fill_scalar should be rejected");
+  CatalogReduceOptions record_axis;
+  record_axis.min_streams = 2;
+  expect_throw([&] { (void)ragged.sum(record_axis); }, "jagged flags on the Record axis should be rejected");
+  CatalogReduceOptions zero = by_key;
+  zero.min_streams = 0;
+  expect_throw([&] { (void)ragged.sum(zero); }, "min_streams < 1 should be rejected");
+
+  // Randomized cross-check against an independent implementation, including inputs
+  // large enough to take the parallel path.
+  std::mt19937_64 rng(20261008);
+  const std::vector<std::string> ops = {"sum", "mean", "min", "max", "var", "std"};
+  for (int trial = 0; trial < 120; ++trial) {
+    const std::size_t k = 1 + rng() % 6;
+    std::vector<std::vector<double>> random_cols(k);
+    for (auto& c : random_cols) {
+      c.resize(1 + rng() % 60);
+      for (auto& x : c) x = (rng() % 11 == 0) ? std::nan("") : static_cast<double>(static_cast<std::int64_t>(rng() % 2001) - 1000) / 7.0;
+    }
+    const auto catalog = jagged_catalog(random_cols);
+    for (const auto& op : ops) {
+      for (const bool skipnull : {true, false}) {
+        CatalogReduceOptions o = by_key;
+        o.skipnull = skipnull;
+        o.ended = (rng() % 2) ? pluss::kindle::RaggedEnd::Null : pluss::kindle::RaggedEnd::Skip;
+        o.anchor = (rng() % 2) ? pluss::kindle::RaggedAnchor::Tail : pluss::kindle::RaggedAnchor::Head;
+        o.min_streams = 1 + static_cast<std::int64_t>(rng() % 3);
+        const bool inner = (rng() % 3) == 0;
+        o.align = inner ? pluss::kindle::Align::Inner : pluss::kindle::Align::Outer;
+        const auto got = reduce_by_name(catalog, op, o).keys(op);
+        const auto want = naive_jagged(random_cols, op, skipnull, true, o.ended == pluss::kindle::RaggedEnd::Null,
+                                       o.anchor == pluss::kindle::RaggedAnchor::Tail, o.min_streams, inner);
+        expect(near_all(stream_values(got), want.value, 1e-9) && stream_valid(got) == want.valid,
+               "jagged " + op + " should match the reference implementation");
+      }
+    }
+  }
+  std::vector<std::vector<double>> big(3);
+  for (std::size_t i = 0; i < big.size(); ++i) {
+    big[i].resize(100000 + 777 * i);
+    for (std::size_t j = 0; j < big[i].size(); ++j) big[i][j] = std::sin(0.001 * static_cast<double>(j * (i + 1)));
+  }
+  const auto big_catalog = jagged_catalog(big);
+  for (const auto& op : ops) {
+    const auto got = reduce_by_name(big_catalog, op, by_key).keys(op);
+    const auto want = naive_jagged(big, op, true, true);
+    expect(near_all(stream_values(got), want.value, 1e-9) && stream_valid(got) == want.valid,
+           "parallel jagged " + op + " should match the reference implementation");
+  }
+}
+
+
+void test_ragged_policy_and_layout() {
+  using namespace pluss::kindle;
+  const auto d = [](OpClass c) { return RaggedPolicy::defaults(c); };
+
+  // The documented default for every operation class.
+  expect(d(OpClass::Reduce) == RaggedPolicy{}, "Reduce: longest, head, skip absent, skip nulls, preserve");
+  expect(d(OpClass::Elementwise).absent == RaggedAbsent::Null && d(OpClass::Elementwise).domain == RaggedDomain::Longest,
+         "Elementwise: an absent operand makes the value unknown");
+  expect(d(OpClass::Relational).absent == RaggedAbsent::Null && d(OpClass::Relational).materialize == RaggedMaterialize::Preserve &&
+             d(OpClass::Relational).domain == RaggedDomain::Longest,
+         "Relational: keep every record, no-partner rows are nulls, stay ragged");
+  expect(d(OpClass::Pairwise).domain == RaggedDomain::Shortest, "Pairwise: complete pairs only");
+  expect(d(OpClass::Plot) == RaggedPolicy{}, "Plot: draw what exists");
+  expect(d(OpClass::Rectangular).materialize == RaggedMaterialize::Pad && d(OpClass::Rectangular).absent == RaggedAbsent::Null &&
+             d(OpClass::Rectangular).domain == RaggedDomain::Longest,
+         "Rectangular: pad with nulls, never trim");
+  expect(d(OpClass::Persist).loss == RaggedLoss::Error, "Persist: lossless");
+  for (const auto c : {OpClass::Reduce, OpClass::Elementwise, OpClass::Relational, OpClass::Pairwise, OpClass::Plot,
+                       OpClass::Rectangular, OpClass::Persist}) {
+    d(c).validate("defaults");  // every default is a valid policy
+  }
+
+  // Contradictory policies are rejected.
+  RaggedPolicy bad;
+  bad.min_support = 0;
+  expect_throw([&] { bad.validate("t"); }, "min_support < 1 should be rejected");
+  bad = {};
+  bad.absent = RaggedAbsent::Fill;
+  expect_throw([&] { bad.validate("t"); }, "absent=Fill without a fill value should be rejected");
+  bad = {};
+  bad.fill = 1.0;
+  expect_throw([&] { bad.validate("t"); }, "a fill value without absent=Fill should be rejected");
+  bad = {};
+  bad.domain = RaggedDomain::Anchor;
+  expect_throw([&] { bad.validate("t"); }, "domain=Anchor without an anchor stream should be rejected");
+
+  // Layouts of three streams with 3, 5 and 6 records.
+  const auto catalog = jagged_catalog({{2.3, 1.3, 2.5}, {2.6, 0.3, 1.9, 2.1, 3.7}, {3.6, 4.3, 0.9, 0.1, 3.1, 0.01}});
+  const auto layout = [&](RaggedDomain dom, RaggedAlignment al) {
+    RaggedPolicy p;
+    p.domain = dom;
+    p.alignment = al;
+    if (dom == RaggedDomain::Anchor) p.anchor_stream = "s1";
+    return RaggedLayout::of(catalog, p, "test");
+  };
+  const auto head = layout(RaggedDomain::Longest, RaggedAlignment::Head);
+  expect(head.extent == std::vector<std::int64_t>({3, 5, 6}) && head.longest == 6 && head.shortest == 3 && head.ragged() &&
+             head.domain() == 6 && head.trimmed() == 0 && head.offset == std::vector<std::int64_t>({0, 0, 0}),
+         "head/longest layout");
+  expect(head.presence() == std::vector<std::int64_t>({3, 3, 3, 2, 2, 1}), "head presence: streams still running at each index");
+  const auto tail = layout(RaggedDomain::Longest, RaggedAlignment::Tail);
+  expect(tail.offset == std::vector<std::int64_t>({3, 1, 0}) &&
+             tail.presence() == std::vector<std::int64_t>({1, 2, 2, 3, 3, 3}),
+         "tail alignment lines the last records up");
+  const auto short_head = layout(RaggedDomain::Shortest, RaggedAlignment::Head);
+  expect(short_head.window_begin == 0 && short_head.window_end == 3 && short_head.trimmed() == 3 &&
+             short_head.presence() == std::vector<std::int64_t>({3, 3, 3}),
+         "shortest/head keeps the first common indices and counts what it cuts");
+  const auto short_tail = layout(RaggedDomain::Shortest, RaggedAlignment::Tail);
+  expect(short_tail.window_begin == 3 && short_tail.window_end == 6 && short_tail.presence() == std::vector<std::int64_t>({3, 3, 3}),
+         "shortest/tail keeps the last common indices");
+  const auto anchor_head = layout(RaggedDomain::Anchor, RaggedAlignment::Head);
+  expect(anchor_head.window_begin == 0 && anchor_head.window_end == 5 &&
+             anchor_head.presence() == std::vector<std::int64_t>({3, 3, 3, 2, 2}),
+         "an anchor stream sets the window");
+  const auto anchor_tail = layout(RaggedDomain::Anchor, RaggedAlignment::Tail);
+  expect(anchor_tail.window_begin == 1 && anchor_tail.window_end == 6 &&
+             anchor_tail.presence() == std::vector<std::int64_t>({2, 2, 3, 3, 3}),
+         "an anchor stream under tail alignment");
+  expect_throw([&] { (void)layout(RaggedDomain::Exact, RaggedAlignment::Head); }, "domain=Exact rejects a ragged catalog");
+  RaggedPolicy exact;
+  exact.domain = RaggedDomain::Exact;
+  expect(RaggedLayout::of(jagged_catalog({{1.0, 2.0}, {3.0, 4.0}}), exact, "t").domain() == 2, "domain=Exact accepts equal lengths");
+  RaggedPolicy strict_loss;
+  strict_loss.domain = RaggedDomain::Shortest;
+  strict_loss.loss = RaggedLoss::Error;
+  expect_throw([&] { (void)RaggedLayout::of(catalog, strict_loss, "t"); }, "loss=Error refuses a policy that cuts records");
+  RaggedPolicy missing_anchor;
+  missing_anchor.domain = RaggedDomain::Anchor;
+  missing_anchor.anchor_stream = "nope";
+  expect_throw([&] { (void)RaggedLayout::of(catalog, missing_anchor, "t"); }, "an unknown anchor stream should be rejected");
+
+  // Conversions from the older option structs.
+  expect(to_ragged(CatalogReduceOptions{}) == d(OpClass::Reduce), "default reduce options are the Reduce defaults");
+  CatalogReduceOptions legacy;
+  legacy.align = Align::Inner;
+  legacy.ended = RaggedEnd::Null;
+  legacy.anchor = RaggedAnchor::Tail;
+  legacy.min_streams = 2;
+  legacy.skipnull = false;
+  const auto converted = to_ragged(legacy);
+  expect(converted.domain == RaggedDomain::Shortest && converted.absent == RaggedAbsent::Null &&
+             converted.alignment == RaggedAlignment::Tail && converted.min_support == 2 && converted.nulls == RaggedNulls::Propagate,
+         "CatalogReduceOptions convert field by field");
+  expect(TabelizePolicy{}.align == Align::Outer, "tabelize now pads by default instead of inner-joining");
+  expect(to_ragged(TabelizePolicy{}).domain == RaggedDomain::Longest && to_ragged(TabelizePolicy{}).absent == RaggedAbsent::Null,
+         "the default TabelizePolicy is the Rectangular default");
+  expect(to_tabelize(d(OpClass::Rectangular), "t").align == Align::Outer, "Rectangular maps to Outer");
+  RaggedPolicy fill = d(OpClass::Rectangular);
+  fill.absent = RaggedAbsent::Fill;
+  fill.fill = 7.0;
+  expect(to_tabelize(fill, "t").fill == FillPolicy::Scalar && to_tabelize(fill, "t").fill_scalar == 7.0, "Fill maps to a scalar fill");
+  RaggedPolicy tail_policy = d(OpClass::Rectangular);
+  tail_policy.alignment = RaggedAlignment::Tail;
+  expect_throw([&] { (void)to_tabelize(tail_policy, "t"); }, "tabelize cannot honour Tail alignment and must say so");
+
+  // tabelize pads by default and drops only when asked.
+  expect(catalog.tabelize().ncases() == 6, "default tabelize keeps every record of the longest stream");
+  TabelizePolicy inner;
+  inner.align = Align::Inner;
+  expect(catalog.tabelize(inner).ncases() == 3, "Align::Inner is still available explicitly");
+  expect(catalog.tabelize(d(OpClass::Rectangular)).ncases() == 6, "tabelize(RaggedPolicy) with the Rectangular defaults pads");
+  RaggedPolicy cut = d(OpClass::Rectangular);
+  cut.domain = RaggedDomain::Shortest;
+  cut.loss = RaggedLoss::Error;
+  expect_throw([&] { (void)catalog.tabelize(cut); }, "tabelize(RaggedPolicy) honours loss=Error");
+
+  // Reductions use the layout: Inner with tail alignment reduces the aligned tails.
+  CatalogReduceOptions tails;
+  tails.axis = ReduceAxis::Key;
+  tails.align = Align::Inner;
+  tails.anchor = RaggedAnchor::Tail;
+  expect(near_all(stream_values(catalog.sum(tails).keys("sum")), {4.3, 6.5, 6.21}),
+         "Inner + Tail sums the last three records of each stream");
+  CatalogReduceOptions heads = tails;
+  heads.anchor = RaggedAnchor::Head;
+  expect(near_all(stream_values(catalog.sum(heads).keys("sum")), {8.5, 5.9, 5.3}), "Inner + Head sums the first three records");
+}
+
+void test_catalog_join_policy() {
+  using namespace pluss::kindle;
+  const auto left = jagged_catalog({{1.0, 2.0, 3.0}});   // stream "s0"
+  Catalog right(std::vector<std::pair<std::string, Stream>>{
+      {"s0", dstream({2.0, 3.0, 4.0})},
+      {"payload", dstream({20.0, 30.0, 40.0})},
+  });
+  CatalogJoinSpec spec;
+  spec.left_keys = {"s0"};
+  spec.right_keys = {"s0"};
+
+  const auto inner = left.join_detailed(right, spec);
+  expect(stream_values(inner.catalog.keys("s0")) == std::vector<double>({2.0, 3.0}) &&
+             stream_values(inner.catalog.keys("payload")) == std::vector<double>({20.0, 30.0}),
+         "Catalog::join matches on the key streams");
+  expect(inner.report.match.left_dropped == 1 && inner.report.match.right_dropped == 1, "the report counts omitted records");
+
+  CatalogJoinOptions refuse;
+  refuse.ragged.loss = RaggedLoss::Error;
+  expect_throw([&] { (void)left.join(right, spec, refuse); }, "loss=Error refuses a join that omits records");
+
+  spec.how = pluss::relational::JoinHow::Outer;
+  const auto outer = left.join_detailed(right, spec, refuse);   // an outer join omits nothing
+  expect(outer.report.output_records == 4 && outer.report.match.left_dropped == 0 && outer.report.match.right_dropped == 0,
+         "an outer join passes loss=Error");
+
+  CatalogJoinOptions bad_policy;
+  bad_policy.ragged.alignment = RaggedAlignment::Label;
+  expect_throw([&] { (void)left.join(right, spec, bad_policy); }, "label alignment is not a join mode");
+  CatalogJoinOptions bad_absent;
+  bad_absent.ragged.absent = RaggedAbsent::Skip;
+  expect_throw([&] { (void)left.join(right, spec, bad_absent); }, "a join cannot skip rows that have no partner");
+}
+
+
+std::vector<double> reduce_ref(const std::vector<double>& values, const std::vector<std::int64_t>& source,
+                               std::int64_t shift, std::int64_t lo, std::int64_t hi, const std::string& op,
+                               bool unbiased, bool* ok) {
+  std::vector<double> xs;
+  for (auto e = lo; e < hi; ++e) {
+    const auto p = source[static_cast<std::size_t>(e)] + shift;
+    if (p < 0 || p >= static_cast<std::int64_t>(values.size())) continue;
+    if (std::isnan(values[static_cast<std::size_t>(p)])) continue;
+    xs.push_back(values[static_cast<std::size_t>(p)]);
+  }
+  *ok = true;
+  const double n = static_cast<double>(xs.size());
+  if (op == "count") return {n};
+  if (op == "ndistinct") {
+    std::sort(xs.begin(), xs.end());
+    return {static_cast<double>(std::unique(xs.begin(), xs.end()) - xs.begin())};
+  }
+  if (xs.empty()) { *ok = false; return {0.0}; }
+  double s = 0.0;
+  for (double x : xs) s += x;
+  if (op == "sum") return {s};
+  if (op == "mean") return {s / n};
+  if (op == "min") return {*std::min_element(xs.begin(), xs.end())};
+  if (op == "max") return {*std::max_element(xs.begin(), xs.end())};
+  if (op == "median") {
+    std::sort(xs.begin(), xs.end());
+    const auto m = xs.size() / 2;
+    return {xs.size() % 2 ? xs[m] : 0.5 * (xs[m - 1] + xs[m])};
+  }
+  const double ddof = unbiased ? 1.0 : 0.0;
+  if (n - ddof <= 0.0) { *ok = false; return {0.0}; }
+  double ss = 0.0;
+  for (double x : xs) ss += (x - s / n) * (x - s / n);
+  const double var = ss / (n - ddof);
+  return {op == "std" ? std::sqrt(var) : var};
+}
+
+void test_stream_reduce_groups_and_expand() {
+  using namespace pluss::kindle;
+  const Stream values = dstream({1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
+  // Groups: {1,2,3}, {} (empty), {4,5}, {0}
+  const std::vector<std::int64_t> source = {0, 1, 2, 3, 4, 0};
+  const std::vector<std::int64_t> offsets = {0, 3, 3, 5, 6};
+  const auto sum = values.reduce_groups(source, 0, offsets, GroupReduce::Sum);
+  expect(stream_values(sum) == std::vector<double>({6.0, 0.0, 9.0, 1.0}) &&
+             stream_valid(sum) == std::vector<bool>({true, false, true, true}),
+         "an empty group has no sum: it is a null, not a zero");
+  const auto count = values.reduce_groups(source, 0, offsets, GroupReduce::Count);
+  expect(stream_values(count) == std::vector<double>({3.0, 0.0, 2.0, 1.0}) && stream_valid(count) == std::vector<bool>(4, true),
+         "an empty group has a count of 0");
+  expect(stream_values(values.reduce_groups(source, 0, offsets, GroupReduce::Mean)) == std::vector<double>({2.0, 0.0, 4.5, 1.0}),
+         "group means");
+  // A shift moves the record indices to stream positions: records {0,1} at shift 1 are positions {1,2}.
+  expect(stream_values(values.reduce_groups({0, 1}, 1, {0, 2}, GroupReduce::Sum)) == std::vector<double>({5.0}),
+         "shift maps record indices to stream positions");
+  // Entries outside the stream and nulls are skipped, not errors.
+  expect(stream_values(values.reduce_groups({0, 99, -1, 2}, 0, {0, 4}, GroupReduce::Sum)) == std::vector<double>({4.0}),
+         "entries outside the stream are skipped");
+  const Stream with_nulls = with_nulls_stream({1.0, 2.0, 3.0}, {true, false, true});
+  expect(stream_values(with_nulls.reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Count)) == std::vector<double>({2.0}) &&
+             stream_values(with_nulls.reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Sum)) == std::vector<double>({4.0}),
+         "null values are skipped by every reduction");
+  expect(stream_values(dstream({1.0, std::nan(""), 3.0}).reduce_groups({0, 1, 2}, 0, {0, 3}, GroupReduce::Mean)) == std::vector<double>({2.0}),
+         "NaN is skipped");
+  const auto var = values.reduce_groups(source, 0, offsets, GroupReduce::Var);
+  expect(stream_valid(var) == std::vector<bool>({true, false, true, false}) && near_all({stream_values(var)[0], stream_values(var)[2]}, {1.0, 0.5}),
+         "unbiased variance needs two values");
+  expect(stream_valid(values.reduce_groups(source, 0, offsets, GroupReduce::Var, false))[3], "population variance of one value is defined");
+
+  // Count and Ndistinct work on text too; the rest refuse.
+  const Stream words_s(pluss::make_note(std::vector<std::string>{"a", "b", "a", "c"}, {4}));
+  expect(stream_values(words_s.reduce_groups({0, 1, 2, 3}, 0, {0, 4}, GroupReduce::Ndistinct)) == std::vector<double>({3.0}) &&
+             stream_values(words_s.reduce_groups({0, 1, 2, 3}, 0, {0, 4}, GroupReduce::Count)) == std::vector<double>({4.0}),
+         "counting reductions work on text");
+  expect_throw([&] { (void)words_s.reduce_groups({0}, 0, {0, 1}, GroupReduce::Sum); }, "sum of text should be rejected");
+  expect_throw([&] { (void)values.reduce_groups({0}, 0, {0, 2}, GroupReduce::Sum); }, "offsets must end at source.size()");
+  expect_throw([&] { (void)values.reduce_groups({0, 1}, 0, {0, 2, 1, 2}, GroupReduce::Sum); }, "offsets must be non-decreasing");
+
+  // Randomized comparison with a naive implementation, including a size that takes the parallel path.
+  std::mt19937_64 rng(4242);
+  const std::vector<std::string> ops = {"count", "ndistinct", "sum", "mean", "median", "min", "max", "std", "var"};
+  const std::vector<GroupReduce> kinds = {GroupReduce::Count, GroupReduce::Ndistinct, GroupReduce::Sum, GroupReduce::Mean,
+                                          GroupReduce::Median, GroupReduce::Min, GroupReduce::Max, GroupReduce::Std,
+                                          GroupReduce::Var};
+  for (int trial = 0; trial < 40; ++trial) {
+    const std::size_t n = 1 + rng() % 200;
+    std::vector<double> data(n);
+    for (auto& x : data) x = (rng() % 9 == 0) ? std::nan("") : static_cast<double>(rng() % 20);
+    const std::int64_t shift = static_cast<std::int64_t>(rng() % 5) - 2;
+    const std::size_t groups = 1 + rng() % (trial == 39 ? 5000 : 12);
+    std::vector<std::int64_t> src, offs{0};
+    for (std::size_t g = 0; g < groups; ++g) {
+      const std::size_t len = rng() % (trial == 39 ? 6 : 15);
+      for (std::size_t e = 0; e < len; ++e) src.push_back(static_cast<std::int64_t>(rng() % (n + 6)) - 3);
+      offs.push_back(static_cast<std::int64_t>(src.size()));
+    }
+    const Stream s = dstream(data);
+    for (std::size_t o = 0; o < ops.size(); ++o) {
+      const bool unb = (rng() % 2) == 0;
+      const auto got = s.reduce_groups(src, shift, offs, kinds[o], unb);
+      const auto gv = stream_values(got);
+      const auto gok = stream_valid(got);
+      for (std::size_t g = 0; g < groups; ++g) {
+        bool ok = true;
+        const auto want = reduce_ref(data, src, shift, offs[g], offs[g + 1], ops[o], unb, &ok);
+        expect(gok[g] == ok && (!ok || std::fabs(gv[g] - want[0]) < 1e-9 * (1.0 + std::fabs(want[0]))),
+               "reduce_groups " + ops[o] + " should match the reference");
+      }
+    }
+  }
+
+  // expand composes two hops without a table in between.
+  namespace rel = pluss::relational;
+  rel::MatchResult hop2;                       // mid records 0..3 -> leaves
+  hop2.left = {0, 0, 1, 3};
+  hop2.right = {10, 11, 12, 13};               // mid 0 has leaves 10,11; mid 1 has 12; mid 3 has 13; mid 2 none
+  const auto e = rel::expand({0, 1, 1}, {0, 1, 2}, hop2, 4, false);
+  expect(e.root == std::vector<std::int64_t>({0, 0, 1}) && e.leaf == std::vector<std::int64_t>({10, 11, 12}),
+         "expand fans a pair out to its partners and drops a pair with none");
+  const auto kept = rel::expand({0, 1, 1}, {0, 1, 2}, hop2, 4, true);
+  expect(kept.root == std::vector<std::int64_t>({0, 0, 1, 1}) && kept.leaf == std::vector<std::int64_t>({10, 11, 12, -1}),
+         "keep_unmatched keeps a partnerless pair as (root, -1)");
+  expect(rel::expand({5, 6}, {-1, 0}, hop2, 4, true).leaf == std::vector<std::int64_t>({-1, 10, 11}),
+         "a missing mid record survives as -1 when unmatched pairs are kept");
+
+  // match_keys is the matching half of join.
+  const Catalog a(std::vector<std::pair<std::string, Stream>>{{"k", dstream({1.0, 2.0, 2.0, 5.0})}});
+  const Catalog b(std::vector<std::pair<std::string, Stream>>{{"k", dstream({2.0, 5.0, 7.0})}});
+  const auto m = a.match_keys(b, {"k"}, {"k"}, rel::JoinHow::Inner);
+  expect(m.pairs.left == std::vector<std::int64_t>({1, 2, 3}) && m.pairs.right == std::vector<std::int64_t>({0, 0, 1}) &&
+             m.left.domain() == 4 && m.right.domain() == 3 && m.left.shift_of("k") == 0,
+         "match_keys returns the record pairs and both layouts");
 }
 
 void test_catalog_construction_and_selection() {
@@ -753,7 +1306,7 @@ void test_catalog_construction_and_selection() {
   auto replaced = base;
   replaced.set_("id", base.keys("id") + 100.0);
   const auto chosen = Catalog::select(
-      {pluss::table::Thread(bool_mask({true, false, true, false, false}))},
+      {pluss::table::Slate(bool_mask({true, false, true, false, false}))},
       {replaced},
       base);
   expect(chosen.keys("id").as_series().to_vec<std::int64_t>() == std::vector<std::int64_t>({103, 1, 102, 5, 4}),
@@ -894,7 +1447,7 @@ void test_catalog_sort_group_missing() {
 
   const auto id_as_note = base.keys({"id"}).cast().note();
   const auto ts_as_series = base.keys({"timestamp"}).cast(
-      pluss::table::ThreadCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
+      pluss::table::SlateCastOptions{.series_dtype = pluss::codem::ScalarType::Int64}).series();
   const auto id_as_f64 = base.keys({"id"}).astype(pluss::codem::ScalarType::Float64);
   expect(id_as_note.keys("id").kind() == StreamKind::Note, "cast(Note) id kind mismatch");
   expect(ts_as_series.keys("timestamp").kind() == StreamKind::Series, "cast(Series) timestamp kind mismatch");
@@ -939,7 +1492,7 @@ void test_catalog_and_archive_lvalue_name_ranges() {
 
   const auto f0 = make_base_frame().slice(0, 3);
   const auto f1 = make_base_frame().slice(2, 5);
-  const auto labels = pluss::table::Thread(
+  const auto labels = pluss::table::Slate(
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
   const auto archive = atlas.kindelize();
@@ -966,7 +1519,14 @@ void test_catalog_aggregates_apply_text_merge() {
   const auto merged = base.merge(right, "id", "inner");
   expect(merged.has("bonus"), "merge should include right-side feature");
   expect(merged.nrows() == 5, "merge row count mismatch");
-  expect_throw([&]() { (void)base.merge(right, "id", "left"); }, "merge(how!=inner) should throw");
+  // merge supports left/right/outer too, and never drops a record silently.
+  const auto first_two = right.head(2);
+  expect(base.merge(first_two, "id", "inner").nrows() == 2, "inner merge keeps only matched records");
+  const auto kept = base.merge(first_two, "id", "left");
+  expect(kept.nrows() == 5 && kept.keys("bonus").size() == 5,
+         "left merge keeps records that have no partner (as nulls)");
+  expect(base.merge(first_two, "id", "outer").nrows() == 5, "outer merge keeps everything");
+  expect_throw([&]() { (void)base.merge(right, "id", "sideways"); }, "merge should reject an unknown how");
 
   const auto applied = base.keys({"id"}).map([](const Stream& s) { return s + 10.0; });
   const auto applied_values = applied.keys("id").as_series().to_vec<std::int64_t>();
@@ -1144,7 +1704,7 @@ void test_archive_to_table_bridge() {
   const auto base = make_base_frame();
   const auto f0 = base.slice(0, 3);
   const auto f1 = base.slice(2, 5);
-  const auto labels = pluss::table::Thread(
+  const auto labels = pluss::table::Slate(
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
 
@@ -1166,7 +1726,7 @@ void test_archive_to_table_bridge() {
   expect(archive.slice_depth(0, 1).depth() == 1, "Archive::slice_depth mismatch");
 
   const auto sorted_desc = archive.label().sort(false);
-  const auto sorted_labels = sorted_desc.label().values().to_thread().cast().note().as_note();
+  const auto sorted_labels = sorted_desc.label().values().to_slate().cast().note().as_note();
   expect(std::string(sorted_labels.at(0)) == "batch_b", "Archive::sort_depth(desc) label mismatch");
 
   const auto relabeled = archive.label().set(
@@ -1418,6 +1978,279 @@ void test_archive_time_accessors() {
          "Archive::keys(...).ts().rolling should preserve second ragged catalog length");
 }
 
+
+void test_catalog_ragged_persistence() {
+  namespace fs = std::filesystem;
+  const auto root = fs::temp_directory_path() / "pluss_catalog_persist_test";
+  fs::remove_all(root);
+
+  for (const std::string kind : {"parquet", "csv"}) {
+    std::vector<std::pair<std::string, Stream>> seed{{"a", dstream({0.0})}};
+    Catalog cat(std::move(seed));
+    cat.set_("a", Stream(pluss::make_series(std::vector<double>{1.5, 2.5, 3.5, 4.5, 5.5}, {5}),
+                         bool_mask({true, false, true, true, true})));
+    cat.set_("weird,key \"q\"", labeled_series({7.0, 8.0}, {"x", "y"}));
+    cat.set_("n", labeled_note({"p", "q", "r"}, {"l1", "l2", "l3"}));
+    cat.set_("i", Stream(pluss::make_series(std::vector<std::int64_t>{10, 20, 30, 40}, {4})));
+    cat.set_("t", Stream(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"})));
+    cat.set_("empty", Stream(pluss::make_series(std::vector<double>{}, {0})));
+
+    const auto dir = (root / kind).string();
+    cat.save_streams(dir, kind);
+    const auto back = Catalog::load_streams(dir);
+
+    expect(back.keys() == cat.keys(), kind + ": key order should round-trip");
+    for (const auto& key : cat.keys()) {
+      const auto a = cat.get(key).value(), b = back.get(key).value();
+      expect(a.size() == b.size(), kind + ": length should round-trip for '" + key + "'");
+      expect(a.kind() == b.kind(), kind + ": kind should round-trip for '" + key + "'");
+      expect(a.has_label() == b.has_label(), kind + ": label presence should round-trip for '" + key + "'");
+    }
+    expect(back.get("a").value().size() == 5 && back.get("empty").value().size() == 0, kind + ": ragged extents are exact");
+    auto av = stream_values(back.get("a").value());
+    av[1] = 2.5;  // the payload under a null is unspecified; only validity matters there
+    expect(near_all(av, {1.5, 2.5, 3.5, 4.5, 5.5}) &&
+               stream_valid(back.get("a").value()) == std::vector<bool>({true, false, true, true, true}),
+           kind + ": values and nulls round-trip");
+    expect(note_values(back.get("n").value().as_note()) == std::vector<std::string>({"p", "q", "r"}),
+           kind + ": note values round-trip");
+    expect(note_values(back.get("n").value().label()->as_note()) == std::vector<std::string>({"l1", "l2", "l3"}),
+           kind + ": labels round-trip");
+    expect(near_all(stream_values(back.get("weird,key \"q\"").value()), {7.0, 8.0}), kind + ": awkward keys round-trip");
+    expect(near_all(stream_values(back.get("i").value()), {10, 20, 30, 40}), kind + ": int values round-trip");
+  }
+
+  expect_throw([&] { (void)Catalog::load_streams((root / "nowhere").string()); },
+               "load_streams should reject a directory with no manifest");
+  expect_throw([&] { Catalog(std::vector<std::pair<std::string, Stream>>{{"a", dstream({1})}}).save_streams((root / "bad").string(), "xlsx"); },
+               "save_streams should reject unknown store kinds");
+  {  // a truncated stream file is caught by the manifest's record count
+    const auto dir = (root / "parquet").string();
+    Catalog cat(std::vector<std::pair<std::string, Stream>>{{"a", dstream({1, 2, 3})}});
+    cat.save_streams((root / "trunc").string(), "csv");
+    Catalog other(std::vector<std::pair<std::string, Stream>>{{"a", dstream({1, 2})}});
+    other.save_streams((root / "trunc2").string(), "csv");
+    fs::copy_file(root / "trunc2" / "stream_000000.csv", root / "trunc" / "stream_000000.csv",
+                  fs::copy_options::overwrite_existing);
+    expect_throw([&] { (void)Catalog::load_streams((root / "trunc").string()); },
+                 "a record-count mismatch against the manifest should throw");
+    (void)dir;
+  }
+  fs::remove_all(root);
+}
+
+
+pluss::Series mask_of(const std::vector<bool>& m) {
+  std::vector<double> d(m.size());
+  for (std::size_t i = 0; i < m.size(); ++i) d[i] = m[i] ? 1.0 : 0.0;
+  return pluss::make_series(d, {static_cast<std::int64_t>(d.size())}).to(pluss::codem::ScalarType::Bool);
+}
+
+void test_catalog_fused_reductions() {
+  std::mt19937 rng(20261008);
+  std::uniform_int_distribution<int> len(0, 40), nstreams(1, 6);
+  std::uniform_real_distribution<double> val(-5.0, 5.0);
+  std::bernoulli_distribution nullp(0.2);
+  const std::vector<std::string> all{"sum", "mean", "min", "max", "var", "std"};
+  for (int trial = 0; trial < 60; ++trial) {
+    std::vector<std::pair<std::string, Stream>> streams;
+    std::vector<std::vector<double>> raw;
+    std::vector<std::vector<bool>> ok;
+    const int k = nstreams(rng);
+    for (int c = 0; c < k; ++c) {
+      std::vector<double> v(static_cast<std::size_t>(c == 0 ? 1 + len(rng) : len(rng)));
+      std::vector<bool> m(v.size());
+      for (std::size_t i = 0; i < v.size(); ++i) { v[i] = val(rng); m[i] = !nullp(rng); }
+      auto st = Stream(pluss::make_series(v, {static_cast<std::int64_t>(v.size())}));
+      if (!v.empty()) st = pluss::kindle::detail::with_validity_mask(st, mask_of(m));
+      streams.emplace_back("s" + std::to_string(c), st);
+      raw.push_back(v);
+      ok.push_back(m);
+    }
+    const Catalog cat(std::move(streams));
+
+    CatalogReduceOptions opt;
+    opt.unbiased = trial % 2 == 0;
+    if (trial % 3 == 1) opt.ended = pluss::kindle::RaggedEnd::Null;
+    if (trial % 5 == 2) opt.min_streams = 2;
+    if (trial % 4 == 3) opt.align = pluss::kindle::Align::Inner;
+
+    opt.axis = pluss::kindle::ReduceAxis::Key;
+    const auto fused = cat.reduce(all, opt);
+    expect(fused.keys() == all, "fused reduce returns one stream per op, in order");
+    const Catalog singles[] = {cat.sum(opt), cat.mean(opt), cat.min(opt), cat.max(opt), cat.var(opt), cat.std(opt)};
+    for (std::size_t i = 0; i < all.size(); ++i) {
+      const auto a = fused.get(all[i]).value();
+      const auto b = singles[i].get(all[i]).value();
+      expect(a.size() == b.size(), "fused '" + all[i] + "' has the single reduction's length");
+      const auto va = stream_valid(a), vb = stream_valid(b);
+      expect(va == vb, "fused '" + all[i] + "' has the single reduction's validity");
+      auto xa = stream_values(a), xb = stream_values(b);
+      for (std::size_t j = 0; j < xa.size(); ++j) if (!va[j]) xa[j] = xb[j] = 0.0;
+      expect(near_all(xa, xb, 1e-12), "fused '" + all[i] + "' equals the single reduction");
+    }
+
+    // count = contributing streams per index (brute force; Head alignment, longest domain)
+    if (opt.align == pluss::kindle::Align::Outer && opt.ended == pluss::kindle::RaggedEnd::Skip &&
+        opt.min_streams == 1) {
+      const auto cnt = stream_values(cat.reduce({"count"}, opt).get("count").value());
+      std::size_t width = 0;
+      for (const auto& r : raw) width = std::max(width, r.size());
+      expect(cnt.size() == width, "count spans the longest stream");
+      for (std::size_t j = 0; j < width; ++j) {
+        double want = 0;
+        for (std::size_t c = 0; c < raw.size(); ++c) want += j < raw[c].size() && ok[c][j];
+        expect(cnt[j] == want, "count matches the brute-force contributor count");
+      }
+    }
+  }
+
+  const Catalog tiny(std::vector<std::pair<std::string, Stream>>{{"a", dstream({1, 2})}});
+  expect_throw([&] { (void)tiny.reduce({"sum", "sum"}); }, "duplicate ops are rejected");
+  expect_throw([&] { (void)tiny.reduce({"median"}); }, "unknown ops are rejected");
+  expect_throw([&] { (void)tiny.reduce(std::vector<std::string>{}); }, "an empty op list is rejected");
+}
+
+
+void test_ragged_binary() {
+  using pluss::kindle::OpClass;
+  using pluss::kindle::RaggedAbsent;
+  using pluss::kindle::RaggedAlignment;
+  using pluss::kindle::RaggedDomain;
+  using pluss::kindle::RaggedLoss;
+  using pluss::kindle::RaggedPolicy;
+  const auto a = dstream({1, 2, 3, 4, 5});
+  const auto b = dstream({10, 20, 30});
+
+  // Default: longest domain, absent operand -> null; nothing dropped.
+  const auto sum = pluss::kindle::ragged_binary(a, b, "+");
+  expect(sum.size() == 5, "default keeps the longest extent");
+  expect(stream_valid(sum) == std::vector<bool>({true, true, true, false, false}),
+         "absent operand gives null, present pairs stay valid");
+  expect(near_all({stream_values(sum)[0], stream_values(sum)[1], stream_values(sum)[2]}, {11, 22, 33}),
+         "valid positions hold the pairwise sums");
+  // Symmetric: absent on the left.
+  const auto rsum = pluss::kindle::ragged_binary(b, a, "+");
+  expect(rsum.size() == 5 && stream_valid(rsum) == stream_valid(sum), "operand order does not change the shape");
+
+  // Equal lengths equal the plain operator.
+  const auto same = pluss::kindle::ragged_binary(a, dstream({1, 1, 1, 1, 1}), "-");
+  expect(near_all(stream_values(same), {0, 1, 2, 3, 4}), "equal lengths take the plain path");
+
+  auto policy = RaggedPolicy::defaults(OpClass::Elementwise);
+  policy.domain = RaggedDomain::Shortest;
+  const auto shortest = pluss::kindle::ragged_binary(a, b, "*", policy);
+  expect(shortest.size() == 3 && near_all(stream_values(shortest), {10, 40, 90}), "Shortest keeps complete pairs");
+  policy.loss = RaggedLoss::Error;
+  expect_throw([&] { (void)pluss::kindle::ragged_binary(a, b, "*", policy); }, "loss=Error refuses to drop records");
+
+  auto tail = RaggedPolicy::defaults(OpClass::Elementwise);
+  tail.alignment = RaggedAlignment::Tail;
+  const auto tl = pluss::kindle::ragged_binary(a, b, "+", tail);  // b lines up with a[2..4]
+  expect(stream_valid(tl) == std::vector<bool>({false, false, true, true, true}) &&
+             near_all({stream_values(tl)[2], stream_values(tl)[3], stream_values(tl)[4]}, {13, 24, 35}),
+         "Tail alignment lines the last records up");
+
+  auto fill = RaggedPolicy::defaults(OpClass::Elementwise);
+  fill.absent = RaggedAbsent::Fill;
+  fill.fill = 100.0;
+  const auto filled = pluss::kindle::ragged_binary(a, b, "+", fill);
+  expect(near_all(stream_values(filled), {11, 22, 33, 104, 105}) && stream_valid(filled) == std::vector<bool>(5, true),
+         "Fill substitutes the value for the absent operand");
+
+  auto ff = RaggedPolicy::defaults(OpClass::Elementwise);
+  ff.absent = RaggedAbsent::ForwardFill;
+  const auto forward = pluss::kindle::ragged_binary(a, b, "+", ff);
+  expect(near_all(stream_values(forward), {11, 22, 33, 34, 35}), "ForwardFill repeats the last record");
+
+  auto exact = RaggedPolicy::defaults(OpClass::Elementwise);
+  exact.domain = RaggedDomain::Exact;
+  expect_throw([&] { (void)pluss::kindle::ragged_binary(a, b, "+", exact); }, "Exact rejects different lengths");
+  auto err = RaggedPolicy::defaults(OpClass::Elementwise);
+  err.absent = RaggedAbsent::Error;
+  expect_throw([&] { (void)pluss::kindle::ragged_binary(a, b, "+", err); }, "absent=Error rejects different lengths");
+  expect_throw([&] { (void)pluss::kindle::ragged_binary(a, b, "^"); }, "unknown operators are rejected");
+
+  // Comparison of ragged streams, and nulls already in the data stay null.
+  const auto cmp = pluss::kindle::ragged_binary(a, b, ">");
+  expect(cmp.size() == 5, "comparisons are ragged-aware too");
+
+  // Catalog level.
+  const Catalog cat(std::vector<std::pair<std::string, Stream>>{{"x", a}, {"y", b}});
+  const auto out = cat.combine("x", "y", "+");
+  expect(out.has("x+y") && out.get("x+y")->size() == 5 && out.get("x")->size() == 5 && out.get("y")->size() == 3,
+         "combine adds the result and leaves the operands ragged");
+  expect_throw([&] { (void)cat.combine("x", "nope", "+"); }, "combine rejects unknown keys");
+}
+
+
+void test_join_build_side_cache() {
+  using pluss::relational::JoinHow;
+  std::mt19937 rng(77);
+  const std::int64_t n = 20000;
+  std::vector<std::int64_t> lk(n), rk(n / 2);
+  std::vector<double> lv(n), rv(n / 2);
+  for (std::int64_t i = 0; i < n; ++i) { lk[i] = static_cast<std::int64_t>(rng() % (n / 2 + 100)); lv[i] = double(i); }
+  for (std::int64_t i = 0; i < n / 2; ++i) { rk[i] = i; rv[i] = i * 0.5; }
+  auto ser = [](const std::vector<std::int64_t>& v) { return Stream(pluss::make_series(v, {static_cast<std::int64_t>(v.size())})); };
+  Catalog L(std::vector<std::pair<std::string, Stream>>{{"k", ser(lk)}, {"a", dstream(lv)}});
+  Catalog R(std::vector<std::pair<std::string, Stream>>{{"k", ser(rk)}, {"b", dstream(rv)}});
+  pluss::kindle::CatalogJoinSpec spec;
+  spec.how = JoinHow::Left;
+  spec.left_keys = {"k"};
+  spec.right_keys = {"k"};
+
+  Catalog::clear_join_cache();
+  const auto before = Catalog::join_cache_stats();
+  const auto first = L.join_detailed(R, spec);
+  const auto mid = Catalog::join_cache_stats();
+  const auto second = L.join_detailed(R, spec);
+  const auto after = Catalog::join_cache_stats();
+  expect(mid.second == before.second + 1 && after.first == mid.first + 1,
+         "the second join on the same right side is served from the cache");
+  expect(first.report.summary() == second.report.summary(), "a cached join reports exactly like a fresh one");
+  expect(near_all(stream_values(first.catalog.get("b").value()), stream_values(second.catalog.get("b").value())),
+         "a cached join produces the same data");
+
+  // Editing the right side in place must not serve stale results.
+  Catalog::clear_join_cache();
+  const auto fresh = L.join_detailed(R, spec);
+  expect(first.report.summary() == fresh.report.summary(), "cache-free result matches the cached one");
+
+  {  // An in-place edit of storage shared with the right side must never serve a stale table.
+    spec.how = JoinHow::Left;
+    auto shared_keys = pluss::make_series(rk, {static_cast<std::int64_t>(rk.size())});
+    Catalog R3(std::vector<std::pair<std::string, Stream>>{{"k", Stream(shared_keys)}, {"b", dstream(rv)}});
+    Catalog::clear_join_cache();
+    const auto pre = L.join_detailed(R3, spec);
+    shared_keys.add_(5);
+    const auto post_cached = L.join_detailed(R3, spec);
+    Catalog::clear_join_cache();
+    const auto post_fresh = L.join_detailed(R3, spec);
+    expect(post_cached.report.summary() == post_fresh.report.summary(),
+           "an in-place edit of shared key storage is never answered from a stale cached table");
+    (void)pre;
+  }
+
+  // A different key column (or data) is a different entry, and results follow the data.
+  std::vector<std::int64_t> shifted(rk.size());
+  for (std::size_t i = 0; i < rk.size(); ++i) shifted[i] = rk[i] + 5;
+  Catalog R2(std::vector<std::pair<std::string, Stream>>{{"k", ser(shifted)}, {"b", dstream(rv)}});
+  const auto other = L.join_detailed(R2, spec);
+  expect(!near_all(stream_values(other.catalog.get("b").value()), stream_values(first.catalog.get("b").value())),
+         "different right keys give a different join");
+
+  // Every join kind agrees with and without the cache.
+  for (const auto how : {JoinHow::Inner, JoinHow::Left, JoinHow::Right, JoinHow::Outer, JoinHow::LeftOnly,
+                         JoinHow::RightOnly}) {
+    spec.how = how;
+    Catalog::clear_join_cache();
+    const auto cold = L.join_detailed(R, spec);
+    const auto warm = L.join_detailed(R, spec);
+    expect(cold.report.summary() == warm.report.summary(), "cold and warm joins agree for every join kind");
+  }
+}
+
 } // namespace
 
 int main() {
@@ -1429,6 +2262,14 @@ int main() {
     test_catalog_plot3d_accessor();
     test_catalog_accessors();
     test_catalog_reductions();
+    test_catalog_jagged_reductions();
+    test_catalog_fused_reductions();
+    test_ragged_binary();
+    test_join_build_side_cache();
+    test_ragged_policy_and_layout();
+    test_catalog_join_policy();
+    test_stream_reduce_groups_and_expand();
+    test_catalog_ragged_persistence();
     test_catalog_construction_and_selection();
     test_catalog_label_alignment();
     test_catalog_sort_group_missing();

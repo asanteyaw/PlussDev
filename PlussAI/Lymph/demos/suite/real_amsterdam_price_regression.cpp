@@ -15,7 +15,7 @@ int main() {
   enc.max_categories = 16;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"room_type", "room_shared", "room_private", "person_capacity", "host_is_superhost",
                  "multi", "biz", "cleanliness_rating", "guest_satisfaction_overall",
                  "bedrooms", "dist", "metro_dist", "attr_index", "rest_index", "lng", "lat"})
@@ -24,14 +24,14 @@ int main() {
 
   lymph::Workflow wf = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
-          lymph::workflow::branch("cat", {"room_type"}, {{"encode", lymph::stage::one_hot_encoder(enc)}}),
+          lymph::workflow::branch("cat", {"room_type"}, {{"encode", lymph::prep::stage::one_hot_encoder(enc)}}),
           lymph::workflow::branch("num", {"room_shared", "room_private", "person_capacity", "host_is_superhost",
                                           "multi", "biz", "cleanliness_rating", "guest_satisfaction_overall",
                                           "bedrooms", "dist", "metro_dist", "attr_index", "rest_index", "lng", "lat"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::random_forest_regressor({.learners = 80, .subsample = 0.85}));
+      lymph::models::random_forest_regressor({.learners = 80, .subsample = 0.85}));
 
   wf.learn_(data);
   std::cout << "amsterdam mae: " << wf.assess(data).mae.item<double>() << "\n";

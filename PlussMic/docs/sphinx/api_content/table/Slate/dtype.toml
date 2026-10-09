@@ -1,0 +1,34 @@
+summary = """
+Return the concrete dtype name used by the underlying slate payload.
+
+This is the concrete readout, not the higher-level payload-family summary used by `Slate::ptype()` and `DataFrame::ptypes()`.
+
+Use it when you care about concrete storage/readout detail rather than only the broad payload family.
+"""
+
+returns = """
+`std::string`
+    Concrete dtype name such as `float64`, `int64`, `bool`, `utf8`, or `datetime64[ns, UTC]`.
+"""
+
+see_also = [
+  "<a href=\"#ptype\"><code>Slate::ptype</code></a>: inspect the broader payload family.",
+  "<a href=\"../../dataframe_api_reference.md#dtypes\"><code>DataFrame::dtypes</code></a>: inspect concrete feature dtypes across an entire frame."
+]
+
+notes = [
+  """
+`dtype()` is most informative after parsing or casting numeric data, when you need to confirm whether the slate is currently carrying `float64`, `int64`, `bool`, or another scalar representation.
+"""
+]
+
+[[examples]]
+title = "Inspect the scalar dtype of a numeric slate."
+code = """
+using namespace pluss::table;
+
+auto out = Slate(pluss::make_series({10.0, 20.0, 30.0})).dtype();
+"""
+output = """
+float64
+"""

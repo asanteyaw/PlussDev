@@ -1,0 +1,36 @@
+#include <pluss/bi/session.h>
+#include <pluss/bi/specs.h>
+
+#include <iostream>
+#include <string>
+#include <variant>
+
+namespace bi = pluss::bi;
+
+template <class Fn>
+bool throws(Fn fn) {
+  try {
+    fn();
+  } catch (const std::exception&) {
+    return true;
+  }
+  return false;
+}
+
+bi::Filter region_filter(const std::string& key, const std::string& value) {
+  return bi::Filter{.key = key, .feature = "region", .op = bi::FilterOp::Eq,
+                    .payload = bi::FilterScalar{value}};
+}
+
+int main() {
+  std::cout << std::boolalpha;
+  // clear_filters removes every filter in one call, and the version moves once.
+  bi::Session session;
+  session.set_filter(region_filter("region", "north"));
+  session.set_filter(region_filter("region_b", "south"));
+  const auto before = session.version();
+  session.clear_filters();
+  std::cout << "filters left: " << session.filters().size() << '\n';
+  std::cout << "version moved by one: " << (session.version() == before + 1) << '\n';
+  return 0;
+}

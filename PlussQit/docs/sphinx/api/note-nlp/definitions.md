@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::definitions
+# Note::NlpAccessor::definitions
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::definitions() const
+TokenBatch Note::NlpAccessor::definitions() const
 ```
 
 ## Locate Defined Terms

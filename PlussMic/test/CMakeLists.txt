@@ -9,6 +9,9 @@ add_executable(plussmic_table_csv_tests
 add_executable(plussmic_kindle_catalog_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/kindle_catalog_tests.cpp
 )
+add_executable(plussmic_bundle_locus_tests
+  ${CMAKE_CURRENT_SOURCE_DIR}/bundle_locus_tests.cpp
+)
 add_executable(plussmic_scribble_model_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/scribble_model_tests.cpp
 )
@@ -48,6 +51,7 @@ add_executable(plussmic_scribble_gap_benchmark
 
 target_link_libraries(plussmic_table_csv_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_kindle_catalog_tests PRIVATE PlussMic)
+target_link_libraries(plussmic_bundle_locus_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_scribble_model_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_dataframe_plot_api_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_ts_accessor_tests PRIVATE PlussMic)
@@ -67,6 +71,9 @@ target_compile_definitions(plussmic_table_csv_tests PRIVATE
 target_compile_definitions(plussmic_kindle_catalog_tests PRIVATE
   FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
+)
+target_compile_definitions(plussmic_bundle_locus_tests PRIVATE
+  FMT_HEADER_ONLY=1
 )
 target_compile_definitions(plussmic_scribble_model_tests PRIVATE
   FMT_HEADER_ONLY=1
@@ -103,6 +110,7 @@ target_compile_definitions(plussmic_bi_serve_tests PRIVATE
 
 add_test(NAME plussmic_table_csv COMMAND plussmic_table_csv_tests)
 add_test(NAME plussmic_kindle_catalog COMMAND plussmic_kindle_catalog_tests)
+add_test(NAME plussmic_bundle_locus COMMAND plussmic_bundle_locus_tests)
 add_test(NAME plussmic_scribble_model COMMAND plussmic_scribble_model_tests)
 add_test(NAME plussmic_table_dataframe_plot_api COMMAND plussmic_table_dataframe_plot_api_tests)
 add_test(NAME plussmic_table_ts_accessor COMMAND plussmic_table_ts_accessor_tests)

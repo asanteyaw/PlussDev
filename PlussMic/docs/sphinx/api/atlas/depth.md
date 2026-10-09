@@ -38,9 +38,9 @@ Example 1. Three quarters stacked into one atlas.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
-auto q3 = DataFrame({{"sales", Thread(pluss::make_series({130.0, 140.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
+auto q3 = DataFrame({{"sales", Slate(pluss::make_series({130.0, 140.0}))}});
 auto atlas = Atlas({q1, q2, q3});
 
 std::cout << atlas.depth();

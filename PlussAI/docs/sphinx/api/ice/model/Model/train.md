@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 028642b2af36 -->
 # `pluss::ai::ice::Model::train`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -8,54 +7,51 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+void pluss::ai::ice::Model::train(bool enabled = true) noexcept;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Sets training mode on every registered parameter and module --
+`train(true)` (the default argument) is training mode,
+`train(false)` is evaluation mode (equivalent to calling
+[`eval`](eval.md)).
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`bool enabled = true`
+: `true` for training mode, `false` for evaluation mode.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`void`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None. `train` is `noexcept` and never throws.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the default argument, explicit `false`, and toggling
+back and forth.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  model.eval();
+  model.train();
+  std::cout << "is_training() after train() = " << model.is_training() << "\n";
 
   return 0;
 }
@@ -64,27 +60,25 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+is_training() after train() = 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  model.train(false);
+  std::cout << "is_training() after train(false) = " << model.is_training() << "\n";
 
   return 0;
 }
@@ -93,27 +87,29 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+is_training() after train(false) = 0
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  model.train(true);
+  std::cout << "[1] is_training() = " << model.is_training() << "\n";
+  model.train(false);
+  std::cout << "[2] is_training() = " << model.is_training() << "\n";
+  model.train(true);
+  std::cout << "[3] is_training() = " << model.is_training() << "\n";
 
   return 0;
 }
@@ -122,12 +118,19 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+[1] is_training() = 1
+[2] is_training() = 0
+[3] is_training() = 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`eval`](eval.md) -- equivalent to `train(false)`.
+- [`is_training`](is_training.md) -- reads this flag back.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
@@ -135,9 +138,9 @@ TODO: paste the verified stdout of the exact program above
     <span class="label">Previous</span>
     <span class="title">to</span>
   </a>
-  <a class="next-link" href="valid_step.html">
+  <a class="next-link" href="training_report.html">
     <span class="label">Next</span>
-    <span class="title">valid_step</span>
+    <span class="title">training_report</span>
   </a>
 </div>
 <!-- apiref:nav:end -->

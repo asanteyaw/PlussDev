@@ -35,8 +35,8 @@ Example 1. Every quarter in the stack has the same two cases.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2 = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2 = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0}))}});
 auto atlas = Atlas({q1, q2});
 
 std::cout << atlas.ncases();
@@ -54,8 +54,8 @@ construction — `ncases()` is never ambiguous about which frame it's describing
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"sales", Thread(pluss::make_series({100.0, 120.0}))}});
-auto q2_wrong_shape = DataFrame({{"sales", Thread(pluss::make_series({110.0, 90.0, 80.0}))}});
+auto q1 = DataFrame({{"sales", Slate(pluss::make_series({100.0, 120.0}))}});
+auto q2_wrong_shape = DataFrame({{"sales", Slate(pluss::make_series({110.0, 90.0, 80.0}))}});
 
 try {
   auto atlas = Atlas({q1, q2_wrong_shape});

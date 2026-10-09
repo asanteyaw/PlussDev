@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_env
+# Note::TexAccessor::strip_env
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_env(std::string_view name) const
+Note Note::TexAccessor::strip_env(std::string_view name) const
 ```
 
 ## Remove One Exact Environment Kind

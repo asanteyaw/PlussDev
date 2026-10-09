@@ -59,7 +59,7 @@ See Example 2 — this is the same category of surprise documented on
 
 **delimiter** (`std::string_view`, default `"|"`)
     The literal text to split each cell on before collecting tokens. Must
-    not be empty — `indicate("")` throws `"Thread::indicate: delimiter
+    not be empty — `indicate("")` throws `"Slate::indicate: delimiter
     cannot be empty"`.
 
 **prefix** (`std::string`, default `""`)
@@ -83,7 +83,7 @@ behavior from the danger box above.
 using namespace pluss::table;
 
 auto tagged = DataFrame({
-    {"tags", Thread(pluss::make_note(
+    {"tags", Slate(pluss::make_note(
         {"red|blue", "blue|green", "red", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -133,7 +133,7 @@ valid row ever uses.
 
 ```cpp
 auto langs = DataFrame({
-    {"langs", Thread(pluss::make_note(
+    {"langs", Slate(pluss::make_note(
         {"python, rust", "python, go", "just-one-word", "mars"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -193,7 +193,7 @@ try {
 ### Output
 
 ```text
-Thread::indicate: delimiter cannot be empty
+Slate::indicate: delimiter cannot be empty
 ```
 
 ## Notes
@@ -206,7 +206,7 @@ Thread::indicate: delimiter cannot be empty
 - The level set is collected from every row's raw text regardless of
   validity, so an invalid row can introduce an all-false phantom column.
   See the warning above and Example 2.
-- An empty `delimiter` throws `"Thread::indicate: delimiter cannot be
+- An empty `delimiter` throws `"Slate::indicate: delimiter cannot be
   empty"`.
 
 ## See Also

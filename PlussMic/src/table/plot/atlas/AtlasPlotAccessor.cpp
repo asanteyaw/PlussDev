@@ -121,12 +121,12 @@ std::vector<double> positional_axis(std::int64_t n) {
   return values;
 }
 
-bool thread_prefers_labels(const Thread& t) {
-  return t.kind() == ThreadKind::Note || t.kind() == ThreadKind::Timeline;
+bool slate_prefers_labels(const Slate& t) {
+  return t.kind() == SlateKind::Note || t.kind() == SlateKind::Timeline;
 }
 
-std::vector<std::string> thread_to_labels(const Thread& thread) {
-  const Thread note_like = (thread.kind() == ThreadKind::Note) ? thread : thread.cast().note();
+std::vector<std::string> slate_to_labels(const Slate& slate) {
+  const Slate note_like = (slate.kind() == SlateKind::Note) ? slate : slate.cast().note();
   const auto& note = note_like.as_note();
   std::vector<std::string> labels;
   labels.reserve(static_cast<std::size_t>(note.numel()));
@@ -147,36 +147,36 @@ template <std::ranges::input_range Range>
   return out;
 }
 
-pluss::Series thread_to_numeric_series(const Thread& t, std::string_view where, std::string_view feature_name) {
-  Thread numeric_thread = t;
+pluss::Series slate_to_numeric_series(const Slate& t, std::string_view where, std::string_view feature_name) {
+  Slate numeric_slate = t;
   switch (t.kind()) {
-    case ThreadKind::Series:
+    case SlateKind::Series:
       break;
-    case ThreadKind::Timeline:
-      numeric_thread = Thread(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
+    case SlateKind::Timeline:
+      numeric_slate = Slate(t.as_timeline().epoch_nanos(), detail::validity_mask(t));
       break;
-    case ThreadKind::Note:
-      numeric_thread = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
+    case SlateKind::Note:
+      numeric_slate = t.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series();
       break;
     default:
-      PLUSS_FAIL(std::string(where) + ": feature '" + std::string(feature_name) + "' is not numeric/threadable");
+      PLUSS_FAIL(std::string(where) + ": feature '" + std::string(feature_name) + "' is not numeric");
   }
 
-  auto values = numeric_thread.as_series().to(pluss::codem::ScalarType::Float64);
-  if (detail::has_validity_mask(numeric_thread)) {
+  auto values = numeric_slate.as_series().to(pluss::codem::ScalarType::Float64);
+  if (detail::has_validity_mask(numeric_slate)) {
     const auto nan_fill = pluss::Series::full(
         {values.numel()},
         std::numeric_limits<double>::quiet_NaN(),
         pluss::codem::ScalarType::Float64);
-    values = values.where(detail::validity_mask(numeric_thread)->logical_not(), nan_fill);
+    values = values.where(detail::validity_mask(numeric_slate)->logical_not(), nan_fill);
   }
   return values.reshape({values.numel()});
 }
 
-std::vector<double> thread_to_numeric_values(const Thread& t,
+std::vector<double> slate_to_numeric_values(const Slate& t,
                                              std::string_view where,
                                              std::string_view feature_name) {
-  return thread_to_numeric_series(t, where, feature_name).to_vec<double>();
+  return slate_to_numeric_series(t, where, feature_name).to_vec<double>();
 }
 
 void require_size(std::int64_t actual, std::int64_t expected, std::string_view where, std::string_view what) {
@@ -193,7 +193,7 @@ void require_min_size(std::int64_t actual, std::int64_t minimum, std::string_vie
           + ", got " + std::to_string(actual) + ")");
 }
 
-std::vector<std::string> depth_legend_labels(const std::optional<Thread>& depth_labels,
+std::vector<std::string> depth_legend_labels(const std::optional<Slate>& depth_labels,
                                              std::span<const std::int64_t> positions,
                                              std::string_view where) {
   const auto depth = static_cast<std::int64_t>(positions.size());
@@ -207,8 +207,8 @@ std::vector<std::string> depth_legend_labels(const std::optional<Thread>& depth_
     return labels;
   }
 
-  if (thread_prefers_labels(*depth_labels)) {
-    const auto source = thread_to_labels(*depth_labels);
+  if (slate_prefers_labels(*depth_labels)) {
+    const auto source = slate_to_labels(*depth_labels);
     require_min_size(
         static_cast<std::int64_t>(source.size()),
         *std::max_element(positions.begin(), positions.end()) + 1,
@@ -222,7 +222,7 @@ std::vector<std::string> depth_legend_labels(const std::optional<Thread>& depth_
     return labels;
   }
 
-  const auto values = thread_to_numeric_values(*depth_labels, where, "depth axis");
+  const auto values = slate_to_numeric_values(*depth_labels, where, "depth axis");
   require_min_size(
       static_cast<std::int64_t>(values.size()),
       *std::max_element(positions.begin(), positions.end()) + 1,
@@ -299,7 +299,7 @@ double reduce_statistic(const std::vector<double>& values, AtlasDepthStatistic s
   PLUSS_FAIL("Atlas::plot().depth: unsupported reduction statistic");
 }
 
-DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels,
+DepthAxis2D build_depth_axis(const std::optional<Slate>& depth_labels,
                              std::span<const std::int64_t> positions,
                              std::string_view where) {
   const auto depth = static_cast<std::int64_t>(positions.size());
@@ -312,9 +312,9 @@ DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels,
     }
     return axis;
   }
-  if (thread_prefers_labels(*depth_labels)) {
+  if (slate_prefers_labels(*depth_labels)) {
     axis.values = positional_axis(depth);
-    const auto source = thread_to_labels(*depth_labels);
+    const auto source = slate_to_labels(*depth_labels);
     require_min_size(
         static_cast<std::int64_t>(source.size()),
         *std::max_element(positions.begin(), positions.end()) + 1,
@@ -326,7 +326,7 @@ DepthAxis2D build_depth_axis(const std::optional<Thread>& depth_labels,
     }
     return axis;
   }
-  const auto source = thread_to_numeric_values(*depth_labels, where, "depth axis");
+  const auto source = slate_to_numeric_values(*depth_labels, where, "depth axis");
   require_min_size(
       static_cast<std::int64_t>(source.size()),
       *std::max_element(positions.begin(), positions.end()) + 1,
@@ -434,7 +434,7 @@ std::vector<double> depth_statistic_values(const std::vector<DataFrame>& frames,
     PLUSS_CHECK(
         frame.get(feature).has_value(),
         std::string(where) + ": missing feature '" + std::string(feature) + "'");
-    const auto frame_values = thread_to_numeric_values(frame.features(feature), where, feature);
+    const auto frame_values = slate_to_numeric_values(frame.features(feature), where, feature);
     values.push_back(reduce_statistic(frame_values, statistic));
   }
   return values;
@@ -459,7 +459,7 @@ std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>&
     for (const auto i : std::views::iota(std::size_t{0}, features.size())) {
       const auto& feature = features[i];
       PLUSS_CHECK(frame.get(feature).has_value(), std::string(where) + ": missing feature '" + feature + "'");
-      const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
+      const auto values = slate_to_numeric_values(frame.features(feature), where, feature);
       require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
       auto& dest = flattened[i];
       dest.insert(dest.end(), values.begin(), values.end());
@@ -475,7 +475,7 @@ std::vector<pluss::Series> flatten_feature_columns(const std::vector<DataFrame>&
 }
 
 AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
-                                  const std::optional<Thread>& depth_labels,
+                                  const std::optional<Slate>& depth_labels,
                                   std::span<const std::int64_t> positions,
                                   std::string_view feature,
                                   std::string_view where) {
@@ -490,7 +490,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
     PLUSS_CHECK(frame.get(feature).has_value(),
                 std::string(where) + ": missing feature '" + std::string(feature) + "' in one or more frames");
     max_cases = std::max(max_cases, frame.ncases());
-    all_case_labeled = all_case_labeled && thread_prefers_labels(frame.label().values());
+    all_case_labeled = all_case_labeled && slate_prefers_labels(frame.label().values());
   }
 
   AtlasGrid3D out;
@@ -504,7 +504,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
 
     for (const auto p : positions) {
       const auto& frame = frames[static_cast<std::size_t>(p)];
-      const auto labels = thread_to_labels(frame.label().values());
+      const auto labels = slate_to_labels(frame.label().values());
       require_size(static_cast<std::int64_t>(labels.size()), frame.ncases(), where, "case labels");
       for (const auto& label : labels) {
         if (!union_index.contains(label)) {
@@ -521,8 +521,8 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
 
     for (const auto p : positions) {
       const auto& frame = frames[static_cast<std::size_t>(p)];
-      const auto labels = thread_to_labels(frame.label().values());
-      const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
+      const auto labels = slate_to_labels(frame.label().values());
+      const auto values = slate_to_numeric_values(frame.features(feature), where, feature);
       require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
 
       std::vector<double> row(static_cast<std::size_t>(ncases), std::numeric_limits<double>::quiet_NaN());
@@ -537,7 +537,7 @@ AtlasGrid3D build_depth_case_grid(const std::vector<DataFrame>& frames,
 
     for (const auto p : positions) {
       const auto& frame = frames[static_cast<std::size_t>(p)];
-      const auto values = thread_to_numeric_values(frame.features(feature), where, feature);
+      const auto values = slate_to_numeric_values(frame.features(feature), where, feature);
       require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), where, feature);
 
       std::vector<double> row(static_cast<std::size_t>(ncases), std::numeric_limits<double>::quiet_NaN());
@@ -594,17 +594,17 @@ struct ResolvedFrameAxis {
 ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
                                      std::optional<std::string_view> x_feature,
                                      std::string_view where) {
-  const auto& axis_thread = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
+  const auto& axis_slate = x_feature.has_value() ? frame.features(*x_feature) : frame.label().values();
   const auto axis_label = x_feature.has_value() ? std::string(*x_feature) : std::string("case");
   ResolvedFrameAxis axis;
   axis.label = axis_label;
-  if (thread_prefers_labels(axis_thread)) {
+  if (slate_prefers_labels(axis_slate)) {
     axis.values = positional_axis(frame.ncases());
-    axis.labels = thread_to_labels(axis_thread);
+    axis.labels = slate_to_labels(axis_slate);
     require_size(static_cast<std::int64_t>(axis.labels.size()), frame.ncases(), where, "x labels");
     return axis;
   }
-  axis.values = thread_to_numeric_values(axis_thread, where, axis_label);
+  axis.values = slate_to_numeric_values(axis_slate, where, axis_label);
   require_size(static_cast<std::int64_t>(axis.values.size()), frame.ncases(), where, "x axis");
   return axis;
 }
@@ -612,7 +612,7 @@ ResolvedFrameAxis resolve_frame_axis(const DataFrame& frame,
 } // namespace
 
 AtlasPlotAccessor::AtlasPlotAccessor(std::vector<DataFrame> frames,
-                                     std::optional<Thread> depth_labels,
+                                     std::optional<Slate> depth_labels,
                                      AtlasPlotOptions options)
     : frames_(std::move(frames)), depth_labels_(std::move(depth_labels)), options_(std::move(options)) {}
 
@@ -649,7 +649,7 @@ pluss::pl::Studio AtlasPlotAccessor::frames(pluss::msharp::RangeView::Int frame_
     PLUSS_CHECK(frame.get(y_feature).has_value(),
                 "Atlas::plot().frames: missing y feature '" + std::string(y_feature) + "' in one or more frames");
     auto axis = resolve_frame_axis(frame, x_feature, "Atlas::plot().frames");
-    auto values = thread_to_numeric_values(frame.features(y_feature), "Atlas::plot().frames", y_feature);
+    auto values = slate_to_numeric_values(frame.features(y_feature), "Atlas::plot().frames", y_feature);
     require_size(static_cast<std::int64_t>(values.size()), frame.ncases(), "Atlas::plot().frames", y_feature);
     xs_series.push_back(pluss::make_series(axis.values));
     ys_series.push_back(pluss::make_series(values));
@@ -788,9 +788,9 @@ pluss::pl::Studio AtlasPlotAccessor::cloud3(std::string_view x_feature,
         frame.get(x_feature).has_value() && frame.get(y_feature).has_value() && frame.get(z_feature).has_value(),
         "Atlas::plot().cloud3: one or more requested features are missing in one or more frames");
 
-    const auto x = thread_to_numeric_values(frame.features(x_feature), "Atlas::plot().cloud3", x_feature);
-    const auto y = thread_to_numeric_values(frame.features(y_feature), "Atlas::plot().cloud3", y_feature);
-    const auto z = thread_to_numeric_values(frame.features(z_feature), "Atlas::plot().cloud3", z_feature);
+    const auto x = slate_to_numeric_values(frame.features(x_feature), "Atlas::plot().cloud3", x_feature);
+    const auto y = slate_to_numeric_values(frame.features(y_feature), "Atlas::plot().cloud3", y_feature);
+    const auto z = slate_to_numeric_values(frame.features(z_feature), "Atlas::plot().cloud3", z_feature);
 
     require_size(static_cast<std::int64_t>(x.size()), frame.ncases(), "Atlas::plot().cloud3", x_feature);
     require_size(static_cast<std::int64_t>(y.size()), frame.ncases(), "Atlas::plot().cloud3", y_feature);
@@ -841,7 +841,7 @@ pluss::pl::Studio AtlasPlotAccessor::depth(std::string_view feature, const Atlas
     PLUSS_CHECK(
         frame.get(feature).has_value(),
         std::string("Atlas::plot().depth: missing feature '") + std::string(feature) + "'");
-    const auto values = thread_to_numeric_values(frame.features(feature), "Atlas::plot().depth", feature);
+    const auto values = slate_to_numeric_values(frame.features(feature), "Atlas::plot().depth", feature);
     center_values.push_back(reduce_statistic(values, options.center));
     if (use_lower) {
       lower_values.push_back(reduce_statistic(values, *options.lower));

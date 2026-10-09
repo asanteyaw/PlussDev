@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 61bfa25297dc -->
+<!-- pluss-signature-hash: 684340c92453 -->
 
 # Catalog::select
 
@@ -9,19 +9,19 @@
 
 ```cpp
 static Catalog Catalog::select(
-    pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+    pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
     pluss::msharp::RangeView::Of<Catalog> choices,
     const Catalog& default_value)
 
 static Catalog Catalog::select(
-    std::initializer_list<pluss::table::Thread> conditions,
+    std::initializer_list<pluss::table::Slate> conditions,
     std::initializer_list<Catalog> choices,
     const Catalog& default_value)
 ```
 
 ## What It Does
 
-Chooses row-wise between whole catalogs, using boolean `Thread` masks as the conditions.
+Chooses row-wise between whole catalogs, using boolean `Slate` masks as the conditions.
 
 Every choice catalog and the default catalog must have the same keys in the same order.
 For each key, `Catalog::select(...)` delegates to [`Stream::select`](../stream/select.md).

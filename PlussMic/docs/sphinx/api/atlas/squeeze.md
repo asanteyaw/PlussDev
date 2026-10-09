@@ -39,8 +39,8 @@ Example 1. Squeeze a depth-1 atlas back to a plain `DataFrame`.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema"}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 
@@ -63,10 +63,10 @@ Example 2. Calling `squeeze()` on a multi-frame atlas throws.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({2.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 

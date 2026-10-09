@@ -1,7 +1,17 @@
 #include "kindle/catalog.h"
+#include "kindle/ColumnView.h"
 
 #include <algorithm>
+#include <filesystem>
+#include "table/io/SnapshotCsv.h"
+
+#include "MSharp/Parallel.h"
+#include "relational/Match.h"
 #include <array>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <cstring>
 #include <cctype>
 #include <exception>
 #include <limits>
@@ -151,16 +161,16 @@ std::vector<std::int64_t> sort_indices_for_keys(const std::vector<Stream>& key_s
     PLUSS_CHECK(s.size() == n, "Catalog::sort: all key streams must have same length");
   }
 
-  std::vector<pluss::table::Thread> key_threads;
-  key_threads.reserve(key_streams.size());
-  for (const auto& s : key_streams) key_threads.push_back(s.to_thread());
+  std::vector<pluss::table::Slate> key_slates;
+  key_slates.reserve(key_streams.size());
+  for (const auto& s : key_streams) key_slates.push_back(s.to_slate());
 
   std::vector<std::int64_t> idx(static_cast<std::size_t>(n));
   for (std::int64_t i = 0; i < n; ++i) idx[static_cast<std::size_t>(i)] = i;
 
   std::stable_sort(idx.begin(), idx.end(), [&](std::int64_t a, std::int64_t b) {
-    for (std::size_t k = 0; k < key_threads.size(); ++k) {
-      const int cmp = pluss::table::detail::compare_rows(key_threads[k], a, b, true);
+    for (std::size_t k = 0; k < key_slates.size(); ++k) {
+      const int cmp = pluss::table::detail::compare_rows(key_slates[k], a, b, true);
       if (cmp == 0) continue;
       const bool asc = k < ascending.size() ? ascending[k] : true;
       return asc ? (cmp < 0) : (cmp > 0);
@@ -271,31 +281,31 @@ std::int64_t positional_target_len(const std::vector<Stream>& streams,
   return min_len;
 }
 
-pluss::table::Thread apply_fill_policy(pluss::table::Thread thread,
+pluss::table::Slate apply_fill_policy(pluss::table::Slate slate,
                                        StreamKind kind,
                                        const TabelizePolicy& policy) {
   switch (policy.fill) {
     case FillPolicy::Null:
-      return thread;
+      return slate;
     case FillPolicy::Scalar:
       PLUSS_CHECK(kind == StreamKind::Series,
                   "Catalog::tabelize(fill=scalar): supported only for Series streams");
       PLUSS_CHECK(policy.fill_scalar.has_value(),
                   "Catalog::tabelize(fill=scalar): fill_scalar must be provided");
-      return thread.fillnull(*policy.fill_scalar);
+      return slate.fillnull(*policy.fill_scalar);
     case FillPolicy::ForwardFill:
-      return thread.ffill();
+      return slate.ffill();
     case FillPolicy::BackwardFill:
-      return thread.bfill();
+      return slate.bfill();
   }
-  return thread;
+  return slate;
 }
 
-pluss::table::Thread build_aligned_thread(const Stream& stream,
+pluss::table::Slate build_aligned_slate(const Stream& stream,
                                           const std::vector<std::int64_t>& source_index,
                                           const TabelizePolicy& policy) {
   const auto target_len = static_cast<std::int64_t>(source_index.size());
-  const auto source = stream.to_thread();
+  const auto source = stream.to_slate();
   const auto source_note = source.cast().note().as_note();
   const auto source_valid = validity_or_all_true(stream);
 
@@ -311,9 +321,9 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
 
   const std::array<std::int64_t, 1> shape{target_len};
   auto note = pluss::make_note(values, shape);
-  pluss::table::Thread out_note(note, optional_mask_from_valid(valid));
+  pluss::table::Slate out_note(note, optional_mask_from_valid(valid));
 
-  pluss::table::Thread out{};
+  pluss::table::Slate out{};
   try {
     switch (stream.kind()) {
       case StreamKind::Series:
@@ -336,7 +346,7 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
                 source_values[static_cast<std::size_t>(src_i)];
           }
         }
-        out = pluss::table::Thread(
+        out = pluss::table::Slate(
             pluss::duration::nanos(std::move(duration_values), {target_len}),
             optional_mask_from_valid(valid));
         break;
@@ -356,7 +366,7 @@ pluss::table::Thread build_aligned_thread(const Stream& stream,
 struct AlignmentPlan {
   AlignBy effective_align_by{AlignBy::Pos};
   std::int64_t target_len{0};
-  pluss::table::Thread label_axis{};
+  pluss::table::Slate label_axis{};
   std::vector<std::vector<std::int64_t>> source_index_by_stream{};
 };
 
@@ -387,7 +397,7 @@ AlignmentPlan build_alignment_plan(const std::vector<std::string>& keys,
 
     std::vector<std::int64_t> idx(static_cast<std::size_t>(plan.target_len));
     for (std::int64_t i = 0; i < plan.target_len; ++i) idx[static_cast<std::size_t>(i)] = i;
-    plan.label_axis = pluss::table::Thread(pluss::make_series(idx, {plan.target_len}));
+    plan.label_axis = pluss::table::Slate(pluss::make_series(idx, {plan.target_len}));
     return plan;
   }
 
@@ -468,7 +478,7 @@ AlignmentPlan build_alignment_plan(const std::vector<std::string>& keys,
   if (all_labels_in_anchor) {
     plan.label_axis = streams[anchor].label()->take(anchor_label_indices);
   } else {
-    plan.label_axis = pluss::table::Thread(
+    plan.label_axis = pluss::table::Slate(
         pluss::make_note(target_labels, {plan.target_len}));
   }
   return plan;
@@ -487,9 +497,9 @@ std::string unique_label_feature_name(std::string base, const std::unordered_set
 Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
                                const pluss::loader::ReadCsvOptions& infer_options,
                                const KindelizePolicy& policy = {}) {
-  std::optional<pluss::table::Thread> case_axis = std::nullopt;
+  std::optional<pluss::table::Slate> case_axis = std::nullopt;
   if (raw.cases.has_value()) {
-    case_axis = pluss::table::detail::infer_thread_from_raw_csv_column(*raw.cases, infer_options);
+    case_axis = pluss::table::detail::infer_slate_from_raw_csv_column(*raw.cases, infer_options);
   }
 
   std::vector<std::pair<std::string, Stream>> out;
@@ -498,21 +508,21 @@ Catalog catalog_from_raw_batch(const pluss::loader::CsvRawBatch& raw,
   names.reserve(raw.features.size() * 2);
 
   for (const auto& col : raw.features) {
-    auto feature = pluss::table::detail::infer_thread_from_raw_csv_column(col, infer_options);
+    auto feature = pluss::table::detail::infer_slate_from_raw_csv_column(col, infer_options);
 
-    std::optional<pluss::table::Thread> stream_label = std::nullopt;
+    std::optional<pluss::table::Slate> stream_label = std::nullopt;
     if (policy.attach_labels && case_axis.has_value() && case_axis->size() == feature.size()) {
       stream_label = case_axis;
     }
 
     names.insert(col.name);
-    out.emplace_back(col.name, Stream::from_thread(feature, std::move(stream_label)));
+    out.emplace_back(col.name, Stream::from_slate(feature, std::move(stream_label)));
   }
 
   if (policy.materialize_label && case_axis.has_value()) {
     PLUSS_CHECK(names.find(policy.label_key) == names.end(),
                 "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
-    out.emplace_back(policy.label_key, Stream::from_thread(*case_axis));
+    out.emplace_back(policy.label_key, Stream::from_slate(*case_axis));
   }
 
   return Catalog(std::move(out));
@@ -527,8 +537,8 @@ Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy&
   names.reserve(batch.features.size() * 2);
   for (auto& [name, feature] : batch.features) {
     auto s = policy.attach_labels
-        ? Stream::from_thread(feature, case_axis)
-        : Stream::from_thread(feature);
+        ? Stream::from_slate(feature, case_axis)
+        : Stream::from_slate(feature);
     names.insert(name);
     out.emplace_back(std::move(name), std::move(s));
   }
@@ -536,7 +546,7 @@ Catalog catalog_from_batch(pluss::loader::CsvBatch batch, const KindelizePolicy&
   if (policy.materialize_label && case_axis.has_value()) {
     PLUSS_CHECK(names.find(policy.label_key) == names.end(),
                 "Catalog::kindelize: label key collides with existing feature '" + policy.label_key + "'");
-    out.emplace_back(policy.label_key, Stream::from_thread(*case_axis));
+    out.emplace_back(policy.label_key, Stream::from_slate(*case_axis));
   }
 
   return Catalog(std::move(out));
@@ -573,6 +583,8 @@ public:
 #include "kindle/ops/catalog/CatalogLifecycleAndIO.inc"
 #include "kindle/ops/catalog/CatalogCoreOps.inc"
 #include "kindle/ops/catalog/CatalogReduce.inc"
+#include "kindle/ops/catalog/CatalogJoin.inc"
+#include "kindle/ops/catalog/CatalogPersist.inc"
 #include "kindle/ops/catalog/CatalogAccessors.inc"
 #include "kindle/ops/catalog/CatalogTextAndMutation.inc"
 #include "kindle/ops/catalog/CatalogTabelizeAndInternals.inc"

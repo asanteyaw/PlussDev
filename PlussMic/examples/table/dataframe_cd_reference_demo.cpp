@@ -34,7 +34,7 @@ int main() {
       {"price", make_series({3.0, 4.0, 2.5, 5.0})},
   }).title("sales");
 
-  auto labeled = sales.label().set(Thread(make_note({"A100", "B200", "B200", "D400"})));
+  auto labeled = sales.label().set(Slate(make_note({"A100", "B200", "B200", "D400"})));
 
   auto numeric_cases = DataFrame({
       {"student", make_note({"Ada", "Bola", "Chen"})},
@@ -117,7 +117,16 @@ int main() {
                   .features({"city", "price"}).to_string());
 
   print_block("CASES", labeled.label().values().to_string());
-  print_block("CASES_AS_SERIES", Thread(numeric_cases.label().values().as_series()).to_string());
+  print_block("LABEL_SET_NOTE",
+              sales.label().set(make_note({"row-a", "row-b", "row-c", "row-d"})).to_string());
+  try {
+    (void)sales.label().set(make_note({"row-a", "row-b"}));
+  } catch (const std::exception& e) {
+    const std::string message(e.what());
+    std::cout << "LABEL_SET_NOTE_SIZE_ERROR\n"
+              << message.substr(0, message.find('\n')) << "\n\n";
+  }
+  print_block("CASES_AS_SERIES", Slate(numeric_cases.label().values().as_series()).to_string());
 
   print_block("CAST_DTYPES", raw.astype({
       {"student_id", ScalarType::Int64},

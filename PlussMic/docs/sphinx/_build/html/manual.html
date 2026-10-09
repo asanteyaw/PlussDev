@@ -13,8 +13,8 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=af5a0516"></script>
-    <script src="_static/layout.js?v=6be133a8"></script>
+    <script src="_static/api_nav.js?v=e742a746"></script>
+    <script src="_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Part I: Orientation" href="manual/part01_orientation.html" />
@@ -42,7 +42,7 @@
 Pluss ecosystem. It is written for readers who want to use PlussMic as a daily
 tool, not only look up signatures.</p>
 <p>PlussMic has four related models:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>table  -&gt; DataFrame, Thread, Atlas
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>table  -&gt; DataFrame, Slate, Atlas
 kindle -&gt; Stream, Catalog, Archive
 bundle -&gt; Nexus, NexusTraverse, NexusQuery
 scribble -&gt; Slot, Registry, Axel
@@ -50,7 +50,7 @@ scribble -&gt; Slot, Registry, Axel
 </div>
 <p>Most users start with <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, because it is the table abstraction used for
 CSV, Excel, JSON, Parquet, feature engineering, exploratory analysis, plotting,
-and export. <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is the typed column model underneath <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
+and export. <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is the typed column model underneath <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>. <code class="docutils literal notranslate"><span class="pre">Atlas</span></code>
 stacks related frames. <code class="docutils literal notranslate"><span class="pre">Kindle</span></code> is the aligned stream layer. <code class="docutils literal notranslate"><span class="pre">Scribble</span></code> covers
 heterogeneous records, while <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> covers the multi-table <code class="docutils literal notranslate"><span class="pre">Nexus</span></code> workbench
 when the job is broader than one rectangular table.</p>
@@ -85,14 +85,14 @@ operations. I/O chapters use files such as <code class="docutils literal notrans
 <code class="docutils literal notranslate"><span class="pre">&quot;transactions.parquet&quot;</span></code>, assumed to be in the program’s working directory.
 The manual shows the relevant input file contents before the code. Public
 examples never contain paths from the author’s machine.</p>
-<p>Pluss values are passed directly where <code class="docutils literal notranslate"><span class="pre">Thread</span></code> conversion is implicit:</p>
+<p>Pluss values are passed directly where <code class="docutils literal notranslate"><span class="pre">Slate</span></code> conversion is implicit:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="w"> </span><span class="n">sales</span><span class="p">({</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">})},</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">7.0</span><span class="p">})},</span>
 <span class="p">});</span>
 </pre></div>
 </div>
-<p>Explicit <code class="docutils literal notranslate"><span class="pre">Thread</span></code> construction appears only when the example needs Thread
+<p>Explicit <code class="docutils literal notranslate"><span class="pre">Slate</span></code> construction appears only when the example needs Slate
 metadata, a validity mask, or a named standalone column.</p>
 </section>
 <section id="verified-examples">
@@ -137,7 +137,7 @@ fixed before the manual teaches the behavior as correct.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="manual/part03_table_model.html">Part III: The Table Model</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="manual/part03_table_model.html#thread">Thread</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part03_table_model.html#slate">Slate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part03_table_model.html#missingness-and-validity">Missingness and validity</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part03_table_model.html#dataframe">DataFrame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part03_table_model.html#cases">Cases</a></li>
@@ -183,25 +183,25 @@ fixed before the manual teaches the behavior as correct.</p>
 <li class="toctree-l2"><a class="reference internal" href="manual/part05_dataframe_workflows.html#display-and-titles">Display and titles</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="manual/part06_thread_workflows.html">Part VI: Thread Workflows</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#payload-families">Payload families</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#construct-threads">Construct threads</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#inspect-a-thread">Inspect a Thread</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#verified-example-numeric-and-text-operations">Verified example: numeric and text operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#row-space-operations">Row-space operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#missingness">Missingness</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#verified-example-missingness-and-row-operations">Verified example: missingness and row operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#numeric-operations">Numeric operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#comparisons-and-bands">Comparisons and bands</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#rolling-windows">Rolling windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#thread-time-series-accessor">Thread time-series accessor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#casting">Casting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#text-operations">Text operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#verified-example-windows-casts-text-and-returns">Verified example: windows, casts, text, and returns</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#time-operations">Time operations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#display-labels-and-names">Display labels and names</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#functional-and-mutating-methods">Functional and mutating methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part06_thread_workflows.html#choosing-thread-or-dataframe-apis">Choosing Thread or DataFrame APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/part06_slate_workflows.html">Part VI: Slate Workflows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#payload-families">Payload families</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#construct-threads">Construct threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#inspect-a-slate">Inspect a Slate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#verified-example-numeric-and-text-operations">Verified example: numeric and text operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#row-space-operations">Row-space operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#missingness">Missingness</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#verified-example-missingness-and-row-operations">Verified example: missingness and row operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#numeric-operations">Numeric operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#comparisons-and-bands">Comparisons and bands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#rolling-windows">Rolling windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#slate-time-series-accessor">Slate time-series accessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#casting">Casting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#text-operations">Text operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#verified-example-windows-casts-text-and-returns">Verified example: windows, casts, text, and returns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#time-operations">Time operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#display-labels-and-names">Display labels and names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#functional-and-mutating-methods">Functional and mutating methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part06_slate_workflows.html#choosing-slate-or-dataframe-apis">Choosing Slate or DataFrame APIs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="manual/part07_query_sql.html">Part VII: Query Expressions and SQL</a><ul>
@@ -225,7 +225,7 @@ fixed before the manual teaches the behavior as correct.</p>
 <li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#the-time-data-model">The time data model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#creating-time-features">Creating time features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#sorting-is-your-responsibility">Sorting is your responsibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#thread-time-series-accessor">Thread time-series accessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#slate-time-series-accessor">Slate time-series accessor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#returns-differences-lag-and-lead">Returns, differences, lag, and lead</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#rolling-windows">Rolling windows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part08_time_series.html#expanding-and-exponentially-weighted-metrics">Expanding and exponentially weighted metrics</a></li>
@@ -354,7 +354,7 @@ fixed before the manual teaches the behavior as correct.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="manual/part15_api_map.html">Part XV: API Map</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#dataframe-api-areas">DataFrame API areas</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#thread-api-areas">Thread API areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#slate-api-areas">Slate API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#loader-api-areas">Loader API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#atlas-api-areas">Atlas API areas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/part15_api_map.html#kindle-api-areas">Kindle API areas</a></li>

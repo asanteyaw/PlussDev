@@ -33,7 +33,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 namespace models = pluss::ai::ice::models;
 namespace data = pluss::ai::ice::data;
 
@@ -386,14 +386,14 @@ bool run_ice_tft_dataset_integration_checks(std::ostream* err = nullptr) {
       }
     }
     return DataFrame({
-        {"series", Thread(pluss::make_note(series_col))},
-        {"t", Thread(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
-        {"level", Thread(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, float_cfg()))},
+        {"series", Slate(pluss::make_note(series_col))},
+        {"t", Slate(pluss::make_series(time_col, {static_cast<std::int64_t>(time_col.size())}, float_cfg()))},
+        {"level", Slate(pluss::make_series(level_col, {static_cast<std::int64_t>(level_col.size())}, float_cfg()))},
         {"position",
-         Thread(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
+         Slate(pluss::make_series(position_col, {static_cast<std::int64_t>(position_col.size())}, float_cfg()))},
         {"noisy_level",
-         Thread(pluss::make_series(noisy_col, {static_cast<std::int64_t>(noisy_col.size())}, float_cfg()))},
-        {"y", Thread(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
+         Slate(pluss::make_series(noisy_col, {static_cast<std::int64_t>(noisy_col.size())}, float_cfg()))},
+        {"y", Slate(pluss::make_series(y_col, {static_cast<std::int64_t>(y_col.size())}, float_cfg()))},
     });
   };
 
@@ -547,6 +547,161 @@ bool run_ice_tft_save_load_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+// Coverage for the batch-shape validation TemporalFusionTransformer::learn/
+// predict/assess now perform: feature *widths* (encoder_size/decoder_size/
+// static_size) must match TFTOptions, since VariableSelectionNetwork
+// silently reads only the first `options.*_size` columns of a too-wide
+// input otherwise (see tft_blocks.h's VariableSelectionNetworkImpl::
+// forward) -- a real correctness gap this check closes. Lookback/horizon
+// *length* is deliberately left unchecked (the LSTM encoder/decoder and
+// the causal self-attention layer are architecturally length-agnostic),
+// so this also pins that a length mismatch alone still predicts
+// successfully, proving the two are independently controlled.
+bool run_ice_tft_shape_validation_checks(std::ostream* err = nullptr) {
+  constexpr std::int64_t kEncoderLength = 6;
+  constexpr std::int64_t kDecoderLength = 3;
+
+  const auto train_data = make_synthetic(32, kEncoderLength, kDecoderLength, /*seed=*/41);
+
+  models::TFTOptions options{};
+  options.static_size = 1;
+  options.encoder_size = 1;
+  options.decoder_size = 1;
+  options.encoder_length = kEncoderLength;
+  options.decoder_length = kDecoderLength;
+  options.hidden_size = 8;
+  options.lstm_layers = 1;
+  options.attention_heads = 2;
+  options.dropout = 0.0;
+  options.cfg = float_cfg();
+  options.seed = 9;
+
+  models::TemporalFusionTransformer model(options);
+
+  models::TFTBatch train_batch{};
+  train_batch.static_inputs = train_data.static_inputs;
+  train_batch.encoder_inputs = train_data.encoder_inputs;
+  train_batch.decoder_inputs = train_data.decoder_inputs;
+  train_batch.target = train_data.target;
+
+  models::TFTTrainOptions train_options{};
+  train_options.execution.max_epochs = 3;
+  train_options.validation.split_ratio = 0.0;
+  model.learn(train_batch, train_options);
+
+  const auto widen_last_dim = [](const Series& x) {
+    return pluss::series::unite(std::vector<Series>{x, x}, -1); // doubles the trailing width.
+  };
+
+  // Too-wide encoder_inputs (encoder_size=2 instead of the trained 1):
+  // VariableSelectionNetwork would otherwise silently read only the first
+  // column and ignore the second with no error at all.
+  {
+    models::TFTBatch wrong = train_batch;
+    wrong.encoder_inputs = widen_last_dim(train_batch.encoder_inputs);
+    bool threw = false;
+    try {
+      const auto forecast = model.predict(wrong);
+      static_cast<void>(forecast);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    if (!threw) {
+      if (err) *err << "ice TFT predict() should reject encoder_inputs wider than encoder_size\n";
+      return false;
+    }
+  }
+
+  // Too-wide decoder_inputs (decoder_size=2 instead of the trained 1).
+  {
+    models::TFTBatch wrong = train_batch;
+    wrong.decoder_inputs = widen_last_dim(train_batch.decoder_inputs);
+    bool threw = false;
+    try {
+      const auto forecast = model.predict(wrong);
+      static_cast<void>(forecast);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    if (!threw) {
+      if (err) *err << "ice TFT predict() should reject decoder_inputs wider than decoder_size\n";
+      return false;
+    }
+  }
+
+  // Too-wide static_inputs (static_size=2 instead of the trained 1).
+  {
+    models::TFTBatch wrong = train_batch;
+    wrong.static_inputs = widen_last_dim(train_batch.static_inputs);
+    bool threw = false;
+    try {
+      const auto forecast = model.predict(wrong);
+      static_cast<void>(forecast);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    if (!threw) {
+      if (err) *err << "ice TFT predict() should reject static_inputs wider than static_size\n";
+      return false;
+    }
+  }
+
+  // static_inputs left undefined entirely, even though static_size > 0.
+  {
+    models::TFTBatch wrong = train_batch;
+    wrong.static_inputs = pluss::series::undefined();
+    bool threw = false;
+    try {
+      const auto forecast = model.predict(wrong);
+      static_cast<void>(forecast);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    if (!threw) {
+      if (err) *err << "ice TFT predict() should reject an undefined static_inputs when static_size > 0\n";
+      return false;
+    }
+  }
+
+  // The same width check applies to learn() -- not just predict()/assess().
+  {
+    models::TFTBatch wrong = train_batch;
+    wrong.encoder_inputs = widen_last_dim(train_batch.encoder_inputs);
+    models::TemporalFusionTransformer fresh_model(options);
+    bool threw = false;
+    try {
+      fresh_model.learn(wrong, train_options);
+    } catch (const std::exception&) {
+      threw = true;
+    }
+    if (!threw) {
+      if (err) *err << "ice TFT learn() should reject encoder_inputs wider than encoder_size\n";
+      return false;
+    }
+  }
+
+  // By contrast, a *length* mismatch (8-step lookback instead of the
+  // trained 6) is deliberately still accepted -- this is the intentional
+  // flexibility the width checks above do not take away.
+  {
+    const auto longer_lookback = make_synthetic(32, /*encoder_length=*/8, kDecoderLength, /*seed=*/42);
+    models::TFTBatch longer{};
+    longer.static_inputs = longer_lookback.static_inputs;
+    longer.encoder_inputs = longer_lookback.encoder_inputs;
+    longer.decoder_inputs = longer_lookback.decoder_inputs;
+    longer.target = longer_lookback.target;
+
+    const auto forecast = model.predict(longer);
+    const auto sizes = forecast.attention_weights.sizes();
+    if (sizes.size() != 3 || sizes[2] != 8 + kDecoderLength) {
+      if (err) *err << "ice TFT predict() should still succeed with a different lookback length\n";
+      return false;
+    }
+  }
+
+  return true;
+}
+
 } // namespace
 
 #ifdef PLUSS_AI_HAS_CATCH2
@@ -555,6 +710,7 @@ TEST_CASE("ice tft tranche", "[ice][models][tft]") {
   if (!run_ice_tft_categorical_checks(&std::cerr)) FAIL("ice TFT categorical checks failed");
   if (!run_ice_tft_dataset_integration_checks(&std::cerr)) FAIL("ice TFT dataset integration checks failed");
   if (!run_ice_tft_save_load_checks(&std::cerr)) FAIL("ice TFT save/load checks failed");
+  if (!run_ice_tft_shape_validation_checks(&std::cerr)) FAIL("ice TFT shape validation checks failed");
 }
 #else
 int main() {
@@ -563,6 +719,7 @@ int main() {
   ok = run_ice_tft_categorical_checks(&std::cerr) && ok;
   ok = run_ice_tft_dataset_integration_checks(&std::cerr) && ok;
   ok = run_ice_tft_save_load_checks(&std::cerr) && ok;
+  ok = run_ice_tft_shape_validation_checks(&std::cerr) && ok;
   if (!ok) {
     return 1;
   }

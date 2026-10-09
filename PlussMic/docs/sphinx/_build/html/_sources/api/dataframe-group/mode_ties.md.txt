@@ -22,7 +22,7 @@ spec alongside them.
 
 Ties are broken by sorting the tied values themselves in ascending order (not by
 which one was observed first) — this deliberately does *not* reuse the
-first-occurrence tie-break [`mode()`](mode.md) and [`Thread::freq()`](../thread/freq.md)
+first-occurrence tie-break [`mode()`](mode.md) and [`Slate::freq()`](../thread/freq.md)
 use, because those pick one arbitrary winner among many distinct values, while this
 method already returns the full tied set: ordering that set by value is a property of
 the values themselves, independent of how the source rows happened to be ordered,
@@ -66,8 +66,8 @@ Example 1. Contrast with `mode()`: no tie stays one row, a tie becomes two.
 using namespace pluss::table;
 
 auto loans = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"status", Thread(pluss::make_note({"good", "good", "bad", "good"}))},
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"status", Slate(pluss::make_note({"good", "good", "bad", "good"}))},
 });
 std::cout << loans;
 
@@ -112,8 +112,8 @@ Example 2. A group with no observed values still produces one row, with a null.
 
 ```cpp
 auto readings = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "South", "South"}))},
-    {"status", Thread(pluss::make_note(
+    {"region", Slate(pluss::make_note({"North", "North", "South", "South"}))},
+    {"status", Slate(pluss::make_note(
         {"x", "x", "bad", "good"}),
         pluss::make_series(std::vector<bool>{false, false, true, true}))},
 });
@@ -160,8 +160,8 @@ Example 3. Works on numeric value features too, not just `Note`.
 
 ```cpp
 auto readings3 = DataFrame({
-    {"region", Thread(pluss::make_note({"A", "A", "A", "B", "B", "B", "B"}))},
-    {"amount", Thread(pluss::make_series({10.0, 20.0, 20.0, 5.0, 5.0, 9.0, 9.0}))},
+    {"region", Slate(pluss::make_note({"A", "A", "A", "B", "B", "B", "B"}))},
+    {"amount", Slate(pluss::make_series({10.0, 20.0, 20.0, 5.0, 5.0, 9.0, 9.0}))},
 });
 std::cout << readings3;
 
@@ -211,7 +211,7 @@ numbers; this method always sorts by the latter for numeric features).
   [`transform()`](transform.md) in the same call — those require a fixed one-row-
   per-group shape across every spec, which a variable-length tie set cannot satisfy.
 - Ties are sorted ascending by value, not by first-occurrence order — a deliberate
-  difference from [`mode()`](mode.md) and [`Thread::freq()`](../thread/freq.md),
+  difference from [`mode()`](mode.md) and [`Slate::freq()`](../thread/freq.md),
   justified by this method returning the whole tied set rather than picking one
   winner from it.
 - Supports the same value-feature kinds as [`mode()`](mode.md): `Note` and numeric
@@ -227,7 +227,7 @@ numbers; this method always sorts by the latter for numeric features).
 
 - [`DataFrameGrouped::mode`](mode.md): the single-winner counterpart this method
   complements.
-- [`Thread::freq()`](../thread/freq.md): the same first-occurrence tie-break
+- [`Slate::freq()`](../thread/freq.md): the same first-occurrence tie-break
   `mode()` uses, explained in full.
 - [`DataFrameGrouped::agg`](agg.md): the fixed-one-row-per-group terminal this
   method cannot be expressed through.

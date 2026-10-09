@@ -17,8 +17,6 @@
 namespace pluss {
 using Note = coden::Note;
 using NoteDType = coden::NoteDType;
-using NoteNlpAccessor = coden::NoteNlpAccessor;
-using NoteRegexAccessor = coden::NoteRegexAccessor;
 using TextRef = coden::TextRef;
 using TokenBatch = coden::TokenBatch;
 using NotePrintOptions = coden::NotePrintOptions;

@@ -1,0 +1,87 @@
+<!-- pluss-hand-authored -->
+
+# SlateLabelAccessor::set
+
+[Back to SlateLabelAccessor API Reference](../../slate_label_accessor_api_reference)
+
+## Signature
+
+```cpp
+SlateLabelAccessor::set(const Slate& labels) const -> Slate
+```
+
+## What It Does
+
+Replaces the bound thread's case labels with `labels`, used as-is — a direct
+forward to `Slate::caselbl(labels)`. The thread's own values are completely
+unchanged; only the companion case-label sequence shown alongside them (and
+used by [`sort()`](sort.md), [`slice()`](slice.md), [`pos()`](pos.md), and
+similar) is replaced.
+
+## Parameters
+
+**labels** (`const Slate&`)
+
+The replacement case labels. Must be the same length as the bound thread.
+
+## Returns
+
+`Slate`
+    A new thread, holding the same values as `*this`, with `labels` as its
+    case labels.
+
+## Examples
+
+Example 1. Attach text labels to a numeric thread.
+
+```cpp
+using namespace pluss::table;
+
+auto sales = Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}));
+auto tagged = sales.label().set(
+    Slate(pluss::make_note({"east", "west", "east", "north"})));
+std::cout << tagged;
+```
+
+### Output
+
+```text
+east   100
+west   200
+east   150
+north  90
+
+ptype: Series
+```
+
+The values are exactly `sales`'s own — only the leftmost display column (the
+case labels) changed.
+
+## Notes
+
+- The thread's own values and kind are never touched — only the case-label
+  companion sequence changes.
+- Identical to calling `Slate::caselbl(labels)` directly.
+- Unlike `DataFrameLabelAccessor::set`, there is no feature-promotion overload
+  here — a bare `Slate` has no named features to promote, so this is the
+  only form.
+
+## See Also
+
+- [`SlateLabelAccessor::reset`](reset.md): the inverse — clears case labels
+  back to the default integer range.
+- [`SlateLabelAccessor::range`](range.md): explicitly reset to the default
+  range labels.
+- [`SlateLabelAccessor::values`](values.md): read the current case labels
+  back out.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="reset.html">
+    <span class="label">Previous</span>
+    <span class="title">reset</span>
+  </a>
+  <a class="next-link" href="slice.html">
+    <span class="label">Next</span>
+    <span class="title">slice</span>
+  </a>
+</div>

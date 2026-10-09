@@ -17,11 +17,11 @@ int main() {
   enc.max_categories = 96;
   enc.include_unknown_bucket = true;
 
-  lymph::Policy gate{
+  lymph::workflow::Policy gate{
       .drop_columns = {"VIN (1-10)", "DOL Vehicle ID", "Vehicle Location", "Electric Utility", "2020 Census Tract"},
       .reject_missing = {"Electric Range"},
   };
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"Model Year", "Make", "Model", "Electric Vehicle Type",
                  "Clean Alternative Fuel Vehicle (CAFV) Eligibility", "Base MSRP"})
       .label("Electric Range")
@@ -32,14 +32,14 @@ int main() {
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("cat", {"Make", "Model", "Electric Vehicle Type",
                                           "Clean Alternative Fuel Vehicle (CAFV) Eligibility"}, {
-              {"encode", lymph::stage::one_hot_encoder(enc)},
+              {"encode", lymph::prep::stage::one_hot_encoder(enc)},
           }),
           lymph::workflow::branch("num", {"Model Year", "Base MSRP"}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"scale", lymph::stage::standard_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::gradient_boost_regressor({.learners = 80, .learning_rate = 0.05}));
+      lymph::models::gradient_boost_regressor({.learners = 80, .learning_rate = 0.05}));
 
   wf.learn_(data);
   std::cout << "ev range mae: " << wf.assess(data).mae.item<double>() << "\n";

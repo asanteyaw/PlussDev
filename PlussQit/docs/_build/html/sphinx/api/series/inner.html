@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::intersect1d" href="intersect1d.html" />
@@ -58,7 +58,7 @@ elements; the result is a scalar <code class="docutils literal notranslate"><spa
 that complements <a class="reference internal" href="outer.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">outer()</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">outer</span></code> fans two vectors out to a
 matrix, <code class="docutils literal notranslate"><span class="pre">inner</span></code> collapses them to a scalar.</p>
 <p>For two genuine 1-D vectors this is the dot product; see
-<a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::dot</span></code></span></a>, which enforces the
+<a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::dot</span></code></span></a>, which enforces the
 rank-1 contract instead of flattening.</p>
 </section>
 <section id="shape-versus-pairing">
@@ -126,7 +126,7 @@ different total element count) is an error.</p></li>
 <li><p>The result is always a scalar <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not a <code class="docutils literal notranslate"><span class="pre">double</span></code>. Call <code class="docutils literal notranslate"><span class="pre">.item&lt;double&gt;()</span></code>
 to extract the number.</p></li>
 <li><p>For a strict 1-D dot product without flattening, use
-<a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::dot</span></code></span></a>.</p></li>
+<a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::dot</span></code></span></a>.</p></li>
 </ul>
 </section>
 <section id="summary">
@@ -142,7 +142,7 @@ to extract the number.</p></li>
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="outer.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::outer</span></code></span></a>: the rank-1 expansion.</p></li>
-<li><p><a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SeriesLinearAlgAccessor::dot</span></code></span></a>: strict 1-D dot
+<li><p><a class="reference internal" href="../series-linearalg/dot.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::LinearAlgAccessor::dot</span></code></span></a>: strict 1-D dot
 product.</p></li>
 <li><p><a class="reference internal" href="mul.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::mul</span></code></span></a> + <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::sum</span></code></span></a>: the explicit two-step form.</p></li>
 </ul>
@@ -192,7 +192,6 @@ product.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -200,8 +199,8 @@ product.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::tabular_blocks
+# Note::TexAccessor::tabular_blocks
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::tabular_blocks() const
+TokenBatch Note::TexAccessor::tabular_blocks() const
 ```
 
 ## Extract Complete `tabular`/`tabular*` Environments

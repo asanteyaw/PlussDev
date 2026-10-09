@@ -147,7 +147,7 @@ The host view is read row-major for display, but `mask.sizes()` remains
 
 ## See Also
 
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): when you need the matching
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): when you need the matching
   substrings, not just a yes/no.
 - [`Note::replace`](replace.md) / [`Note::remove_all`](remove_all.md):
   rewrite or delete matches instead of testing for them.

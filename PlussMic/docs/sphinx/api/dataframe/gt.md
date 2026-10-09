@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 985827ed4fbb -->
+<!-- pluss-signature-hash: 915995e7fe90 -->
 
 # DataFrame::gt
 
@@ -12,9 +12,9 @@ DataFrame::gt(double other, bool strict = true) const -> DataFrame
 DataFrame::gt(std::string_view other, bool strict = true) const -> DataFrame
 DataFrame::gt(const DataFrame& other, bool strict = true) const -> DataFrame
 DataFrame::gt(const DataFrame& other, const AlignOptions& options, bool strict = true) const -> DataFrame
-DataFrame::gt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
-DataFrame::gt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
-DataFrame::gt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame::gt(const Slate& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame::gt(const Slate& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
+DataFrame::gt(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ DataFrame::gt(const Thread& other, const AlignOptions& options, Axis axis = Axis
 The ordering relation "greater than", returning a boolean-valued frame the same shape
 as the source. `gt()` is the mirror image of [`lt()`](lt.md): same operand shapes, same
 `strict` parameter, same comparison-family alignment rules — see [`eq()`](eq.md)'s
-"What It Does" for the full explanation of the shared scalar/string/`DataFrame`/`Thread`
+"What It Does" for the full explanation of the shared scalar/string/`DataFrame`/`Slate`
 operand shapes.
 
 ```{important} ge() is implemented in terms of gt()
@@ -36,7 +36,7 @@ independent implementation: `frame.ge(other)` is literally `frame.gt(other, /* s
 **other**
 
 The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
-`const DataFrame&`, or `const Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for
+`const DataFrame&`, or `const Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for
 the full breakdown.
 
 **strict** (`bool`, default `true`)
@@ -46,7 +46,7 @@ the full breakdown.
 - `false`: "greater than or equal to" (`>=`) — a cell equal to `other` reports `true`.
   This is exactly what calling [`ge()`](ge.md) does internally.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -176,13 +176,13 @@ Exactly one `true` cell — `s3`'s `quiz` (`84 > 83`) — since every other cell
 [`scores.ge(changed)`](ge.md) on the identical two frames, where all of those equal
 cells report `true` instead.
 
-Example 5. Compare against a `Thread` with one value per feature — `quiz` checked
+Example 5. Compare against a `Slate` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
-auto out_thread = scores.gt(thresholds);
-std::cout << out_thread;
+auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
+auto out_slate = scores.gt(thresholds);
+std::cout << out_slate;
 ```
 
 ### Output

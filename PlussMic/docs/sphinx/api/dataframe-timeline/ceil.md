@@ -38,7 +38,7 @@ Example 1. Ceil every row of a `Timeline` feature to the nearest hour.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T09:47:12Z",
           "2024-06-01T14:05:00Z",
       }))}});
@@ -83,7 +83,7 @@ already exactly on a second boundary.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T14:05:00.250000000Z",
           "2024-06-01T14:05:01.000000000Z",
       }))}});
@@ -128,7 +128,7 @@ Example 3. Ceil to the nearest minute with `"min"`.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-06-01T14:05:47Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-06-01T14:05:47Z"}))}});
 std::cout << events;
 
 auto out = events.tl().ceil("min");
@@ -166,7 +166,7 @@ one already on the boundary.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-06-01T14:05:00Z",
           "2024-06-03T00:00:00Z",
       }))}});

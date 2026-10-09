@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::align_blocks
+# Note::TexAccessor::align_blocks
 
 [Back to Note Tex Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::align_blocks() const
+TokenBatch Note::TexAccessor::align_blocks() const
 ```
 
 ## Extract Complete Alignment Environments

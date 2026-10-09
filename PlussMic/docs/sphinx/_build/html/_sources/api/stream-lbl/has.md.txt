@@ -39,12 +39,12 @@ was set" from "nothing was set, here's a fallback."
 Example 1. `has()` toggles across the set/reset lifecycle.
 
 ```cpp
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0}));
 std::cout << "initial: " << std::boolalpha << stream.lbl().has() << "\n";
 
-auto labeled = stream.lbl().set(Thread(pluss::make_note({"a", "b", "c"})));
+auto labeled = stream.lbl().set(Slate(pluss::make_note({"a", "b", "c"})));
 std::cout << "after set: " << std::boolalpha << labeled.lbl().has() << "\n";
 
 auto back = labeled.lbl().reset();

@@ -1,0 +1,41 @@
+summary = """
+Expose the underlying `pluss::Timeline` payload directly.
+
+`Slate::as_timeline()` is the temporal escape hatch for timeline-specific transforms such as calendar component extraction, localization, rounding, and other specialized chronology operations that belong to the underlying temporal type.
+"""
+
+returns = """
+`const pluss::Timeline&`
+    Reference to the underlying timeline payload.
+"""
+
+see_also = [
+  "<a href=\"#as_timeindex\"><code>Slate::as_timeindex</code></a>: expose the indexed temporal payload.",
+  "<a href=\"#as_series\"><code>Slate::as_series</code></a>: switch to the numeric payload when the result has become numeric."
+]
+
+notes = [
+  """
+Many timeline operations return numeric or temporal pluss payloads directly. Wrap them back into `Slate(...)` when you want to keep working at the table layer afterward.
+"""
+]
+
+[[examples]]
+title = "Use the Timeline payload to extract the calendar year and wrap the result back into a Slate."
+code = """
+using namespace pluss::table;
+
+auto stamps = Slate(pluss::make_timeline({
+    "2024-01-01T09:10:00Z",
+    "2024-02-01T11:00:00Z",
+    "2024-03-05T15:30:00Z",
+}));
+
+auto out = Slate(stamps.as_timeline().year());
+"""
+output = """
+0  2024
+1  2024
+2  2024
+ptype: Series
+"""

@@ -42,8 +42,8 @@ Example 1. Compute the one-period log return of a numeric feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().log_returns(1);
@@ -75,8 +75,8 @@ still returns a number, but `log_returns()` is `NULL`.
 
 ```cpp
 auto signed_readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3}))},
-    {"delta",     Thread(pluss::make_series({10.0, -5.0, 20.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3}))},
+    {"delta",     Slate(pluss::make_series({10.0, -5.0, 20.0}))},
 });
 
 auto pct = signed_readings.features({"delta"}).ts().returns(1);

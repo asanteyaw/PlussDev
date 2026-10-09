@@ -54,9 +54,9 @@ Example 1. Match one named level; every row sharing that level's value is kept.
 ```cpp
 using namespace pluss::table;
 auto frame = DataFrame({
-    {"region", Thread(pluss::make_note({"West", "West", "East"}))},
-    {"account", Thread(pluss::make_note({"101", "102", "201"}))},
-    {"sales", Thread(pluss::make_series({3, 5, 8}))},
+    {"region", Slate(pluss::make_note({"West", "West", "East"}))},
+    {"account", Slate(pluss::make_note({"101", "102", "201"}))},
+    {"sales", Slate(pluss::make_series({3, 5, 8}))},
 }).label().set({"region", "account"});
 
 auto west = frame.case_study().pick(

@@ -73,7 +73,7 @@ of whether this build links the Unicode backend.
 using namespace pluss::table;
 
 auto titles = DataFrame({
-    {"title", Thread(pluss::make_note(
+    {"title", Slate(pluss::make_note(
         {"Hello World", "ASCII text only", "x"}),
         pluss::make_series(std::vector<bool>{true, true, false}))},
 });
@@ -121,7 +121,7 @@ the important callout above).
 
 ```cpp
 auto accented = DataFrame({
-    {"word", Thread(pluss::make_note({"caf\xC3\xA9"}))},  // "café"
+    {"word", Slate(pluss::make_note({"caf\xC3\xA9"}))},  // "café"
 });
 
 try {

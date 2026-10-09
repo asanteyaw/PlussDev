@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="CatalogTimelineAccessor::iso" href="iso.html" />
@@ -57,7 +57,7 @@ each <code class="docutils literal notranslate"><span class="pre">Timeline</span
 Every method on this accessor — not just <code class="docutils literal notranslate"><span class="pre">isnat()</span></code> — routes through <code class="docutils literal notranslate"><span class="pre">Stream::tl()</span></code>
 for each bound key. <code class="docutils literal notranslate"><span class="pre">tl()</span></code> requires every bound key to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind; if any
 bound key is not (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Mixed</span></code>, <code class="docutils literal notranslate"><span class="pre">Null</span></code>, or <code class="docutils literal notranslate"><span class="pre">Empty</span></code>), the call throws
-<code class="docutils literal notranslate"><span class="pre">&quot;Thread::tl:</span> <span class="pre">expected</span> <span class="pre">Timeline</span> <span class="pre">payload&quot;</span></code>.
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::tl:</span> <span class="pre">expected</span> <span class="pre">Timeline</span> <span class="pre">payload&quot;</span></code>.
 Since <a class="reference internal" href="../catalog/tl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::tl()</span></code></span></a> binds <em>every</em> key of the catalog by
 default, project down to just the timestamp keys first with
 <a class="reference internal" href="../catalog/keys.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Catalog::keys(names)</span></code></span></a> or
@@ -119,7 +119,7 @@ above.</p>
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::tl: expected Timeline payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::tl: expected Timeline payload
 </pre></div>
 </div>
 </section>

@@ -89,7 +89,7 @@ pluss::bi::Studio make_serve_test_studio(const pluss::bundle::Nexus& nexus) {
   return studio;
 }
 
-// httplib::Client isn't in pluss::bi_tools -- it's the vendored third-party
+// httplib::Client is the vendored third-party HTTP client used by the server
 // library's own client, pulled in transitively by pluss/bi/serve.h.
 httplib::Client make_client(const pluss::bi::ServeHandle& handle) {
   httplib::Client client("127.0.0.1", handle.port());

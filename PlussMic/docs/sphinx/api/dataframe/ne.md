@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 2d8fb76d0ba7 -->
+<!-- pluss-signature-hash: 2acc9375218e -->
 
 # DataFrame::ne
 
@@ -12,16 +12,16 @@ DataFrame::ne(double other) const -> DataFrame
 DataFrame::ne(std::string_view other) const -> DataFrame
 DataFrame::ne(const DataFrame& other) const -> DataFrame
 DataFrame::ne(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::ne(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::ne(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::ne(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::ne(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::ne(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::ne(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
 The negated counterpart of [`eq()`](eq.md): elementwise "not equal", returning a
 boolean-valued frame the same shape as the source. `ne()` shares the exact same
-overload shape as `eq()` — a scalar, a string, another `DataFrame`, or a `Thread`
+overload shape as `eq()` — a scalar, a string, another `DataFrame`, or a `Slate`
 broadcast by `axis` — see `eq()`'s "What It Does" for the full explanation of the
 operand shapes and the `axis`/`options` parameters.
 
@@ -31,9 +31,9 @@ operand shapes and the `axis`/`options` parameters.
 
 The right-hand operand: `double` (numeric scalar), `std::string_view` (text value,
 `Note`-kind features only), `const DataFrame&` (aligned frame-to-frame), or `const
-Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for the full breakdown.
+Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for the full breakdown.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 
@@ -137,13 +137,13 @@ s3    | true   false
 Exactly one `true` cell — `s3`'s `quiz` (`84` vs. `83`) — the complement of what
 [`scores.eq(changed)`](eq.md) reports for the same two frames.
 
-Example 4. Compare against a `Thread` with one value per feature — `quiz` checked
+Example 4. Compare against a `Slate` with one value per feature — `quiz` checked
 against `84`, `final` checked against `88`.
 
 ```cpp
-auto thresholds = Thread(pluss::make_series({84.0, 88.0}));
-auto out_thread = scores.ne(thresholds);
-std::cout << out_thread;
+auto thresholds = Slate(pluss::make_series({84.0, 88.0}));
+auto out_slate = scores.ne(thresholds);
+std::cout << out_slate;
 ```
 
 ### Output

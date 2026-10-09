@@ -1,0 +1,82 @@
+summary = """
+Encode each note value using one of the built-in text encodings.
+
+`encode(...)` is the text-column surface for turning raw note values into encoded representations such as Base64, hexadecimal text, or URL-safe escaped text.
+"""
+
+returns = """
+`Slate`
+    Note-backed slate containing the encoded text.
+"""
+
+see_also = [
+  "<a href=\"#extract\"><code>Slate::extract</code></a>: structured regex extraction from note values instead of encoding them.",
+  "<a href=\"#chars\"><code>Slate::chars</code></a>: slice or transform text at the character level before encoding."
+]
+
+notes = [
+  """
+`encode(...)` is note-only. Call `as_note()` or select a note-backed feature first when the current slate is not already textual.
+""",
+  """
+Supported encodings are exactly `base64`, `hex`, and `url`. Any other encoding name throws.
+"""
+]
+
+[[parameters]]
+name = "encoding"
+body = """
+Encoding algorithm to apply.
+
+- `base64`: Base64 text representation.
+- `hex`: hexadecimal text representation.
+- `url`: percent-escaped URL-style representation.
+"""
+
+[[examples]]
+title = "Encode note values as Base64 text."
+code = """
+using namespace pluss::table;
+
+auto urls = Slate(pluss::make_note({"A B", "C&D", "email@example.com"}));
+
+auto out = urls.encode("base64");
+"""
+output = """
+0  QSBC
+1  QyZE
+2  ZW1haWxAZXhhbXBsZS5jb~
+ptype: Note
+"""
+
+[[examples]]
+title = "Encode note values as hexadecimal text."
+code = """
+using namespace pluss::table;
+
+auto urls = Slate(pluss::make_note({"A B", "C&D", "email@example.com"}));
+
+auto out = urls.encode("hex");
+"""
+output = """
+0  412042
+1  432644
+2  656d61696c406578616d7~
+ptype: Note
+"""
+
+[[examples]]
+title = "Encode note values with URL escaping."
+code = """
+using namespace pluss::table;
+
+auto urls = Slate(pluss::make_note({"A B", "C&D", "email@example.com"}));
+
+auto out = urls.encode("url");
+"""
+output = """
+0  A%20B
+1  C%26D
+2  email%40example.com
+ptype: Note
+"""

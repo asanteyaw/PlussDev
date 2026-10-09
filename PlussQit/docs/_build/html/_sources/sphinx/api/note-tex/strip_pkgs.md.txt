@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_pkgs
+# Note::TexAccessor::strip_pkgs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_pkgs() const
+Note Note::TexAccessor::strip_pkgs() const
 ```
 
 ## Remove Package And Class Declarations

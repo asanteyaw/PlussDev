@@ -50,8 +50,8 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 
 auto biz = Nexus({{"customers", customers}});

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e06cc0a68ea6 -->
+<!-- pluss-signature-hash: 36a4dd0d5192 -->
 
 # AtlasLabelAccessor::slice
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const -> Thread
+AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const -> Slate
 ```
 
 ## What It Does
@@ -28,7 +28,7 @@ convention used across the rest of PlussMic's `.loc`-style APIs.
 
 ## Returns
 
-`Thread`
+`Slate`
     The depth labels from `start` through `stop`, inclusive, named `"slice"`.
 
 ## Examples
@@ -37,15 +37,15 @@ Example 1. Slice a text-labeled atlas's depth labels between two bounds.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
 
 std::cout << atlas.label().slice("feb", "mar");
 ```

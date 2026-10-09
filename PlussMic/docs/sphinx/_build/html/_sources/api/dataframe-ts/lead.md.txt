@@ -38,8 +38,8 @@ Example 1. Lead a numeric feature by one row.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().lead(1);

@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::neighbor_imputer`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `neighbor_imputer` builds an attachable [`prep::Stage`](Stage.md) that fills each gap from the most similar complete rows, using the other routed columns to measure similarity.
 
@@ -63,7 +63,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -74,15 +74,15 @@ int main() {
   const pluss::Series h = pluss::make_series({1.,2.,3.,4.,5.,6.}, {6}, f64);
   const pluss::Series w = pluss::make_series({1.1, 2.0, NaN, 4.1, 5.0, NaN}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"h", Thread(h)}, {"w", Thread(w)}});
+  const DataFrame x({{"h", Slate(h)}, {"w", Slate(w)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::neighbor_imputer(), lymph::prep::route::names({"h", "w"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"h", Thread(h)}, {"w", Thread(w)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"h", Slate(h)}, {"w", Slate(w)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -121,7 +121,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -132,7 +132,7 @@ int main() {
   // the fill depends on which rows count as "near".
   const pluss::Series a = pluss::make_series({1., 2., 3., 4., 10., 11., 12., 13.}, {8}, f64);
   const pluss::Series b = pluss::make_series({2., 5., NaN, 9., 21., 24., 23., 27.}, {8}, f64);
-  const DataFrame frame({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame frame({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::options::NeighborImputer k2{};
   k2.neighbors = 2;
@@ -196,7 +196,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -206,7 +206,7 @@ int main() {
   const pluss::Series x2 = pluss::make_series({2.,4.,NaN,8.,10.,12.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,0,1,2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"region", Thread(region)}});
+  const DataFrame x({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::neighbor_imputer(), lymph::prep::route::names({"x1", "x2"}))
@@ -214,8 +214,8 @@ int main() {
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"x2", Thread(x2)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"x2", Slate(x2)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

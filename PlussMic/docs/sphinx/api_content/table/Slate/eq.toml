@@ -1,0 +1,88 @@
+summary = """
+Compare the current slate for equality against a scalar literal or another slate.
+
+`eq(...)` is the direct typed equality surface for slate work. It is the method form behind many mask-building operations on one extracted column.
+"""
+
+returns = """
+`Slate`
+    Boolean-style result slate with one equality decision per entry.
+"""
+
+see_also = [
+  "<a href=\"#compare\"><code>Slate::compare</code></a>: generalized comparison surface when you want to choose the operator at runtime.",
+  "<a href=\"../../dataframe_api_reference.md#eq\"><code>DataFrame::eq</code></a>: frame-level equality across several features at once."
+]
+
+notes = [
+  """
+Numeric scalar equality broadcasts one value across the entire slate.
+""",
+  """
+Text scalar equality is the direct route for note-backed slates.
+""",
+  """
+Slate-to-slate equality is positional unless you explicitly align the slates first.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand equality target.
+
+Supported overload families include:
+
+- numeric scalars such as `20.0`,
+- text scalars such as `"Bola.txt"`,
+- another `Slate` for elementwise equality.
+"""
+
+[[examples]]
+title = "Broadcast one numeric scalar across a numeric slate."
+code = """
+using namespace pluss::table;
+
+auto values = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = values.eq(20.0);
+"""
+output = """
+0  false
+1  true
+2  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Broadcast one text scalar across a note-backed slate."
+code = """
+using namespace pluss::table;
+
+auto names = Slate(pluss::make_note({"Ada.csv", "Bola.txt", "Chen.csv"}));
+
+auto out = names.eq("Bola.txt");
+"""
+output = """
+0  false
+1  true
+2  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Compare two numeric slates element by element."
+code = """
+using namespace pluss::table;
+
+auto left = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto right = Slate(pluss::make_series({10.0, 0.0, 30.0}));
+
+auto out = left.eq(right);
+"""
+output = """
+0  true
+1  false
+2  true
+ptype: Series
+"""

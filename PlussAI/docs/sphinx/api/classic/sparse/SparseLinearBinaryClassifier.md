@@ -129,6 +129,9 @@ through `infer`/`infer_scores`/`assess`/`dump_state`.
   `Status::not_implemented`, not `Status::invalid_argument` — see
   [Example 10](#example-10).
 
+`loss_history()`
+: The loss after each gradient iteration of the last `learn` call, in order. Its length is the number of iterations the fit took, which is less than `options.max_iterations` when the tolerance stopped it early. Empty before `learn` and after a failed `learn`. See [Example 11](#example-11).
+
 `dump_state()` / `load_state(state)`
 : `[metadata, weights]` — `metadata` is `[trained flag, feature_count]`;
   `weights` is the bias-plus-coefficient vector, length
@@ -604,6 +607,45 @@ Output
 ok = false
 status code = 4
 message = "SparseLinearBinaryClassifier::assess supports hard-label / LogLoss / Brier / Mcc / CohenKappa metrics (Gini / AveragePrecision need a dense classifier's score sweep)."
+```
+
+### Example 11
+
+The loss after each step falls, and the step count is how long the fit ran. The program prints the count, the first and last losses, and the loss at the midpoint of the run.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+
+#include <iostream>
+
+int main() {
+  namespace cls = pluss::ai::classic;
+
+  const cls::SparseTripletMatrix x = cls::make_sparse_triplet(
+      4, 2, {0, 1, 2, 3}, {0, 0, 1, 1}, {1.0, 2.0, 1.0, 2.0}).value();
+  const pluss::Series y = pluss::make_series(
+      {1.0, 1.0, 0.0, 0.0}, {4}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU));
+
+  cls::SparseLinearBinaryClassifier model;
+  model.learn(x, y);
+
+  const std::vector<double> history = model.loss_history();
+  std::cout << "steps = " << history.size() << "\n";
+  std::cout << "first loss = " << history.front() << "\n";
+  std::cout << "last loss = " << history.back() << "\n";
+  std::cout << "midpoint loss = " << history[history.size() / 2] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+steps = 1000
+first loss = 0.693147
+last loss = 0.0330077
+midpoint loss = 0.0598433
 ```
 
 ## Changelog

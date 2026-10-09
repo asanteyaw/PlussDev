@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_math
+# Note::NlpAccessor::remove_math
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_math() const
+Note Note::NlpAccessor::remove_math() const
 ```
 
 ## Remove Delimited Math Regions

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::bfill" href="bfill.html" />
@@ -228,7 +228,7 @@ than for rounding.</p></li>
 numeric-looking column onto the <code class="docutils literal notranslate"><span class="pre">Note</span></code> text family before string operations), see
 <a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cast()</span></code></span></a> instead — <code class="docutils literal notranslate"><span class="pre">astype()</span></code> changes the scalar dtype within a feature’s
 existing payload family, not the family itself. <code class="docutils literal notranslate"><span class="pre">cast()</span></code>’s <code class="docutils literal notranslate"><span class="pre">CastSpec</span></code> overload accepts a
-<code class="docutils literal notranslate"><span class="pre">ThreadCastTarget</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">ThreadCastTarget::Note</span></code>) for exactly that purpose.</p></li>
+<code class="docutils literal notranslate"><span class="pre">SlateCastTarget</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">SlateCastTarget::Note</span></code>) for exactly that purpose.</p></li>
 </ul>
 </section>
 <section id="see-also">
@@ -236,7 +236,7 @@ existing payload family, not the family itself. <code class="docutils literal no
 <ul class="simple">
 <li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cast</span></code></span></a>: the broader casting route — change a feature’s payload
 family (<code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/etc.), not just its scalar dtype within the current family.</p></li>
-<li><p><a class="reference internal" href="../thread/astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::astype</span></code></span></a>: cast one thread directly outside a frame.</p></li>
+<li><p><a class="reference internal" href="#../thread/astype.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::astype</span></code></span></a>: cast one thread directly outside a frame.</p></li>
 <li><p><a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::features</span></code></span></a>: narrow the frame to the feature(s) the
 shared-dtype overload should cast.</p></li>
 <li><p><a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::update</span></code></span></a>: merge a narrowed, cast-only result back into the

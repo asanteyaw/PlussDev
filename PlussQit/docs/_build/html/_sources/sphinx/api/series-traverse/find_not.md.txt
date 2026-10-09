@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_not
+# Series::TraverseAccessor::find_not
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_not(const Series& mask) const;
+TraverseMatch Series::TraverseAccessor::find_not(const Series& mask) const;
 TraverseMatch SeriesTraverseProxy::find_not(const Series& mask) const;
 ```
 

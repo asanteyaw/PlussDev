@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: 737192ad65c2 -->
 # `pluss::ai::ice::Source::learn_batches`
 
 [Back to `pluss::ai::ice::Source`](../Source.md)
@@ -8,54 +7,61 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] virtual const std::vector<pluss::ai::ice::data::Batch>& pluss::ai::ice::Source::learn_batches() const = 0;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Returns every training batch, populated by [`prepare`](prepare.md).
+`Coach::learn`'s own training loop iterates this once per epoch.
+Whether it is ever non-empty depends entirely on how the concrete
+`Source` was constructed -- for [`TensorSource`](../TensorSource.md),
+only the two four/five-argument training constructors populate it; the
+infer-only and test-only constructors never do.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+None.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`const std::vector<data::Batch>&` -- a reference into the source's own
+storage, valid as long as the source itself is alive. Empty before
+[`prepare`](prepare.md) runs, or if this source was never given
+training data at all.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: batches split per `BatchPlan::batch_size`, the
+infer-only constructor leaving this empty, and
+[`DataSetSource`](../DataSetSource.md)'s own training `DataSet`
+populating it unconditionally (unlike `valid`/`test`/`infer`, which are
+optional there).
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {3, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 2.0f}, {3, 1});
+
+  ice::TensorSource source(x, y, std::nullopt, std::nullopt, ice::BatchPlan{.batch_size = 2});
+  source.prepare();
+
+  std::cout << "learn_batches().size() = " << source.learn_batches().size() << "\n";
+  std::cout << "learn_batches()[0].size() = " << source.learn_batches()[0].size() << "\n";
+  std::cout << "learn_batches()[1].size() = " << source.learn_batches()[1].size() << "\n";
 
   return 0;
 }
@@ -64,27 +70,29 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+learn_batches().size() = 2
+learn_batches()[0].size() = 2
+learn_batches()[1].size() = 1
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 1.0f, 0.0f}, {2, 2});
+
+  // The infer-only constructor never populates learn_batches().
+  ice::TensorSource source(x, ice::BatchPlan{});
+  source.prepare();
+  std::cout << "learn_batches().size() = " << source.learn_batches().size() << "\n";
+  std::cout << "infer_batches().size() = " << source.infer_batches().size() << "\n";
 
   return 0;
 }
@@ -93,27 +101,32 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+learn_batches().size() = 0
+infer_batches().size() = 1
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::data::Batch raw(ice::data::Layout::CrossSection);
+  raw.set("features", pluss::make_series({0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {3, 2}));
+  raw.set_target(pluss::make_series({0.0f, 1.0f, 2.0f}, {3, 1}));
+  const ice::data::DataSet train = ice::data::DataSet::from_batch(raw);
+
+  // The training DataSet is the only required argument -- learn_batches()
+  // is always populated, unlike valid/test/infer which are optional.
+  ice::DataSetSource source(train);
+  source.prepare();
+  std::cout << "learn_batches().size() = " << source.learn_batches().size() << "\n";
+  std::cout << "valid_batches().size() = " << source.valid_batches().size() << "\n";
 
   return 0;
 }
@@ -122,12 +135,20 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+learn_batches().size() = 1
+valid_batches().size() = 0
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`prepare`](prepare.md) -- what populates this.
+- [`valid_batches`](valid_batches.md) / [`test_batches`](test_batches.md) /
+  [`infer_batches`](infer_batches.md) -- the sibling accessors for the
+  other three stages.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

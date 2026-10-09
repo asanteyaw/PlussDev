@@ -24,7 +24,7 @@
 #include "loader/CsvLoader.h"
 #include "loader/SourceResolver.h"
 #include "table/DataFrame.h"
-#include "table/Thread.h"
+#include "table/Slate.h"
 
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
 #include <zip.h>
@@ -77,17 +77,17 @@ bool series_value_is_nan_for_io(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-bool thread_value_is_missing_for_io(const pluss::table::Thread& t, std::int64_t row) {
+bool slate_value_is_missing_for_io(const pluss::table::Slate& t, std::int64_t row) {
   if (pluss::table::detail::has_validity_mask(t)) {
     const auto valid = pluss::table::detail::validity_mask(t)->to_vec<bool>();
     if (!valid[static_cast<std::size_t>(row)]) {
       return true;
     }
   }
-  if (t.kind() == pluss::table::ThreadKind::Series) {
+  if (t.kind() == pluss::table::SlateKind::Series) {
     return series_value_is_nan_for_io(t.as_series(), row);
   }
-  if (t.kind() == pluss::table::ThreadKind::Duration) {
+  if (t.kind() == pluss::table::SlateKind::Duration) {
     return t.as_duration().host()[static_cast<std::size_t>(row)] ==
            pluss::Duration::kNaT;
   }
@@ -99,24 +99,24 @@ bool series_all_zero_i64_for_io(const pluss::Series& s) {
   return std::all_of(values.begin(), values.end(), [](const std::int64_t v) { return v == 0; });
 }
 
-pluss::table::Thread temporal_thread_for_io(const pluss::table::Thread& t) {
+pluss::table::Slate temporal_slate_for_io(const pluss::table::Slate& t) {
   const auto timeline = t.as_timeline();
   const auto has_subsecond = !series_all_zero_i64_for_io(timeline.nanosecond());
   const auto has_clock_time = has_subsecond || !series_all_zero_i64_for_io(timeline.second())
                               || !series_all_zero_i64_for_io(timeline.minute())
                               || !series_all_zero_i64_for_io(timeline.hour());
   if (!has_clock_time) {
-    return pluss::table::Thread(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
+    return pluss::table::Slate(timeline.strftime("%Y-%m-%d"), pluss::table::detail::validity_mask(t));
   }
   if (!has_subsecond) {
-    return pluss::table::Thread(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
+    return pluss::table::Slate(timeline.strftime("%Y-%m-%d %H:%M:%S"), pluss::table::detail::validity_mask(t));
   }
-  return pluss::table::Thread(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
+  return pluss::table::Slate(timeline.strftime("%Y-%m-%d %H:%M:%S.%f"), pluss::table::detail::validity_mask(t));
 }
 
-pluss::table::Thread thread_for_excel_io(const pluss::table::Thread& t) {
-  if (t.kind() == pluss::table::ThreadKind::Timeline) {
-    return temporal_thread_for_io(t);
+pluss::table::Slate slate_for_excel_io(const pluss::table::Slate& t) {
+  if (t.kind() == pluss::table::SlateKind::Timeline) {
+    return temporal_slate_for_io(t);
   }
   return t;
 }
@@ -194,22 +194,22 @@ std::string scalar_for_excel(const pluss::Series& s, std::int64_t row) {
   }
 }
 
-std::string thread_value_for_excel(const pluss::table::Thread& t, std::int64_t row, std::string_view null_rep) {
-  if (thread_value_is_missing_for_io(t, row)) {
+std::string slate_value_for_excel(const pluss::table::Slate& t, std::int64_t row, std::string_view null_rep) {
+  if (slate_value_is_missing_for_io(t, row)) {
     return std::string(null_rep);
   }
 
   switch (t.kind()) {
-    case pluss::table::ThreadKind::Series:
+    case pluss::table::SlateKind::Series:
       return scalar_for_excel(t.as_series(), row);
-    case pluss::table::ThreadKind::Note:
+    case pluss::table::SlateKind::Note:
       return std::string(t.as_note().at(row));
-    case pluss::table::ThreadKind::Timeline:
+    case pluss::table::SlateKind::Timeline:
       return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
-    case pluss::table::ThreadKind::Duration:
+    case pluss::table::SlateKind::Duration:
       return fmt::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
-  PLUSS_FAIL("save_excel: unsupported Thread kind");
+  PLUSS_FAIL("save_excel: unsupported Slate kind");
 }
 
 std::string column_letters(std::int64_t zero_based_col) {
@@ -1094,13 +1094,13 @@ void save_excel(const pluss::table::DataFrame& frame,
 
   const auto sheet_name = options.sheet_name.empty() ? std::string("Sheet1") : options.sheet_name;
   const auto names = frame.features();
-  std::vector<pluss::table::Thread> cols;
+  std::vector<pluss::table::Slate> cols;
   cols.reserve(names.size());
   for (const auto& name : names) {
-    cols.push_back(thread_for_excel_io(frame.features(name)));
+    cols.push_back(slate_for_excel_io(frame.features(name)));
   }
   const bool include_cases = options.add_cases || options.cases;
-  const auto case_values = include_cases ? thread_for_excel_io(frame.label().values()) : pluss::table::Thread{};
+  const auto case_values = include_cases ? slate_for_excel_io(frame.label().values()) : pluss::table::Slate{};
 
   std::string sheet_xml;
   sheet_xml += R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)";
@@ -1130,10 +1130,10 @@ void save_excel(const pluss::table::DataFrame& frame,
     std::vector<std::string> row;
     row.reserve(names.size() + (include_cases ? 1u : 0u));
     if (include_cases) {
-      row.push_back(thread_value_for_excel(case_values, r, options.null_rep));
+      row.push_back(slate_value_for_excel(case_values, r, options.null_rep));
     }
     for (const auto& c : cols) {
-      row.push_back(thread_value_for_excel(c, r, options.null_rep));
+      row.push_back(slate_value_for_excel(c, r, options.null_rep));
     }
     emit_row(row);
   }

@@ -54,8 +54,8 @@ Example 1. Forward-fill and backward-fill the same gapped feature.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"reading_id", Thread(pluss::make_series({1, 2, 3, 4, 5}))},
-    {"temp",       Thread(pluss::make_series({68.0, std::nullopt, std::nullopt, 72.0, std::nullopt}))},
+    {"reading_id", Slate(pluss::make_series({1, 2, 3, 4, 5}))},
+    {"temp",       Slate(pluss::make_series({68.0, std::nullopt, std::nullopt, 72.0, std::nullopt}))},
 });
 std::cout << readings;
 ```

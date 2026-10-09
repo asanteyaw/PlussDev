@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::simplify_roots
+# Note::TexAccessor::simplify_roots
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::simplify_roots() const
+Note Note::TexAccessor::simplify_roots() const
 ```
 
 ## Canonicalize Root Syntax While Retaining TeX

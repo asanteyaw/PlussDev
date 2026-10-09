@@ -95,9 +95,6 @@ ice/models_rl
 
 ## Documentation Status
 
-In progress -- this handwritten branch is the public `ice` reference,
-built to the same standard as [`nn`](plussai_nn.md): full prose on every
-overload, parameter, and failure mode, plus verified end-to-end examples.
-`platform` is complete. The remaining fourteen categories are scaffolded
-(structure, cross-references, and manifest all in place) and are being
-filled in the reading-strategy order above.
+Complete -- this handwritten reference covers all fifteen categories to
+the same standard as [`nn`](plussai_nn.md): full prose on every overload,
+parameter, and failure mode, plus verified end-to-end examples.

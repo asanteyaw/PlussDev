@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::char_ngrams
+# Note::NlpAccessor::char_ngrams
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::char_ngrams(std::int64_t width) const
+TokenBatch Note::NlpAccessor::char_ngrams(std::int64_t width) const
 ```
 
 ## Build Overlapping Character Windows

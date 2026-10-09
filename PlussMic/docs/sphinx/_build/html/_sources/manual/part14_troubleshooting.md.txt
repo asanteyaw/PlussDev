@@ -65,11 +65,11 @@ Then cast:
 auto typed = df.astype({{"amount", pluss::codem::ScalarType::Float64}});
 auto text = typed.cast({
     pluss::table::DataFrame::CastSpec{
-        "category", pluss::table::ThreadCastTarget::Note, {}},
+        "category", pluss::table::SlateCastTarget::Note, {}},
 });
 auto dates = typed.cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+        "date", pluss::table::SlateCastTarget::Timeline, {}},
 });
 ```
 

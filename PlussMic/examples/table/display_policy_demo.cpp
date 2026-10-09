@@ -71,7 +71,7 @@ int main() {
   stress = stress.title("stress");
   auto atlas = pluss::table::Atlas(
       {baseline, stress},
-      pluss::table::Thread(pluss::make_note({"baseline", "stress"})));
+      pluss::table::Slate(pluss::make_note({"baseline", "stress"})));
   atlas.show();
 
   return 0;

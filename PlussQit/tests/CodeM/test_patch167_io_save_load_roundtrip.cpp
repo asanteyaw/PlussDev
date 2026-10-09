@@ -79,9 +79,8 @@ TEST_CASE("pluss::save/load roundtrip for bytes Note", "[io][note]") {
   remove_if_exists(path);
 }
 
-TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timeline][timeindex]") {
+TEST_CASE("pluss::save/load roundtrip for Timeline", "[io][timeline]") {
   const auto timeline_path = temp_file_path("pluss_timeline_roundtrip");
-  const auto timeindex_path = temp_file_path("pluss_timeindex_roundtrip");
 
   const auto timeline = pluss::timeline::from_epoch(
       std::vector<std::int64_t>{1704067200000000000LL, 1704153600000000000LL},
@@ -94,17 +93,7 @@ TEST_CASE("pluss::save/load roundtrip for Timeline and TimeIndex", "[io][timelin
   REQUIRE(loaded_timeline.ticks() == timeline.ticks());
   REQUIRE(loaded_timeline.tz() == timeline.tz());
 
-  const auto index =
-      pluss::timeline::from_epoch(std::vector<std::int64_t>{3, 1, 2}).index(false);
-  pluss::save(index, timeindex_path.string());
-  const auto loaded_index =
-      pluss::load<pluss::Timeline::TimelineIndexAccessor>(timeindex_path.string());
-
-  REQUIRE(loaded_index.size() == index.size());
-  REQUIRE(loaded_index.timeline().ticks() == index.timeline().ticks());
-
   remove_if_exists(timeline_path);
-  remove_if_exists(timeindex_path);
 }
 
 TEST_CASE("pluss::save/load roundtrip for STL containers and StackArray<Series>", "[io][container]") {

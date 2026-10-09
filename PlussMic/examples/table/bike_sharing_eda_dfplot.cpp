@@ -80,8 +80,8 @@ template <std::size_t NCodes, std::size_t NLabels>
   }
 
   return DataFrame({
-      {std::string(code_feature), pluss::table::Thread(pluss::make_series(codes))},
-      {std::string(label_feature), pluss::table::Thread(pluss::make_note(mapped_labels))},
+      {std::string(code_feature), pluss::table::Slate(pluss::make_series(codes))},
+      {std::string(label_feature), pluss::table::Slate(pluss::make_note(mapped_labels))},
   });
 }
 
@@ -140,7 +140,7 @@ template <std::size_t NCodes, std::size_t NLabels>
            .assign({
                DataFrame::DeriveSpec{"is_weekend", [](const DataFrame& frame) {
                                       const auto weekday = frame.features("weekday").as_series();
-                                      return pluss::table::Thread(weekday.eq(0.0).logical_or(weekday.eq(6.0)));
+                                      return pluss::table::Slate(weekday.eq(0.0).logical_or(weekday.eq(6.0)));
                                     }},
            });
 
@@ -190,12 +190,12 @@ void clear_plot_outputs(const fs::path& out_dir) {
   }
 }
 
-std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
-  switch (thread.kind()) {
-    case pluss::table::ThreadKind::Series:
-      return thread.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
-    case pluss::table::ThreadKind::Timeline: {
-      const auto ticks = thread.as_timeline().ticks();
+std::vector<double> slate_as_numeric(const pluss::table::Slate& slate) {
+  switch (slate.kind()) {
+    case pluss::table::SlateKind::Series:
+      return slate.as_series().to(pluss::codem::ScalarType::Float64).to_vec<double>();
+    case pluss::table::SlateKind::Timeline: {
+      const auto ticks = slate.as_timeline().ticks();
       std::vector<double> values;
       values.reserve(ticks.size());
       for (const auto tick : ticks) {
@@ -203,9 +203,9 @@ std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
       }
       return values;
     }
-    case pluss::table::ThreadKind::Note: {
+    case pluss::table::SlateKind::Note: {
       std::vector<double> values;
-      const auto note = thread.as_note();
+      const auto note = slate.as_note();
       values.reserve(static_cast<std::size_t>(note.numel()));
       note.for_each_flat([&](std::string_view text) {
         std::string token(text);
@@ -221,9 +221,9 @@ std::vector<double> thread_as_numeric(const pluss::table::Thread& thread) {
   }
 }
 
-std::vector<std::string> thread_as_labels(const pluss::table::Thread& thread) {
+std::vector<std::string> slate_as_labels(const pluss::table::Slate& slate) {
   const auto note_like =
-      thread.kind() == pluss::table::ThreadKind::Note ? thread : thread.cast().note();
+      slate.kind() == pluss::table::SlateKind::Note ? slate : slate.cast().note();
   std::vector<std::string> labels;
   const auto note = note_like.as_note();
   labels.reserve(static_cast<std::size_t>(note.numel()));
@@ -266,7 +266,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
   fig.mosaic(1, 2, 18.0, 18.0);
   fig.tight_layout(true, 4.0);
 
-  const auto x = thread_as_numeric(registered.label().values());
+  const auto x = slate_as_numeric(registered.label().values());
   std::vector<std::string> x_labels;
   x_labels.reserve(x.size());
   for (const auto value : x) {
@@ -282,7 +282,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
       if (!frame.get(weekday).has_value()) {
         continue;
       }
-      auto& trace = flash::lineplot(pane, x, thread_as_numeric(frame.features(weekday)));
+      auto& trace = flash::lineplot(pane, x, slate_as_numeric(frame.features(weekday)));
       trace.label(std::string(weekday));
     }
   };
@@ -301,7 +301,7 @@ pl::Studio make_registered_vs_casual_figure(const DataFrame& registered, const D
 
 void draw_grouped_bar_panel(pl::Pane& pane, const DataFrame& pivoted, std::string_view x_label) {
   configure_pane(pane, true);
-  const auto x = thread_as_numeric(pivoted.label().values());
+  const auto x = slate_as_numeric(pivoted.label().values());
   std::vector<std::string> x_labels;
   x_labels.reserve(x.size());
   for (const auto value : x) {
@@ -323,7 +323,7 @@ void draw_grouped_bar_panel(pl::Pane& pane, const DataFrame& pivoted, std::strin
     for (std::size_t i = 0; i < x.size(); ++i) {
       centers[i] = x[i] - 0.5 * group_span + width * (static_cast<double>(g) + 0.5);
     }
-    auto& trace = flash::barplot(pane, centers, thread_as_numeric(pivoted.features(season)));
+    auto& trace = flash::barplot(pane, centers, slate_as_numeric(pivoted.features(season)));
     trace.label(std::string(season));
   }
 }
@@ -362,7 +362,7 @@ void draw_box_features(pl::Pane& pane,
   std::size_t idx = 0;
   for (const auto feature : features) {
     labels.emplace_back(feature);
-    const auto v = thread_as_numeric(frame.features(feature));
+    const auto v = slate_as_numeric(frame.features(feature));
     for (const auto value : v) {
       if (!std::isfinite(value)) {
         continue;

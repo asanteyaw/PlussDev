@@ -5,14 +5,14 @@
 
 int main() {
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   auto sales = DataFrame({
-      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
-      {"quarter", Thread(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
-      {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-      {"cost", Thread(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
+      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
+      {"quarter", Slate(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
+      {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"cost", Slate(pluss::make_series(std::vector<double>{4.0, 8.0, 12.0, 16.0}))},
   });
 
   auto indexed = sales.label().set(DataFrame::SetLabelOptions{
@@ -83,7 +83,7 @@ int main() {
   std::cout << long_again << "\n";
 
   auto featurewise = indexed.features({"sales", "cost"}).transform(
-      [](const Thread& values) {
+      [](const Slate& values) {
         return values + 1.0;
       },
       pluss::table::Axis::Feature);
@@ -94,18 +94,18 @@ int main() {
       [](const DataFrame& row) {
         auto sales_value = row.features("sales").as_series();
         auto cost_value = row.features("cost").as_series();
-        return pluss::table::ThreadValue(Thread(sales_value - cost_value));
+        return pluss::table::SlateValue(Slate(sales_value - cost_value));
       },
       pluss::table::Axis::Case);
   std::cout << "Row-wise transform with Axis::Case\n";
   std::cout << row_score << "\n";
 
-  auto threadwise = indexed.features("sales").transform(
-      [](const pluss::table::ThreadValue& value) {
-        return pluss::table::ThreadValue(value.thread() * 2.0);
+  auto slatewise = indexed.features("sales").transform(
+      [](const pluss::table::SlateValue& value) {
+        return pluss::table::SlateValue(value.slate() * 2.0);
       });
-  std::cout << "Thread element-wise transform\n";
-  std::cout << threadwise << "\n";
+  std::cout << "Slate element-wise transform\n";
+  std::cout << slatewise << "\n";
 
   return 0;
 }

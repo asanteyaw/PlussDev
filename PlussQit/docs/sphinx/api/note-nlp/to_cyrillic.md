@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::to_cyrillic
+# Note::NlpAccessor::to_cyrillic
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::to_cyrillic() const
+Note Note::NlpAccessor::to_cyrillic() const
 ```
 
 ## Romanize Cyrillic Letters Into ASCII
@@ -32,7 +32,7 @@ Any non-Cyrillic character — Latin letters, digits, punctuation, spaces —
 passes through unchanged, so mixed-script text keeps its non-Cyrillic parts.
 
 The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode `Note` is rejected with `NoteNlpAccessor::to_cyrillic requires
+(a bytes-mode `Note` is rejected with `Note::NlpAccessor::to_cyrillic requires
 a UTF-8 text Note (not bytes)`), and returns a fresh UTF-8 `Note`.
 
 ## Example 1: Names And Multi-Letter Sounds
@@ -85,9 +85,9 @@ untouched.
 
 ## See Also
 
-- [`NoteNlpAccessor::to_greek`](to_greek.md): the same idea for
+- [`Note::NlpAccessor::to_greek`](to_greek.md): the same idea for
   Greek.
-- [`NoteNlpAccessor::to_ascii`](to_ascii.md): fold Latin accents
+- [`Note::NlpAccessor::to_ascii`](to_ascii.md): fold Latin accents
   and replace anything else with `?`.
 
 <div class="pluss-inline-prev-next">

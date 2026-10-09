@@ -7,14 +7,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const DataFrame train({{"region", Thread(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
   // Row 1 carries category 9, never seen at fit time.
-  const DataFrame later({{"region", Thread(pluss::make_series({1., 9.}, {2}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({1., 9.}, {2}, f64))}});
 
   lymph::prep::OneHotEncoder encoder;
   encoder.features({"region"}).learn(train);

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_size
+# Note::TexAccessor::strip_size
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_size() const
+Note Note::TexAccessor::strip_size() const
 ```
 
 ## Remove Explicit Delimiter-Size Commands

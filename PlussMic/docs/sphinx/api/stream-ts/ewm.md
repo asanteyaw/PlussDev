@@ -135,8 +135,8 @@ than re-normalizing against every raw value seen so far the way
 - [`StreamTimeSeriesAccessor::rolling`](rolling.md): a fixed-width
   alternative, rather than a decaying weight over the whole stream.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::ewm`](../thread-ts/ewm.md): the underlying
-  single-thread engine, with additional edge-case examples
+- [`TimeSeriesAccessor::ewm`](../slate-ts/ewm.md): the underlying
+  single-slate engine, with additional edge-case examples
   (`ignore_nulls`, `adjusted=false` throw).
 
 <div class="pluss-inline-prev-next">

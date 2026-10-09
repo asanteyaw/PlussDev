@@ -30,7 +30,7 @@ Features to keep as identifiers, repeated unchanged for every value feature's bl
 
 Features to stack together into one output value column. Leave empty (the default) to
 use every feature not already listed in `id_features`. All selected value features
-must share the same `Thread` kind — and, for numeric features, the same scalar dtype
+must share the same `Slate` kind — and, for numeric features, the same scalar dtype
 and platform — since they end up concatenated into one homogeneous output column.
 
 **feature_name** (`std::string`, default `"feature"`)
@@ -62,9 +62,9 @@ Example 1. Melt two quarterly sales columns into long form.
 using namespace pluss::table;
 
 auto wide = DataFrame({
-    {"id",        Thread(pluss::make_series({1, 2}))},
-    {"q1_sales",  Thread(pluss::make_series({100.0, 150.0}))},
-    {"q2_sales",  Thread(pluss::make_series({110.0, 130.0}))},
+    {"id",        Slate(pluss::make_series({1, 2}))},
+    {"q1_sales",  Slate(pluss::make_series({100.0, 150.0}))},
+    {"q2_sales",  Slate(pluss::make_series({110.0, 130.0}))},
 });
 std::cout << wide;
 ```
@@ -116,7 +116,7 @@ known by name ahead of time.
 
 ## Notes
 
-- Every selected value feature must share one `Thread` kind (and, for numeric data,
+- Every selected value feature must share one `Slate` kind (and, for numeric data,
   the same scalar dtype and platform); mixing a `Series` value feature with a `Note`
   one in the same call is not supported, since they must concatenate into a single
   homogeneous output column.

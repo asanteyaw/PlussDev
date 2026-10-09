@@ -24,15 +24,51 @@ apply yourself, or a whole cross-validation loop inside
 
 ## How To Call It
 
+Hold out a quarter of the rows, then slice the batch into train and test parts. The program prints each part's row count.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::SplitOptions options{};
-options.holdout_fraction = 0.2;
-const cls::StatusOr<cls::IndexSplit> split = cls::holdout_split(batch.sample_count(), options);
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-const cls::FeatureBatch train = cls::slice_feature_batch(batch, split.value().train_indices).value();
-const cls::FeatureBatch test = cls::slice_feature_batch(batch, split.value().test_indices).value();
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const cls::LabeledBatch batch = fixture_batch(cfg);
+  cls::SplitOptions options{};
+  options.holdout_fraction = 0.25;
+  const cls::StatusOr<cls::IndexSplit> split = cls::holdout_split(batch.features.sample_count(), options);
+  const cls::FeatureBatch train = cls::slice_feature_batch(batch.features, split.value().train_indices).value();
+  const cls::FeatureBatch test = cls::slice_feature_batch(batch.features, split.value().test_indices).value();
+  std::cout << "train rows = " << train.sample_count() << "\n";
+  std::cout << "test rows = " << test.sample_count() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+train rows = 6
+test rows = 2
 ```
 
 ## Related Pages

@@ -45,8 +45,8 @@ Example 1. Count distinct products ordered per city.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"product", Thread(pluss::make_note({"Tea", "Tea", "Coffee", "Tea", "Tea"}))},
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"product", Slate(pluss::make_note({"Tea", "Tea", "Coffee", "Tea", "Tea"}))},
 });
 std::cout << orders;
 
@@ -92,9 +92,9 @@ Example 2. Count distinctness only for one selected value feature.
 
 ```cpp
 auto wide = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"product", Thread(pluss::make_note({"Tea", "Coffee", "Tea", "Tea"}))},
-    {"rep", Thread(pluss::make_note({"Ama", "Ama", "Kojo", "Esi"}))},
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"product", Slate(pluss::make_note({"Tea", "Coffee", "Tea", "Tea"}))},
+    {"rep", Slate(pluss::make_note({"Ama", "Ama", "Kojo", "Esi"}))},
 });
 
 auto out2 = wide.group().by({"city"}).ndistinct({"rep"});

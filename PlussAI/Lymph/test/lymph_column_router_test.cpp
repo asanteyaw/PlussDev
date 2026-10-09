@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -38,9 +38,9 @@ bool run_column_router_checks(std::ostream* err) {
   const Series x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, f64());
   const Series z = pluss::make_series(std::vector<double>{4.0, 5.0, 6.0}, {3}, f64());
   const DataFrame frame({
-      {"x", Thread(x)},
-      {"category", Thread(pluss::make_note({"red", "green", "blue"}))},
-      {"z", Thread(z)},
+      {"x", Slate(x)},
+      {"category", Slate(pluss::make_note({"red", "green", "blue"}))},
+      {"z", Slate(z)},
   });
   const std::vector<std::string> ordered_names = {"x", "category", "z"};
 
@@ -99,7 +99,7 @@ bool run_column_router_checks(std::ostream* err) {
 
   // 6) Convenience one-argument resolve() matches the Series-only frame
   // order for a Series-only selection (no Note columns involved).
-  const DataFrame series_only_frame({{"x", Thread(x)}, {"z", Thread(z)}});
+  const DataFrame series_only_frame({{"x", Slate(x)}, {"z", Slate(z)}});
   const auto default_resolved = prep::route::names({"x"}).resolve(series_only_frame);
   if (default_resolved != std::vector<std::int64_t>{0}) {
     if (err) *err << "prep::Route::resolve(frame) convenience overload should match the Series-only order\n";

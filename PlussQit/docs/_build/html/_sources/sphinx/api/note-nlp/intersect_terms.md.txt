@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::intersect_terms
+# Note::NlpAccessor::intersect_terms
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::intersect_terms(const Note& other) const
+TokenBatch Note::NlpAccessor::intersect_terms(const Note& other) const
 ```
 
 ## Shared Content Words Between Two Notes
@@ -43,8 +43,8 @@ empty range. The rank-`1` Int64 Note `batch.offsets()` has length
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::intersect_terms requires a UTF-8 text Note (lhs is bytes)` (or `rhs`);
-a numel mismatch raises `NoteNlpAccessor::intersect_terms expects equal numel or scalar
+`Note::NlpAccessor::intersect_terms requires a UTF-8 text Note (lhs is bytes)` (or `rhs`);
+a numel mismatch raises `Note::NlpAccessor::intersect_terms expects equal numel or scalar
 broadcast`.
 
 ## Example 1: Fillers And Short Words Drop Out
@@ -74,13 +74,13 @@ two cells share.
 
 ## See Also
 
-- [`NoteNlpAccessor::intersect_tokens`](intersect_tokens.md): the same operation with no
+- [`Note::NlpAccessor::intersect_tokens`](intersect_tokens.md): the same operation with no
   content filter.
-- [`NoteNlpAccessor::jaccard_terms`](jaccard_terms.md) /
-  [`NoteNlpAccessor::overlap_terms`](overlap_terms.md): score the shared-term overlap.
-- [`NoteNlpAccessor::intersect_acronyms`](intersect_acronyms.md) /
-  [`NoteNlpAccessor::intersect_citations`](intersect_citations.md) /
-  [`NoteNlpAccessor::intersect_symbols`](intersect_symbols.md): other set
+- [`Note::NlpAccessor::jaccard_terms`](jaccard_terms.md) /
+  [`Note::NlpAccessor::overlap_terms`](overlap_terms.md): score the shared-term overlap.
+- [`Note::NlpAccessor::intersect_acronyms`](intersect_acronyms.md) /
+  [`Note::NlpAccessor::intersect_citations`](intersect_citations.md) /
+  [`Note::NlpAccessor::intersect_symbols`](intersect_symbols.md): other set
   kinds.
 
 <div class="pluss-inline-prev-next">

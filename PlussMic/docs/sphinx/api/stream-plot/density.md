@@ -16,7 +16,7 @@ StreamPlotAccessor::density(const DensityPlotOptions& options) const -> pluss::p
 
 Draws a kernel-density estimate for the bound stream's values — always exactly one curve,
 since a `Stream` is always one series. Both overloads forward to
-[`ThreadPlotAccessor::density`](../thread-plot/density.md) after `Stream::to_thread()`.
+[`SlatePlotAccessor::density`](../slate-plot/density.md) after `Stream::to_slate()`.
 
 ## Parameters
 
@@ -90,7 +90,7 @@ chart.show();
 
 ## See Also
 
-- [`ThreadPlotAccessor::density`](../thread-plot/density.md): the method this delegates to.
+- [`SlatePlotAccessor::density`](../slate-plot/density.md): the method this delegates to.
 - [`StreamPlotAccessor::hist`](hist.md): the same per-stream distribution idea, as binned
   counts instead of a smoothed curve.
 

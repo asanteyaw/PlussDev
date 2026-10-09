@@ -21,9 +21,49 @@
 Nothing in `reports` computes a metric. `model.reports().classification_summary(
 frame)` is exactly:
 
+Train a logistic model, predict on its features, and summarize the predictions against the true labels. The program prints the prediction count and the number of accuracy values in the summary.
+
 ```cpp
-const pluss::Series y_pred = model.infer(frame_features);
-lymph::metrics::classification::summary(y_true, y_pred);
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const lymph::LabeledBatch batch = fixture_batch(cfg);
+  lymph::models::Model model = lymph::models::logistic_regression();
+  model.learn_(batch);
+  const pluss::Series y_pred = model.infer(batch.features);
+  const lymph::ClassReport summary = lymph::metrics::classification::summary(batch.y, y_pred);
+  std::cout << "predictions = " << y_pred.numel() << "\n";
+  std::cout << "summary accuracy values = " << summary.accuracy.numel() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+predictions = 8
+summary accuracy values = 1
 ```
 
 with the first line folded in. The value is convenience and correctness — the

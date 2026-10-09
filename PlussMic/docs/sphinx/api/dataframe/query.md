@@ -79,7 +79,7 @@ or any other runtime to use `query()`. The patterns documented above (numeric an
 comparisons, `and` / `or` combinators, quoted literals, and backtick-quoted feature
 names) are the supported core; if a more elaborate expression does not parse the way you
 expect, fall back to building the mask explicitly with [`filter()`](filter.md), which
-accepts any boolean `Thread` you can construct in ordinary C++.
+accepts any boolean `Slate` you can construct in ordinary C++.
 
 ## Examples
 

@@ -218,6 +218,17 @@ void write_recipe_(std::ostringstream& out, const TrainOptions& recipe) {
   write_num_(out, "recipe.seed", recipe.seed);
   write_bool_(out, "recipe.standardize", recipe.standardize);
 
+  write_bool_(out, "recipe.progress.verbose", recipe.progress.verbose);
+  write_num_(out, "recipe.progress.log_every_n_epochs", recipe.progress.log_every_n_epochs);
+  write_bool_(out, "recipe.progress.progress_bar", recipe.progress.progress_bar);
+  write_num_(out, "recipe.progress.output", static_cast<int>(recipe.progress.output));
+  write_num_(out, "recipe.progress.bar_width", recipe.progress.bar_width);
+  write_num_(out, "recipe.progress.precision", recipe.progress.precision);
+  write_num_(out, "recipe.progress.metrics.count", recipe.progress.metrics.size());
+  for (std::size_t i = 0; i < recipe.progress.metrics.size(); ++i) {
+    write_kv_(out, "recipe.progress.metrics." + std::to_string(i), recipe.progress.metrics[i]);
+  }
+
   write_num_(out, "recipe.validation.split_ratio", recipe.validation.split_ratio);
   write_num_(out, "recipe.validation.every_n_epochs", recipe.validation.every_n_epochs);
   write_num_(out, "recipe.validation.start_from_epoch", recipe.validation.start_from_epoch);
@@ -271,6 +282,24 @@ void write_recipe_(std::ostringstream& out, const TrainOptions& recipe) {
   out.shuffle = maybe_bool_(kv, "recipe.shuffle", out.shuffle);
   out.seed = static_cast<std::uint64_t>(maybe_i64_(kv, "recipe.seed", static_cast<std::int64_t>(out.seed)));
   out.standardize = maybe_bool_(kv, "recipe.standardize", out.standardize);
+
+  out.progress.verbose = maybe_bool_(kv, "recipe.progress.verbose", out.progress.verbose);
+  out.progress.log_every_n_epochs =
+      maybe_i64_(kv, "recipe.progress.log_every_n_epochs", out.progress.log_every_n_epochs);
+  out.progress.progress_bar =
+      maybe_bool_(kv, "recipe.progress.progress_bar", out.progress.progress_bar);
+  out.progress.output = static_cast<ProgressOutput>(
+      maybe_i64_(kv, "recipe.progress.output", static_cast<int>(out.progress.output)));
+  out.progress.bar_width = maybe_i64_(kv, "recipe.progress.bar_width", out.progress.bar_width);
+  out.progress.precision = maybe_i64_(kv, "recipe.progress.precision", out.progress.precision);
+  if (const auto count = maybe_i64_(kv, "recipe.progress.metrics.count", -1); count >= 0) {
+    out.progress.metrics.clear();
+    out.progress.metrics.reserve(static_cast<std::size_t>(count));
+    for (std::int64_t i = 0; i < count; ++i) {
+      out.progress.metrics.push_back(
+          maybe_(kv, "recipe.progress.metrics." + std::to_string(i), {}));
+    }
+  }
 
   out.validation.split_ratio = maybe_f64_(kv, "recipe.validation.split_ratio", out.validation.split_ratio);
   out.validation.every_n_epochs =
@@ -734,6 +763,16 @@ CheckpointState load_checkpoint(
     optim::Optimizer& optimizer,
     const std::vector<std::shared_ptr<pluss::ai::ice::Callback>>& callbacks) {
   PLUSS_CALL_GUARD();
+  // Deliberately not used to restore callback state here, unlike
+  // save_checkpoint's own symmetric use of `callbacks` -- a callback such
+  // as EarlyStopCallback unconditionally resets its own state in
+  // on_run_begin, which the caller's own loop (see Coach::learn) always
+  // fires *after* this function returns. Restoring here would just be
+  // overwritten; the caller applies out.callback_state once its own
+  // on_run_begin-equivalent step has already run. `callbacks` stays in
+  // the signature for symmetry with save_checkpoint and so a future
+  // caller-side convenience wrapper has it to hand without widening the
+  // ABI.
   static_cast<void>(callbacks);
   PLUSS_CHECK(!filepath.empty(), "pluss::ai::ice::io::load_checkpoint: input path cannot be empty.");
   std::ifstream in{std::string(filepath)};

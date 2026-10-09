@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::nanstd
+# Series::StatAccessor::nanstd
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::nanstd() const
-Series SeriesStatAccessor::nanstd(std::int64_t dim, bool keepdim = false) const
+Series Series::StatAccessor::nanstd() const
+Series Series::StatAccessor::nanstd(std::int64_t dim, bool keepdim = false) const
 Series SeriesStatProxy::nanstd() const
 Series SeriesStatProxy::nanstd(std::int64_t dim, bool keepdim = false) const
 ```

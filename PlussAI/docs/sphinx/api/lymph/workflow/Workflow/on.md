@@ -39,6 +39,10 @@ WorkflowRoute WorkflowBranch::route(
 WorkflowRoute& WorkflowRoute::add(Stage stage);
 ```
 
+## What It Does
+
+`on` starts a branch on the workflow. It names a group of columns through a route and returns an accessor that adds stages to that branch's own ordered chain. Several branches on one workflow give each group its own transforms. A route can be a list of names, a predicate over feature names and dtypes, or a route object.
+
 ## Parameters
 
 `std::string name`
@@ -123,7 +127,7 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -134,10 +138,10 @@ int main() {
       {0.6, 1.0, 1.3, 1.6, 1.9, 2.2, 2.6, 2.0, 0.8, 1.4}, {10}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
-  const DataFrame frame({{"income", Thread(income)}, {"balance", Thread(balance)},
-                         {"category", Thread(pluss::make_note(std::vector<std::string>{
+  const DataFrame frame({{"income", Slate(income)}, {"balance", Slate(balance)},
+                         {"category", Slate(pluss::make_note(std::vector<std::string>{
                              "a", "b", "a", "b", "a", "b", "a", "b", "a", "b"}))},
-                         {"target", Thread(y)}});
+                         {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance", "category"};
@@ -193,7 +197,7 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -204,8 +208,8 @@ int main() {
       {0.6, 1.0, 1.3, 1.6, 1.9, 2.2, 2.6, 2.0, 0.8, 1.4}, {10}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
-  const DataFrame frame({{"income", Thread(income)}, {"balance", Thread(balance)},
-                         {"target", Thread(y)}});
+  const DataFrame frame({{"income", Slate(income)}, {"balance", Slate(balance)},
+                         {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance"};
@@ -263,7 +267,7 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -276,10 +280,10 @@ int main() {
       {1.0, 2.0, 1.0, 3.0, 2.0, 4.0, 3.0, 1.0, 2.0, 3.0}, {10}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64);
-  const DataFrame frame({{"num_income", Thread(num_income)},
-                         {"num_balance", Thread(num_balance)},
-                         {"num_tenure", Thread(num_tenure)},
-                         {"target", Thread(y)}});
+  const DataFrame frame({{"num_income", Slate(num_income)},
+                         {"num_balance", Slate(num_balance)},
+                         {"num_tenure", Slate(num_tenure)},
+                         {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"num_income", "num_balance", "num_tenure"};

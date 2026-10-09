@@ -61,7 +61,7 @@ pluss::coden::Note impl_duration_to_note(const Duration& a, std::string_view sty
 
 namespace pluss::codeh {
 
-class TimeIndex;
+class TimelineIndexAccessor;
 class Timeline;
 class Duration;
 class DurationTotal;
@@ -119,7 +119,7 @@ private:
 
 
   friend class Timeline;
-  friend class TimeIndex;
+  friend class TimelineIndexAccessor;
   friend struct ::pluss::codeh::_compat::detail::Access;
   friend Duration detail::impl_diff(const Timeline&, const Timeline&);
   friend Timeline detail::impl_add_duration(const Timeline&, const Duration&);

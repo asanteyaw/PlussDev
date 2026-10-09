@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fe667a4ce8f4 -->
 # `pluss::ai::ice::Model::save`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -143,12 +145,12 @@ int main() {
   namespace ice = pluss::ai::ice;
   namespace nn = pluss::nn;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const DataFrame df({
-      {"a", Thread(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
-      {"b", Thread(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
-      {"label", Thread(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
+      {"a", Slate(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
+      {"b", Slate(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
+      {"label", Slate(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
   });
 
   ice::Outline model(nn::Fusion(2, 1));
@@ -189,3 +191,16 @@ sidecar exists = 1
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ready.html">
+    <span class="label">Previous</span>
+    <span class="title">ready</span>
+  </a>
+  <a class="next-link" href="test_step.html">
+    <span class="label">Next</span>
+    <span class="title">test_step</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

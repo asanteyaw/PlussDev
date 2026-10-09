@@ -240,7 +240,7 @@ kind = "options"
 family = "classic/data"
 page = "api/classic/data/DataFrameBatchOptions.md"
 summary = "Names the feature / label / weight columns when building a batch from a DataFrame."
-fields = ["feature_names", "label_feature", "sample_weight_feature", "layout", "thread_policy", "note_policy", "note_hash_seed", "factorize_unknown_categorical"]
+fields = ["feature_names", "label_feature", "sample_weight_feature", "layout", "slate_policy", "note_policy", "note_hash_seed", "factorize_unknown_categorical"]
 
 [[symbol]]
 qualname = "pluss::ai::classic::feature_batch_from_dataframe"

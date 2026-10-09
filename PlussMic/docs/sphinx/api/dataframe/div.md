@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 754bd4a44854 -->
+<!-- pluss-signature-hash: 23cdbaf4d163 -->
 
 # DataFrame::div
 
@@ -11,16 +11,16 @@
 DataFrame::div(double other) const -> DataFrame
 DataFrame::div(const DataFrame& other) const -> DataFrame
 DataFrame::div(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::div(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::div(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::div(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::div(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::div(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::div(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
 
 The named-method form of elementwise division. `div()` shares the exact same overload
 shape and alignment rules as [`add()`](add.md) and the rest of the arithmetic family —
-see `add()`'s "What It Does" for the full explanation of the scalar/frame/Thread
+see `add()`'s "What It Does" for the full explanation of the scalar/frame/Slate
 operand shapes and the `axis`/`options` parameters.
 
 ```{important} div() and truediv() are the same operation
@@ -39,10 +39,10 @@ there is no behavioral reason to prefer one over the other.
 **other**
 
 The right-hand operand, dividing the current frame: `double` (broadcast scalar),
-`const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast per
+`const DataFrame&` (aligned frame-to-frame), or `const Slate&` (broadcast per
 `axis`).
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
 value per feature; `Axis::Case` supplies one value per case.
@@ -110,12 +110,12 @@ positional alignment.
 
 ```cpp
 auto left = DataFrame({
-    {"amount", Thread(pluss::make_series({100.0, 200.0, 50.0}))},
-}, Thread(pluss::make_note({"a", "b", "c"})));
+    {"amount", Slate(pluss::make_series({100.0, 200.0, 50.0}))},
+}, Slate(pluss::make_note({"a", "b", "c"})));
 
 auto right = DataFrame({
-    {"amount", Thread(pluss::make_series({4.0, 5.0, 2.0}))},
-}, Thread(pluss::make_note({"x", "y", "z"})));
+    {"amount", Slate(pluss::make_series({4.0, 5.0, 2.0}))},
+}, Slate(pluss::make_note({"x", "y", "z"})));
 
 auto out = left.div(right);
 std::cout << out;
@@ -140,19 +140,19 @@ cells are paired by physical position — `left`'s row `0` (`100`) divides by
 `right`'s row `0` (`4`) regardless of either side's labels — so the result
 keeps `left`'s own case labels (`a, b, c`).
 
-Example 4. The `Thread` overload with `axis` passed explicitly as
+Example 4. The `Slate` overload with `axis` passed explicitly as
 `Axis::Feature` — one divisor per feature, broadcast down every case in that
 column.
 
 ```cpp
 auto values = DataFrame({
-    {"x", Thread(pluss::make_series({100.0, 200.0}))},
-    {"y", Thread(pluss::make_series({50.0, 25.0}))},
-}, Thread(pluss::make_note({"p", "q"})));
+    {"x", Slate(pluss::make_series({100.0, 200.0}))},
+    {"y", Slate(pluss::make_series({50.0, 25.0}))},
+}, Slate(pluss::make_note({"p", "q"})));
 
-auto divisors = Thread(pluss::make_series({4.0, 5.0}));
-auto out_thread = values.div(divisors, Axis::Feature);
-std::cout << out_thread;
+auto divisors = Slate(pluss::make_series({4.0, 5.0}));
+auto out_slate = values.div(divisors, Axis::Feature);
+std::cout << out_slate;
 ```
 
 ### Output

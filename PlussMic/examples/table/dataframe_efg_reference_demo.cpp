@@ -9,7 +9,7 @@ int main() {
   using pluss::make_series;
   using pluss::make_timeline;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   auto sales = DataFrame({
       {"city", make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
@@ -27,8 +27,8 @@ int main() {
 
   auto sales_missing = DataFrame({
       {"city", make_note({"Accra", "Tema", "Kumasi", "Tamale"})},
-      {"region", Thread(make_note({"south", "", "middle", ""}), valid)},
-      {"units", Thread(make_series({10.0, 0.0, 12.0, 0.0}), valid)},
+      {"region", Slate(make_note({"south", "", "middle", ""}), valid)},
+      {"units", Slate(make_series({10.0, 0.0, 12.0, 0.0}), valid)},
       {"price", make_series({3.0, 4.0, 2.5, 5.0})},
   }).title("sales_missing");
 

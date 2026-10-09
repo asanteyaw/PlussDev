@@ -818,7 +818,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
         {6},
         f64());
     const pluss::table::DataFrame x({
-        {"x", pluss::table::Thread(x_series)},
+        {"x", pluss::table::Slate(x_series)},
     });
 
     std::vector<lymph::selection::Candidate> candidates;
@@ -891,7 +891,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
         std::vector<double>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0}, {6}, f64());
     const Series y = pluss::make_series(
         std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0}, {6}, f64());
-    const pluss::table::DataFrame x({{"x", pluss::table::Thread(x_series)}});
+    const pluss::table::DataFrame x({{"x", pluss::table::Slate(x_series)}});
 
     std::vector<lymph::selection::Candidate> candidates;
     candidates.emplace_back(
@@ -988,7 +988,7 @@ bool run_nodej_cv_tune_checks(std::ostream* err = nullptr) {
     // (smallest regularization_strength) point should win.
     const Series x_series = pluss::make_series(std::vector<double>{-2.0, -1.0, 0.0, 1.0, 2.0, 3.0}, {6}, f64());
     const Series y_series = pluss::make_series(std::vector<double>{-3.0, -1.0, 1.0, 3.0, 5.0, 7.0}, {6}, f64());
-    const pluss::table::DataFrame tune_x({{"x", pluss::table::Thread(x_series)}});
+    const pluss::table::DataFrame tune_x({{"x", pluss::table::Slate(x_series)}});
 
     const std::vector<lymph::selection::GridAxis> hp_axes = {
         {.name = "regularization_strength", .values = {0.0001, 0.01, 1.0, 10.0}},

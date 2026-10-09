@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteRegexAccessor::count
+# Note::RegexAccessor::count
 
 [Back to Note Regex Accessor API Reference](../../note_regex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteRegexAccessor::count(std::string_view pattern) const
+Note Note::RegexAccessor::count(std::string_view pattern) const
 ```
 
 ## Measure Pattern Frequency Without Extracting Matches
@@ -145,11 +145,11 @@ engine does not reinterpret them as character data.
 
 ## See Also
 
-- [`NoteRegexAccessor::findall`](findall.md): retain each matching substring and
+- [`Note::RegexAccessor::findall`](findall.md): retain each matching substring and
   its source-cell boundaries.
 - [`Note::count_substring`](../note/count_substring.md): count one literal byte
   sequence without regex metacharacters or compilation.
-- [`NoteRegexAccessor::search`](search.md): return one Bool per cell when only
+- [`Note::RegexAccessor::search`](search.md): return one Bool per cell when only
   presence or absence matters.
 
 <div class="pluss-inline-prev-next">

@@ -17,7 +17,7 @@ The reflected (right-hand) form of [`add()`](add.md): computes `other + frame` i
 of `frame + other`. `radd()`, [`rsub()`](rsub.md), `rmul`, `rdiv`, `rtruediv`,
 `rfloordiv`, `rmod`, and `rpow` are the reflected counterparts of the eight forward
 arithmetic methods, all scalar-only (`double other`) — there is no reflected
-`DataFrame`-to-`DataFrame` or `Thread` form, since swapping which side is the "frame"
+`DataFrame`-to-`DataFrame` or `Slate` form, since swapping which side is the "frame"
 is unambiguous once a scalar is the other operand.
 
 For addition specifically, `frame.add(other)` and `frame.radd(other)` produce the
@@ -73,7 +73,7 @@ same number.
 
 - All eight reflected methods (`radd`, `rsub`, `rmul`, `rdiv`, `rtruediv`,
   `rfloordiv`, `rmod`, `rpow`) only accept a scalar `double`; there is no reflected
-  `DataFrame` or `Thread` overload.
+  `DataFrame` or `Slate` overload.
 - For commutative operations (`radd`, `rmul`), the reflected and forward forms always
   agree. For non-commutative operations (`rsub`, `rdiv`, `rtruediv`, `rfloordiv`,
   `rmod`, `rpow`), the reflected form computes a genuinely different result — see

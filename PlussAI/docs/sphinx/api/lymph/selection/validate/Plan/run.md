@@ -43,7 +43,7 @@ selection::CompareResult run(const models::Builder& builder, /* same data shapes
 
 The first argument is a `models::Model`, a `ModelSpec`, a `workflow::Workflow`,
 or a `models::Builder`. The data is `(frame, data_options)`, an `(x, y)` pair
-with `y` a `Series` or `Thread`, a `LabeledBatch`, or a
+with `y` a `Series` or `Slate`, a `LabeledBatch`, or a
 [`workflow::Payload`](../../../workflow/Payload.md). For a `time` plan the `Payload`
 overload also carries the timeline role.
 
@@ -122,7 +122,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -135,8 +135,8 @@ int main() {
        2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
-  const DataFrame frame({{"income", Thread(income)}, {"balance", Thread(balance)},
-                         {"target", Thread(y)}});
+  const DataFrame frame({{"income", Slate(income)}, {"balance", Slate(balance)},
+                         {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance"};
@@ -187,7 +187,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -201,7 +201,7 @@ int main() {
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
 
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   lymph::AssessOptions assess{};
   assess.metrics = {lymph::MetricKind::Accuracy, lymph::MetricKind::F1};
@@ -249,7 +249,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -262,8 +262,8 @@ int main() {
        2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
-  const DataFrame frame({{"income", Thread(income)}, {"balance", Thread(balance)},
-                         {"target", Thread(y)}});
+  const DataFrame frame({{"income", Slate(income)}, {"balance", Slate(balance)},
+                         {"target", Slate(y)}});
 
   lymph::options::DFBatch data_options{};
   data_options.feature_names = {"income", "balance"};

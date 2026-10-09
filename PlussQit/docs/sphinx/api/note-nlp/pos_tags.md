@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::pos_tags
+# Note::NlpAccessor::pos_tags
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::pos_tags() const
+TokenBatch Note::NlpAccessor::pos_tags() const
 ```
 
 ## Attach Lightweight Part-Of-Speech Tags

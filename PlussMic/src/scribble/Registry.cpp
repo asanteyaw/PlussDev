@@ -103,16 +103,16 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
   return {s, e};
 }
 
-Slot::Value slot_value_from_scalar_thread(const pluss::table::Thread& thread) {
-  switch (thread.kind()) {
-    case pluss::table::ThreadKind::Series:
-      return thread.as_series();
-    case pluss::table::ThreadKind::Note:
-      return thread.as_note();
-    case pluss::table::ThreadKind::Timeline:
-      return thread.as_timeline();
-    case pluss::table::ThreadKind::Duration:
-      return thread.as_duration();
+Slot::Value slot_value_from_scalar_slate(const pluss::table::Slate& slate) {
+  switch (slate.kind()) {
+    case pluss::table::SlateKind::Series:
+      return slate.as_series();
+    case pluss::table::SlateKind::Note:
+      return slate.as_note();
+    case pluss::table::SlateKind::Timeline:
+      return slate.as_timeline();
+    case pluss::table::SlateKind::Duration:
+      return slate.as_duration();
   }
   return std::monostate{};
 }
@@ -130,7 +130,7 @@ Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
                                             std::string_view raw_token,
                                             const pluss::loader::ReadCsvOptions& options) {
   std::vector<std::string> one{std::string(raw_token)};
-  const auto inferred = pluss::table::detail::infer_thread_from_raw_csv_column(
+  const auto inferred = pluss::table::detail::infer_slate_from_raw_csv_column(
       col_name,
       source_col_index,
       one,
@@ -142,7 +142,7 @@ Slot::Value infer_slot_value_from_raw_token(std::string_view col_name,
       return std::monostate{};
     }
   }
-  return slot_value_from_scalar_thread(inferred);
+  return slot_value_from_scalar_slate(inferred);
 }
 
 std::string unique_key_name(std::string base, const std::unordered_set<std::string>& taken) {

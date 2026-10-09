@@ -11,15 +11,15 @@ namespace {
 namespace lymph = pluss::ai::lymph;
 using pluss::ScalarType;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 const pluss::Config kF64 =
     pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
 DataFrame features() {
   return DataFrame({
-      {"x1", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, kF64))},
-      {"x2", Thread(pluss::make_series({2, 2, 3, 3, 7, 7, 8, 8}, {8}, kF64))},
+      {"x1", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, kF64))},
+      {"x2", Slate(pluss::make_series({2, 2, 3, 3, 7, 7, 8, 8}, {8}, kF64))},
   });
 }
 
@@ -27,9 +27,9 @@ pluss::Series labels() { return pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}
 
 DataFrame labelled() {
   return DataFrame({
-      {"x1", Thread(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, kF64))},
-      {"x2", Thread(pluss::make_series({2, 2, 3, 3, 7, 7, 8, 8}, {8}, kF64))},
-      {"label", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, kF64))},
+      {"x1", Slate(pluss::make_series({1, 2, 3, 4, 5, 6, 7, 8}, {8}, kF64))},
+      {"x2", Slate(pluss::make_series({2, 2, 3, 3, 7, 7, 8, 8}, {8}, kF64))},
+      {"label", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, kF64))},
   });
 }
 

@@ -13,8 +13,8 @@
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="_static/api_nav.js?v=d45ea178"></script>
-    <script src="_static/layout.js?v=e199898b"></script>
+    <script src="_static/api_nav.js?v=47991f43"></script>
+    <script src="_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Series API Reference" href="sphinx/series_api_reference.html" />
@@ -74,12 +74,13 @@ arithmetic.</p></li>
 <li><p><a class="reference internal" href="sphinx/duration_factory_api_reference.html"><span class="std std-doc">Duration Factory API Reference</span></a>:
 exact unit construction, progressions, shape-first allocation, sampling, and
 rendering in <code class="docutils literal notranslate"><span class="pre">pluss::duration</span></code>.</p></li>
+<li><p><a class="reference internal" href="sphinx/queue_api_reference.html"><span class="std std-doc">Queue API Reference</span></a>: the handwritten
+per-method reference for <code class="docutils literal notranslate"><span class="pre">Queue</span></code> — a dynamic holder over <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">Duration</span></code>, for code that doesn’t know which of the four it
+has until runtime.</p></li>
 <li><p><a class="reference internal" href="sphinx/timeline_index_accessor_api_reference.html"><span class="std std-doc">Timeline Index Accessor API Reference</span></a>:
 the ordered-axis methods entered through <code class="docutils literal notranslate"><span class="pre">Timeline::index()</span></code> for search,
 slicing, resampling, rolling windows, and alignment.</p></li>
-<li><p><a class="reference internal" href="sphinx/timeindex_factory_api_reference.html"><span class="std std-doc">TimeIndex Factory API Reference</span></a>:
-ordered-axis construction, regular ranges, buffer ownership, and rendering
-in <code class="docutils literal notranslate"><span class="pre">pluss::timeindex</span></code>.</p></li>
 <li><p><a class="reference internal" href="coden_method_index.html"><span class="std std-doc">Method Index</span></a>: a flat cross-referenced index of the whole
 surface, documented and not-yet-documented alike.</p></li>
 </ul>
@@ -130,7 +131,6 @@ for maintainers but are intentionally excluded from the published site.</p>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">PlussQit API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#method-surface">Method surface</a></li>
 </ul>
@@ -138,8 +138,8 @@ for maintainers but are intentionally excluded from the published site.</p>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

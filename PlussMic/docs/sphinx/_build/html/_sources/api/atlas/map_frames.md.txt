@@ -44,12 +44,12 @@ Example 1. Apply the same per-frame transform (here, `head(1)`) across the whole
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({4.0, 5.0, 6.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 
 auto out = atlas.map_frames([](const pluss::table::DataFrame& df) { return df.head(1); });
 std::cout << "out depth: " << out.depth() << "\n";
@@ -75,10 +75,10 @@ resulting atlas is built — see the important callout above.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({4.0, 5.0, 6.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({4.0, 5.0, 6.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 

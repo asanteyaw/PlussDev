@@ -30,10 +30,10 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({10.0, 20.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({30.0, 40.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 
@@ -49,10 +49,10 @@ Example 2. Use the overload whose parameter combination matches the data you alr
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({10.0, 20.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({10.0, 20.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({30.0, 40.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({30.0, 40.0}))},
 });
 auto atlas = pluss::table::Atlas({f0, f1});
 

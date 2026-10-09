@@ -6,14 +6,14 @@ frames as you like, with the fitted parameters held on the object and readable
 through `summary()`.
 
 Each scaler here is the object twin of a
-[`prep::stage`](stage_family.md) factory: `prep::StandardScaler` does the same
+[`prep::stage`](stage.md) factory: `prep::StandardScaler` does the same
 arithmetic as `prep::stage::standard_scaler(...)`, from the same
 [`options::StandardScaler`](scaling/StandardScalerOptions.md) struct. The
 difference is ownership.
 
 | Reach for… | when… |
 | --- | --- |
-| the [`prep::stage::*`](stage_family.md) factory | the scaling should travel *inside a model's* preparation plan and be fitted by `Model::learn` |
+| the [`prep::stage::*`](stage.md) factory | the scaling should travel *inside a model's* preparation plan and be fitted by `Model::learn` |
 | the object here | the scaler is a *first-class thing you hold* — to fit once and reuse across frames, to inspect its learned parameters, or to wire into a `prep::FeatureTransformer` branch or non-model code |
 
 ## The scalers
@@ -44,7 +44,7 @@ All four have the same method surface:
   `state` tensor vector).
 
 The arithmetic of each transform, and its option toggles, are covered on the
-matching [`prep::stage`](stage_family.md) factory page — this subfamily is about
+matching [`prep::stage`](stage.md) factory page — this subfamily is about
 the *object* around it.
 
 <!-- apiref:toctree:start -->

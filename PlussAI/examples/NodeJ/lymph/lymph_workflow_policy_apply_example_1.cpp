@@ -13,17 +13,17 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const double nan_val = std::numeric_limits<double>::quiet_NaN();
   const DataFrame raw({
-      {"customer_id", Thread(pluss::make_series({1, 2, 3, 4, 5, 6}, {6}, f64))},
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1}, {6}, f64))},
-      {"default", Thread(pluss::make_series({0.0, nan_val, 0.0, 1.0, 1.0, nan_val}, {6}, f64))},
+      {"customer_id", Slate(pluss::make_series({1, 2, 3, 4, 5, 6}, {6}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2}, {6}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1}, {6}, f64))},
+      {"default", Slate(pluss::make_series({0.0, nan_val, 0.0, 1.0, 1.0, nan_val}, {6}, f64))},
   });
 
   workflow::Policy policy{};

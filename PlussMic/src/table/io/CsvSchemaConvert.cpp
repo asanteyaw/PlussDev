@@ -26,7 +26,7 @@ namespace pluss::table::detail {
 
 namespace {
 
-using Thread = pluss::table::Thread;
+using Slate = pluss::table::Slate;
 
 enum class InferredKind : std::uint8_t {
   Bool,
@@ -484,47 +484,47 @@ std::optional<pluss::Series> validity_mask_from_valid(const std::vector<bool>& v
   return mask;
 }
 
-Thread make_series_thread_bool(const std::vector<bool>& values, const std::vector<bool>& valid) {
+Slate make_series_slate_bool(const std::vector<bool>& values, const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::zeros({n}, pluss::codem::ScalarType::Bool);
   auto* p = reinterpret_cast<bool*>(s.raw_data());
   for (std::int64_t i = 0; i < n; ++i) {
     p[i] = values[static_cast<std::size_t>(i)];
   }
-  return Thread(s, validity_mask_from_valid(valid));
+  return Slate(s, validity_mask_from_valid(valid));
 }
 
-Thread make_series_thread_i64(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
+Slate make_series_slate_i64(const std::vector<std::int64_t>& values, const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Int64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(std::int64_t));
   }
-  return Thread(s, validity_mask_from_valid(valid));
+  return Slate(s, validity_mask_from_valid(valid));
 }
 
-Thread make_series_thread_f64(const std::vector<double>& values, const std::vector<bool>& valid) {
+Slate make_series_slate_f64(const std::vector<double>& values, const std::vector<bool>& valid) {
   const auto n = static_cast<std::int64_t>(values.size());
   auto s = pluss::Series::empty({n}, pluss::codem::ScalarType::Float64);
   if (!values.empty()) {
     std::memcpy(s.raw_data(), values.data(), values.size() * sizeof(double));
   }
-  return Thread(s, validity_mask_from_valid(valid));
+  return Slate(s, validity_mask_from_valid(valid));
 }
 
-Thread make_note_thread(const std::vector<std::string>& values, const std::vector<bool>& valid) {
+Slate make_note_slate(const std::vector<std::string>& values, const std::vector<bool>& valid) {
   auto note = pluss::make_note(values);
   const bool all_valid = std::all_of(valid.begin(), valid.end(), [](bool value) { return value; });
   if (all_valid) {
-    return Thread(note);
+    return Slate(note);
   }
-  return Thread(note, validity_mask_from_valid(valid));
+  return Slate(note, validity_mask_from_valid(valid));
 }
 
-bool try_make_timeline_thread(const std::vector<std::string>& values,
+bool try_make_timeline_slate(const std::vector<std::string>& values,
                               const std::vector<bool>& valid,
                               const pluss::loader::ReadCsvOptions& options,
-                              Thread& out_thread) {
+                              Slate& out_slate) {
   std::vector<std::string> filled = values;
   for (std::size_t i = 0; i < filled.size(); ++i) {
     if (!valid[i]) {
@@ -543,7 +543,7 @@ bool try_make_timeline_thread(const std::vector<std::string>& values,
     auto timeline = pluss::codeh::ops_internal::timeline_from_utf8(
         std::span<const std::string_view>(views.data(), views.size()),
         std::span<const std::int64_t>(shape.data(), shape.size()));
-    out_thread = Thread(timeline, validity_mask_from_valid(valid));
+    out_slate = Slate(timeline, validity_mask_from_valid(valid));
     return true;
   } catch (...) {
     // Fall back to a permissive parser for common CSV date/time formats:
@@ -562,15 +562,15 @@ bool try_make_timeline_thread(const std::vector<std::string>& values,
     auto timeline = pluss::codeh::ops_internal::timeline_from_epoch_nanos(
         std::span<const std::int64_t>(ticks.data(), ticks.size()),
         std::span<const std::int64_t>(shape.data(), shape.size()));
-    out_thread = Thread(timeline, validity_mask_from_valid(valid));
+    out_slate = Slate(timeline, validity_mask_from_valid(valid));
     return true;
   }
 }
 
-bool try_make_timeline_thread(const pluss::coden::Note& values,
+bool try_make_timeline_slate(const pluss::coden::Note& values,
                               const std::vector<bool>& valid,
                               const pluss::loader::ReadCsvOptions& options,
-                              Thread& out_thread) {
+                              Slate& out_slate) {
   const auto n = static_cast<std::size_t>(values.numel());
   const std::array<std::int64_t, 1> shape{static_cast<std::int64_t>(n)};
 
@@ -584,7 +584,7 @@ bool try_make_timeline_thread(const pluss::coden::Note& values,
     auto timeline = pluss::codeh::ops_internal::timeline_from_utf8(
         std::span<const std::string_view>(views.data(), views.size()),
         std::span<const std::int64_t>(shape.data(), shape.size()));
-    out_thread = Thread(timeline, validity_mask_from_valid(valid));
+    out_slate = Slate(timeline, validity_mask_from_valid(valid));
     return true;
   } catch (...) {
     std::vector<std::int64_t> ticks(n, 0);
@@ -601,7 +601,7 @@ bool try_make_timeline_thread(const pluss::coden::Note& values,
     auto timeline = pluss::codeh::ops_internal::timeline_from_epoch_nanos(
         std::span<const std::int64_t>(ticks.data(), ticks.size()),
         std::span<const std::int64_t>(shape.data(), shape.size()));
-    out_thread = Thread(timeline, validity_mask_from_valid(valid));
+    out_slate = Slate(timeline, validity_mask_from_valid(valid));
     return true;
   }
 }
@@ -655,7 +655,7 @@ InferredKind forced_kind_for(const std::string& name,
   return forced.value_or(InferredKind::Text);
 }
 
-Thread infer_column_thread(const std::string& col_name,
+Slate infer_column_slate(const std::string& col_name,
                            std::size_t source_col_index,
                            const std::vector<std::string>& raw_values,
                            const pluss::loader::ReadCsvOptions& options,
@@ -679,8 +679,8 @@ Thread infer_column_thread(const std::string& col_name,
       (!forced.has_value() || *forced == InferredKind::DateTime)
       && should_parse_as_datetime(col_name, source_col_index, options, dtype_lower);
   if (parse_dt || (forced.has_value() && *forced == InferredKind::DateTime)) {
-    Thread out;
-    if (try_make_timeline_thread(values, valid, options, out)) {
+    Slate out;
+    if (try_make_timeline_slate(values, valid, options, out)) {
       return out;
     }
     if (forced.has_value() && *forced == InferredKind::DateTime) {
@@ -688,7 +688,7 @@ Thread infer_column_thread(const std::string& col_name,
     }
   }
 
-  const auto try_bool_block = [&]() -> std::optional<Thread> {
+  const auto try_bool_block = [&]() -> std::optional<Slate> {
     const bool try_bool = !forced.has_value() || *forced == InferredKind::Bool;
     if (!try_bool) return std::nullopt;
     std::vector<bool> parsed(n, false);
@@ -706,7 +706,7 @@ Thread infer_column_thread(const std::string& col_name,
       if (ambiguous_numeric_bool_tokens(values, valid) && !looks_boolean_feature_name(col_name)) {
         return std::nullopt;
       }
-      return make_series_thread_bool(parsed, valid);
+      return make_series_slate_bool(parsed, valid);
     }
     if (forced.has_value() && *forced == InferredKind::Bool) {
       PLUSS_FAIL("load_csv: failed to parse bool column '" + col_name + "'");
@@ -714,7 +714,7 @@ Thread infer_column_thread(const std::string& col_name,
     return std::nullopt;
   };
 
-  const auto try_i64_block = [&]() -> std::optional<Thread> {
+  const auto try_i64_block = [&]() -> std::optional<Slate> {
     const bool try_i64 = !forced.has_value() || *forced == InferredKind::Int64;
     if (!try_i64) return std::nullopt;
     std::vector<std::int64_t> parsed(n, 0);
@@ -729,7 +729,7 @@ Thread infer_column_thread(const std::string& col_name,
       parsed[i] = v;
     }
     if (ok) {
-      return make_series_thread_i64(parsed, valid);
+      return make_series_slate_i64(parsed, valid);
     }
     if (forced.has_value() && *forced == InferredKind::Int64) {
       PLUSS_FAIL("load_csv: failed to parse int64 column '" + col_name + "'");
@@ -760,7 +760,7 @@ Thread infer_column_thread(const std::string& col_name,
         parsed[i] = v;
       }
       if (ok) {
-        return make_series_thread_f64(parsed, valid);
+        return make_series_slate_f64(parsed, valid);
       }
       if (forced.has_value() && *forced == InferredKind::Float64) {
         PLUSS_FAIL("load_csv: failed to parse float64 column '" + col_name + "'");
@@ -769,16 +769,16 @@ Thread infer_column_thread(const std::string& col_name,
   }
 
   if (raw_values_look_datetime_like(values, valid)) {
-    Thread out;
-    if (try_make_timeline_thread(values, valid, options, out)) {
+    Slate out;
+    if (try_make_timeline_slate(values, valid, options, out)) {
       return out;
     }
   }
 
-  return make_note_thread(values, valid);
+  return make_note_slate(values, valid);
 }
 
-Thread infer_column_note_thread(const std::string& col_name,
+Slate infer_column_note_slate(const std::string& col_name,
                                 std::size_t source_col_index,
                                 const pluss::coden::Note& raw_values,
                                 const pluss::loader::ReadCsvOptions& options,
@@ -800,8 +800,8 @@ Thread infer_column_note_thread(const std::string& col_name,
       (!forced.has_value() || *forced == InferredKind::DateTime)
       && should_parse_as_datetime(col_name, source_col_index, options, dtype_lower);
   if (parse_dt || (forced.has_value() && *forced == InferredKind::DateTime)) {
-    Thread out;
-    if (try_make_timeline_thread(raw_values, valid, options, out)) {
+    Slate out;
+    if (try_make_timeline_slate(raw_values, valid, options, out)) {
       return out;
     }
     if (forced.has_value() && *forced == InferredKind::DateTime) {
@@ -809,7 +809,7 @@ Thread infer_column_note_thread(const std::string& col_name,
     }
   }
 
-  const auto try_bool_block = [&]() -> std::optional<Thread> {
+  const auto try_bool_block = [&]() -> std::optional<Slate> {
     const bool try_bool = !forced.has_value() || *forced == InferredKind::Bool;
     if (!try_bool) return std::nullopt;
     std::vector<bool> parsed(n, false);
@@ -827,7 +827,7 @@ Thread infer_column_note_thread(const std::string& col_name,
       if (ambiguous_numeric_bool_tokens(raw_values, valid) && !looks_boolean_feature_name(col_name)) {
         return std::nullopt;
       }
-      return make_series_thread_bool(parsed, valid);
+      return make_series_slate_bool(parsed, valid);
     }
     if (forced.has_value() && *forced == InferredKind::Bool) {
       PLUSS_FAIL("load_csv: failed to parse bool column '" + col_name + "'");
@@ -835,7 +835,7 @@ Thread infer_column_note_thread(const std::string& col_name,
     return std::nullopt;
   };
 
-  const auto try_i64_block = [&]() -> std::optional<Thread> {
+  const auto try_i64_block = [&]() -> std::optional<Slate> {
     const bool try_i64 = !forced.has_value() || *forced == InferredKind::Int64;
     if (!try_i64) return std::nullopt;
     std::vector<std::int64_t> parsed(n, 0);
@@ -850,7 +850,7 @@ Thread infer_column_note_thread(const std::string& col_name,
       parsed[i] = v;
     }
     if (ok) {
-      return make_series_thread_i64(parsed, valid);
+      return make_series_slate_i64(parsed, valid);
     }
     if (forced.has_value() && *forced == InferredKind::Int64) {
       PLUSS_FAIL("load_csv: failed to parse int64 column '" + col_name + "'");
@@ -881,7 +881,7 @@ Thread infer_column_note_thread(const std::string& col_name,
         parsed[i] = v;
       }
       if (ok) {
-        return make_series_thread_f64(parsed, valid);
+        return make_series_slate_f64(parsed, valid);
       }
       if (forced.has_value() && *forced == InferredKind::Float64) {
         PLUSS_FAIL("load_csv: failed to parse float64 column '" + col_name + "'");
@@ -890,8 +890,8 @@ Thread infer_column_note_thread(const std::string& col_name,
   }
 
   if (raw_values_look_datetime_like(raw_values, valid)) {
-    Thread out;
-    if (try_make_timeline_thread(raw_values, valid, options, out)) {
+    Slate out;
+    if (try_make_timeline_slate(raw_values, valid, options, out)) {
       return out;
     }
   }
@@ -901,7 +901,7 @@ Thread infer_column_note_thread(const std::string& col_name,
   for (std::size_t i = 0; i < n; ++i) {
     values.emplace_back(raw_values.at(static_cast<std::int64_t>(i)));
   }
-  return make_note_thread(values, valid);
+  return make_note_slate(values, valid);
 }
 
 std::size_t resolve_column_workers(const pluss::loader::ReadCsvOptions& options, std::size_t column_count) {
@@ -931,29 +931,29 @@ std::unordered_map<std::string, std::string> dtype_lower_from_options(const plus
   return dtype_lower;
 }
 
-pluss::table::Thread infer_thread_from_raw_csv_column(std::string_view col_name,
+pluss::table::Slate infer_slate_from_raw_csv_column(std::string_view col_name,
                                                        std::size_t source_col_index,
                                                        const std::vector<std::string>& raw_values,
                                                        const pluss::loader::ReadCsvOptions& options,
                                                        bool prefer_numeric_over_bool) {
   auto dtype_lower = dtype_lower_from_options(options);
-  return infer_column_thread(std::string(col_name), source_col_index, raw_values, options, dtype_lower,
+  return infer_column_slate(std::string(col_name), source_col_index, raw_values, options, dtype_lower,
                              prefer_numeric_over_bool);
 }
 
-pluss::table::Thread infer_thread_from_raw_csv_column(const pluss::loader::CsvRawColumn& column,
+pluss::table::Slate infer_slate_from_raw_csv_column(const pluss::loader::CsvRawColumn& column,
                                                        const pluss::loader::ReadCsvOptions& options,
                                                        bool prefer_numeric_over_bool) {
   auto dtype_lower = dtype_lower_from_options(options);
   if (column.note_values.has_value()) {
-    return infer_column_note_thread(column.name,
+    return infer_column_note_slate(column.name,
                                     column.source_index,
                                     *column.note_values,
                                     options,
                                     dtype_lower,
                                     prefer_numeric_over_bool);
   }
-  return infer_column_thread(column.name, column.source_index, column.values, options, dtype_lower,
+  return infer_column_slate(column.name, column.source_index, column.values, options, dtype_lower,
                              prefer_numeric_over_bool);
 }
 
@@ -962,7 +962,7 @@ pluss::loader::CsvBatch csv_batch_from_raw_batch(const pluss::loader::CsvRawBatc
                                                  double* infer_columns_ms) {
   const auto t_infer_start = std::chrono::steady_clock::now();
 
-  std::vector<pluss::table::Thread> inferred(raw.features.size());
+  std::vector<pluss::table::Slate> inferred(raw.features.size());
   const auto max_workers = resolve_column_workers(options, raw.features.size());
   const bool use_parallel = max_workers > 1 && raw.features.size() >= 4;
 
@@ -982,7 +982,7 @@ pluss::loader::CsvBatch csv_batch_from_raw_batch(const pluss::loader::CsvRawBatc
           return;
         }
         try {
-          inferred[i] = infer_thread_from_raw_csv_column(raw.features[i], options);
+          inferred[i] = infer_slate_from_raw_csv_column(raw.features[i], options);
         } catch (...) {
           {
             std::lock_guard<std::mutex> lock(error_mutex);
@@ -1012,7 +1012,7 @@ pluss::loader::CsvBatch csv_batch_from_raw_batch(const pluss::loader::CsvRawBatc
     }
   } else {
     for (std::size_t i = 0; i < raw.features.size(); ++i) {
-      inferred[i] = infer_thread_from_raw_csv_column(raw.features[i], options);
+      inferred[i] = infer_slate_from_raw_csv_column(raw.features[i], options);
     }
   }
 
@@ -1020,15 +1020,15 @@ pluss::loader::CsvBatch csv_batch_from_raw_batch(const pluss::loader::CsvRawBatc
     *infer_columns_ms = elapsed_ms(t_infer_start, std::chrono::steady_clock::now());
   }
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> cols;
+  std::vector<std::pair<std::string, pluss::table::Slate>> cols;
   cols.reserve(raw.features.size());
   for (std::size_t i = 0; i < raw.features.size(); ++i) {
     cols.emplace_back(raw.features[i].name, std::move(inferred[i]));
   }
 
-  std::optional<pluss::table::Thread> cases = std::nullopt;
+  std::optional<pluss::table::Slate> cases = std::nullopt;
   if (raw.cases.has_value()) {
-    cases = infer_thread_from_raw_csv_column(*raw.cases, options);
+    cases = infer_slate_from_raw_csv_column(*raw.cases, options);
   }
 
   return pluss::loader::CsvBatch{std::move(cols), std::move(cases)};

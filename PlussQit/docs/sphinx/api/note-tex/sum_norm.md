@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::sum_norm
+# Note::TexAccessor::sum_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::sum_norm() const
+Note Note::TexAccessor::sum_norm() const
 ```
 
 ## Collapse `\sumlimits`/`\sumnolimits` To `\sum`

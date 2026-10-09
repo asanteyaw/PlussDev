@@ -1,18 +1,18 @@
-# TimelineIndexAccessor::slice
+# Timeline::TimelineIndexAccessor::slice
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::slice(const Timeline& start, const Timeline& end) const
+pluss::Series Timeline::TimelineIndexAccessor::slice(const Timeline& start, const Timeline& end) const
 ```
 
 ## What It Does
 
 Returns the matching positional indices for an inclusive time-range slice.
 
-This method does not return a new `TimelineIndexAccessor`. It returns a 1D integer
+This method does not return a new `Timeline::TimelineIndexAccessor`. It returns a 1D integer
 `Series` containing the case positions whose timestamps fall within
 `[start, end]`.
 
@@ -89,9 +89,9 @@ gather aligned values with the same positions.
 
 ## See Also
 
-- [`TimelineIndexAccessor::slice_time`](slice_time.md): same idea, but with ISO-like string
+- [`Timeline::TimelineIndexAccessor::slice_time`](slice_time.md): same idea, but with ISO-like string
   bounds.
-- [`TimelineIndexAccessor::searchsorted`](searchsorted.md): the lower-level insertion lookup
+- [`Timeline::TimelineIndexAccessor::searchsorted`](searchsorted.md): the lower-level insertion lookup
   primitive behind range slicing.
 
 <div class="pluss-inline-prev-next">

@@ -181,14 +181,14 @@ struct CompareResult {
   const Config i64_cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU);
   const auto n = static_cast<std::int64_t>(trials.size());
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> columns{};
+  std::vector<std::pair<std::string, pluss::table::Slate>> columns{};
   columns.reserve(3 + metrics.size());
-  columns.emplace_back("name", pluss::table::Thread(pluss::make_note(names)));
-  columns.emplace_back("objective", pluss::table::Thread(pluss::make_series(objectives, {n}, f64_cfg)));
-  columns.emplace_back("rank", pluss::table::Thread(pluss::make_series(ranks, {n}, i64_cfg)));
+  columns.emplace_back("name", pluss::table::Slate(pluss::make_note(names)));
+  columns.emplace_back("objective", pluss::table::Slate(pluss::make_series(objectives, {n}, f64_cfg)));
+  columns.emplace_back("rank", pluss::table::Slate(pluss::make_series(ranks, {n}, i64_cfg)));
   for (std::size_t m = 0; m < metrics.size(); ++m) {
     columns.emplace_back(metric_kind_name_(metrics[m]),
-                         pluss::table::Thread(pluss::make_series(metric_columns[m], {n}, f64_cfg)));
+                         pluss::table::Slate(pluss::make_series(metric_columns[m], {n}, f64_cfg)));
   }
 
   return pluss::table::DataFrame(std::move(columns)).title("Candidate Comparison Ranking");
@@ -364,7 +364,7 @@ inline void assign_objective_ranks_(CompareReport& report) {
 }
 
 // Shared body for every compare() overload below -- takes an already-built
-// LabeledBatch so the (x, y), (x, Thread), and (frame, DataFrameBatchOptions)
+// LabeledBatch so the (x, y), (x, Slate), and (frame, DataFrameBatchOptions)
 // entry points only differ in how they construct that one batch (Reject-only
 // vs. the caller's own note_policy, e.g. DataNotePolicy::Factorize) and
 // otherwise share every line of the actual grid-scheduling/ranking logic.
@@ -845,7 +845,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline CompareResult compare(std::vector<Candidate> candidates,
                                            const pluss::table::DataFrame& x,
-                                           const pluss::table::Thread& y,
+                                           const pluss::table::Slate& y,
                                            CrossValOptions cv = {},
                                            TrainOptions train_options = {},
                                            AssessOptions assess_options = {},
@@ -939,7 +939,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
-                                               const pluss::table::Thread& y,
+                                               const pluss::table::Slate& y,
                                                const SplitOptions& split = {},
                                                const TrainOptions& train_options = {},
                                                const AssessOptions& assess_options = {},
@@ -957,7 +957,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline SpecTuneResult tune_specs(pluss::msharp::RangeView::Of<ModelSpec> candidates,
                                                const pluss::table::DataFrame& x,
-                                               const pluss::table::Thread& y,
+                                               const pluss::table::Slate& y,
                                                const TuneOptions& tune_options,
                                                const TrainOptions& train_options = {},
                                                const AssessOptions& assess_options = {},
@@ -1070,7 +1070,7 @@ struct FoldFramePair_ {
 [[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
                                                 std::int64_t trials,
                                                 const pluss::table::DataFrame& x,
-                                                const pluss::table::Thread& y,
+                                                const pluss::table::Slate& y,
                                                 const SplitOptions& split = {},
                                                 const TrainOptions& train_options = {},
                                                 const AssessOptions& assess_options = {},
@@ -1091,7 +1091,7 @@ struct FoldFramePair_ {
 
 [[nodiscard]] inline SpecTuneResult probe_specs(const ProbeSpecSampler& sampler,
                                                 const pluss::table::DataFrame& x,
-                                                const pluss::table::Thread& y,
+                                                const pluss::table::Slate& y,
                                                 const TuneOptions& tune_options,
                                                 const TrainOptions& train_options = {},
                                                 const AssessOptions& assess_options = {},
@@ -1331,7 +1331,7 @@ class GridPoint {
 [[nodiscard]] inline SpecTuneResult tune_specs(const std::vector<GridAxis>& axes,
                                                const std::function<ModelSpec(const GridPoint&)>& make_spec,
                                                const pluss::table::DataFrame& x,
-                                               const pluss::table::Thread& y,
+                                               const pluss::table::Slate& y,
                                                const TuneOptions& tune_options = {},
                                                const TrainOptions& train_options = {},
                                                const AssessOptions& assess_options = {},

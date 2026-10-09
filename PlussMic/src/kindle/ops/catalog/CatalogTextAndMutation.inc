@@ -1,6 +1,6 @@
 Catalog Catalog::clean(std::string_view field) const {
   return keys({field}).map([](const Stream& s) {
-    const auto t = s.to_thread().cast().note().as_note();
+    const auto t = s.to_slate().cast().note().as_note();
     std::vector<std::string> out;
     out.reserve(static_cast<std::size_t>(s.size()));
     for (std::int64_t i = 0; i < s.size(); ++i) {
@@ -21,7 +21,7 @@ Catalog Catalog::keywords(std::string_view field, int top_n) const {
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::keywords: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::keywords: unknown key '" + key + "'");
-  const auto src = at(key).to_thread().cast().note().as_note();
+  const auto src = at(key).to_slate().cast().note().as_note();
 
   std::unordered_map<std::string, std::int64_t> counts;
   for (std::int64_t i = 0; i < src.numel(); ++i) {
@@ -71,8 +71,8 @@ Catalog Catalog::similarity(std::string_view field1,
   PLUSS_CHECK(lowercase_copy(trim_copy(method)) == "cosine",
               "Catalog::similarity currently supports only method='cosine'");
 
-  const auto lhs = at(left_name).to_thread().cast().note().as_note();
-  const auto rhs = at(right_name).to_thread().cast().note().as_note();
+  const auto lhs = at(left_name).to_slate().cast().note().as_note();
+  const auto rhs = at(right_name).to_slate().cast().note().as_note();
   PLUSS_CHECK(lhs.numel() == rhs.numel(), "Catalog::similarity: fields must have same length");
 
   std::vector<double> sim;
@@ -106,7 +106,7 @@ Catalog Catalog::grep(std::string_view field, std::string_view pattern) const {
   const auto pat = lowercase_copy(trim_copy(pattern));
   PLUSS_CHECK(!key.empty(), "Catalog::grep: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::grep: unknown field '" + key + "'");
-  const auto src = at(key).to_thread().cast().note().as_note();
+  const auto src = at(key).to_slate().cast().note().as_note();
   std::vector<bool> keep(static_cast<std::size_t>(src.numel()), false);
   for (std::int64_t i = 0; i < src.numel(); ++i) {
     const auto txt = lowercase_copy(src.at(i));
@@ -120,7 +120,7 @@ Catalog Catalog::featurize(std::string_view field) const {
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::featurize: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::featurize: unknown field '" + key + "'");
-  const auto src = at(key).to_thread().cast().note().as_note();
+  const auto src = at(key).to_slate().cast().note().as_note();
 
   std::vector<std::int64_t> char_len;
   std::vector<std::int64_t> word_count;
@@ -146,7 +146,7 @@ Catalog Catalog::stats(std::string_view field, std::string_view stat_type) const
   const auto stat = lowercase_copy(trim_copy(stat_type));
   PLUSS_CHECK(!key.empty(), "Catalog::stats: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::stats: unknown field '" + key + "'");
-  const auto src = at(key).to_thread().cast().note().as_note();
+  const auto src = at(key).to_slate().cast().note().as_note();
 
   std::vector<std::int64_t> lens;
   lens.reserve(static_cast<std::size_t>(src.numel()));
@@ -187,7 +187,7 @@ Catalog Catalog::tfidf(std::string_view field) const {
   const auto key = trim_copy(field);
   PLUSS_CHECK(!key.empty(), "Catalog::tfidf: field cannot be empty");
   PLUSS_CHECK(has(key), "Catalog::tfidf: unknown field '" + key + "'");
-  const auto src = at(key).to_thread().cast().note().as_note();
+  const auto src = at(key).to_slate().cast().note().as_note();
   const auto n = src.numel();
 
   std::vector<std::vector<std::string>> docs;

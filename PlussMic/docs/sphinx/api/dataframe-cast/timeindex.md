@@ -13,7 +13,7 @@ DataFrameCastAccessor::timeindex() const -> DataFrame
 ## What It Does
 
 Casts every feature currently bound on the accessor to `TimeIndex`, using the shared
-`ThreadCastOptions` from `DataFrame::cast(...)`.
+`SlateCastOptions` from `DataFrame::cast(...)`.
 
 ## Returns
 
@@ -28,5 +28,5 @@ Casts every feature currently bound on the accessor to `TimeIndex`, using the sh
 ## See Also
 
 - [`DataFrame::cast`](../dataframe/cast.md): enters the accessor and supplies shared
-  `ThreadCastOptions`.
+  `SlateCastOptions`.
 - [`DataFrameCastAccessor::timeline`](timeline.md): the non-indexed temporal target.

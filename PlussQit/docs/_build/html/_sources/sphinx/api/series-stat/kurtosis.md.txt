@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::kurtosis
+# Series::StatAccessor::kurtosis
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::kurtosis() const
-Series SeriesStatAccessor::kurtosis(std::int64_t dim) const
+Series Series::StatAccessor::kurtosis() const
+Series Series::StatAccessor::kurtosis(std::int64_t dim) const
 Series SeriesStatProxy::kurtosis() const
 Series SeriesStatProxy::kurtosis(std::int64_t dim) const
 ```

@@ -1,12 +1,12 @@
-# TimelineIndexAccessor::resample_bins
+# Timeline::TimelineIndexAccessor::resample_bins
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-ResampleBins TimelineIndexAccessor::resample_bins(const ResampleOptions& options) const
-ResampleBins TimelineIndexAccessor::resample_bins(std::string_view freq, std::int64_t step = 1) const
+ResampleBins Timeline::TimelineIndexAccessor::resample_bins(const ResampleOptions& options) const
+ResampleBins Timeline::TimelineIndexAccessor::resample_bins(std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does
@@ -143,11 +143,11 @@ Example 3. Use the `ResampleOptions` overload when closure, label edge, origin,
 or offset must be controlled explicitly.
 
 ```cpp
-pluss::TimelineIndexAccessor::ResampleOptions opts;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions opts;
 opts.freq = "H";
 opts.step = 1;
-opts.closed = pluss::TimelineIndexAccessor::ResampleClosed::Right;
-opts.label = pluss::TimelineIndexAccessor::ResampleLabel::Right;
+opts.closed = pluss::Timeline::TimelineIndexAccessor::ResampleClosed::Right;
+opts.label = pluss::Timeline::TimelineIndexAccessor::ResampleLabel::Right;
 
 auto bins = idx.resample_bins(opts);
 std::cout << pluss::timeline::print(bins.labels) << "\n";
@@ -166,8 +166,8 @@ std::cout << pluss::series::print(bins.bin_id) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_count`](resample_count.md): count observations per bin.
-- [`TimelineIndexAccessor::resample_agg`](resample_agg.md): dispatch aggregation by an
+- [`Timeline::TimelineIndexAccessor::resample_count`](resample_count.md): count observations per bin.
+- [`Timeline::TimelineIndexAccessor::resample_agg`](resample_agg.md): dispatch aggregation by an
   operation name.
 
 <div class="pluss-inline-prev-next">

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::includes
+# Note::TexAccessor::includes
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::includes() const
+TokenBatch Note::TexAccessor::includes() const
 ```
 
 ## Extract External Resource Targets

@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::simple_imputer`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `simple_imputer` builds an attachable [`prep::Stage`](Stage.md) that fills the gaps in a routed numeric column with a single fitted statistic — the column mean by default.
 
@@ -60,7 +60,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -71,15 +71,15 @@ int main() {
   // completed column.
   const pluss::Series amount = pluss::make_series({10., 20., NaN, 40., NaN, 60.}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 1, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}});
+  const DataFrame x({{"amount", Slate(amount)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::simple_imputer(), lymph::prep::route::names({"amount"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"amount", Thread(amount)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"amount", Slate(amount)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -119,7 +119,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -128,7 +128,7 @@ int main() {
   // strategy selects the fill statistic. Standalone view over one gappy column:
   // mean, median, and a fixed constant.
   const pluss::Series v = pluss::make_series({1., 2., 100., NaN, 4., NaN}, {6}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::SimpleImputer mean_opt{};                                  // default: Mean
   lymph::options::SimpleImputer median_opt{};
@@ -202,7 +202,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -211,7 +211,7 @@ int main() {
   const pluss::Series a = pluss::make_series({10., 20., NaN, 40., 50., 60.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"a", Thread(a)}, {"region", Thread(region)}});
+  const DataFrame x({{"a", Slate(a)}, {"region", Slate(region)}});
 
   // impute then scale the numeric column, one-hot the categorical one.
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -220,8 +220,8 @@ int main() {
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"a", Thread(a)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"a", Slate(a)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_fmt
+# Note::TexAccessor::strip_fmt
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_fmt() const
+Note Note::TexAccessor::strip_fmt() const
 ```
 
 ## Unwrap Formatting While Keeping Its Text

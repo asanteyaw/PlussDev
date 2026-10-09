@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: cabcab3cee66 -->
 # `pluss::ai::ice::Callback::on_after_backward`
 
 [Back to `pluss::ai::ice::Callback`](../Callback.md)
@@ -8,54 +7,86 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+virtual void pluss::ai::ice::Callback::on_after_backward(pluss::ai::ice::RunState& state);
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Fires once per training batch, right after `.reverse()` has run -- every
+registered parameter now has a gradient
+([`Series::has_sensitivity()`](../RunState.md)) whether or not this
+batch will actually trigger an optimizer step (that depends on
+`accumulation_steps`; see [`on_before_step`](on_before_step.md)). The
+default implementation does nothing. This is the point to inspect or
+log gradient-level information -- a gradient norm, a per-parameter
+statistic -- before the optimizer ever touches the parameters. A stop
+requested here still skips the optimizer step for this batch (so the
+parameter values themselves are unaffected), but unlike
+[`on_before_backward`](on_before_backward.md), the gradient has already
+been computed by this point.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`RunState& state`
+: `state.parameters`' entries now have a populated gradient --
+  `has_sensitivity()` reads `true`.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`void`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+None from the base class; whatever an override throws propagates out
+of the run and triggers [`on_exception`](on_exception.md) instead.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: confirming it fires once per training batch, the
+gradient becoming available exactly at this point (not before), and a
+stop requested here leaving parameters unchanged even though the
+gradient was already computed.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class CountAfterBackwardCallback final : public pluss::ai::ice::Callback {
+ public:
+  int fire_count = 0;
+  void on_after_backward(pluss::ai::ice::RunState&) override { ++fire_count; }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 1;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.5;
+  options.shuffle = false;
+
+  const auto counter = std::make_shared<CountAfterBackwardCallback>();
+  ice::Coach coach(options);
+  coach.add_callback(counter);
+  coach.learn(model, x, y);
+
+  std::cout << "on_after_backward fired " << counter->fire_count << " time(s)\n";
 
   return 0;
 }
@@ -64,27 +95,51 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+on_after_backward fired 1 time(s)
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class ShowGradientAppearsCallback final : public pluss::ai::ice::Callback {
+ public:
+  void on_before_backward(pluss::ai::ice::RunState& state) override {
+    std::cout << "on_before_backward: has_sensitivity() = "
+               << state.parameters->front()->has_sensitivity() << "\n";
+  }
+  void on_after_backward(pluss::ai::ice::RunState& state) override {
+    std::cout << "on_after_backward:  has_sensitivity() = "
+               << state.parameters->front()->has_sensitivity() << "\n";
+  }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 1;
+  options.learning_rate = 0.5;
+  options.validation.split_ratio = 0.0;
+
+  ice::Coach coach(options);
+  coach.add_callback(std::make_shared<ShowGradientAppearsCallback>());
+  coach.learn(model, x, y);
 
   return 0;
 }
@@ -93,27 +148,63 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+on_before_backward: has_sensitivity() = 0
+on_after_backward:  has_sensitivity() = 1
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Stopping here still skips the optimizer step -- the parameter's value
+is unchanged at the end of the run -- but `has_sensitivity()` confirms
+the gradient itself was already computed before the stop took effect.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
+#include <memory>
+
+namespace {
+
+class StopAfterBackwardCallback final : public pluss::ai::ice::Callback {
+ public:
+  void on_after_backward(pluss::ai::ice::RunState& state) override {
+    state.stop_requested = true;
+  }
+};
+
+class ShowParamAndGradientCallback final : public pluss::ai::ice::Callback {
+ public:
+  void on_batch_begin(pluss::ai::ice::RunState& state) override {
+    std::cout << "before batch: param[0].sum() = " << state.parameters->front()->sum().item<float>() << "\n";
+  }
+  void on_run_end(pluss::ai::ice::RunState& state) override {
+    std::cout << "after run:    param[0].sum() = " << state.parameters->front()->sum().item<float>()
+               << ", has_sensitivity() = " << state.parameters->front()->has_sensitivity() << "\n";
+  }
+};
+
+} // namespace
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 1;
+  options.learning_rate = 0.5;
+  options.validation.split_ratio = 0.0;
+
+  ice::Coach coach(options);
+  coach.add_callback(std::make_shared<ShowParamAndGradientCallback>());
+  coach.add_callback(std::make_shared<StopAfterBackwardCallback>());
+  coach.learn(model, x, y);
 
   return 0;
 }
@@ -122,12 +213,20 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+before batch: param[0].sum() = -0.599627
+after run:    param[0].sum() = -0.599627, has_sensitivity() = 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`on_before_backward`](on_before_backward.md) -- fires right before,
+  with no gradient available yet.
+- [`on_before_step`](on_before_step.md) -- the next hook, only firing
+  on batches that actually trigger an optimizer step.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

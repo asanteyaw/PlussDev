@@ -74,8 +74,8 @@ Example 1. The default (`adjusted = true`) exponentially weighted mean.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().ewm(0.5);
@@ -178,8 +178,8 @@ null gap.
 
 ```cpp
 auto readings_with_null = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series(
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series(
         {10.0, std::numeric_limits<double>::quiet_NaN(), 15.0, 30.0}))},
 });
 
@@ -234,8 +234,8 @@ Example 5. `adjusted = false` on a feature with a null value, to see it throw.
 
 ```cpp
 auto readings_with_null = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series(
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series(
         {10.0, std::numeric_limits<double>::quiet_NaN(), 15.0, 30.0}))},
 });
 
@@ -250,7 +250,7 @@ try {
 ### Output
 
 ```text
-Thread::decay(adjusted=false): nullable input requires adjusted=true
+Slate::decay(adjusted=false): nullable input requires adjusted=true
 ```
 
 The classic recursive form has no defined way to skip over a missing
@@ -271,7 +271,7 @@ try {
 ### Output
 
 ```text
-Thread::decay: only Mean, Var, and Std are supported
+Slate::decay: only Mean, Var, and Std are supported
 ```
 
 `WindowStatistic` has other members used elsewhere (by [`rolling()`](rolling.md)

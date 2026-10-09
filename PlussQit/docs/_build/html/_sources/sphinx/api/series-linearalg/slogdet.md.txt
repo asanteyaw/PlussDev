@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::slogdet
+# Series::LinearAlgAccessor::slogdet
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::slogdet() const
+Series Series::LinearAlgAccessor::slogdet() const
 Series SeriesLinearAlgProxy::slogdet() const
 ```
 
@@ -225,9 +225,9 @@ log-magnitude slot contributes the inverse-transpose gradient.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::det`](det.md): ordinary signed determinant.
-- [`SeriesLinearAlgAccessor::logdet`](logdet.md): real log of a positive determinant.
-- [`SeriesLinearAlgAccessor::inverse`](inverse.md): inverse-transpose relationship.
+- [`Series::LinearAlgAccessor::det`](det.md): ordinary signed determinant.
+- [`Series::LinearAlgAccessor::logdet`](logdet.md): real log of a positive determinant.
+- [`Series::LinearAlgAccessor::inverse`](inverse.md): inverse-transpose relationship.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="qr_r.html">

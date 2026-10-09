@@ -181,7 +181,7 @@ int main() {
   for (int step = 0; step < 5; ++step) {
     const Series gradient = w.sub(target);
     optimizer.step(std::vector<Series>{gradient});
-    std::cout << "step " << step << ": gradient = " << gradient.item<float>() << ", w = " << w.item<float>() << "\n";
+    std::cout << "step " << step << ": loss = " << gradient.square().mul(0.5).item<float>() << ", gradient = " << gradient.item<float>() << ", w = " << w.item<float>() << "\n";
   }
 
   return 0;
@@ -191,11 +191,11 @@ int main() {
 Output
 
 ```text
-step 0: gradient = 4, w = 4.6
-step 1: gradient = 3.6, w = 4.24
-step 2: gradient = 3.24, w = 3.916
-step 3: gradient = 2.916, w = 3.6244
-step 4: gradient = 2.6244, w = 3.36196
+step 0: loss = 8, gradient = 4, w = 4.6
+step 1: loss = 6.48, gradient = 3.6, w = 4.24
+step 2: loss = 5.2488, gradient = 3.24, w = 3.916
+step 3: loss = 4.25153, gradient = 2.916, w = 3.6244
+step 4: loss = 3.44374, gradient = 2.6244, w = 3.36196
 ```
 
 Identical trajectory to Example 1 -- same math, reached without building or

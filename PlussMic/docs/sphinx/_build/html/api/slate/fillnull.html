@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slate::fillnull &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Slate::fillnull_" href="fillnull_.html" />
+    <link rel="prev" title="Slate::ffill" href="ffill.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: be8a298dd281 -->
+<section id="slate-fillnull">
+<h1>Slate::fillnull<a class="headerlink" href="#slate-fillnull" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../slate_api_reference.html"><span class="doc std std-doc">Back to Slate API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
+<span class="n">Slate</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
+<span class="n">Slate</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Timeline</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
+<span class="n">Slate</span><span class="o">::</span><span class="n">fillnull</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Replaces every <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell with <code class="docutils literal notranslate"><span class="pre">value</span></code>, leaving already-valid cells untouched. The
+overload selects which payload kind is required: <code class="docutils literal notranslate"><span class="pre">double</span></code> requires a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind
+thread, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> requires
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind, and <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> requires <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind. Unlike the other
+overloads, the <code class="docutils literal notranslate"><span class="pre">Duration</span></code> overload also clears any intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes (not just
+lanes flagged by a validity mask) via <code class="docutils literal notranslate"><span class="pre">fill_nat</span></code>, since <code class="docutils literal notranslate"><span class="pre">Duration</span></code>’s own payload can
+carry a sentinel-missing value independent of the thread’s validity mask. This is the
+same operation <a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace(null_t,</span> <span class="pre">to)</span></code></span></a> delegates to internally when <code class="docutils literal notranslate"><span class="pre">from</span></code>
+is <code class="docutils literal notranslate"><span class="pre">pluss::series::null</span></code>.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>value</strong>
+The replacement for <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells. Its C++ type selects the overload — <code class="docutils literal notranslate"><span class="pre">double</span></code>
+for <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>/<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char*</span></code> for <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">pluss::Timeline</span></code> for
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind threads, <code class="docutils literal notranslate"><span class="pre">pluss::Duration</span></code> for <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind threads. The
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> overload requires a scalar value (<code class="docutils literal notranslate"><span class="pre">numel()</span> <span class="pre">==</span> <span class="pre">1</span></code>); the <code class="docutils literal notranslate"><span class="pre">Duration</span></code>
+overload requires exactly one value and that value must not itself be <code class="docutils literal notranslate"><span class="pre">NaT</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
+A new thread, same length and kind as <code class="docutils literal notranslate"><span class="pre">*this</span></code>, with every <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell replaced
+by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Fill <code class="docutils literal notranslate"><span class="pre">NULL</span></code> numeric cells with a sentinel value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">readings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="mf">0.0</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  10
+1  0
+2  30
+
+ptype: Series
+</pre></div>
+</div>
+<p>Example 2. Fill <code class="docutils literal notranslate"><span class="pre">NULL</span></code> text cells with a placeholder string.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cities</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="s">&quot;Unknown&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  Accra
+1  Unknown
+2  Kumasi
+
+ptype: Note
+</pre></div>
+</div>
+<p>Example 3. Fill <code class="docutils literal notranslate"><span class="pre">NULL</span></code> timestamps with a scalar <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> value.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;2024-01-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-02-01T00:00:00Z&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-03-01T00:00:00Z&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">events</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_timeline</span><span class="p">({</span><span class="s">&quot;2000-01-01T00:00:00Z&quot;</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  2024-01-01
+1  2000-01-01
+2  2024-03-01
+
+ptype: Timeline
+</pre></div>
+</div>
+<p>Example 4. Fill a <code class="docutils literal notranslate"><span class="pre">Duration</span></code>-kind thread. <code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code>
+lanes in addition to any validity-mask-flagged ones.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">gaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">({</span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">Duration</span><span class="o">::</span><span class="n">kNaT</span><span class="p">,</span>
+<span class="w">                                           </span><span class="mi">-2&#39;000&#39;000&#39;000LL</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gaps</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">duration</span><span class="o">::</span><span class="n">nanos</span><span class="p">(</span><span class="mi">9</span><span class="p">));</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">out4</span><span class="p">.</span><span class="n">as_duration</span><span class="p">().</span><span class="n">host</span><span class="p">()</span><span class="w"> </span><span class="o">==</span>
+<span class="w">       </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">({</span><span class="mf">1&#39;000&#39;000&#39;000L</span><span class="n">L</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">-2&#39;000&#39;000&#39;000LL</span><span class="p">}));</span>
+<span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">has_validity_mask</span><span class="p">(</span><span class="n">out4</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>The middle lane was <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (not mask-flagged), yet it was still replaced, and the
+result carries no validity mask once every absent lane has been filled — pinned by
+<code class="docutils literal notranslate"><span class="pre">PlussMic/test/temporal_core_migration_tests.cpp:198-203</span></code>.</p>
+<p>Example 5. Value-kind mismatches throw.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">readings</span><span class="p">.</span><span class="n">fillnull</span><span class="p">(</span><span class="s">&quot;not a number&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::fillnull(string) is only valid for Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Overload selection is by the C++ type of <code class="docutils literal notranslate"><span class="pre">value</span></code>, which also determines the
+required payload kind.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(double)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Series</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(double)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(string_view)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Note</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(string)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Note</span> <span class="pre">payload&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(Timeline)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Timeline)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Timeline</span> <span class="pre">payload&quot;</span></code>. It requires a scalar (single-element)
+replacement value, or throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Timeline):</span> <span class="pre">replacement</span> <span class="pre">value</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">scalar</span> <span class="pre">(numel</span> <span class="pre">==</span> <span class="pre">1)&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fillnull(Duration)</span></code> requires <code class="docutils literal notranslate"><span class="pre">Duration</span></code>; message: <code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Duration)</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Duration</span> <span class="pre">payload&quot;</span></code>. It requires exactly one replacement value
+(<code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Duration):</span> <span class="pre">replacement</span> <span class="pre">must</span> <span class="pre">contain</span> <span class="pre">exactly</span> <span class="pre">one</span> <span class="pre">value&quot;</span></code>), and
+that value cannot itself be <code class="docutils literal notranslate"><span class="pre">NaT</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;Slate::fillnull(Duration):</span> <span class="pre">replacement</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">NaT&quot;</span></code>). Unlike the other overloads, it clears intrinsic <code class="docutils literal notranslate"><span class="pre">NaT</span></code> lanes even when
+the thread carries no validity mask at all.</p></li>
+<li><p>A mutating sibling, <a class="reference internal" href="fillnull_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">fillnull_()</span></code></span></a>, applies the same fill in place.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="fillnull_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::fillnull_</span></code></span></a>: the mutating (in-place) form of this method.</p></li>
+<li><p><a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::replace</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">replace(pluss::series::null,</span> <span class="pre">to)</span></code> is equivalent to
+<code class="docutils literal notranslate"><span class="pre">fillnull(to)</span></code>.</p></li>
+<li><p><a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::isnull</span></code></span></a>: the validity check <code class="docutils literal notranslate"><span class="pre">fillnull()</span></code> acts on.</p></li>
+<li><p><a class="reference internal" href="ffill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::ffill</span></code></span></a> / <a class="reference internal" href="bfill.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::bfill</span></code></span></a>: fill <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cells from
+neighboring values instead of a fixed replacement.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ffill.html">
+    <span class="label">Previous</span>
+    <span class="title">ffill</span>
+  </a>
+  <a class="next-link" href="fillnull_.html">
+    <span class="label">Next</span>
+    <span class="title">fillnull_</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../slate_api_reference.html">Slate API Reference</a><ul>
+      <li>Previous: <a href="ffill.html" title="previous chapter">Slate::ffill</a></li>
+      <li>Next: <a href="fillnull_.html" title="next chapter">Slate::fillnull_</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/slate/fillnull.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

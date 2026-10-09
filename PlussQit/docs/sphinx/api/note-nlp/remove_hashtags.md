@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_hashtags
+# Note::NlpAccessor::remove_hashtags
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_hashtags() const
+Note Note::NlpAccessor::remove_hashtags() const
 ```
 
 ## Delete Hashtag Tokens Without Damaging Embedded Hashes
@@ -104,7 +104,7 @@ are not changed merely because they share the same Note.
 ## See Also
 
 - [`mask_hashtags`](mask_hashtags.md): replace recognized tags with `[HASHTAG]`.
-- `NoteNlpAccessor::remove_mentions`: delete `@`-prefixed mention tokens.
+- `Note::NlpAccessor::remove_mentions`: delete `@`-prefixed mention tokens.
 - [`remove_emails`](remove_emails.md): delete address-shaped email spans.
 
 <div class="pluss-inline-prev-next">

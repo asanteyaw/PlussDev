@@ -91,8 +91,8 @@ Example 1. A fixed-size trailing rolling mean, including its partial windows.
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"sensor_id", Thread(pluss::make_series({1, 2, 3, 4}))},
-    {"load",      Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"sensor_id", Slate(pluss::make_series({1, 2, 3, 4}))},
+    {"load",      Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out = readings.features({"load"}).ts().rolling(2);
@@ -191,7 +191,7 @@ try {
 ### Output
 
 ```text
-Thread::moving: window must be > 0
+Slate::moving: window must be > 0
 ```
 
 A window of `0` (or negative) has no meaningful trailing span, so it's
@@ -210,7 +210,7 @@ rejected outright.
   one — and is not covered by a worked example here since it depends on frequency
   and calendar conventions outside this reference's current verified scope.
 - The structured `specs` overload only supports `Sum`/`Mean`/`Min`/`Max` (via
-  `ThreadWindowOp`), not the full `WindowStatistic` set the other two overloads
+  `SlateWindowOp`), not the full `WindowStatistic` set the other two overloads
   support.
 
 ## See Also

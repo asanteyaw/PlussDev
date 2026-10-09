@@ -31,7 +31,7 @@ accessor from a single feature: `df.features({"code"}).nt().extract(...)`.
 ```
 
 `pattern` must contain at least one capture group — `extract("no groups
-here")` throws `"Thread::extract: pattern needs a capture group"`. The
+here")` throws `"Slate::extract: pattern needs a capture group"`. The
 search is unanchored (`regex_search`, like [`has()`](has.md)'s regex mode,
 not a whole-cell [`fullmatch()`](fullmatch.md)) and only the **first**
 match in each cell is used; if `pattern` could match more than once,
@@ -40,7 +40,7 @@ everything after the first match is ignored for that row.
 **Naming the output columns.** By default, columns are named `group_0`,
 `group_1`, ... in capture-group order. Passing `names` overrides this —
 but `names.size()` must exactly equal the number of capture groups in
-`pattern`, or the call throws `"Thread::extract: names must match capture
+`pattern`, or the call throws `"Slate::extract: names must match capture
 groups"`.
 
 **Optional groups that don't participate.** A capture group inside an
@@ -80,7 +80,7 @@ using the default `group_N` column names.
 using namespace pluss::table;
 
 auto codes = DataFrame({
-    {"code", Thread(pluss::make_note(
+    {"code", Slate(pluss::make_note(
         {"ID-4521", "REF-99", "bad", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -131,7 +131,7 @@ auto out2 = codes.features({"code"}).nt().extract(
 std::cout << out2;
 
 auto partial = DataFrame({
-    {"code", Thread(pluss::make_note(
+    {"code", Slate(pluss::make_note(
         {"ID-4521", "ID-", "REF99", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -194,8 +194,8 @@ try {
 ### Output
 
 ```text
-Thread::extract: pattern needs a capture group
-Thread::extract: names must match capture groups
+Slate::extract: pattern needs a capture group
+Slate::extract: names must match capture groups
 ```
 
 ## Notes

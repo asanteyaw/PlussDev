@@ -94,7 +94,7 @@ try {
 ### Output
 
 ```text
-Thread::filter: bool mask length mismat
+Slate::filter: bool mask length mismat
 ```
 
 ## Notes

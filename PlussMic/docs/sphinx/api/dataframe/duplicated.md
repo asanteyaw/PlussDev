@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 1f392c1853fc -->
+<!-- pluss-signature-hash: c18de89c6fd8 -->
 
 # DataFrame::duplicated
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::duplicated(bool keep_first = true, bool keep_last = false) const -> Thread
+DataFrame::duplicated(bool keep_first = true, bool keep_last = false) const -> Slate
 ```
 
 ## What It Does
@@ -51,7 +51,7 @@ occurrences.
 
 ## Returns
 
-`Thread`
+`Slate`
     One `Bool` entry per case, labeled by case index and named `"duplicated"`,
     `true` wherever that row is considered a duplicate under the current
     `keep_first` / `keep_last` policy.
@@ -65,9 +65,9 @@ default policy.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
-    {"product",  Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
+    {"product",  Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
 });
 
 auto dupes = orders.features({"city", "product"}).duplicated();

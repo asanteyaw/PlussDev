@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 58816705dcfa -->
+<!-- pluss-signature-hash: 514fa7c08ea4 -->
 
 # DataFrame::se
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::se(Axis axis = Axis::Case, ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const -> Thread
+DataFrame::se(Axis axis = Axis::Case, ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const -> Slate
 ```
 
 ## What It Does
@@ -48,7 +48,7 @@ The same structured policy [`var()`](var.md) and [`std()`](std.md) accept:
 
 ## Returns
 
-`Thread`
+`Slate`
     One entry per participating numeric feature, labeled by feature name, holding
     that feature's standard error of the mean.
 
@@ -60,10 +60,10 @@ Example 1. Compute the standard error of the mean for each numeric feature.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto standard_errors = orders.se();

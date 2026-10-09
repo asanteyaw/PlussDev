@@ -82,9 +82,9 @@ Example 1. A single feature, explicit x-axis.
 using namespace pluss::table;
 
 auto rates = DataFrame({
-    {"tier",   Thread(pluss::make_note({"Bronze", "Silver", "Gold", "Platinum"}))},
-    {"price",  Thread(pluss::make_series({9.99, 19.99, 39.99, 79.99}))},
-    {"limit",  Thread(pluss::make_series({5.0, 25.0, 100.0, 500.0}))},
+    {"tier",   Slate(pluss::make_note({"Bronze", "Silver", "Gold", "Platinum"}))},
+    {"price",  Slate(pluss::make_series({9.99, 19.99, 39.99, 79.99}))},
+    {"limit",  Slate(pluss::make_series({5.0, 25.0, 100.0, 500.0}))},
 });
 
 auto chart = rates.plot().step("price", "tier");

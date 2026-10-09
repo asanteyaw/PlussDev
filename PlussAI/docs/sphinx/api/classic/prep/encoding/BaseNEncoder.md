@@ -44,7 +44,7 @@ the object, set by `learn`, read back only through `map` / `dump_state`.
   (`0` reserved for missing/unseen, `1..K` the fitted categories in sorted
   order). Fails with `Status::invalid_argument` if `base < 2`.
 
-`learn(thread, options = {})`
+`learn(slate, options = {})`
 : The single-column convenience overload.
 
 `map(batch, options = {})`
@@ -59,10 +59,10 @@ the object, set by `learn`, read back only through `map` / `dump_state`.
   dropped by `overflow`" and "category never seen at `learn` time" either;
   both produce code `0`.
 
-`map(thread, options = {})`
+`map(slate, options = {})`
 : The single-column convenience overload.
 
-`learn_map(batch_or_thread, learn_options = {}, infer_options = {})`
+`learn_map(batch_or_slate, learn_options = {}, infer_options = {})`
 : `learn` then `map` on the same data, in one call.
 
 `dump_state()` / `load_state(state)`
@@ -86,7 +86,7 @@ the object, set by `learn`, read back only through `map` / `dump_state`.
 
 The default binary (`base = 2`) encoding's digit order, a missing/unseen
 value collapsing to the all-zero code, a higher radix (`base = 3`)
-shrinking the digit count further, and the single-column `Thread`
+shrinking the digit count further, and the single-column `Slate`
 overload proven equivalent to a `FeatureBatch`.
 
 ### Example 1
@@ -211,8 +211,8 @@ data=[[1],
 
 ### Example 4
 
-The single-column `Thread` overload — the same training/probe values as
-Example 1, fit and mapped through `learn(thread, ...)`/`map(thread, ...)`
+The single-column `Slate` overload — the same training/probe values as
+Example 1, fit and mapped through `learn(slate, ...)`/`map(slate, ...)`
 directly instead of a `FeatureBatch`.
 
 ```cpp
@@ -223,16 +223,16 @@ directly instead of a `FeatureBatch`.
 
 int main() {
   namespace cls = pluss::ai::classic;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
 
-  const Thread train(pluss::make_series({10.0, 20.0, 30.0}, {3}, f64));
-  const Thread probe(pluss::make_series({10.0, 20.0, 30.0}, {3}, f64));
+  const Slate train(pluss::make_series({10.0, 20.0, 30.0}, {3}, f64));
+  const Slate probe(pluss::make_series({10.0, 20.0, 30.0}, {3}, f64));
 
-  cls::prep::BaseNEncoder via_thread;  // base = 2 by default
-  via_thread.learn(train);
-  const pluss::Series thread_result = via_thread.map(probe).value();
+  cls::prep::BaseNEncoder via_slate;  // base = 2 by default
+  via_slate.learn(train);
+  const pluss::Series slate_result = via_slate.map(probe).value();
 
   cls::FeatureBatch train_batch{};
   train_batch.x = pluss::make_series({10.0, 20.0, 30.0}, {3}, f64).reshape({3, 1});
@@ -243,8 +243,8 @@ int main() {
   via_batch.learn(train_batch);
   const pluss::Series batch_result = via_batch.map(probe_batch).value();
 
-  const double max_abs_diff = (thread_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
-  std::cout << "max abs diff between Thread and FeatureBatch forms = " << max_abs_diff << "\n";
+  const double max_abs_diff = (slate_result - batch_result).abs().amax(0, false).amax(0, false).item<double>();
+  std::cout << "max abs diff between Slate and FeatureBatch forms = " << max_abs_diff << "\n";
 
   return 0;
 }
@@ -253,12 +253,12 @@ int main() {
 Output
 
 ```text
-max abs diff between Thread and FeatureBatch forms = 0
+max abs diff between Slate and FeatureBatch forms = 0
 ```
 
 ## Changelog
 
-- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Thread`
+- **0.1** — `learn`/`map`/`learn_map` (`FeatureBatch` and `Slate`
   overloads), `base`/`max_categories`/`overflow`, `dump_state`/`load_state`.
 
 ## See Also

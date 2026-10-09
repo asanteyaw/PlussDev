@@ -328,34 +328,6 @@ struct QuerySpec {
   std::optional<std::string> scope{};
   std::optional<std::string> title{};
 
-  [[nodiscard]] static QuerySpec from(std::string_view source) {
-    return QuerySpec{
-        .mode = QueryMode::Source,
-        .source = std::string(source),
-    };
-  }
-
-  [[nodiscard]] static QuerySpec stored(std::string_view name) {
-    return QuerySpec{
-        .mode = QueryMode::StoredPlan,
-        .source = std::string(name),
-    };
-  }
-
-  [[nodiscard]] static QuerySpec sql(std::string_view statement) {
-    return QuerySpec{
-        .mode = QueryMode::Sql,
-        .statement = std::string(statement),
-    };
-  }
-
-  [[nodiscard]] static QuerySpec traverse_from(std::string_view source) {
-    return QuerySpec{
-        .mode = QueryMode::Traverse,
-        .source = std::string(source),
-    };
-  }
-
   [[nodiscard]] QuerySpec where(const Filter& value) const {
     QuerySpec out = *this;
     out.filters.push_back(value);
@@ -569,6 +541,7 @@ struct BindSpec {
   std::vector<std::string> value_features{};
   bool dropna{true};
   bool sort{true};
+  std::optional<int> decimals{};
 
   [[nodiscard]] static BindSpec kpi(
       std::string_view feature,
@@ -715,6 +688,12 @@ public:
     return *this;
   }
 
+  View& min_height(double pixels) {
+    PLUSS_CHECK(pixels > 0.0, "pluss::bi::View::min_height: height must be positive");
+    layout_.min_height = pixels;
+    return *this;
+  }
+
   View& title(std::string_view value) {
     bind_.title = std::string(value);
     return *this;
@@ -805,6 +784,12 @@ public:
     return *this;
   }
 
+  View& decimals(int places) {
+    PLUSS_CHECK(places >= 0, "pluss::bi::View::decimals: places cannot be negative");
+    bind_.decimals = places;
+    return *this;
+  }
+
   [[nodiscard]] static View make(
       std::string_view key,
       QuerySpec query,
@@ -812,57 +797,6 @@ public:
     View out(key);
     out.query_ = std::move(query);
     out.bind_ = std::move(bind);
-    return out;
-  }
-
-  [[nodiscard]] static View kpi(std::string_view key) {
-    View out(key);
-    out.bind_.kind = ViewKind::Kpi;
-    return out;
-  }
-
-  [[nodiscard]] static View line(std::string_view key) {
-    View out(key);
-    out.bind_ = BindSpec::line();
-    return out;
-  }
-
-  [[nodiscard]] static View bar(std::string_view key) {
-    View out(key);
-    out.bind_ = BindSpec::bar();
-    return out;
-  }
-
-  [[nodiscard]] static View scatter(std::string_view key) {
-    View out(key);
-    out.bind_ = BindSpec::scatter();
-    return out;
-  }
-
-  [[nodiscard]] static View heatmap(std::string_view key) {
-    View out(key);
-    out.bind_ = BindSpec::heatmap();
-    return out;
-  }
-
-  [[nodiscard]] static View corr(std::string_view key) {
-    View out(key);
-    out.bind_ = BindSpec::corr();
-    return out;
-  }
-
-  [[nodiscard]] static View table(std::string_view key) {
-    View out(key);
-    out.bind_ = BindSpec::detail_table();
-    return out;
-  }
-
-  [[nodiscard]] static View pivot(std::string_view key) {
-    View out(key);
-    out.bind_.kind = ViewKind::PivotTable;
-    out.bind_.op = pluss::table::GroupOp::Mean;
-    out.bind_.dropna = true;
-    out.bind_.sort = true;
     return out;
   }
 
@@ -937,37 +871,10 @@ public:
     return *this;
   }
 
-  [[nodiscard]] static Control category(
-      std::string_view key,
-      std::string_view feature,
-      std::string_view label = {}) {
-    Control out(key);
-    out.kind_ = ControlKind::Category;
-    out.feature_ = std::string(feature);
-    out.label_ = std::string(label);
-    return out;
-  }
-
-  [[nodiscard]] static Control numeric_range(
-      std::string_view key,
-      std::string_view feature,
-      std::string_view label = {}) {
-    Control out(key);
-    out.kind_ = ControlKind::NumericRange;
-    out.feature_ = std::string(feature);
-    out.label_ = std::string(label);
-    return out;
-  }
-
-  [[nodiscard]] static Control temporal_range(
-      std::string_view key,
-      std::string_view feature,
-      std::string_view label = {}) {
-    Control out(key);
-    out.kind_ = ControlKind::TemporalRange;
-    out.feature_ = std::string(feature);
-    out.label_ = std::string(label);
-    return out;
+  Control& min_height(double pixels) {
+    PLUSS_CHECK(pixels > 0.0, "pluss::bi::Control::min_height: height must be positive");
+    layout_.min_height = pixels;
+    return *this;
   }
 
   [[nodiscard]] Control scoped(std::string_view value) const {
@@ -1099,69 +1006,93 @@ private:
 };
 
 [[nodiscard]] inline QuerySpec from(std::string_view source) {
-  return QuerySpec::from(source);
+  return QuerySpec{
+      .mode = QueryMode::Source,
+      .source = std::string(source),
+  };
 }
 
 [[nodiscard]] inline QuerySpec stored(std::string_view name) {
-  return QuerySpec::stored(name);
+  return QuerySpec{
+      .mode = QueryMode::StoredPlan,
+      .source = std::string(name),
+  };
 }
 
 [[nodiscard]] inline QuerySpec sql(std::string_view statement) {
-  return QuerySpec::sql(statement);
+  return QuerySpec{
+      .mode = QueryMode::Sql,
+      .statement = std::string(statement),
+  };
 }
 
 [[nodiscard]] inline QuerySpec traverse_from(std::string_view source) {
-  return QuerySpec::traverse_from(source);
+  return QuerySpec{
+      .mode = QueryMode::Traverse,
+      .source = std::string(source),
+  };
 }
 
-[[nodiscard]] inline Control category(std::string_view key) {
+[[nodiscard]] inline Control category(
+    std::string_view key,
+    std::string_view feature = {},
+    std::string_view label = {}) {
   auto out = Control(key);
-  out.kind(ControlKind::Category);
+  out.kind(ControlKind::Category).feature(feature).label(label);
   return out;
 }
 
-[[nodiscard]] inline Control range(std::string_view key) {
+[[nodiscard]] inline Control range(
+    std::string_view key,
+    std::string_view feature = {},
+    std::string_view label = {}) {
   auto out = Control(key);
-  out.kind(ControlKind::NumericRange);
+  out.kind(ControlKind::NumericRange).feature(feature).label(label);
   return out;
 }
 
-[[nodiscard]] inline Control time_range(std::string_view key) {
+[[nodiscard]] inline Control time_range(
+    std::string_view key,
+    std::string_view feature = {},
+    std::string_view label = {}) {
   auto out = Control(key);
-  out.kind(ControlKind::TemporalRange);
+  out.kind(ControlKind::TemporalRange).feature(feature).label(label);
   return out;
 }
 
 [[nodiscard]] inline View kpi(std::string_view key) {
-  return View::kpi(key);
+  return View::make(key, QuerySpec{}, BindSpec{.kind = ViewKind::Kpi});
 }
 
 [[nodiscard]] inline View line(std::string_view key) {
-  return View::line(key);
+  return View::make(key, QuerySpec{}, BindSpec::line());
 }
 
 [[nodiscard]] inline View bar(std::string_view key) {
-  return View::bar(key);
+  return View::make(key, QuerySpec{}, BindSpec::bar());
 }
 
 [[nodiscard]] inline View scatter(std::string_view key) {
-  return View::scatter(key);
+  return View::make(key, QuerySpec{}, BindSpec::scatter());
 }
 
 [[nodiscard]] inline View heatmap(std::string_view key) {
-  return View::heatmap(key);
+  return View::make(key, QuerySpec{}, BindSpec::heatmap());
 }
 
 [[nodiscard]] inline View corr(std::string_view key) {
-  return View::corr(key);
+  return View::make(key, QuerySpec{}, BindSpec::corr());
 }
 
 [[nodiscard]] inline View table(std::string_view key) {
-  return View::table(key);
+  return View::make(key, QuerySpec{}, BindSpec::detail_table());
 }
 
 [[nodiscard]] inline View pivot(std::string_view key) {
-  return View::pivot(key);
+  return View::make(
+      key,
+      QuerySpec{},
+      BindSpec::pivot_table({}, {}, {}));
 }
 
 } // namespace pluss::bi

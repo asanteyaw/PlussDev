@@ -15,7 +15,7 @@ Stream StreamTimelineAccessor::tz(std::string_view name) const
 
 Relabels the bound stream's timestamp *display* timezone to `name`, without
 changing the underlying instant — the same operation as
-[`Thread::tl().tz()`](../thread-timeline/tz.md)/
+[`Slate::tl().tz()`](../slate-timeline/tz.md)/
 [`DataFrame::tl().tz()`](../dataframe-timeline/tz.md) at the table layer.
 
 The relabeling survives being read back through any further `.tl()` call
@@ -60,7 +60,7 @@ std::cout << fmted.as_note().at(0);
 
 `04:15:30` is the `"America/New_York"`-relative reading of the same instant
 (a `-5:00` offset in January) — matching what
-[`Thread::tl().tz()`](../thread-timeline/tz.md) produces on the same input.
+[`Slate::tl().tz()`](../slate-timeline/tz.md) produces on the same input.
 
 ## Notes
 

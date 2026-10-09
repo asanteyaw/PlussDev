@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   using pluss::Config;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   using namespace pluss::ai::nodej;
 
   //========== setup: paths, controls, and output destinations ========
@@ -87,21 +87,21 @@ int main(int argc, char** argv) {
   const Series s_month = frame.features("month").as_series();
   const Series s_weather = frame.features("weather_condition").as_series();
 
-  frame = frame.assign(std::vector<std::pair<std::string, Thread>>{
-      {"temp_sq", Thread(s_temp.square())},
-      {"atemp_sq", Thread(s_atemp.square())},
-      {"humidity_sq", Thread(s_humidity.square())},
-      {"windspeed_sq", Thread(s_windspeed.square())},
-      {"temp_humidity_interaction", Thread(s_temp.mul(s_humidity))},
-      {"temp_windspeed_interaction", Thread(s_temp.mul(s_windspeed))},
-      {"atemp_humidity_interaction", Thread(s_atemp.mul(s_humidity))},
-      {"atemp_windspeed_interaction", Thread(s_atemp.mul(s_windspeed))},
-      {"temp_minus_atemp", Thread(s_temp.sub(s_atemp))},
-      {"hour_centered", Thread(s_hour.sub(12.0))},
-      {"hour_centered_sq", Thread(s_hour.sub(12.0).square())},
-      {"month_centered", Thread(s_month.sub(6.5))},
-      {"month_centered_sq", Thread(s_month.sub(6.5).square())},
-      {"weather_sq", Thread(s_weather.square())},
+  frame = frame.assign(std::vector<std::pair<std::string, Slate>>{
+      {"temp_sq", Slate(s_temp.square())},
+      {"atemp_sq", Slate(s_atemp.square())},
+      {"humidity_sq", Slate(s_humidity.square())},
+      {"windspeed_sq", Slate(s_windspeed.square())},
+      {"temp_humidity_interaction", Slate(s_temp.mul(s_humidity))},
+      {"temp_windspeed_interaction", Slate(s_temp.mul(s_windspeed))},
+      {"atemp_humidity_interaction", Slate(s_atemp.mul(s_humidity))},
+      {"atemp_windspeed_interaction", Slate(s_atemp.mul(s_windspeed))},
+      {"temp_minus_atemp", Slate(s_temp.sub(s_atemp))},
+      {"hour_centered", Slate(s_hour.sub(12.0))},
+      {"hour_centered_sq", Slate(s_hour.sub(12.0).square())},
+      {"month_centered", Slate(s_month.sub(6.5))},
+      {"month_centered_sq", Slate(s_month.sub(6.5).square())},
+      {"weather_sq", Slate(s_weather.square())},
   });
 
   //========== missingness diagnostics ========
@@ -111,17 +111,17 @@ int main(int argc, char** argv) {
       "temp_sq", "atemp_sq", "humidity_sq", "windspeed_sq",
   });
   // Axis::Case reduces down each column across all rows, producing one missingness rate per
-  // feature; the result is a Feature-labeled Thread, so its own labels are the original feature
+  // feature; the result is a Feature-labeled Slate, so its own labels are the original feature
   // names. Those labels are surfaced both as an explicit "feature" column (so they show up in
   // the CSV, which is saved with the library's default add_cases=false) and as the summary
   // frame's own case labels.
-  const Thread missing_rate_thread = missing_binary.mean(pluss::table::Axis::Case);
+  const Slate missing_rate_slate = missing_binary.mean(pluss::table::Axis::Case);
   const DataFrame missing_rate = DataFrame(
       {
-          {"feature", missing_rate_thread.label().values()},
-          {"missing_rate", missing_rate_thread},
+          {"feature", missing_rate_slate.label().values()},
+          {"missing_rate", missing_rate_slate},
       },
-      missing_rate_thread.label().values());
+      missing_rate_slate.label().values());
   missing_rate.save_csv((out_dir / "missing_rate.csv").string());
 
   //========== exploratory data analysis (EDA) ========
@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
   DataFrameBatchOptions x_batch_options{};
   x_batch_options.feature_names = model_feature_names;
   x_batch_options.layout = ObservationLayout::Rows;
-  x_batch_options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  x_batch_options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
   x_batch_options.note_policy = DataNotePolicy::Reject;
 
   StatusOr<FeatureBatch> train_x_batch_or = feature_batch_from_dataframe(train_x, x_batch_options);
@@ -415,12 +415,12 @@ int main(int argc, char** argv) {
   std::vector<Series> maxabs_state = maxabs_state_or.move_value();
 
   DataFrame prep_state_frame({
-      {"simple_state_entries", Thread(pluss::make_series(std::vector<double>{static_cast<double>(simple_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"knn_state_entries", Thread(pluss::make_series(std::vector<double>{static_cast<double>(knn_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"iter_state_entries", Thread(pluss::make_series(std::vector<double>{static_cast<double>(iter_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"standard_state_entries", Thread(pluss::make_series(std::vector<double>{static_cast<double>(standard_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"robust_state_entries", Thread(pluss::make_series(std::vector<double>{static_cast<double>(robust_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"maxabs_state_entries", Thread(pluss::make_series(std::vector<double>{static_cast<double>(maxabs_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"simple_state_entries", Slate(pluss::make_series(std::vector<double>{static_cast<double>(simple_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"knn_state_entries", Slate(pluss::make_series(std::vector<double>{static_cast<double>(knn_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"iter_state_entries", Slate(pluss::make_series(std::vector<double>{static_cast<double>(iter_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"standard_state_entries", Slate(pluss::make_series(std::vector<double>{static_cast<double>(standard_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"robust_state_entries", Slate(pluss::make_series(std::vector<double>{static_cast<double>(robust_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"maxabs_state_entries", Slate(pluss::make_series(std::vector<double>{static_cast<double>(maxabs_state.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
   });
   prep_state_frame.save_csv((out_dir / "prep_state_summary.csv").string());
 
@@ -1057,11 +1057,11 @@ int main(int argc, char** argv) {
   const Series sq_error_cpu = residual_cpu.square();
 
   DataFrame pred_frame({
-      {"y_true", Thread(y_true_cpu)},
-      {"y_pred", Thread(y_pred_cpu)},
-      {"residual", Thread(residual_cpu)},
-      {"abs_error", Thread(abs_error_cpu)},
-      {"sq_error", Thread(sq_error_cpu)},
+      {"y_true", Slate(y_true_cpu)},
+      {"y_pred", Slate(y_pred_cpu)},
+      {"residual", Slate(residual_cpu)},
+      {"abs_error", Slate(abs_error_cpu)},
+      {"sq_error", Slate(sq_error_cpu)},
   });
 
   pred_frame.save_csv((out_dir / "final_test_predictions.csv").string());
@@ -1084,16 +1084,16 @@ int main(int argc, char** argv) {
   //========== run summary ========
   // This section writes compact run metadata.
   DataFrame run_summary({
-      {"n_rows_loaded", Thread(pluss::make_series(std::vector<double>{static_cast<double>(frame.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"n_features_used", Thread(pluss::make_series(std::vector<double>{static_cast<double>(model_feature_names.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"holdout_train_rows", Thread(pluss::make_series(std::vector<double>{static_cast<double>(train_frame_full.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"holdout_test_rows", Thread(pluss::make_series(std::vector<double>{static_cast<double>(test_frame_full.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"broad_candidates", Thread(pluss::make_series(std::vector<double>{static_cast<double>(broad_specs.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"tuned_candidates", Thread(pluss::make_series(std::vector<double>{static_cast<double>(tuned_specs.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"final_rmse", Thread(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 0 ? final_metrics_vec[0] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"final_r2", Thread(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 1 ? final_metrics_vec[1] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"final_mae", Thread(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 2 ? final_metrics_vec[2] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
-      {"restored_max_abs_diff", Thread(pluss::make_series(std::vector<double>{restored_max_abs_diff}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"n_rows_loaded", Slate(pluss::make_series(std::vector<double>{static_cast<double>(frame.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"n_features_used", Slate(pluss::make_series(std::vector<double>{static_cast<double>(model_feature_names.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"holdout_train_rows", Slate(pluss::make_series(std::vector<double>{static_cast<double>(train_frame_full.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"holdout_test_rows", Slate(pluss::make_series(std::vector<double>{static_cast<double>(test_frame_full.ncases())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"broad_candidates", Slate(pluss::make_series(std::vector<double>{static_cast<double>(broad_specs.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"tuned_candidates", Slate(pluss::make_series(std::vector<double>{static_cast<double>(tuned_specs.size())}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"final_rmse", Slate(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 0 ? final_metrics_vec[0] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"final_r2", Slate(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 1 ? final_metrics_vec[1] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"final_mae", Slate(pluss::make_series(std::vector<double>{final_metrics_vec.size() > 2 ? final_metrics_vec[2] : std::numeric_limits<double>::quiet_NaN()}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
+      {"restored_max_abs_diff", Slate(pluss::make_series(std::vector<double>{restored_max_abs_diff}, {1}, Config{}.with_dtype(ScalarType::Float64)))} ,
   });
   run_summary.save_csv((out_dir / "run_summary.csv").string());
 

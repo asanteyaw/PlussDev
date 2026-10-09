@@ -8,15 +8,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
-      {"balance", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
-      {"target", Thread(pluss::make_series({0.0, 0.0, 1.0, 1.0}, {4}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}, {4}, f64))},
+      {"balance", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}, {4}, f64))},
+      {"target", Slate(pluss::make_series({0.0, 0.0, 1.0, 1.0}, {4}, f64))},
   });
 
   workflow::Workflow wf = workflow::make(lymph::models::logistic_regression());

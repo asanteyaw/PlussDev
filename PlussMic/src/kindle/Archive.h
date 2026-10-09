@@ -105,9 +105,9 @@ public:
   Archive notnull() const;
   Archive invalid() const;
   ArchiveCastAccessor cast() const;
-  ArchiveCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
-  Archive cast(pluss::table::ThreadCastTarget target,
-               const pluss::table::ThreadCastOptions& options = {}) const;
+  ArchiveCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
+  Archive cast(pluss::table::SlateCastTarget target,
+               const pluss::table::SlateCastOptions& options = {}) const;
   ArchiveTimelineAccessor tl() const;
   ArchiveTimeSeriesAccessor ts() const;
   Archive astype(pluss::codem::ScalarType dtype) const;
@@ -172,7 +172,7 @@ public:
   ArchiveKeyAccessor(Archive archive, std::vector<std::string> keys);
 
   ArchiveCastAccessor cast() const;
-  ArchiveCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  ArchiveCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   Archive fillnull(double value) const;
   Archive fillnull(std::string_view value) const;
   Archive fillnull(const char* value) const {
@@ -207,7 +207,7 @@ class ArchiveCastAccessor {
 public:
   ArchiveCastAccessor(Archive archive,
                       std::vector<std::string> keys,
-                      pluss::table::ThreadCastOptions options = {});
+                      pluss::table::SlateCastOptions options = {});
 
   Archive series() const;
   Archive note() const;
@@ -216,7 +216,7 @@ public:
 
 private:
   ArchiveKeyAccessor keysel_;
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class ArchiveTimelineAccessor {

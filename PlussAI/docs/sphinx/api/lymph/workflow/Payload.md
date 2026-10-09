@@ -71,7 +71,7 @@ the caller already assembled.
 | [`label`](Payload/label.md) | `label(name)`, `label(Series)` | Attach the supervised target, by column name or by an external vector. |
 | [`weights`](Payload/weights.md) | `weights(name)`, `weights(Series)` | Attach per-row training weights, plus the frame-backed alignment rule. |
 | [`time`](Payload/time.md) | `time(name)`, `time(TimeOptions)`, `time(Series)` | Attach the time role, from a name, a full contract, or a vector. |
-| [`roles`](Payload/roles.md) | `features`, `groups`, `note`, `layout`, `thread` | The remaining role and data-conversion-policy setters. |
+| [`roles`](Payload/roles.md) | `features`, `groups`, `note`, `layout`, `slate` | The remaining role and data-conversion-policy setters. |
 | [`batch`](Payload/batch.md) | `feature_batch`, `labeled_batch`, `with_frame` | Materialize the `Payload` into the batch every verb consumes. |
 
 ## Changelog

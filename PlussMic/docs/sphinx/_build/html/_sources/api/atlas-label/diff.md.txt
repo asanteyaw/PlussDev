@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 33a993e5abc2 -->
+<!-- pluss-signature-hash: 1e87b63c48da -->
 
 # AtlasLabelAccessor::diff
 
@@ -8,24 +8,24 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::diff(const Thread& other) const -> Thread
+AtlasLabelAccessor::diff(const Slate& other) const -> Slate
 ```
 
 ## What It Does
 
 Returns the set difference of the atlas's current depth labels minus `other` — the
 labels present in the bound atlas but absent from `other`. A pure set operation: it
-returns a `Thread` of labels, not a new `Atlas`, and does not touch the bound atlas's
+returns a `Slate` of labels, not a new `Atlas`, and does not touch the bound atlas's
 frames.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
     The set of labels to subtract from the atlas's current depth labels.
 
 ## Returns
 
-`Thread`
+`Slate`
     The labels present in the bound atlas's depth labels but not in `other`, named
     `"diff"`.
 
@@ -35,16 +35,16 @@ Example 1. Find which depth labels exist in one atlas but not another.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
 });
-auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
-auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"feb", "mar", "apr"})));
+auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
+auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"feb", "mar", "apr"})));
 
 std::cout << a1.label().diff(a2.label().values());
 ```
@@ -60,7 +60,7 @@ Name: diff, ptype: Note
 
 - Direction matters: `a.label().diff(b)` is not the same as `b`-side-minus-`a`. Use
   [`symdiff()`](symdiff.md) for the symmetric (either-direction) difference.
-- Pure set operation — returns a `Thread`, not an `Atlas`.
+- Pure set operation — returns a `Slate`, not an `Atlas`.
 
 ## See Also
 

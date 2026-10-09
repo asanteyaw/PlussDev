@@ -3,6 +3,6 @@
     const auto gx = linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gy = linspace(-2.5, 2.5, 24, ScalarType::Float64);
     const auto gz = make_grid_surface(24, 24);
-    theme_preset3d(pane, ThemePreset3D::Slate);
+    theme_preset3d(pane, ThemePreset3D::Graphite);
     sheet(pane, gx, gy, gz).label("theme_preset3d");
     save(fig);

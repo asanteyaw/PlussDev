@@ -31,7 +31,7 @@ reference; it tells you where to look.
 
 See [DataFrame API Reference](../dataframe_api_reference.md).
 
-## Thread API areas
+## Slate API areas
 
 | Task | Methods |
 | --- | --- |
@@ -46,7 +46,7 @@ See [DataFrame API Reference](../dataframe_api_reference.md).
 | Payload | `as_series`, `as_note`, `as_timeline`, `as_timeindex` |
 | Display | `show`, `with_display_labels`, `name`, `named`, `unname` |
 
-See [Thread API Reference](../thread_api_reference.md).
+See [Slate API Reference](../slate_api_reference.md).
 
 ## Loader API areas
 

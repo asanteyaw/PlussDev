@@ -45,8 +45,8 @@ Example 1. Forward-fill a gapped feature stacked across two frames.
 using namespace pluss::table;
 
 auto nan = std::numeric_limits<double>::quiet_NaN();
-auto q1 = DataFrame({{"load", Thread(pluss::make_series({10.0, nan, nan, 30.0}))}});
-auto q2 = DataFrame({{"load", Thread(pluss::make_series({12.0, nan, 14.0, nan}))}});
+auto q1 = DataFrame({{"load", Slate(pluss::make_series({10.0, nan, nan, 30.0}))}});
+auto q2 = DataFrame({{"load", Slate(pluss::make_series({12.0, nan, 14.0, nan}))}});
 auto atlas = Atlas({q1, q2});
 
 auto out = atlas.ts().fill_gaps();

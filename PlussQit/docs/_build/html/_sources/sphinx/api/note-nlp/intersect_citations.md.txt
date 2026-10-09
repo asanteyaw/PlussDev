@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::intersect_citations
+# Note::NlpAccessor::intersect_citations
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::intersect_citations(const Note& other) const
+TokenBatch Note::NlpAccessor::intersect_citations(const Note& other) const
 ```
 
 ## Shared Citation Markers Between Two Notes
@@ -41,8 +41,8 @@ Note `batch.offsets()` has length `numel + 1` and marks each cell's run.
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::intersect_citations requires a UTF-8 text Note (lhs is bytes)` (or
-`rhs`); a numel mismatch raises `NoteNlpAccessor::intersect_citations expects equal
+`Note::NlpAccessor::intersect_citations requires a UTF-8 text Note (lhs is bytes)` (or
+`rhs`); a numel mismatch raises `Note::NlpAccessor::intersect_citations expects equal
 numel or scalar broadcast`.
 
 ## Example 1: Shared Numbered References
@@ -71,13 +71,13 @@ are part of each token.
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_citations`](jaccard_citations.md) /
-  [`NoteNlpAccessor::overlap_citations`](overlap_citations.md): score the shared-citation
+- [`Note::NlpAccessor::jaccard_citations`](jaccard_citations.md) /
+  [`Note::NlpAccessor::overlap_citations`](overlap_citations.md): score the shared-citation
   overlap.
-- [`NoteNlpAccessor::intersect_tokens`](intersect_tokens.md) /
-  [`NoteNlpAccessor::intersect_terms`](intersect_terms.md) /
-  [`NoteNlpAccessor::intersect_acronyms`](intersect_acronyms.md) /
-  [`NoteNlpAccessor::intersect_symbols`](intersect_symbols.md): other set
+- [`Note::NlpAccessor::intersect_tokens`](intersect_tokens.md) /
+  [`Note::NlpAccessor::intersect_terms`](intersect_terms.md) /
+  [`Note::NlpAccessor::intersect_acronyms`](intersect_acronyms.md) /
+  [`Note::NlpAccessor::intersect_symbols`](intersect_symbols.md): other set
   kinds.
 
 <div class="pluss-inline-prev-next">

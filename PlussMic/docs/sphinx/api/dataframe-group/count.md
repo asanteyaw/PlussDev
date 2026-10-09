@@ -48,10 +48,10 @@ Example 1. Count observed values per city, with one missing `amount`.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Thread(pluss::make_series(
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Slate(pluss::make_series(
         {100.0, std::numeric_limits<double>::quiet_NaN(), 50.0, 40.0}))},
-    {"units", Thread(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
+    {"units", Slate(pluss::make_series({2.0, 1.0, 3.0, 1.0}))},
 });
 std::cout << sales;
 

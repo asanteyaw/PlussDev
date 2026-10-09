@@ -21,7 +21,7 @@ and [`ends()`](ends.md) only check the two ends of the string, `has()` looks
 everywhere, and it can be switched between a plain literal search and a
 regular-expression search via `options`.
 
-`TextOptions` (namespace-scope in `Thread.h`, used unqualified) has four
+`TextOptions` (namespace-scope in `Slate.h`, used unqualified) has four
 fields, though only two matter to `has()`:
 
 ```cpp
@@ -85,7 +85,7 @@ Example 1. Default call: literal, case-sensitive substring search.
 using namespace pluss::table;
 
 auto logs = DataFrame({
-    {"logs", Thread(pluss::make_note(
+    {"logs", Slate(pluss::make_note(
         {"ERROR: disk full", "warning: low memory", "INFO: restart ok", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });

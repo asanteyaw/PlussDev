@@ -13,7 +13,7 @@ The type is `lymph::prep::OrdinalEncoder`. It takes an
 `prep::OrdinalEncoderOptions`) at construction, default-constructed if omitted.
 It shares its whole method surface with
 [`prep::OneHotEncoder`](OneHotEncoder.md) — `features` / `learn` / `map` /
-`learn_map` / `learned` / `summary`, plus the single-column `Thread` overloads
+`learn_map` / `learned` / `summary`, plus the single-column `Slate` overloads
 and the `categories_` / `mapped_names_` attributes — so that page is the
 reference for the mechanics. What follows is what is specific to
 `OrdinalEncoder`.
@@ -59,7 +59,7 @@ signatures, semantics, and per-method examples.
 | [`learned()`](OneHotEncoder.md#learned) | has `learn` run yet? |
 | [`summary()`](OneHotEncoder.md#summary) | fitted category list as a `TransformerSummary` |
 
-Plus the single-column [`Thread` overloads](OneHotEncoder.md#single-column-overloads).
+Plus the single-column [`Slate` overloads](OneHotEncoder.md#single-column-overloads).
 
 ## Practical Examples
 
@@ -78,12 +78,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"region", Thread(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
-  const DataFrame later({{"region", Thread(pluss::make_series({30., 10., 20.}, {3}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({30., 10., 20.}, {3}, f64))}});
 
   lymph::prep::OrdinalEncoder encoder;
   const DataFrame coded = encoder.features({"region"}).learn_map(train);
@@ -129,7 +129,7 @@ mapped_names_[0] = region_ordinal
 
 ### Example 2
 
-`one_based = false` for a dense `0..K-1` coding, and the single-column `Thread`
+`one_based = false` for a dense `0..K-1` coding, and the single-column `Slate`
 overload.
 
 ```cpp
@@ -142,11 +142,11 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"region", Thread(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
 
   lymph::prep::OrdinalEncoder zero_based(
       lymph::prep::OrdinalEncoderOptions{.one_based = false});
@@ -155,8 +155,8 @@ int main() {
 
   lymph::prep::OrdinalEncoder e;
   const pluss::Series codes =
-      e.learn_map(Thread(pluss::make_note({"low", "mid", "high", "mid", "low"})));
-  std::cout << "Thread overload:\n" << codes << "\n";
+      e.learn_map(Slate(pluss::make_note({"low", "mid", "high", "mid", "low"})));
+  std::cout << "Slate overload:\n" << codes << "\n";
 
   return 0;
 }
@@ -177,7 +177,7 @@ one_based = false:
 5    | 2     
 -------------
 [6 cs x 1 feat]
-Thread overload:
+Slate overload:
 pluss::Series(shape=[5,1], strides=[1,1], dtype=float64, platform=cpu, numel=5, contiguous=true)
 data=[[2],
   [1],
@@ -203,12 +203,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"region", Thread(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
-  const DataFrame later({{"region", Thread(pluss::make_series({30., 10., 99.}, {3}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({30., 10., 99.}, {3}, f64))}});
 
   lymph::prep::OrdinalEncoder encoder;
   encoder.features({"region"}).learn(train);

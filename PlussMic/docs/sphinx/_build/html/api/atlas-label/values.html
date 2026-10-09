@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="AtlasTimelineAccessor API Reference" href="../../atlas_timeline_accessor_api_reference.html" />
@@ -37,21 +37,21 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 870ea23630f1 -->
+<!-- pluss-signature-hash: 4d8f2d518021 -->
 <section id="atlaslabelaccessor-values">
 <h1>AtlasLabelAccessor::values<a class="headerlink" href="#atlaslabelaccessor-values" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../atlas_label_accessor_api_reference.html"><span class="doc std std-doc">Back to AtlasLabelAccessor API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasLabelAccessor</span><span class="o">::</span><span class="n">values</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">AtlasLabelAccessor</span><span class="o">::</span><span class="n">values</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the atlas’s depth-axis labels as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> — the same values
+<p>Returns the atlas’s depth-axis labels as a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> — the same values
 <a class="reference internal" href="../atlas/axis0_labels.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Atlas::axis0_labels()</span></code></span></a> exposes, but always as a concrete
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> rather than a <code class="docutils literal notranslate"><span class="pre">std::optional&lt;Thread&gt;</span></code>. If the atlas was constructed without
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> rather than a <code class="docutils literal notranslate"><span class="pre">std::optional&lt;Slate&gt;</span></code>. If the atlas was constructed without
 explicit depth labels, <code class="docutils literal notranslate"><span class="pre">values()</span></code> materializes the default <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> integer
 positions on the fly instead of requiring a <code class="docutils literal notranslate"><span class="pre">has_value()</span></code> check first — the same
 “always defined” convenience <a class="reference internal" href="../dataframe-label/values.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::label().values()</span></code></span></a>
@@ -59,8 +59,8 @@ offers for the case axis, applied here to the depth axis instead.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
-The depth labels: whatever <code class="docutils literal notranslate"><span class="pre">Thread</span></code> was set at construction (or via
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
+The depth labels: whatever <code class="docutils literal notranslate"><span class="pre">Slate</span></code> was set at construction (or via
 <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set()</span></code></span></a>/<a class="reference internal" href="range.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">range()</span></code></span></a>), or a default <code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> integer
 sequence if none was ever set.</p>
 </section>
@@ -69,9 +69,9 @@ sequence if none was ever set.</p>
 <p>Example 1. An atlas constructed with explicit depth labels.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024Q2&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">},</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024Q1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024Q2&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">values</span><span class="p">();</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
@@ -85,11 +85,11 @@ ptype: Note
 </pre></div>
 </div>
 <p>Example 2. An atlas constructed <em>without</em> depth labels still returns a concrete
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> from <code class="docutils literal notranslate"><span class="pre">values()</span></code> — the default integer positions, not an empty result.</p>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> from <code class="docutils literal notranslate"><span class="pre">values()</span></code> — the default integer positions, not an empty result.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">100.0</span><span class="p">,</span><span class="w"> </span><span class="mf">120.0</span><span class="p">}))}});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">q2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({{</span><span class="s">&quot;sales&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">110.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">}))}});</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">atlas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Atlas</span><span class="p">({</span><span class="n">q1</span><span class="p">,</span><span class="w"> </span><span class="n">q2</span><span class="p">});</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;axis0_labels has_value: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atlas</span><span class="p">.</span><span class="n">axis0_labels</span><span class="p">().</span><span class="n">has_value</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
@@ -112,7 +112,7 @@ leaves you checking for that — it fills in the default integer sequence itself
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Always returns a concrete <code class="docutils literal notranslate"><span class="pre">Thread</span></code>; never throws for lack of labels the way a raw
+<li><p>Always returns a concrete <code class="docutils literal notranslate"><span class="pre">Slate</span></code>; never throws for lack of labels the way a raw
 <code class="docutils literal notranslate"><span class="pre">*atlas.axis0_labels()</span></code> dereference would on an atlas with none set.</p></li>
 <li><p>The default labels are exactly <code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">depth()</span> <span class="pre">-</span> <span class="pre">1</span></code>, matching the row numbers
 <code class="docutils literal notranslate"><span class="pre">Atlas::frame(i)</span></code>/<code class="docutils literal notranslate"><span class="pre">Atlas::dloc(i)</span></code> already use to index the stack.</p></li>
@@ -125,7 +125,7 @@ leaves you checking for that — it fills in the default integer sequence itself
 wraps.</p></li>
 <li><p><a class="reference internal" href="has.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasLabelAccessor::has</span></code></span></a>: check whether real labels were set, without
 materializing the default sequence.</p></li>
-<li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasLabelAccessor::set</span></code></span></a>: replace the depth labels with a new <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">AtlasLabelAccessor::set</span></code></span></a>: replace the depth labels with a new <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="unite.html">

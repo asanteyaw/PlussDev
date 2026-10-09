@@ -12,15 +12,15 @@ int main() {
   namespace workflow = lymph::workflow;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"x1", Thread(pluss::make_series({1.0, 1.2, 3.0, 3.2, 5.0, 5.2, 7.0, 7.2}, {8}, f64))},
-      {"x2", Thread(pluss::make_series({0.5, 0.7, 2.5, 2.7, 4.5, 4.7, 6.5, 6.7}, {8}, f64))},
-      {"y",  Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"x1", Slate(pluss::make_series({1.0, 1.2, 3.0, 3.2, 5.0, 5.2, 7.0, 7.2}, {8}, f64))},
+      {"x2", Slate(pluss::make_series({0.5, 0.7, 2.5, 2.7, 4.5, 4.7, 6.5, 6.7}, {8}, f64))},
+      {"y",  Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
   // Four entities, two rows each.
   const pluss::Series groups = pluss::make_series({0, 0, 1, 1, 2, 2, 3, 3}, {8}, f64);

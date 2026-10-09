@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 3ce097f73825 -->
+<!-- pluss-signature-hash: 785b3b234aa7 -->
 
 # AtlasLabelAccessor::find
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::find(const Thread& targets) const -> Thread
+AtlasLabelAccessor::find(const Slate& targets) const -> Slate
 ```
 
 ## What It Does
@@ -19,17 +19,17 @@ labels, returning one integer position per target, in the same order as `targets
 ```{important} A target with no match returns -1 — it does not throw
 Unlike [`align()`](align.md), which throws on an unmatched target label,
 `find()` reports a missing label as position `-1` in the result rather than raising.
-Check for `-1` in the returned `Thread` if you need to detect misses.
+Check for `-1` in the returned `Slate` if you need to detect misses.
 ```
 
 ## Parameters
 
-**targets** (`const Thread&`)
+**targets** (`const Slate&`)
     The depth-label values to look up.
 
 ## Returns
 
-`Thread`
+`Slate`
     One integer position per value in `targets`, named `"find"`, indexed by the target
     values themselves. A target with no match yields `-1`.
 
@@ -39,17 +39,17 @@ Example 1. Look up the positions of two known depth labels.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
 
-std::cout << atlas.label().find(pluss::table::Thread(pluss::make_note({"mar", "jan"})));
+std::cout << atlas.label().find(pluss::table::Slate(pluss::make_note({"mar", "jan"})));
 ```
 
 ### Output
@@ -65,17 +65,17 @@ throw.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
+auto atlas = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
 
-std::cout << atlas.label().find(pluss::table::Thread(pluss::make_note({"nope"})));
+std::cout << atlas.label().find(pluss::table::Slate(pluss::make_note({"nope"})));
 ```
 
 ### Output
@@ -95,7 +95,7 @@ Name: find, ptype: Series
 ## See Also
 
 - [`AtlasLabelAccessor::pos`](pos.md): look up a single label's position directly,
-  without wrapping it in a `Thread` first.
+  without wrapping it in a `Slate` first.
 - [`AtlasLabelAccessor::align`](align.md): reorder/subset the bound atlas's frames to a
   target label order — throws on a miss instead of returning `-1`.
 

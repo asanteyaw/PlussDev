@@ -1,0 +1,70 @@
+summary = """
+Divide a numeric slate by one scalar or by another numeric slate.
+
+`div(...)` is the named slate-level division surface behind `/`-style arithmetic when you want a method in a chain or you want the overload family documented explicitly.
+"""
+
+returns = """
+`Slate`
+    Numeric result slate with elementwise division applied.
+"""
+
+see_also = [
+  "<a href=\"#truediv\"><code>Slate::truediv</code></a>: explicit true-division surface.",
+  "<a href=\"#mul\"><code>Slate::mul</code></a>: same typed arithmetic model for multiplication.",
+  "<a href=\"#align\"><code>Slate::align</code></a>: align slates first when you need label-aware preparation before arithmetic."
+]
+
+notes = [
+  """
+Scalar division broadcasts the divisor across the full slate length.
+""",
+  """
+Slate-to-slate division is positional unless you explicitly align the slates beforehand.
+""",
+  """
+This method is numeric. Use note, timeline, or timeindex accessors for non-numeric payload work.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand divisor.
+
+- `double`: broadcast one numeric divisor across the whole slate.
+- `const Slate&`: divide element by element against another numeric slate of compatible size.
+"""
+
+[[examples]]
+title = "Broadcast one scalar divisor across a numeric slate."
+code = """
+using namespace pluss::table;
+
+auto values = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = values.div(10.0);
+"""
+output = """
+0  1
+1  2
+2  3
+ptype: Series
+"""
+
+[[examples]]
+title = "Divide one numeric slate by another slate element by element."
+code = """
+using namespace pluss::table;
+
+auto left = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto right = Slate(pluss::make_series({2.0, 4.0, 5.0}));
+
+auto out = left.div(right);
+"""
+output = """
+0  5
+1  5
+2  6
+ptype: Series
+"""

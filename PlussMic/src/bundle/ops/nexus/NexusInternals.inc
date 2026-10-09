@@ -110,9 +110,9 @@ void append_auto_frame(detail::NexusImpl& dst, const pluss::table::DataFrame& fr
   append_named_frame(dst, next_auto_key(dst), frame, where);
 }
 
-std::string nexus_label_string_at(const pluss::table::Thread& labels, std::int64_t i) {
+std::string nexus_label_string_at(const pluss::table::Slate& labels, std::int64_t i) {
   switch (labels.kind()) {
-    case pluss::table::ThreadKind::Series: {
+    case pluss::table::SlateKind::Series: {
       const auto series = labels.as_series();
       switch (series.scalar_type()) {
         case pluss::codem::ScalarType::Int64:
@@ -123,18 +123,18 @@ std::string nexus_label_string_at(const pluss::table::Thread& labels, std::int64
           return std::string("table_") + std::to_string(i);
       }
     }
-    case pluss::table::ThreadKind::Note:
+    case pluss::table::SlateKind::Note:
       return std::string(labels.as_note().at(i));
-    case pluss::table::ThreadKind::Timeline:
+    case pluss::table::SlateKind::Timeline:
       return std::to_string(labels.as_timeline().ticks()[static_cast<std::size_t>(i)]);
-    case pluss::table::ThreadKind::Duration:
+    case pluss::table::SlateKind::Duration:
       return std::to_string(labels.as_duration().host()[static_cast<std::size_t>(i)]);
   }
   return std::string("table_") + std::to_string(i);
 }
 
-pluss::table::Thread default_atlas_labels(const std::vector<std::string>& keys) {
-  return pluss::table::Thread(pluss::make_note(keys));
+pluss::table::Slate default_atlas_labels(const std::vector<std::string>& keys) {
+  return pluss::table::Slate(pluss::make_note(keys));
 }
 
 std::unordered_set<std::string> retained_key_set(const detail::NexusImpl& dst) {

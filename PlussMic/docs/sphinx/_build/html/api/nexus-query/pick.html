@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="NexusTraverse::drop" href="drop.html" />
@@ -85,13 +85,13 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {&quot;name&quot;,        Thread(pluss::make_note({&quot;Ada&quot;, &quot;Ben&quot;, &quot;Cy&quot;}))},
+    {&quot;customer_id&quot;, Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {&quot;name&quot;,        Slate(pluss::make_note({&quot;Ada&quot;, &quot;Ben&quot;, &quot;Cy&quot;}))},
 });
 auto orders = DataFrame({
-    {&quot;order_id&quot;,    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
-    {&quot;customer_id&quot;, Thread(pluss::make_series({1.0, 2.0, 2.0}))},
-    {&quot;amount&quot;,      Thread(pluss::make_series({50.0, 75.0, 20.0}))},
+    {&quot;order_id&quot;,    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
+    {&quot;customer_id&quot;, Slate(pluss::make_series({1.0, 2.0, 2.0}))},
+    {&quot;amount&quot;,      Slate(pluss::make_series({50.0, 75.0, 20.0}))},
 });
 
 auto biz = Nexus({

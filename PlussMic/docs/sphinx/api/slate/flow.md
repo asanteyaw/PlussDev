@@ -1,0 +1,152 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7c78930cbff6 -->
+
+# Slate::flow
+
+[Back to Slate API Reference](../../slate_api_reference)
+
+## Signature
+
+```cpp
+Slate::flow(const std::function<Slate(const Slate&)>& fn) const -> Slate
+```
+
+## What It Does
+
+Calls `fn` **exactly once**, passing the entire current slate, and returns exactly what
+`fn` returns — with no size or shape validation at all. It's the least restrictive of the
+whole-slate functional escape hatches: [`fold()`](fold.md) does the same single call but
+checks the result's size against a `ResultShape`; `flow()` skips that check entirely and
+only confirms the callback isn't empty and that it returned a defined `Slate`.
+
+Reach for `flow()` when you want to drop into a pipeline stage that changes row count
+arbitrarily (filtering, expanding, reducing) and don't want a shape check getting in the
+way; reach for [`fold()`](fold.md) instead when you want that check as a lightweight
+assertion on your own transform's contract.
+
+```{important} No size validation whatsoever — unlike fold()
+`flow()`'s callback can return a `Slate` of any length, including a different length than
+the input. This is the key difference from [`fold()`](fold.md), which validates the result
+size against its `shape` parameter. If you want that safety net, use `fold()` instead.
+```
+
+## Parameters
+
+**fn** (`const std::function<Slate(const Slate&)>&`)
+    Called exactly once with `*this`. Must return a defined `Slate` of any length; must
+    not be empty.
+
+## Returns
+
+`Slate`
+    Exactly what `fn` returned, unmodified.
+
+## Examples
+
+Example 1. Reduce the whole slate to a single summary value — `flow()` places no
+restriction on the result's length, so this "changes shape" without issue.
+
+```cpp
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.flow([](const Slate& t) {
+  return Slate(pluss::make_series({t.sum().to_dbl()}));
+});
+std::cout << out;
+```
+
+### Output
+
+```text
+0  60
+ptype: Series
+```
+
+Example 2. Return a result with a *different* row count than the input — something
+[`fold()`](fold.md)'s `Reduce`/`Preserve` shapes would reject, but `flow()` accepts without
+complaint.
+
+```cpp
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.flow([](const Slate& t) {
+  return Slate(pluss::make_series({1.0, 2.0}));
+});
+std::cout << out;
+```
+
+### Output
+
+```text
+0  1
+1  2
+ptype: Series
+```
+
+Example 3. An empty callback throws immediately.
+
+```cpp
+auto slate = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+try {
+  std::function<Slate(const Slate&)> empty_fn;
+  auto out = slate.flow(empty_fn);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Slate::flow: callback is empty
+```
+
+Example 4. Returning a default-constructed (undefined) `Slate` throws.
+
+```cpp
+auto slate = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+try {
+  auto out = slate.flow([](const Slate& t) {
+    return Slate{};
+  });
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Slate::flow: callback returned an undefined Slate
+```
+
+## Notes
+
+- `fn` is called exactly once, with the whole slate — not once per row. Use
+  [`map()`](map.md) for genuine row-by-row iteration.
+- No size or shape validation on the result — this is the one real difference from
+  [`fold()`](fold.md). Use `fold()` instead if you want that check.
+- The only two failure modes are an empty callback and a callback that returns an
+  undefined `Slate` — anything else, at any length, passes through.
+
+## See Also
+
+- [`Slate::fold`](fold.md): the same "call `fn` once with the whole slate" shape, plus a
+  `ResultShape` size check on the result.
+- [`Slate::map`](map.md): the row-by-row counterpart — calls `fn` once per valid row
+  instead of once for the whole slate.
+- [`Slate::transform`](transform.md): the dispatcher that forwards to `map()` or `fold()`
+  depending on which overload you call — `flow()` is not one of its targets.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="floordiv.html">
+    <span class="label">Previous</span>
+    <span class="title">floordiv</span>
+  </a>
+  <a class="next-link" href="fold.html">
+    <span class="label">Next</span>
+    <span class="title">fold</span>
+  </a>
+</div>

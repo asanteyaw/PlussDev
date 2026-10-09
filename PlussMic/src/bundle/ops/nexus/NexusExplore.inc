@@ -271,21 +271,21 @@ pluss::table::DataFrame Nexus::profile() const {
   }
 
   src.profile_cache_ = pluss::table::DataFrame({
-      {"table", pluss::table::Thread(pluss::make_note(names))},
-      {"rows", pluss::table::Thread(pluss::make_series(rows))},
-      {"cols", pluss::table::Thread(pluss::make_series(cols))},
-      {"null_cells", pluss::table::Thread(pluss::make_series(null_cells))},
-      {"null_frac", pluss::table::Thread(pluss::make_series(null_frac))},
-      {"meta_score", pluss::table::Thread(pluss::make_series(meta_score))},
-      {"meta_ready", pluss::table::Thread(pluss::make_series(meta_ready))},
-      {"primary_key", pluss::table::Thread(pluss::make_note(primary_keys))},
-      {"key_missing_rows", pluss::table::Thread(pluss::make_series(key_missing_rows))},
-      {"key_duplicate_rows", pluss::table::Thread(pluss::make_series(key_duplicate_rows))},
-      {"links", pluss::table::Thread(pluss::make_series(links))},
-      {"left_links", pluss::table::Thread(pluss::make_series(left_links))},
-      {"right_links", pluss::table::Thread(pluss::make_series(right_links))},
-      {"time_field", pluss::table::Thread(pluss::make_note(time_fields))},
-      {"fingerprint", pluss::table::Thread(pluss::make_note(fingerprints))},
+      {"table", pluss::table::Slate(pluss::make_note(names))},
+      {"rows", pluss::table::Slate(pluss::make_series(rows))},
+      {"cols", pluss::table::Slate(pluss::make_series(cols))},
+      {"null_cells", pluss::table::Slate(pluss::make_series(null_cells))},
+      {"null_frac", pluss::table::Slate(pluss::make_series(null_frac))},
+      {"meta_score", pluss::table::Slate(pluss::make_series(meta_score))},
+      {"meta_ready", pluss::table::Slate(pluss::make_series(meta_ready))},
+      {"primary_key", pluss::table::Slate(pluss::make_note(primary_keys))},
+      {"key_missing_rows", pluss::table::Slate(pluss::make_series(key_missing_rows))},
+      {"key_duplicate_rows", pluss::table::Slate(pluss::make_series(key_duplicate_rows))},
+      {"links", pluss::table::Slate(pluss::make_series(links))},
+      {"left_links", pluss::table::Slate(pluss::make_series(left_links))},
+      {"right_links", pluss::table::Slate(pluss::make_series(right_links))},
+      {"time_field", pluss::table::Slate(pluss::make_note(time_fields))},
+      {"fingerprint", pluss::table::Slate(pluss::make_note(fingerprints))},
   });
   return *src.profile_cache_;
 }
@@ -411,26 +411,26 @@ pluss::table::DataFrame Nexus::scan() const {
   }
 
   src.scan_cache_ = pluss::table::DataFrame({
-      {"kind", pluss::table::Thread(pluss::make_note(kinds))},
-      {"name", pluss::table::Thread(pluss::make_note(names))},
-      {"left", pluss::table::Thread(pluss::make_note(lefts))},
-      {"right", pluss::table::Thread(pluss::make_note(rights))},
-      {"key_signature", pluss::table::Thread(pluss::make_note(key_signatures))},
-      {"rows", pluss::table::Thread(pluss::make_series(rows))},
-      {"cols", pluss::table::Thread(pluss::make_series(cols))},
-      {"left_missing_rows", pluss::table::Thread(pluss::make_series(left_missing_rows))},
-      {"right_missing_rows", pluss::table::Thread(pluss::make_series(right_missing_rows))},
-      {"left_duplicate_rows", pluss::table::Thread(pluss::make_series(left_duplicate_rows))},
-      {"right_duplicate_rows", pluss::table::Thread(pluss::make_series(right_duplicate_rows))},
-      {"left_orphans", pluss::table::Thread(pluss::make_series(left_orphan_rows))},
-      {"right_orphans", pluss::table::Thread(pluss::make_series(right_orphan_rows))},
-      {"valid", pluss::table::Thread(pluss::make_series(valid))},
-      {"declared_status", pluss::table::Thread(pluss::make_note(declared_status))},
-      {"computed_status", pluss::table::Thread(pluss::make_note(computed_status))},
-      {"meta_score", pluss::table::Thread(pluss::make_series(meta_scores))},
-      {"meta_ready", pluss::table::Thread(pluss::make_series(meta_ready))},
-      {"confidence", pluss::table::Thread(pluss::make_series(confidences))},
-      {"note", pluss::table::Thread(pluss::make_note(notes))},
+      {"kind", pluss::table::Slate(pluss::make_note(kinds))},
+      {"name", pluss::table::Slate(pluss::make_note(names))},
+      {"left", pluss::table::Slate(pluss::make_note(lefts))},
+      {"right", pluss::table::Slate(pluss::make_note(rights))},
+      {"key_signature", pluss::table::Slate(pluss::make_note(key_signatures))},
+      {"rows", pluss::table::Slate(pluss::make_series(rows))},
+      {"cols", pluss::table::Slate(pluss::make_series(cols))},
+      {"left_missing_rows", pluss::table::Slate(pluss::make_series(left_missing_rows))},
+      {"right_missing_rows", pluss::table::Slate(pluss::make_series(right_missing_rows))},
+      {"left_duplicate_rows", pluss::table::Slate(pluss::make_series(left_duplicate_rows))},
+      {"right_duplicate_rows", pluss::table::Slate(pluss::make_series(right_duplicate_rows))},
+      {"left_orphans", pluss::table::Slate(pluss::make_series(left_orphan_rows))},
+      {"right_orphans", pluss::table::Slate(pluss::make_series(right_orphan_rows))},
+      {"valid", pluss::table::Slate(pluss::make_series(valid))},
+      {"declared_status", pluss::table::Slate(pluss::make_note(declared_status))},
+      {"computed_status", pluss::table::Slate(pluss::make_note(computed_status))},
+      {"meta_score", pluss::table::Slate(pluss::make_series(meta_scores))},
+      {"meta_ready", pluss::table::Slate(pluss::make_series(meta_ready))},
+      {"confidence", pluss::table::Slate(pluss::make_series(confidences))},
+      {"note", pluss::table::Slate(pluss::make_note(notes))},
   });
   return *src.scan_cache_;
 }
@@ -504,18 +504,18 @@ pluss::table::DataFrame Nexus::deduce(double min_confidence) const {
   }
 
   auto out = pluss::table::DataFrame({
-      {"name", pluss::table::Thread(pluss::make_note(names))},
-      {"left", pluss::table::Thread(pluss::make_note(lefts))},
-      {"right", pluss::table::Thread(pluss::make_note(rights))},
-      {"left_key", pluss::table::Thread(pluss::make_note(left_keys))},
-      {"right_key", pluss::table::Thread(pluss::make_note(right_keys))},
-      {"cardinality", pluss::table::Thread(pluss::make_note(cards))},
-      {"left_unique", pluss::table::Thread(pluss::make_series(left_unique))},
-      {"right_unique", pluss::table::Thread(pluss::make_series(right_unique))},
-      {"left_declared", pluss::table::Thread(pluss::make_series(left_declared))},
-      {"right_declared", pluss::table::Thread(pluss::make_series(right_declared))},
-      {"confidence", pluss::table::Thread(pluss::make_series(confidences))},
-      {"basis", pluss::table::Thread(pluss::make_note(bases))},
+      {"name", pluss::table::Slate(pluss::make_note(names))},
+      {"left", pluss::table::Slate(pluss::make_note(lefts))},
+      {"right", pluss::table::Slate(pluss::make_note(rights))},
+      {"left_key", pluss::table::Slate(pluss::make_note(left_keys))},
+      {"right_key", pluss::table::Slate(pluss::make_note(right_keys))},
+      {"cardinality", pluss::table::Slate(pluss::make_note(cards))},
+      {"left_unique", pluss::table::Slate(pluss::make_series(left_unique))},
+      {"right_unique", pluss::table::Slate(pluss::make_series(right_unique))},
+      {"left_declared", pluss::table::Slate(pluss::make_series(left_declared))},
+      {"right_declared", pluss::table::Slate(pluss::make_series(right_declared))},
+      {"confidence", pluss::table::Slate(pluss::make_series(confidences))},
+      {"basis", pluss::table::Slate(pluss::make_note(bases))},
   });
   if (min_confidence == 0.5) {
     src.deduce_cache_ = out;
@@ -581,17 +581,17 @@ pluss::table::DataFrame Nexus::neighbors(std::string_view table) const {
   }
 
   auto out = pluss::table::DataFrame({
-      {"table", pluss::table::Thread(pluss::make_note(anchor))},
-      {"relationship", pluss::table::Thread(pluss::make_note(relationships))},
-      {"other", pluss::table::Thread(pluss::make_note(others))},
-      {"cardinality", pluss::table::Thread(pluss::make_note(cards))},
-      {"keys", pluss::table::Thread(pluss::make_note(keys))},
-      {"reversed", pluss::table::Thread(pluss::make_series(reversed))},
-      {"from_optional", pluss::table::Thread(pluss::make_series(from_optional))},
-      {"to_optional", pluss::table::Thread(pluss::make_series(to_optional))},
-      {"confidence", pluss::table::Thread(pluss::make_series(confidences))},
-      {"status", pluss::table::Thread(pluss::make_note(statuses))},
-      {"note", pluss::table::Thread(pluss::make_note(notes))},
+      {"table", pluss::table::Slate(pluss::make_note(anchor))},
+      {"relationship", pluss::table::Slate(pluss::make_note(relationships))},
+      {"other", pluss::table::Slate(pluss::make_note(others))},
+      {"cardinality", pluss::table::Slate(pluss::make_note(cards))},
+      {"keys", pluss::table::Slate(pluss::make_note(keys))},
+      {"reversed", pluss::table::Slate(pluss::make_series(reversed))},
+      {"from_optional", pluss::table::Slate(pluss::make_series(from_optional))},
+      {"to_optional", pluss::table::Slate(pluss::make_series(to_optional))},
+      {"confidence", pluss::table::Slate(pluss::make_series(confidences))},
+      {"status", pluss::table::Slate(pluss::make_note(statuses))},
+      {"note", pluss::table::Slate(pluss::make_note(notes))},
   });
   auto [it, _] = src.neighbors_cache_.emplace(std::string(table), out);
   return it->second;

@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::power_map`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `power_map` builds an attachable [`prep::Stage`](Stage.md) that applies a fitted power transform (Yeo-Johnson by default) to make a skewed column more symmetric, then standardises it.
 
@@ -62,7 +62,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -71,15 +71,15 @@ int main() {
   // column more symmetric, then standardises it.
   const pluss::Series income = pluss::make_series({1., 2., 4., 8., 16., 64.}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}});
+  const DataFrame x({{"income", Slate(income)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::power_map(), lymph::prep::route::names({"income"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"income", Thread(income)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"income", Slate(income)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -118,7 +118,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -126,7 +126,7 @@ int main() {
   // mode picks Yeo-Johnson (handles zero and negative values) or Box-Cox
   // (strictly positive input). standardize toggles the trailing z-score step.
   const pluss::Series v = pluss::make_series({1., 2., 3., 5., 8., 13., 21., 34.}, {8}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::PowerMap yj{};                                       // default: YeoJohnson, standardize=true
   lymph::options::PowerMap yj_raw{};
@@ -187,7 +187,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -195,15 +195,15 @@ int main() {
   const pluss::Series income = pluss::make_series({1., 3., 9., 27., 81., 243.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,0,1,2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"region", Thread(region)}});
+  const DataFrame x({{"income", Slate(income)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::power_map(), lymph::prep::route::names({"income"}))
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"income", Thread(income)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"income", Slate(income)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

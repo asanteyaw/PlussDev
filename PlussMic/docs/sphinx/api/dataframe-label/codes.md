@@ -17,7 +17,7 @@ Factorizes the case labels into integer codes, in first-occurrence order (the
 first distinct value seen gets code `0`, the next new value gets `1`, and so
 on). For a structured (multi-level) frame, each level is factorized
 **independently**, producing one integer column per level. For an unstructured
-frame, the whole flat case-label thread is factorized into a single `label`
+frame, the whole flat case-label slate is factorized into a single `label`
 column.
 
 ## Returns
@@ -35,9 +35,9 @@ Example 1. Factorize a 2-level structured case axis.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "east", "west", "west"}))},
-     {"city",   Thread(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
-     {"sales",  Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "east", "west", "west"}))},
+     {"city",   Slate(pluss::make_note({"Boston", "NYC", "LA", "SF"}))},
+     {"sales",  Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}))}});
 auto grouped = readings.label().set({"region", "city"}, true, "/");
 std::cout << grouped;
 
@@ -78,12 +78,12 @@ its codes are `0`/`1`; `city` sees four distinct values in row order, so it
 gets a fresh code `0`–`3` for every row.
 
 Example 2. Factorize an unstructured, single flat case axis — one built by
-[`set(const Thread&)`](set.md) rather than by promoting a named feature.
+[`set(const Slate&)`](set.md) rather than by promoting a named feature.
 
 ```cpp
 auto orders = DataFrame(
-    {{"sales", Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
-auto tagged = orders.label().set(Thread(pluss::make_note({"r1", "r2", "r3", "r4"})));
+    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+auto tagged = orders.label().set(Slate(pluss::make_note({"r1", "r2", "r3", "r4"})));
 
 auto out2 = tagged.label().codes();
 std::cout << out2;
@@ -103,10 +103,10 @@ r4   | 3
 [4 cs x 1 feat]
 ```
 
-`tagged`'s case labels came from `set(const Thread&)` — the raw-axis overload,
+`tagged`'s case labels came from `set(const Slate&)` — the raw-axis overload,
 which never populates `case_axis_` — so `.label().has()` is `false` here, and
 `codes()` takes the unstructured branch: one column, always named `"label"`,
-factorizing the whole flat thread. Contrast with a frame built by promoting a
+factorizing the whole flat slate. Contrast with a frame built by promoting a
 *named* feature (like `set("region")`), which — even with only one promoted
 name — still creates a genuine one-level `case_axis_`, so `codes()` takes the
 structured branch instead and names the column after that level (`"region"`,

@@ -4,7 +4,7 @@ Return the feature-axis helper surface.
 `feataxis()` is the compact surface for schema-driven feature selection and feature-name transforms. It is deliberately smaller than the main `DataFrame` API:
 
 - `df.features()` returns feature names.
-- `df.features("price")` selects one feature as a `Thread`.
+- `df.features("price")` selects one feature as a `Slate`.
 - `df.features({"price", "volume"})` selects explicit features as a `DataFrame`.
 - `df.feataxis().like("price")` selects features whose names contain a substring.
 - `df.feataxis().match("^score_")` selects features whose names match a regex pattern.

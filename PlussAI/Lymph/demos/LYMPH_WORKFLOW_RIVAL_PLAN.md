@@ -56,7 +56,7 @@ staying Pluss-native.
    sample weights, groups, validation frames, time keys) through explicit option structs and
    Workflow methods rather than ad-hoc keyword forwarding.
 6. Output container control is bolted onto estimator protocol. Lymph should preserve
-   `Series`, `Thread`, `Note`, `Timeline`, and `DataFrame` semantics directly, keeping GPU
+   `Series`, `Slate`, `Note`, `Timeline`, and `DataFrame` semantics directly, keeping GPU
    and Series paths first-class.
 
 ## Current Lymph Baseline

@@ -9,7 +9,7 @@
 ```cpp
 static Nexus::from_atlas(const Atlas& atlas) -> Nexus
 
-static Nexus::from_atlas(const Atlas& atlas, const Thread& labels) -> Nexus
+static Nexus::from_atlas(const Atlas& atlas, const Slate& labels) -> Nexus
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ them (`atlas.axis0_labels().has_value()`); otherwise it falls back to auto-gener
 `table_0`, `table_1`, ... keys, same as [`inject()`](inject.md)'s unnamed form. The
 two-argument overload always uses the given `labels` explicitly, converting each label to
 a string key the same way [`neighbors()`](neighbors.md) and friends stringify things
-internally — text labels are used as-is; numeric labels are stringified; a labels thread
+internally — text labels are used as-is; numeric labels are stringified; a labels slate
 that produces the same key string twice throws.
 
 ## Parameters
@@ -31,7 +31,7 @@ that produces the same key string twice throws.
 **atlas** (`const Atlas&`)
     The source stack of same-shaped frames.
 
-**labels** (`const Thread&`, two-argument overload)
+**labels** (`const Slate&`, two-argument overload)
     Explicit table keys, one per atlas frame. Must be defined, must have exactly
     `atlas.depth()` elements, and must not produce a duplicate key string — see the
     important callout above.
@@ -50,15 +50,15 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto orders_q1 = DataFrame({
-    {"order_id", Thread(pluss::make_series({101.0, 102.0}))},
-    {"amount",   Thread(pluss::make_series({50.0, 75.0}))},
+    {"order_id", Slate(pluss::make_series({101.0, 102.0}))},
+    {"amount",   Slate(pluss::make_series({50.0, 75.0}))},
 });
 auto orders_q2 = DataFrame({
-    {"order_id", Thread(pluss::make_series({201.0, 202.0}))},
-    {"amount",   Thread(pluss::make_series({40.0, 60.0}))},
+    {"order_id", Slate(pluss::make_series({201.0, 202.0}))},
+    {"amount",   Slate(pluss::make_series({40.0, 60.0}))},
 });
 
-auto atlas = Atlas({orders_q1, orders_q2}, Thread(pluss::make_note({"Q1", "Q2"})));
+auto atlas = Atlas({orders_q1, orders_q2}, Slate(pluss::make_note({"Q1", "Q2"})));
 
 auto rebuilt = Nexus::from_atlas(atlas);
 std::cout << rebuilt.ntables() << " ";
@@ -80,7 +80,7 @@ Example 2. The two-argument overload, supplying labels explicitly regardless of 
 atlas itself carries.
 
 ```cpp
-auto with_labels = Nexus::from_atlas(atlas, Thread(pluss::make_note({"Q1", "Q2"})));
+auto with_labels = Nexus::from_atlas(atlas, Slate(pluss::make_note({"Q1", "Q2"})));
 for (const auto& k : with_labels.keys()) {
   std::cout << k << " ";
 }

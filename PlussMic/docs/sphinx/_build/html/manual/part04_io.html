@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part V: DataFrame Workflows" href="part05_dataframe_workflows.html" />
@@ -88,7 +88,7 @@ loader API.</p>
 <li><p>Decide the header and feature names.</p></li>
 <li><p>Decide which input columns become features.</p></li>
 <li><p>Decide whether one input column becomes the case axis.</p></li>
-<li><p>Convert selected columns into typed <code class="docutils literal notranslate"><span class="pre">Thread</span></code> values.</p></li>
+<li><p>Convert selected columns into typed <code class="docutils literal notranslate"><span class="pre">Slate</span></code> values.</p></li>
 </ol>
 <p>Most surprising loading behavior comes from mixing up stages 3 and 4. If a
 column is selected as <code class="docutils literal notranslate"><span class="pre">case_col</span></code>, it becomes the DataFrame case axis and is not
@@ -316,7 +316,7 @@ column. <code class="docutils literal notranslate"><span class="pre">write_optio
 <section id="type-inference-and-explicit-dtypes">
 <h2>Type inference and explicit dtypes<a class="headerlink" href="#type-inference-and-explicit-dtypes" title="Link to this heading">¶</a></h2>
 <p>CSV data starts as text. PlussMic converts each selected column into a typed
-Thread. Common inferred outputs are:</p>
+Slate. Common inferred outputs are:</p>
 <ul class="simple">
 <li><p>integer Series for integral values;</p></li>
 <li><p>floating Series for decimal values;</p></li>
@@ -352,7 +352,7 @@ numbers, and product IDs should usually be loaded as text, not numbers.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">na_filter</span> <span class="pre">=</span> <span class="pre">false</span></code> disables missing-value detection. <code class="docutils literal notranslate"><span class="pre">keep_default_na</span> <span class="pre">=</span> <span class="pre">true</span></code>
 keeps the built-in missing tokens. <code class="docutils literal notranslate"><span class="pre">na_values</span></code> adds project-specific tokens.</p>
-<p>Missingness becomes a Thread validity mask. That means a numeric feature can
+<p>Missingness becomes a Slate validity mask. That means a numeric feature can
 still have an integer or floating dtype even when some rows display as <code class="docutils literal notranslate"><span class="pre">NA</span></code>.</p>
 </section>
 <section id="bad-lines">
@@ -482,7 +482,7 @@ becomes a <code class="docutils literal notranslate"><span class="pre">DataFrame
 </pre></div>
 </div>
 <p>Raw batches keep strings/notes close to file contents. Neutral batches carry
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> values but do not own a frame.</p>
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> values but do not own a frame.</p>
 </section>
 <section id="csvcasereader-next">
 <h2><code class="docutils literal notranslate"><span class="pre">CsvCaseReader::next</span></code><a class="headerlink" href="#csvcasereader-next" title="Link to this heading">¶</a></h2>

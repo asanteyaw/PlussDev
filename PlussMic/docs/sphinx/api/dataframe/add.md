@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b29c9ce5357a -->
+<!-- pluss-signature-hash: 838fbd248ff2 -->
 
 # DataFrame::add
 
@@ -11,9 +11,9 @@
 DataFrame::add(double other) const -> DataFrame
 DataFrame::add(const DataFrame& other) const -> DataFrame
 DataFrame::add(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::add(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::add(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::add(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::add(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::add(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::add(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -36,11 +36,11 @@ The right-hand operand, in one of three shapes:
 - `double`: one scalar, broadcast against every numeric feature.
 - `const DataFrame&`: another frame, added feature-by-feature and case-by-case after
   the two frames are aligned.
-- `const Thread&`: one column of values, broadcast according to `axis` (see below).
+- `const Slate&`: one column of values, broadcast according to `axis` (see below).
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
-Controls how a `Thread` right-hand operand is broadcast:
+Controls how a `Slate` right-hand operand is broadcast:
 
 - `Axis::Feature` (the default): `other` supplies **one value per feature** — its
   length must match `nfeatures()`. Feature `i`'s value is added to every case in
@@ -51,7 +51,7 @@ Controls how a `Thread` right-hand operand is broadcast:
 
 **options** (`AlignOptions`, optional)
 
-Controls how the `DataFrame` or `Thread` right-hand operand is aligned to the current
+Controls how the `DataFrame` or `Slate` right-hand operand is aligned to the current
 frame before the arithmetic runs (by position, case label, or feature name), and how
 missing values are filled during alignment. Defaults to strict positional alignment.
 
@@ -107,11 +107,11 @@ c    | 11     40
 [3 cs x 2 feat]
 ```
 
-Example 2. Add a `Thread` with one value per feature (`Axis::Feature`, the default) —
+Example 2. Add a `Slate` with one value per feature (`Axis::Feature`, the default) —
 `units` gets `+100`, `price` gets `+1`.
 
 ```cpp
-auto per_feature_bump = Thread(pluss::make_series({100.0, 1.0}));
+auto per_feature_bump = Slate(pluss::make_series({100.0, 1.0}));
 auto out = prices.add(per_feature_bump);
 std::cout << out;
 ```
@@ -129,11 +129,11 @@ c    | 101    31
 [3 cs x 2 feat]
 ```
 
-Example 3. Add a `Thread` with one value per case (`Axis::Case`) instead — row `a` gets
+Example 3. Add a `Slate` with one value per case (`Axis::Case`) instead — row `a` gets
 `+1`, row `b` gets `+2`, row `c` gets `+3`, applied across every feature in that row.
 
 ```cpp
-auto per_case_bump = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+auto per_case_bump = Slate(pluss::make_series({1.0, 2.0, 3.0}));
 auto out = prices.add(per_case_bump, Axis::Case);
 std::cout << out;
 ```
@@ -157,9 +157,9 @@ names.
 
 ```cpp
 auto bumps = DataFrame({
-    {"col1", Thread(pluss::make_series({300.0, 100.0, 200.0}))},
-    {"col2", Thread(pluss::make_series({3000.0, 1000.0, 2000.0}))},
-}, Thread(pluss::make_note({"c", "a", "b"})));
+    {"col1", Slate(pluss::make_series({300.0, 100.0, 200.0}))},
+    {"col2", Slate(pluss::make_series({3000.0, 1000.0, 2000.0}))},
+}, Slate(pluss::make_note({"c", "a", "b"})));
 std::cout << bumps;
 
 auto out = prices.add(bumps);
@@ -232,8 +232,8 @@ mismatched entities (`"a"` with `"c"`'s values).
 ## Notes
 
 - Non-numeric features (`Note`, `Timeline`, `TimeIndex`) are always left unchanged,
-  whether the right-hand operand is a scalar, a `Thread`, or another `DataFrame`.
-- `Axis::Feature` (one value per column) is the default for the `Thread` overload;
+  whether the right-hand operand is a scalar, a `Slate`, or another `DataFrame`.
+- `Axis::Feature` (one value per column) is the default for the `Slate` overload;
   `Axis::Case` (one value per row) must be requested explicitly.
 - For the reflected form (useful mainly for readability when the frame is the
   right-hand conceptual operand), see [`radd()`](radd.md) — though for addition

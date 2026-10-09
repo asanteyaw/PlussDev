@@ -54,7 +54,7 @@ public:
   Axel fields(const NameRange& keys) const;
   AxelFieldAxisAccessor fieldaxis() const;
   AxelCastAccessor cast() const;
-  AxelCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  AxelCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   AxelNoteAccessor nt() const;
   AxelTimelineAccessor tl() const;
   Registry registry(std::int64_t i) const;
@@ -130,7 +130,7 @@ class AxelCastAccessor {
 public:
   explicit AxelCastAccessor(Axel base,
                             std::vector<std::string> keys,
-                            pluss::table::ThreadCastOptions options = {});
+                            pluss::table::SlateCastOptions options = {});
 
   Axel series() const;
   Axel note() const;
@@ -140,7 +140,7 @@ public:
 private:
   Axel base_{};
   std::vector<std::string> keys_{};
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class AxelNoteAccessor {

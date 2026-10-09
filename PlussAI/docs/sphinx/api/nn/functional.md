@@ -26,19 +26,39 @@ without constructing a `Module`. Also reachable via the short
 
 ## How To Call It
 
+Apply a fused linear map with an explicit weight matrix, then run a one-step recurrent pass with explicit parameters. The program prints both output shapes.
+
 ```cpp
-namespace nn = pluss::ai::nn;
+#include <pluss/pluss.h>
+#include <pluss/ai/nn.h>
+#include <pluss/nn.h>
 
-const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0}, {1, 3});
-const pluss::Series weight = pluss::make_series({1.0, 0.0, 0.0, 0.0, 1.0, 0.0}, {2, 3});
-const pluss::Series y = nn::fusion(x, weight);
+#include <iostream>
+#include <tuple>
+#include <vector>
 
-nn::rnn::NetWeight params{};
-params.weight_ih = pluss::make_series({0.5}, {1, 1});
-params.weight_hh = pluss::make_series({0.0}, {1, 1});
-params.bias = pluss::make_series({0.0}, {1});
-const pluss::Series seq = pluss::make_series({1.0}, {1, 1, 1});
-const auto [output, hidden] = nn::rnn(seq, params);
+int main() {
+  namespace nn = pluss::ai::nn;
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0}, {1, 3});
+  const pluss::Series weight = pluss::make_series({1.0, 0.0, 0.0, 0.0, 1.0, 0.0}, {2, 3});
+  const pluss::Series y = nn::fusion(x, weight);
+  std::cout << "fusion = " << y.sizes()[0] << " x " << y.sizes()[1] << "\n";
+  nn::rnn::NetWeight params{};
+  params.weight_ih = pluss::make_series({0.5}, {1, 1});
+  params.weight_hh = pluss::make_series({0.0}, {1, 1});
+  params.bias = pluss::make_series({0.0}, {1});
+  const pluss::Series seq = pluss::make_series({1.0}, {1, 1, 1});
+  const auto [output, hidden] = nn::rnn(seq, params);
+  std::cout << "rnn output = " << output.sizes()[0] << " x " << output.sizes()[1] << " x " << output.sizes()[2] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+fusion = 1 x 2
+rnn output = 1 x 1 x 1
 ```
 
 Every function here is a plain function -- no `Module` to construct, no

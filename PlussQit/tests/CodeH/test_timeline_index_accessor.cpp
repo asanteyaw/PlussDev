@@ -2,10 +2,18 @@
 #include <pluss/pluss.h>
 
 #include <cstdlib>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
+static_assert(std::is_same_v<
+              decltype(std::declval<const pluss::Timeline&>().index()),
+              pluss::Timeline::TimelineIndexAccessor>);
+static_assert(!std::is_default_constructible_v<
+              pluss::Timeline::TimelineIndexAccessor>);
+
 TEST_CASE("Timeline index centralizes rank and ordering validation",
-          "[timeline][index][timeindex]") {
+          "[timeline][index][accessor]") {
   const auto ordered = pluss::timeline::make({
       "2025-01-01T00:00:00Z",
       "2025-01-02T00:00:00Z",
@@ -38,7 +46,7 @@ TEST_CASE("Timeline index centralizes rank and ordering validation",
 }
 
 TEST_CASE("Timeline index preserves timezone and borrowed storage",
-          "[timeline][index][timeindex][storage]") {
+          "[timeline][index][accessor][storage]") {
   auto* raw = static_cast<std::int64_t*>(
       std::malloc(3 * sizeof(std::int64_t)));
   REQUIRE(raw != nullptr);

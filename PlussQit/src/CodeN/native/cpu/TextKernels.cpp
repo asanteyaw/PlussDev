@@ -456,20 +456,106 @@ inline std::size_t scan_known_abbreviation_span(std::string_view s, std::size_t 
   return looks_like_known_abbreviation(lower) ? end + 1 : start;
 }
 
+// Byte length of the UTF-8 sequence that starts at `pos`, clamped to the
+// string end. Malformed lead bytes count as one byte so scanning always moves.
+inline std::size_t utf8_sequence_length(std::string_view s, std::size_t pos) {
+  const unsigned char lead = static_cast<unsigned char>(s[pos]);
+  std::size_t len = 1;
+  if (lead >= 0xF0 && lead <= 0xF7) {
+    len = 4;
+  } else if (lead >= 0xE0) {
+    len = lead <= 0xEF ? 3 : 1;
+  } else if (lead >= 0xC2 && lead <= 0xDF) {
+    len = 2;
+  }
+  if (pos + len > s.size()) return 1;
+  for (std::size_t k = 1; k < len; ++k) {
+    const unsigned char cont = static_cast<unsigned char>(s[pos + k]);
+    if ((cont & 0xC0) != 0x80) return 1;
+  }
+  return len;
+}
+
+inline std::uint32_t utf8_decode(std::string_view s, std::size_t pos, std::size_t len) {
+  const unsigned char lead = static_cast<unsigned char>(s[pos]);
+  if (len == 1) return lead;
+  std::uint32_t cp = lead & (0xFFu >> (len + 1));
+  for (std::size_t k = 1; k < len; ++k) {
+    cp = (cp << 6) | (static_cast<unsigned char>(s[pos + k]) & 0x3Fu);
+  }
+  return cp;
+}
+
+// Non-ASCII whitespace that carries no token content.
+inline bool is_unicode_space(std::uint32_t cp) {
+  return cp == 0x00A0u || cp == 0x1680u || (cp >= 0x2000u && cp <= 0x200Au) ||
+         cp == 0x202Fu || cp == 0x205Fu || cp == 0x3000u;
+}
+
+// Non-ASCII general punctuation, symbols, and CJK punctuation. Every other
+// non-ASCII codepoint is treated as a letter, so accented and non-Latin words
+// stay whole instead of being split at their multi-byte characters.
+inline bool is_unicode_punct(std::uint32_t cp) {
+  return (cp >= 0x00A1u && cp <= 0x00BFu && cp != 0x00AAu && cp != 0x00BAu) ||
+         cp == 0x00D7u || cp == 0x00F7u ||
+         (cp >= 0x2010u && cp <= 0x2027u) || (cp >= 0x2030u && cp <= 0x205Eu) ||
+         (cp >= 0x20A0u && cp <= 0x20CFu) || (cp >= 0x2190u && cp <= 0x2BFFu) ||
+         (cp >= 0x3001u && cp <= 0x3003u) || (cp >= 0x3008u && cp <= 0x3011u);
+}
+
+// Byte length of a non-ASCII whitespace codepoint at `pos`, or 0 when there is none.
+inline std::size_t unicode_space_length(std::string_view s, std::size_t pos) {
+  if (pos >= s.size()) return 0;
+  const unsigned char lead = static_cast<unsigned char>(s[pos]);
+  if (lead < 0xC2 || lead > 0xF7) return 0;
+  const std::size_t len = utf8_sequence_length(s, pos);
+  return is_unicode_space(utf8_decode(s, pos, len)) ? len : 0;
+}
+
+// Length of a non-ASCII word codepoint at `pos`, or 0 when `pos` does not hold one.
+inline std::size_t utf8_word_char_length(std::string_view s, std::size_t pos) {
+  if (pos >= s.size()) return 0;
+  const unsigned char lead = static_cast<unsigned char>(s[pos]);
+  if (lead < 0xC2 || lead > 0xF7) return 0;  // ASCII, continuation, overlong, or invalid lead
+  const std::size_t len = utf8_sequence_length(s, pos);
+  const std::uint32_t cp = utf8_decode(s, pos, len);
+  if (is_unicode_space(cp) || is_unicode_punct(cp)) return 0;
+  return len;
+}
+
 inline std::size_t scan_word_like_span(std::string_view s, std::size_t start) {
-  if (!is_ascii_word_start(static_cast<unsigned char>(s[start]))) return start;
-  std::size_t end = start + 1;
+  // A connector joins two word pieces, so "café's" stays one token. The byte
+  // before a connector was already consumed as word material, so a byte at or
+  // above 0x80 there is a letter's tail; the byte after it must start one.
+  auto word_before = [&](std::size_t pos) {
+    const unsigned char b = static_cast<unsigned char>(s[pos]);
+    return is_ascii_alnum(b) || b >= 0x80;
+  };
+  auto word_after = [&](std::size_t pos) {
+    return is_ascii_alnum(static_cast<unsigned char>(s[pos])) || utf8_word_char_length(s, pos) > 0;
+  };
+  std::size_t end = start;
+  if (is_ascii_word_start(static_cast<unsigned char>(s[start]))) {
+    end = start + 1;
+  } else {
+    end = start + utf8_word_char_length(s, start);
+    if (end == start) return start;
+  }
   while (end < s.size()) {
     const unsigned char c = static_cast<unsigned char>(s[end]);
     if (is_ascii_alnum(c) || c == '_') {
       ++end;
       continue;
     }
+    if (const std::size_t wide = utf8_word_char_length(s, end); wide > 0) {
+      end += wide;
+      continue;
+    }
     if (is_ascii_word_connector(c) &&
         end > start &&
         end + 1 < s.size() &&
-        is_ascii_alnum(static_cast<unsigned char>(s[end - 1])) &&
-        is_ascii_alnum(static_cast<unsigned char>(s[end + 1]))) {
+        word_before(end - 1) &&
+        word_after(end + 1)) {
       ++end;
       continue;
     }
@@ -1759,7 +1845,15 @@ void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
   ::std::size_t i = 0;
 
   while (i < n) {
-    while (i < n && is_ascii_space(static_cast<unsigned char>(s[i]))) ++i;
+    while (i < n) {
+      if (is_ascii_space(static_cast<unsigned char>(s[i]))) {
+        ++i;
+        continue;
+      }
+      const ::std::size_t space = unicode_space_length(s, i);
+      if (space == 0) break;
+      i += space;
+    }
     if (i >= n) break;
 
     const ::std::size_t start = i;
@@ -1775,9 +1869,16 @@ void hash_bytes_fnv1a_batch(::std::span<const ::std::string_view> in,
       continue;
     }
 
-    ++i;
-    if (keep_punct && is_ascii_punct(static_cast<unsigned char>(s[start]))) {
+    // Nothing above matched: this is one punctuation or symbol character.
+    // Step over its whole UTF-8 sequence so no byte is read as a token start.
+    const ::std::size_t width = utf8_sequence_length(s, i);
+    const unsigned char lead = static_cast<unsigned char>(s[start]);
+    i += width;
+    if (!keep_punct) continue;
+    if (is_ascii_punct(lead)) {
       out.emplace_back(start, 1);
+    } else if (width > 1 && is_unicode_punct(utf8_decode(s, start, width))) {
+      out.emplace_back(start, width);
     }
   }
 

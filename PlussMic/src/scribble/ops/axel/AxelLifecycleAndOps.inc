@@ -41,7 +41,7 @@ AxelCastAccessor Axel::cast() const {
   return AxelCastAccessor(*this, {}, {});
 }
 
-AxelCastAccessor Axel::cast(const pluss::table::ThreadCastOptions& options) const {
+AxelCastAccessor Axel::cast(const pluss::table::SlateCastOptions& options) const {
   return AxelCastAccessor(*this, {}, options);
 }
 

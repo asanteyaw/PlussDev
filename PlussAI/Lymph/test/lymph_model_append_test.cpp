@@ -16,7 +16,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -31,10 +31,10 @@ DataFrame make_frame() {
   const Series x2 = pluss::make_series(std::vector<double>{1000, 2000, 500, 4000, 1500, 3000, 800, 3500}, {8}, f64());
   const Series y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1}, {8}, f64());
   return DataFrame({
-      {"x1", Thread(x1)},
-      {"x2", Thread(x2)},
-      {"category", Thread(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
-      {"y", Thread(y)},
+      {"x1", Slate(x1)},
+      {"x2", Slate(x2)},
+      {"category", Slate(pluss::make_note({"a", "b", "a", "b", "a", "b", "a", "b"}))},
+      {"y", Slate(y)},
   });
 }
 

@@ -1,0 +1,206 @@
+summary = """
+Return whether each element falls between two bounds.
+
+`Slate::btw(...)` is the interval-membership surface on `Slate`. It supports scalar numeric bounds, scalar temporal/string bounds, and rowwise lower/upper slates. This makes it useful for grading bands, date windows, threshold rules, and per-row tolerance envelopes.
+"""
+
+returns = """
+`Slate`
+    A boolean slate containing one interval-membership result per element.
+"""
+
+see_also = [
+  "<a href=\"#ge\"><code>Slate::ge</code></a> and <a href=\"#le\"><code>Slate::le</code></a>: spell out the two comparisons manually when you want the lower and upper tests separately.",
+  "<a href=\"dataframe_api_reference.html#filter\"><code>DataFrame::filter</code></a>: use the boolean result as a row mask inside a frame workflow."
+]
+
+notes = [
+  """
+The overload family supports three bound styles:
+
+- numeric scalar bounds,
+- temporal/text scalar bounds,
+- rowwise lower/upper slates.
+""",
+  """
+When you use the two-boolean form, `include_left` and `include_right` independently control whether each boundary is closed or open.
+""",
+  """
+The one-boolean `inclusive` shorthand differs by overload family in the current API. The examples below show the actual behavior for each family, which is why this method deserves more careful reading than simpler comparison helpers.
+"""
+]
+
+[[parameters]]
+name = "a"
+body = """
+Lower scalar numeric bound for the numeric-scalar overloads.
+"""
+
+[[parameters]]
+name = "b"
+body = """
+Upper scalar numeric bound for the numeric-scalar overloads.
+"""
+
+[[parameters]]
+name = "lo"
+body = """
+Lower bound.
+
+- In scalar temporal/text overloads, this is one lower literal bound.
+- In rowwise overloads, this is the lower-bound slate used element by element.
+"""
+
+[[parameters]]
+name = "hi"
+body = """
+Upper bound.
+
+- In scalar temporal/text overloads, this is one upper literal bound.
+- In rowwise overloads, this is the upper-bound slate used element by element.
+"""
+
+[[parameters]]
+name = "inclusive"
+body = """
+Shared boundary-closure shorthand.
+
+- `true`: both boundaries are closed.
+- `false`: both boundaries are open.
+
+Use this when both sides should share the same closure rule.
+"""
+
+[[parameters]]
+name = "include_left"
+body = """
+Whether the lower boundary is included.
+
+- `true`: the lower boundary is closed.
+- `false`: the lower boundary is open.
+"""
+
+[[parameters]]
+name = "include_right"
+body = """
+Whether the upper boundary is included.
+
+- `true`: the upper boundary is closed.
+- `false`: the upper boundary is open.
+"""
+
+[[examples]]
+title = "Use shared inclusion for scalar numeric bounds."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+
+auto out = scores.btw(20.0, 40.0, true);
+"""
+output = """
+0  false
+1  true
+2  true
+3  true
+4  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Use asymmetric scalar numeric boundaries."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+
+auto out = scores.btw(20.0, 40.0, false, true);
+"""
+output = """
+0  false
+1  false
+2  true
+3  true
+4  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Use shared inclusion for scalar temporal bounds."
+code = """
+using namespace pluss::table;
+
+auto dates = Slate(pluss::make_timeline({
+    "2024-01-01T00:00:00Z",
+    "2024-01-02T00:00:00Z",
+    "2024-01-03T00:00:00Z",
+}));
+
+auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);
+"""
+output = """
+0  true
+1  true
+2  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Use asymmetric scalar temporal boundaries."
+code = """
+using namespace pluss::table;
+
+auto dates = Slate(pluss::make_timeline({
+    "2024-01-01T00:00:00Z",
+    "2024-01-02T00:00:00Z",
+    "2024-01-03T00:00:00Z",
+}));
+
+auto out = dates.btw("2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", false, true);
+"""
+output = """
+0  false
+1  true
+2  true
+ptype: Series
+"""
+
+[[examples]]
+title = "Use rowwise lower and upper slates with shared inclusion."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto lower = Slate(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
+auto upper = Slate(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
+
+auto out = scores.btw(lower, upper, true);
+"""
+output = """
+0  true
+1  true
+2  false
+3  true
+4  true
+ptype: Series
+"""
+
+[[examples]]
+title = "Use rowwise lower and upper slates with asymmetric boundaries."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto lower = Slate(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
+auto upper = Slate(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
+
+auto out = scores.btw(lower, upper, false, true);
+"""
+output = """
+0  false
+1  false
+2  false
+3  true
+4  true
+ptype: Series
+"""

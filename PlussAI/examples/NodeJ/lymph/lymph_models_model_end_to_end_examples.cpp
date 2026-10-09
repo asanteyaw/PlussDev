@@ -8,13 +8,13 @@ namespace {
 namespace lymph = pluss::ai::lymph;
 using pluss::ScalarType;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 // BEGIN APPEND 1
 void append_named_route() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"income", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
-                     {"late", Thread(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
+  const DataFrame x({{"income", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
+                     {"late", Slate(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2});
   model.append(lymph::prep::stage::standard_scaler(), lymph::prep::route::names({"income"}));
@@ -27,8 +27,8 @@ void append_named_route() {
 // BEGIN APPEND 2
 void append_chained_routes() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"amount", Thread(pluss::make_series({10, 20, 80, 90}, {4}, cfg))},
-                     {"age", Thread(pluss::make_series({20, 30, 50, 60}, {4}, cfg))}});
+  const DataFrame x({{"amount", Slate(pluss::make_series({10, 20, 80, 90}, {4}, cfg))},
+                     {"age", Slate(pluss::make_series({20, 30, 50, 60}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   const auto amount = lymph::prep::route::names({"amount"});
   auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2});
@@ -43,9 +43,9 @@ void append_chained_routes() {
 // BEGIN APPEND 3
 void append_categorical_encoder() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame rows({{"income", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
-                        {"tier", Thread(pluss::make_note({"basic", "basic", "gold", "gold"}))},
-                        {"defaulted", Thread(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
+  const DataFrame rows({{"income", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
+                        {"tier", Slate(pluss::make_note({"basic", "basic", "gold", "gold"}))},
+                        {"defaulted", Slate(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
   lymph::options::DFBatch contract{};
   contract.feature_names = {"income", "tier"};
   contract.label_feature = "defaulted";
@@ -61,8 +61,8 @@ void append_categorical_encoder() {
 // BEGIN PREPARE 1
 void prepare_named_standardization() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"income", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
-                     {"late", Thread(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
+  const DataFrame x({{"income", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
+                     {"late", Slate(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2});
   model.prepare().standardize(lymph::prep::route::names({"income"}));
@@ -75,8 +75,8 @@ void prepare_named_standardization() {
 // BEGIN PREPARE 2
 void prepare_remainder_route() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"amount", Thread(pluss::make_series({10, 20, 80, 90}, {4}, cfg))},
-                     {"age", Thread(pluss::make_series({20, 30, 50, 60}, {4}, cfg))}});
+  const DataFrame x({{"amount", Slate(pluss::make_series({10, 20, 80, 90}, {4}, cfg))},
+                     {"age", Slate(pluss::make_series({20, 30, 50, 60}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2});
   auto prep = model.prepare();
@@ -91,9 +91,9 @@ void prepare_remainder_route() {
 // BEGIN PREPARE 3
 void prepare_categorical_encoding() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame rows({{"income", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
-                        {"tier", Thread(pluss::make_note({"basic", "basic", "gold", "gold"}))},
-                        {"defaulted", Thread(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
+  const DataFrame rows({{"income", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
+                        {"tier", Slate(pluss::make_note({"basic", "basic", "gold", "gold"}))},
+                        {"defaulted", Slate(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
   lymph::options::DFBatch contract{};
   contract.feature_names = {"income", "tier"};
   contract.label_feature = "defaulted";
@@ -109,7 +109,7 @@ void prepare_categorical_encoding() {
 // BEGIN LEARN 1
 void learn_mutates_current_model() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"score", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
+  const DataFrame x({{"score", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2});
   model.learn_(x, y);
@@ -121,7 +121,7 @@ void learn_mutates_current_model() {
 // BEGIN LEARN 2
 void learn_returns_a_trained_copy() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"score", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
+  const DataFrame x({{"score", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   const auto template_model = lymph::models::tree::decision_tree_classifier({.max_depth = 2});
   const auto trained_model = template_model.learn(x, y);
@@ -133,8 +133,8 @@ void learn_returns_a_trained_copy() {
 // BEGIN LEARN 3
 void learn_from_a_labelled_dataframe() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame rows({{"score", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
-                        {"defaulted", Thread(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
+  const DataFrame rows({{"score", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
+                        {"defaulted", Slate(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
   lymph::options::DFBatch contract{};
   contract.feature_names = {"score"};
   contract.label_feature = "defaulted";
@@ -148,7 +148,7 @@ void learn_from_a_labelled_dataframe() {
 // BEGIN INFER 1
 void infer_feature_dataframe() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"score", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
+  const DataFrame x({{"score", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   const auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2}).learn(x, y);
   std::cout << "infer_features cases=" << model.infer(x).size().item<std::int64_t>() << '\n';
@@ -158,8 +158,8 @@ void infer_feature_dataframe() {
 // BEGIN INFER 2
 void infer_labelled_dataframe_contract() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame rows({{"score", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
-                        {"defaulted", Thread(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
+  const DataFrame rows({{"score", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))},
+                        {"defaulted", Slate(pluss::make_series({0, 0, 1, 1}, {4}, cfg))}});
   lymph::options::DFBatch contract{};
   contract.feature_names = {"score"};
   contract.label_feature = "defaulted";
@@ -171,7 +171,7 @@ void infer_labelled_dataframe_contract() {
 // BEGIN INFER 3
 void infer_scores_instead_of_labels() {
   const auto cfg = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame x({{"score", Thread(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
+  const DataFrame x({{"score", Slate(pluss::make_series({1, 2, 8, 9}, {4}, cfg))}});
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, cfg);
   const auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2}).learn(x, y);
   std::cout << "infer_scores cases=" << model.infer_scores(x).size().item<std::int64_t>() << '\n';

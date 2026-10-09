@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Queue::invoke &#8212; PlussQit  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/api_ref.css?v=15722e59" />
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Queue operators" href="operators.html" />
+    <link rel="prev" title="Queue::visit" href="visit.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<section id="queue-invoke">
+<h1>Queue::invoke<a class="headerlink" href="#queue-invoke" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../queue_api_reference.html"><span class="doc std std-doc">Back to Queue API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Queue</span><span class="w"> </span><span class="nf">invoke</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">span</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">Arg</span><span class="o">&gt;</span><span class="w"> </span><span class="n">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">Queue</span><span class="w"> </span><span class="nf">invoke</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Arg</span><span class="o">&gt;</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="n">Queue</span><span class="w"> </span><span class="nf">invoke</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">methods</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">invoke</span></code> calls a method by name on the held payload – <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">Duration</span></code> – the same way you would call it directly on
+that type, but through a name string instead of a member-function call.
+This is the general-purpose way to reach a method generically, without
+first branching on <code class="docutils literal notranslate"><span class="pre">kind()</span></code> and calling the matching accessor.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Timeline</span></code> also accepts a handful of friendlier names –
+<code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;month&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;day&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;hour&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;minute&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;second&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;quarter&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;weekday&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;dayofyear&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;week&quot;</span></code> – which are translated to
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>’s own registered method names before the call (so <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code>
+reaches the same method <code class="docutils literal notranslate"><span class="pre">Timeline::year()</span></code> calls directly). Any other
+method name passes through unchanged. If a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> method isn’t found
+under the (possibly translated) name, two fallbacks are tried: a
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>-flavored lookup, then a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-flavored one, since some <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>
+operations are implemented alongside those types. <code class="docutils literal notranslate"><span class="pre">Duration</span></code> looks a method
+up directly, with the same two fallbacks on a miss.</p>
+<p>Each argument converts implicitly – an integer, a floating-point number, a
+boolean, a string, a list of integers, or a <code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> value can all be written directly in the argument list (<code class="docutils literal notranslate"><span class="pre">{2.0}</span></code>,
+<code class="docutils literal notranslate"><span class="pre">{&quot;some</span> <span class="pre">text&quot;}</span></code>) with no explicit wrapping needed, the same way <code class="docutils literal notranslate"><span class="pre">Queue</span></code>’s
+own constructors are implicit.</p>
+<p>Three overloads exist: a single method with a list of arguments (spelled
+either as a <code class="docutils literal notranslate"><span class="pre">span</span></code> or a braced <code class="docutils literal notranslate"><span class="pre">initializer_list</span></code> – both accept <code class="docutils literal notranslate"><span class="pre">{2.0}</span></code>
+directly), and a third overload that takes a list of <em>method names</em> rather
+than arguments, applying each one in turn, with no arguments to any of
+them, to the result of the last.</p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>method</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
+<p>The method name to call, in the payload’s own naming convention (or one of
+the handful of <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> aliases above).</p>
+<p><strong>args</strong> (a list of arguments, default empty)</p>
+<p>The arguments to pass. Each one converts implicitly from an integer,
+floating-point number, boolean, string, list of integers, or a
+<code class="docutils literal notranslate"><span class="pre">Series</span></code>/<code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">Duration</span></code> value.</p>
+<p><strong>methods</strong> (a list of method names, three-argument-less overload only)</p>
+<p>A sequence of method names, each applied with no arguments to the result
+of the previous call, left to right. An empty method name anywhere in the
+list is refused.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p>A new <code class="docutils literal notranslate"><span class="pre">Queue</span></code> wrapping whatever the called method returned, re-wrapped by
+kind the same way the original constructors are.</p>
+</section>
+<section id="errors">
+<h2>Errors<a class="headerlink" href="#errors" title="Link to this heading">¶</a></h2>
+<p>Throws when the payload doesn’t have a method by that name (after any
+<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> alias translation and fallback attempts), or when an argument of
+a type the method doesn’t accept is passed. The chained,
+method-names-only overload also throws if any name in the list is empty.</p>
+<p><code class="docutils literal notranslate"><span class="pre">invoke</span></code> also cannot reach an in-place, trailing-underscore method
+(<code class="docutils literal notranslate"><span class="pre">Series</span></code>’s <code class="docutils literal notranslate"><span class="pre">add_</span></code>, <code class="docutils literal notranslate"><span class="pre">mul_</span></code>, and the rest) by name – it always throws,
+regardless of the payload’s kind. Mutating a <code class="docutils literal notranslate"><span class="pre">Queue</span></code>’s held value is only
+possible through the non-<code class="docutils literal notranslate"><span class="pre">const</span></code> <a class="reference internal" href="accessors.html"><span class="std std-doc">accessor</span></a>, calling the
+in-place method directly: <code class="docutils literal notranslate"><span class="pre">q.series().add_(x)</span></code>, not
+<code class="docutils literal notranslate"><span class="pre">q.invoke(&quot;add_&quot;,</span> <span class="pre">{x})</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. <code class="docutils literal notranslate"><span class="pre">invoke(&quot;mul&quot;,</span> <span class="pre">...)</span></code> on a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-holding <code class="docutils literal notranslate"><span class="pre">Queue</span></code> – the
+argument converts implicitly, with no explicit wrapping.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">series_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">doubled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series_q</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="s">&quot;mul&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">2.0</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;series invoke(mul, 2.0): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">doubled</span><span class="p">.</span><span class="n">series</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>series invoke(mul, 2.0): Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[2.0000, 4.0000, 6.0000]
+</pre></div>
+</div>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">invoke(&quot;upper&quot;)</span></code> on a <code class="docutils literal notranslate"><span class="pre">Note</span></code>-holding <code class="docutils literal notranslate"><span class="pre">Queue</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">note_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;ab&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cd&quot;</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">note_upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">note_q</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="s">&quot;upper&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;note invoke(upper): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">note_upper</span><span class="p">.</span><span class="n">note</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>note invoke(upper): Note(shape=[2], dim=1, numel=2, encoding=utf8)
+[&quot;AB&quot;, &quot;CD&quot;]
+</pre></div>
+</div>
+<p>Example 3. <code class="docutils literal notranslate"><span class="pre">invoke(&quot;year&quot;)</span></code> on a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-holding <code class="docutils literal notranslate"><span class="pre">Queue</span></code> – <code class="docutils literal notranslate"><span class="pre">&quot;year&quot;</span></code> is
+translated to the name <code class="docutils literal notranslate"><span class="pre">Timeline::year()</span></code> is registered under before the
+call.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">timeline_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">timeline</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="s">&quot;1999-04-17T21:15:23Z&quot;</span><span class="p">));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">year_q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timeline_q</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="s">&quot;year&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;timeline invoke(year): &quot;</span>
+<span class="w">          </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">year_q</span><span class="p">.</span><span class="n">series</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>timeline invoke(year): Series(shape=[], strides=[], dtype=int32, platform=cpu, numel=1, contiguous=true)
+data=1999
+</pre></div>
+</div>
+<p>The result comes back as a plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> wrapped in a <code class="docutils literal notranslate"><span class="pre">Queue</span></code> –
+<code class="docutils literal notranslate"><span class="pre">Timeline::year()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not another <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, so the
+returned <code class="docutils literal notranslate"><span class="pre">Queue</span></code>’s <code class="docutils literal notranslate"><span class="pre">kind()</span></code> is <code class="docutils literal notranslate"><span class="pre">Series</span></code>, not <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>.</p>
+<p>Example 4. The chained, method-names-only overload: <code class="docutils literal notranslate"><span class="pre">neg</span></code> then <code class="docutils literal notranslate"><span class="pre">abs</span></code>,
+applied in sequence to a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-holding <code class="docutils literal notranslate"><span class="pre">Queue</span></code>, with no arguments to
+either.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">series_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">chained</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series_q</span><span class="p">.</span><span class="n">invoke</span><span class="p">({</span><span class="s">&quot;neg&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;abs&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;chained invoke({neg, abs}): &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">series</span><span class="o">::</span><span class="n">print</span><span class="p">(</span><span class="n">chained</span><span class="p">.</span><span class="n">series</span><span class="p">())</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>chained invoke({neg, abs}): Series(shape=[3], strides=[1], dtype=float64, platform=cpu, numel=3, contiguous=true)
+data=[1.0000, 2.0000, 3.0000]
+</pre></div>
+</div>
+<p>Negating then taking the absolute value returns the original magnitudes –
+<code class="docutils literal notranslate"><span class="pre">neg</span></code> followed by <code class="docutils literal notranslate"><span class="pre">abs</span></code> is a round trip for any already-positive input.</p>
+<p>Example 5. <code class="docutils literal notranslate"><span class="pre">invoke</span></code> cannot reach an in-place method – <code class="docutils literal notranslate"><span class="pre">&quot;add_&quot;</span></code> throws,
+even though <code class="docutils literal notranslate"><span class="pre">Series::add_</span></code> itself is a perfectly real method.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="nf">series_q</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pluss</span><span class="o">::</span><span class="n">Queue</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">series_q</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="s">&quot;add_&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mf">1.0</span><span class="p">});</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;invoke(add_): did not throw</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">();</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;invoke(add_) threw: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>invoke(add_) threw: Unrouted op on CPU (strict mode): add_(double) has no route to a kernel; it would otherwise return the receiver unchanged (a silent identity). Implement it or remove the call.
+</pre></div>
+</div>
+<p>To mutate the <code class="docutils literal notranslate"><span class="pre">Series</span></code> a <code class="docutils literal notranslate"><span class="pre">Queue</span></code> holds, call <code class="docutils literal notranslate"><span class="pre">add_</span></code> directly off the
+non-<code class="docutils literal notranslate"><span class="pre">const</span></code> accessor instead – <code class="docutils literal notranslate"><span class="pre">series_q.series().add_(x)</span></code> – which is
+real C++ method dispatch, not a name string, so it reaches <code class="docutils literal notranslate"><span class="pre">add_</span></code> without
+going through <code class="docutils literal notranslate"><span class="pre">invoke</span></code> at all. See <a class="reference internal" href="accessors.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">accessors</span></code></span></a>’s Example 2.</p>
+</section>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="operators.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">operators</span></code></span></a>: <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, and the comparison operators
+are themselves thin wrappers around <code class="docutils literal notranslate"><span class="pre">invoke</span></code> for <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">Duration</span></code> payloads.</p></li>
+<li><p><a class="reference internal" href="where.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">where</span></code></span></a>: the one operation <code class="docutils literal notranslate"><span class="pre">Queue</span></code> exposes as a static method
+rather than through <code class="docutils literal notranslate"><span class="pre">invoke</span></code>.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">PlussQit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../api_reference.html">PlussQit API Reference</a><ul>
+  <li><a href="../../queue_api_reference.html">Queue API Reference</a><ul>
+      <li>Previous: <a href="visit.html" title="previous chapter">Queue::visit</a></li>
+      <li>Next: <a href="operators.html" title="next chapter">Queue operators</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/sphinx/api/queue/invoke.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

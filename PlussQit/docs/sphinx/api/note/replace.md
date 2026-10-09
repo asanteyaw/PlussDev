@@ -134,7 +134,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
   occurrence.
 - `pluss::coden::Note::replace_first` / `replace_last` / `replace_n`:
   bounded substitution instead of replace-all.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): when the target is a pattern,
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): when the target is a pattern,
   not a fixed string.
 
 <div class="pluss-inline-prev-next">

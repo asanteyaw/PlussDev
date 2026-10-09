@@ -20,12 +20,12 @@ int main() {
   const DataFrame raw = DataFrame::load_csv((root / "data/horse_colic.csv").string(), csv);
 
   std::vector<std::string> features(names.begin(), names.begin() + 27);
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features(features)
       .label("outcome")
       .note(lymph::DataNotePolicy::Factorize);
 
-  lymph::Workflow wf = lymph::workflow::make(lymph::model::decision_tree_classifier({.max_depth = 6, .min_samples_leaf = 3}));
+  lymph::Workflow wf = lymph::workflow::make(lymph::models::decision_tree_classifier({.max_depth = 6, .min_samples_leaf = 3}));
   wf.learn_(data);
   std::cout << "horse-colic accuracy: " << wf.assess(data).accuracy.item<double>() << "\n";
   return 0;

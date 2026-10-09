@@ -20,7 +20,7 @@ the accessor it returns, which exposes exactly seven methods:
 
 - `like(needle, case_sensitive = true)`: keep features whose name contains `needle`.
 - `match(pattern)`: keep features whose name matches an ECMAScript regex.
-- `series()` / `note()` / `timeline()`: keep features of one particular `Thread` kind.
+- `series()` / `note()` / `timeline()`: keep features of one particular `Slate` kind.
 - `prefix(text)` / `suffix(text)`: rename **every** feature on the frame by prepending
   or appending `text` to its name.
 
@@ -54,10 +54,10 @@ Example 1. Select every feature whose name contains a substring.
 using namespace pluss::table;
 
 auto stats = DataFrame({
-    {"id",          Thread(pluss::make_series({1, 2, 3}))},
-    {"sales_2023",  Thread(pluss::make_series({100.0, 150.0, 120.0}))},
-    {"sales_2024",  Thread(pluss::make_series({110.0, 130.0, 140.0}))},
-    {"region",      Thread(pluss::make_note({"East", "West", "East"}))},
+    {"id",          Slate(pluss::make_series({1, 2, 3}))},
+    {"sales_2023",  Slate(pluss::make_series({100.0, 150.0, 120.0}))},
+    {"sales_2024",  Slate(pluss::make_series({110.0, 130.0, 140.0}))},
+    {"region",      Slate(pluss::make_note({"East", "West", "East"}))},
 });
 std::cout << stats;
 ```

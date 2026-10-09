@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -15,8 +15,8 @@ int main() {
   // region is an integer-coded category (0, 1, 2). The standalone encoder holds
   // its fitted category layout; pin the column with features(), fit with
   // learn() (which returns *this so it chains), then map() any later frame.
-  const DataFrame train({{"region", Thread(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
-  const DataFrame later({{"region", Thread(pluss::make_series({2., 0., 1.}, {3}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({0., 1., 2., 0., 1., 2.}, {6}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({2., 0., 1.}, {3}, f64))}});
 
   lymph::prep::OneHotEncoder encoder;
   std::cout << "learned before = " << std::boolalpha << encoder.learned() << "\n";

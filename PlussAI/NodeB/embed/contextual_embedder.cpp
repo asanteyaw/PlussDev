@@ -45,17 +45,18 @@ nodej::Status ContextualEmbedder::learn(const std::vector<Doc>& docs) {
   PLUSS_CALL_GUARD();
   if (docs.empty()) {
     return nodej::Status::invalid_argument(
-        "nodeb::embed::ContextualEmbedder::learn: expected at least one document.");
+        "nlp::embed::ContextualEmbedder::learn: expected at least one document.");
   }
   if (options_.width <= 0 || options_.num_layers <= 0 || options_.num_heads <= 0 ||
-      options_.feedforward_width <= 0 || options_.epochs <= 0 || options_.batch_size <= 0) {
+      options_.feedforward_width <= 0 || options_.epochs <= 0 ||
+      !std::isfinite(options_.learning_rate) || options_.learning_rate <= 0.0) {
     return nodej::Status::invalid_argument(
-        "nodeb::embed::ContextualEmbedder::learn: width, num_layers, num_heads, "
-        "feedforward_width, epochs and batch_size must all be positive.");
+        "nlp::embed::ContextualEmbedder::learn: width, num_layers, num_heads, "
+        "feedforward_width, epochs, and learning_rate must all be positive.");
   }
   if (options_.width % options_.num_heads != 0) {
     return nodej::Status::invalid_argument(
-        "nodeb::embed::ContextualEmbedder::learn: width must be a multiple of num_heads.");
+        "nlp::embed::ContextualEmbedder::learn: width must be a multiple of num_heads.");
   }
 
   runtime::SequenceOptions seq_options{};
@@ -79,7 +80,7 @@ nodej::Status ContextualEmbedder::learn(const std::vector<Doc>& docs) {
   const auto& full_batch = batch_or.value();
   if (full_batch.empty() || full_batch.max_length < 2) {
     return nodej::Status::precondition(
-        "nodeb::embed::ContextualEmbedder::learn: documents are too short to train a "
+        "nlp::embed::ContextualEmbedder::learn: documents are too short to train a "
         "next-token objective (need at least 2 tokens once framed with <bos>/<eos>).");
   }
 
@@ -176,7 +177,7 @@ nodej::Status ContextualEmbedder::learn(const std::vector<Doc>& docs) {
     }
   } catch (const std::exception& e) {
     return nodej::Status::numerical_failure(
-        std::string("nodeb::embed::ContextualEmbedder::learn: training became numerically unstable: ") + e.what());
+        std::string("nlp::embed::ContextualEmbedder::learn: training became numerically unstable: ") + e.what());
   }
 
   encoder->model()->eval();
@@ -200,7 +201,7 @@ nodej::StatusOr<std::vector<std::vector<double>>> ContextualEmbedder::encode(con
   using Result = std::vector<std::vector<double>>;
   if (!ready()) {
     return nodej::StatusOr<Result>(
-        nodej::Status::precondition("nodeb::embed::ContextualEmbedder::encode: model has not been trained."));
+        nodej::Status::precondition("nlp::embed::ContextualEmbedder::encode: model has not been trained."));
   }
 
   const auto batch_or = impl_->indexer.batch(std::vector<Doc>{doc});
@@ -210,7 +211,7 @@ nodej::StatusOr<std::vector<std::vector<double>>> ContextualEmbedder::encode(con
   const auto& batch = batch_or.value();
   if (batch.empty() || batch.max_length <= 2) {
     return nodej::StatusOr<Result>(nodej::Status::precondition(
-        "nodeb::embed::ContextualEmbedder::encode: document produced no content tokens."));
+        "nlp::embed::ContextualEmbedder::encode: document produced no content tokens."));
   }
 
   const Series embedded = impl_->embedding->forward(batch);
@@ -320,15 +321,19 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
   using Result = std::vector<std::string>;
   if (!ready()) {
     return nodej::StatusOr<Result>(
-        nodej::Status::precondition("nodeb::embed::ContextualEmbedder::generate: model has not been trained."));
+        nodej::Status::precondition("nlp::embed::ContextualEmbedder::generate: model has not been trained."));
   }
   if (options.max_new_tokens <= 0) {
     return nodej::StatusOr<Result>(nodej::Status::invalid_argument(
-        "nodeb::embed::ContextualEmbedder::generate: max_new_tokens must be positive."));
+        "nlp::embed::ContextualEmbedder::generate: max_new_tokens must be positive."));
   }
-  if (options.temperature <= 0.0) {
+  if (!options.greedy && (!std::isfinite(options.temperature) || options.temperature <= 0.0)) {
     return nodej::StatusOr<Result>(
-        nodej::Status::invalid_argument("nodeb::embed::ContextualEmbedder::generate: temperature must be positive."));
+        nodej::Status::invalid_argument("nlp::embed::ContextualEmbedder::generate: temperature must be positive."));
+  }
+  if (!options.greedy && options.top_k < 0) {
+    return nodej::StatusOr<Result>(nodej::Status::invalid_argument(
+        "nlp::embed::ContextualEmbedder::generate: top_k must be non-negative."));
   }
 
   const auto batch_or = impl_->indexer.batch(std::vector<Doc>{prompt});
@@ -338,7 +343,7 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
   const auto& prompt_batch = batch_or.value();
   if (prompt_batch.empty() || prompt_batch.max_length < 2) {
     return nodej::StatusOr<Result>(nodej::Status::precondition(
-        "nodeb::embed::ContextualEmbedder::generate: failed to frame the prompt with <bos>/<eos>."));
+        "nlp::embed::ContextualEmbedder::generate: failed to frame the prompt with <bos>/<eos>."));
   }
 
   // `learn()` always frames documents with <bos> ... <eos>; drop the
@@ -369,7 +374,7 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
     const Series encoded = impl_->encoder->forward(embedded, step_batch, /*causal=*/true);
     const Series last = encoded.narrow_copy(1, length - 1, 1).reshape({1, width});
     Series logits = last.matmul(impl_->output_weight).add(impl_->output_bias).reshape({vocab_size});
-    if (options.temperature != 1.0) {
+    if (!options.greedy && options.temperature != 1.0) {
       logits = logits.div(options.temperature);
     }
 
@@ -409,15 +414,15 @@ constexpr std::int64_t kCurrentSchema = 1;
 void ContextualEmbedder::save(std::string_view filepath) const {
   PLUSS_CALL_GUARD();
   if (filepath.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::save: output path cannot be empty.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::save: output path cannot be empty.");
   }
   if (!ready()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::save: model has not been trained.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::save: model has not been trained.");
   }
   std::ofstream out{std::string(filepath)};
   if (!out.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::ContextualEmbedder::save: failed to open '" + std::string(filepath) + "'.");
+        "nlp::embed::ContextualEmbedder::save: failed to open '" + std::string(filepath) + "'.");
   }
 
   std::ostringstream body{};
@@ -463,24 +468,24 @@ void ContextualEmbedder::save(std::string_view filepath) const {
 
   if (!out.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::ContextualEmbedder::save: failed while writing '" + std::string(filepath) + "'.");
+        "nlp::embed::ContextualEmbedder::save: failed while writing '" + std::string(filepath) + "'.");
   }
 }
 
 ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
   PLUSS_CALL_GUARD();
   if (filepath.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: input path cannot be empty.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: input path cannot be empty.");
   }
   std::ifstream in{std::string(filepath)};
   if (!in.good()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::ContextualEmbedder::load: failed to open '" + std::string(filepath) + "'.");
+        "nlp::embed::ContextualEmbedder::load: failed to open '" + std::string(filepath) + "'.");
   }
 
   std::string line{};
   if (!std::getline(in, line) || line != kMagicLine) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: invalid contextual embedder header.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: invalid contextual embedder header.");
   }
 
   std::int64_t schema = -1;
@@ -516,11 +521,11 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
       have_checksum = true;
       break; // checksum is always the last header line; the body follows immediately.
     }
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: unrecognized header line '" + line + "'.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: unrecognized header line '" + line + "'.");
   }
   if (schema != kCurrentSchema || width <= 0 || num_layers <= 0 || num_heads <= 0 || feedforward_width <= 0 ||
       !have_checksum) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: invalid or unsupported header.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: invalid or unsupported header.");
   }
 
   std::ostringstream body_buffer{};
@@ -528,7 +533,7 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
   const auto body_text = body_buffer.str();
   if (io::detail::fnv1a64(body_text) != expected_checksum) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::ContextualEmbedder::load: checksum mismatch, artifact is truncated or corrupted.");
+        "nlp::embed::ContextualEmbedder::load: checksum mismatch, artifact is truncated or corrupted.");
   }
 
   std::vector<std::string> body_lines{};
@@ -555,7 +560,7 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
     if (key == "output_bias") { output_bias_flat = detail::parse_doubles_line(value); continue; }
   }
   if (indexer_line_count < 0 || embedding_line_count < 0 || encoder_param_count < 0) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: malformed contextual embedder state.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: malformed contextual embedder state.");
   }
 
   const auto collect_indexed_lines = [&](const std::string& prefix, std::int64_t count) {
@@ -578,7 +583,7 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
   runtime::Indexer indexer{};
   const auto indexer_status = indexer.load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(indexer_views));
   if (!indexer_status.ok()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: " + indexer_status.message);
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: " + indexer_status.message);
   }
 
   const auto embedding_lines_raw = collect_indexed_lines("embedding_", embedding_line_count);
@@ -587,7 +592,7 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
   const auto embedding_status =
       embedding->load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(embedding_views));
   if (!embedding_status.ok()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: " + embedding_status.message);
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: " + embedding_status.message);
   }
 
   const auto cfg = contextual_float_cfg();
@@ -606,7 +611,7 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
   auto encoder_params = encoder->model()->parameters();
   if (static_cast<std::int64_t>(encoder_params.size()) != encoder_param_count) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::embed::ContextualEmbedder::load: encoder parameter count mismatch "
+        "nlp::embed::ContextualEmbedder::load: encoder parameter count mismatch "
         "(architecture options changed since save?).");
   }
 
@@ -637,7 +642,7 @@ ContextualEmbedder ContextualEmbedder::load(std::string_view filepath) {
   }
 
   if (output_weight_flat.empty() || output_bias_flat.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::embed::ContextualEmbedder::load: missing output head state.");
+    ::pluss::ai::nodeb::detail::fail("nlp::embed::ContextualEmbedder::load: missing output head state.");
   }
   const auto vocab_size = static_cast<std::int64_t>(embedding->vocab_size());
   Series output_weight = pluss::make_series(output_weight_flat, std::vector<std::int64_t>{width, vocab_size}, cfg)

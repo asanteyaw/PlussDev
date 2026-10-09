@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::argsort
+# Timeline::TimelineIndexAccessor::argsort
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::argsort() const
+pluss::Series Timeline::TimelineIndexAccessor::argsort() const
 ```
 
 ## What It Does
@@ -23,13 +23,13 @@ returns the reordered axis directly.
 ## Examples
 
 ```cpp
-auto dup = pluss::timeindex::make({
+auto dup = pluss::timeline::make({
     "2024-11-01T00:40:00Z",
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T01:00:00Z",
-}, false);
+}).index(false);
 
 auto out = dup.argsort();
 std::cout << pluss::series::print(out) << "\n";
@@ -49,7 +49,7 @@ payload.
 auto order = dup.argsort();
 auto sorted_idx = dup.take(order);
 std::cout << pluss::series::print(order) << "\n";
-std::cout << pluss::timeindex::print(sorted_idx) << "\n";
+std::cout << pluss::timeline::print(sorted_idx.timeline()) << "\n";
 // values.take(order) would follow the same temporal order
 ```
 
@@ -60,8 +60,8 @@ std::cout << pluss::timeindex::print(sorted_idx) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::sort`](sort.md)
-- [`TimelineIndexAccessor::take`](take.md)
+- [`Timeline::TimelineIndexAccessor::sort`](sort.md)
+- [`Timeline::TimelineIndexAccessor::take`](take.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="align_union.html">

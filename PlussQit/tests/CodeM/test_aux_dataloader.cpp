@@ -520,7 +520,11 @@ TEST_CASE("aux scalar helpers provide concise scalar extraction", "[aux][scalars
 
   const Series i = pluss::make_series(std::int64_t{42}, Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
   REQUIRE(pluss::tils::as_i64(i) == 42);
-  REQUIRE(pluss::tils::as_I64(i) == 42);
+
+  const auto exact_i64 = std::int64_t{9007199254740993LL};
+  const auto exact_u64 = std::uint64_t{9007199254740993ULL};
+  REQUIRE(pluss::tils::as_i64(pluss::tils::as_i64(exact_i64, Config{})) == exact_i64);
+  REQUIRE(pluss::tils::as_u64(pluss::tils::as_u64(exact_u64, Config{})) == exact_u64);
 }
 
 TEST_CASE("aux pathing supports lean root+file API", "[aux][pathing]") {
@@ -533,19 +537,24 @@ TEST_CASE("aux pathing supports lean root+file API", "[aux][pathing]") {
   REQUIRE_FALSE(ec_got);
   REQUIRE_FALSE(ec_expected);
   REQUIRE(got_root == expected_root);
-  REQUIRE(std::filesystem::path(pluss::loader::file_path("sample.csv").string()) == (custom / "sample.csv"));
+  REQUIRE(std::filesystem::path(pluss::loader::file_path("sample.csv").string()) ==
+          (expected_root / "sample.csv"));
 
   const auto model_dir = pluss::loader::file_dir("trained_models", pluss::loader::PathOptions{
                                                                        .create_dirs = true,
                                                                    });
   REQUIRE(std::filesystem::exists(std::filesystem::path(model_dir.string())));
-  REQUIRE(std::filesystem::path(model_dir.file("model.bin").string()) == (custom / "trained_models" / "model.bin"));
+  REQUIRE(std::filesystem::path(model_dir.file("model.bin").string()) ==
+          (expected_root / "trained_models" / "model.bin"));
   REQUIRE_THROWS(pluss::loader::file_path("../escape.txt").string());
 }
 
 TEST_CASE("aux pathing supports batch file path helpers", "[aux][pathing]") {
   const auto custom = std::filesystem::temp_directory_path() / "pluss_aux_pathing_batch_test";
   pluss::loader::set_root_path(custom);
+  std::error_code ec;
+  const auto expected_root = std::filesystem::weakly_canonical(custom, ec);
+  REQUIRE_FALSE(ec);
 
   const auto paths = pluss::loader::file_paths({
       "all_data/housing.csv",
@@ -553,9 +562,9 @@ TEST_CASE("aux pathing supports batch file path helpers", "[aux][pathing]") {
       "all_other_data/fossils.xlsx",
   });
   REQUIRE(paths.size() == 3);
-  REQUIRE(std::filesystem::path(paths[0].string()) == (custom / "all_data" / "housing.csv"));
-  REQUIRE(std::filesystem::path(paths[1].string()) == (custom / "some_other_data" / "prices.csv"));
-  REQUIRE(std::filesystem::path(paths[2].string()) == (custom / "all_other_data" / "fossils.xlsx"));
+  REQUIRE(std::filesystem::path(paths[0].string()) == (expected_root / "all_data" / "housing.csv"));
+  REQUIRE(std::filesystem::path(paths[1].string()) == (expected_root / "some_other_data" / "prices.csv"));
+  REQUIRE(std::filesystem::path(paths[2].string()) == (expected_root / "all_other_data" / "fossils.xlsx"));
 
   const auto named = pluss::loader::file_path_map({
       {"housing", "all_data/housing.csv"},
@@ -563,9 +572,12 @@ TEST_CASE("aux pathing supports batch file path helpers", "[aux][pathing]") {
       {"fossils", "all_other_data/fossils.xlsx"},
   });
   REQUIRE(named.size() == 3);
-  REQUIRE(std::filesystem::path(named.at("housing").string()) == (custom / "all_data" / "housing.csv"));
-  REQUIRE(std::filesystem::path(named.at("prices").string()) == (custom / "some_other_data" / "prices.csv"));
-  REQUIRE(std::filesystem::path(named.at("fossils").string()) == (custom / "all_other_data" / "fossils.xlsx"));
+  REQUIRE(std::filesystem::path(named.at("housing").string()) ==
+          (expected_root / "all_data" / "housing.csv"));
+  REQUIRE(std::filesystem::path(named.at("prices").string()) ==
+          (expected_root / "some_other_data" / "prices.csv"));
+  REQUIRE(std::filesystem::path(named.at("fossils").string()) ==
+          (expected_root / "all_other_data" / "fossils.xlsx"));
 
   REQUIRE_THROWS(pluss::loader::file_path_map({
       {"dup", "a.csv"},

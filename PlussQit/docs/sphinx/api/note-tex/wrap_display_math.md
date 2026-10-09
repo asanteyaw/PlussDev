@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::wrap_display_math
+# Note::TexAccessor::wrap_display_math
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::wrap_display_math(std::string_view delim) const
+Note Note::TexAccessor::wrap_display_math(std::string_view delim) const
 ```
 
 ## Wrap Each Cell As A Display Math Block

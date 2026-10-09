@@ -144,8 +144,8 @@ b                        | Series       | Series[float64]  | 3       | [nan, 1, 
 
 - [`CatalogTimeSeriesAccessor::lead`](lead.md): the mirror-image shift.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::lag`](../thread-ts/lag.md): the underlying
-  single-thread engine this method delegates to.
+- [`TimeSeriesAccessor::lag`](../slate-ts/lag.md): the underlying
+  single-slate engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="diff.html">

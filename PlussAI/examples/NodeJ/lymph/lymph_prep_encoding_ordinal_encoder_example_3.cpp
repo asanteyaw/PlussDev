@@ -11,13 +11,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"region", Thread(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
+  const DataFrame train({{"region", Slate(pluss::make_series({10., 20., 30., 10., 20., 30.}, {6}, f64))}});
   // Row 2 carries category 99, never seen at fit time.
-  const DataFrame later({{"region", Thread(pluss::make_series({30., 10., 99.}, {3}, f64))}});
+  const DataFrame later({{"region", Slate(pluss::make_series({30., 10., 99.}, {3}, f64))}});
 
   lymph::prep::OrdinalEncoder encoder;
   encoder.features({"region"}).learn(train);

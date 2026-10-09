@@ -50,10 +50,10 @@ std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
 for (int i = 0; i < 5; ++i) {
     double base = static_cast<double>(i);
     frames.push_back(DataFrame({
-        {"humidity", Thread(pluss::make_series({55.0 - base, 60.0 - base, 65.0 - base, 70.0 - base, 75.0 - base}))},
-    }, Thread(pluss::make_note(cities))));
+        {"humidity", Slate(pluss::make_series({55.0 - base, 60.0 - base, 65.0 - base, 70.0 - base, 75.0 - base}))},
+    }, Slate(pluss::make_note(cities))));
 }
-auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+auto atlas = Atlas(frames, Slate(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
 auto chart = atlas.plot().wireframe("humidity");
 chart.show();
@@ -72,10 +72,10 @@ std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
 for (int i = 0; i < 5; ++i) {
     double base = static_cast<double>(i);
     frames.push_back(DataFrame({
-        {"humidity", Thread(pluss::make_series({55.0 - base, 60.0 - base, 65.0 - base, 70.0 - base, 75.0 - base}))},
-    }, Thread(pluss::make_note(cities))));
+        {"humidity", Slate(pluss::make_series({55.0 - base, 60.0 - base, 65.0 - base, 70.0 - base, 75.0 - base}))},
+    }, Slate(pluss::make_note(cities))));
 }
-auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+auto atlas = Atlas(frames, Slate(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
 Wireframe3DPlotOptions options;
 options.scene.preset = pluss::pl::flash::ScenePreset3D::Topology;

@@ -54,7 +54,7 @@ Root-level aggregation (mirror specific already-built package hubs):
         --package-hub PlussMa=PlussMa/docs \\
         --package-hub PlussPl=PlussPl/docs/sphinx \\
         --package-hub PlussAI=PlussAI/docs/sphinx \\
-        --package-hub PlussTils=PlussTils/view/docs
+        --package-hub PlussTils=PlussTils/docs/sphinx
 """
 from __future__ import annotations
 

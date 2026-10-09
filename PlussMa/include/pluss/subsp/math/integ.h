@@ -197,7 +197,7 @@ inline double scalar_magnitude_(const Series& x) {
 // purely as this module's own namespaced surface (`pluss::integ::
 // trapezoid(y, x)`, matching every other engine in this file's calling
 // convention) and simply forward to `y`'s own `antidiff` ACCESSOR
-// (`Series::SeriesAntidiffAccessor`/`SeriesAntidiffProxy` in
+// (`Series::AntidiffAccessor`/`SeriesAntidiffProxy` in
 // CodeM/core/Series.h -- `y.antidiff().trapezoid(x)` /
 // `y.antidiff.trapezoid(x)`), not a flat Series method: this mirrors the
 // SAME dual accessor pattern Series already uses for `.stat()`/

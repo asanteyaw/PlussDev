@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../_static/layout.js?v=6be133a8"></script>
+    <script src="../_static/api_nav.js?v=e742a746"></script>
+    <script src="../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Part XIV: Troubleshooting and Production Notes" href="part14_troubleshooting.html" />
@@ -166,7 +166,7 @@ names and options.</p>
 <span class="k">auto</span><span class="w"> </span><span class="n">stress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span><span class="s">&quot;stress.csv&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">optimistic</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">::</span><span class="n">load_csv</span><span class="p">(</span><span class="s">&quot;optimistic.csv&quot;</span><span class="p">);</span>
 
-<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span>
+<span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="w"> </span><span class="n">labels</span><span class="w"> </span><span class="o">=</span>
 <span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;base&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;stress&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;optimistic&quot;</span><span class="p">});</span>
 <span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Atlas</span><span class="w"> </span><span class="nf">scenarios</span><span class="p">({</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">stress</span><span class="p">,</span><span class="w"> </span><span class="n">optimistic</span><span class="p">},</span><span class="w"> </span><span class="n">labels</span><span class="p">);</span>
 

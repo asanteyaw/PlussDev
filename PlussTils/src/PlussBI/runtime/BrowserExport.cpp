@@ -1,4 +1,4 @@
-#include "BI_tools/browser_launch.h"
+#include "pluss/bi/detail/browser_launch.h"
 
 #include <chrono>
 #include <filesystem>
@@ -15,7 +15,7 @@ extern char** environ;
 #include <windows.h>
 #endif
 
-namespace pluss::bi_tools {
+namespace pluss::bi::detail {
 
 namespace {
 
@@ -91,4 +91,4 @@ bool open_path_in_browser(std::string_view path_or_url) {
 #endif
 }
 
-} // namespace pluss::bi_tools
+} // namespace pluss::bi::detail

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 33a993e5abc2 -->
+<!-- pluss-signature-hash: 1e87b63c48da -->
 
 # DataFrameLabelAccessor::diff
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::diff(const Thread& other) const -> Thread
+DataFrameLabelAccessor::diff(const Slate& other) const -> Slate
 ```
 
 ## What It Does
@@ -21,30 +21,30 @@ library compute; it's a set operation over label *values*.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
 
-The values to subtract. Can be any `Thread`, not necessarily another frame's
+The values to subtract. Can be any `Slate`, not necessarily another frame's
 case labels.
 
 ## Returns
 
-`Thread`
+`Slate`
     The distinct case-label values with no match in `other`, in first-occurrence
     order, `display_name` `"diff"`.
 
 ## Examples
 
-Example 1. Subtract a set of values from a case-label thread with a repeat.
+Example 1. Subtract a set of values from a case-label slate with a repeat.
 
 ```cpp
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
-auto other = Thread(pluss::make_note({"west", "north"}));
+auto other = Slate(pluss::make_note({"west", "north"}));
 auto out = labeled.label().diff(other);
 std::cout << out;
 ```

@@ -7,6 +7,12 @@
 namespace pluss::view {
 
 bool runtime_gui_environment_available() noexcept {
+  // PLUSS_HEADLESS=1 forces the terminal fallback for unattended runs (CI,
+  // piped demos) on platforms where a GUI session is otherwise always assumed.
+  if (const char* headless = std::getenv("PLUSS_HEADLESS");
+      headless != nullptr && headless[0] != '\0' && headless[0] != '0') {
+    return false;
+  }
 #if defined(_WIN32) || defined(__APPLE__)
   return true;
 #else

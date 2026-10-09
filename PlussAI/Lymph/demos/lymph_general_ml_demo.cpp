@@ -30,7 +30,7 @@ int main() {
       .skew_threshold = 0.2,
       .heavy_tail_threshold = 0.5,
   });
-  lymph::Model shaped_model = lymph::model::logistic_regression({.fit_intercept = true});
+  lymph::models::Model shaped_model = lymph::models::logistic_regression({.fit_intercept = true});
   profile.plan({.skew_threshold = 0.2, .heavy_tail_threshold = 0.5}).apply(shaped_model);
 
   std::vector<double> two_group_values{};
@@ -54,11 +54,11 @@ int main() {
   lymph::TrainOptions seeded{};
   seeded.random.seed = 31;
   seeded.random.deterministic = true;
-  const lymph::cluster::Result grouped = lymph::cluster::model(lymph::model::kmeans(cluster_options)).run(two_groups, seeded);
+  const lymph::models::cluster::Result grouped = lymph::models::cluster::model(lymph::models::kmeans(cluster_options)).run(two_groups, seeded);
 
   lymph::DecomposeFamilyOptions pca_options{};
   pca_options.components = 1;
-  const lymph::embed::Result embedded = lymph::embed::model(lymph::model::pca(pca_options)).run(shaped);
+  const lymph::models::embed::Result embedded = lymph::models::embed::model(lymph::models::pca(pca_options)).run(shaped);
 
   lymph::prep::OutlierIsolatorOptions detector_options{};
   detector_options.estimators = 5;
@@ -68,20 +68,20 @@ int main() {
   detector_options.contamination = 0.08;
   detector_options.random.seed = 37;
   detector_options.random.deterministic = true;
-  const lymph::detect::Result flagged =
-      lymph::detect::model(lymph::model::isolation_detector(detector_options)).run(two_groups);
+  const lymph::models::detect::Result flagged =
+      lymph::models::detect::model(lymph::models::isolation_detector(detector_options)).run(two_groups);
 
   std::vector<double> labels(16, -1.0);
   labels[0] = 0.0;
   labels[1] = 0.0;
   labels[8] = 1.0;
   labels[9] = 1.0;
-  lymph::semi::Options semi_options{};
-  semi_options.select = lymph::semi::SelectKind::TopK;
+  lymph::models::semi::Options semi_options{};
+  semi_options.select = lymph::models::semi::SelectKind::TopK;
   semi_options.top_k = 4;
   semi_options.max_rounds = 1;
-  const lymph::semi::Result pseudo =
-      lymph::semi::model(lymph::model::gaussian_nb_classifier())
+  const lymph::models::semi::Result pseudo =
+      lymph::models::semi::model(lymph::models::gaussian_nb_classifier())
           .run(lymph::LabeledBatch{
                    .features = two_groups,
                    .y = pluss::make_series(labels, {16}, f64),

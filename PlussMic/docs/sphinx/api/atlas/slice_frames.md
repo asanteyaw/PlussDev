@@ -39,7 +39,7 @@ Example 1. Slice a middle range of frames.
 std::vector<pluss::table::DataFrame> frames;
 for (int i = 0; i < 5; ++i) {
   frames.push_back(pluss::table::DataFrame({
-      {"id", pluss::table::Thread(pluss::make_series({double(i)}))},
+      {"id", pluss::table::Slate(pluss::make_series({double(i)}))},
   }));
 }
 auto atlas = pluss::table::Atlas(frames);
@@ -68,7 +68,7 @@ Example 2. Negative `start`/`stop` count from the end, same convention as
 std::vector<pluss::table::DataFrame> frames;
 for (int i = 0; i < 5; ++i) {
   frames.push_back(pluss::table::DataFrame({
-      {"id", pluss::table::Thread(pluss::make_series({double(i)}))},
+      {"id", pluss::table::Slate(pluss::make_series({double(i)}))},
   }));
 }
 auto atlas = pluss::table::Atlas(frames);

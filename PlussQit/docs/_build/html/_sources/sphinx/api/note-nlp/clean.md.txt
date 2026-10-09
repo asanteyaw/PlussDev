@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::clean
+# Note::NlpAccessor::clean
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::clean() const
+Note Note::NlpAccessor::clean() const
 ```
 
 ## Establish A Conservative Text Baseline

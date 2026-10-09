@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::lbl" href="lbl.html" />
@@ -37,19 +37,19 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 2e5d1cfae168 -->
+<!-- pluss-signature-hash: 09fc636c2fc0 -->
 <section id="stream-label">
 <h1>Stream::label<a class="headerlink" href="#stream-label" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../stream_api_reference.html"><span class="doc std std-doc">Back to Stream API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="o">::</span><span class="n">label</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&gt;&amp;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="o">::</span><span class="n">label</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="o">&gt;&amp;</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
-<p>Returns the stream’s row-label axis as a raw <code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::table::Thread&gt;</span></code> — engaged
+<p>Returns the stream’s row-label axis as a raw <code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::table::Slate&gt;</span></code> — engaged
 when a label has been set (via a constructor’s <code class="docutils literal notranslate"><span class="pre">cases</span></code> argument,
 <a class="reference internal" href="with_label.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">with_label()</span></code></span></a>/<a class="reference internal" href="with_label_.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">with_label_()</span></code></span></a>, or
 <a class="reference internal" href="lbl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lbl().set()</span></code></span></a>), and <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> otherwise. It is the plain getter counterpart
@@ -63,8 +63,8 @@ synthesis only happens on <a class="reference internal" href="lbl.html"><span cl
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::optional&lt;pluss::table::Thread&gt;&amp;</span></code>
-The label <code class="docutils literal notranslate"><span class="pre">Thread</span></code> if one is set; <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> otherwise. Returned by reference — no
+<p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::optional&lt;pluss::table::Slate&gt;&amp;</span></code>
+The label <code class="docutils literal notranslate"><span class="pre">Slate</span></code> if one is set; <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code> otherwise. Returned by reference — no
 copy is made.</p>
 </section>
 <section id="examples">
@@ -81,7 +81,7 @@ copy is made.</p>
 </pre></div>
 </div>
 <p>Example 2. A label set via the constructor’s <code class="docutils literal notranslate"><span class="pre">cases</span></code> argument is returned as-is.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">cases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">,</span><span class="w"> </span><span class="n">cases</span><span class="p">);</span>
 
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">label</span><span class="p">().</span><span class="n">value</span><span class="p">();</span>
@@ -120,8 +120,8 @@ unset label throws <code class="docutils literal notranslate"><span class="pre">
 <ul class="simple">
 <li><p>Returns the raw optional by <code class="docutils literal notranslate"><span class="pre">const&amp;</span></code> — no default-value synthesis, unlike
 <a class="reference internal" href="lbl.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lbl().values()</span></code></span></a>.</p></li>
-<li><p>The returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is whatever kind was originally supplied as <code class="docutils literal notranslate"><span class="pre">cases</span></code> — commonly
-<code class="docutils literal notranslate"><span class="pre">Note</span></code> for string labels, but any <code class="docutils literal notranslate"><span class="pre">Thread</span></code> payload kind is accepted.</p></li>
+<li><p>The returned <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is whatever kind was originally supplied as <code class="docutils literal notranslate"><span class="pre">cases</span></code> — commonly
+<code class="docutils literal notranslate"><span class="pre">Note</span></code> for string labels, but any <code class="docutils literal notranslate"><span class="pre">Slate</span></code> payload kind is accepted.</p></li>
 </ul>
 </section>
 <section id="see-also">

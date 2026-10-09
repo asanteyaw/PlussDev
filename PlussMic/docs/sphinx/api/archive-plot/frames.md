@@ -94,7 +94,7 @@ Example 1. Single-index overload: bind catalog `0` and chain into its own `.line
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -119,7 +119,7 @@ using each catalog's own positional record axis.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -144,7 +144,7 @@ its own `humidity`.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -171,7 +171,7 @@ one overlaid pane.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -199,7 +199,7 @@ Example 5. Single-index overload, negative index: `-1` wraps to the last catalog
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -275,7 +275,7 @@ Example 8. Multi-index overload, duplicate indices: `{0, 0, 2, 2, 4}` dedupes to
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {

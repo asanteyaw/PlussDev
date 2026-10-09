@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::mask" href="mask.html" />
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 103f757200d9 -->
+<!-- pluss-signature-hash: ba3097eddc87 -->
 <section id="dataframe-map">
 <h1>DataFrame::map<a class="headerlink" href="#dataframe-map" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">map</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">ThreadValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">map</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">SlateValue</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">SlateValue</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to every cell of every feature currently on the frame, one scalar value
 at a time, and returns a new frame with those features replaced. <code class="docutils literal notranslate"><span class="pre">fn</span></code> receives one
-cell as a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> and must return one <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> back — it is skipped
+cell as a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> and must return one <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> back — it is skipped
 entirely for missing cells (a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> cell stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> without <code class="docutils literal notranslate"><span class="pre">fn</span></code> ever being
 called), and every non-null cell in one feature’s column must map to the <strong>same</strong>
 output kind (you cannot have <code class="docutils literal notranslate"><span class="pre">fn</span></code> return a numeric value for one row and text for
@@ -63,17 +63,17 @@ with <a class="reference internal" href="features.html"><span class="std std-doc
 different features need different treatment, and recombine with
 <a class="reference internal" href="update.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">update()</span></code></span></a> afterward if the untouched features need to survive alongside
 the mapped result.</p>
-<p>Unlike <a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a>, which operates on a whole feature <code class="docutils literal notranslate"><span class="pre">Thread</span></code> at
+<p>Unlike <a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></span></a>, which operates on a whole feature <code class="docutils literal notranslate"><span class="pre">Slate</span></code> at
 once (so it can do things like a running total), <code class="docutils literal notranslate"><span class="pre">map()</span></code> only ever sees one value at
 a time — it is the right tool for a pure, independent per-cell computation.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;ThreadValue(const</span> <span class="pre">ThreadValue&amp;)&gt;&amp;</span></code>)</p>
+<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;SlateValue(const</span> <span class="pre">SlateValue&amp;)&gt;&amp;</span></code>)</p>
 <p>The per-cell callback. Extract the incoming scalar with <code class="docutils literal notranslate"><span class="pre">.to_dbl()</span></code> / <code class="docutils literal notranslate"><span class="pre">.to_int()</span></code> /
 <code class="docutils literal notranslate"><span class="pre">.to_str()</span></code> (matching the feature’s kind), compute a new value, and wrap it back into
-a <code class="docutils literal notranslate"><span class="pre">ThreadValue</span></code> over a length-1 <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (for example
-<code class="docutils literal notranslate"><span class="pre">ThreadValue(Thread(pluss::make_series({result})))</span></code>). The output kind does not have to
+a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> over a length-1 <code class="docutils literal notranslate"><span class="pre">Slate</span></code> (for example
+<code class="docutils literal notranslate"><span class="pre">SlateValue(Slate(pluss::make_series({result})))</span></code>). The output kind does not have to
 match the input kind — mapping <code class="docutils literal notranslate"><span class="pre">Note</span></code> cells to their string length (an <code class="docutils literal notranslate"><span class="pre">Int64</span></code>
 result) is a valid, kind-changing use of <code class="docutils literal notranslate"><span class="pre">map()</span></code>.</p>
 </section>
@@ -89,8 +89,8 @@ feature replaced by <code class="docutils literal notranslate"><span class="pre"
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">students</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;score&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">80.0</span><span class="p">,</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span><span class="w"> </span><span class="mf">70.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">students</span><span class="p">;</span>
 </pre></div>
@@ -108,9 +108,9 @@ feature replaced by <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">score_squared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;score&quot;</span><span class="p">}).</span><span class="n">map</span><span class="p">(</span>
-<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">SlateValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
-<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">})));</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">SlateValue</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">})));</span>
 <span class="w">    </span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">score_squared</span><span class="p">;</span>
 
@@ -152,9 +152,9 @@ kind-changed result back in with <a class="reference internal" href="set.html"><
 only refreshes values within a feature’s existing kind and cannot swap <code class="docutils literal notranslate"><span class="pre">Note</span></code> for
 <code class="docutils literal notranslate"><span class="pre">Int64</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">city_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;city&quot;</span><span class="p">}).</span><span class="n">map</span><span class="p">(</span>
-<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">[](</span><span class="k">const</span><span class="w"> </span><span class="n">SlateValue</span><span class="o">&amp;</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">      </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">.</span><span class="n">to_str</span><span class="p">();</span>
-<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">ThreadValue</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())})));</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">SlateValue</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">size</span><span class="p">())})));</span>
 <span class="w">    </span><span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">with_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">students</span><span class="p">;</span>
@@ -188,8 +188,8 @@ a matching kind.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">fn</span></code> is never invoked for a missing cell; the cell stays <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the output
 without needing special-case handling inside <code class="docutils literal notranslate"><span class="pre">fn</span></code> itself.</p></li>
-<li><p>Every non-null result within one feature must share the same <code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code>; mixing
-kinds within a single feature’s output throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::map:</span> <span class="pre">output</span> <span class="pre">kinds</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">consistent&quot;</span></code>.</p></li>
+<li><p>Every non-null result within one feature must share the same <code class="docutils literal notranslate"><span class="pre">SlateKind</span></code>; mixing
+kinds within a single feature’s output throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::map:</span> <span class="pre">output</span> <span class="pre">kinds</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">consistent&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">map()</span></code> has no feature selector of its own and applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> to literally every
 feature on the current frame, including features of different kinds — narrow with
 <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features()</span></code></span></a> first unless <code class="docutils literal notranslate"><span class="pre">fn</span></code> is written to handle every kind
@@ -204,7 +204,7 @@ features it was called on. Recombine a narrowed result with
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::transform</span></code></span></a>: apply a function to a whole feature
-<code class="docutils literal notranslate"><span class="pre">Thread</span></code> at once, for computations that need to see more than one cell (running
+<code class="docutils literal notranslate"><span class="pre">Slate</span></code> at once, for computations that need to see more than one cell (running
 totals, shifts, and so on).</p></li>
 <li><p><a class="reference internal" href="cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::cast</span></code></span></a>: change a feature’s dtype or payload kind directly,
 when the target kind is fixed rather than computed per-cell.</p></li>

@@ -47,13 +47,13 @@ default `Exact` alignment.
 using namespace pluss::table;
 
 auto left = DataFrame(
-    {{"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))}},
-    Thread(pluss::make_timeline({
+    {{"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z"})));
 
 auto right = DataFrame(
-    {{"sales", Thread(pluss::make_series({10.0, 5.0, 3.0}))}},
-    Thread(pluss::make_timeline({
+    {{"sales", Slate(pluss::make_series({10.0, 5.0, 3.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"})));
 
 auto out = left.ts().mul(right);
@@ -106,8 +106,8 @@ Example 3. `other` is missing a same-named feature, to see the call throw.
 
 ```cpp
 auto other_missing = DataFrame(
-    {{"units", Thread(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Thread(pluss::make_timeline({
+    {{"units", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"})));
 
 try {

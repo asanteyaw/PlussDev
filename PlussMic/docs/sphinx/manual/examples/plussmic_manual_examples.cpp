@@ -10,7 +10,7 @@
 namespace {
 
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 void section(const std::string& name) {
   std::cout << "\n=== " << name << " ===\n";
@@ -179,8 +179,8 @@ void example_06_csv_options(const std::filesystem::path& dir) {
   std::cout << "case dtype=" << df.label().values().dtype() << '\n';
 }
 
-void example_07_thread_operations() {
-  section("07 thread operations");
+void example_07_slate_operations() {
+  section("07 slate operations");
   auto sales = sales_frame();
   auto units = sales.features("units");
   auto city = sales.features("city");
@@ -188,7 +188,7 @@ void example_07_thread_operations() {
   std::cout << "units dtype=" << units.dtype() << '\n';
   std::cout << "units clipped:\n" << units.clip(6.0, 10.0).to_string() << '\n';
   std::cout << "city lower:\n" << city.lower().to_string() << '\n';
-  std::cout << "city contains 'a':\n" << Thread(city.contains("a")).to_string() << '\n';
+  std::cout << "city contains 'a':\n" << Slate(city.contains("a")).to_string() << '\n';
 }
 
 void example_08_atlas_and_conversion() {
@@ -196,7 +196,7 @@ void example_08_atlas_and_conversion() {
   auto sales = sales_frame();
   auto south = sales.query("region == 'south'");
   auto other = sales.query("region != 'south'");
-  Thread labels = pluss::make_note({"south", "other"});
+  Slate labels = pluss::make_note({"south", "other"});
 
   pluss::table::Atlas atlas({south, other}, labels);
   std::cout << "depth=" << atlas.depth() << ", ncases=" << atlas.ncases() << ", nfeatures=" << atlas.nfeatures() << '\n';
@@ -280,9 +280,9 @@ void example_11_combine_frames() {
   std::cout << left.stitch_on("sku", right, "sku", "_right").to_string() << '\n';
 }
 
-void example_12_thread_missing_and_rows() {
-  section("12 thread missing and rows");
-  Thread score(
+void example_12_slate_missing_and_rows() {
+  section("12 slate missing and rows");
+  Slate score(
       pluss::make_series({4.0, 1.0, 0.0, 3.0, 2.0}),
       bool_series({true, true, false, true, true}));
 
@@ -295,22 +295,22 @@ void example_12_thread_missing_and_rows() {
   std::cout << "take 4,1,0:\n" << score.take(std::vector<std::int64_t>{4, 1, 0}).to_string() << '\n';
 }
 
-void example_13_thread_windows_casts_and_ts() {
-  section("13 thread windows casts and ts");
-  Thread values = pluss::make_series({1.0, 2.0, 4.0, 8.0, 16.0});
-  Thread labels(pluss::make_note({"10", "20", "bad", "40"}));
-  Thread words(pluss::make_note({"North-East", "South", "north-west", "Central"}));
+void example_13_slate_windows_casts_and_ts() {
+  section("13 slate windows casts and ts");
+  Slate values = pluss::make_series({1.0, 2.0, 4.0, 8.0, 16.0});
+  Slate labels(pluss::make_note({"10", "20", "bad", "40"}));
+  Slate words(pluss::make_note({"North-East", "South", "north-west", "Central"}));
 
   std::cout << "values + 3:\n" << (values + 3.0).to_string() << '\n';
   std::cout << "between 2 and 8 inclusive:\n" << values.between(2.0, 8.0, true).to_string() << '\n';
   std::cout << "rolling mean window 3 min 2:\n"
-            << values.window(3, pluss::table::ThreadWindowOp::RollingMean, 2).to_string() << '\n';
+            << values.window(3, pluss::table::SlateWindowOp::RollingMean, 2).to_string() << '\n';
   std::cout << "returns:\n" << values.ts().returns(1).to_string() << '\n';
   std::cout << "label cast to float64:\n"
             << labels.cast({.series_dtype = pluss::codem::ScalarType::Float64}).series().to_string()
             << '\n';
   std::cout << "words replace/lower:\n" << words.replace("-", " ").lower().to_string() << '\n';
-  std::cout << "words contains north:\n" << Thread(words.lower().contains("north")).to_string() << '\n';
+  std::cout << "words contains north:\n" << Slate(words.lower().contains("north")).to_string() << '\n';
 }
 
 void example_14_csv_roundtrip(const std::filesystem::path& dir) {
@@ -447,13 +447,13 @@ int main(int argc, char** argv) {
   example_04_group_and_aggregate();
   example_05_missing_data();
   example_06_csv_options(dir);
-  example_07_thread_operations();
+  example_07_slate_operations();
   example_08_atlas_and_conversion();
   example_09_sql();
   example_10_shape_and_schema();
   example_11_combine_frames();
-  example_12_thread_missing_and_rows();
-  example_13_thread_windows_casts_and_ts();
+  example_12_slate_missing_and_rows();
+  example_13_slate_windows_casts_and_ts();
   example_14_csv_roundtrip(dir);
   example_15_plotting(dir);
   example_16_time_series();

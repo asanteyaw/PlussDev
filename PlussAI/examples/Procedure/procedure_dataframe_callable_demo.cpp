@@ -8,12 +8,12 @@
 int main() {
   namespace ai = pluss::ai;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame frame({
-      {"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, cfg))},
-      {"y", Thread(pluss::make_series(std::vector<double>{4.0, 5.0, 6.0}, {3}, cfg))},
+      {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, cfg))},
+      {"y", Slate(pluss::make_series(std::vector<double>{4.0, 5.0, 6.0}, {3}, cfg))},
   });
 
   const ai::Procedure proc = ai::procedure::make({

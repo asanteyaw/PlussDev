@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d20d5b3f2eca -->
+<!-- pluss-signature-hash: 2da1aa1e4f13 -->
 
 # DataFrame::pow
 
@@ -11,9 +11,9 @@
 DataFrame::pow(double other) const -> DataFrame
 DataFrame::pow(const DataFrame& other) const -> DataFrame
 DataFrame::pow(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::pow(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::pow(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::pow(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::pow(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::pow(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::pow(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -35,9 +35,9 @@ The right-hand operand (the exponent), in one of three shapes:
 - `double`: one scalar exponent, applied to every numeric feature.
 - `const DataFrame&`: another frame supplying one exponent per cell, after the two
   frames are aligned.
-- `const Thread&`: one column of exponents, broadcast according to `axis`.
+- `const Slate&`: one column of exponents, broadcast according to `axis`.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 - `Axis::Feature` (the default): `other` supplies **one exponent per feature** — its
   length must match `nfeatures()`. Feature `i`'s exponent is applied to every case in
@@ -47,7 +47,7 @@ The right-hand operand (the exponent), in one of three shapes:
 
 **options** (`AlignOptions`, optional)
 
-Controls how the `DataFrame` or `Thread` right-hand operand is aligned to the current
+Controls how the `DataFrame` or `Slate` right-hand operand is aligned to the current
 frame before the exponentiation runs (by position, case label, or feature name), and
 how missing values are filled during alignment. Defaults to strict positional
 alignment (`AlignBy::Pos`).
@@ -104,11 +104,11 @@ c     | 16    900
 [3 cs x 2 feat]
 ```
 
-Example 2. Raise each feature to its own exponent via a `Thread` with one value per
+Example 2. Raise each feature to its own exponent via a `Slate` with one value per
 feature (`Axis::Feature`, the default) — `base` gets `^2`, `scale` gets `^3`.
 
 ```cpp
-auto per_feature_exp = Thread(pluss::make_series({2.0, 3.0}));
+auto per_feature_exp = Slate(pluss::make_series({2.0, 3.0}));
 auto out = values.pow(per_feature_exp);
 std::cout << out;
 ```
@@ -131,7 +131,7 @@ gets `^1`, row `b` gets `^2`, row `c` gets `^3`, applied across every feature in
 row.
 
 ```cpp
-auto per_case_exp = Thread(pluss::make_series({1.0, 2.0, 3.0}));
+auto per_case_exp = Slate(pluss::make_series({1.0, 2.0, 3.0}));
 auto out = values.pow(per_case_exp, Axis::Case);
 std::cout << out;
 ```
@@ -154,9 +154,9 @@ overload — a plain positional pairing that ignores both frames' case labels.
 
 ```cpp
 auto exponents = DataFrame({
-    {"col1", Thread(pluss::make_series({3.0, 1.0, 2.0}))},
-    {"col2", Thread(pluss::make_series({1.0, 2.0, 1.0}))},
-}, Thread(pluss::make_note({"x", "y", "z"})));
+    {"col1", Slate(pluss::make_series({3.0, 1.0, 2.0}))},
+    {"col2", Slate(pluss::make_series({1.0, 2.0, 1.0}))},
+}, Slate(pluss::make_note({"x", "y", "z"})));
 std::cout << exponents;
 
 auto out = values.pow(exponents);
@@ -201,9 +201,9 @@ physical position.
 
 ```cpp
 auto exponents_by_label = DataFrame({
-    {"col1", Thread(pluss::make_series({3.0, 1.0, 2.0}))},
-    {"col2", Thread(pluss::make_series({1.0, 2.0, 1.0}))},
-}, Thread(pluss::make_note({"c", "a", "b"})));
+    {"col1", Slate(pluss::make_series({3.0, 1.0, 2.0}))},
+    {"col2", Slate(pluss::make_series({1.0, 2.0, 1.0}))},
+}, Slate(pluss::make_note({"c", "a", "b"})));
 std::cout << exponents_by_label;
 
 auto out = values.pow(exponents_by_label, AlignOptions{.align = AlignBy::Caselbl});

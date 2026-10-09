@@ -219,7 +219,7 @@ template <class T>
     const auto idx = static_cast<std::size_t>(std::stoll(key.substr(item_prefix.size())));
     if (idx >= payloads.size()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::load_state_lines: state tensor index out of range.");
+          "nlp::TextCatStage::load_state_lines: state tensor index out of range.");
     }
     payloads[idx] = detail::parse_doubles_line(value);
   }
@@ -236,6 +236,7 @@ template <class T>
 } // namespace
 
 struct TextCatStage::Impl {
+  TrainingReport report{};
   ::pluss::ai::nodej::LexiconMapper mapper{};
   ::pluss::ai::nodej::SparseLinearBinaryClassifier binary{};
   ::pluss::ai::nodej::SparseLinearMultiClassifier multi{};
@@ -270,21 +271,52 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
   PLUSS_CALL_GUARD();
   if (labels.size() != docs.size()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::learn: label count must match document count.");
+        "nlp::TextCatStage::learn: label count must match document count.");
   }
   if (docs.empty()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::learn: expected at least one document.");
+        "nlp::TextCatStage::learn: expected at least one document.");
   }
+  if (std::ranges::any_of(labels, [](std::string_view label) { return label.empty(); })) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::TextCatStage::learn: labels must not be empty.");
+  }
+  if (options_.max_iterations <= 0) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::TextCatStage::learn: max_iterations must be positive.");
+  }
+  if (!std::isfinite(options_.tolerance) || options_.tolerance < 0.0) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::TextCatStage::learn: tolerance must be finite and nonnegative.");
+  }
+  impl_->report = TrainingReport{};
+  impl_->report.doc_count = static_cast<std::int64_t>(docs.size());
   if (options_.multi_label && options_.backend != TaskBackend::Sequence) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::learn: multi_label is only supported with TaskBackend::Sequence.");
+        "nlp::TextCatStage::learn: multi_label is only supported with TaskBackend::Sequence.");
   }
-  if (options_.multi_label) {
+  if (options_.backend == TaskBackend::Sequence) {
     if (options_.sequence_width <= 0) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: sequence_width must be positive for the Sequence backend.");
+          "nlp::TextCatStage::learn: sequence_width must be positive for the Sequence backend.");
     }
+    if (!std::isfinite(options_.sequence_learning_rate) ||
+        options_.sequence_learning_rate <= 0.0) {
+      ::pluss::ai::nodeb::detail::fail(
+          "nlp::TextCatStage::learn: sequence_learning_rate must be finite and positive.");
+    }
+    if (!std::isfinite(options_.sequence_dropout) ||
+        options_.sequence_dropout < 0.0 || options_.sequence_dropout >= 1.0) {
+      ::pluss::ai::nodeb::detail::fail(
+          "nlp::TextCatStage::learn: sequence_dropout must be in [0, 1).");
+    }
+    if (!std::isfinite(options_.multi_label_threshold) ||
+        options_.multi_label_threshold < 0.0 || options_.multi_label_threshold > 1.0) {
+      ::pluss::ai::nodeb::detail::fail(
+          "nlp::TextCatStage::learn: multi_label_threshold must be in [0, 1].");
+    }
+  }
+  if (options_.multi_label) {
     impl_->mapper = ::pluss::ai::nodej::LexiconMapper(::pluss::ai::nodej::LexiconMapOptions{});
     impl_->binary = decltype(impl_->binary){};
     impl_->multi = decltype(impl_->multi){};
@@ -311,7 +343,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     }
     if (label_values.size() < 2) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: expected at least two distinct labels.");
+          "nlp::TextCatStage::learn: expected at least two distinct labels.");
     }
     impl_->label_values = label_values;
 
@@ -323,7 +355,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     auto vocab = build_sequence_vocab(doc_terms);
     if (vocab.vocabulary.empty()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: no vocabulary terms found for the Sequence backend.");
+          "nlp::TextCatStage::learn: no vocabulary terms found for the Sequence backend.");
     }
 
     const auto vocab_size = static_cast<std::int64_t>(vocab.vocabulary.size());
@@ -380,6 +412,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
         optimizer->step();
 
         const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
+        impl_->report.loss_history.push_back(loss_value);
         if (std::abs(previous_loss - loss_value) < options_.tolerance) {
           previous_loss = loss_value;
           break;
@@ -388,7 +421,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
       }
     } catch (const std::exception& e) {
       ::pluss::ai::nodeb::detail::fail(
-          std::string("nodeb::TextCatStage::learn: training became numerically unstable: ") + e.what());
+          std::string("nlp::TextCatStage::learn: training became numerically unstable: ") + e.what());
     }
 
     impl_->sequence_vocabulary = std::move(vocab.vocabulary);
@@ -410,13 +443,13 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
   auto fit_status = mapper.learn(::pluss::msharp::RangeView::Of<std::string>(feature_docs));
   if (!fit_status.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::learn: " + fit_status.message);
+        "nlp::TextCatStage::learn: " + fit_status.message);
   }
 
   auto x_or = mapper.map_tfidf_sparse(::pluss::msharp::RangeView::Of<std::string>(feature_docs));
   if (!x_or.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::learn: " + x_or.status().message);
+        "nlp::TextCatStage::learn: " + x_or.status().message);
   }
 
   std::vector<std::string> label_values;
@@ -442,13 +475,13 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
   }
   if (label_values.size() < 2) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::learn: expected at least two distinct labels.");
+        "nlp::TextCatStage::learn: expected at least two distinct labels.");
   }
 
   if (options_.backend == TaskBackend::Sequence) {
     if (options_.sequence_width <= 0) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: sequence_width must be positive for the Sequence backend.");
+          "nlp::TextCatStage::learn: sequence_width must be positive for the Sequence backend.");
     }
     impl_->mapper = ::pluss::ai::nodej::LexiconMapper(::pluss::ai::nodej::LexiconMapOptions{});
     impl_->binary = decltype(impl_->binary){};
@@ -456,13 +489,8 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     impl_->label_values = std::move(label_values);
     impl_->multiclass = impl_->label_values.size() > 2;
 
-    // Build the Sequence backend's own small vocabulary. This is
-    // intentionally independent of `sequence_head`/`sequence_pooling`
-    // (the shared tagger/ner/textcat "detail::SequenceTaskState" machinery
-    // used by TaskBackend::Sequence there pools a randomly-initialized,
-    // never-trained projection): textcat instead jointly trains its own
-    // embedding table end to end with a linear softmax head via real
-    // backpropagation, always with mean pooling.
+    // Build the Sequence backend's own vocabulary and jointly train its
+    // embedding table and linear softmax head using mean pooling.
     std::vector<std::vector<std::string>> doc_terms;
     doc_terms.reserve(docs.size());
     for (const auto& doc : docs) {
@@ -471,7 +499,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     auto vocab = build_sequence_vocab(doc_terms);
     if (vocab.vocabulary.empty()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: no vocabulary terms found for the Sequence backend.");
+          "nlp::TextCatStage::learn: no vocabulary terms found for the Sequence backend.");
     }
 
     const auto vocab_size = static_cast<std::int64_t>(vocab.vocabulary.size());
@@ -500,7 +528,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     std::vector<Series*> parameters{&embedding_weights, &cls_weight, &cls_bias};
     pluss::ai::ice::TrainOptions optimizer_options{};
     optimizer_options.optimizer = pluss::ai::ice::OptimizerKind::Adam;
-    optimizer_options.learning_rate = 0.05;
+    optimizer_options.learning_rate = options_.sequence_learning_rate;
     auto optimizer = pluss::ai::ice::make_optimizer(parameters, optimizer_options);
 
     double previous_loss = std::numeric_limits<double>::infinity();
@@ -520,6 +548,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
         optimizer->step();
 
         const double loss_value = loss.to(pluss::pCPU, ScalarType::Float64).item<double>();
+        impl_->report.loss_history.push_back(loss_value);
         if (std::abs(previous_loss - loss_value) < options_.tolerance) {
           previous_loss = loss_value;
           break;
@@ -528,7 +557,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
       }
     } catch (const std::exception& e) {
       ::pluss::ai::nodeb::detail::fail(
-          std::string("nodeb::TextCatStage::learn: training became numerically unstable: ") + e.what());
+          std::string("nlp::TextCatStage::learn: training became numerically unstable: ") + e.what());
     }
 
     impl_->sequence_vocabulary = std::move(vocab.vocabulary);
@@ -556,7 +585,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     const auto status = impl_->multi.learn(x_or.value(), y, train_options, linear_options);
     if (!status.ok()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: " + status.message);
+          "nlp::TextCatStage::learn: " + status.message);
     }
   } else {
     impl_->binary = {};
@@ -564,7 +593,7 @@ void TextCatStage::learn(const std::vector<Doc>& docs,
     const auto status = impl_->binary.learn(x_or.value(), y, train_options, linear_options);
     if (!status.ok()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::learn: " + status.message);
+          "nlp::TextCatStage::learn: " + status.message);
     }
   }
   impl_->trained = true;
@@ -637,7 +666,9 @@ void TextCatStage::apply(Doc& doc) const {
     const double raw_score = score_or.value().to(pluss::pCPU, pluss::ScalarType::Float64).item<double>();
     if (pred >= 0 && pred < static_cast<std::int64_t>(impl_->label_values.size())) {
       doc.doc_label = impl_->label_values[static_cast<std::size_t>(pred)];
-      doc.doc_score = sigmoid(raw_score);
+      const double positive_probability = sigmoid(raw_score);
+      doc.doc_score = pred == 0 ? 1.0 - positive_probability
+                                : positive_probability;
     }
     return;
   }
@@ -651,9 +682,33 @@ void TextCatStage::apply(Doc& doc) const {
   if (pred >= 0 && pred < static_cast<std::int64_t>(impl_->label_values.size())) {
     doc.doc_label = impl_->label_values[static_cast<std::size_t>(pred)];
     if (pred < static_cast<std::int64_t>(raw_scores.size())) {
-      doc.doc_score = raw_scores[static_cast<std::size_t>(pred)];
+      const double maximum = *std::max_element(raw_scores.begin(), raw_scores.end());
+      double denominator = 0.0;
+      for (const double score : raw_scores) {
+        denominator += std::exp(score - maximum);
+      }
+      doc.doc_score = std::exp(raw_scores[static_cast<std::size_t>(pred)] - maximum) /
+                      denominator;
     }
   }
+}
+
+TrainingReport TextCatStage::training_report() const {
+  PLUSS_CALL_GUARD();
+  TrainingReport report{};
+  if (!impl_ || !impl_->trained) return report;
+  report.doc_count = impl_->report.doc_count;
+  report.entry_count = options_.backend == TaskBackend::Sequence
+                           ? static_cast<std::int64_t>(impl_->sequence_vocabulary.size())
+                           : static_cast<std::int64_t>(impl_->mapper.vocabulary().size());
+  if (options_.backend == TaskBackend::Sequence) {
+    report.loss_history = impl_->report.loss_history;
+  } else {
+    // Classic: the linear model's own gradient iterations. For more than two
+    // labels that is one-vs-rest, so each class's losses follow the previous one's.
+    report.loss_history = impl_->multiclass ? impl_->multi.loss_history() : impl_->binary.loss_history();
+  }
+  return report;
 }
 
 std::vector<std::string> TextCatStage::dump_state_lines() const {
@@ -669,14 +724,10 @@ std::vector<std::string> TextCatStage::dump_state_lines() const {
       std::string("multi_label=") + (options_.multi_label ? "1" : "0"),
       "multi_label_threshold=" + std::to_string(options_.multi_label_threshold),
       "backend=" + std::string(detail::to_string(options_.backend)),
-      "sequence_head=" + std::string(detail::to_string(options_.sequence_head)),
-      "sequence_pooling=" + std::string(detail::to_string(options_.sequence_pooling)),
       "sequence_width=" + std::to_string(options_.sequence_width),
       "sequence_learning_rate=" + std::to_string(options_.sequence_learning_rate),
       "sequence_dropout=" + std::to_string(options_.sequence_dropout),
       "sequence_seed=" + std::to_string(options_.sequence_seed),
-      "quantization=" + std::string(detail::to_string(options_.quantization)),
-      "distillation=" + std::string(detail::to_string(options_.distillation)),
       std::string("trained=") + ((impl_ && impl_->trained) ? "1" : "0"),
       std::string("multiclass=") + ((impl_ && impl_->multiclass) ? "1" : "0"),
   };
@@ -728,7 +779,7 @@ std::vector<std::string> TextCatStage::dump_state_lines() const {
                                           : impl_->binary.dump_state();
   if (!state_or.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::dump_state_lines: " + state_or.status().message);
+        "nlp::TextCatStage::dump_state_lines: " + state_or.status().message);
   }
   const auto& state = state_or.value();
   lines.push_back("model_state_count=" + std::to_string(state.size()));
@@ -756,7 +807,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
     const auto eq = line.find('=');
     if (eq == std::string_view::npos) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::load_state_lines: expected key=value line.");
+          "nlp::TextCatStage::load_state_lines: expected key=value line.");
     }
     const std::string key(line.substr(0, eq));
     const std::string_view value = line.substr(eq + 1);
@@ -770,14 +821,12 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
     if (key == "max_iterations") { options_.max_iterations = std::stoll(std::string(value)); continue; }
     if (key == "tolerance") { options_.tolerance = std::stod(std::string(value)); continue; }
     if (key == "backend") { options_.backend = detail::parse_task_backend(value); continue; }
-    if (key == "sequence_head") { options_.sequence_head = detail::parse_sequence_head(value); continue; }
-    if (key == "sequence_pooling") { options_.sequence_pooling = detail::parse_sequence_pooling(value); continue; }
+    if (key == "sequence_head" || key == "sequence_pooling") { continue; }
     if (key == "sequence_width") { options_.sequence_width = std::stoll(std::string(value)); continue; }
     if (key == "sequence_learning_rate") { options_.sequence_learning_rate = std::stod(std::string(value)); continue; }
     if (key == "sequence_dropout") { options_.sequence_dropout = std::stod(std::string(value)); continue; }
     if (key == "sequence_seed") { options_.sequence_seed = static_cast<std::uint64_t>(std::stoull(std::string(value))); continue; }
-    if (key == "quantization") { options_.quantization = detail::parse_quantization_hint(value); continue; }
-    if (key == "distillation") { options_.distillation = detail::parse_distillation_hint(value); continue; }
+    if (key == "quantization" || key == "distillation") { continue; }
     if (key == "trained") { impl_->trained = value == "1"; continue; }
     if (key == "multiclass") { impl_->multiclass = value == "1"; continue; }
     if (key == "label_count") {
@@ -790,7 +839,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(6)));
       if (idx >= labels.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: label index out of range.");
+            "nlp::TextCatStage::load_state_lines: label index out of range.");
       }
       labels[idx] = detail::hex_decode_string(value);
       continue;
@@ -822,7 +871,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(15)));
       if (idx >= impl_->sequence_vocabulary.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: sequence vocabulary index out of range.");
+            "nlp::TextCatStage::load_state_lines: sequence vocabulary index out of range.");
       }
       impl_->sequence_vocabulary[idx] = detail::hex_decode_string(value);
       continue;
@@ -832,7 +881,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(15)));
       if (idx >= impl_->sequence_embedding.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: sequence embedding index out of range.");
+            "nlp::TextCatStage::load_state_lines: sequence embedding index out of range.");
       }
       impl_->sequence_embedding[idx] = detail::parse_doubles_line(value);
       continue;
@@ -851,7 +900,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(20)));
       if (idx >= impl_->sequence_cls_weight.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: sequence classifier weight index out of range.");
+            "nlp::TextCatStage::load_state_lines: sequence classifier weight index out of range.");
       }
       impl_->sequence_cls_weight[idx] = detail::parse_doubles_line(value);
       continue;
@@ -864,7 +913,7 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
       const auto idx = static_cast<std::size_t>(std::stoll(key.substr(mapper_vocab_prefix_len)));
       if (idx >= mapper_state.vocabulary.size()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: mapper vocabulary index out of range.");
+            "nlp::TextCatStage::load_state_lines: mapper vocabulary index out of range.");
       }
       mapper_state.vocabulary[idx] = detail::hex_decode_string(value);
       continue;
@@ -893,34 +942,34 @@ void TextCatStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_vie
     }
     if (!impl_->trained) return;
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextCatStage::load_state_lines: malformed sequence textcat state.");
+        "nlp::TextCatStage::load_state_lines: malformed sequence textcat state.");
   }
   if (impl_->trained) {
     if (label_count < 2) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::load_state_lines: trained state requires at least two labels.");
+          "nlp::TextCatStage::load_state_lines: trained state requires at least two labels.");
     }
     if (mapper_vocab_count < 1) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::load_state_lines: trained state requires mapper vocabulary.");
+          "nlp::TextCatStage::load_state_lines: trained state requires mapper vocabulary.");
     }
     const auto mapper_status = impl_->mapper.load_state(mapper_state);
     if (!mapper_status.ok()) {
       ::pluss::ai::nodeb::detail::fail(
-          "nodeb::TextCatStage::load_state_lines: " + mapper_status.message);
+          "nlp::TextCatStage::load_state_lines: " + mapper_status.message);
     }
     const auto state = parse_series_state_lines("model_state", lines);
     if (impl_->multiclass) {
       const auto status = impl_->multi.load_state(pluss::msharp::RangeView::Series(state));
       if (!status.ok()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: " + status.message);
+            "nlp::TextCatStage::load_state_lines: " + status.message);
       }
     } else {
       const auto status = impl_->binary.load_state(pluss::msharp::RangeView::Series(state));
       if (!status.ok()) {
         ::pluss::ai::nodeb::detail::fail(
-            "nodeb::TextCatStage::load_state_lines: " + status.message);
+            "nlp::TextCatStage::load_state_lines: " + status.message);
       }
     }
   }

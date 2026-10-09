@@ -1,0 +1,137 @@
+summary = """
+Realign one slate to a target label slate using positional, case-label, or feature-label rules.
+
+`Slate::align(...)` is the typed column-level alignment surface behind many higher-level DataFrame operations. Use it when you are working with one extracted column directly and you need to reorder or relabel it against another label vector before comparison, arithmetic, export, or manual reconstruction.
+"""
+
+returns = """
+`Slate`
+    New slate whose values and label provenance reflect the requested alignment mode.
+
+    - `AlignBy::Caselbl` gathers values by case label.
+    - `AlignBy::Feature` gathers one value per feature label.
+    - `AlignBy::Pos` keeps positional matching strict.
+"""
+
+see_also = [
+  "<a href=\"../../dataframe_api_reference.md#align\"><code>DataFrame::align</code></a>: frame-level alignment for several features at once.",
+  "<a href=\"#label\"><code>Slate::label</code></a>: use <code>label().set(...)</code> to attach explicit labels before aligning by label."
+]
+
+notes = [
+  """
+`AlignBy::Both` is a DataFrame-oriented concept and is rejected for `Slate`.
+""",
+  """
+When `fill` is omitted, unmatched target labels produce missing output entries. When `fill` is provided, newly introduced numeric gaps are filled with that scalar.
+""",
+  """
+`AlignBy::Pos` does not broadcast. It expects compatible lengths and preserves the current slate's value order and visible labels.
+"""
+]
+
+[[parameters]]
+name = "target_labels"
+body = """
+Target label vector that defines the output order.
+
+Its interpretation depends on `options.align`:
+
+- `AlignBy::Caselbl`: treat `target_labels` as the desired case axis.
+- `AlignBy::Feature`: treat `target_labels` as the desired feature-label axis.
+- `AlignBy::Pos`: validate strict positional compatibility without doing label-based remapping.
+"""
+
+[[parameters]]
+name = "options"
+body = """
+Alignment policy.
+
+`AlignOptions` exposes two public fields:
+
+- `align`: chooses the matching rule.
+  - `AlignBy::Pos`: strict positional alignment.
+  - `AlignBy::Caselbl`: match by case labels.
+  - `AlignBy::Feature`: match by feature labels.
+  - `AlignBy::Both`: not supported on `Slate`.
+- `fill`: optional numeric fill scalar for newly introduced gaps.
+"""
+
+[[examples]]
+title = "Align by case labels and let unmatched labels stay missing."
+code = """
+using namespace pluss::table;
+
+auto labeled = Slate(pluss::make_series({10.0, 20.0, 30.0}))
+                   .label().set(pluss::make_note({"b", "a", "c"}));
+
+auto out = labeled.align(
+    pluss::make_note({"a", "b", "d"}),
+    AlignOptions{.align = AlignBy::Caselbl}
+);
+"""
+output = """
+a  20
+b  10
+d  NA
+ptype: Series
+"""
+
+[[examples]]
+title = "Fill newly introduced numeric slots during case-label alignment."
+code = """
+using namespace pluss::table;
+
+auto labeled = Slate(pluss::make_series({10.0, 20.0, 30.0}))
+                   .label().set(pluss::make_note({"b", "a", "c"}));
+
+auto out = labeled.align(
+    pluss::make_note({"a", "b", "d"}),
+    AlignOptions{.align = AlignBy::Caselbl, .fill = 0.0}
+);
+"""
+output = """
+a  20
+b  10
+d  0
+ptype: Series
+"""
+
+[[examples]]
+title = "Align a one-value-per-feature slate by feature label."
+code = """
+using namespace pluss::table;
+
+auto feature_slate = Slate(pluss::make_series({1.5, 2.5}))
+                          .label().set(pluss::make_note({"A2", "A1"}));
+
+auto out = feature_slate.align(
+    pluss::make_note({"A1", "A2"}),
+    AlignOptions{.align = AlignBy::Feature}
+);
+"""
+output = """
+A1  2.5
+A2  1.5
+ptype: Series
+"""
+
+[[examples]]
+title = "Use strict positional alignment when you want no label-based remapping at all."
+code = """
+using namespace pluss::table;
+
+auto labeled = Slate(pluss::make_series({10.0, 20.0, 30.0}))
+                   .label().set(pluss::make_note({"b", "a", "c"}));
+
+auto out = labeled.align(
+    pluss::make_note({"x", "y", "z"}),
+    AlignOptions{.align = AlignBy::Pos}
+);
+"""
+output = """
+b  10
+a  20
+c  30
+ptype: Series
+"""

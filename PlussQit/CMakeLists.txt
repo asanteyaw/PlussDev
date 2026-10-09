@@ -84,7 +84,7 @@ option(PLUSSQIT_BUILD_EXAMPLES "Build examples" ON)
 option(PLUSSQIT_USE_FMT "Use fmt for messages" ON)
 option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2)" OFF)
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
-option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimeIndex)" ${PLUSSQIT_BUILD_CODEM})
+option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimelineIndexAccessor)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
 option(PLUSSQIT_ENABLE_CUDA "Enable CUDA runtime probing for CodeM (kernels still WIP)" OFF)
 option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
@@ -934,7 +934,7 @@ if (PLUSSQIT_BUILD_EXAMPLES)
   endif()
 endif()
 
-# ---- CodeH (time, Timeline/Duration/TimeIndex) ----
+# ---- CodeH (time, Timeline/Duration/TimelineIndexAccessor) ----
 if (PLUSSQIT_BUILD_CODEH)
   if (NOT PLUSSQIT_BUILD_CODEM)
     message(FATAL_ERROR "PLUSSQIT_BUILD_CODEH requires PLUSSQIT_BUILD_CODEM=ON")
@@ -943,7 +943,7 @@ if (PLUSSQIT_BUILD_CODEH)
   set(CODEH_GEN_DIR ${PLUSSQIT_GEN_DIR}/CodeH/generated)
   set(CODEH_TIMELINE_METHODS_GEN ${CODEH_GEN_DIR}/TimelineMethodsGen.h)
   set(CODEH_DURATION_METHODS_GEN ${CODEH_GEN_DIR}/DurationMethodsGen.h)
-  set(CODEH_TIMEINDEX_METHODS_GEN ${CODEH_GEN_DIR}/TimeIndexMethodsGen.h)
+  set(CODEH_INDEX_ACCESSOR_METHODS_GEN ${CODEH_GEN_DIR}/TimelineIndexAccessorMethodsGen.h)
   set(CODEH_METHODS_GEN_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/gen_codeh_methods.py)
   set(CODEH_TIMELINE_DT_FIELDS ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/codeh_timeline_dt_fields.tsv)
   set(CODEH_TIMELINE_PREDICATES ${CMAKE_CURRENT_SOURCE_DIR}/tools/codegen/codeh_timeline_predicates.tsv)
@@ -953,7 +953,7 @@ if (PLUSSQIT_BUILD_CODEH)
     OUTPUT
       ${CODEH_TIMELINE_METHODS_GEN}
       ${CODEH_DURATION_METHODS_GEN}
-      ${CODEH_TIMEINDEX_METHODS_GEN}
+      ${CODEH_INDEX_ACCESSOR_METHODS_GEN}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CODEH_GEN_DIR}
     COMMAND ${Python3_EXECUTABLE} ${CODEH_METHODS_GEN_SCRIPT}
             --timeline-dt-fields ${CODEH_TIMELINE_DT_FIELDS}
@@ -976,7 +976,7 @@ if (PLUSSQIT_BUILD_CODEH)
   add_library(plussqit_codeh
     ${CODEH_TIMELINE_METHODS_GEN}
     ${CODEH_DURATION_METHODS_GEN}
-    ${CODEH_TIMEINDEX_METHODS_GEN}
+    ${CODEH_INDEX_ACCESSOR_METHODS_GEN}
     ${PLUSSQIT_CODEH_CPP}
     src/CodeH/compat/Access.h
     src/CodeH/compat/InvokeFwd.h
@@ -999,7 +999,7 @@ if (PLUSSQIT_BUILD_CODEH)
     PRIVATE CODEH_BUILD_MAIN_LIB
     PUBLIC
       CODEH_ENABLE_TIMELINE_SURFACE
-      CODEH_ENABLE_TIMEINDEX_SURFACE
+      CODEH_ENABLE_INDEX_ACCESSOR_SURFACE
       CODEH_ENABLE_DURATION_SURFACE
   )
   target_link_libraries(plussqit_codeh PUBLIC PlussQit::CodeM PlussQit::CodeN)
@@ -1014,20 +1014,20 @@ if (PLUSSQIT_BUILD_CODEH)
     )
     target_link_libraries(plussqit_codeh_timeline_printing_2d_3d_demo PRIVATE PlussQit::CodeH)
 
-    add_executable(plussqit_codeh_timeline_dataframe_timeindex_methods_demo
-      examples/CodeH/timeline_dataframe_timeindex_methods_demo.cpp
+    add_executable(plussqit_codeh_timeline_index_methods_demo
+      examples/CodeH/timeline_index_methods_demo.cpp
     )
-    target_link_libraries(plussqit_codeh_timeline_dataframe_timeindex_methods_demo PRIVATE PlussQit::CodeH)
+    target_link_libraries(plussqit_codeh_timeline_index_methods_demo PRIVATE PlussQit::CodeH)
 
     add_executable(plussqit_codeh_timeline_non_generated_and_factory_methods_demo
       examples/CodeH/timeline_non_generated_and_factory_methods_demo.cpp
     )
     target_link_libraries(plussqit_codeh_timeline_non_generated_and_factory_methods_demo PRIVATE PlussQit::CodeH)
 
-    add_executable(plussqit_codeh_timeindex_docverify_demo
-      examples/CodeH/timeindex_docverify_demo.cpp
+    add_executable(plussqit_codeh_timeline_index_docverify_demo
+      examples/CodeH/timeline_index_docverify_demo.cpp
     )
-    target_link_libraries(plussqit_codeh_timeindex_docverify_demo PRIVATE PlussQit::CodeH)
+    target_link_libraries(plussqit_codeh_timeline_index_docverify_demo PRIVATE PlussQit::CodeH)
 
     add_executable(plussqit_codeh_timeline_docverify_demo
       examples/CodeH/timeline_docverify_demo.cpp
@@ -1123,6 +1123,11 @@ if (PLUSSQIT_BUILD_CODEH)
       examples/CodeH/duration_docverify_demo.cpp
     )
     target_link_libraries(plussqit_codeh_duration_docverify_demo PRIVATE PlussQit::CodeH)
+
+    add_executable(plussqit_codeh_queue_docverify_demo
+      examples/CodeH/queue_docverify_demo.cpp
+    )
+    target_link_libraries(plussqit_codeh_queue_docverify_demo PRIVATE PlussQit::CodeH)
 
     add_executable(plussqit_codeh_duration_factory_reference_demo
       examples/CodeH/duration_factory_reference_demo.cpp

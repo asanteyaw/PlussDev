@@ -67,9 +67,9 @@ the column labels.
 using namespace pluss::table;
 
 auto df = DataFrame({
-    {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-    {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-    {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+    {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+    {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+    {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
 });
 
 auto facets = df.contingency({"city", "channel", "weekend"})

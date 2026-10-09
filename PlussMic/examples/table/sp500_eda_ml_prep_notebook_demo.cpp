@@ -185,7 +185,7 @@ int main() {
   std::cout << "\n[Cell 5] 3D plot -> PDF/SVG outputs\n";
   pluss::table::Plot3DSceneOptions scene3_opts;
   scene3_opts.preset = pluss::pl::flash::ScenePreset3D::Presentation;
-  scene3_opts.theme = pluss::pl::flash::ThemePreset3D::Slate;
+  scene3_opts.theme = pluss::pl::flash::ThemePreset3D::Graphite;
   scene3_opts.camera_preset = pluss::pl::flash::CameraPreset3D::Isometric;
   scene3_opts.lighting = pluss::pl::flash::Lighting3DOptions{
       .clear_first = true,

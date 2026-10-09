@@ -22,11 +22,7 @@
 namespace pluss::codeh {
 
 class Timeline;
-class TimeIndex;
-// Public name for Timeline's lightweight ordered-axis accessor. The concrete
-// engine keeps its internal historical name until the implementation files are
-// regenerated; it is not a core value type.
-using TimelineIndexAccessor = TimeIndex;
+class TimelineIndexAccessor;
 
 enum class TimelineSpanUnit : std::uint8_t {
   Nanos = 0,

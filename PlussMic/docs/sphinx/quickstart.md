@@ -24,9 +24,9 @@ df.describe();
 
 ```cpp
 auto sales = pluss::table::DataFrame({
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"revenue", pluss::table::Thread(pluss::make_series({120.0, 95.0, 140.0}))},
-    {"opened_at", pluss::table::Thread(pluss::make_timeline({
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"revenue", pluss::table::Slate(pluss::make_series({120.0, 95.0, 140.0}))},
+    {"opened_at", pluss::table::Slate(pluss::make_timeline({
         "2024-01-01T09:00:00Z",
         "2024-01-02T09:00:00Z",
         "2024-01-03T09:00:00Z",

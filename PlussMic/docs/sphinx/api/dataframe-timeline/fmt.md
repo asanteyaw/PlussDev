@@ -42,7 +42,7 @@ Example 1. Format every row of a `Timeline` feature with a custom pattern.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:15:30Z",
           "2024-02-29T23:45:00Z",
           "2024-07-06T14:00:00Z",
@@ -92,7 +92,7 @@ hand, confirming both tokens' documented behavior.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-31T09:15:30.123456789Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-31T09:15:30.123456789Z"}))}});
 std::cout << events;
 
 auto out = events.tl().fmt("%Y-%m-%dT%H:%M:%S.%f%z");
@@ -132,7 +132,7 @@ Example 3. Pass an empty pattern to see the call throw.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-31T09:15:30Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-31T09:15:30Z"}))}});
 
 try {
   auto out = events.tl().fmt("");
@@ -145,7 +145,7 @@ try {
 ### Output
 
 ```text
-Thread::tl().fmt: pattern cannot be empty
+Slate::tl().fmt: pattern cannot be empty
 ```
 
 An empty `pattern` has no tokens to render anything with, so it's rejected
@@ -163,7 +163,7 @@ outright rather than silently producing an empty string for every row.
 - `DataFrame::tl()` requires **every** feature on the calling frame to already
   be `Timeline`-kind — narrow with
   [`features()`](../dataframe/features.md) first if needed.
-- A `NaT` row (or one already null on the underlying `Thread`) displays as
+- A `NaT` row (or one already null on the underlying `Slate`) displays as
   `"NULL"`, regardless of `pattern`.
 
 ## See Also

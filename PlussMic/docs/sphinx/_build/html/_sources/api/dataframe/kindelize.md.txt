@@ -59,10 +59,10 @@ Example 1. Convert a frame into a catalog using the default policy.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"sales", Thread(pluss::make_series({100.0, 150.0, 90.0}))},
-}, Thread(pluss::make_note({"o1", "o2", "o3"})));
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"sales", Slate(pluss::make_series({100.0, 150.0, 90.0}))},
+}, Slate(pluss::make_note({"o1", "o2", "o3"})));
 std::cout << orders;
 ```
 
@@ -138,7 +138,7 @@ streams.
 - [`Catalog::tabelize`](../catalog/tabelize.md): the reverse conversion, from `Catalog`
   back to `DataFrame`.
 - [`DataFrame::features`](features.md): the plain, in-frame way to pull out a single
-  feature as a `Thread`, without leaving the `DataFrame` representation at all.
+  feature as a `Slate`, without leaving the `DataFrame` representation at all.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="join.html">

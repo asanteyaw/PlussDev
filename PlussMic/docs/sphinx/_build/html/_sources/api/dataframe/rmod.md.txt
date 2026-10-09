@@ -89,7 +89,7 @@ noticeably different result from the reflected form.
   `frame mod other`. These only coincide in special cases (for example, when
   `frame`'s values evenly divide `other` and vice versa).
 - Only accepts a scalar `double` — see [`radd()`](radd.md) for why there is no
-  reflected `DataFrame` or `Thread` overload.
+  reflected `DataFrame` or `Slate` overload.
 
 ## See Also
 

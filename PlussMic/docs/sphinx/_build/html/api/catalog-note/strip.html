@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="CatalogNoteAccessor::titlecase" href="titlecase.html" />
@@ -60,7 +60,7 @@ either end.</p>
 <p>CatalogNoteAccessor requires every bound key to be Note-kind
 Every method on this accessor – not just strip() – routes through
 Stream::nt() for each bound key. If any bound key isn’t Note-kind (Series,
-Timeline, TimeIndex), the call throws “Thread::strip is only valid for Note payload”
+Timeline, TimeIndex), the call throws “Slate::strip is only valid for Note payload”
 (the exact message names whichever method actually ran). Since Catalog::nt() binds
 <em>every</em> key of the catalog by default, this is the most common way to trip the throw
 – project down to just the text keys first with Catalog::keys(names) or
@@ -144,7 +144,7 @@ bound throws — see the important callout above.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::strip is only valid for Note payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::strip is only valid for Note payload
 </pre></div>
 </div>
 </section>

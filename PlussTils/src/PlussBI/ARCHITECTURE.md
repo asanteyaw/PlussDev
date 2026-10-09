@@ -47,7 +47,7 @@ questions.
    The first-class runtime is a real OS browser tab: `Studio::show()` writes
    the same self-contained dashboard HTML/SVG artifact `export_html()`
    produces and opens it with the system default browser
-   (`pluss::bi_tools::open_html_in_browser`, `include/BI_tools/`). This
+   (`pluss::bi::detail::open_html_in_browser`). This
    revises the original native-first framing: a dashboard that only opens in
    a blocking, unshare-able native window cannot rival a real BI tool, and
    PlussBI already generates browser-native HTML/SVG for every render, so
@@ -61,7 +61,7 @@ questions.
    or `PlussWebViewOnly`); it is not being removed.
 
 5. BI should normalize inputs to one central table contract.
-   Low-level Flash may still admit `Thread`, `DataFrame`, `Atlas`, and other
+   Low-level Flash may still admit `Slate`, `DataFrame`, `Atlas`, and other
    raw payload families directly. PlussBI itself should not branch wildly on
    payload family. It should resolve everything into one central table/query
    result contract, then bind visuals from that normalized result.
@@ -545,7 +545,7 @@ So the BI stack should prefer:
 
 ### Browser Host (primary)
 
-First host is a real OS browser tab, implemented in `include/BI_tools/` +
+First host is a real OS browser tab, implemented in `include/pluss/bi/detail/` +
 `src/PlussBI/runtime/BrowserExport.cpp`: `Studio::show()` renders the
 studio, builds the same dashboard HTML/SVG document `export_html()` writes
 to disk, and hands that document straight to the system default browser
@@ -555,7 +555,7 @@ window toolkit, no browser-engine framework linkage, no modal event loop.
 Needed pieces, in rough build order:
 
 - ✅ static dashboard HTML/SVG generation (`detail::dashboard_html_`)
-- ✅ cross-platform "open a real browser tab" launcher (`BI_tools`)
+- ✅ cross-platform "open a real browser tab" launcher (`pluss::bi::detail`)
 - ✅ dashboard chrome, selectable per render via `DashboardChrome` (`show()`/
   `export_html()`/`serve()`'s trailing `chrome` parameter, default
   `Sidebar`): `Sidebar` is a fixed, non-scrolling top navbar (`.bi-topbar`)
@@ -695,7 +695,7 @@ Required shared machinery:
 The dashboard layer should delegate vectorized work downward into:
 
 - `DataFrame`
-- `Thread`
+- `Slate`
 - `Series`
 - `Note`
 - Flash
@@ -855,14 +855,14 @@ Suggested file grouping:
   - ✅ implemented as header-only instead of this directory: the live HTTP
     + JSON query API from "Rendering Layers" above is `Studio::serve()` in
     `include/pluss/bi/serve.h`, matching the header-only style of the rest
-    of `include/pluss/bi/`. `include/BI_tools/json_lite.h` (a deliberately
+    of `include/pluss/bi/`. `include/pluss/bi/detail/json_lite.h` (a deliberately
     minimal flat-JSON encode/decode, not a general JSON library) and the
     vendored `third_party/httplib/httplib.h` (cpp-httplib, MIT) back it.
 
 Public headers should eventually mirror that shape under `include/pluss/bi/`.
-`BrowserExport`'s public header lives under `include/BI_tools/` instead,
+`BrowserExport`'s internal header lives under `include/pluss/bi/detail/` instead,
 per `explore.h`'s original split: `include/pluss/bi/` is the core dashboard
-object model (`Studio`/`Board`/`View`/...), `include/BI_tools/` is
+object model (`Studio`/`Board`/`View`/...), `include/pluss/bi/detail/` is
 supporting infrastructure the core model calls into but that isn't itself a
 dashboard authoring type.
 

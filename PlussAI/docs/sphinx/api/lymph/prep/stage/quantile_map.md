@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::quantile_map`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `quantile_map` builds an attachable [`prep::Stage`](Stage.md) that re-maps a routed column onto its own rank distribution — a uniform spread by default, or a Gaussian shape. Skew, heavy tails, and single extreme values are flattened away.
 
@@ -56,7 +56,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -65,15 +65,15 @@ int main() {
   // default. Skew and outliers are flattened out.
   const pluss::Series amount = pluss::make_series({1., 2., 3., 4., 5., 500.}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}});
+  const DataFrame x({{"amount", Slate(amount)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::quantile_map(), lymph::prep::route::names({"amount"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"amount", Thread(amount)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"amount", Slate(amount)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -112,7 +112,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -120,7 +120,7 @@ int main() {
   // output = Uniform spreads values evenly on [0, 1]; output = Gaussian maps
   // them onto a standard normal shape. Standalone over a skewed column.
   const pluss::Series v = pluss::make_series({1., 2., 4., 8., 16., 32., 64., 128.}, {8}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::QuantileMap uni{};                                   // default: Uniform
   lymph::options::QuantileMap gauss{};
@@ -181,7 +181,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -189,15 +189,15 @@ int main() {
   const pluss::Series amount = pluss::make_series({10., 12., 15., 900., 20., 25.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,0,1,2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::quantile_map(), lymph::prep::route::names({"amount"}))
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"amount", Thread(amount)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"amount", Slate(amount)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

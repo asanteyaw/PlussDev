@@ -1,0 +1,220 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9aaa2fec980c -->
+
+# Slate::transform
+
+[Back to Slate API Reference](../../slate_api_reference)
+
+## Signatures
+
+```cpp
+Slate Slate::transform(const std::function<SlateValue(const SlateValue&)>& fn) const
+Slate Slate::transform(
+    const std::function<Slate(const Slate&)>& fn,
+    ResultShape shape = ResultShape::Preserve) const
+```
+
+## What It Does
+
+`transform()` is the common entry point for two different callback granularities. The
+callback type determines whether the operation visits individual values or receives the
+entire slate:
+
+- A callback taking `const SlateValue&` runs once for each valid row. This overload has
+  the same contract as [`map()`](map.md): invalid rows bypass the callback, every callback
+  result must contain one value, and all returned values must have the same payload kind.
+- A callback taking `const Slate&` runs exactly once with the complete slate. This
+  overload has the same contract as [`fold()`](fold.md), except that `transform()` defaults
+  `shape` to `ResultShape::Preserve`. A whole-slate transform is therefore expected to
+  retain the input row count unless the caller explicitly requests reduction or an
+  unconstrained result.
+
+```{important} The whole-slate default is Preserve, not Reduce
+`fold(slate_fn)` defaults to `ResultShape::Reduce`, but `transform(slate_fn)` defaults to
+`ResultShape::Preserve`. The implementations share the same validation kernel; only their
+public defaults differ. Write `transform(fn, ResultShape::Reduce)` when a transform should
+produce one row. Omitting the policy while returning one row from a longer input is an
+error rather than an implicit reduction.
+```
+
+This distinction keeps ordinary transformations safe: a callback cannot accidentally
+remove or add rows while its result is about to be assigned back into a frame. Use
+`ResultShape::Infer` or `ResultShape::Expand` when a deliberately shape-changing callback
+needs no row-count constraint. Those two policies currently perform the same validation
+(none), but communicate different intent at the call site.
+
+## Parameters
+
+**fn**
+    Either a per-value callback with the form `SlateValue(const SlateValue&)`, or a
+    whole-slate callback with the form `Slate(const Slate&)`. State the lambda parameter
+    type explicitly when both forms could be inferred through a generic lambda; it makes
+    overload selection unambiguous and records the intended granularity.
+
+**shape** (`ResultShape`, default `Preserve`, whole-slate overload only)
+    Validates the row count returned by the callback. `Preserve` requires the input row
+    count; `Reduce` requires exactly one row; `Infer` and `Expand` accept any row count.
+
+## Returns
+
+`Slate`
+    A newly produced slate. The value callback assembles one output lane per input lane;
+    the whole-slate callback returns its slate after the requested shape check. Neither
+    overload mutates the receiver.
+
+## Validation And Cost
+
+The per-value overload pays for one callback invocation and one single-row wrapper per
+valid lane, so a native vectorized `Slate`, `Series`, `Note`, `Timeline`, or `Duration`
+operation is preferable when it can express the work. The whole-slate overload invokes
+the callback once and performs only constant-time definition and size checks around the
+callback's own work.
+
+An empty callback, an undefined callback result, a per-value result whose size is not one,
+mixed per-value payload kinds, or a whole-slate result that violates `shape` throws before
+an invalid result is returned.
+
+## Examples
+
+Example 1. A `SlateValue` callback selects the per-value overload. Each valid value is
+doubled independently and the four results are assembled in their original order.
+
+```cpp
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+
+auto out = scores.transform([](const SlateValue& v) {
+  return SlateValue(v.slate() * 2.0);
+});
+std::cout << out;
+```
+
+### Output
+
+```text
+0  20
+1  40
+2  60
+3  80
+ptype: Series
+```
+
+Example 2. A `Slate` callback selects the whole-slate overload. Omitting `shape` applies
+the `Preserve` default, so this four-row result is accepted.
+
+```cpp
+auto out = scores.transform([](const Slate& t) {
+  return t + 0.5;
+});
+std::cout << out;
+```
+
+### Output
+
+```text
+0  10.5
+1  20.5
+2  30.5
+3  40.5
+ptype: Series
+```
+
+Example 3. Reduction is explicit. `ResultShape::Reduce` accepts the one-row total that the
+default `Preserve` policy would reject.
+
+```cpp
+auto out = scores.transform([](const Slate& t) {
+  return Slate(pluss::make_series({t.sum().to_dbl()}));
+}, ResultShape::Reduce);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  100
+ptype: Series
+```
+
+Example 4. `Infer` and `Expand` both permit deliberate row-count changes. The names carry
+intent even though the current validator imposes no size rule for either policy.
+
+```cpp
+auto inferred = scores.transform([](const Slate&) {
+  return Slate(pluss::make_series({7.0, 8.0}));
+}, ResultShape::Infer);
+
+auto expanded = scores.transform([](const Slate&) {
+  return Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}));
+}, ResultShape::Expand);
+
+std::cout << inferred << "\n\n" << expanded;
+```
+
+### Output
+
+```text
+0  7
+1  8
+ptype: Series
+
+0  1
+1  2
+2  3
+3  4
+4  5
+ptype: Series
+```
+
+Example 5. Returning a reduction while relying on the default policy fails. The callback
+runs once and creates a valid one-row `Slate`; the error is specifically that one row does
+not preserve the four-row input shape.
+
+```cpp
+try {
+  auto out = scores.transform([](const Slate& t) {
+    return Slate(pluss::make_series({t.sum().to_dbl()}));
+  });
+} catch (const std::exception& e) {
+  std::string message(e.what());
+  std::cout << message.substr(0, message.find('\n'));
+}
+```
+
+### Output
+
+```text
+Slate::fold: Preserve requires input length
+```
+
+## Notes
+
+- `transform(value_fn)` delegates to `map(value_fn)`. `transform(slate_fn, shape)`
+  delegates to `fold(slate_fn, shape)`, but supplies `Preserve` when the caller omits
+  `shape`; calling `fold(slate_fn)` directly instead supplies `Reduce`.
+- Overload selection is compile-time and depends on the callback signature, not a runtime
+  mode.
+- [`Slate::flow`](flow.md) is a related whole-slate transform but is **not** one of
+  `transform()`'s targets. It accepts any returned size without asking the caller to state
+  a shape policy.
+
+## See Also
+
+- [`Slate::map`](map.md): what the `SlateValue`-callback overload forwards to — row-by-row
+  transformation.
+- [`Slate::fold`](fold.md): what the `Slate`-callback overload forwards to — whole-slate
+  transformation with a size check.
+- [`Slate::flow`](flow.md): whole-slate transformation with no size check at all, not
+  reachable through `transform()`.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="top.html">
+    <span class="label">Previous</span>
+    <span class="title">top</span>
+  </a>
+  <a class="next-link" href="truediv.html">
+    <span class="label">Next</span>
+    <span class="title">truediv</span>
+  </a>
+</div>

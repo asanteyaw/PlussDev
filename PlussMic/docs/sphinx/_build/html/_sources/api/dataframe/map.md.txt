@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 103f757200d9 -->
+<!-- pluss-signature-hash: ba3097eddc87 -->
 
 # DataFrame::map
 
@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-DataFrame::map(const std::function<ThreadValue(const ThreadValue&)>& fn) const -> DataFrame
+DataFrame::map(const std::function<SlateValue(const SlateValue&)>& fn) const -> DataFrame
 ```
 
 ## What It Does
 
 Applies `fn` to every cell of every feature currently on the frame, one scalar value
 at a time, and returns a new frame with those features replaced. `fn` receives one
-cell as a `ThreadValue` and must return one `ThreadValue` back — it is skipped
+cell as a `SlateValue` and must return one `SlateValue` back — it is skipped
 entirely for missing cells (a `NULL` cell stays `NULL` without `fn` ever being
 called), and every non-null cell in one feature's column must map to the **same**
 output kind (you cannot have `fn` return a numeric value for one row and text for
@@ -29,18 +29,18 @@ different features need different treatment, and recombine with
 [`update()`](update.md) afterward if the untouched features need to survive alongside
 the mapped result.
 
-Unlike [`transform()`](transform.md), which operates on a whole feature `Thread` at
+Unlike [`transform()`](transform.md), which operates on a whole feature `Slate` at
 once (so it can do things like a running total), `map()` only ever sees one value at
 a time — it is the right tool for a pure, independent per-cell computation.
 
 ## Parameters
 
-**fn** (`const std::function<ThreadValue(const ThreadValue&)>&`)
+**fn** (`const std::function<SlateValue(const SlateValue&)>&`)
 
 The per-cell callback. Extract the incoming scalar with `.to_dbl()` / `.to_int()` /
 `.to_str()` (matching the feature's kind), compute a new value, and wrap it back into
-a `ThreadValue` over a length-1 `Thread` (for example
-`ThreadValue(Thread(pluss::make_series({result})))`). The output kind does not have to
+a `SlateValue` over a length-1 `Slate` (for example
+`SlateValue(Slate(pluss::make_series({result})))`). The output kind does not have to
 match the input kind — mapping `Note` cells to their string length (an `Int64`
 result) is a valid, kind-changing use of `map()`.
 
@@ -58,8 +58,8 @@ Example 1. Square every value in one numeric feature.
 using namespace pluss::table;
 
 auto students = DataFrame({
-    {"score", Thread(pluss::make_series({80.0, 90.0, 70.0}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"score", Slate(pluss::make_series({80.0, 90.0, 70.0}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 std::cout << students;
 ```
@@ -79,9 +79,9 @@ std::cout << students;
 
 ```cpp
 auto score_squared = students.features({"score"}).map(
-    [](const ThreadValue& v) {
+    [](const SlateValue& v) {
       const auto x = v.to_dbl();
-      return ThreadValue(Thread(pluss::make_series({x * x})));
+      return SlateValue(Slate(pluss::make_series({x * x})));
     });
 std::cout << score_squared;
 
@@ -126,9 +126,9 @@ only refreshes values within a feature's existing kind and cannot swap `Note` fo
 
 ```cpp
 auto city_length = students.features({"city"}).map(
-    [](const ThreadValue& v) {
+    [](const SlateValue& v) {
       const auto s = v.to_str();
-      return ThreadValue(Thread(pluss::make_series({static_cast<std::int64_t>(s.size())})));
+      return SlateValue(Slate(pluss::make_series({static_cast<std::int64_t>(s.size())})));
     });
 
 auto with_length = students;
@@ -160,8 +160,8 @@ a matching kind.
 
 - `fn` is never invoked for a missing cell; the cell stays `NULL` in the output
   without needing special-case handling inside `fn` itself.
-- Every non-null result within one feature must share the same `ThreadKind`; mixing
-  kinds within a single feature's output throws `"Thread::map: output kinds must be
+- Every non-null result within one feature must share the same `SlateKind`; mixing
+  kinds within a single feature's output throws `"Slate::map: output kinds must be
   consistent"`.
 - `map()` has no feature selector of its own and applies `fn` to literally every
   feature on the current frame, including features of different kinds — narrow with
@@ -175,7 +175,7 @@ a matching kind.
 ## See Also
 
 - [`DataFrame::transform`](transform.md): apply a function to a whole feature
-  `Thread` at once, for computations that need to see more than one cell (running
+  `Slate` at once, for computations that need to see more than one cell (running
   totals, shifts, and so on).
 - [`DataFrame::cast`](cast.md): change a feature's dtype or payload kind directly,
   when the target kind is fixed rather than computed per-cell.

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::to_html
+# Note::TexAccessor::to_html
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::to_html() const
+Note Note::TexAccessor::to_html() const
 ```
 
 ## Convert A Recognized TeX Subset To HTML Markup

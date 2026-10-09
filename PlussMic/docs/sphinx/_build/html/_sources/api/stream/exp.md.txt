@@ -14,7 +14,7 @@ Stream::exp() const -> Stream
 ## What It Does
 
 Applies the elementwise exponential (`e^x`) to a `Series`-kind stream. Delegates to
-`Thread::exp()`, so it's `Series`-only, same as
+`Slate::exp()`, so it's `Series`-only, same as
 [`abs()`](abs.md)/[`clip()`](clip.md)/[`log()`](log.md) — the inverse of
 [`log()`](log.md).
 
@@ -92,7 +92,7 @@ try {
 ### Output
 
 ```text
-Thread::exp is only valid for Series payload
+Slate::exp is only valid for Series payload
 ```
 
 ## Notes

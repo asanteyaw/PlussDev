@@ -1,12 +1,12 @@
-# TimelineIndexAccessor::resample_mean
+# Timeline::TimelineIndexAccessor::resample_mean
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_mean(const pluss::Series& values, const ResampleOptions& options) const
-pluss::Series TimelineIndexAccessor::resample_mean(const pluss::Series& values, std::string_view freq, std::int64_t step = 1) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_mean(const pluss::Series& values, const ResampleOptions& options) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_mean(const pluss::Series& values, std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does
@@ -84,8 +84,8 @@ data=[3.0000]
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_sum`](resample_sum.md)
-- [`TimelineIndexAccessor::resample_agg`](resample_agg.md)
+- [`Timeline::TimelineIndexAccessor::resample_sum`](resample_sum.md)
+- [`Timeline::TimelineIndexAccessor::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_max.html">

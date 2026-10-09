@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::without_numbers
+# Note::NlpAccessor::without_numbers
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::without_numbers() const
+TokenBatch Note::NlpAccessor::without_numbers() const
 ```
 
 ## Remove Purely Numeric Tokens

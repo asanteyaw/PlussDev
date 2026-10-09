@@ -50,15 +50,15 @@ features not shared by both are left as this frame's own.
 using namespace pluss::table;
 
 auto left = DataFrame({
-    {"name", Thread(pluss::make_note({"Ama", "Kofi", "Efua"}))},
-    {"age",  Thread(pluss::make_series({30.0, std::nullopt, 28.0}))},
-}, Thread(pluss::make_note({"c1", "c2", "c3"})));
+    {"name", Slate(pluss::make_note({"Ama", "Kofi", "Efua"}))},
+    {"age",  Slate(pluss::make_series({30.0, std::nullopt, 28.0}))},
+}, Slate(pluss::make_note({"c1", "c2", "c3"})));
 std::cout << left;
 
 auto right = DataFrame({
-    {"age",   Thread(pluss::make_series({26.0, 40.0, 22.0}))},
-    {"score", Thread(pluss::make_series({88.0, 91.0, 75.0}))},
-}, Thread(pluss::make_note({"c2", "c3", "c4"})));
+    {"age",   Slate(pluss::make_series({26.0, 40.0, 22.0}))},
+    {"score", Slate(pluss::make_series({88.0, 91.0, 75.0}))},
+}, Slate(pluss::make_note({"c2", "c3", "c4"})));
 std::cout << right;
 ```
 

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::canonicalize_macros
+# Note::TexAccessor::canonicalize_macros
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::canonicalize_macros() const
+Note Note::TexAccessor::canonicalize_macros() const
 ```
 
 ## Normalize Equivalent Built-In Command Spellings

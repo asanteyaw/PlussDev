@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::dots_norm
+# Note::TexAccessor::dots_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::dots_norm() const
+Note Note::TexAccessor::dots_norm() const
 ```
 
 ## Collapse Ellipsis Commands To `\dots`

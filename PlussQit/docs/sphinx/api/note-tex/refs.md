@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::refs
+# Note::TexAccessor::refs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::refs() const
+TokenBatch Note::TexAccessor::refs() const
 ```
 
 ## Extract Cross-Reference Targets

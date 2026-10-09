@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamLabelAccessor::values" href="values.html" />
@@ -37,14 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d8857ac61a6e -->
+<!-- pluss-signature-hash: 6696490763db -->
 <section id="streamlabelaccessor-set">
 <h1>StreamLabelAccessor::set<a class="headerlink" href="#streamlabelaccessor-set" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../stream_lbl_accessor_api_reference.html"><span class="doc std std-doc">Back to StreamLabelAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="w"> </span><span class="n">StreamLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
-<span class="n">Stream</span><span class="w"> </span><span class="n">StreamLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Stream</span><span class="w"> </span><span class="n">StreamLabelAccessor</span><span class="o">::</span><span class="n">set</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -52,23 +52,23 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Attaches <code class="docutils literal notranslate"><span class="pre">labels</span></code> as the bound stream’s row labels, returning a new stream.
 Both overloads accept the same length-matching label data — as a <code class="docutils literal notranslate"><span class="pre">Stream</span></code>
-or a <code class="docutils literal notranslate"><span class="pre">pluss::table::Thread</span></code> — and are otherwise interchangeable.</p>
+or a <code class="docutils literal notranslate"><span class="pre">pluss::table::Slate</span></code> — and are otherwise interchangeable.</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>make_note(…) is ambiguous here — wrap it explicitly
 <code class="docutils literal notranslate"><span class="pre">pluss::make_note(...)</span></code> (and other <code class="docutils literal notranslate"><span class="pre">make_*</span></code> helpers) implicitly convert to
-<strong>both</strong> <code class="docutils literal notranslate"><span class="pre">Stream</span></code> and <code class="docutils literal notranslate"><span class="pre">pluss::table::Thread</span></code> — passing one directly to
+<strong>both</strong> <code class="docutils literal notranslate"><span class="pre">Stream</span></code> and <code class="docutils literal notranslate"><span class="pre">pluss::table::Slate</span></code> — passing one directly to
 <code class="docutils literal notranslate"><span class="pre">set()</span></code> fails to compile with an ambiguous-overload error. Wrap it
 explicitly in whichever type you mean:
-<code class="docutils literal notranslate"><span class="pre">set(pluss::table::Thread(pluss::make_note({...})))</span></code> or
+<code class="docutils literal notranslate"><span class="pre">set(pluss::table::Slate(pluss::make_note({...})))</span></code> or
 <code class="docutils literal notranslate"><span class="pre">set(pluss::kindle::Stream(pluss::make_note({...})))</span></code>. A pre-built <code class="docutils literal notranslate"><span class="pre">Stream</span></code>
-or <code class="docutils literal notranslate"><span class="pre">Thread</span></code> value (not a bare <code class="docutils literal notranslate"><span class="pre">make_note(...)</span></code> call) resolves cleanly with
+or <code class="docutils literal notranslate"><span class="pre">Slate</span></code> value (not a bare <code class="docutils literal notranslate"><span class="pre">make_note(...)</span></code> call) resolves cleanly with
 no wrapping needed.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Thread&amp;</span></code>)
+<p><strong>labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Slate&amp;</span></code>)
 The new row labels. Must be the same length as the bound stream.</p>
 </section>
 <section id="returns">
@@ -79,11 +79,11 @@ aspect of the stream (values, mask) is unchanged.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
-<p>Example 1. Attach <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind labels via the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<p>Example 1. Attach <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind labels via the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">labeled</span><span class="p">;</span>
 </pre></div>
 </div>

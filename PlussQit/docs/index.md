@@ -2,7 +2,7 @@
 <div class="pluss-hero">
 <div class="kicker">Pluss &middot; Space</div>
 <h1>PlussQit</h1>
-<p class="tagline">The core object layer of Pluss: <code>Series</code> (the numeric/boolean tensor object), <code>Note</code> (the vectorized text object), and the <code>Timeline</code> / <code>TimeIndex</code> time objects that every other space's <code>Thread</code> column ultimately wraps.</p>
+<p class="tagline">The core object layer of Pluss: <code>Series</code> for numeric and boolean values, <code>Note</code> for vectorized text, <code>Timeline</code> for instants, and <code>Duration</code> for elapsed time.</p>
 <div class="pluss-hero-actions">
 <a class="primary" href="api_reference.html">API Reference</a>
 </div>
@@ -16,25 +16,25 @@
 <div class="pluss-card">
 <span class="card-name">Series</span>
 <span class="card-model">Numeric &middot; Boolean</span>
-<p class="card-desc">The tensor-style numeric and boolean object underneath every numeric <code>Thread</code> column.</p>
+<p class="card-desc">The tensor-style numeric and boolean object underneath every numeric <code>Slate</code> column.</p>
 </div>
 
 <div class="pluss-card">
 <span class="card-name">Note</span>
 <span class="card-model">Text</span>
-<p class="card-desc">The vectorized text object underneath every string-like <code>Thread</code> column.</p>
+<p class="card-desc">The vectorized text object underneath every string-like <code>Slate</code> column.</p>
 </div>
 
 <div class="pluss-card">
 <span class="card-name">Timeline</span>
-<span class="card-model">Time</span>
-<p class="card-desc">A time-point object, one of the two temporal payload kinds a <code>Thread</code> can carry.</p>
+<span class="card-model">Instants</span>
+<p class="card-desc">The temporal object for absolute instants, calendar projections, timezone work, and ordered-axis access through <code>index()</code>.</p>
 </div>
 
 <div class="pluss-card">
-<span class="card-name">TimeIndex</span>
-<span class="card-model">Time</span>
-<p class="card-desc">The second temporal payload kind, typically used for case-axis time labels.</p>
+<span class="card-name">Duration</span>
+<span class="card-model">Elapsed Time</span>
+<p class="card-desc">The temporal object for signed elapsed quantities, fixed-width offsets, and differences between instants.</p>
 </div>
 
 </div>

@@ -78,7 +78,8 @@ int main() {
 
   nn::LayerNormOptions opts{};
   opts.normalized_size = 3;
-  nn::LayerNorm ln(opts);  // eps=1e-5 (default), weight=ones, bias=zeros
+  opts.cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  nn::LayerNorm ln(opts);  // eps=1e-5 (default), weight=ones, bias=zeros, both Float64 to match the input
 
   const pluss::Config f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0, 100.0, 200.0, 300.0}, {2, 3}, f64);
@@ -133,6 +134,7 @@ int main() {
 
   nn::LayerNormOptions opts{};
   opts.normalized_size = 3;
+  opts.cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
   nn::LayerNorm ln(opts);
 
   ln->weight().copy_(pluss::make_series({2.0, 2.0, 2.0}, {3}));

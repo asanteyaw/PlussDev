@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteRegexAccessor::findall
+# Note::RegexAccessor::findall
 
 [Back to Note API Reference](../../note_api_reference)
 
 ## Signatures
 
 ```cpp
-TokenBatch NoteRegexAccessor::findall(std::string_view pattern,
+TokenBatch Note::RegexAccessor::findall(std::string_view pattern,
                                       std::int64_t flags = 0) const
 ```
 
@@ -181,10 +181,10 @@ regex().findall: The expression contained mismatched ( and ).
 
 ## See Also
 
-- [`NoteRegexAccessor::split`](split.md): cut each cell at the matches instead of
+- [`Note::RegexAccessor::split`](split.md): cut each cell at the matches instead of
   collecting them.
 - [`Note::contains`](../note/contains.md): a literal yes/no test, no regex engine.
-- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md) /
+- [`Note::NlpAccessor::tokens`](../note-nlp/tokens.md) /
   [`Note::split`](../note/split.md): structural tokenizers that also return a
   `TokenBatch`.
 

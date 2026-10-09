@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::lemmas
+# Note::NlpAccessor::lemmas
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::lemmas() const
+TokenBatch Note::NlpAccessor::lemmas() const
 ```
 
 ## Reduce Tokens To Dictionary-Like Forms

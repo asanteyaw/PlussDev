@@ -9,9 +9,9 @@
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  const DataFrame train({{"tag", Thread(pluss::make_note(
+  const DataFrame train({{"tag", Slate(pluss::make_note(
       {"red", "green", "blue", "cyan", "black", "white"}))}});
 
   lymph::prep::HashingEncoder narrow{lymph::prep::HashingEncoderOptions{.n_components = 2}};

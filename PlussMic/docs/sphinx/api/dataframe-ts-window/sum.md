@@ -41,9 +41,9 @@ sensor's own last reading.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sensor_id", Thread(pluss::make_note({"A", "A", "A", "B", "B", "B"}))},
-     {"value",     Thread(pluss::make_series({10.0, 20.0, 15.0, 5.0, 8.0, 12.0}))}},
-    Thread(pluss::make_timeline({
+    {{"sensor_id", Slate(pluss::make_note({"A", "A", "A", "B", "B", "B"}))},
+     {"value",     Slate(pluss::make_series({10.0, 20.0, 15.0, 5.0, 8.0, 12.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z",
         "2024-01-02T00:00:00Z", "2024-01-05T00:00:00Z", "2024-01-06T00:00:00Z"})));
 std::cout << readings;
@@ -95,10 +95,10 @@ on the accessor.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sensor_id", Thread(pluss::make_note({"A", "A", "B", "B"}))},
-     {"temp",      Thread(pluss::make_series({10.0, 20.0, 5.0, 8.0}))},
-     {"humidity",  Thread(pluss::make_series({40.0, 42.0, 55.0, 50.0}))}},
-    Thread(pluss::make_timeline({
+    {{"sensor_id", Slate(pluss::make_note({"A", "A", "B", "B"}))},
+     {"temp",      Slate(pluss::make_series({10.0, 20.0, 5.0, 8.0}))},
+     {"humidity",  Slate(pluss::make_series({40.0, 42.0, 55.0, 50.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z",
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"})));
 std::cout << readings;
@@ -145,8 +145,8 @@ see it throw immediately — before `sum()` is even called.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({10.0, 20.0, 15.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({10.0, 20.0, 15.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z"})));
 
 try {

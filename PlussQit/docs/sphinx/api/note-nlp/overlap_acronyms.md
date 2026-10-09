@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::overlap_acronyms
+# Note::NlpAccessor::overlap_acronyms
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::overlap_acronyms(const Note& other) const
+Note Note::NlpAccessor::overlap_acronyms(const Note& other) const
 ```
 
 ## Acronym-Set Containment Score Between Two Notes
@@ -32,8 +32,8 @@ trailing zeros trimmed.
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::overlap_acronyms requires a UTF-8 text Note (lhs is bytes)` (or
-`rhs`); a numel mismatch raises `NoteNlpAccessor::overlap_acronyms expects equal numel
+`Note::NlpAccessor::overlap_acronyms requires a UTF-8 text Note (lhs is bytes)` (or
+`rhs`); a numel mismatch raises `Note::NlpAccessor::overlap_acronyms expects equal numel
 or scalar broadcast`.
 
 ## Example 1: Smaller Set Fully Contained
@@ -56,14 +56,14 @@ Note(shape=[1], dim=1, numel=1, dtype=Float64)
 
 ## See Also
 
-- [`NoteNlpAccessor::jaccard_acronyms`](jaccard_acronyms.md): the mutual-similarity
+- [`Note::NlpAccessor::jaccard_acronyms`](jaccard_acronyms.md): the mutual-similarity
   score over the same sets.
-- [`NoteNlpAccessor::intersect_acronyms`](intersect_acronyms.md): the shared acronyms
+- [`Note::NlpAccessor::intersect_acronyms`](intersect_acronyms.md): the shared acronyms
   themselves.
-- [`NoteNlpAccessor::overlap_tokens`](overlap_tokens.md) /
-  [`NoteNlpAccessor::overlap_terms`](overlap_terms.md) /
-  [`NoteNlpAccessor::overlap_citations`](overlap_citations.md) /
-  [`NoteNlpAccessor::overlap_symbols`](overlap_symbols.md): other set kinds.
+- [`Note::NlpAccessor::overlap_tokens`](overlap_tokens.md) /
+  [`Note::NlpAccessor::overlap_terms`](overlap_terms.md) /
+  [`Note::NlpAccessor::overlap_citations`](overlap_citations.md) /
+  [`Note::NlpAccessor::overlap_symbols`](overlap_symbols.md): other set kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="numbers.html"><span class="label">Previous</span><span class="title">numbers</span></a>

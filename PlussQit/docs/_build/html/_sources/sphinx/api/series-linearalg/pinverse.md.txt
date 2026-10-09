@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::pinverse
+# Series::LinearAlgAccessor::pinverse
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::pinverse(double rcond = 1e-12) const
+Series Series::LinearAlgAccessor::pinverse(double rcond = 1e-12) const
 Series SeriesLinearAlgProxy::pinverse(double rcond = 1e-12) const
 ```
 
@@ -302,9 +302,9 @@ the Moore-Penrose projection identities.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::inverse`](inverse.md): strict inverse for nonsingular square matrices.
-- [`SeriesLinearAlgAccessor::det`](det.md): detect rank loss in square matrices.
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): apply and verify projection identities.
+- [`Series::LinearAlgAccessor::inverse`](inverse.md): strict inverse for nonsingular square matrices.
+- [`Series::LinearAlgAccessor::det`](det.md): detect rank loss in square matrices.
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): apply and verify projection identities.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="norm.html">

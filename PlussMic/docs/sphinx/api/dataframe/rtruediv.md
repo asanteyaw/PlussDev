@@ -84,7 +84,7 @@ Both compute `10 / x` for every case — identical numbers, since `rtruediv()` a
 - Non-numeric features are always left unchanged.
 - `rtruediv()` and `rdiv()` are verified to be identical operations.
 - Only accepts a scalar `double` — see [`radd()`](radd.md) for why there is no
-  reflected `DataFrame` or `Thread` overload.
+  reflected `DataFrame` or `Slate` overload.
 - For the reflected floor-division variant that rounds `other / frame` down to a whole
   number instead, use [`rfloordiv()`](rfloordiv.md).
 

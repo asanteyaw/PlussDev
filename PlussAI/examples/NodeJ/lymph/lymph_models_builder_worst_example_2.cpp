@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -19,7 +19,7 @@ int main() {
        2.4, 2.8, 3.1, 3.4, 3.7, 1.8, 4.0, 3.6, 2.2, 3.2}, {20}, f64);
   const pluss::Series y = pluss::make_series(
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {20}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   lymph::models::Builder builder = lymph::models::build({
       {"logreg", lymph::models::logistic_regression()},
@@ -40,13 +40,13 @@ int main() {
   // genuinely disagree.
   const pluss::Series probe_income = pluss::make_series({2.6, 3.0, 3.4, 2.4}, {4}, f64);
   const pluss::Series probe_balance = pluss::make_series({2.4, 2.0, 1.7, 2.6}, {4}, f64);
-  const DataFrame probe({{"income", Thread(probe_income)}, {"balance", Thread(probe_balance)}});
+  const DataFrame probe({{"income", Slate(probe_income)}, {"balance", Slate(probe_balance)}});
 
   const DataFrame compare({
-      {"income", Thread(probe_income)},
-      {"balance", Thread(probe_balance)},
-      {"best_predicts", Thread(top.infer(probe))},
-      {"worst_predicts", Thread(bottom.infer(probe))},
+      {"income", Slate(probe_income)},
+      {"balance", Slate(probe_balance)},
+      {"best_predicts", Slate(top.infer(probe))},
+      {"worst_predicts", Slate(bottom.infer(probe))},
   });
   std::cout << compare;
 

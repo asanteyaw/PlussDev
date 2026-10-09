@@ -1,0 +1,8 @@
+pluss_ice_model
+schema=1
+param_count=2
+checksum=771cd00b294549a3
+param_0_shape=2 2
+param_0=1 2 3 4
+param_1_shape=1
+param_1=0.5

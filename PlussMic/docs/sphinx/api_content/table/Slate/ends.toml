@@ -1,0 +1,43 @@
+summary = """
+Check whether each note value ends with the supplied suffix.
+
+`ends(...)` is the note-slate suffix test. Use it when you are building filename filters, extension masks, code-family checks, or any text workflow where the tail of the string matters.
+"""
+
+returns = """
+`Slate`
+    Boolean-style slate marking which note values end with the supplied suffix.
+"""
+
+see_also = [
+  "<a href=\"#starts\"><code>Slate::starts</code></a>: prefix-based companion check.",
+  "<a href=\"#matches\"><code>Slate::matches</code></a>: regex-oriented matching instead of literal suffix checks."
+]
+
+notes = [
+  """
+`ends(...)` is note-only. It is intended for textual payloads.
+"""
+]
+
+[[parameters]]
+name = "suffix"
+body = """
+Literal trailing text to test for at the end of each note value.
+"""
+
+[[examples]]
+title = "Build a suffix mask for filename-like values."
+code = """
+using namespace pluss::table;
+
+auto names = Slate(pluss::make_note({"Ada.csv", "Bola.txt", "Chen.csv"}));
+
+auto out = names.ends(".csv");
+"""
+output = """
+0  true
+1  false
+2  true
+ptype: Series
+"""

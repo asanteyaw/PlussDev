@@ -46,8 +46,8 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben", "Cy"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben", "Cy"}))},
 });
 
 auto biz = Nexus({{"customers", customers}});
@@ -56,7 +56,7 @@ auto fp1 = biz.fingerprint();
 auto fp2 = biz.fingerprint();
 std::cout << (fp1 == fp2) << " " << fp1.size() << "\n";
 
-auto changed = biz.inject("extra", DataFrame({{"x", Thread(pluss::make_series({1.0}))}}));
+auto changed = biz.inject("extra", DataFrame({{"x", Slate(pluss::make_series({1.0}))}}));
 std::cout << (fp1 == changed.fingerprint());
 ```
 

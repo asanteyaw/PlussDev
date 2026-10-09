@@ -2,7 +2,7 @@
 
 #include "pluss/bi/session.h"
 
-#include "BI_tools/browser_launch.h"
+#include "pluss/bi/detail/browser_launch.h"
 #include "pluss/bi/dashboard_assets.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/pl.h"
@@ -64,7 +64,7 @@ struct TileRender {
   std::optional<Filter> active_filter{};
   std::shared_ptr<pluss::pl::Studio> plot{};
   std::shared_ptr<pluss::table::DataFrame> table{};
-  std::optional<pluss::table::ThreadValue> scalar{};
+  std::optional<pluss::table::SlateValue> scalar{};
 };
 
 struct BoardRender {
@@ -118,7 +118,7 @@ namespace detail {
   if (options.backend_preference != pluss::view::BackendPreference::Auto) {
     return pluss::view::show_html_window(html, options);
   }
-  const auto path = pluss::bi_tools::open_html_in_browser(html, options.title);
+  const auto path = detail::open_html_in_browser(html, options.title);
   return !path.empty();
 }
 
@@ -155,7 +155,7 @@ namespace detail {
       continue;
     }
     const auto column = frame.features(name);
-    if (column.kind() == pluss::table::ThreadKind::Series &&
+    if (column.kind() == pluss::table::SlateKind::Series &&
         is_numeric_series(column.as_series())) {
       out.push_back(name);
     }
@@ -208,12 +208,12 @@ namespace detail {
   return duration;
 }
 
-[[nodiscard]] inline pluss::table::Thread apply_scalar_filter_(
-    const pluss::table::Thread& column,
+[[nodiscard]] inline pluss::table::Slate apply_scalar_filter_(
+    const pluss::table::Slate& column,
     FilterOp op,
     const FilterScalar& value) {
   switch (column.kind()) {
-    case pluss::table::ThreadKind::Series: {
+    case pluss::table::SlateKind::Series: {
       PLUSS_CHECK(std::holds_alternative<double>(value),
                   "pluss::bi: numeric filter payload must be a double");
       const double scalar = std::get<double>(value);
@@ -228,7 +228,7 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::ThreadKind::Note: {
+    case pluss::table::SlateKind::Note: {
       PLUSS_CHECK(std::holds_alternative<std::string>(value),
                   "pluss::bi: text filter payload must be a string");
       const auto& scalar = std::get<std::string>(value);
@@ -243,8 +243,13 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::ThreadKind::Timeline: {
-      const auto scalar = scalar_timeline_(value);
+    case pluss::table::SlateKind::Timeline: {
+      // A timeline column compares position by position, so a single bound is
+      // broadcast to the column's length first. Comparing a length-one Slate
+      // with a longer column would be rejected as a length mismatch.
+      const auto iso = scalar_temporal_iso_(value);
+      const auto scalar = pluss::make_timeline(std::vector<std::string>(
+          static_cast<std::size_t>(column.size()), iso));
       switch (op) {
         case FilterOp::Eq: return column == scalar;
         case FilterOp::Ne: return column != scalar;
@@ -256,15 +261,15 @@ namespace detail {
       }
       break;
     }
-    case pluss::table::ThreadKind::Duration: {
+    case pluss::table::SlateKind::Duration: {
       const auto scalar = scalar_duration_(value);
       switch (op) {
-        case FilterOp::Eq: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Eq);
-        case FilterOp::Ne: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Ne);
-        case FilterOp::Gt: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Gt);
-        case FilterOp::Ge: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Ge);
-        case FilterOp::Lt: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Lt);
-        case FilterOp::Le: return column.compare(scalar, pluss::table::ThreadBinaryCompareOp::Le);
+        case FilterOp::Eq: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Eq);
+        case FilterOp::Ne: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Ne);
+        case FilterOp::Gt: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Gt);
+        case FilterOp::Ge: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Ge);
+        case FilterOp::Lt: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Lt);
+        case FilterOp::Le: return column.compare(scalar, pluss::table::SlateBinaryCompareOp::Le);
         default: break;
       }
       break;
@@ -273,38 +278,38 @@ namespace detail {
   PLUSS_FAIL("pluss::bi: unsupported scalar filter operator");
 }
 
-[[nodiscard]] inline pluss::table::Thread apply_between_filter_(
-    const pluss::table::Thread& column,
+[[nodiscard]] inline pluss::table::Slate apply_between_filter_(
+    const pluss::table::Slate& column,
     const FilterRange& range) {
   switch (column.kind()) {
-    case pluss::table::ThreadKind::Series:
+    case pluss::table::SlateKind::Series:
       PLUSS_CHECK(std::holds_alternative<double>(range.low) &&
                       std::holds_alternative<double>(range.high),
                   "pluss::bi: numeric between filter requires double bounds");
       return (column >= std::get<double>(range.low)) &
              (column <= std::get<double>(range.high));
-    case pluss::table::ThreadKind::Timeline:
+    case pluss::table::SlateKind::Timeline:
       return column.between(scalar_temporal_iso_(range.low), scalar_temporal_iso_(range.high), true);
-    case pluss::table::ThreadKind::Note:
+    case pluss::table::SlateKind::Note:
       PLUSS_FAIL("pluss::bi: between filter is not supported for text features");
-    case pluss::table::ThreadKind::Duration: {
+    case pluss::table::SlateKind::Duration: {
       auto low = scalar_duration_(range.low);
       auto high = scalar_duration_(range.high);
       if (low.host().front() > high.host().front()) {
         std::swap(low, high);
       }
-      return column.compare(low, pluss::table::ThreadBinaryCompareOp::Ge) &
-             column.compare(high, pluss::table::ThreadBinaryCompareOp::Le);
+      return column.compare(low, pluss::table::SlateBinaryCompareOp::Ge) &
+             column.compare(high, pluss::table::SlateBinaryCompareOp::Le);
     }
   }
   PLUSS_FAIL("pluss::bi: unsupported between filter payload");
 }
 
-[[nodiscard]] inline pluss::table::Thread apply_set_filter_(
-    const pluss::table::Thread& column,
+[[nodiscard]] inline pluss::table::Slate apply_set_filter_(
+    const pluss::table::Slate& column,
     const FilterSet& set_value) {
   if (std::holds_alternative<std::vector<double>>(set_value)) {
-    PLUSS_CHECK(column.kind() == pluss::table::ThreadKind::Series,
+    PLUSS_CHECK(column.kind() == pluss::table::SlateKind::Series,
                 "pluss::bi: numeric set filter requires a numeric feature");
     const auto& values = std::get<std::vector<double>>(set_value);
     PLUSS_CHECK(!values.empty(), "pluss::bi: set filter cannot be empty");
@@ -315,7 +320,7 @@ namespace detail {
     return mask;
   }
 
-  PLUSS_CHECK(column.kind() == pluss::table::ThreadKind::Note,
+  PLUSS_CHECK(column.kind() == pluss::table::SlateKind::Note,
               "pluss::bi: text set filter requires a text feature");
   const auto& values = std::get<std::vector<std::string>>(set_value);
   PLUSS_CHECK(!values.empty(), "pluss::bi: set filter cannot be empty");
@@ -326,8 +331,8 @@ namespace detail {
   return mask;
 }
 
-[[nodiscard]] inline pluss::table::Thread apply_filter_(
-    const pluss::table::Thread& column,
+[[nodiscard]] inline pluss::table::Slate apply_filter_(
+    const pluss::table::Slate& column,
     const Filter& filter) {
   if (std::holds_alternative<FilterScalar>(filter.payload)) {
     return apply_scalar_filter_(column, filter.op, std::get<FilterScalar>(filter.payload));
@@ -513,7 +518,7 @@ namespace detail {
   return out;
 }
 
-[[nodiscard]] inline pluss::table::ThreadValue reduce_kpi_(
+[[nodiscard]] inline pluss::table::SlateValue reduce_kpi_(
     const pluss::table::DataFrame& frame,
     const BindSpec& bind) {
   PLUSS_CHECK(bind.feature.has_value(),
@@ -529,14 +534,31 @@ namespace detail {
     case pluss::table::GroupOp::Max: return column.max();
     case pluss::table::GroupOp::Std: return column.std(true);
     case pluss::table::GroupOp::Var: return column.var(true);
-    case pluss::table::GroupOp::Mode: return pluss::table::ThreadValue(column.mode());
+    case pluss::table::GroupOp::Mode: return pluss::table::SlateValue(column.mode());
   }
   PLUSS_FAIL("pluss::bi: unsupported KPI reducer");
 }
 
-[[nodiscard]] inline std::string scalar_text_(const pluss::table::ThreadValue& value) {
+[[nodiscard]] inline std::optional<int> tile_decimals_(const TileRender& tile) {
+  if (!tile.view.has_value()) {
+    return std::nullopt;
+  }
+  return tile.view->bind().decimals;
+}
+
+[[nodiscard]] inline std::string scalar_text_(
+    const pluss::table::SlateValue& value,
+    std::optional<int> decimals = std::nullopt) {
   try {
-    return std::to_string(pluss::tils::as_f64(value.as_series()));
+    const double number = pluss::tils::as_f64(value.as_series());
+    std::ostringstream out;
+    if (decimals.has_value()) {
+      out << std::fixed << std::setprecision(*decimals);
+    } else {
+      out << std::setprecision(15);
+    }
+    out << number;
+    return out.str();
   } catch (...) {
   }
   try {
@@ -574,7 +596,7 @@ namespace detail {
     const auto title = bind.title.empty() ? tile.view->key() : bind.title;
     out << title;
     if (tile.kind == ViewKind::Kpi && tile.scalar.has_value()) {
-      out << "\n" << scalar_text_(*tile.scalar);
+      out << "\n" << scalar_text_(*tile.scalar, tile_decimals_(tile));
     } else if (tile.table != nullptr) {
       out << "\n" << tile.table->ncases() << " cases x "
           << tile.table->nfeatures() << " feat";
@@ -1190,7 +1212,7 @@ public:
   //
   // `port == 0` asks the OS for any free port. When `open_browser` is true
   // (the default), the dashboard's URL is opened in the system browser via
-  // the same `pluss::bi_tools::open_path_in_browser` Phase-1 launcher used
+  // the same internal browser launcher used
   // by `show()`. The `Studio` itself must outlive the returned handle --
   // every request the running server answers calls back into `*this`.
   [[nodiscard]] ServeHandle start_serving(
@@ -2256,13 +2278,13 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
          "</html>\n";
 }
 
-[[nodiscard]] inline std::string thread_scalar_text_at_(
-    const pluss::table::Thread& thread,
+[[nodiscard]] inline std::string slate_scalar_text_at_(
+    const pluss::table::Slate& slate,
     std::int64_t row) {
-  if (!pluss::table::detail::valid_at(thread, row)) {
+  if (!pluss::table::detail::valid_at(slate, row)) {
     return "NULL";
   }
-  return scalar_text_(thread.slice(row, row + 1).min());
+  return scalar_text_(slate.slice(row, row + 1).min());
 }
 
 [[nodiscard]] inline std::optional<pluss::table::DataFrame> control_source_frame_(
@@ -2369,7 +2391,7 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
 [[nodiscard]] inline std::string render_kpi_tile_html_(
     const TileRender& tile) {
   const auto title = escape_html_(tile_title_(tile));
-  const auto value = tile.scalar.has_value() ? escape_html_(scalar_text_(*tile.scalar)) : std::string("NULL");
+  const auto value = tile.scalar.has_value() ? escape_html_(scalar_text_(*tile.scalar, tile_decimals_(tile))) : std::string("NULL");
   std::ostringstream out;
   out << "<div class=\"bi-kpi\">"
       << "<div class=\"bi-kpi-label\">" << title << "</div>"
@@ -2424,7 +2446,7 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
           << "onchange=\"plussBiSyncSelect('" << control_id << "')\">";
       out << "<option value=\"\">All</option>";
       for (std::int64_t row = 0; row < option_count; ++row) {
-        const auto value = thread_scalar_text_at_(values, row);
+        const auto value = slate_scalar_text_at_(values, row);
         const auto escaped = escape_html_(value);
         out << "<option value=\"" << escaped << "\">" << escaped << "</option>";
       }
@@ -2509,14 +2531,17 @@ inline void write_text_file_(const std::filesystem::path& path, std::string_view
       << "<h2>" << escape_html_(board.title.empty() ? board.key : board.title) << "</h2>"
       << "<span class=\"bi-board-meta\">" << board.tiles.size() << " tiles</span>"
       << "</div>"
-      << "<div class=\"bi-grid\" style=\"grid-template-columns:repeat("
-      << std::max<std::int64_t>(1, board.cols) << ", minmax(0, 1fr));\">";
+      << "<div class=\"bi-grid\" style=\"--board-cols:"
+      << std::max<std::int64_t>(1, board.cols) << ";\">";
+  // Placement is data, not layout: the stylesheet decides whether a tile spans
+  // these grid cells, which it does from the medium breakpoint upward. Below
+  // that, every tile stacks in a single column.
   for (const auto& tile : board.tiles) {
-    out << "<article class=\"bi-tile\" style=\"grid-column:"
-        << (tile.layout.col + 1) << " / span " << std::max<std::int64_t>(1, tile.layout.col_span)
-        << ";grid-row:" << (tile.layout.row + 1) << " / span "
-        << std::max<std::int64_t>(1, tile.layout.row_span)
-        << ";min-height:" << tile_min_height_px_(tile) << "px;\">"
+    out << "<article class=\"bi-tile\" style=\"--col:" << (tile.layout.col + 1)
+        << ";--span-cols:" << std::max<std::int64_t>(1, tile.layout.col_span)
+        << ";--row:" << (tile.layout.row + 1)
+        << ";--span-rows:" << std::max<std::int64_t>(1, tile.layout.row_span)
+        << ";--tile-min-h:" << tile_min_height_px_(tile) << "px;\">"
         << "<div class=\"bi-tile-title\">" << escape_html_(tile_title_(tile)) << "</div>"
         << render_tile_html_(nexus, session, tile)
         << "</article>";

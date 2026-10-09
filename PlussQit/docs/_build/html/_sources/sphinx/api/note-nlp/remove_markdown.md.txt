@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_markdown
+# Note::NlpAccessor::remove_markdown
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_markdown() const
+Note Note::NlpAccessor::remove_markdown() const
 ```
 
 ## Flatten Markdown To Visible Text

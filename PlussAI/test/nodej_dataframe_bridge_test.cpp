@@ -17,7 +17,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::nodej;
 
 Config f64() {
@@ -35,10 +35,10 @@ DataFrame make_regression_frame() {
   const Series w = pluss::make_series(std::vector<double>{1.0, 1.0, 0.8, 1.2, 1.0, 0.9}, {6}, f64());
 
   return DataFrame({
-      {"x0", Thread(x0)},
-      {"x1", Thread(x1)},
-      {"target", Thread(y)},
-      {"weight", Thread(w)},
+      {"x0", Slate(x0)},
+      {"x1", Slate(x1)},
+      {"target", Slate(y)},
+      {"weight", Slate(w)},
   });
 }
 
@@ -51,14 +51,14 @@ DataFrame make_mixed_frame() {
           1'700'000'003'000'000'000LL, 1'700'000'004'000'000'000LL, 1'700'000'005'000'000'000LL},
       {6},
       Config{}.with_dtype(ScalarType::Int64).with_platform(pluss::pCPU));
-  const Thread ts = Thread(epoch_nanos).cast().timeline();
+  const Slate ts = Slate(epoch_nanos).cast().timeline();
   const Series y = x0.mul(0.75).add(2.0);
 
   return DataFrame({
-      {"x0", Thread(x0)},
-      {"color", Thread(note)},
+      {"x0", Slate(x0)},
+      {"color", Slate(note)},
       {"ts", ts},
-      {"target", Thread(y)},
+      {"target", Slate(y)},
   });
 }
 
@@ -134,7 +134,7 @@ bool run_nodej_dataframe_bridge_checks(std::ostream* err = nullptr) {
   DataFrameBatchOptions mixed_options{};
   mixed_options.feature_names = {"x0", "color", "ts", "target"};
   mixed_options.label_feature = "target";
-  mixed_options.thread_policy = DataThreadPolicy::CastTemporalToSeries;
+  mixed_options.slate_policy = DataSlatePolicy::CastTemporalToSeries;
   mixed_options.note_policy = DataNotePolicy::Hash;
   auto mixed_or = labeled_batch_from_dataframe(mixed, mixed_options);
   if (!mixed_or.ok()) {
@@ -168,7 +168,7 @@ bool run_nodej_dataframe_bridge_checks(std::ostream* err = nullptr) {
 
   {
     // Factorize: fresh fit assigns codes in lexicographically-sorted category order.
-    const DataFrame train_colors = DataFrame({{"color", Thread(pluss::make_note(
+    const DataFrame train_colors = DataFrame({{"color", Slate(pluss::make_note(
         {"red", "green", "blue", "red", "green", "blue", "red", "blue"}))}});
     DataFrameBatchOptions factorize_options{};
     factorize_options.feature_names = {"color"};
@@ -196,7 +196,7 @@ bool run_nodej_dataframe_bridge_checks(std::ostream* err = nullptr) {
 
     // Reusing the fitted map on new data must encode with the exact same
     // codes (not refit fresh codes for this call's own distinct values).
-    const DataFrame reuse_colors = DataFrame({{"color", Thread(pluss::make_note({"green", "red", "blue"}))}});
+    const DataFrame reuse_colors = DataFrame({{"color", Slate(pluss::make_note({"green", "red", "blue"}))}});
     auto reuse_or = feature_batch_from_dataframe(reuse_colors, factorize_options, &fitted, nullptr);
     if (!reuse_or.ok() || as_f64(reuse_or.value().x) != std::vector<double>{1.0, 2.0, 0.0}) {
       if (err) *err << "Factorize reuse should encode using the exact fitted codes, not a fresh refit\n";
@@ -204,7 +204,7 @@ bool run_nodej_dataframe_bridge_checks(std::ostream* err = nullptr) {
     }
 
     // Unknown category ("purple") handling under all three UnknownCategoryPolicy values.
-    const DataFrame unseen_colors = DataFrame({{"color", Thread(pluss::make_note({"red", "purple", "blue"}))}});
+    const DataFrame unseen_colors = DataFrame({{"color", Slate(pluss::make_note({"red", "purple", "blue"}))}});
 
     DataFrameBatchOptions error_options = factorize_options;
     error_options.factorize_unknown_categorical = UnknownCategoryPolicy::Error;

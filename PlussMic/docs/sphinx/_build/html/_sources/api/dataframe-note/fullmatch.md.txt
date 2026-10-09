@@ -50,7 +50,7 @@ that only matches a prefix.
 using namespace pluss::table;
 
 auto codes = DataFrame({
-    {"code", Thread(pluss::make_note(
+    {"code", Slate(pluss::make_note(
         {"A123", "A123XYZ", "123A", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -131,7 +131,7 @@ anchors don't change anything.
   `fullmatch()` already requires the whole cell to match.
 - Changes the feature's payload kind from `Note` to `Series` (`Bool`).
 - A null cell on input stays null on output.
-- An invalid regex pattern throws at call time (`"Thread::fullmatch:
+- An invalid regex pattern throws at call time (`"Slate::fullmatch:
   invalid regular expression: ..."`).
 
 ## See Also

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::subjectivity
+# Note::NlpAccessor::subjectivity
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::subjectivity() const
+Note Note::NlpAccessor::subjectivity() const
 ```
 
 ## Score Subjective Language

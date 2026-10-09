@@ -52,10 +52,10 @@ whitespace in place.
 using namespace pluss::table;
 
 auto catalog = DataFrame({
-    {"sku", Thread(
+    {"sku", Slate(
         pluss::make_note({"  SKU-1001", "SKU-1002   ", "  SKU-1003", "SKU-1004"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
-}, Thread(pluss::make_note({"p1", "p2", "p3", "p4"})));
+}, Slate(pluss::make_note({"p1", "p2", "p3", "p4"})));
 
 auto out = catalog.nt().rstrip();
 std::cout << out;
@@ -85,7 +85,7 @@ right-edge effect visible) to isolate the one-sided behavior.
 
 ```cpp
 auto codes = DataFrame({
-    {"code", Thread(pluss::make_note({"[[[SKU-1001", "((SKU-1002", "SKU-1003"}))},
+    {"code", Slate(pluss::make_note({"[[[SKU-1001", "((SKU-1002", "SKU-1003"}))},
 });
 
 auto out2 = codes.nt().rstrip("])");

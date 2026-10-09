@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_dates
+# Note::NlpAccessor::mask_dates
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_dates() const
+Note Note::NlpAccessor::mask_dates() const
 ```
 
 ## Replace Date-Shaped Spans Without Rewriting The Record

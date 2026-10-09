@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::norm
+# Series::LinearAlgAccessor::norm
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signature
 
 ```cpp
-Series SeriesLinearAlgAccessor::norm() const
+Series Series::LinearAlgAccessor::norm() const
 Series SeriesLinearAlgProxy::norm() const
 ```
 
@@ -102,7 +102,7 @@ data=[0.6, 0.8]
 ## See Also
 
 - [`Series::div`](../series/div.md): divide by a computed norm to rescale values.
-- [`SeriesLinearAlgAccessor::dot`](dot.md): inner product of two vectors.
+- [`Series::LinearAlgAccessor::dot`](dot.md): inner product of two vectors.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mv.html"><span class="label">Previous</span><span class="title">mv</span></a>

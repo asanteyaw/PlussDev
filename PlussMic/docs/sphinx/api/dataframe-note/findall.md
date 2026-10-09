@@ -82,7 +82,7 @@ cell into one match per character.
 using namespace pluss::table;
 
 auto samples = DataFrame({
-    {"text", Thread(pluss::make_note({"hi", "a.b", "xyz", "x"}),
+    {"text", Slate(pluss::make_note({"hi", "a.b", "xyz", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
 std::cout << samples;
@@ -150,7 +150,7 @@ producing a ragged, NULL-padded result.
 
 ```cpp
 auto orders = DataFrame({
-    {"text", Thread(pluss::make_note(
+    {"text", Slate(pluss::make_note(
         {"1 2 3 4", "10 20", "no digits", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });

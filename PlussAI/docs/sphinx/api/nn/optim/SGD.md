@@ -175,10 +175,13 @@ int main() {
 
   for (int step = 0; step < 6; ++step) {
     const Series g_classic = w_classic.sub(target);
+    const float classic_loss = g_classic.square().mul(0.5).item<float>();
     classic.step(std::vector<Series>{g_classic});
     const Series g_nesterov = w_nesterov.sub(target);
+    const float nesterov_loss = g_nesterov.square().mul(0.5).item<float>();
     nesterov.step(std::vector<Series>{g_nesterov});
-    std::cout << "step " << step << ": classic momentum w = " << w_classic.item<float>()
+    std::cout << "step " << step << ": classic loss = " << classic_loss << ", nesterov loss = " << nesterov_loss
+              << ", classic momentum w = " << w_classic.item<float>()
                << ", nesterov w = " << w_nesterov.item<float>() << "\n";
   }
 
@@ -189,12 +192,12 @@ int main() {
 Output
 
 ```text
-step 0: classic momentum w = 4.6, nesterov w = 4.24
-step 1: classic momentum w = 3.88, nesterov w = 3.3004
-step 2: classic momentum w = 2.944, nesterov w = 2.30928
-step 3: classic momentum w = 1.9072, nesterov w = 1.37555
-step 4: classic momentum w = 0.88336, nesterov w = 0.581673
-step 5: classic momentum w = -0.0264322, nesterov w = -0.0195355
+step 0: classic loss = 8, nesterov loss = 8, classic momentum w = 4.6, nesterov w = 4.24
+step 1: classic loss = 6.48, nesterov loss = 5.2488, classic momentum w = 3.88, nesterov w = 3.3004
+step 2: classic loss = 4.1472, nesterov loss = 2.64592, classic momentum w = 2.944, nesterov w = 2.30928
+step 3: classic loss = 1.88957, nesterov loss = 0.857112, classic momentum w = 1.9072, nesterov w = 1.37555
+step 4: classic loss = 0.411506, nesterov loss = 0.0705194, classic momentum w = 0.88336, nesterov w = 0.581673
+step 5: classic loss = 0.00680247, nesterov loss = 0.0874987, classic momentum w = -0.0264322, nesterov w = -0.0195355
 ```
 
 `nesterov` requires `momentum > 0` -- construction throws otherwise.
@@ -278,22 +281,30 @@ int main() {
   optim::SGD optimizer(std::vector<Series*>{&w}, optim::SGDOptions{.learning_rate = 0.1, .momentum = 0.9});
 
   for (int step = 0; step < 3; ++step) {
-    optimizer.step(std::vector<Series>{w.sub(target)});
+    const Series residual = w.sub(target);
+    const float loss = residual.square().mul(0.5).item<float>();
+    optimizer.step(std::vector<Series>{residual});
+    std::cout << "step " << step << ": loss = " << loss << ", w = " << w.item<float>() << "\n";
   }
   std::cout << "after 3 steps: w = " << w.item<float>() << "\n";
 
   const optim::SGD::State saved = optimizer.capture_state();
 
   for (int step = 0; step < 3; ++step) {
-    optimizer.step(std::vector<Series>{w.sub(target)});
+    const Series residual = w.sub(target);
+    const float loss = residual.square().mul(0.5).item<float>();
+    optimizer.step(std::vector<Series>{residual});
+    std::cout << "continued step " << step << ": loss = " << loss << ", w = " << w.item<float>() << "\n";
   }
   std::cout << "after 3 more steps: w = " << w.item<float>() << "\n";
 
   optimizer.restore_state(saved);
   std::cout << "after restore_state(): w itself is unchanged by restore, still = " << w.item<float>() << "\n";
 
-  optimizer.step(std::vector<Series>{w.sub(target)});
-  std::cout << "one more step from the restored velocity: w = " << w.item<float>() << "\n";
+  const Series residual = w.sub(target);
+  const float loss = residual.square().mul(0.5).item<float>();
+  optimizer.step(std::vector<Series>{residual});
+  std::cout << "one more step from the restored velocity: loss = " << loss << ", w = " << w.item<float>() << "\n";
 
   return 0;
 }
@@ -302,10 +313,16 @@ int main() {
 Output
 
 ```text
+step 0: loss = 8, w = 4.6
+step 1: loss = 6.48, w = 3.88
+step 2: loss = 4.1472, w = 2.944
 after 3 steps: w = 2.944
+continued step 0: loss = 1.88957, w = 1.9072
+continued step 1: loss = 0.411506, w = 0.88336
+continued step 2: loss = 0.00680247, w = -0.0264322
 after 3 more steps: w = -0.0264322
 after restore_state(): w itself is unchanged by restore, still = -0.0264322
-one more step from the restored velocity: w = -0.766189
+one more step from the restored velocity: loss = 0.526781, w = -0.766189
 ```
 
 The last line's update is driven by the *restored* (step-3) velocity, not

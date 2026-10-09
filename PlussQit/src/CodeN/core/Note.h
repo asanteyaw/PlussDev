@@ -55,6 +55,12 @@ class TokenBatch;
 // native lanes use the typed item and contiguous-span accessors on NoteBase.
 class CODEN_API Note final : public NoteBase {
 public:
+  // Accessors belong to Note's public type hierarchy. The namespace-level
+  // classes remain the ABI implementation identities behind these aliases.
+  using NlpAccessor = NoteNlpAccessor;
+  using RegexAccessor = NoteRegexAccessor;
+  using TexAccessor = NoteTexAccessor;
+
   static Note undefined() noexcept { return Note(); }
 
   // Minimal core API remains implemented in Note.cpp
@@ -127,13 +133,13 @@ public:
 
   // Linguistic analysis and corpus-cleanup namespace. Returning this small
   // proxy by value keeps Note itself a one-pointer intrusive handle.
-  NoteNlpAccessor nlp() const noexcept { return NoteNlpAccessor(*this); }
+  NlpAccessor nlp() const noexcept { return NlpAccessor(*this); }
 
   // Pattern matching, extraction, substitution, and splitting.
-  NoteRegexAccessor regex() const noexcept { return NoteRegexAccessor(*this); }
+  RegexAccessor regex() const noexcept { return RegexAccessor(*this); }
 
   // TeX/LaTeX-source cleanup, extraction, conversion, and rendering.
-  NoteTexAccessor tex() const noexcept { return NoteTexAccessor(*this); }
+  TexAccessor tex() const noexcept { return TexAccessor(*this); }
 
 private:
   Note() = default;

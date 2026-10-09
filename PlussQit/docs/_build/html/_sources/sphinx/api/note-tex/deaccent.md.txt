@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::deaccent
+# Note::TexAccessor::deaccent
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::deaccent() const
+Note Note::TexAccessor::deaccent() const
 ```
 
 ## Remove Authored Accent Marks Without Removing Text

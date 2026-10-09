@@ -8,15 +8,15 @@
 int main() {
   namespace ai = pluss::ai;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame good({
-      {"timestamp", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, cfg))},
-      {"x", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3}, cfg))},
+      {"timestamp", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, cfg))},
+      {"x", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3}, cfg))},
   });
   const DataFrame missing_time({
-      {"x", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3}, cfg))},
+      {"x", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}, {3}, cfg))},
   });
 
   ai::StepOptions gate{};

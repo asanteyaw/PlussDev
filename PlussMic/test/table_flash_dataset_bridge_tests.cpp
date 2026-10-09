@@ -8,7 +8,7 @@
 namespace {
 
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using pluss::table::Atlas;
 
 [[noreturn]] void fail(std::string_view message) {
@@ -59,11 +59,11 @@ pluss::Timeline timeline_with_nat(std::initializer_list<std::string_view> values
 void test_from_table_preserves_order_kinds_and_masks() {
   const auto mask = bool_mask({true, false, true});
   const auto frame = DataFrame({
-      {"student", Thread(pluss::make_note({"Ada", "", "Cy"}), mask)},
-      {"observed_at", Thread(timeline_with_nat({"2026-01-01", "2026-01-02", "2026-01-03"},
+      {"student", Slate(pluss::make_note({"Ada", "", "Cy"}), mask)},
+      {"observed_at", Slate(timeline_with_nat({"2026-01-01", "2026-01-02", "2026-01-03"},
                                                {true, false, true}),
                              mask)},
-      {"score", Thread(pluss::make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
+      {"score", Slate(pluss::make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
   });
 
   const auto data = pluss::pl::flash::Dataset::from_table(frame);
@@ -258,17 +258,17 @@ void test_histplot_dataframe_requires_single_feature_or_explicit_feature() {
          "flash::histplot(DataFrame) should accept explicit feature selection");
 }
 
-void test_barplot_thread_and_atlas_depth_gate() {
-  pluss::pl::Studio thread_fig("barplot_thread_horizontal");
-  auto& thread_pane = thread_fig.pane2("thread");
+void test_barplot_slate_and_atlas_depth_gate() {
+  pluss::pl::Studio slate_fig("barplot_slate_horizontal");
+  auto& slate_pane = slate_fig.pane2("slate");
   (void)pluss::pl::flash::barplot(
-      thread_pane,
-      Thread(pluss::make_series(std::vector<double>{3.0, 7.0, 4.0})),
+      slate_pane,
+      Slate(pluss::make_series(std::vector<double>{3.0, 7.0, 4.0})),
       {.horizontal = true});
-  expect(thread_pane.x_axis().label == "value",
-         "flash::barplot(Thread) should label the value axis for horizontal bars");
-  expect(thread_pane.y_axis().label == "y",
-         "flash::barplot(Thread) should label the implicit position axis for horizontal bars");
+  expect(slate_pane.x_axis().label == "value",
+         "flash::barplot(Slate) should label the value axis for horizontal bars");
+  expect(slate_pane.y_axis().label == "y",
+         "flash::barplot(Slate) should label the implicit position axis for horizontal bars");
 
   const auto frame = DataFrame({
       {"x", pluss::make_series(std::vector<double>{1.0, 2.0, 3.0})},
@@ -406,7 +406,7 @@ int main() {
   test_dataset_nrows_rejects_ragged_shapes();
   test_lineplot_dataframe_auto_select_and_explicit_select();
   test_histplot_dataframe_requires_single_feature_or_explicit_feature();
-  test_barplot_thread_and_atlas_depth_gate();
+  test_barplot_slate_and_atlas_depth_gate();
   test_barplot_dataframe_supports_categorical_numeric_pairs();
   test_relplot_dataframe_supports_explicit_hue();
   test_boxenplot_dataframe_accepts_single_numeric_feature();

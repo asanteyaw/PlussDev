@@ -53,10 +53,10 @@ std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
 for (int i = 0; i < 5; ++i) {
     double base = static_cast<double>(i);
     frames.push_back(DataFrame({
-        {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
-    }, Thread(pluss::make_note(cities))));
+        {"temp_c", Slate(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
+    }, Slate(pluss::make_note(cities))));
 }
-auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+auto atlas = Atlas(frames, Slate(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
 auto chart = atlas.plot().surface("temp_c");
 chart.show();
@@ -77,10 +77,10 @@ std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
 for (int i = 0; i < 5; ++i) {
     double base = static_cast<double>(i);
     frames.push_back(DataFrame({
-        {"temp_c", Thread(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
-    }, Thread(pluss::make_note(cities))));
+        {"temp_c", Slate(pluss::make_series({18.0 + base, 19.0 + base, 20.0 + base, 21.0 + base, 22.0 + base}))},
+    }, Slate(pluss::make_note(cities))));
 }
-auto atlas = Atlas(frames, Thread(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
+auto atlas = Atlas(frames, Slate(pluss::make_note({"day1", "day2", "day3", "day4", "day5"})));
 
 Surface3DPlotOptions options;
 options.scene.preset = pluss::pl::flash::ScenePreset3D::Studio;

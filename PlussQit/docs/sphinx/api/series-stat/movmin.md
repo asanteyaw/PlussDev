@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::movmin
+# Series::StatAccessor::movmin
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::movmin() const
-Series SeriesStatAccessor::movmin(std::int64_t window) const
-Series SeriesStatAccessor::movmin(std::int64_t window, std::int64_t dim) const
+Series Series::StatAccessor::movmin() const
+Series Series::StatAccessor::movmin(std::int64_t window) const
+Series Series::StatAccessor::movmin(std::int64_t window, std::int64_t dim) const
 Series SeriesStatProxy::movmin() const
 Series SeriesStatProxy::movmin(std::int64_t window) const
 Series SeriesStatProxy::movmin(std::int64_t window, std::int64_t dim) const

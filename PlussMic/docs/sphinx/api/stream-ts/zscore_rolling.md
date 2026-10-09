@@ -107,8 +107,8 @@ Position `1`'s window is `(10, 20)`: mean `15`, population std `5`, so
 - [`StreamTimeSeriesAccessor::rolling_block`](rolling_block.md): shares this
   method's underlying rolling-mean/rolling-std engine.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::zscore_rolling`](../thread-ts/zscore_rolling.md): the
-  underlying single-thread engine, with the fully worked
+- [`TimeSeriesAccessor::zscore_rolling`](../slate-ts/zscore_rolling.md): the
+  underlying single-slate engine, with the fully worked
   missing-value-poisons-the-window example.
 
 <div class="pluss-inline-prev-next">

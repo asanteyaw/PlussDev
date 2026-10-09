@@ -65,7 +65,7 @@ city                     | Note         | Note             | 3       | [Accra, K
 ```
 
 Example 2. Build the mask from one of the catalog's own streams, via
-[`at()`](at.md).`as_series()` and a `Thread`-level comparison.
+[`at()`](at.md).`as_series()` and a `Slate`-level comparison.
 
 ```cpp
 auto ct = pluss::kindle::Catalog({

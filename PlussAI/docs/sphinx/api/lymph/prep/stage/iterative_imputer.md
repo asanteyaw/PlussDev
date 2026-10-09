@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::iterative_imputer`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `iterative_imputer` builds an attachable [`prep::Stage`](Stage.md) that fills gaps by modelling each column with missing values as a ridge regression on the others, repeated for a fixed number of rounds.
 
@@ -60,7 +60,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -71,15 +71,15 @@ int main() {
   const pluss::Series a = pluss::make_series({1.,2.,3.,4.,5.,6.,7.,8.}, {8}, f64);
   const pluss::Series b = pluss::make_series({2., 4., NaN, 8., 10., 12., NaN, 16.}, {8}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1}, {8}, f64);
-  const DataFrame x({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame x({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::iterative_imputer(), lymph::prep::route::names({"a", "b"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"b", Thread(b)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"b", Slate(b)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -121,7 +121,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -131,7 +131,7 @@ int main() {
   // regulariser. b is exactly 2*a, so the fill should recover 6 for row 2.
   const pluss::Series a = pluss::make_series({1.,2.,3.,4.,5.,6.}, {6}, f64);
   const pluss::Series b = pluss::make_series({2., 4., NaN, 8., 10., 12.}, {6}, f64);
-  const DataFrame frame({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame frame({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::options::IterativeImputer few{};
   few.rounds = 1;
@@ -190,7 +190,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -200,7 +200,7 @@ int main() {
   const pluss::Series x2 = pluss::make_series({3.,6.,NaN,12.,15.,18.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,0,1,2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"x1", Thread(x1)}, {"x2", Thread(x2)}, {"region", Thread(region)}});
+  const DataFrame x({{"x1", Slate(x1)}, {"x2", Slate(x2)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::iterative_imputer(), lymph::prep::route::names({"x1", "x2"}))
@@ -208,8 +208,8 @@ int main() {
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"x2", Thread(x2)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"x2", Slate(x2)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

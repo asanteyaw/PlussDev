@@ -90,8 +90,10 @@ int main() {
   optim::Adam optimizer(std::vector<Series*>{&w}, optim::AdamOptions{.learning_rate = 0.5});
 
   for (int step = 0; step < 8; ++step) {
-    optimizer.step(std::vector<Series>{w.sub(target)});
-    std::cout << "step " << step << ": w = " << w.item<float>() << "\n";
+    const Series w_residual = w.sub(target);
+    const float w_loss = w_residual.square().mul(0.5).item<float>();
+    optimizer.step(std::vector<Series>{w_residual});
+    std::cout << "step " << step << ": loss = " << w_loss << ", w = " << w.item<float>() << "\n";
   }
 
   return 0;
@@ -101,14 +103,14 @@ int main() {
 Output
 
 ```text
-step 0: w = 4.5
-step 1: w = 4.00284
-step 2: w = 3.5111
-step 3: w = 3.028
-step 4: w = 2.55751
-step 5: w = 2.10445
-step 6: w = 1.67443
-step 7: w = 1.27372
+step 0: loss = 8, w = 4.5
+step 1: loss = 6.125, w = 4.00284
+step 2: loss = 4.50852, w = 3.5111
+step 3: loss = 3.1528, w = 3.028
+step 4: loss = 2.05638, w = 2.55751
+step 5: loss = 1.21293, w = 2.10445
+step 6: loss = 0.609909, w = 1.67443
+step 7: loss = 0.227427, w = 1.27372
 ```
 
 ### Example 2

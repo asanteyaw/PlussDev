@@ -47,8 +47,8 @@ Example 1. One group with an odd count, one with an even count.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Thread(pluss::make_series({10.0, 50.0, 20.0, 30.0, 70.0}))},
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Slate(pluss::make_series({10.0, 50.0, 20.0, 30.0, 70.0}))},
 });
 std::cout << orders;
 
@@ -94,9 +94,9 @@ Example 2. Median only one selected value feature.
 
 ```cpp
 auto wide = DataFrame({
-    {"city", Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Thread(pluss::make_series({10.0, 50.0, 30.0, 70.0}))},
-    {"units", Thread(pluss::make_series({2.0, 9.0, 1.0, 3.0}))},
+    {"city", Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Slate(pluss::make_series({10.0, 50.0, 30.0, 70.0}))},
+    {"units", Slate(pluss::make_series({2.0, 9.0, 1.0, 3.0}))},
 });
 
 auto out2 = wide.group().by({"city"}).median({"amount"});

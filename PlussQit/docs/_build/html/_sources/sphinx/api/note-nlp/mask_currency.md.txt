@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_currency
+# Note::NlpAccessor::mask_currency
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_currency() const
+Note Note::NlpAccessor::mask_currency() const
 ```
 
 ## Preserve The Sentence, Hide The Amount

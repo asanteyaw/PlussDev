@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::is_unique
+# Timeline::TimelineIndexAccessor::is_unique
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-bool TimelineIndexAccessor::is_unique() const
+bool Timeline::TimelineIndexAccessor::is_unique() const
 ```
 
 ## Whether Every Instant Appears Once
@@ -39,11 +39,11 @@ duplicates separated by other timestamps are still detected.
 Example 1. A normal ordered axis is unique.
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
-});
+}).index();
 std::cout << std::boolalpha << index.is_unique() << "\n";
 ```
 
@@ -56,11 +56,11 @@ true
 Example 2. Equal neighboring instants make a monotonic axis non-unique.
 
 ```cpp
-auto tied = pluss::timeindex::make({
+auto tied = pluss::timeline::make({
     "2025-01-01T00:00:00Z",
     "2025-01-01T00:00:00+00:00",
     "2025-01-01T01:00:00Z",
-});
+}).index();
 std::cout << std::boolalpha << tied.is_unique() << "\n";
 ```
 
@@ -73,12 +73,12 @@ false
 Example 3. Separated duplicates are detected on a deliberately unordered axis.
 
 ```cpp
-auto separated = pluss::timeindex::make({
+auto separated = pluss::timeline::make({
     "2025-01-01T02:00:00Z",
     "2025-01-01T00:00:00Z",
     "2025-01-01T01:00:00Z",
     "2025-01-01T02:00:00Z",
-}, false);
+}).index(false);
 std::cout << std::boolalpha << separated.is_unique() << "\n";
 ```
 
@@ -91,8 +91,8 @@ false
 Example 4. Empty and singleton axes satisfy the predicate.
 
 ```cpp
-auto empty = pluss::timeindex::make(std::vector<std::int64_t>{});
-auto one = pluss::timeindex::make("2025-01-01T00:00:00Z");
+auto empty = pluss::timeline::epoch(std::vector<std::int64_t>{}).index();
+auto one = pluss::timeline::make({"2025-01-01T00:00:00Z"}).index();
 std::cout << std::boolalpha
           << "empty=" << empty.is_unique() << "\n"
           << "one=" << one.is_unique() << "\n";
@@ -109,13 +109,13 @@ one=true
 
 The result is a native C++ `bool`. Monotonic input is checked in `O(n)` time
 with `O(1)` auxiliary memory. Unordered input remains `O(n)` expected time but
-may allocate `O(n)` hash storage. The TimelineIndexAccessor itself is not modified.
+may allocate `O(n)` hash storage. The Timeline::TimelineIndexAccessor itself is not modified.
 
 ## See Also
 
-- [`TimelineIndexAccessor::unique`](unique.md)
-- [`TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md)
-- [`TimelineIndexAccessor::sort`](sort.md)
+- [`Timeline::TimelineIndexAccessor::unique`](unique.md)
+- [`Timeline::TimelineIndexAccessor::is_monotonic_increasing`](is_monotonic_increasing.md)
+- [`Timeline::TimelineIndexAccessor::sort`](sort.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="is_monotonic_increasing.html">

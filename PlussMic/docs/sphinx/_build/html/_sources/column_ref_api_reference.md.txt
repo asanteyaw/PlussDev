@@ -16,7 +16,7 @@ This page documents the public `ColumnRef` helper returned by DataFrame column-r
 #### Signature
 
 ```cpp
-ColumnRef::head(std::int64_t n) -> Thread
+ColumnRef::head(std::int64_t n) -> Slate
 ```
 
 #### What It Does
@@ -30,7 +30,7 @@ Returns the first `n` values from the referenced column as a thread.
 
 #### Returns
 
-`Thread`
+`Slate`
     Value produced by this call.
 
 #### Examples
@@ -39,9 +39,9 @@ Example 1. Inspect the first part of the current object without changing the sou
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -89,9 +89,9 @@ Example 1. Compute `mean` and inspect the resulting summary value or summary obj
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -143,9 +143,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -162,25 +162,25 @@ sales
     <span class="label">Previous</span>
     <span class="title">mean</span>
   </a>
-  <a class="next-link" href="#thread">
+  <a class="next-link" href="#slate">
     <span class="label">Next</span>
-    <span class="title">thread</span>
+    <span class="title">slate</span>
   </a>
 </div>
 
-## T
+## S
 
-### `thread`
+### `slate`
 
 #### Signature
 
 ```cpp
-ColumnRef::thread() -> const Thread&
+ColumnRef::slate() -> const Slate&
 ```
 
 #### What It Does
 
-Returns the referenced column as a `Thread` object.
+Uses the public contract shown above to inspect, transform, summarize, or combine the current object without changing the rest of its alignment model unexpectedly.
 
 #### Parameters
 
@@ -188,7 +188,7 @@ Returns the referenced column as a `Thread` object.
 
 #### Returns
 
-`const Thread&`
+`const Slate&`
     Value produced by this call.
 
 #### Examples
@@ -197,13 +197,13 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
-auto out = ref.thread();
+auto out = ref.slate();
 ```
 
 ##### Output
@@ -214,8 +214,8 @@ auto out = ref.thread();
 
 #### Practical Behavior
 
-- `thread()` gives you the exact referenced column payload without copying it into a new frame.
-- Use this when you want to switch into `Thread` operations such as comparisons, casting, or text cleanup.
+- `slate()` gives you the exact referenced column payload without copying it into a new frame.
+- Use this when you want to switch into `Slate` operations such as comparisons, casting, or text cleanup.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#name">
@@ -235,7 +235,7 @@ auto out = ref.thread();
 #### Signature
 
 ```cpp
-ColumnRef::value() -> ThreadValue
+ColumnRef::value() -> SlateValue
 ```
 
 #### What It Does
@@ -248,7 +248,7 @@ Returns one scalar-like wrapper for the first referenced value, which is useful 
 
 #### Returns
 
-`ThreadValue`
+`SlateValue`
     Value produced by this call.
 
 #### Examples
@@ -257,9 +257,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -274,13 +274,13 @@ auto out = ref.value();
 
 #### Practical Behavior
 
-- `value()` returns a `ThreadValue` wrapper over the first element of the referenced column.
+- `value()` returns a `SlateValue` wrapper over the first element of the referenced column.
 - Use this when you need typed scalar extraction rather than a whole-column thread.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="#thread">
+  <a class="prev-link" href="#slate">
     <span class="label">Previous</span>
-    <span class="title">thread</span>
+    <span class="title">slate</span>
   </a>
   <a class="next-link" href="#values">
     <span class="label">Next</span>
@@ -293,12 +293,12 @@ auto out = ref.value();
 #### Signature
 
 ```cpp
-ColumnRef::values() -> Thread
+ColumnRef::values() -> Slate
 ```
 
 #### What It Does
 
-Materializes the full referenced column as a standalone `Thread` so you can reuse it outside the parent frame.
+Materializes the full referenced column as a standalone `Slate` so you can reuse it outside the parent frame.
 
 #### Parameters
 
@@ -306,7 +306,7 @@ Materializes the full referenced column as a standalone `Thread` so you can reus
 
 #### Returns
 
-`Thread`
+`Slate`
     Value produced by this call.
 
 #### Examples
@@ -315,9 +315,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 auto ref = pluss::table::ColumnRef("sales", df.features("sales"));
 
@@ -332,8 +332,8 @@ auto out = ref.values();
 
 #### Practical Behavior
 
-- `values()` materializes the referenced feature as a standalone `Thread`.
-- Use this when you want to pass the column into another API that expects a thread rather than a column reference.
+- `values()` materializes the referenced feature as a standalone `Slate`.
+- Use this when you want to pass the column into another API that expects a slate rather than a column reference.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="#value">

@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::qr_q
+# Series::LinearAlgAccessor::qr_q
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::qr_q(bool reduced = true) const
+Series Series::LinearAlgAccessor::qr_q(bool reduced = true) const
 Series SeriesLinearAlgProxy::qr_q(bool reduced = true) const
 ```
 

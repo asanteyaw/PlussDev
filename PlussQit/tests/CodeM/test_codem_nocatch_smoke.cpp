@@ -6,6 +6,15 @@
 using pluss::codem::Series;
 using pluss::codem::ScalarType;
 
+static_assert(std::is_same_v<Series::StatAccessor,
+                             std::remove_reference_t<decltype(std::declval<Series&>().stat)>>);
+static_assert(std::is_same_v<Series::LinearAlgAccessor,
+                             std::remove_reference_t<decltype(std::declval<Series&>().linearalg)>>);
+static_assert(std::is_same_v<Series::AntidiffAccessor,
+                             std::remove_reference_t<decltype(std::declval<Series&>().antidiff)>>);
+static_assert(std::is_same_v<Series::TraverseAccessor,
+                             std::remove_reference_t<decltype(std::declval<Series&>().traverse)>>);
+
 
 #include <array>
 #include <cstddef>
@@ -275,8 +284,20 @@ void test_factories() {
 }
 
 void test_aux_let_transmit() {
+  struct ScalarNeedsIndex {
+    int operator()(int value, std::size_t index) const {
+      return value + static_cast<int>(index);
+    }
+  };
+  constexpr auto scalar_transmittable = []<class F, class T>() {
+    return requires(F fn, T value) {
+      pluss::tils::transmit(fn, value);
+    };
+  };
+  static_assert(!scalar_transmittable.template operator()<ScalarNeedsIndex, int>());
+
   std::cout << "[RUN] aux:let\n";
-  auto lv = suppose(std::vector<int>{1, 2, 3})
+  auto lv = pluss::tils::suppose(std::vector<int>{1, 2, 3})
                 .then([](const std::vector<int>& x) {
                   std::vector<int> y = x;
                   for (auto& v : y) v *= 2;
@@ -290,10 +311,10 @@ void test_aux_let_transmit() {
                 .value();
   expect_eq(lv, std::vector<int>{2, 4, 6}, "let pipeline");
 
-  auto gv = suppose(5).then([](int x) { return x + 3; }).value();
+  auto gv = pluss::tils::suppose(5).then([](int x) { return x + 3; }).value();
   expect_true(gv == 8, "global suppose alias");
 
-  auto la = suppose.as<double>(3).then([](double x) { return x + 0.5; }).value();
+  auto la = pluss::tils::suppose.as<double>(3).then([](double x) { return x + 0.5; }).value();
   expect_close(la, 3.5, 1e-12, "suppose typed conversion");
 
   auto declared = pluss::make_series({1.0, 2.0, 3.0});

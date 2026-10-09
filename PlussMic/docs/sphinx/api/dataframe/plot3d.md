@@ -50,9 +50,9 @@ Example 1. Enter the 3D plotting accessor and draw a 3D scatter chart.
 using namespace pluss::table;
 
 auto points = DataFrame({
-    {"x", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"y", Thread(pluss::make_series({4.0, 3.0, 2.0}))},
-    {"z", Thread(pluss::make_series({2.0, 5.0, 4.0}))},
+    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"y", Slate(pluss::make_series({4.0, 3.0, 2.0}))},
+    {"z", Slate(pluss::make_series({2.0, 5.0, 4.0}))},
 });
 
 auto chart = points.plot3d().scatter("x", "y", "z");
@@ -77,9 +77,9 @@ Example 3. Draw an aggregated surface mesh instead — see
 
 ```cpp
 auto readings = DataFrame({
-    {"depth_m", Thread(pluss::make_series({10.0, 10.0, 20.0, 20.0}))},
-    {"hour",    Thread(pluss::make_series({0.0, 12.0, 0.0, 12.0}))},
-    {"temp_c",  Thread(pluss::make_series({18.0, 20.0, 15.0, 16.5}))},
+    {"depth_m", Slate(pluss::make_series({10.0, 10.0, 20.0, 20.0}))},
+    {"hour",    Slate(pluss::make_series({0.0, 12.0, 0.0, 12.0}))},
+    {"temp_c",  Slate(pluss::make_series({18.0, 20.0, 15.0, 16.5}))},
 });
 
 auto surface_chart = readings.plot3d().surface("hour", "depth_m", "temp_c");

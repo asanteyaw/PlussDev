@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5dc00a1ac683 -->
+<!-- pluss-signature-hash: fba94be15cde -->
 
 # DataFrameTsAccessor::grouped
 
@@ -10,7 +10,7 @@
 ```cpp
 DataFrameTsAccessor::grouped(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
 DataFrameTsAccessor::grouped(std::string_view group_feature, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
-DataFrameTsAccessor::grouped(const Thread& groups, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
+DataFrameTsAccessor::grouped(const Slate& groups, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
 ```
 
 ## What It Does
@@ -27,10 +27,10 @@ within each group**, using each group's own rows in their original relative orde
   exact frame `.ts()` was called on — since `ts()` requires every feature on that
   frame to already be numeric, this only works if the group column is itself
   numeric (or if it wasn't dropped by an earlier `.features({...})` narrowing
-  step). In practice, the **`groups`-`Thread` overload** below is the more
+  step). In practice, the **`groups`-`Slate` overload** below is the more
   reliable choice whenever the grouping key is non-numeric, since it lets you
   extract that key *before* narrowing to the numeric value feature(s).
-- The **`groups` overload** takes an explicit `Thread` of grouping keys, one per
+- The **`groups` overload** takes an explicit `Slate` of grouping keys, one per
   case, matching the frame's case count, independent of whichever features are
   currently bound to the accessor.
 
@@ -54,7 +54,7 @@ Same fields as [`rolling()`](rolling.md)'s fixed-window overload: `min_count`,
 
 The name of an existing feature on the frame whose values define the groups.
 
-**groups** (`const Thread&`, one overload)
+**groups** (`const Slate&`, one overload)
 
 An explicit per-case grouping key; must be defined and match the frame's case
 count.
@@ -68,15 +68,15 @@ count.
 ## Examples
 
 Example 1. Compute a rolling mean scoped independently to each of two groups, using
-the `groups`-`Thread` overload so the (non-numeric) group key can be extracted
+the `groups`-`Slate` overload so the (non-numeric) group key can be extracted
 before narrowing to the numeric value feature.
 
 ```cpp
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"group", Thread(pluss::make_note({"A", "A", "B", "B"}))},
-    {"load",  Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"group", Slate(pluss::make_note({"A", "A", "B", "B"}))},
+    {"load",  Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 std::cout << readings;
 ```
@@ -124,12 +124,12 @@ bound feature (`load`), replaced by its grouped rolling values; `group` itself
 isn't part of the result.
 
 Example 2. The `group_feature` overload, naming the grouping column instead of
-extracting it into a `Thread` first.
+extracting it into a `Slate` first.
 
 ```cpp
 auto numeric_groups = DataFrame({
-    {"group_id", Thread(pluss::make_series({1, 1, 2, 2}))},
-    {"load",     Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
+    {"group_id", Slate(pluss::make_series({1, 1, 2, 2}))},
+    {"load",     Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))},
 });
 
 auto out2 = numeric_groups.ts().grouped("group_id", 2);
@@ -154,7 +154,7 @@ std::cout << out2;
 numeric column, including `group_id` itself, so it comes along in the output
 unchanged, alongside `load`'s grouped rolling mean — the same values as
 Example 1, just keyed by a numeric grouping feature named directly instead of
-extracted as a `Thread` beforehand.
+extracted as a `Slate` beforehand.
 
 Example 3. Call the no-argument-group overload without `TsOptions.group` set,
 to see it throw.

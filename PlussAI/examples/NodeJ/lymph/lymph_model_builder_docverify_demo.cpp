@@ -13,17 +13,17 @@ int main() {
   using lymph::RegularizationKind;
   using lymph::TrainOptions;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame raw({
-      {"income", Thread(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
-      {"balance", Thread(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
-      {"late", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
-      {"region", Thread(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
-      {"default", Thread(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.4, 1.8, 2.2, 3.8, 4.2, 4.6, 5.0}, {8}, f64))},
+      {"balance", Slate(pluss::make_series({0.2, 0.4, 0.6, 0.9, 1.8, 2.1, 2.4, 2.7}, {8}, f64))},
+      {"late", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
+      {"region", Slate(pluss::make_note({"north", "west", "north", "south", "east", "south", "west", "east"}))},
+      {"default", Slate(pluss::make_series({0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64))},
   });
 
   LinearFamilyOptions logistic_options{};
@@ -31,11 +31,11 @@ int main() {
   logistic_options.regularization_strength = 1e-3;
   logistic_options.fit_intercept = true;
 
-  lymph::Model model = lymph::model::logistic_regression(logistic_options);
-  lymph::ModelPrep prep = model.prepare();
+  lymph::models::Model model = lymph::models::logistic_regression(logistic_options);
+  lymph::models::ModelPrep prep = model.prepare();
   prep.standardize({"income", "balance", "late"});
   prep.encode(
-      lymph::columnrouter::names({"region"}),
+      lymph::prep::route::names({"region"}),
       lymph::prep::OneHotEncoderOptions{
           .max_categories = 8,
           .overflow = lymph::prep::CategoryOverflowPolicy::KeepMostFrequent,
@@ -69,9 +69,9 @@ int main() {
   std::cout << "accuracy=" << report.accuracy
             << " f1=" << report.f1 << "\n";
 
-  lymph::Builder builder = lymph::builder::build({
-      {"logreg", lymph::model::logistic_regression(logistic_options)},
-      {"tree", lymph::model::decision_tree_classifier()},
+  lymph::models::Builder builder = lymph::models::builder::build({
+      {"logreg", lymph::models::logistic_regression(logistic_options)},
+      {"tree", lymph::models::decision_tree_classifier()},
   });
 
   std::cout << "== builder_report ==\n";

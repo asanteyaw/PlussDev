@@ -27,7 +27,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -39,9 +39,9 @@ Series vec(std::vector<double> values) {
 
 DataFrame raw_frame() {
   return DataFrame({
-      {"id", Thread(vec({100, 101, 102}))},
-      {"x", Thread(vec({1.0, 2.0, 3.0}))},
-      {"y", Thread(vec({4.0, 5.0, 6.0}))},
+      {"id", Slate(vec({100, 101, 102}))},
+      {"x", Slate(vec({1.0, 2.0, 3.0}))},
+      {"y", Slate(vec({4.0, 5.0, 6.0}))},
   });
 }
 
@@ -267,7 +267,11 @@ bool run_phase6_checks(std::ostream* err = nullptr) {
   {
     const auto bundle = fresh_bundle_path("procedure_phase6_policy");
     const ai::Procedure proc = ai::procedure::make({
-        ai::procedure::step("gate", "raw", "clean", lymph::Policy{.drop_columns = {"id"}}),
+        ai::procedure::step(
+            "gate",
+            "raw",
+            "clean",
+            lymph::workflow::Policy{.drop_columns = {"id"}}),
         ai::procedure::step("out", ai::procedure::sink("phase6.clean")),
     }, {
         ai::procedure::link("gate", "out"),
@@ -331,7 +335,8 @@ bool run_phase6_checks(std::ostream* err = nullptr) {
     const lymph::AssessOptions assess = rich_assess_options();
     lymph::models::Model trained_model = lymph::models::decision_tree_regressor({.max_depth = 3});
     trained_model.learn_(regression_batch(), lymph::TrainOptions{});
-    lymph::Workflow trained_workflow = lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 2}));
+    lymph::workflow::Workflow trained_workflow =
+        lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 2}));
     trained_workflow.learn_(regression_batch(), lymph::TrainOptions{});
     const ai::Procedure proc = ai::procedure::make({
         ai::procedure::step("model_step", "train", "model_out",

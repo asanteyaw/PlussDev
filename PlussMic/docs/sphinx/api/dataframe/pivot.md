@@ -71,10 +71,10 @@ Example 1. Pivot per-order sales into a city-by-product grid, where every
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",  Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"sales",    Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0, 80.0, 60.0}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",  Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"sales",    Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0, 80.0, 60.0}))},
 });
 
 auto by_city_product = orders.pivot("city", "product", "sales");
@@ -103,10 +103,10 @@ Example 2. A repeated pair throws, pointing you at `pivot_table()` instead.
 
 ```cpp
 auto orders_with_repeat = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema"}))},
-    {"product",  Thread(pluss::make_note({"Laptop", "Laptop", "Laptop"}))},
-    {"sales",    Thread(pluss::make_series({100.0, 200.0, 90.0}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema"}))},
+    {"product",  Slate(pluss::make_note({"Laptop", "Laptop", "Laptop"}))},
+    {"sales",    Slate(pluss::make_series({100.0, 200.0, 90.0}))},
 });
 
 try {

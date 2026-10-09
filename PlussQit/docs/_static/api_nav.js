@@ -419,8 +419,8 @@ window.PLUSS_API_NAV = {
       "zeros_like"
     ]
   },
-  "SeriesStatAccessor": {
-    "title": "SeriesStatAccessor",
+  "Series::StatAccessor": {
+    "title": "Series::StatAccessor",
     "slug": "series-stat",
     "landing": "series_stat_accessor_api_reference.html",
     "methods": [
@@ -449,8 +449,8 @@ window.PLUSS_API_NAV = {
       "var"
     ]
   },
-  "SeriesLinearAlgAccessor": {
-    "title": "SeriesLinearAlgAccessor",
+  "Series::LinearAlgAccessor": {
+    "title": "Series::LinearAlgAccessor",
     "slug": "series-linearalg",
     "landing": "series_linearalg_accessor_api_reference.html",
     "methods": [
@@ -480,8 +480,17 @@ window.PLUSS_API_NAV = {
       "vdot"
     ]
   },
-  "SeriesTraverseAccessor": {
-    "title": "SeriesTraverseAccessor",
+  "Series::AntidiffAccessor": {
+    "title": "Series::AntidiffAccessor",
+    "slug": "series-antidiff",
+    "landing": "series_antidiff_accessor_api_reference.html",
+    "methods": [
+      "cumulative_trapezoid",
+      "trapezoid"
+    ]
+  },
+  "Series::TraverseAccessor": {
+    "title": "Series::TraverseAccessor",
     "slug": "series-traverse",
     "landing": "series_traverse_accessor_api_reference.html",
     "methods": [
@@ -661,8 +670,8 @@ window.PLUSS_API_NAV = {
       "vector"
     ]
   },
-  "NoteNlpAccessor": {
-    "title": "NoteNlpAccessor",
+  "Note::NlpAccessor": {
+    "title": "Note::NlpAccessor",
     "slug": "note-nlp",
     "landing": "note_nlp_accessor_api_reference.html",
     "methods": [
@@ -763,8 +772,8 @@ window.PLUSS_API_NAV = {
       "word_ngrams"
     ]
   },
-  "NoteRegexAccessor": {
-    "title": "NoteRegexAccessor",
+  "Note::RegexAccessor": {
+    "title": "Note::RegexAccessor",
     "slug": "note-regex",
     "landing": "note_regex_accessor_api_reference.html",
     "methods": [
@@ -776,8 +785,8 @@ window.PLUSS_API_NAV = {
       "split"
     ]
   },
-  "NoteTexAccessor": {
-    "title": "NoteTexAccessor",
+  "Note::TexAccessor": {
+    "title": "Note::TexAccessor",
     "slug": "note-tex",
     "landing": "note_tex_accessor_api_reference.html",
     "methods": [
@@ -1069,8 +1078,17 @@ window.PLUSS_API_NAV = {
       "seconds", "weeks", "zeros", "zeros_like"
     ]
   },
-  "TimelineIndexAccessor": {
-    "title": "Timeline Index Accessor",
+  "Queue": {
+    "title": "Queue",
+    "slug": "queue",
+    "landing": "queue_api_reference.html",
+    "methods": [
+      "accessors", "construction", "generic-access", "invoke", "kind",
+      "operators", "state", "stream", "visit", "where"
+    ]
+  },
+  "Timeline::TimelineIndexAccessor": {
+    "title": "Timeline::TimelineIndexAccessor",
     "slug": "timeline-index",
     "landing": "timeline_index_accessor_api_reference.html",
     "methods": [
@@ -1124,14 +1142,6 @@ window.PLUSS_API_NAV = {
       "tz_localize",
       "union_",
       "unique"
-    ]
-  },
-  "TimeIndexFactory": {
-    "title": "TimeIndex Factory",
-    "slug": "timeindex_factory",
-    "landing": "timeindex_factory_api_reference.html",
-    "methods": [
-      "date_range", "from_buffer", "make", "print"
     ]
   }
 };

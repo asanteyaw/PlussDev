@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   using DataFrame = pluss::table::DataFrame;
   using pluss::ScalarType;
   using pluss::Series;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   using namespace pluss::ai::nodej;
   namespace nja = pluss::ai::lymph;
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     });
 
 
-    const auto split = nja::validate::holdout()
+    const auto split = nja::selection::validate::holdout()
                            .test_size(0.2)
                            .shuffle(true)
                            .seed(42)
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     AssessOptions assess_options{};
     assess_options.metrics = {MetricKind::Rmse, MetricKind::R2, MetricKind::Mae};
 
-    nja::metrics::CrossValidationOptions cv_options{};
+    nja::selection::CrossValOptions cv_options{};
     cv_options.plan = CVPlanKind::CrossVal;
     cv_options.folds = 5;
     cv_options.shuffle = true;
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
     std::vector<nja::selection::Candidate> candidates{};
     {
-      nja::Model wf = nja::models::linear_regression(LinearFamilyOptions{
+      nja::models::Model wf = nja::models::linear_regression(LinearFamilyOptions{
           .objective = LinearObjective::LeastSquares,
           .regularization = RegularizationKind::L2,
           .regularization_strength = 1e-6,
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
       candidates.emplace_back("linear_ridge", wf);
     }
     {
-      nja::Model wf = nja::models::decision_tree_regressor(TreeFamilyOptions{
+      nja::models::Model wf = nja::models::decision_tree_regressor(TreeFamilyOptions{
           .criterion = TreeCriterion::Mse,
           .max_depth = 18,
           .min_samples_leaf = 8,
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
       candidates.emplace_back("decision_tree", wf);
     }
     {
-      nja::Model wf = nja::models::random_forest_regressor(EnsembleFamilyOptions{
+      nja::models::Model wf = nja::models::random_forest_regressor(EnsembleFamilyOptions{
           .method = EnsembleMethod::RandomForest,
           .learners = 140,
           .subsample = 0.9,
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
       candidates.emplace_back("random_forest", wf);
     }
     {
-      nja::Model wf = nja::models::knn_regressor(NeighborFamilyOptions{
+      nja::models::Model wf = nja::models::knn_regressor(NeighborFamilyOptions{
           .k = 9,
           .distance_weighted = true,
           .standardize = true,
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     const Series pred = best.infer(test_x);
     const fs::path best_model_path = model_dir / "hour_best_workflow.bin";
     best.save(best_model_path.string(), train_x, train_y, train_options);
-    auto restored = nja::Model::load(best_model_path.string());
+    auto restored = nja::models::Model::load(best_model_path.string());
     const Series pred_restored = restored.infer(test_x);
     const double restored_max_abs_diff = nja::max_abs_diff(pred, pred_restored);
     std::cout << "restored prediction max_abs_diff: " << restored_max_abs_diff << "\n";
@@ -145,9 +145,9 @@ int main(int argc, char** argv) {
     const Series y_true = test_y.to(pluss::pCPU, ScalarType::Float64).reshape({test_y.numel()});
     const Series y_pred = pred.to(pluss::pCPU, ScalarType::Float64).reshape({pred.numel()});
     DataFrame pred_frame({
-        {"y_true", Thread(y_true)},
-        {"y_pred", Thread(y_pred)},
-        {"residual", Thread(y_true.sub(y_pred))},
+        {"y_true", Slate(y_true)},
+        {"y_pred", Slate(y_pred)},
+        {"residual", Slate(y_true.sub(y_pred))},
     });
     pred_frame.save_csv((out_dir / "hour_workflow_tuning_predictions.csv").string());
     pred_frame.plot()

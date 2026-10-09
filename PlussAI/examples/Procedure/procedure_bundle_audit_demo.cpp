@@ -13,15 +13,19 @@ int main() {
   namespace ai = pluss::ai;
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"drop_me", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, cfg))},
-      {"x", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}, {2}, cfg))},
+      {"drop_me", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, cfg))},
+      {"x", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}, {2}, cfg))},
   });
   const ai::Procedure proc = ai::procedure::make({
-      ai::procedure::step("clean", "raw", "frame", lymph::Policy{.drop_columns = {"drop_me"}}),
+      ai::procedure::step(
+          "clean",
+          "raw",
+          "frame",
+          lymph::workflow::Policy{.drop_columns = {"drop_me"}}),
       ai::procedure::step("out", ai::procedure::sink("procedure.demo.frame")),
   }, {
       ai::procedure::link("clean", "out"),

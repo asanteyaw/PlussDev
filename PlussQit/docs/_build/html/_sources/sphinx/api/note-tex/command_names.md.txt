@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::command_names
+# Note::TexAccessor::command_names
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::command_names() const
+TokenBatch Note::TexAccessor::command_names() const
 ```
 
 ## Extract TeX Control-Word Names

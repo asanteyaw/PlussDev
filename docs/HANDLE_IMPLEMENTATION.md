@@ -19,7 +19,7 @@ Archive (3D)  → Multi-catalog management (corpus/database level)
 ```
 
 ### Design Philosophy
-- **Feed**: Mirrors Thread, adds 30+ text processing methods
+- **Feed**: Mirrors Slate, adds 30+ text processing methods
 - **Catalog**: Mirrors DataFrame, adds document collection features
 - **Archive**: Mirrors Atlas, adds corpus management capabilities
 

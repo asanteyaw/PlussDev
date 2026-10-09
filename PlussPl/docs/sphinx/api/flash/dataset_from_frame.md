@@ -88,8 +88,8 @@ is exported into the temporal family as `Timeline`.
   unified Pluss include such as `<pluss/pluss.h>` so the PlussMic bridge definitions
   are present.
 - No plotting occurs here. The result is an intermediate dataset object.
-- The bridge supports `ThreadKind::Series`, `ThreadKind::Note`, `ThreadKind::Timeline`,
-  and optionally `ThreadKind::TimeIndex`.
+- The bridge supports `SlateKind::Series`, `SlateKind::Note`, `SlateKind::Timeline`,
+  and optionally `SlateKind::TimeIndex`.
 - `TimeIndex` is exported into the temporal family, not preserved as a separate index
   family.
 - Columns with no missing values do not allocate a redundant all-true validity mask.
@@ -110,9 +110,9 @@ ptr[1] = false;
 ptr[2] = true;
 
 auto grades = DataFrame({
-    {"city", Thread(make_note({"Accra", "", "Kumasi"}), mask)},
-    {"score", Thread(make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
-    {"stamp", Thread(make_timeline({
+    {"city", Slate(make_note({"Accra", "", "Kumasi"}), mask)},
+    {"score", Slate(make_series(std::vector<double>{91.5, 0.0, 88.0}), mask)},
+    {"stamp", Slate(make_timeline({
         "2026-01-01T00:00:00Z",
         "2026-01-02T00:00:00Z",
         "2026-01-03T00:00:00Z",

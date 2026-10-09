@@ -8,14 +8,14 @@ namespace {
 namespace lymph = pluss::ai::lymph;
 using pluss::ScalarType;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 // BEGIN EXAMPLE 1
 void assess_separate_features_and_labels() {
   const auto f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame x({
-      {"income", Thread(pluss::make_series({1.0, 1.5, 4.0, 4.5}, {4}, f64))},
-      {"late_payments", Thread(pluss::make_series({0, 0, 1, 1}, {4}, f64))},
+      {"income", Slate(pluss::make_series({1.0, 1.5, 4.0, 4.5}, {4}, f64))},
+      {"late_payments", Slate(pluss::make_series({0, 0, 1, 1}, {4}, f64))},
   });
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
 
@@ -29,9 +29,9 @@ void assess_separate_features_and_labels() {
 void assess_labelled_dataframe_contract() {
   const auto f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame customer_rows({
-      {"balance", Thread(pluss::make_series({20.0, 40.0, 500.0, 600.0}, {4}, f64))},
-      {"months_active", Thread(pluss::make_series({36, 24, 2, 1}, {4}, f64))},
-      {"defaulted", Thread(pluss::make_series({0, 0, 1, 1}, {4}, f64))},
+      {"balance", Slate(pluss::make_series({20.0, 40.0, 500.0, 600.0}, {4}, f64))},
+      {"months_active", Slate(pluss::make_series({36, 24, 2, 1}, {4}, f64))},
+      {"defaulted", Slate(pluss::make_series({0, 0, 1, 1}, {4}, f64))},
   });
   lymph::options::DFBatch contract{};
   contract.feature_names = {"balance", "months_active"};
@@ -48,8 +48,8 @@ void assess_labelled_dataframe_contract() {
 void assess_multiple_requested_metrics() {
   const auto f64 = pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame x({
-      {"utilization", Thread(pluss::make_series({0.1, 0.2, 0.8, 0.9}, {4}, f64))},
-      {"delinquencies", Thread(pluss::make_series({0, 0, 2, 3}, {4}, f64))},
+      {"utilization", Slate(pluss::make_series({0.1, 0.2, 0.8, 0.9}, {4}, f64))},
+      {"delinquencies", Slate(pluss::make_series({0, 0, 2, 3}, {4}, f64))},
   });
   const auto y = pluss::make_series({0, 0, 1, 1}, {4}, f64);
   const auto model = lymph::models::tree::decision_tree_classifier({.max_depth = 2}).learn(x, y);

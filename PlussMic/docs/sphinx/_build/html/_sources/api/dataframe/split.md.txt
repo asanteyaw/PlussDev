@@ -83,12 +83,12 @@ using namespace pluss::table;
 
 auto panel = DataFrame(
     {
-        {"city", Thread(pluss::make_note({"A", "A", "B", "B", "C"}))},
-        {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
-        {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
-        {"score", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
+        {"city", Slate(pluss::make_note({"A", "A", "B", "B", "C"}))},
+        {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
+        {"amount", Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}))},
+        {"score", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
     },
-    Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+    Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
 
 auto [lhs, rhs] = panel.split(0.4);
 std::cout << lhs;

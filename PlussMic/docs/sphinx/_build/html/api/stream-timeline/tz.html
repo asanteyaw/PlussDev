@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamTimelineAccessor::utc" href="utc.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Relabels the bound stream’s timestamp <em>display</em> timezone to <code class="docutils literal notranslate"><span class="pre">name</span></code>, without
 changing the underlying instant — the same operation as
-<a class="reference internal" href="../thread-timeline/tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tl().tz()</span></code></span></a>/
+<a class="reference internal" href="../slate-timeline/tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::tl().tz()</span></code></span></a>/
 <a class="reference internal" href="../dataframe-timeline/tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::tl().tz()</span></code></span></a> at the table layer.</p>
 <p>The relabeling survives being read back through any further <code class="docutils literal notranslate"><span class="pre">.tl()</span></code> call
 (<code class="docutils literal notranslate"><span class="pre">fmt()</span></code>, <code class="docutils literal notranslate"><span class="pre">hour()</span></code>, another <code class="docutils literal notranslate"><span class="pre">tz()</span></code>, anything) — see Example 1.</p>
@@ -93,7 +93,7 @@ in effect on the very next <code class="docutils literal notranslate"><span clas
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">04:15:30</span></code> is the <code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>-relative reading of the same instant
 (a <code class="docutils literal notranslate"><span class="pre">-5:00</span></code> offset in January) — matching what
-<a class="reference internal" href="../thread-timeline/tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::tl().tz()</span></code></span></a> produces on the same input.</p>
+<a class="reference internal" href="../slate-timeline/tz.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::tl().tz()</span></code></span></a> produces on the same input.</p>
 </section>
 </section>
 <section id="notes">

@@ -83,6 +83,9 @@ supplied fresh per `learn` call, and again only `regularization`/
   Supports `Mse`, `Rmse`, `Mae`, `R2` only — every other `MetricKind` is
   rejected with `Status::not_implemented`.
 
+`loss_history()`
+: The mean squared-error loss after each gradient iteration of the last `learn` call, in order. Its length is the number of iterations the fit took. Empty before `learn`.
+
 `dump_state()` / `load_state(state)`
 : `[metadata, weights]` — the same shape as
   [`SparseLinearBinaryClassifier`'s own](SparseLinearBinaryClassifier.md#methods).
@@ -405,6 +408,45 @@ Output
 ```text
 load_state ok = true
 max abs diff after restore = 0
+```
+
+### Example 8
+
+The squared-error loss falls as the coefficients settle. The program prints the step count and the first and last losses of the fit.
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+
+#include <iostream>
+
+int main() {
+  namespace cls = pluss::ai::classic;
+
+  const cls::SparseTripletMatrix x = cls::make_sparse_triplet(
+      6, 2, {0, 1, 2, 3, 4, 5}, {0, 0, 1, 1, 0, 1}, {1.0, 2.0, 1.0, 2.0, 1.0, 2.0}).value();
+  const pluss::Series y = pluss::make_series(
+      {1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU));
+
+  cls::SparseLinearRegressor model;
+  model.learn(x, y);
+
+  const std::vector<double> history = model.loss_history();
+  std::cout << "steps = " << history.size() << "\n";
+  std::cout << "first loss = " << history.front() << "\n";
+  std::cout << "last loss = " << history.back() << "\n";
+  std::cout << "midpoint loss = " << history[history.size() / 2] << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+steps = 1000
+first loss = 7.58333
+last loss = 0.93378
+midpoint loss = 0.939272
 ```
 
 ## Changelog

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 5f3d87017387 -->
+<!-- pluss-signature-hash: 9c03cada3d6b -->
 
 # DataFrame::lt
 
@@ -12,15 +12,15 @@ DataFrame::lt(double other, bool strict = true) const -> DataFrame
 DataFrame::lt(std::string_view other, bool strict = true) const -> DataFrame
 DataFrame::lt(const DataFrame& other, bool strict = true) const -> DataFrame
 DataFrame::lt(const DataFrame& other, const AlignOptions& options, bool strict = true) const -> DataFrame
-DataFrame::lt(const Thread& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
-DataFrame::lt(const Thread& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
-DataFrame::lt(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame::lt(const Slate& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame::lt(const Slate& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
+DataFrame::lt(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
 ```
 
 ## What It Does
 
 The ordering relation "less than", returning a boolean-valued frame the same shape as
-the source. `lt()` shares the same scalar/string/`DataFrame`/`Thread` operand shapes as
+the source. `lt()` shares the same scalar/string/`DataFrame`/`Slate` operand shapes as
 [`eq()`](eq.md) — see `eq()`'s "What It Does" for the full explanation — plus one
 extra parameter, `strict`, that the equality/inequality methods don't have.
 
@@ -36,7 +36,7 @@ as calling `le()`.
 **other**
 
 The right-hand operand: `double`, `std::string_view` (`Note`-kind features only),
-`const DataFrame&`, or `const Thread&` (broadcast per `axis`). See [`eq()`](eq.md) for
+`const DataFrame&`, or `const Slate&` (broadcast per `axis`). See [`eq()`](eq.md) for
 the full breakdown.
 
 **strict** (`bool`, default `true`)
@@ -48,7 +48,7 @@ Selects which relation is actually evaluated:
 - `false`: "less than or equal to" (`<=`) — a cell equal to `other` reports `true`.
   This is exactly what calling [`le()`](le.md) does internally.
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`eq()`](eq.md)'s `axis`.
 

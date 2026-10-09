@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::clear_label" href="clear_label.html" />
@@ -37,25 +37,25 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e611cd99b145 -->
+<!-- pluss-signature-hash: feb3b4126c58 -->
 <section id="stream-cast">
 <h1>Stream::cast<a class="headerlink" href="#stream-cast" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../stream_api_reference.html"><span class="doc std std-doc">Back to Stream API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;</span><span class="w"> </span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Stream</span>
-<span class="n">Stream</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Stream</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">&gt;</span><span class="w"> </span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Stream</span>
+<span class="n">Stream</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Stream</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Converts the stream to a different payload kind (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>,
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), delegating to <code class="docutils literal notranslate"><span class="pre">Thread::cast()</span></code>; see <a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a> for
-the full breakdown of what each <code class="docutils literal notranslate"><span class="pre">ThreadCastTarget</span></code> means and how <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>
+<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>), delegating to <code class="docutils literal notranslate"><span class="pre">Slate::cast()</span></code>; see <a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for
+the full breakdown of what each <code class="docutils literal notranslate"><span class="pre">SlateCastTarget</span></code> means and how <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code>
 (dtype selection, parse-failure handling) affects the conversion. The first overload is a
 convenience shorthand accepting just a <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> directly instead of a full
-<code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>; the second accepts the full options struct.</p>
+<code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code>; the second accepts the full options struct.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>cast() also has a no-argument accessor-returning overload
@@ -68,15 +68,15 @@ the primary, most commonly used path.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::ThreadCastTarget</span></code>)
+<p><strong>target</strong> (<code class="docutils literal notranslate"><span class="pre">pluss::table::SlateCastTarget</span></code>)
 The payload kind to cast to — <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>.</p>
 <p><strong>series_dtype</strong> (<code class="docutils literal notranslate"><span class="pre">std::optional&lt;pluss::codem::ScalarType&gt;</span></code>, first overload, defaults to
 <code class="docutils literal notranslate"><span class="pre">std::nullopt</span></code>)
 The numeric dtype to use when <code class="docutils literal notranslate"><span class="pre">target</span></code> is <code class="docutils literal notranslate"><span class="pre">Series</span></code>. Shorthand for setting just this one
-field of <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>.</p>
-<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::ThreadCastOptions&amp;</span></code>, second overload)
+field of <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code>.</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::SlateCastOptions&amp;</span></code>, second overload)
 The full conversion policy — <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> and <code class="docutils literal notranslate"><span class="pre">invalid</span></code> (parse-failure handling). See
-<a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a> for the complete breakdown.</p>
+<a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a> for the complete breakdown.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -88,7 +88,7 @@ A new stream with its payload converted to <code class="docutils literal notrans
 <p>Example 1. Cast numeric-looking text to <code class="docutils literal notranslate"><span class="pre">Series</span></code>, letting the dtype be inferred.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3&quot;</span><span class="p">}));</span>
 
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="output">
@@ -108,7 +108,7 @@ label        | value
 <p>Example 2. Request a specific numeric dtype via the shorthand <code class="docutils literal notranslate"><span class="pre">series_dtype</span></code> argument.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -127,12 +127,12 @@ label        | value
 ========================================================================================================================
 </pre></div>
 </div>
-<p>Example 3. The full <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> overload does the same thing, spelled out.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<p>Example 3. The full <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code> overload does the same thing, spelled out.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Int64</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;3&quot;</span><span class="p">}));</span>
-<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">ThreadCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">stream</span><span class="p">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">SlateCastTarget</span><span class="o">::</span><span class="n">Series</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -155,8 +155,8 @@ label        | value
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>Follows the same per-target conversion rules as <a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a>,
-including its documented quirk that <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions::invalid</span></code> only actually takes
+<li><p>Follows the same per-target conversion rules as <a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>,
+including its documented quirk that <code class="docutils literal notranslate"><span class="pre">SlateCastOptions::invalid</span></code> only actually takes
 effect for the <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> target.</p></li>
 <li><p>The no-argument <code class="docutils literal notranslate"><span class="pre">cast()</span></code>/<code class="docutils literal notranslate"><span class="pre">cast(options)</span></code> accessor overloads (returning
 <code class="docutils literal notranslate"><span class="pre">StreamCastAccessor</span></code>) are out of scope for this page — see the note above.</p></li>
@@ -168,7 +168,7 @@ effect for the <code class="docutils literal notranslate"><span class="pre">Time
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="astype.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::astype</span></code></span></a>: the shorthand for <code class="docutils literal notranslate"><span class="pre">cast(Series,</span> <span class="pre">{.series_dtype</span> <span class="pre">=</span> <span class="pre">dtype})</span></code>.</p></li>
-<li><p><a class="reference internal" href="../thread/cast.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::cast</span></code></span></a>: the underlying single-stream conversion this method
+<li><p><a class="reference internal" href="#../thread/cast.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::cast</span></code></span></a>: the underlying single-stream conversion this method
 delegates to.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

@@ -23,9 +23,9 @@ const T& arg_as(const Args& args, std::size_t i) {
     auto p = std::get_if<const Duration*>(&v);
     CODEM_CHECK(p && *p, "CodeH invoke: expected Duration arg");
     return **p;
-  } else if constexpr (std::is_same_v<T, TimeIndex>) {
-    auto p = std::get_if<const TimeIndex*>(&v);
-    CODEM_CHECK(p && *p, "CodeH invoke: expected TimeIndex arg");
+  } else if constexpr (std::is_same_v<T, TimelineIndexAccessor>) {
+    auto p = std::get_if<const TimelineIndexAccessor*>(&v);
+    CODEM_CHECK(p && *p, "CodeH invoke: expected TimelineIndexAccessor arg");
     return **p;
   } else if constexpr (std::is_same_v<T, pluss::codem::Series>) {
     auto p = std::get_if<const pluss::codem::Series*>(&v);
@@ -73,13 +73,13 @@ inline const Duration* arg_optional_duration(const Args& args, std::size_t i) {
   return *p;
 }
 
-inline TimeIndex::ResampleOptions arg_resample_options(const Args& args, std::size_t freq_index) {
-  return TimeIndex::ResampleOptions{
+inline TimelineIndexAccessor::ResampleOptions arg_resample_options(const Args& args, std::size_t freq_index) {
+  return TimelineIndexAccessor::ResampleOptions{
       .freq = std::string(arg_sv(args, freq_index)),
       .step = arg_i64(args, freq_index + 1),
-      .closed = static_cast<TimeIndex::ResampleClosed>(arg_i64(args, freq_index + 2)),
-      .label = static_cast<TimeIndex::ResampleLabel>(arg_i64(args, freq_index + 3)),
-      .origin = static_cast<TimeIndex::ResampleOrigin>(arg_i64(args, freq_index + 4)),
+      .closed = static_cast<TimelineIndexAccessor::ResampleClosed>(arg_i64(args, freq_index + 2)),
+      .label = static_cast<TimelineIndexAccessor::ResampleLabel>(arg_i64(args, freq_index + 3)),
+      .origin = static_cast<TimelineIndexAccessor::ResampleOrigin>(arg_i64(args, freq_index + 4)),
       .offset_nanos = arg_i64(args, freq_index + 5),
   };
 }
@@ -227,15 +227,15 @@ std::vector<std::int64_t> call_i64vec_timeline(std::string_view, const Timeline&
   CODEM_FAIL("CodeH invoke: unknown Timeline->vector<int64> op");
 }
 
-TimeIndex call_timeindex_from_timeline(std::string_view op, const Timeline& self, const Args& args) {
-  if (op == "make_timeindex" || op == "from_timeline") {
+TimelineIndexAccessor call_index_accessor_from_timeline(std::string_view op, const Timeline& self, const Args& args) {
+  if (op == "make_index_accessor" || op == "from_timeline") {
     const bool require_sorted = arg_bool(args, 0);
     return ::pluss::codeh::_compat::detail::Access::from_timeline(self, require_sorted);
   }
-  CODEM_FAIL("CodeH invoke: unknown Timeline->TimeIndex op");
+  CODEM_FAIL("CodeH invoke: unknown Timeline->TimelineIndexAccessor op");
 }
 
-pluss::codem::Series call_series_timeindex(std::string_view op, const TimeIndex& self, const Args& args) {
+pluss::codem::Series call_series_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args) {
   if (op == "slice") return ::pluss::codeh::_compat::detail::Access::slice(self, arg_as<Timeline>(args, 0), arg_as<Timeline>(args, 1));
   if (op == "slice_time") return ::pluss::codeh::_compat::detail::Access::slice_time(self, arg_sv(args, 0), arg_sv(args, 1));
   if (op == "resample_count") return ::pluss::codeh::_compat::detail::Access::resample_count(self, arg_sv(args, 0), arg_i64(args, 1));
@@ -257,8 +257,8 @@ pluss::codem::Series call_series_timeindex(std::string_view op, const TimeIndex&
   if (op == "rolling_count") return ::pluss::codeh::_compat::detail::Access::rolling_count(self, arg_as<Duration>(args, 0));
   if (op == "rolling_sum") return ::pluss::codeh::_compat::detail::Access::rolling_sum(self, arg_as<pluss::codem::Series>(args, 0), arg_as<Duration>(args, 1));
   if (op == "join_asof") {
-    const auto& right = arg_as<TimeIndex>(args, 0);
-    const auto dir = static_cast<TimeIndex::AsofDirection>(arg_i64(args, 1));
+    const auto& right = arg_as<TimelineIndexAccessor>(args, 0);
+    const auto dir = static_cast<TimelineIndexAccessor::AsofDirection>(arg_i64(args, 1));
     const auto* tol = arg_optional_duration(args, 2);
     const bool allow_exact = arg_bool(args, 3);
     return ::pluss::codeh::_compat::detail::Access::join_asof(self, right, dir, tol, allow_exact);
@@ -276,64 +276,64 @@ pluss::codem::Series call_series_timeindex(std::string_view op, const TimeIndex&
     return ::pluss::codeh::_compat::detail::Access::rolling_agg(self,
       arg_as<pluss::codem::Series>(args, 0), arg_as<Duration>(args, 1), arg_sv(args, 2));
   }
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->Series op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->Series op");
 }
 
-std::int64_t call_i64_timeindex(std::string_view op, const TimeIndex& self, const Args& args) {
+std::int64_t call_i64_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args) {
   if (op == "searchsorted") return ::pluss::codeh::_compat::detail::Access::searchsorted(self, arg_as<Timeline>(args, 0), arg_bool(args, 1));
   if (op == "asof") return ::pluss::codeh::_compat::detail::Access::asof(self, arg_as<Timeline>(args, 0));
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->int64 op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->int64 op");
 }
 
-bool call_bool_timeindex(std::string_view op, const TimeIndex& self, const Args&) {
+bool call_bool_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args&) {
   if (op == "is_monotonic_increasing") return ::pluss::codeh::_compat::detail::Access::is_monotonic_increasing(self);
   if (op == "is_monotonic_decreasing") return ::pluss::codeh::_compat::detail::Access::is_monotonic_decreasing(self);
   if (op == "is_unique") return ::pluss::codeh::_compat::detail::Access::is_unique(self);
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->bool op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->bool op");
 }
 
-std::string call_string_timeindex(std::string_view op, const TimeIndex& self, const Args&) {
+std::string call_string_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args&) {
   if (op == "infer_freq") return ::pluss::codeh::_compat::detail::Access::infer_freq(self);
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->string op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->string op");
 }
 
-pluss::coden::Note call_note_timeindex(std::string_view op, const TimeIndex& self, const Args&) {
+pluss::coden::Note call_note_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args&) {
   if (op == "to_note_iso") return ::pluss::codeh::_compat::detail::Access::to_note_iso(self);
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->Note op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->Note op");
 }
 
-Timeline call_timeline_from_timeindex(std::string_view op, const TimeIndex& self, const Args&) {
+Timeline call_timeline_from_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args&) {
   if (op == "min") return ::pluss::codeh::_compat::detail::Access::min(self);
   if (op == "max") return ::pluss::codeh::_compat::detail::Access::max(self);
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->Timeline op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->Timeline op");
 }
 
-TimeIndex call_timeindex(std::string_view op, const TimeIndex& self, const Args& args) {
+TimelineIndexAccessor call_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args) {
   if (op == "sort") return ::pluss::codeh::_compat::detail::Access::sort(self);
   if (op == "unique") return ::pluss::codeh::_compat::detail::Access::unique(self);
   if (op == "take") return ::pluss::codeh::_compat::detail::Access::take(self, arg_as<pluss::codem::Series>(args, 0));
   if (op == "slice_index") return ::pluss::codeh::_compat::detail::Access::slice_index(self, arg_i64(args, 0), arg_i64(args, 1));
   if (op == "tail") return ::pluss::codeh::_compat::detail::Access::tail(self, arg_i64(args, 0));
-  if (op == "union") return ::pluss::codeh::_compat::detail::Access::union_(self, arg_as<TimeIndex>(args, 0));
-  if (op == "intersection") return ::pluss::codeh::_compat::detail::Access::intersection(self, arg_as<TimeIndex>(args, 0));
-  if (op == "difference") return ::pluss::codeh::_compat::detail::Access::difference(self, arg_as<TimeIndex>(args, 0));
+  if (op == "union") return ::pluss::codeh::_compat::detail::Access::union_(self, arg_as<TimelineIndexAccessor>(args, 0));
+  if (op == "intersection") return ::pluss::codeh::_compat::detail::Access::intersection(self, arg_as<TimelineIndexAccessor>(args, 0));
+  if (op == "difference") return ::pluss::codeh::_compat::detail::Access::difference(self, arg_as<TimelineIndexAccessor>(args, 0));
   if (op == "tz_convert") return ::pluss::codeh::_compat::detail::Access::tz_convert(self, arg_sv(args, 0));
   if (op == "tz_localize") return ::pluss::codeh::_compat::detail::Access::tz_localize(self, arg_sv(args, 0), (int)arg_i64(args, 1), arg_sv(args, 2));
   if (op == "floor") return ::pluss::codeh::_compat::detail::Access::round(self, "floor", arg_sv(args, 0));
   if (op == "ceil") return ::pluss::codeh::_compat::detail::Access::round(self, "ceil", arg_sv(args, 0));
   if (op == "round") return ::pluss::codeh::_compat::detail::Access::round(self, "round", arg_sv(args, 0));
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->TimeIndex op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->TimelineIndexAccessor op");
 }
 
-TimeIndex::ResampleBins call_resamplebins_timeindex(std::string_view op, const TimeIndex& self, const Args& args) {
+TimelineIndexAccessor::ResampleBins call_resample_bins_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args) {
   if (op == "resample_bins") return ::pluss::codeh::_compat::detail::Access::resample_bins(self, arg_sv(args, 0), arg_i64(args, 1));
   if (op == "resample_bins_opts") return ::pluss::codeh::_compat::detail::Access::resample_bins(self, arg_resample_options(args, 0));
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->ResampleBins op");
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->ResampleBins op");
 }
 
-TimeIndex::AlignUnion call_alignunion_timeindex(std::string_view op, const TimeIndex& self, const Args& args) {
-  if (op == "align_union") return ::pluss::codeh::_compat::detail::Access::align_union(self, arg_as<TimeIndex>(args, 0));
-  CODEM_FAIL("CodeH invoke: unknown TimeIndex->AlignUnion op");
+TimelineIndexAccessor::AlignUnion call_align_union_index_accessor(std::string_view op, const TimelineIndexAccessor& self, const Args& args) {
+  if (op == "align_union") return ::pluss::codeh::_compat::detail::Access::align_union(self, arg_as<TimelineIndexAccessor>(args, 0));
+  CODEM_FAIL("CodeH invoke: unknown TimelineIndexAccessor->AlignUnion op");
 }
 
 } // namespace pluss::codeh::_compat

@@ -8,29 +8,29 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const Series x = pluss::series::linspace(-4.0, 4.0, 80, ScalarType::Float64);
   const Series z = x.sin().add(x.mul(0.5).cos());
   const Series y = z.gt(0.0).to(ScalarType::Float64);
-  const DataFrame raw({{"x", Thread(x)}, {"z", Thread(z)}, {"y", Thread(y)}});
+  const DataFrame raw({{"x", Slate(x)}, {"z", Slate(z)}, {"y", Slate(y)}});
 
-  lymph::Payload data = lymph::payload::make(raw).features({"x", "z"}).label("y");
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x", "z"}).label("y");
   lymph::Workflow design = lymph::workflow::make(
-      lymph::Policy{},
+      lymph::workflow::Policy{},
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"x", "z"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       });
 
   lymph::Builder models = lymph::builder::build({
-      {"linear", lymph::model::logistic_regression({.regularization_strength = 0.01})},
-      {"tree", lymph::model::decision_tree_classifier({.max_depth = 4, .min_samples_leaf = 2})},
-      {"forest", lymph::model::random_forest_classifier({.learners = 25, .subsample = 1.0})},
+      {"linear", lymph::models::logistic_regression({.regularization_strength = 0.01})},
+      {"tree", lymph::models::decision_tree_classifier({.max_depth = 4, .min_samples_leaf = 2})},
+      {"forest", lymph::models::random_forest_classifier({.learners = 25, .subsample = 1.0})},
   });
 
-  lymph::metrics::CrossValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.plan = lymph::CVPlanKind::StratifiedCrossVal;
   cv.folds = 3;
   cv.shuffle = true;
@@ -53,8 +53,8 @@ int main() {
   const lymph::selection::CompareResult direct =
       models.benchmark(raw, data.data(), cv, plain, assess, lymph::MetricKind::F1,
                        lymph::TuneObjectivePolicy::Maximize, {.fit_top = 1, .fit_bottom = 1});
-  const lymph::Model best = models.best();
-  const lymph::Model worst = models.worst();
+  const lymph::models::Model best = models.best();
+  const lymph::models::Model worst = models.worst();
 
   std::cout << "spotcheck top: " << ranked.top(2).size() << "\n";
   std::cout << "spotcheck bottom: " << ranked.bottom(2).size() << "\n";

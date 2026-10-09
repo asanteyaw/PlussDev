@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Timeline::is_business_day" href="is_business_day.html" />
@@ -41,7 +41,7 @@
 <p><a class="reference internal" href="../../timeline_api_reference.html"><span class="doc std std-doc">Back to Timeline API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">TimelineIndexAccessor</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">index</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">require_sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Timeline</span><span class="o">::</span><span class="n">TimelineIndexAccessor</span><span class="w"> </span><span class="n">Timeline</span><span class="o">::</span><span class="n">index</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">require_sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -54,7 +54,7 @@ must be a one-dimensional sequence of present instants, and it is
 nondecreasing unless the caller explicitly requests an unchecked accessor.</p>
 <p>Open the dedicated
 <a class="reference internal" href="../../timeline_index_accessor_api_reference.html"><span class="std std-doc">Timeline Index Accessor API Reference</span></a>
-for the complete ordered-axis method index and the individual teaching page
+for the complete ordered-axis method index and the individual reference page
 for every accessor operation.</p>
 <p>The returned object owns a cheap Timeline handle. Construct it once and retain
 it when several index operations belong to the same workflow:</p>
@@ -242,14 +242,6 @@ contains <code class="docutils literal notranslate"><span class="pre">NaT</span>
 relaxes only the final condition. No path silently reshapes, sorts, removes
 duplicates, or substitutes absent instants.</p>
 </section>
-<section id="compatibility">
-<h2>Compatibility<a class="headerlink" href="#compatibility" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">TimelineIndexAccessor</span></code> is currently a source-level name for the public
-<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> compatibility object. <code class="docutils literal notranslate"><span class="pre">to_timeindex()</span></code> remains temporarily
-available as a forwarding spelling while downstream components migrate. New
-code should use <code class="docutils literal notranslate"><span class="pre">index()</span></code>; compatibility names will be removed only after the
-SDK no longer exposes TimeIndex as a value dtype.</p>
-</section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
@@ -293,7 +285,6 @@ SDK no longer exposes TimeIndex as a value dtype.</p>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -301,8 +292,8 @@ SDK no longer exposes TimeIndex as a value dtype.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

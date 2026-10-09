@@ -22,11 +22,19 @@ if(NOT stage_result EQUAL 0)
   message(FATAL_ERROR "Failed to stage the pluss SDK")
 endif()
 
+set(configure_command
+    ${CMAKE_COMMAND}
+    -S ${SDK_CONSUMER_SOURCE_DIR}
+    -B ${SDK_CONSUMER_BUILD_DIR}
+    -DCMAKE_PREFIX_PATH=${SDK_STAGE_DIR})
+foreach(package_dir IN ITEMS Arrow_DIR Parquet_DIR Torch_DIR)
+  if(DEFINED ${package_dir} AND NOT "${${package_dir}}" STREQUAL "")
+    list(APPEND configure_command "-D${package_dir}=${${package_dir}}")
+  endif()
+endforeach()
+
 execute_process(
-  COMMAND ${CMAKE_COMMAND}
-          -S ${SDK_CONSUMER_SOURCE_DIR}
-          -B ${SDK_CONSUMER_BUILD_DIR}
-          -DCMAKE_PREFIX_PATH=${SDK_STAGE_DIR}
+  COMMAND ${configure_command}
   RESULT_VARIABLE configure_result
 )
 if(NOT configure_result EQUAL 0)

@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   // mode picks Yeo-Johnson (handles zero and negative values) or Box-Cox
   // (strictly positive input). standardize toggles the trailing z-score step.
   const pluss::Series v = pluss::make_series({1., 2., 3., 5., 8., 13., 21., 34.}, {8}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::PowerMap yj{};                                       // default: YeoJohnson, standardize=true
   lymph::options::PowerMap yj_raw{};

@@ -8,19 +8,19 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const Series x = pluss::series::linspace(-2.0, 2.0, 90, ScalarType::Float64);
   const Series x2 = x.square();
   const Series y = x.mul(2.2).sub(x2.mul(0.4)).add(0.5);
-  const DataFrame raw({{"x", Thread(x)}, {"x2", Thread(x2)}, {"y", Thread(y)}});
+  const DataFrame raw({{"x", Slate(x)}, {"x2", Slate(x2)}, {"y", Slate(y)}});
 
-  lymph::Payload data = lymph::payload::make(raw).features({"x", "x2"}).label("y");
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw).features({"x", "x2"}).label("y");
   lymph::Workflow design = lymph::workflow::make(
-      lymph::Policy{},
+      lymph::workflow::Policy{},
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"x", "x2"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       });
 
@@ -28,13 +28,13 @@ int main() {
       {.name = "regularization_strength", .values = {0.0001, 0.001, 0.01}},
   };
 
-  lymph::metrics::CrossValidationOptions cv{};
+  lymph::selection::CrossValOptions cv{};
   cv.plan = lymph::CVPlanKind::CrossVal;
   cv.folds = 3;
 
   const lymph::search::Result tuned = lymph::search::grid(space, cv)
       .run([](const lymph::GridPoint& point) {
-             return lymph::model::linear_regression({
+             return lymph::models::linear_regression({
                  .regularization_strength = point.at("regularization_strength"),
              });
            },

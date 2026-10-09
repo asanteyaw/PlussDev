@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::sort_tokens
+# Note::NlpAccessor::sort_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::sort_tokens() const
+TokenBatch Note::NlpAccessor::sort_tokens() const
 ```
 
 ## Sort Tokens Within Each Cell

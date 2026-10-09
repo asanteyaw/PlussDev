@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_code
+# Note::NlpAccessor::remove_code
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_code() const
+Note Note::NlpAccessor::remove_code() const
 ```
 
 ## Delete Code-Shaped Spans Without Parsing A Language
@@ -154,8 +154,8 @@ Bool, Int64, and Float64 Notes reject for the same reason.
 ## See Also
 
 - [`remove_brackets`](remove_brackets.md): remove balanced bracketed spans.
-- `NoteNlpAccessor::remove_markdown`: remove links, emphasis, headings, and Markdown code together.
-- `NoteNlpAccessor::remove_math`: remove common math-delimiter forms rather than code forms.
+- `Note::NlpAccessor::remove_markdown`: remove links, emphasis, headings, and Markdown code together.
+- `Note::NlpAccessor::remove_math`: remove common math-delimiter forms rather than code forms.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="remove_bullets.html"><span class="label">Previous</span><span class="title">remove_bullets</span></a>

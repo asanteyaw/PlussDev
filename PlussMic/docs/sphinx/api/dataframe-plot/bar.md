@@ -88,8 +88,8 @@ Example 1. A single feature, explicit categorical x-axis.
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"city",   Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"amount", Thread(pluss::make_series({320.0, 180.0, 240.0}))},
+    {"city",   Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"amount", Slate(pluss::make_series({320.0, 180.0, 240.0}))},
 });
 
 auto chart = sales.plot().bar("amount", "city");
@@ -104,9 +104,9 @@ Example 2. Two y-features, grouped (side-by-side) bars sharing each x position.
 
 ```cpp
 auto exams = DataFrame({
-    {"student", Thread(pluss::make_note({"Laurel", "Kojo", "Ama"}))},
-    {"midterm", Thread(pluss::make_series({71.0, 82.0, 93.0}))},
-    {"final",   Thread(pluss::make_series({75.0, 79.0, 95.0}))},
+    {"student", Slate(pluss::make_note({"Laurel", "Kojo", "Ama"}))},
+    {"midterm", Slate(pluss::make_series({71.0, 82.0, 93.0}))},
+    {"final",   Slate(pluss::make_series({75.0, 79.0, 95.0}))},
 });
 
 auto chart = exams.plot().bar({"midterm", "final"}, "student");
@@ -155,8 +155,8 @@ bar with a confidence-interval whisker.
 
 ```cpp
 auto repeated = DataFrame({
-    {"city",   Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-    {"amount", Thread(pluss::make_series({300.0, 320.0, 340.0, 175.0, 185.0}))},
+    {"city",   Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+    {"amount", Slate(pluss::make_series({300.0, 320.0, 340.0, 175.0, 185.0}))},
 });
 
 BarPlotOptions ci_options;

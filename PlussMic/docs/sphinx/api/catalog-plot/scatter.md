@@ -31,9 +31,9 @@ distinctly colored/labeled point groups by a categorical `hue_key`. `x_key`/`y_k
 [`DataFramePlotAccessor::scatter`](../dataframe-plot/scatter.md) — there is no row-label
 fallback here.
 
-```{important} Two entirely different code paths, chosen by x_key's thread kind
+```{important} Two entirely different code paths, chosen by x_key's slate kind
 Unlike `line()`/`step()`/`area()`/`bar()` (which all share one x-axis-resolution helper),
-`scatter()` branches on **`x_key`'s own thread kind**:
+`scatter()` branches on **`x_key`'s own slate kind**:
 
 - If `x_key` resolves to a **Note, Timeline, or TimeIndex** key, it's treated as a *labeled
   axis*: positions are `0..n-1`, tick labels come from `x_key`'s own values, and `y_key`
@@ -59,7 +59,7 @@ hue key '<name>' must be note-like or time-like"`. See Example 6.
 ## Parameters
 
 **x_key** (`std::string_view`, required)
-    The key for the horizontal axis. Its thread kind decides which alignment path is taken
+    The key for the horizontal axis. Its slate kind decides which alignment path is taken
     — see the important callout above.
 
 **y_key** (`std::string_view`, required)
@@ -199,9 +199,9 @@ values rather than truncated by position.
 using namespace pluss::kindle::literals;
 
 auto x_stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0, 60.0}))
-    .with_label(pluss::table::Thread(pluss::make_note({"a", "b", "c", "d", "e", "f"})));
+    .with_label(pluss::table::Slate(pluss::make_note({"a", "b", "c", "d", "e", "f"})));
 auto y_stream = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0, 4.0}))
-    .with_label(pluss::table::Thread(pluss::make_note({"b", "c", "e", "f"})));
+    .with_label(pluss::table::Slate(pluss::make_note({"b", "c", "e", "f"})));
 auto paired = pluss::kindle::Catalog({"x_metric"_k = x_stream, "y_metric"_k = y_stream});
 
 pluss::kindle::CatalogScatterPlotOptions options;
@@ -269,7 +269,7 @@ Catalog::plot().scatter: unknown x key 'nope'
 
 - `x_key`/`y_key` are required, non-optional arguments — there is no fallback the way
   `line()`/`bar()`/etc. have for a single axis.
-- `x_key`'s thread kind picks the code path — see the important callout above. This is a
+- `x_key`'s slate kind picks the code path — see the important callout above. This is a
   meaningful difference from `DataFrame::plot().scatter`, which always treats both features
   as plain numeric columns.
 - `align`/`align_by` (via `CatalogScatterPlotOptions`) only take effect on the numeric-pair

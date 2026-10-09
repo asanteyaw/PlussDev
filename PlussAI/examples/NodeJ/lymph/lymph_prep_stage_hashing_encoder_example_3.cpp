@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.,1800.,3400.,4100.,5200.,6000.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,3,4,5}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
 
   lymph::options::HashingEncoder o{};
   o.n_components = 6;
@@ -25,8 +25,8 @@ int main() {
        .append(lymph::prep::stage::hashing_encoder(o), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"region", Thread(region)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"region", Slate(region)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

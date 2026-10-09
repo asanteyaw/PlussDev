@@ -65,13 +65,13 @@ Example 1. Read one observation out of a wide frame.
 using namespace pluss::table;
 
 auto homes = DataFrame({
-    {"home_id",   Thread(pluss::make_note({"H-104", "H-887", "H-231"}))},
-    {"built_on",  Thread(pluss::make_timeline({"2021-06-14T00:00:00Z",
+    {"home_id",   Slate(pluss::make_note({"H-104", "H-887", "H-231"}))},
+    {"built_on",  Slate(pluss::make_timeline({"2021-06-14T00:00:00Z",
                                                "2019-02-03T00:00:00Z",
                                                "2022-11-30T00:00:00Z"}))},
-    {"price",     Thread(pluss::make_series({412000.0, 268500.0, 559900.0}))},
-    {"bedrooms",  Thread(pluss::make_series(std::vector<std::int64_t>{3, 2, 4}))},
-    {"inspected", Thread(pluss::make_series(std::vector<bool>{true, false, true}))},
+    {"price",     Slate(pluss::make_series({412000.0, 268500.0, 559900.0}))},
+    {"bedrooms",  Slate(pluss::make_series(std::vector<std::int64_t>{3, 2, 4}))},
+    {"inspected", Slate(pluss::make_series(std::vector<bool>{true, false, true}))},
 }).title("homes");
 
 std::cout << homes.observe(1);
@@ -134,7 +134,7 @@ one feature's value as text (handy when a long value is clipped by the display w
 
 ```cpp
 auto card  = DataFrame(homes.observe(0));
-auto value = card.features("value");   // a Note-kind Thread, one entry per feature
+auto value = card.features("value");   // a Note-kind Slate, one entry per feature
 std::cout << value;
 ```
 

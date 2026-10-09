@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::searchsorted
+# Timeline::TimelineIndexAccessor::searchsorted
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-std::int64_t TimelineIndexAccessor::searchsorted(const Timeline& key, bool right = false) const
+std::int64_t Timeline::TimelineIndexAccessor::searchsorted(const Timeline& key, bool right = false) const
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ That makes `searchsorted()` a load-bearing primitive for building time slices,
 bucketing event streams, or mapping ad-hoc timestamps into the nearest valid
 interval boundary.
 
-At the `TimelineIndexAccessor` level, this is one of the most fundamental ordered-axis
+At the `Timeline::TimelineIndexAccessor` level, this is one of the most fundamental ordered-axis
 questions: if this timestamp were inserted here, where would it land?
 
 ## Parameters
@@ -52,13 +52,13 @@ Controls which side of equal timestamps is chosen.
 Example 1. Find the insertion position for an in-between timestamp.
 
 ```cpp
-auto idx = pluss::timeindex::make({
+auto idx = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
 auto key = pluss::timeline::make("2024-11-01T00:55:00Z");
 
@@ -92,7 +92,7 @@ whether the new case belongs before or after the equal block.
   method's job.
 - `right = false` behaves like a left insertion point.
 - `right = true` behaves like an upper-bound style insertion point.
-- The semantics only make sense against a sorted `TimelineIndexAccessor`.
+- The semantics only make sense against a sorted `Timeline::TimelineIndexAccessor`.
 - Use `searchsorted()` when you need the raw insertion logic itself. Use
   `slice()` or `asof()` when you want a higher-level answer built on top of the
   same ordering semantics.
@@ -101,9 +101,9 @@ whether the new case belongs before or after the equal block.
 
 ## See Also
 
-- [`TimelineIndexAccessor::asof`](asof.md): get the last observed timestamp position at or
+- [`Timeline::TimelineIndexAccessor::asof`](asof.md): get the last observed timestamp position at or
   before a key.
-- [`TimelineIndexAccessor::slice`](slice.md): turn two temporal bounds into a range of
+- [`Timeline::TimelineIndexAccessor::slice`](slice.md): turn two temporal bounds into a range of
   matching case positions.
 
 <div class="pluss-inline-prev-next">

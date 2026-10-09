@@ -19,7 +19,7 @@ Counts how many rows share each distinct combination of values across `features`
 returning a compact frame with one row per distinct combination plus a `"count"`
 column — sorted by count descending, ties broken alphabetically by the key values
 ascending. This is the `DataFrame`-returning sibling of [`freq()`](freq.md): `freq()`
-returns a `Thread` with structured labels, while `tally()` keeps each
+returns a `Slate` with structured labels, while `tally()` keeps each
 key feature as its own separate output column, which reads more naturally when
 there's more than one key feature to inspect.
 
@@ -67,9 +67,9 @@ Example 1. Tally over two named features.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"city",    Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Accra"}))},
-    {"product", Thread(pluss::make_note({"A", "B", "A", "B", "A"}))},
-    {"sales",   Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0, 95.0}))},
+    {"city",    Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Accra"}))},
+    {"product", Slate(pluss::make_note({"A", "B", "A", "B", "A"}))},
+    {"sales",   Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0, 95.0}))},
 });
 std::cout << orders;
 ```
@@ -173,7 +173,7 @@ character) on the stringified value, not a numeric comparison — `"1"` is less 
 
 ## See Also
 
-- [`DataFrame::freq`](freq.md): the `Thread`-returning sibling, keeping the grouped
+- [`DataFrame::freq`](freq.md): the `Slate`-returning sibling, keeping the grouped
   keys in structured labels instead of separate columns.
 - [`DataFrame::duplicated`](duplicated.md), [`DataFrame::repeated`](repeated.md):
   flag individual rows by the same composite-key convention, rather than counting

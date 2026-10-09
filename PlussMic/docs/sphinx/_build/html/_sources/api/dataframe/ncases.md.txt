@@ -15,7 +15,7 @@ DataFrame::ncases() const -> std::int64_t
 
 Returns the number of cases (rows) in the frame. This is the same count that appears
 as the first number in a printed frame's `[N cs x M feat]` footer, and the length
-every case-aligned `Thread` argument (the `Axis::Case` side of [`add()`](add.md),
+every case-aligned `Slate` argument (the `Axis::Case` side of [`add()`](add.md),
 [`eq()`](eq.md), and similar methods) is checked against.
 
 ## Parameters
@@ -56,7 +56,7 @@ This matches the `3` in `scores`'s own `[3 cs x 2 feat]` footer when printed.
 - `ncases()` counts rows, not distinct case labels — a frame is not required to have
   unique case labels, so `ncases()` can exceed the number of *distinct* labels
   reported by [`ndistinct()`](ndistinct.md) on the case axis.
-- Every feature `Thread` in the frame has exactly `ncases()` elements; this is an
+- Every feature `Slate` in the frame has exactly `ncases()` elements; this is an
   invariant the frame maintains internally.
 
 ## See Also

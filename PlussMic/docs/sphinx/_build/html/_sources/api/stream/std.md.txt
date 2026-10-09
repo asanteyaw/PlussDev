@@ -15,7 +15,7 @@ Stream::std(bool unbiased = true) const -> Stream
 
 Returns the standard deviation of a `Series`-kind stream's non-`NULL` values, as a
 one-element `Stream` — the square root of [`var()`](var.md), with the identical
-`unbiased` flag. Delegates to `Thread::std()`, so it's `Series`-only, same as
+`unbiased` flag. Delegates to `Slate::std()`, so it's `Series`-only, same as
 [`sum()`](sum.md)/[`mean()`](mean.md)/[`min()`](min.md)/[`max()`](max.md)/[`var()`](var.md).
 
 ## Parameters
@@ -80,7 +80,7 @@ label        | value
 
 ## Notes
 
-- `Series`-only; throws `"Thread::std is only valid for Series payload"` on
+- `Series`-only; throws `"Slate::std is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - `NULL` rows are excluded, same as [`var()`](var.md)/[`mean()`](mean.md).
 - Always equals `sqrt(var(unbiased))` for the same `unbiased` argument.

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 8c61d67c78a5 -->
+<!-- pluss-signature-hash: 37cf2ec2178f -->
 
 # DataFrameLabelAccessor::isnull
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::isnull() const -> Thread
+DataFrameLabelAccessor::isnull() const -> Slate
 ```
 
 ## What It Does
@@ -18,8 +18,8 @@ genuine value.
 
 ## Returns
 
-`Thread`
-    A boolean thread, one entry per row, `display_name` `"isnull"`, displayed
+`Slate`
+    A boolean slate, one entry per row, `display_name` `"isnull"`, displayed
     against the case labels themselves.
 
 ## Examples
@@ -30,8 +30,8 @@ Example 1. A numeric case-label axis with one null.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0, 3.0}))}},
-    Thread(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
+    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0}))}},
+    Slate(pluss::make_series({10.0, std::numeric_limits<double>::quiet_NaN(), 30.0})));
 
 auto out = readings.label().isnull();
 std::cout << out;
@@ -49,7 +49,7 @@ Name: isnull, ptype: Series
 ## Notes
 
 - Works regardless of whether the case labels are structured or a flat/default
-  axis — it always inspects the flat displayed case-label thread.
+  axis — it always inspects the flat displayed case-label slate.
 
 ## See Also
 

@@ -44,7 +44,7 @@ std::cout << "]\n";
 
 - [`Note::is_digit`](is_digit.md): "every character is a digit".
 - [`Note::contains_any_alpha`](contains_any_alpha.md): the letter version.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): pull the digit runs out.
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): pull the digit runs out.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="contains_any_alpha.html">

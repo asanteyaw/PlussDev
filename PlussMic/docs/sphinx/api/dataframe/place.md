@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e4ce27e0a644 -->
+<!-- pluss-signature-hash: c99fe6d7f0e1 -->
 
 # DataFrame::place
 
@@ -9,7 +9,7 @@
 
 ```cpp
 DataFrame::place(std::string name,
-                 const Thread& feature,
+                 const Slate& feature,
                  std::string_view anchor_feature,
                  bool after = false) const -> DataFrame
 DataFrame::place(std::string_view name,
@@ -37,7 +37,7 @@ The feature to insert or move. For the first overload, a name not already on the
 frame inserts `feature` as new; a name that already exists replaces that column's
 values with `feature` and relocates it next to `anchor_feature`.
 
-**feature** (`const Thread&`, first overload only)
+**feature** (`const Slate&`, first overload only)
 
 The column data to write at the target position. Its length must match the frame's
 case count (when the frame already has features).
@@ -66,12 +66,12 @@ Example 1. Insert a brand-new feature right after an existing one.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
-auto profit = Thread(pluss::make_series({40.0, 35.0, 30.0}));
+auto profit = Slate(pluss::make_series({40.0, 35.0, 30.0}));
 auto with_profit = orders.place("profit", profit, "sales", /*after=*/true);
 std::cout << with_profit;
 ```

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::punct_tokens
+# Note::NlpAccessor::punct_tokens
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::punct_tokens() const
+TokenBatch Note::NlpAccessor::punct_tokens() const
 ```
 
 ## Extract ASCII Punctuation

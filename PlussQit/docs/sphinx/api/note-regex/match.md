@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteRegexAccessor::match
+# Note::RegexAccessor::match
 
 [Back to Note API Reference](../../note_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteRegexAccessor::match(std::string_view pattern) const
+Note Note::RegexAccessor::match(std::string_view pattern) const
 ```
 
 ## Test Whether A Whole Cell Matches A Pattern
@@ -85,10 +85,10 @@ regex().match: The expression contained mismatched ( and ).
 
 ## See Also
 
-- [`NoteRegexAccessor::search`](search.md): the unanchored version; it matches
+- [`Note::RegexAccessor::search`](search.md): the unanchored version; it matches
   anywhere in the cell.
-- [`NoteRegexAccessor::findall`](findall.md) /
-  [`NoteRegexAccessor::replace`](replace.md): extract or rewrite matches.
+- [`Note::RegexAccessor::findall`](findall.md) /
+  [`Note::RegexAccessor::replace`](replace.md): extract or rewrite matches.
 - [`Note::is_digit`](../note/is_digit.md) and the `is_*` family: fixed
   character-class checks with no regex engine.
 

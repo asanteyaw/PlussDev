@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::polynomial_lift`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `polynomial_lift` builds an attachable [`prep::Stage`](Stage.md) that adds squared and interaction terms to the routed columns so a linear model can fit a curved boundary.
 
@@ -59,7 +59,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -69,15 +69,15 @@ int main() {
   const pluss::Series a = pluss::make_series({-2., -1., 0., 1., 2., 3.}, {6}, f64);
   const pluss::Series b = pluss::make_series({1., 0., -1., 0., 1., 2.}, {6}, f64);
   const pluss::Series y = pluss::make_series({1, 0, 0, 0, 1, 1}, {6}, f64);
-  const DataFrame x({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame x({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::polynomial_lift(), lymph::prep::route::names({"a", "b"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"a", Thread(a)}, {"b", Thread(b)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"a", Slate(a)}, {"b", Slate(b)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -116,7 +116,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -125,7 +125,7 @@ int main() {
   // only cross terms; include_bias adds a constant column. Standalone view.
   const pluss::Series a = pluss::make_series({1., 2., 3.}, {3}, f64);
   const pluss::Series b = pluss::make_series({4., 5., 6.}, {3}, f64);
-  const DataFrame frame({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame frame({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::options::PolynomialLift deg2{};                               // default
   lymph::options::PolynomialLift inter{};
@@ -188,7 +188,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -197,7 +197,7 @@ int main() {
   const pluss::Series b = pluss::make_series({1., 0., -1., 0., 1., 2.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,0,1,2}, {6}, f64);
   const pluss::Series y = pluss::make_series({1,0,0,0,1,1}, {6}, f64);
-  const DataFrame x({{"a", Thread(a)}, {"b", Thread(b)}, {"region", Thread(region)}});
+  const DataFrame x({{"a", Slate(a)}, {"b", Slate(b)}, {"region", Slate(region)}});
 
   // lift the numeric pair, scale the lifted result, one-hot the categorical one.
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -206,8 +206,8 @@ int main() {
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"a", Thread(a)}, {"b", Thread(b)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"a", Slate(a)}, {"b", Slate(b)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

@@ -39,12 +39,12 @@ Example 1. Convert a two-frame atlas into an `Archive`.
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1.0, 2.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({1.0, 2.0}))},
 });
 auto f1 = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({3.0, 4.0}))},
+    {"id", pluss::table::Slate(pluss::make_series({3.0, 4.0}))},
 });
-auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({f0, f1}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 
 auto archive = atlas.kindelize();
 std::cout << "depth: " << archive.depth() << "\n";

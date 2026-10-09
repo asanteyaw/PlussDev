@@ -106,8 +106,8 @@ Example 1. Feature-list mode with no explicit list: every numeric feature in the
 using namespace pluss::table;
 
 auto scores = DataFrame({
-    {"midterm", Thread(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0, 74.0}))},
-    {"final",   Thread(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0, 78.0}))},
+    {"midterm", Slate(pluss::make_series({71.0, 82.0, 93.0, 65.0, 88.0, 74.0}))},
+    {"final",   Slate(pluss::make_series({75.0, 85.0, 91.0, 60.0, 92.0, 78.0}))},
 });
 
 auto chart = scores.plot().violin();
@@ -134,8 +134,8 @@ category.
 
 ```cpp
 auto grouped = DataFrame({
-    {"section", Thread(pluss::make_note({"A", "A", "A", "B", "B", "B"}))},
-    {"score",   Thread(pluss::make_series({71.0, 88.0, 79.0, 95.0, 60.0, 82.0}))},
+    {"section", Slate(pluss::make_note({"A", "A", "A", "B", "B", "B"}))},
+    {"score",   Slate(pluss::make_series({71.0, 88.0, 79.0, 95.0, 60.0, 82.0}))},
 });
 
 auto chart = grouped.plot().violin("score", "section");
@@ -153,8 +153,8 @@ small-cardinality code.
 
 ```cpp
 auto coded = DataFrame({
-    {"tier_code", Thread(pluss::make_series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}))},
-    {"score",     Thread(pluss::make_series({71.0, 88.0, 79.0, 95.0, 60.0, 82.0}))},
+    {"tier_code", Slate(pluss::make_series({1.0, 1.0, 1.0, 2.0, 2.0, 2.0}))},
+    {"score",     Slate(pluss::make_series({71.0, 88.0, 79.0, 95.0, 60.0, 82.0}))},
 });
 
 auto chart = coded.plot().violin("score", "tier_code");

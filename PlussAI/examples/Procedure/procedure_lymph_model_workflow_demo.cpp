@@ -23,15 +23,17 @@ int main() {
       .y = y,
   };
 
-  lymph::Workflow wf = lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 3}));
+  lymph::workflow::Workflow wf =
+      lymph::workflow::make(lymph::models::decision_tree_regressor({.max_depth = 3}));
   ai::RunOptions learn{};
   learn.mode = ai::ProcedureMode::Learn;
 
   const ai::Procedure trained_proc = ai::procedure::make({
       ai::procedure::step("learn", "train", "workflow", wf),
   });
-  const lymph::Workflow trained =
-      trained_proc.run({ai::procedure::input("train", batch)}, learn).get<lymph::Workflow>("workflow");
+  const lymph::workflow::Workflow trained =
+      trained_proc.run({ai::procedure::input("train", batch)}, learn)
+          .get<lymph::workflow::Workflow>("workflow");
 
   const ai::Procedure infer_proc = ai::procedure::make({
       ai::procedure::step("infer", "features", "pred", trained),
@@ -41,6 +43,7 @@ int main() {
   });
   const ai::ProcedureResult out = infer_proc.run({ai::procedure::input("features", batch.features)});
 
+  std::cout << "trained=" << trained.trained() << "\n";
   std::cout << "predictions=" << out.get<pluss::Series>("pred").numel() << "\n";
   std::cout << "sink_predictions=" << out.get<pluss::Series>("out").numel() << "\n";
   return 0;

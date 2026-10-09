@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_refs
+# Note::TexAccessor::strip_refs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_refs() const
+Note Note::TexAccessor::strip_refs() const
 ```
 
 ## Remove Cross-Reference Calls

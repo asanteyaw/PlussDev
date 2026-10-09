@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::rolling_max
+# Timeline::TimelineIndexAccessor::rolling_max
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_max(
+pluss::Series Timeline::TimelineIndexAccessor::rolling_max(
     const pluss::Series& values,
     const pluss::Duration& window) const
 ```
@@ -35,11 +35,11 @@ length.
 ## Examples
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto window = pluss::duration::minutes(45);
 ```
 
@@ -92,8 +92,8 @@ data=[nan, 8.0000, 2.0000, 9.0000, 4.0000]
 Example 4. An unordered axis cannot define a forward-moving trailing window.
 
 ```cpp
-auto unordered = pluss::timeindex::make({
-    "2024-11-01T00:20:00Z", "2024-11-01T00:00:00Z"}, false);
+auto unordered = pluss::timeline::make({
+    "2024-11-01T00:20:00Z", "2024-11-01T00:00:00Z"}).index(false);
 try {
   (void)unordered.rolling_max(pluss::make_series({8.0, 2.0}), window);
 } catch (const std::exception& e) {
@@ -105,7 +105,7 @@ try {
 ### Output
 
 ```text
-TimelineIndexAccessor rolling operations require a monotonic increasing index
+Timeline::TimelineIndexAccessor rolling operations require a monotonic increasing index
 ```
 
 ## Cost And Ownership
@@ -116,9 +116,9 @@ a newly allocated contiguous `Series`; no input is mutated.
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_min`](rolling_min.md)
-- [`TimelineIndexAccessor::rolling_last`](rolling_last.md)
-- [`TimelineIndexAccessor::resample_max`](resample_max.md)
+- [`Timeline::TimelineIndexAccessor::rolling_min`](rolling_min.md)
+- [`Timeline::TimelineIndexAccessor::rolling_last`](rolling_last.md)
+- [`Timeline::TimelineIndexAccessor::resample_max`](resample_max.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_last.html">

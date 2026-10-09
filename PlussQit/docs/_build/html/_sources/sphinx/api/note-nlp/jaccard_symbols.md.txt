@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::jaccard_symbols
+# Note::NlpAccessor::jaccard_symbols
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::jaccard_symbols(const Note& other) const
+Note Note::NlpAccessor::jaccard_symbols(const Note& other) const
 ```
 
 ## Math-Symbol Similarity Score Between Two Notes
@@ -33,8 +33,8 @@ trailing zeros trimmed.
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::jaccard_symbols requires a UTF-8 text Note (lhs is bytes)` (or
-`rhs`); a numel mismatch raises `NoteNlpAccessor::jaccard_symbols expects equal
+`Note::NlpAccessor::jaccard_symbols requires a UTF-8 text Note (lhs is bytes)` (or
+`rhs`); a numel mismatch raises `Note::NlpAccessor::jaccard_symbols expects equal
 numel or scalar broadcast`.
 
 ## Example 1: One Shared Operator Out Of Three
@@ -57,14 +57,14 @@ Sets `{+, =}` and `{-, =}` share only `=` — one of three distinct symbols →
 
 ## See Also
 
-- [`NoteNlpAccessor::overlap_symbols`](overlap_symbols.md): the containment
+- [`Note::NlpAccessor::overlap_symbols`](overlap_symbols.md): the containment
   score over the same sets.
-- [`NoteNlpAccessor::intersect_symbols`](intersect_symbols.md): the shared
+- [`Note::NlpAccessor::intersect_symbols`](intersect_symbols.md): the shared
   symbols themselves.
-- [`NoteNlpAccessor::jaccard_tokens`](jaccard_tokens.md) /
-  [`NoteNlpAccessor::jaccard_terms`](jaccard_terms.md) /
-  [`NoteNlpAccessor::jaccard_acronyms`](jaccard_acronyms.md) /
-  [`NoteNlpAccessor::jaccard_citations`](jaccard_citations.md): other set kinds.
+- [`Note::NlpAccessor::jaccard_tokens`](jaccard_tokens.md) /
+  [`Note::NlpAccessor::jaccard_terms`](jaccard_terms.md) /
+  [`Note::NlpAccessor::jaccard_acronyms`](jaccard_acronyms.md) /
+  [`Note::NlpAccessor::jaccard_citations`](jaccard_citations.md): other set kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="jaccard_citations.html"><span class="label">Previous</span><span class="title">jaccard_citations</span></a>

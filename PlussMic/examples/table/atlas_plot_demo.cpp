@@ -27,7 +27,7 @@ int main() {
         {"Volume", pluss::make_series(volume)},
         {"Range", pluss::make_series(range)},
     });
-    return frame.label().set(pluss::table::Thread(cases));
+    return frame.label().set(pluss::table::Slate(cases));
   };
 
   auto f0 = make_frame({102.0, 105.0, 108.0, 111.0, 109.0, 113.0},
@@ -41,7 +41,7 @@ int main() {
 
   Atlas atlas(
       {f0, f1, f2, f3},
-      pluss::table::Thread(pluss::make_note({"W1", "W2", "W3", "W4"})));
+      pluss::table::Slate(pluss::make_note({"W1", "W2", "W3", "W4"})));
 
   AtlasPlotOptions plot_opts;
   plot_opts.figure.width = 1240.0;

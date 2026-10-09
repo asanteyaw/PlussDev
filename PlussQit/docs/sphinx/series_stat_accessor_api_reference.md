@@ -1,10 +1,10 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor API Reference
+# Series::StatAccessor API Reference
 
 [Back to Series API Reference](series_api_reference.md)
 
-`SeriesStatAccessor` groups statistical reductions, normal-distribution
+`Series::StatAccessor` groups statistical reductions, normal-distribution
 functions, trailing-window calculations, normalization transforms, and
 pairwise distances. Start here when the question is statistical rather than a
 generic elementwise or shape operation.

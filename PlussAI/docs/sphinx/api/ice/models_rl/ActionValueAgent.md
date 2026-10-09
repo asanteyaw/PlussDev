@@ -1,29 +1,47 @@
 # `pluss::ai::ice::models::ActionValueAgent`
 
-A double-DQN-style discrete action-value agent: learn from transitions, predict Q-values, or act with epsilon-greedy exploration.
+A double-DQN-style discrete action-value agent: learn from
+transitions, predict Q-values, or act with epsilon-greedy
+exploration.
 
 ## Signature
 
 ```cpp
-// the public factories / constructors that produce this object
-// e.g. lymph::models::Model lymph::models::logistic_regression(...);
+explicit pluss::ai::ice::models::ActionValueAgent::ActionValueAgent(
+    pluss::ai::ice::models::ActionValueAgentOptions options);
 ```
 
 ## Construction
 
-<!-- how an instance is obtained; delete if the Signature block says it all -->
+```cpp
+namespace ice = pluss::ai::ice;
+namespace models = ice::models;
 
-## State
+models::ActionValueAgentOptions options{};
+options.observation_size = 4;
+options.action_count = 2;
+options.hidden_size = 64;
 
-<!-- the observable fields / accessors and what each means -->
+models::ActionValueAgent agent(options);
+```
 
 ## Methods
 
-<!-- one line per method, linking its page; the toctree below carries the sidebar entries -->
+| Method | Returns | Covered on |
+| --- | --- | --- |
+| `act(observation, epsilon = 0.0, seed = 0)` | `std::int64_t` | [`act`](ActionValueAgent/act.md) |
+| `assess(batch, use_huber = true)` | `ActionValueReport` | [`assess`](ActionValueAgent/assess.md) |
+| `learn(train, options = {})` / `learn(train, val, options = {})` | `void` | [`learn`](ActionValueAgent/learn.md) |
+| `load(filepath)` | `ActionValueAgent` | [`load`](ActionValueAgent/load.md) |
+| `predict(observations)` | `Series` | [`predict`](ActionValueAgent/predict.md) |
+| `ready()` | `bool` | [`ready`](ActionValueAgent/ready.md) |
+| `save(filepath)` | `void` | [`save`](ActionValueAgent/save.md) |
+| `to(platform)` | `ActionValueAgent&` | [`to`](ActionValueAgent/to.md) |
 
 ## Changelog
 
-- **0.1** — <!-- initial documented surface -->
+- **0.1** -- `ActionValueAgent`: `learn` over `ActionValueBatch`,
+  `predict`, `act`, `assess`, `save`/`load`, `ready`, `to`.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

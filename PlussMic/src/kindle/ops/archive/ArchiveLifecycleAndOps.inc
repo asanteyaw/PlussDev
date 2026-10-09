@@ -21,7 +21,7 @@ std::pair<std::int64_t, std::int64_t> normalize_slice(std::int64_t start, std::i
 }
 
 std::int64_t find_note_label(const Stream& labels, std::string_view key) {
-  const auto note = labels.to_thread().cast().note().as_note();
+  const auto note = labels.to_slate().cast().note().as_note();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (note.at(i) == key) {
       return i;
@@ -31,10 +31,10 @@ std::int64_t find_note_label(const Stream& labels, std::string_view key) {
 }
 
 std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
-  const auto thread = labels.to_thread();
-  PLUSS_CHECK(thread.kind() == pluss::table::ThreadKind::Series,
+  const auto slate = labels.to_slate();
+  PLUSS_CHECK(slate.kind() == pluss::table::SlateKind::Series,
               "Archive::loc(int64): depth labels must be numeric Series");
-  const auto values = thread.as_series().to_vec<std::int64_t>();
+  const auto values = slate.as_series().to_vec<std::int64_t>();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (values[static_cast<std::size_t>(i)] == key) {
       return i;
@@ -46,7 +46,7 @@ std::int64_t find_int_label(const Stream& labels, std::int64_t key) {
 std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& key) {
   PLUSS_CHECK(key.defined(), "Archive::loc(Timeline): key is undefined");
   PLUSS_CHECK(key.numel() == 1, "Archive::loc(Timeline): key must be scalar Timeline");
-  const auto keys = labels.to_thread().cast().timeline().as_timeline().ticks();
+  const auto keys = labels.to_slate().cast().timeline().as_timeline().ticks();
   const auto want = key.ticks();
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     if (keys[static_cast<std::size_t>(i)] == want[0]) {
@@ -57,7 +57,7 @@ std::int64_t find_timeline_label(const Stream& labels, const pluss::Timeline& ke
 }
 
 std::string label_string_at(const Stream& labels, std::int64_t i) {
-  const auto note = labels.to_thread().cast().note().as_note();
+  const auto note = labels.to_slate().cast().note().as_note();
   return std::string(note.at(i));
 }
 
@@ -307,13 +307,13 @@ ArchiveCastAccessor Archive::cast() const {
   return ArchiveCastAccessor(*this, catalog(0).keys(), {});
 }
 
-ArchiveCastAccessor Archive::cast(const pluss::table::ThreadCastOptions& options) const {
+ArchiveCastAccessor Archive::cast(const pluss::table::SlateCastOptions& options) const {
   if (empty()) return ArchiveCastAccessor(*this, {}, options);
   return ArchiveCastAccessor(*this, catalog(0).keys(), options);
 }
 
-Archive Archive::cast(pluss::table::ThreadCastTarget target,
-                      const pluss::table::ThreadCastOptions& options) const {
+Archive Archive::cast(pluss::table::SlateCastTarget target,
+                      const pluss::table::SlateCastOptions& options) const {
   return map_catalogs([&](const Catalog& catalog) { return catalog.cast(target, options); });
 }
 
@@ -351,9 +351,9 @@ pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy) const {
     frames.push_back(c.tabelize(policy));
   }
 
-  std::optional<pluss::table::Thread> labels = std::nullopt;
+  std::optional<pluss::table::Slate> labels = std::nullopt;
   if (impl_ref_().depth_labels_.has_value()) {
-    labels = impl_ref_().depth_labels_->to_thread();
+    labels = impl_ref_().depth_labels_->to_slate();
   }
   return pluss::table::Atlas(std::move(frames), std::move(labels));
 }

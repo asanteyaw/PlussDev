@@ -289,6 +289,33 @@ namespace {
   return out;
 }
 
+// Validates feature *widths* (encoder_size/decoder_size/static_size)
+// against `options`. Deliberately does not validate the *length* axis
+// (encoder_inputs/decoder_inputs' own sizes()[1]) -- the LSTM encoder/
+// decoder and the causal self-attention layer are architecturally
+// length-agnostic, so a batch with a different lookback/horizon length
+// than training still predicts correctly; see TemporalFusionTransformer's
+// own Introduction for why that is kept, unlike the width checks below.
+// Width mismatches are not architecturally safe: VariableSelectionNetwork
+// (tft_blocks.h) narrows exactly `options.*_size` columns out of its input's
+// last axis regardless of that axis's actual size -- a too-narrow input
+// throws from narrow_copy's own bounds check, but a too-wide one silently
+// reads only the first `options.*_size` columns and ignores the rest,
+// which is why this check exists rather than relying on that incidental
+// throw.
+void validate_batch_shape_(const TFTBatch& batch, const TFTOptions& options, const char* what) {
+  PLUSS_CHECK(batch.encoder_inputs.dim() == 3 && batch.encoder_inputs.sizes()[2] == options.encoder_size,
+             std::string(what) + ": encoder_inputs must be [N, encoder_length, encoder_size].");
+  PLUSS_CHECK(batch.decoder_inputs.dim() == 3 && batch.decoder_inputs.sizes()[2] == options.decoder_size,
+             std::string(what) + ": decoder_inputs must be [N, decoder_length, decoder_size].");
+  if (options.static_size > 0) {
+    PLUSS_CHECK(batch.static_inputs.defined(),
+               std::string(what) + ": static_inputs is required when TFTOptions::static_size > 0.");
+    PLUSS_CHECK(batch.static_inputs.dim() == 2 && batch.static_inputs.sizes()[1] == options.static_size,
+               std::string(what) + ": static_inputs must be [N, static_size].");
+  }
+}
+
 [[nodiscard]] TrainOptions make_optimizer_options_(const TFTTrainOptions& options) {
   TrainOptions out{};
   out.optimizer = options.optimizer;
@@ -296,6 +323,7 @@ namespace {
   out.objective_regularization = options.objective_regularization;
   out.loop_regularization = options.loop_regularization;
   out.validation = options.validation;
+  out.progress = options.progress;
   out.execution = options.execution;
   return out;
 }
@@ -459,23 +487,23 @@ void TemporalFusionTransformer::learn(const TFTBatch& train, const TFTBatch& val
   PLUSS_CHECK(train.encoder_inputs.defined() && train.decoder_inputs.defined() && train.target.defined(),
              "pluss::ai::ice::models::TemporalFusionTransformer::learn: encoder_inputs, decoder_inputs and "
              "target are required.");
-  if (options_.static_size > 0) {
-    PLUSS_CHECK(train.static_inputs.defined(),
-               "pluss::ai::ice::models::TemporalFusionTransformer::learn: static_inputs is required when "
-               "TFTOptions::static_size > 0.");
-  }
+  validate_batch_shape_(train, options_, "pluss::ai::ice::models::TemporalFusionTransformer::learn(train)");
 
   const Platform target_platform = resolve_platform(options.execution.platform);
   impl_->move_to(target_platform);
 
   const TFTBatch train_on_device = move_batch_(train, target_platform);
   const bool has_val = val.encoder_inputs.defined() && val.target.defined();
+  if (has_val) {
+    validate_batch_shape_(val, options_, "pluss::ai::ice::models::TemporalFusionTransformer::learn(val)");
+  }
   const TFTBatch val_on_device = has_val ? move_batch_(val, target_platform) : TFTBatch{};
 
   const auto parameters = impl_->all_parameters();
   PLUSS_CHECK(!parameters.empty(),
              "pluss::ai::ice::models::TemporalFusionTransformer::learn: model has no parameters.");
-  auto optimizer = ice::make_optimizer(parameters, make_optimizer_options_(options));
+  const TrainOptions runtime_options = make_optimizer_options_(options);
+  auto optimizer = ice::make_optimizer(parameters, runtime_options);
 
   const auto n = train_on_device.encoder_inputs.sizes()[0];
   std::mt19937_64 rng(options.seed);
@@ -488,6 +516,9 @@ void TemporalFusionTransformer::learn(const TFTBatch& train, const TFTBatch& val
        options.loop_regularization.restore_best_weights)) {
     callbacks.add(std::make_shared<EarlyStopCallback>(options.validation, options.loop_regularization));
   }
+  if (options.progress.verbose) {
+    callbacks.add(std::make_shared<EpochLoggerCallback>(options.progress));
+  }
   RunState state{
       .model = nullptr,
       .stage = StepStage::Learn,
@@ -498,6 +529,7 @@ void TemporalFusionTransformer::learn(const TFTBatch& train, const TFTBatch& val
       .rows = 0,
       .metrics = {},
       .parameters = &parameters,
+      .recipe = &runtime_options,
       .stop_requested = false,
       .stop_reason = {},
       .exception_message = {},
@@ -612,6 +644,7 @@ TFTForecast TemporalFusionTransformer::predict(const TFTBatch& batch) const {
   PLUSS_CHECK(batch.encoder_inputs.defined() && batch.decoder_inputs.defined(),
              "pluss::ai::ice::models::TemporalFusionTransformer::predict: encoder_inputs and decoder_inputs "
              "are required.");
+  validate_batch_shape_(batch, options_, "pluss::ai::ice::models::TemporalFusionTransformer::predict");
 
   const auto parameters = impl_->all_parameters();
   const NoGradGuard guard;

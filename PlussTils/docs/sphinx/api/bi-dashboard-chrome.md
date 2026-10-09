@@ -1,0 +1,298 @@
+# `pluss::bi::DashboardChrome`
+
+[Back to PlussBI API Reference](bi.md)
+
+```cpp
+#include <pluss/bi/specs.h>
+
+enum class DashboardChrome : std::uint8_t {
+  None = 0,
+  Sidebar = 1,
+};
+```
+
+`DashboardChrome` chooses the page layout of an exported or served dashboard. `None` lays the boards out in a single centered column with
+no sidebar element. `Sidebar` adds the board tabs and the active filter panel, and it is the default for `export_html`, `show`, and
+`start_serving`.
+
+## Parameters
+
+| Enumerator | Value | Layout |
+|---|---|---|
+| `None` | 0 | A single column with no sidebar element. |
+| `Sidebar` | 1 | Board tabs and the filter panel beside the content. The default. |
+
+## Returns
+
+Not applicable. `DashboardChrome` is an enumeration.
+
+## Errors
+
+Not applicable.
+
+## Practical Examples
+
+### Example 1
+
+Example 1 prints the numeric value of each enumerator.
+
+```cpp
+#include <pluss/bi/bi.h>
+#include <pluss/bi/serve.h>
+#include <pluss/bundle/bundle.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <string>
+#include <vector>
+
+namespace bi = pluss::bi;
+namespace fs = std::filesystem;
+
+// Three sales rows: regions north, south, north; amounts 10, 20, 30.
+pluss::bundle::Nexus make_nexus() {
+  using pluss::table::DataFrame;
+  using pluss::table::Slate;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame sales({
+      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
+  });
+  return pluss::bundle::Nexus({{"sales", sales}});
+}
+
+// A studio with one board holding one table over the sales data.
+bi::Studio overview_studio(const pluss::bundle::Nexus& nexus) {
+  bi::Studio studio("sales_studio");
+  studio.source(nexus);
+  studio.board("overview").title("Sales overview").grid(1, 1);
+  studio.board("overview").view(bi::table("rows").query(bi::from("sales")).place(0, 0));
+  return studio;
+}
+
+// The number of rows the overview table shows on a studio.
+std::int64_t rows_shown(const bi::Studio& studio) {
+  return studio.render().boards.front().tiles.front().table->height();
+}
+
+fs::path private_dir(const std::string& name) {
+  const fs::path dir = fs::temp_directory_path() / name;
+  fs::remove_all(dir);
+  fs::create_directories(dir);
+  return dir;
+}
+
+std::string read_file(const fs::path& path) {
+  std::ifstream in(path, std::ios::binary);
+  return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+}
+
+template <class Fn>
+bool throws(Fn fn) {
+  try {
+    fn();
+  } catch (const std::exception&) {
+    return true;
+  }
+  return false;
+}
+
+int main() {
+  // DashboardChrome selects the page layout. None is a single column; Sidebar adds the board tabs and filter panel.
+  std::cout << "None=" << static_cast<int>(bi::DashboardChrome::None)
+            << " Sidebar=" << static_cast<int>(bi::DashboardChrome::Sidebar) << '\n';
+  return 0;
+}
+```
+
+Output
+
+```text
+None=0 Sidebar=1
+```
+
+### Example 2
+
+Example 2 exports without naming a chrome and shows that the sidebar element is present, so Sidebar is the default.
+
+```cpp
+#include <pluss/bi/bi.h>
+#include <pluss/bi/serve.h>
+#include <pluss/bundle/bundle.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <string>
+#include <vector>
+
+namespace bi = pluss::bi;
+namespace fs = std::filesystem;
+
+// Three sales rows: regions north, south, north; amounts 10, 20, 30.
+pluss::bundle::Nexus make_nexus() {
+  using pluss::table::DataFrame;
+  using pluss::table::Slate;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame sales({
+      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
+  });
+  return pluss::bundle::Nexus({{"sales", sales}});
+}
+
+// A studio with one board holding one table over the sales data.
+bi::Studio overview_studio(const pluss::bundle::Nexus& nexus) {
+  bi::Studio studio("sales_studio");
+  studio.source(nexus);
+  studio.board("overview").title("Sales overview").grid(1, 1);
+  studio.board("overview").view(bi::table("rows").query(bi::from("sales")).place(0, 0));
+  return studio;
+}
+
+// The number of rows the overview table shows on a studio.
+std::int64_t rows_shown(const bi::Studio& studio) {
+  return studio.render().boards.front().tiles.front().table->height();
+}
+
+fs::path private_dir(const std::string& name) {
+  const fs::path dir = fs::temp_directory_path() / name;
+  fs::remove_all(dir);
+  fs::create_directories(dir);
+  return dir;
+}
+
+std::string read_file(const fs::path& path) {
+  std::ifstream in(path, std::ios::binary);
+  return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+}
+
+template <class Fn>
+bool throws(Fn fn) {
+  try {
+    fn();
+  } catch (const std::exception&) {
+    return true;
+  }
+  return false;
+}
+
+int main() {
+  // export_html uses Sidebar chrome unless you pass another value.
+  const auto nexus = make_nexus();
+  bi::Studio studio = overview_studio(nexus);
+  const fs::path dir = private_dir("pluss_studio_chrome_default_example");
+  studio.export_html((dir / "default.html").string(), "T", 900, 600);
+  std::cout << "default export has a sidebar element: " << (read_file(dir / "default.html").find("class=\"bi-sidebar\"") != std::string::npos) << '\n';
+  fs::remove_all(dir);
+  return 0;
+}
+```
+
+Output
+
+```text
+default export has a sidebar element: 1
+```
+
+### Example 3
+
+Example 3 exports with each chrome and shows that only the sidebar chrome adds a sidebar element.
+
+```cpp
+#include <pluss/bi/bi.h>
+#include <pluss/bi/serve.h>
+#include <pluss/bundle/bundle.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <string>
+#include <vector>
+
+namespace bi = pluss::bi;
+namespace fs = std::filesystem;
+
+// Three sales rows: regions north, south, north; amounts 10, 20, 30.
+pluss::bundle::Nexus make_nexus() {
+  using pluss::table::DataFrame;
+  using pluss::table::Slate;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame sales({
+      {"region", Slate(pluss::make_note({"north", "south", "north"}))},
+      {"amount", Slate(pluss::make_series(std::vector<double>{10, 20, 30}, {3}, cfg))},
+  });
+  return pluss::bundle::Nexus({{"sales", sales}});
+}
+
+// A studio with one board holding one table over the sales data.
+bi::Studio overview_studio(const pluss::bundle::Nexus& nexus) {
+  bi::Studio studio("sales_studio");
+  studio.source(nexus);
+  studio.board("overview").title("Sales overview").grid(1, 1);
+  studio.board("overview").view(bi::table("rows").query(bi::from("sales")).place(0, 0));
+  return studio;
+}
+
+// The number of rows the overview table shows on a studio.
+std::int64_t rows_shown(const bi::Studio& studio) {
+  return studio.render().boards.front().tiles.front().table->height();
+}
+
+fs::path private_dir(const std::string& name) {
+  const fs::path dir = fs::temp_directory_path() / name;
+  fs::remove_all(dir);
+  fs::create_directories(dir);
+  return dir;
+}
+
+std::string read_file(const fs::path& path) {
+  std::ifstream in(path, std::ios::binary);
+  return std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+}
+
+template <class Fn>
+bool throws(Fn fn) {
+  try {
+    fn();
+  } catch (const std::exception&) {
+    return true;
+  }
+  return false;
+}
+
+int main() {
+  // The chrome decides the layout. Sidebar chrome adds a sidebar element; None does not.
+  const auto nexus = make_nexus();
+  bi::Studio studio = overview_studio(nexus);
+  const fs::path dir = private_dir("pluss_studio_chrome_example");
+  studio.export_html((dir / "none.html").string(), "T", 900, 600, bi::DashboardChrome::None);
+  studio.export_html((dir / "sidebar.html").string(), "T", 900, 600, bi::DashboardChrome::Sidebar);
+  std::cout << "None has a sidebar element: " << (read_file(dir / "none.html").find("class=\"bi-sidebar\"") != std::string::npos) << '\n';
+  std::cout << "Sidebar has a sidebar element: " << (read_file(dir / "sidebar.html").find("class=\"bi-sidebar\"") != std::string::npos) << '\n';
+  fs::remove_all(dir);
+  return 0;
+}
+```
+
+Output
+
+```text
+None has a sidebar element: 0
+Sidebar has a sidebar element: 1
+```
+
+## See Also
+
+- [`export_html`](bi-studio/export_html.md) -- takes a chrome.
+- [`start_serving`](bi-studio/start_serving.md) -- takes a chrome.

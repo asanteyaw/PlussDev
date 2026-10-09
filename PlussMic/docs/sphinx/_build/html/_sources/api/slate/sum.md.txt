@@ -1,0 +1,201 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1928d5c81c5a -->
+
+# Slate::sum
+
+[Back to Slate API Reference](../../slate_api_reference)
+
+## Signature
+
+```cpp
+Slate::sum() const -> SlateValue
+```
+
+## What It Does
+
+Returns the sum of every observed (non-missing) value in a numeric `Series`
+thread, as a scalar `SlateValue`. Missing entries are excluded before the sum
+is computed, not treated as zero. Restricted to `Series` payloads; every other
+kind throws, since "sum" has no defined meaning for `Note`/`Timeline`/`TimeIndex`
+data. A thread whose every entry is missing (or that is empty) also throws —
+there is no meaningful sum of zero observations to return.
+
+```{note} printing a SlateValue directly
+`SlateValue` wraps a one-element payload (a `Series` here). Streaming it
+directly — `std::cout << result` — does **not** print a clean bare number: it
+prints the full diagnostic form of the underlying `pluss::Series`, including its
+shape, dtype, platform, and contiguity metadata ahead of the data. Example 2
+below shows the raw form for reference, once, so you know what to expect if
+you ever do stream a `SlateValue` directly.
+
+To pull out a plain host-language scalar instead, reach for `.to_dbl()`,
+`.to_int()`, or `.to_str()` — but each of those commits you to a specific
+native C++ type, so you need to already know (or assume) what the underlying
+scalar is before calling one. `.host()` sidesteps that: it returns a
+`SlateValue::HostAny`, a small tagged union that already knows its own kind
+(`Bool`/`Int`/`UInt`/`Double`/`String`/`Time`), and streaming *it* —
+`std::cout << result.host()` — prints a clean scalar with no cast or
+type-picking required up front. Reach for `.host()` when you just want to
+print or forward the value without committing to a type; reach for
+`.to_dbl()`/`.to_int()`/`.to_str()` when you specifically need the value as
+that native C++ type (e.g. to do further arithmetic on it). Every example on
+this page (and across the rest of the reduction methods) uses one of those
+four — see Example 3 below for `.host()` specifically.
+
+A related trap: some statistical methods (for example the `StatisticOptions`
+overloads of [`var()`](var.md)/[`std()`](std.md)/[`se()`](se.md), and
+[`skew()`](skew.md)/[`kurtosis()`](kurtosis.md)/[`corr_with()`](corr_with.md))
+return a `SlateValue` marked *invalid* instead of throwing when there isn't
+enough data — but `.to_dbl()`/`.to_int()`/`.to_str()` still hand back whatever
+number the underlying arithmetic produced, with no indication it's actually
+meaningless. `Series`/`Note`/`Timeline`/`TimeIndex` printing has no concept of
+nullness at all — only the wrapping `Slate`'s own validity mask does. Check
+`result.slate().notnull().as_series().to_vec<bool>()[0]` before trusting a
+result from one of those
+methods.
+```
+
+## Parameters
+
+`None`
+
+## Returns
+
+`SlateValue`
+    A scalar wrapping the sum, in the source `Series`'s own numeric dtype (or
+    its promoted equivalent, following the same numeric promotion rules as the
+    underlying `Series::sum()`).
+
+## Examples
+
+Example 1. Sum a numeric thread, extracting a clean scalar with `.to_dbl()`.
+
+```cpp
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+auto out = scores.sum();
+std::cout << out.to_dbl();
+```
+
+### Output
+
+```text
+60
+```
+
+Example 2. Streaming the `SlateValue` directly prints its full diagnostic
+representation instead of a bare number.
+
+```cpp
+std::cout << out;
+```
+
+### Output
+
+```text
+pluss::Series(shape=[1], strides=[1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[60]
+```
+
+Example 3. `.host()` prints a clean scalar too, without needing to know the
+underlying native type in advance.
+
+```cpp
+std::cout << out.host();
+```
+
+### Output
+
+```text
+60
+```
+
+Same value as Example 1 — `.host()` just doesn't require committing to
+`.to_dbl()` specifically to get there.
+
+Example 4. Missing entries are excluded before summing, not treated as zero.
+
+```cpp
+auto with_gap = Slate(
+    pluss::make_series({10.0, 20.0, 30.0}),
+    pluss::make_series(std::vector<bool>{true, false, true})
+);
+auto out2 = with_gap.sum();
+std::cout << out2.to_dbl();
+```
+
+### Output
+
+```text
+40
+```
+
+Only `10.0` and `30.0` (the two observed entries) contribute — `20.0` is
+excluded entirely, not counted as `0`.
+
+Example 5. A thread with no observed values throws — there is nothing to sum.
+
+```cpp
+auto all_missing = Slate(
+    pluss::make_series({10.0, 20.0}),
+    pluss::make_series(std::vector<bool>{false, false})
+);
+try {
+  auto bad = all_missing.sum();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Slate::sum on an empty (all-null) selection
+```
+
+Example 6. Any non-`Series` payload throws.
+
+```cpp
+auto words = Slate(pluss::make_note({"a", "b"}));
+try {
+  auto bad = words.sum();
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Slate::sum is only valid for Series payload
+```
+
+## Notes
+
+- Missing entries are excluded before summing — never treated as `0`.
+- An empty thread, or one where every entry is missing, throws `"Slate::sum on
+  an empty (all-null) selection"`.
+- Restricted to `Series` payloads; anything else throws `"Slate::sum is only
+  valid for Series payload"`.
+- See the callout above for how `SlateValue` prints — use `.to_dbl()` (or
+  `.host()` if you don't want to commit to a native type) for a clean
+  numeric result.
+
+## See Also
+
+- [`Slate::prod`](prod.md): the multiplicative counterpart.
+- [`Slate::mean`](mean.md): the sum divided by the observed count.
+- [`Slate::cumsum`](cumsum.md): the running sum at every position, instead of
+  one final total.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sub.html">
+    <span class="label">Previous</span>
+    <span class="title">sub</span>
+  </a>
+  <a class="next-link" href="tail.html">
+    <span class="label">Next</span>
+    <span class="title">tail</span>
+  </a>
+</div>

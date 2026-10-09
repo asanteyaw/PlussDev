@@ -5,8 +5,8 @@ Return the coordinate of the maximum value along the requested axis.
 """
 
 returns = """
-`Thread`
-    Label/position thread describing where each maximum was found.
+`Slate`
+    Label/position slate describing where each maximum was found.
 """
 
 notes = [

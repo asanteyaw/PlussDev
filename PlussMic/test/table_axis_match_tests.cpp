@@ -17,7 +17,7 @@ using pluss::table::Axis;
 using pluss::table::FrameMatchOptions;
 using pluss::table::FrameMatchRule;
 using pluss::table::RepeatedCaseRule;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using pluss::table::Atlas;
 using pluss::scribble::Registry;
 using pluss::scribble::Axel;
@@ -44,24 +44,24 @@ void expect_throw(Fn&& fn, std::string_view message) {
 }
 
 DataFrame make_frame(
-    std::initializer_list<std::pair<std::string, Thread>> features,
+    std::initializer_list<std::pair<std::string, Slate>> features,
     std::initializer_list<std::string_view> cases) {
   return DataFrame(
       features,
-      Thread(pluss::make_note(cases)));
+      Slate(pluss::make_note(cases)));
 }
 
 void test_union_matching_for_frame_math() {
   const auto left = make_frame(
       {
-          {"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"y", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"y", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
       },
       {"A", "C"});
   const auto right = make_frame(
       {
-          {"y", Thread(pluss::make_series(std::vector<double>{100.0, 200.0}))},
-          {"z", Thread(pluss::make_series(std::vector<double>{7.0, 8.0}))},
+          {"y", Slate(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+          {"z", Slate(pluss::make_series(std::vector<double>{7.0, 8.0}))},
       },
       {"B", "A"});
 
@@ -98,14 +98,14 @@ void test_union_matching_for_frame_math() {
 void test_explicit_common_matching() {
   const auto left = make_frame(
       {
-          {"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"y", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"y", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
       },
       {"A", "C"});
   const auto right = make_frame(
       {
-          {"y", Thread(pluss::make_series(std::vector<double>{100.0, 200.0}))},
-          {"z", Thread(pluss::make_series(std::vector<double>{7.0, 8.0}))},
+          {"y", Slate(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+          {"z", Slate(pluss::make_series(std::vector<double>{7.0, 8.0}))},
       },
       {"B", "A"});
 
@@ -129,10 +129,10 @@ void test_explicit_common_matching() {
 
 void test_repeated_caselbl_pair_in_order() {
   const auto left = make_frame(
-      {{"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
+      {{"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
       {"A", "A"});
   const auto right = make_frame(
-      {{"x", Thread(pluss::make_series(std::vector<double>{10.0}))}},
+      {{"x", Slate(pluss::make_series(std::vector<double>{10.0}))}},
       {"A"});
 
   expect_throw(
@@ -155,11 +155,11 @@ void test_repeated_caselbl_pair_in_order() {
 
 void test_matching_rejects_incompatible_case_types() {
   const auto text_cases = make_frame(
-      {{"x", Thread(pluss::make_series(std::vector<double>{1.0}))}},
+      {{"x", Slate(pluss::make_series(std::vector<double>{1.0}))}},
       {"A"});
   const auto numeric_cases = DataFrame(
-      {{"x", Thread(pluss::make_series(std::vector<double>{2.0}))}},
-      Thread(pluss::make_series(std::vector<std::int64_t>{0})));
+      {{"x", Slate(pluss::make_series(std::vector<double>{2.0}))}},
+      Slate(pluss::make_series(std::vector<std::int64_t>{0})));
 
   expect_throw(
       [&]() { (void)text_cases.match(numeric_cases); },
@@ -168,10 +168,10 @@ void test_matching_rejects_incompatible_case_types() {
 
 void test_case_aware_horizontal_composition() {
   const auto left = make_frame(
-      {{"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
+      {{"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))}},
       {"A", "C"});
   const auto right = make_frame(
-      {{"y", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))}},
+      {{"y", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))}},
       {"B", "A"});
 
   const auto combined = left.combine(right);
@@ -190,7 +190,7 @@ void test_case_aware_horizontal_composition() {
 
   const auto updated = left.update(
       make_frame(
-          {{"x", Thread(pluss::make_series(std::vector<double>{9.0}))}},
+          {{"x", Slate(pluss::make_series(std::vector<double>{9.0}))}},
           {"A"}));
   expect(updated.label().values().as_note().vector() ==
              std::vector<std::string_view>({"A", "C"}),
@@ -203,14 +203,14 @@ void test_case_aware_horizontal_composition() {
 void test_vertical_case_extension() {
   const auto left = make_frame(
       {
-          {"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"y", Thread(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+          {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"y", Slate(pluss::make_series(std::vector<double>{3.0, 4.0}))},
       },
       {"A", "C"});
   const auto right = make_frame(
       {
-          {"y", Thread(pluss::make_series(std::vector<double>{5.0, 6.0}))},
-          {"z", Thread(pluss::make_series(std::vector<double>{7.0, 8.0}))},
+          {"y", Slate(pluss::make_series(std::vector<double>{5.0, 6.0}))},
+          {"z", Slate(pluss::make_series(std::vector<double>{7.0, 8.0}))},
       },
       {"B", "A"});
 
@@ -243,15 +243,15 @@ void test_vertical_case_extension() {
 
 DataFrame make_unify_left() {
   return DataFrame({
-      {"id", Thread(pluss::make_series(std::vector<std::int64_t>{1, 2}))},
-      {"left_value", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+      {"id", Slate(pluss::make_series(std::vector<std::int64_t>{1, 2}))},
+      {"left_value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
   });
 }
 
 DataFrame make_unify_right() {
   return DataFrame({
-      {"id", Thread(pluss::make_series(std::vector<std::int64_t>{2, 3}))},
-      {"right_value", Thread(pluss::make_series(std::vector<double>{200.0, 300.0}))},
+      {"id", Slate(pluss::make_series(std::vector<std::int64_t>{2, 3}))},
+      {"right_value", Slate(pluss::make_series(std::vector<double>{200.0, 300.0}))},
   });
 }
 
@@ -300,10 +300,10 @@ void test_unify_modes() {
 
 void test_vectorized_group_reductions() {
   const auto frame = DataFrame({
-      {"group", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-      {"value", Thread(pluss::make_series(
+      {"group", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+      {"value", Slate(pluss::make_series(
           std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
-      {"label", Thread(pluss::make_note({"x", "y", "z", "z", "w"}))},
+      {"label", Slate(pluss::make_note({"x", "y", "z", "z", "w"}))},
   });
   const std::vector<DataFrame::GroupSpec> specs{
       {"n", "", DataFrame::GroupOp::Count},
@@ -362,9 +362,9 @@ void test_vectorized_group_reductions() {
          "group variance should use sample degrees of freedom");
 
   const auto pivot_frame = DataFrame({
-      {"case", Thread(pluss::make_note({"r1", "r1", "r2", "r2"}))},
-      {"feature", Thread(pluss::make_note({"c1", "c1", "c1", "c1"}))},
-      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 5.0, 2.0, 8.0}))},
+      {"case", Slate(pluss::make_note({"r1", "r1", "r2", "r2"}))},
+      {"feature", Slate(pluss::make_note({"c1", "c1", "c1", "c1"}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 5.0, 2.0, 8.0}))},
   });
   const auto pivoted = pivot_frame.pivot_table(
       "case", "feature", "value", DataFrame::GroupOp::Median, true, false);
@@ -373,9 +373,9 @@ void test_vectorized_group_reductions() {
          "pivot_table median should aggregate duplicate cells");
 
   const auto sparse_counts = DataFrame({
-      {"case", Thread(pluss::make_note({"r1", "r2"}))},
-      {"feature", Thread(pluss::make_note({"c1", "c2"}))},
-      {"value", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+      {"case", Slate(pluss::make_note({"r1", "r2"}))},
+      {"feature", Slate(pluss::make_note({"c1", "c2"}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
   }).pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, true, false);
   expect(pluss::table::detail::validity_mask(sparse_counts.features("c1"))->to_vec<bool>() ==
              std::vector<bool>({true, false}),
@@ -384,13 +384,13 @@ void test_vectorized_group_reductions() {
              std::vector<bool>({false, true}),
          "pivot_table count should preserve sparsity per pivoted feature");
 
-  const auto feature_keys = Thread(
+  const auto feature_keys = Slate(
       pluss::make_note(std::vector<std::string>{"NULL", "unused"}),
       pluss::make_series(std::vector<bool>{true, false}));
   const auto collision_frame = DataFrame({
-      {"case", Thread(pluss::make_note({"r1", "r2"}))},
+      {"case", Slate(pluss::make_note({"r1", "r2"}))},
       {"feature", feature_keys},
-      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
   });
   const auto collision_pivot =
       collision_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Count, false, false);
@@ -421,9 +421,9 @@ void test_vectorized_group_reductions() {
          "pivot_table(var) should support sample variance per cell");
 
   const auto mode_frame = DataFrame({
-      {"case", Thread(pluss::make_note({"r1", "r1", "r2", "r2"}))},
-      {"feature", Thread(pluss::make_note({"c1", "c1", "c1", "c1"}))},
-      {"value", Thread(pluss::make_note({"x", "x", "z", "z"}))},
+      {"case", Slate(pluss::make_note({"r1", "r1", "r2", "r2"}))},
+      {"feature", Slate(pluss::make_note({"c1", "c1", "c1", "c1"}))},
+      {"value", Slate(pluss::make_note({"x", "x", "z", "z"}))},
   });
   const auto pivot_mode =
       mode_frame.pivot_table("case", "feature", "value", DataFrame::GroupOp::Mode, true, false);
@@ -437,11 +437,11 @@ void test_vectorized_group_reductions() {
   multi_options.values = {"units", "revenue"};
   multi_options.aggfuncs = {DataFrame::GroupOp::Sum};
   auto sales = DataFrame({
-      {"city", Thread(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
-      {"quarter", Thread(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
-      {"product", Thread(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
-      {"units", Thread(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 1.0, 5.0}))},
-      {"revenue", Thread(pluss::make_series(std::vector<double>{20.0, 30.0, 40.0, 10.0, 50.0}))},
+      {"city", Slate(pluss::make_note({"Accra", "Accra", "Accra", "Tema", "Tema"}))},
+      {"quarter", Slate(pluss::make_note({"Q1", "Q1", "Q2", "Q1", "Q2"}))},
+      {"product", Slate(pluss::make_note({"Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+      {"units", Slate(pluss::make_series(std::vector<double>{2.0, 3.0, 4.0, 1.0, 5.0}))},
+      {"revenue", Slate(pluss::make_series(std::vector<double>{20.0, 30.0, 40.0, 10.0, 50.0}))},
   });
   const auto multi_pivot = sales.pivot_table(multi_options);
   expect(multi_pivot.label().names() == std::vector<std::string>({"city", "quarter"}),
@@ -467,7 +467,7 @@ void test_vectorized_group_reductions() {
                  std::vector<bool>({true, true, true, false}),
          "pivot_table(options) should populate the requested value-column aggregates per pivoted column");
 
-  multi_options.fill_value = pluss::table::ThreadValue::HostAny::floating(0.0);
+  multi_options.fill_value = pluss::table::SlateValue::HostAny::floating(0.0);
   multi_options.margins = true;
   const auto pivot_with_totals = sales.pivot_table(multi_options);
   expect(pivot_with_totals.get("units_sum :: All").has_value() &&
@@ -486,9 +486,9 @@ void test_vectorized_group_reductions() {
 
 void test_group_phase5_contracts() {
   const auto frame = DataFrame({
-      {"group", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
-      {"label", Thread(pluss::make_note({"x", "y", "z", "z", "w"}))},
+      {"group", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 4.0, 6.0}))},
+      {"label", Slate(pluss::make_note({"x", "y", "z", "z", "w"}))},
   });
 
   const auto counted = frame.group().by({"group"}).count();
@@ -562,13 +562,13 @@ void test_group_phase5_contracts() {
 }
 
 void test_group_transform_and_filter() {
-  const auto groups = Thread(
+  const auto groups = Slate(
       pluss::make_note({"A", "A", "B", "drop", "B"}),
       pluss::make_series(std::vector<bool>{true, true, true, false, true}));
   const auto frame = DataFrame({
       {"group", groups},
-      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 9.0, 6.0}))},
-      {"label", Thread(pluss::make_note({"x", "y", "z", "skip", "w"}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 3.0, 2.0, 9.0, 6.0}))},
+      {"label", Slate(pluss::make_note({"x", "y", "z", "skip", "w"}))},
   });
 
   const auto value_mean = frame.features("value")
@@ -577,10 +577,10 @@ void test_group_transform_and_filter() {
                               .transform(pluss::table::GroupOp::Mean);
   expect(value_mean.as_series().to_vec<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}),
-         "ThreadGrouped::transform should broadcast grouped reductions back to row space");
+         "SlateGrouped::transform should broadcast grouped reductions back to row space");
   expect(pluss::table::detail::validity_mask(value_mean)->to_vec<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
-         "ThreadGrouped::transform should null out rows excluded by dropnull keys");
+         "SlateGrouped::transform should null out rows excluded by dropnull keys");
 
   const auto multi_value =
       frame.features("value")
@@ -592,15 +592,15 @@ void test_group_transform_and_filter() {
           });
   expect(multi_value.ncases() == frame.ncases() &&
              multi_value.features() == std::vector<std::string>({"value_mean", "value_count"}),
-         "ThreadGrouped::transform(specs) should return broadcasted output features only");
+         "SlateGrouped::transform(specs) should return broadcasted output features only");
   expect(multi_value.features("value_mean").as_series().to_vec<double>() ==
              std::vector<double>({2.0, 2.0, 4.0, 2.0, 4.0}) &&
              multi_value.features("value_count").as_series().to_vec<std::int64_t>() ==
                  std::vector<std::int64_t>({2, 2, 2, 2, 2}),
-         "ThreadGrouped::transform(specs) should broadcast multiple grouped reductions");
+         "SlateGrouped::transform(specs) should broadcast multiple grouped reductions");
   expect(pluss::table::detail::validity_mask(multi_value.features("value_count"))->to_vec<bool>() ==
              std::vector<bool>({true, true, true, false, true}),
-         "ThreadGrouped::transform(specs) should preserve dropped-key nulls");
+         "SlateGrouped::transform(specs) should preserve dropped-key nulls");
 
   const auto transformed = frame.group({.dropnull = true}).by({"group"}).transform({
       {"value_mean", "value", DataFrame::GroupOp::Mean},
@@ -634,18 +634,18 @@ void test_group_transform_and_filter() {
 }
 
 void test_group_yield_and_ndistinct() {
-  const auto groups = Thread(
+  const auto groups = Slate(
       pluss::make_note({"B", "A", "B", "A", "skip", "B"}),
       pluss::make_series(std::vector<bool>{true, true, true, true, false, true}));
   const auto frame = DataFrame(
       {
           {"group", groups},
-          {"month_code", Thread(
+          {"month_code", Slate(
                              pluss::make_series(std::vector<double>{2.0, 1.0, 2.0, 3.0, 9.0, 0.0}),
                              pluss::make_series(std::vector<bool>{true, true, true, true, false, false}))},
-          {"amount", Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0, 50.0, 60.0}))},
+          {"amount", Slate(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0, 50.0, 60.0}))},
       },
-      Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4", "r5"})));
+      Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4", "r5"})));
 
   const auto yielded = frame.group({.dropnull = true, .sort = true}).by({"group"}).yield();
   expect(yielded.ncases() == 5,
@@ -668,9 +668,9 @@ void test_group_yield_and_ndistinct() {
          "grouped ndistinct should count unique non-null values per group");
 
   const auto indexed = DataFrame({
-      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 102, 201, 202}))},
-      {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 102, 201, 202}))},
+      {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
   }).label().set(
       DataFrame::SetLabelOptions{
           .features = {"region", "account"},
@@ -688,12 +688,12 @@ void test_group_yield_and_ndistinct() {
 void test_contingency_and_split() {
   const auto cont_frame = DataFrame(
       {
-          {"city", Thread(pluss::make_note({"A", "A", "B", "B", "B"}))},
-          {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
-          {"weekend", Thread(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
-          {"amount", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
+          {"city", Slate(pluss::make_note({"A", "A", "B", "B", "B"}))},
+          {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Cash", "Card"}))},
+          {"weekend", Slate(pluss::make_note({"no", "no", "no", "yes", "yes"}))},
+          {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
       },
-      Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+      Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
 
   const auto counts_ct = cont_frame.contingency("city", "channel");
   expect(counts_ct.ndim() == 2,
@@ -799,12 +799,12 @@ void test_contingency_and_split() {
 
   const auto split_frame = DataFrame(
       {
-          {"city", Thread(pluss::make_note({"A", "A", "B", "B", "C"}))},
-          {"channel", Thread(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
-          {"amount", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
-          {"score", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}))},
+          {"city", Slate(pluss::make_note({"A", "A", "B", "B", "C"}))},
+          {"channel", Slate(pluss::make_note({"Cash", "Card", "Cash", "Card", "Cash"}))},
+          {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}))},
+          {"score", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}))},
       },
-      Thread(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
+      Slate(pluss::make_note({"r0", "r1", "r2", "r3", "r4"})));
 
   const auto ordered_case = split_frame.split(0.4);
   expect(ordered_case.first.ncases() == 3 && ordered_case.second.ncases() == 2,
@@ -836,7 +836,7 @@ void test_contingency_and_split() {
          "randomized row split should partition the original rows without loss");
 
   const auto nan_render = DataFrame({
-      {"value", Thread(pluss::make_series(std::vector<double>{
+      {"value", Slate(pluss::make_series(std::vector<double>{
           1.0,
           std::numeric_limits<double>::quiet_NaN(),
       }))},
@@ -849,11 +849,11 @@ void test_contingency_and_split() {
 }
 
 void test_temporal_subtraction_and_sort_builder() {
-  const auto left = Thread(pluss::make_timeline({
+  const auto left = Slate(pluss::make_timeline({
       "2024-01-03T00:00:00Z",
       "2024-01-05T00:00:00Z",
   }));
-  const auto right = Thread(pluss::make_timeline({
+  const auto right = Slate(pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
   }));
@@ -864,7 +864,7 @@ void test_temporal_subtraction_and_sort_builder() {
              right.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
          "Timeline - Timeline should preserve subtraction direction while matching tl().span(..., Nanos)");
 
-  const auto idx = Thread(pluss::make_timeline({"2024-01-01", "2024-01-04"}));
+  const auto idx = Slate(pluss::make_timeline({"2024-01-01", "2024-01-04"}));
   expect((left - idx).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({172800000000000LL, 86400000000000LL}),
          "Timeline subtraction should produce nanosecond deltas for indexed axes");
@@ -872,18 +872,18 @@ void test_temporal_subtraction_and_sort_builder() {
              idx.tl().span(left, pluss::table::TimeUnit::Nanos).as_series().to_vec<std::int64_t>(),
          "indexed Timeline subtraction should match tl().span(..., Nanos) with direction preserved");
 
-  const auto values = Thread(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
-  const Thread sorted_thread = values.sort();
-  expect(sorted_thread.as_series().to_vec<double>() == std::vector<double>({1.0, 2.0, 3.0}),
-         "Thread::sort() should remain usable through implicit conversion");
+  const auto values = Slate(pluss::make_series(std::vector<double>{3.0, 1.0, 2.0}));
+  const Slate sorted_slate = values.sort();
+  expect(sorted_slate.as_series().to_vec<double>() == std::vector<double>({1.0, 2.0, 3.0}),
+         "Slate::sort() should remain usable through implicit conversion");
 
   const auto frame = DataFrame(
       {
-          {"a", Thread(pluss::make_series(std::vector<std::int64_t>{2, 1, 2, 1}))},
-          {"b", Thread(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 1}))},
-          {"v", Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
+          {"a", Slate(pluss::make_series(std::vector<std::int64_t>{2, 1, 2, 1}))},
+          {"b", Slate(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 1}))},
+          {"v", Slate(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
       },
-      Thread(pluss::make_note({"r2", "r1", "r3", "r0"})));
+      Slate(pluss::make_note({"r2", "r1", "r3", "r0"})));
 
   const auto by = frame.sort().by({"a", "b"}).yield();
   expect(by.features("v").as_series().to_vec<double>() ==
@@ -911,11 +911,11 @@ void test_temporal_subtraction_and_sort_builder() {
 
   const auto grouped = DataFrame(
       {
-          {"g", Thread(pluss::make_note({"B", "A", "B", "A", "C"}))},
-          {"score", Thread(pluss::make_series(std::vector<std::int64_t>{3, 1, 2, 4, 0}))},
-          {"v2", Thread(pluss::make_series(std::vector<std::int64_t>{30, 10, 20, 40, 0}))},
+          {"g", Slate(pluss::make_note({"B", "A", "B", "A", "C"}))},
+          {"score", Slate(pluss::make_series(std::vector<std::int64_t>{3, 1, 2, 4, 0}))},
+          {"v2", Slate(pluss::make_series(std::vector<std::int64_t>{30, 10, 20, 40, 0}))},
       },
-      Thread(pluss::make_note({"b0", "a0", "b1", "a1", "c0"})));
+      Slate(pluss::make_note({"b0", "a0", "b1", "a1", "c0"})));
   const auto within = grouped.sort().within("g").by("score").desc().yield();
   expect(within.features("g").as_note().vector() ==
              std::vector<std::string_view>({"B", "B", "A", "A", "C"}),
@@ -932,9 +932,9 @@ void test_temporal_subtraction_and_sort_builder() {
 void test_bundelize_and_tabelize_interop() {
   const auto orders = make_frame(
       {
-          {"id", Thread(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
-          {"city", Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-          {"sales", Thread(pluss::make_series(std::vector<double>{100.0, 150.0, 90.0}))},
+          {"id", Slate(pluss::make_series(std::vector<std::int64_t>{1, 2, 3}))},
+          {"city", Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+          {"sales", Slate(pluss::make_series(std::vector<double>{100.0, 150.0, 90.0}))},
       },
       {"o1", "o2", "o3"});
 
@@ -972,14 +972,14 @@ void test_group_phase7_hardening() {
   const auto value_validity = pluss::make_series(
       std::vector<bool>{true, true, true, true, false, true});
   const auto frame = DataFrame({
-      {"k1", Thread(
+      {"k1", Slate(
                  pluss::make_note({"b", "a", "b", "drop", "a", "b"}),
                  key_validity)},
-      {"k2", Thread(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 9, 1, 2}))},
-      {"value", Thread(
+      {"k2", Slate(pluss::make_series(std::vector<std::int64_t>{2, 2, 1, 9, 1, 2}))},
+      {"value", Slate(
                     pluss::make_series(std::vector<double>{5.0, 1.0, 3.0, 7.0, 9.0, 11.0}),
                     value_validity)},
-      {"label", Thread(pluss::make_note({"u", "v", "u", "w", "x", "u"}))},
+      {"label", Slate(pluss::make_note({"u", "v", "u", "w", "x", "u"}))},
   });
 
   const auto first_seen = frame.group({.dropnull = true, .sort = false}).by({"k1", "k2"});
@@ -1014,10 +1014,10 @@ void test_group_phase7_hardening() {
          "reusing the same grouped handle for count then filter should retain cached grouping semantics");
 
   const auto all_null = DataFrame({
-      {"group", Thread(
+      {"group", Slate(
                     pluss::make_note({"A", "B", "C"}),
                     pluss::make_series(std::vector<bool>{false, false, false}))},
-      {"value", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}))},
   }).group({.dropnull = true}).by({"group"});
   const auto empty = all_null.agg({
       {"n", "", DataFrame::GroupOp::Count},
@@ -1034,7 +1034,7 @@ void test_group_phase7_hardening() {
              pluss::table::detail::validity_mask(empty_tx.features("total"))->to_vec<bool>() ==
                  std::vector<bool>({false, false, false}),
          "all-null keys should broadcast all-invalid grouped transform results");
-  const auto none = all_null.filter(Thread(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
+  const auto none = all_null.filter(Slate(pluss::Series::empty({0}, pluss::codem::ScalarType::Bool)));
   expect(none.ncases() == 0,
          "all-null keys should allow a zero-length keep mask and return no rows");
 
@@ -1047,8 +1047,8 @@ void test_group_phase7_hardening() {
     values.push_back(static_cast<double>(i));
   }
   const auto high_cardinality = DataFrame({
-      {"group", Thread(pluss::make_note(ids))},
-      {"value", Thread(pluss::make_series(values))},
+      {"group", Slate(pluss::make_note(ids))},
+      {"value", Slate(pluss::make_series(values))},
   }).group({.dropnull = true, .sort = false}).by({"group"}).count();
   expect(high_cardinality.ncases() == 128 &&
              high_cardinality.features("value_count").as_series().to_vec<std::int64_t>()[127] == 1,
@@ -1058,11 +1058,11 @@ void test_group_phase7_hardening() {
 void test_lengthen_reshape() {
   const auto frame = DataFrame(
       {
-          {"id", Thread(pluss::make_note({"r1", "r2"}))},
-          {"a", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-          {"b", Thread(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+          {"id", Slate(pluss::make_note({"r1", "r2"}))},
+          {"a", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+          {"b", Slate(pluss::make_series(std::vector<double>{3.0, 4.0}))},
       },
-      Thread(pluss::make_note({"C1", "C2"})));
+      Slate(pluss::make_note({"C1", "C2"})));
 
   const auto long_form = frame.lengthen({"id"}, {"a", "b"});
   expect(long_form.features() ==
@@ -1094,11 +1094,11 @@ void test_lengthen_reshape() {
 
 void test_hierarchical_case_axis_engine() {
   const auto frame = DataFrame({
-      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{102, 101, 201, 202}))},
-      {"quarter", Thread(pluss::make_note({"Q2", "Q1", "Q1", "Q2"}))},
-      {"sales", Thread(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
-      {"cost", Thread(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
+      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{102, 101, 201, 202}))},
+      {"quarter", Slate(pluss::make_note({"Q2", "Q1", "Q1", "Q2"}))},
+      {"sales", Slate(pluss::make_series(std::vector<double>{20.0, 10.0, 30.0, 40.0}))},
+      {"cost", Slate(pluss::make_series(std::vector<double>{8.0, 4.0, 12.0, 16.0}))},
   });
 
   const auto indexed = frame.label().set(
@@ -1182,15 +1182,15 @@ void test_hierarchical_case_axis_engine() {
          "label().reset should materialize case labels as ordinary features and clear hierarchy");
 
   const auto collision_left = DataFrame({
-      {"region", Thread(pluss::make_note({"A"}))},
-      {"account", Thread(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
-      {"value", Thread(pluss::make_series(std::vector<double>{10.0}))},
+      {"region", Slate(pluss::make_note({"A"}))},
+      {"account", Slate(pluss::make_note(std::vector<std::string>{std::string("B") + '\x1F' + "C"}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{10.0}))},
   }).label().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision_right = DataFrame({
-      {"region", Thread(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
-      {"account", Thread(pluss::make_note({"C"}))},
-      {"value", Thread(pluss::make_series(std::vector<double>{1.0}))},
+      {"region", Slate(pluss::make_note(std::vector<std::string>{std::string("A") + '\x1F' + "B"}))},
+      {"account", Slate(pluss::make_note({"C"}))},
+      {"value", Slate(pluss::make_series(std::vector<double>{1.0}))},
   }).label().set({"region", "account"}, false, "\x1F")
     .features({"value"});
   const auto collision = collision_left.add(
@@ -1204,10 +1204,10 @@ void test_hierarchical_case_axis_engine() {
 
 void test_stack_unstack_hierarchical_cases() {
   const auto frame = DataFrame({
-      {"region", Thread(pluss::make_note({"West", "West", "East", "East"}))},
-      {"account", Thread(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
-      {"quarter", Thread(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
-      {"sales", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+      {"region", Slate(pluss::make_note({"West", "West", "East", "East"}))},
+      {"account", Slate(pluss::make_series(std::vector<std::int64_t>{101, 101, 201, 201}))},
+      {"quarter", Slate(pluss::make_note({"Q1", "Q2", "Q1", "Q2"}))},
+      {"sales", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
   }).label().set({"region", "account", "quarter"}, true);
 
   const auto wide = frame.unstack("quarter");
@@ -1228,9 +1228,9 @@ void test_stack_unstack_hierarchical_cases() {
          "stack should move features into the case hierarchy and keep typed values");
 
   const auto duplicate = DataFrame({
-      {"region", Thread(pluss::make_note({"West", "West"}))},
-      {"quarter", Thread(pluss::make_note({"Q1", "Q1"}))},
-      {"sales", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"region", Slate(pluss::make_note({"West", "West"}))},
+      {"quarter", Slate(pluss::make_note({"Q1", "Q1"}))},
+      {"sales", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
   }).label().set({"region", "quarter"}, true);
   expect_throw([&]() { (void)duplicate.unstack("quarter"); },
                "unstack should reject duplicate output cells");
@@ -1238,11 +1238,11 @@ void test_stack_unstack_hierarchical_cases() {
 
 void test_transform_axis_surface() {
   const auto frame = DataFrame({
-      {"x", Thread(pluss::make_series(std::vector<double>{1.0, 2.0}))},
-      {"y", Thread(pluss::make_series(std::vector<double>{3.0, 4.0}))},
+      {"x", Slate(pluss::make_series(std::vector<double>{1.0, 2.0}))},
+      {"y", Slate(pluss::make_series(std::vector<double>{3.0, 4.0}))},
   });
   const auto by_feature = frame.transform(
-      [](const Thread& value) {
+      [](const Slate& value) {
         return value + 10.0;
       },
       pluss::table::Axis::Feature);
@@ -1250,22 +1250,47 @@ void test_transform_axis_surface() {
              std::vector<double>({11.0, 12.0}) &&
              by_feature.features("y").as_series().to_vec<double>() ==
                  std::vector<double>({13.0, 14.0}),
-         "transform(thread_fn, Axis::Feature) should apply column-wise");
+         "transform(slate_fn, Axis::Feature) should apply column-wise");
 
-  const auto thread_transformed = frame.features("x").transform(
-      [](const pluss::table::ThreadValue& value) {
-        return pluss::table::ThreadValue(value.thread() + 5.0);
+  const auto slate_transformed = frame.features("x").transform(
+      [](const pluss::table::SlateValue& value) {
+        return pluss::table::SlateValue(value.slate() + 5.0);
       });
-  expect(thread_transformed.as_series().to_vec<double>() ==
+  expect(slate_transformed.as_series().to_vec<double>() ==
              std::vector<double>({6.0, 7.0}),
-         "Thread::transform(value_fn) should apply element-wise");
+         "Slate::transform(value_fn) should apply element-wise");
+
+  const auto whole_slate_default = frame.features("x").transform(
+      [](const Slate& value) {
+        return value + 20.0;
+      });
+  expect(whole_slate_default.as_series().to_vec<double>() ==
+             std::vector<double>({21.0, 22.0}),
+         "Slate::transform(slate_fn) should preserve length by default");
+
+  const auto whole_slate_reduce = frame.features("x").transform(
+      [](const Slate& value) {
+        return Slate(pluss::make_series({value.sum().to_dbl()}));
+      },
+      pluss::table::ResultShape::Reduce);
+  expect(whole_slate_reduce.as_series().to_vec<double>() ==
+             std::vector<double>({3.0}),
+         "Slate::transform(slate_fn, Reduce) should accept one-row output");
+
+  expect_throw(
+      [&]() {
+        (void)frame.features("x").transform([](const Slate& value) {
+          return Slate(pluss::make_series({value.sum().to_dbl()}));
+        });
+      },
+      "Slate::transform(slate_fn) should reject reduction output under the Preserve default");
 }
 
 void test_category_factor() {
   const auto validity = pluss::make_series(
       std::vector<bool>{true, true, true, true, false});
   const auto frame = DataFrame({
-      {"city", Thread(
+      {"city", Slate(
           pluss::make_note({"Calgary", "Edmonton", "Calgary", "Banff", ""}),
           validity)},
   });
@@ -1331,17 +1356,17 @@ void test_streamed_csv_case_batches() {
 void test_case_aligned_set_and_reduction_axis_rules() {
   auto df = DataFrame(
       {
-          {"student", Thread(pluss::make_note({"Alice", "Bob", "Carol", "David"}))},
-          {"A1", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
-          {"A2", Thread(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
+          {"student", Slate(pluss::make_note({"Alice", "Bob", "Carol", "David"}))},
+          {"A1", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0}))},
+          {"A2", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0}))},
       },
-      Thread(pluss::make_series(std::vector<std::int64_t>{1001, 1002, 1003, 1004})));
+      Slate(pluss::make_series(std::vector<std::int64_t>{1001, 1002, 1003, 1004})));
 
   expect(df.shape() == std::pair<std::int64_t, std::int64_t>{4, 3},
          "DataFrame::shape should report cases x features");
   expect(df.features("A1").ncases() == 4 &&
              df.features("A1").shape() == std::pair<std::int64_t, std::int64_t>{4, 1},
-         "Thread::ncases/shape should report a 1D case vector");
+         "Slate::ncases/shape should report a 1D case vector");
 
   const auto row_totals = df.features({"A1", "A2"}).sum(Axis::Feature);
   expect(row_totals.as_series().to_vec<double>() ==
@@ -1369,9 +1394,9 @@ void test_case_aligned_set_and_reduction_axis_rules() {
              std::vector<bool>({false, false, false, false}),
          "explicit case-label assignment should make feature-indexed reduction null when labels do not match");
 
-  const auto scholarship = Thread(pluss::make_series(
+  const auto scholarship = Slate(pluss::make_series(
                                std::vector<double>{1500.0, 2500.0, 1000.0}))
-                               .label().set(Thread(pluss::make_series(
+                               .label().set(Slate(pluss::make_series(
                                    std::vector<std::int64_t>{1003, 1001, 1004})));
   bool scholarship_default_threw = false;
   try {
@@ -1398,23 +1423,23 @@ void test_case_aligned_set_and_reduction_axis_rules() {
 
   bool one_row_default_threw = false;
   try {
-    df.set("one_row_series") = Thread(pluss::make_series(std::vector<double>{7235.0}));
+    df.set("one_row_series") = Slate(pluss::make_series(std::vector<double>{7235.0}));
   } catch (const std::exception&) {
     one_row_default_threw = true;
   }
   expect(one_row_default_threw,
-         "plain 1D length-one Thread assignment should not broadcast or align by default");
+         "plain 1D length-one Slate assignment should not broadcast or align by default");
 }
 
 void test_align_reindex_equivalent() {
   const auto frame = make_frame(
       {
-          {"A", Thread(pluss::make_series(std::vector<double>{10.0, 20.0}))},
-          {"B", Thread(pluss::make_series(std::vector<double>{100.0, 200.0}))},
+          {"A", Slate(pluss::make_series(std::vector<double>{10.0, 20.0}))},
+          {"B", Slate(pluss::make_series(std::vector<double>{100.0, 200.0}))},
       },
       {"r1", "r2"});
 
-  const auto cases = frame.label().align(Thread(pluss::make_note({"r2", "missing", "r1"})));
+  const auto cases = frame.label().align(Slate(pluss::make_note({"r2", "missing", "r1"})));
   expect(cases.label().values().as_note().vector() ==
              std::vector<std::string_view>({"r2", "missing", "r1"}),
          "align_caselbl should conform the case-label axis exactly");
@@ -1426,7 +1451,7 @@ void test_align_reindex_equivalent() {
          "align_caselbl should mark missing case labels null");
 
   const auto both = frame.align(DataFrame::AlignSpec{
-      .label = Thread(pluss::make_note({"r2", "missing"})),
+      .label = Slate(pluss::make_note({"r2", "missing"})),
       .features = {"B", "C", "A"},
       .fill = 0.0,
   });
@@ -1453,20 +1478,20 @@ void test_timeline_epoch_days_surface() {
       "1970-01-02T00:00:00Z",
       "1970-01-03T00:00:00Z",
   });
-  const auto thread_days =
-      Thread(timeline).tl().epoch(pluss::table::TimeUnit::Days);
-  expect(thread_days.as_series().to_vec<std::int64_t>() ==
+  const auto slate_days =
+      Slate(timeline).tl().epoch(pluss::table::TimeUnit::Days);
+  expect(slate_days.as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
-         "Thread::tl().epoch(TimeUnit::Days) should return epoch-day integers");
+         "Slate::tl().epoch(TimeUnit::Days) should return epoch-day integers");
 
   const auto frame = DataFrame({
-      {"when", Thread(timeline)},
-      {"value", Thread(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
+      {"when", Slate(timeline)},
+      {"value", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0}))},
   });
   const auto frame_days = frame.features({"when"}).tl().epoch(pluss::table::TimeUnit::Days);
   expect(frame_days.features("when").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 2}),
-         "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Thread::tl()");
+         "DataFrame::tl().epoch(TimeUnit::Days) should delegate through Slate::tl()");
 }
 
 void test_timeline_span_surface() {
@@ -1477,12 +1502,12 @@ void test_timeline_span_surface() {
     return std::find(calendar.holidays.begin(), calendar.holidays.end(), label) != calendar.holidays.end();
   };
 
-  const auto starts = Thread(pluss::make_timeline({
+  const auto starts = Slate(pluss::make_timeline({
       "2024-01-31T00:00:00Z",
       "2024-02-29T00:00:00Z",
       "2024-01-01T00:00:00Z",
   }));
-  const auto ends = Thread(pluss::make_timeline({
+  const auto ends = Slate(pluss::make_timeline({
       "2024-02-01T00:00:00Z",
       "2025-02-28T00:00:00Z",
       "2024-01-05T00:00:00Z",
@@ -1492,7 +1517,7 @@ void test_timeline_span_surface() {
              .as_series()
              .to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({1, 365, 4}),
-         "Thread::tl().span(Days) should use fixed UTC 24-hour spans");
+         "Slate::tl().span(Days) should use fixed UTC 24-hour spans");
 
   pluss::table::TimelineSpanOptions complete_months;
   complete_months.unit = pluss::table::TimeUnit::Months;
@@ -1500,7 +1525,7 @@ void test_timeline_span_surface() {
              .as_series()
              .to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
-         "Thread::tl().span(Months, Complete) should count completed calendar months");
+         "Slate::tl().span(Months, Complete) should count completed calendar months");
 
   pluss::table::TimelineSpanOptions boundary_years;
   boundary_years.unit = pluss::table::TimeUnit::Years;
@@ -1509,29 +1534,29 @@ void test_timeline_span_surface() {
              .as_series()
              .to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 1, 0}),
-         "Thread::tl().span(Years, Boundary) should count crossed year labels");
+         "Slate::tl().span(Years, Boundary) should count crossed year labels");
 
   pluss::table::TimelineSpanOptions month_end_months;
   month_end_months.unit = pluss::table::TimeUnit::Months;
   month_end_months.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
-  expect(Thread(pluss::make_timeline({"2024-01-31T00:00:00Z"}))
+  expect(Slate(pluss::make_timeline({"2024-01-31T00:00:00Z"}))
              .tl()
-             .span(Thread(pluss::make_timeline({"2024-02-29T00:00:00Z"})), month_end_months)
+             .span(Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"})), month_end_months)
              .as_series()
              .to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
-         "Thread::tl().span(Months, MonthEnd) should treat paired month ends as complete");
+         "Slate::tl().span(Months, MonthEnd) should treat paired month ends as complete");
 
   pluss::table::TimelineSpanOptions month_end_years;
   month_end_years.unit = pluss::table::TimeUnit::Years;
   month_end_years.anchor = pluss::table::TimelineSpanAnchor::MonthEnd;
-  expect(Thread(pluss::make_timeline({"2024-02-29T00:00:00Z"}))
+  expect(Slate(pluss::make_timeline({"2024-02-29T00:00:00Z"}))
              .tl()
-             .span(Thread(pluss::make_timeline({"2025-02-28T00:00:00Z"})), month_end_years)
+             .span(Slate(pluss::make_timeline({"2025-02-28T00:00:00Z"})), month_end_years)
              .as_series()
              .to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
-         "Thread::tl().span(Years, MonthEnd) should handle leap-day to February month-end");
+         "Slate::tl().span(Years, MonthEnd) should handle leap-day to February month-end");
 
   const auto holiday =
       pluss::make_timeline({"2024-01-03T00:00:00Z"}).epoch_days().to_vec<std::int64_t>(0);
@@ -1539,51 +1564,51 @@ void test_timeline_span_surface() {
   business.unit = pluss::table::TimeUnit::BusinessDays;
   business.calendar.holidays = {holiday};
   expect(starts.tl().span(ends, business).as_series().to_vec<std::int64_t>()[2] == 3,
-         "Thread::tl().span(BusinessDays) should honor explicit holiday calendars");
+         "Slate::tl().span(BusinessDays) should honor explicit holiday calendars");
 
-  const auto business_start = Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
-  const auto business_end = Thread(pluss::make_timeline({"2024-01-05T00:00:00Z"}));
+  const auto business_start = Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}));
+  const auto business_end = Slate(pluss::make_timeline({"2024-01-05T00:00:00Z"}));
   pluss::table::TimelineSpanOptions closed;
   closed.unit = pluss::table::TimeUnit::BusinessDays;
   closed.closed = pluss::table::TimelineSpanClosed::Right;
   expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({4}),
-         "Thread::tl().span(BusinessDays, Right) should use (start,end]");
+         "Slate::tl().span(BusinessDays, Right) should use (start,end]");
   closed.closed = pluss::table::TimelineSpanClosed::Both;
   expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({5}),
-         "Thread::tl().span(BusinessDays, Both) should use [start,end]");
+         "Slate::tl().span(BusinessDays, Both) should use [start,end]");
   closed.closed = pluss::table::TimelineSpanClosed::Neither;
   expect(business_start.tl().span(business_end, closed).as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({3}),
-         "Thread::tl().span(BusinessDays, Neither) should use (start,end)");
+         "Slate::tl().span(BusinessDays, Neither) should use (start,end)");
 
   pluss::table::TimelineSpanOptions bad_weekmask;
   bad_weekmask.unit = pluss::table::TimeUnit::BusinessDays;
   bad_weekmask.calendar.weekmask = 0;
   expect_throw(
       [&] { (void)business_start.tl().span(business_end, bad_weekmask); },
-      "Thread::tl().span(BusinessDays) should reject empty business weekmasks");
+      "Slate::tl().span(BusinessDays) should reject empty business weekmasks");
 
   pluss::table::TimelineSpanOptions bad_holiday;
   bad_holiday.unit = pluss::table::TimeUnit::BusinessDays;
   bad_holiday.calendar.holidays = {1'700'000'000'000'000'000LL};
   expect_throw(
       [&] { (void)business_start.tl().span(business_end, bad_holiday); },
-      "Thread::tl().span(BusinessDays) should reject holiday values that look like epoch nanos");
+      "Slate::tl().span(BusinessDays) should reject holiday values that look like epoch nanos");
 
   pluss::table::TimelineSpanOptions bad_calendar_tz;
   bad_calendar_tz.unit = pluss::table::TimeUnit::BusinessDays;
   bad_calendar_tz.calendar.timezone = "America/Edmonton";
   expect_throw(
       [&] { (void)business_start.tl().span(business_end, bad_calendar_tz); },
-      "Thread::tl().span(BusinessDays) should reject calendar timezone mismatches");
+      "Slate::tl().span(BusinessDays) should reject calendar timezone mismatches");
 
-  const auto edmonton_end = Thread(pluss::make_timeline({"2024-01-05T00:00:00Z"})
+  const auto edmonton_end = Slate(pluss::make_timeline({"2024-01-05T00:00:00Z"})
                                       .tz_convert("America/Edmonton"));
   expect_throw(
       [&] { (void)business_start.tl().span(edmonton_end, business); },
-      "Thread::tl().span(BusinessDays) should reject timeline timezone mismatches");
+      "Slate::tl().span(BusinessDays) should reject timeline timezone mismatches");
 
   const auto monfri = pluss::table::BusinessCalendar::monfri();
   expect(monfri.weekmask == 0b0111110 && monfri.holidays.empty(),
@@ -1625,9 +1650,9 @@ void test_timeline_span_surface() {
   pluss::table::TimelineSpanOptions nyse_span;
   nyse_span.unit = pluss::table::TimeUnit::BusinessDays;
   nyse_span.calendar = nyse;
-  expect(Thread(pluss::make_timeline({"2026-04-02T00:00:00Z"}).tz_convert("America/New_York"))
+  expect(Slate(pluss::make_timeline({"2026-04-02T00:00:00Z"}).tz_convert("America/New_York"))
              .tl()
-             .span(Thread(pluss::make_timeline({"2026-04-06T00:00:00Z"}).tz_convert("America/New_York")), nyse_span)
+             .span(Slate(pluss::make_timeline({"2026-04-06T00:00:00Z"}).tz_convert("America/New_York")), nyse_span)
              .as_series()
              .to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({1}),
@@ -1654,7 +1679,7 @@ void test_timeline_span_surface() {
       frame.features({"start"}).tl().span(frame.features("end"), complete_months);
   expect(frame_months.features("start").as_series().to_vec<std::int64_t>() ==
              std::vector<std::int64_t>({0, 11, 0}),
-         "DataFrame::tl().span should delegate through Thread::tl().span");
+         "DataFrame::tl().span should delegate through Slate::tl().span");
 }
 
 } // namespace

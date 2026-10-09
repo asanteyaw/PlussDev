@@ -35,7 +35,7 @@ Example 1. Flag which rows of a `Timeline` feature are real timestamps.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-10T08:00:00Z",
           "",
           "2024-03-05T17:30:00Z",

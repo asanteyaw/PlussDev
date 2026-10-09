@@ -18,7 +18,7 @@ per-row index every frame carries alongside its features. `label()` itself does
 nothing but bind the accessor to the current frame; the accessor exposes around
 thirty methods covering inspection (`.values()`, `.names()`, `.part()`), promoting a
 feature into the label axis and back (`.set()`, `.reset()`), reordering
-(`.sort()`, `.align()`), set-style operations between two label threads (`.unite()`,
+(`.sort()`, `.align()`), set-style operations between two label slates (`.unite()`,
 `.intersect()`, `.diff()`, `.symdiff()`), positional lookup (`.find()`, `.pos()`), and
 distinct/duplicate inspection (`.distinct()`, `.duplicated()`, `.repeated()`,
 `.freq()`) — the label-axis counterparts of the same-named `DataFrame` methods, but
@@ -39,21 +39,21 @@ what it accepts.
 
 `DataFrameLabelAccessor`
     A lightweight accessor bound to the current frame. Methods that inspect labels
-    return a `Thread`, `bool`, or `std::vector<std::string>`; methods that transform
+    return a `Slate`, `bool`, or `std::vector<std::string>`; methods that transform
     the label axis or the frame return a new `DataFrame`. The source frame is never
     mutated.
 
 ## Examples
 
-Example 1. Read the current case-label axis as a plain `Thread`.
+Example 1. Read the current case-label axis as a plain `Slate`.
 
 ```cpp
 using namespace pluss::table;
 
 auto sales = DataFrame({
-    {"id",    Thread(pluss::make_series({1, 2, 3}))},
-    {"units", Thread(pluss::make_series({10.0, 7.0, 12.0}))},
-}, Thread(pluss::make_note({"c1", "c2", "c3"})));
+    {"id",    Slate(pluss::make_series({1, 2, 3}))},
+    {"units", Slate(pluss::make_series({10.0, 7.0, 12.0}))},
+}, Slate(pluss::make_note({"c1", "c2", "c3"})));
 std::cout << sales;
 ```
 
@@ -84,16 +84,16 @@ std::cout << labels;
 ptype: Note
 ```
 
-`.values()` is the direct read of the case-label axis — the same thread `caselbl()`
+`.values()` is the direct read of the case-label axis — the same slate `caselbl()`
 returns.
 
 Example 2. Promote a feature into the case-label axis, dropping it from the columns.
 
 ```cpp
 auto customers = DataFrame({
-    {"id",   Thread(pluss::make_series({1, 2, 3}))},
-    {"city", Thread(pluss::make_note({"Tema", "Accra", "Kumasi"}))},
-}, Thread(pluss::make_note({"c1", "c2", "c3"})));
+    {"id",   Slate(pluss::make_series({1, 2, 3}))},
+    {"city", Slate(pluss::make_note({"Tema", "Accra", "Kumasi"}))},
+}, Slate(pluss::make_note({"c1", "c2", "c3"})));
 
 auto by_city = customers.label().set("city", /*drop_feature=*/true);
 std::cout << by_city;

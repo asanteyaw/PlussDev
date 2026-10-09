@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::matrix_norm
+# Note::TexAccessor::matrix_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::matrix_norm() const
+Note Note::TexAccessor::matrix_norm() const
 ```
 
 ## Rewrite Delimited Matrix Environments To `matrix`

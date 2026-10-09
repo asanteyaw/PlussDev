@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::acronyms
+# Note::NlpAccessor::acronyms
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::acronyms() const
+TokenBatch Note::NlpAccessor::acronyms() const
 ```
 
 ## Extract Uppercase Acronyms

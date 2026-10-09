@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::limit_norm
+# Note::TexAccessor::limit_norm
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::limit_norm() const
+Note Note::TexAccessor::limit_norm() const
 ```
 
 ## Strip The `\limits`/`\nolimits` Position Modifier

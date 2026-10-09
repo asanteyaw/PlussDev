@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::feataxis" href="feataxis.html" />
@@ -62,7 +62,7 @@ second frame later.</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>feature</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)</p>
-<p>The feature to factor. Works on any <code class="docutils literal notranslate"><span class="pre">Thread</span></code> kind — “distinct value” is determined by
+<p>The feature to factor. Works on any <code class="docutils literal notranslate"><span class="pre">Slate</span></code> kind — “distinct value” is determined by
 the same string-key comparison used throughout the categorical-encoding surface
 (<code class="docutils literal notranslate"><span class="pre">unify_key_parts</span></code>), not restricted to <code class="docutils literal notranslate"><span class="pre">Note</span></code> text.</p>
 <p><strong>ordered</strong> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, default <code class="docutils literal notranslate"><span class="pre">false</span></code>)</p>
@@ -83,11 +83,11 @@ thread.</p>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">CategoryEncoding</span></code>
-A plain struct with three fields: <code class="docutils literal notranslate"><span class="pre">codes</span></code> (<code class="docutils literal notranslate"><span class="pre">Thread</span></code>, <code class="docutils literal notranslate"><span class="pre">Int64</span></code>, one entry per case,
-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> wherever <code class="docutils literal notranslate"><span class="pre">feature</span></code> itself was missing), <code class="docutils literal notranslate"><span class="pre">levels</span></code> (<code class="docutils literal notranslate"><span class="pre">Thread</span></code>, the distinct
+A plain struct with three fields: <code class="docutils literal notranslate"><span class="pre">codes</span></code> (<code class="docutils literal notranslate"><span class="pre">Slate</span></code>, <code class="docutils literal notranslate"><span class="pre">Int64</span></code>, one entry per case,
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> wherever <code class="docutils literal notranslate"><span class="pre">feature</span></code> itself was missing), <code class="docutils literal notranslate"><span class="pre">levels</span></code> (<code class="docutils literal notranslate"><span class="pre">Slate</span></code>, the distinct
 values in code order — code <code class="docutils literal notranslate"><span class="pre">i</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">levels[i]</span></code>), and <code class="docutils literal notranslate"><span class="pre">ordered</span></code> (<code class="docutils literal notranslate"><span class="pre">bool</span></code>,
 the value passed in). <code class="docutils literal notranslate"><span class="pre">CategoryEncoding</span></code> also exposes a <code class="docutils literal notranslate"><span class="pre">.decode()</span></code> method that
-reconstructs a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> of original values from <code class="docutils literal notranslate"><span class="pre">codes</span></code> and <code class="docutils literal notranslate"><span class="pre">levels</span></code>.</p>
+reconstructs a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> of original values from <code class="docutils literal notranslate"><span class="pre">codes</span></code> and <code class="docutils literal notranslate"><span class="pre">levels</span></code>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
@@ -96,8 +96,8 @@ missing value.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Kumasi&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">}),</span>
 <span class="w">                    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Bool</span><span class="p">))},</span>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
@@ -177,7 +177,7 @@ that might encounter their distinct values in a different order.</p>
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">codes</span></code> carries no case labels or display name of its own; it prints with a plain
-<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> index, the same as a fresh <code class="docutils literal notranslate"><span class="pre">Thread</span></code> built directly from a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code> index, the same as a fresh <code class="docutils literal notranslate"><span class="pre">Slate</span></code> built directly from a <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p></li>
 <li><p>A missing <code class="docutils literal notranslate"><span class="pre">feature</span></code> value always produces a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> code — it is never assigned to an
 implicit “unknown” level, and it never appears in <code class="docutils literal notranslate"><span class="pre">levels</span></code>.</p></li>
 <li><p><a class="reference internal" href="encode.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">encode(feature,</span> <span class="pre">EncodeMode::Ordinal,</span> <span class="pre">options)</span></code></span></a> is equivalent to
@@ -185,7 +185,7 @@ implicit “unknown” level, and it never appears in <code class="docutils lite
 frame at <code class="docutils literal notranslate"><span class="pre">feature</span></code>’s original position — use <code class="docutils literal notranslate"><span class="pre">encode()</span></code> directly when you only need
 the codes back inside the frame and don’t need <code class="docutils literal notranslate"><span class="pre">levels</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CategoryEncoding::decode()</span></code> reverses the process: given <code class="docutils literal notranslate"><span class="pre">codes</span></code> and <code class="docutils literal notranslate"><span class="pre">levels</span></code>, it
-reconstructs a <code class="docutils literal notranslate"><span class="pre">Thread</span></code> equal to the original <code class="docutils literal notranslate"><span class="pre">feature</span></code> (missing codes decode back to
+reconstructs a <code class="docutils literal notranslate"><span class="pre">Slate</span></code> equal to the original <code class="docutils literal notranslate"><span class="pre">feature</span></code> (missing codes decode back to
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>).</p></li>
 </ul>
 </section>

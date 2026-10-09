@@ -104,6 +104,42 @@ bool run_nodeb_vocab_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  Morphology first_class_member{
+      .casing = CaseKind::Lower,
+      .kind = TokenKind::Word,
+      .length = 4,
+      .is_ascii = true,
+      .has_alpha = true,
+      .is_lowercase = true,
+      .norm = "first",
+      .shape = "xxxx",
+      .spec = "word-class",
+  };
+  Morphology second_class_member = first_class_member;
+  second_class_member.norm = "second";
+  const auto class_id = doc.lexicon->intern_morphology(first_class_member);
+  if (doc.lexicon->intern_morphology(second_class_member) != class_id) {
+    if (err) *err << "nodeb equivalent morphology classes should reuse ids\n";
+    return false;
+  }
+  const auto* class_record = doc.lexicon->find_morphology(class_id);
+  if (!class_record || class_record->norm != "first") {
+    if (err) *err << "nodeb morphology interning should preserve its first representative\n";
+    return false;
+  }
+  try {
+    static_cast<void>(doc.lexicon->observe(""));
+    if (err) *err << "nodeb lexicon should reject empty observed forms\n";
+    return false;
+  } catch (const std::exception&) {
+  }
+  try {
+    static_cast<void>(doc.lexicon->intern_morphology(Morphology{}));
+    if (err) *err << "nodeb morph bank should reject an empty class spec\n";
+    return false;
+  } catch (const std::exception&) {
+  }
+
   const auto write_doc = nlp.infer("writes");
   if (write_doc.tokens.size() != 1 || write_doc.tokens[0].lemma != "write") {
     if (err) *err << "nodeb lemma fixture should normalize writes -> write\n";

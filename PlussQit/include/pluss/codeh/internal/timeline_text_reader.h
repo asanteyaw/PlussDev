@@ -16,7 +16,7 @@
 
 namespace pluss::codeh::detail {
 
-// Normalizes every Timeline::make/TimeIndex::make input shape (scalar, 1D
+// Normalizes every Timeline construction input shape (scalar, 1D
 // list, nested-braced N-D, or explicit flat+shape) into one flat
 // pluss::detail::TextSpan + pluss::detail::ShapeSpec pair, reusing the
 // existing, already-tested TextSpan/ShapeSpec/flatten_timeline_literal/
@@ -28,7 +28,7 @@ class TimelineTextReader {
  public:
   // Scalar (0D). string_view is a non-owning view; safe here because the
   // reader is always consumed synchronously within the same full expression
-  // as the pluss::timeline::make(...)/TimeIndex::make(...) call that builds
+  // as the pluss::timeline::make(...) call that builds
   // it (same lifetime envelope the original scalar overload relied on).
   TimelineTextReader(std::string_view s) : flat_(std::vector<std::string_view>{s}) {}
   TimelineTextReader(const char* s) : TimelineTextReader(std::string_view{s ? s : ""}) {}

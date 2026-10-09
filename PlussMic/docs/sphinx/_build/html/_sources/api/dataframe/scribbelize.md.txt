@@ -30,9 +30,9 @@ Example 1. Call the simplest overload.
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 auto out = df.scribbelize();
@@ -47,9 +47,9 @@ Example 2. Use the overload whose parameter combination matches the data you alr
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"id", pluss::table::Thread(pluss::make_series({1, 2, 3}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"id", pluss::table::Slate(pluss::make_series({1, 2, 3}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
 });
 
 auto out = df.scribbelize();

@@ -89,7 +89,7 @@ public:
   Registry fields(const NameRange& keys) const;
   RegistryFieldAxisAccessor fieldaxis() const;
   RegistryCastAccessor cast() const;
-  RegistryCastAccessor cast(const pluss::table::ThreadCastOptions& options) const;
+  RegistryCastAccessor cast(const pluss::table::SlateCastOptions& options) const;
   RegistryNoteAccessor nt() const;
   RegistryTimelineAccessor tl() const;
   bool has(std::string_view key) const;
@@ -259,7 +259,7 @@ class RegistryCastAccessor {
 public:
   explicit RegistryCastAccessor(Registry base,
                                 std::vector<std::string> keys,
-                                pluss::table::ThreadCastOptions options = {});
+                                pluss::table::SlateCastOptions options = {});
 
   Registry series() const;
   Registry note() const;
@@ -269,7 +269,7 @@ public:
 private:
   Registry base_{};
   std::vector<std::string> keys_{};
-  pluss::table::ThreadCastOptions options_{};
+  pluss::table::SlateCastOptions options_{};
 };
 
 class RegistryNoteAccessor {

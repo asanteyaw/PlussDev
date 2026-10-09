@@ -3,11 +3,11 @@
 Time-series work in PlussMic is built from two ideas:
 
 1. A time axis is data, usually a `Timeline` or `TimeIndex` stored in a
-   `Thread`.
+   `Slate`.
 2. Time-series calculations are ordinary table transformations that return
-   either a `Thread` or a `DataFrame`.
+   either a `Slate` or a `DataFrame`.
 
-Use the Thread accessor when you are working on one numeric value stream:
+Use the Slate accessor when you are working on one numeric value stream:
 
 ```cpp
 auto returns = df.features("close").ts().returns(1);
@@ -38,8 +38,8 @@ If a date column starts as text, parse it through explicit `cast(...)` first:
 auto parsed = df.cast({
     pluss::table::DataFrame::CastSpec{
         "date_text",
-        pluss::table::ThreadCastTarget::Timeline,
-        pluss::table::ThreadCastOptions{
+        pluss::table::SlateCastTarget::Timeline,
+        pluss::table::SlateCastOptions{
             .format = "%Y-%m-%d",
             .invalid = pluss::table::ParseInvalid::Null}},
 });
@@ -55,8 +55,8 @@ PlussMic represents time in three common ways:
 | `TimeIndex` | A timeline with index semantics. Use it when alignment and as-of operations matter. |
 | Numeric `Series` | A numeric value stream measured over time, such as close price, volume, demand, or latency. |
 
-Time-series value transforms require numeric `Series` threads. Time-axis
-methods require a `Timeline` or `TimeIndex` thread.
+Time-series value transforms require numeric `Series` slates. Time-axis
+methods require a `Timeline` or `TimeIndex` slate.
 
 This split is deliberate. A price column and a timestamp column have different
 semantics even though both can be represented internally as arrays.
@@ -89,12 +89,12 @@ If a column loaded as text or as a numeric `YYYYMMDD` series, cast it:
 ```cpp
 auto with_time = df.cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+        "date", pluss::table::SlateCastTarget::Timeline, {}},
 });
 ```
 
 The current source supports conversion of integer `YYYYMMDD` values through
-`cast(..., ThreadCastTarget::Timeline)`, which is useful for market-data files that store dates as
+`cast(..., SlateCastTarget::Timeline)`, which is useful for market-data files that store dates as
 `19900102` instead of ISO strings.
 
 ## Sorting is your responsibility
@@ -113,42 +113,42 @@ auto returns = sorted.features({"close"}).ts().returns(1);
 This matters in production. A return computed on unsorted prices is not a
 slightly messy return; it is a different calculation.
 
-## Thread time-series accessor
+## Slate time-series accessor
 
-`Thread::ts()` creates a `TimeSeriesAccessor` for one numeric `Series` payload:
+`Slate::ts()` creates a `TimeSeriesAccessor` for one numeric `Series` payload:
 
 ```cpp
 auto close = df.features("close");
 auto r = close.ts().returns(1);
 ```
 
-The source thread must be defined, must be `ThreadKind::Series`, and must be
+The source slate must be defined, must be `SlateKind::Series`, and must be
 numeric. If you call `ts()` on a `Note`, `Timeline`, or non-numeric payload, the
 operation throws when you call the accessor method.
 
-### Thread accessor methods
+### Slate accessor methods
 
 | Method | Return | Meaning |
 | --- | --- | --- |
-| `returns(periods)` | `Thread` | Fractional return over `periods`. |
-| `log_returns(periods)` | `Thread` | Log return over `periods`. |
-| `diff(periods)` | `Thread` | Difference from the value `periods` rows earlier. |
-| `lag(periods)` | `Thread` | Shift values backward by `periods`; early rows become undefined numeric positions. |
-| `lead(periods)` | `Thread` | Shift values forward by `periods`; trailing rows become undefined numeric positions. |
-| `rolling(window, statistic, options)` | `Thread` | Observation-count rolling/window statistic. |
-| `expanding(statistic, options)` | `Thread` | Expanding statistic. |
-| `ewm(alpha, statistic, ...)` | `Thread` | Exponentially weighted statistic. |
-| `zscore_rolling(window, min_periods, epsilon)` | `Thread` | Rolling z-score. |
-| `fill_gaps(mode, constant)` | `Thread` | Fill numeric gaps according to a gap-fill mode. |
+| `returns(periods)` | `Slate` | Fractional return over `periods`. |
+| `log_returns(periods)` | `Slate` | Log return over `periods`. |
+| `diff(periods)` | `Slate` | Difference from the value `periods` rows earlier. |
+| `lag(periods)` | `Slate` | Shift values backward by `periods`; early rows become undefined numeric positions. |
+| `lead(periods)` | `Slate` | Shift values forward by `periods`; trailing rows become undefined numeric positions. |
+| `rolling(window, statistic, options)` | `Slate` | Observation-count rolling/window statistic. |
+| `expanding(statistic, options)` | `Slate` | Expanding statistic. |
+| `ewm(alpha, statistic, ...)` | `Slate` | Exponentially weighted statistic. |
+| `zscore_rolling(window, min_periods, epsilon)` | `Slate` | Rolling z-score. |
+| `fill_gaps(mode, constant)` | `Slate` | Fill numeric gaps according to a gap-fill mode. |
 | `resample(axis, freq, op, step)` | `TimeSeriesResample` | Resample one value stream against a time axis. |
 
-The return type is important. `Thread::ts()` methods return `Thread`, except
+The return type is important. `Slate::ts()` methods return `Slate`, except
 for `resample`, which returns:
 
 ```cpp
 struct TimeSeriesResample {
-  Thread labels;
-  Thread values;
+  Slate labels;
+  Slate values;
 };
 ```
 
@@ -250,7 +250,7 @@ Use a domain-appropriate value if your data scale is unusual.
 
 ## Gap filling
 
-The Thread and DataFrame accessors expose `fill_gaps`:
+The Slate and DataFrame accessors expose `fill_gaps`:
 
 ```cpp
 auto forward = close.ts().fill_gaps(
@@ -477,12 +477,12 @@ Use `.tl().span(...)` when you need elapsed calendar distances between timeline
 values:
 
 ```cpp
-auto start = pluss::table::Thread(pluss::make_timeline({
+auto start = pluss::table::Slate(pluss::make_timeline({
     "2024-01-31T00:00:00Z",
     "2024-02-29T00:00:00Z",
     "2024-01-01T00:00:00Z"}));
 
-auto end = pluss::table::Thread(pluss::make_timeline({
+auto end = pluss::table::Slate(pluss::make_timeline({
     "2024-02-01T00:00:00Z",
     "2025-02-28T00:00:00Z",
     "2024-01-05T00:00:00Z"}));
@@ -725,7 +725,7 @@ The output demonstrates several important details:
 | --- | --- |
 | One transformed value stream | `df.features("x").ts()` |
 | Several transformed value streams | `df.features({"x", "y"}).ts()` |
-| Resample one value stream and handle labels manually | `Thread::ts().resample(axis, ...)` |
+| Resample one value stream and handle labels manually | `Slate::ts().resample(axis, ...)` |
 | Resample several value streams into a new frame | `df.label().set("date").features({...}).ts().resample(...)` |
 | Add calendar model features | `df.features({"date"}).tl().year()` |
 | Build lagged model features | `df.features({...}).ts().lag_block(...)` |
@@ -753,7 +753,7 @@ Before using a time-series result in a report, model, or downstream pipeline:
 
 ### Calling the wrong accessor
 
-This returns a `Thread`:
+This returns a `Slate`:
 
 ```cpp
 auto out = df.features("close").ts().returns(1);
@@ -792,7 +792,7 @@ Fix the schema first:
 ```cpp
 auto fixed = df.cast({
     pluss::table::DataFrame::CastSpec{
-        "date", pluss::table::ThreadCastTarget::Timeline, {}},
+        "date", pluss::table::SlateCastTarget::Timeline, {}},
 });
 auto daily = fixed.label().set("date", false).features({"close"}).ts().resample("D").mean();
 ```

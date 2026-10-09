@@ -91,8 +91,8 @@ both but a different one for the halving case.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
 - [`CatalogTimeSeriesAccessor::log_returns`](../catalog-ts/log_returns.md):
   the whole-catalog equivalent.
-- [`TimeSeriesAccessor::log_returns`](../thread-ts/log_returns.md): the
-  underlying single-thread engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::log_returns`](../slate-ts/log_returns.md): the
+  underlying single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lead.html">

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_mentions
+# Note::NlpAccessor::mask_mentions
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_mentions() const
+Note Note::NlpAccessor::mask_mentions() const
 ```
 
 ## Mask Standalone Handles Without Damaging Email Addresses

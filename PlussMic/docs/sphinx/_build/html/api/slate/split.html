@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slate::split &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Slate::starts" href="starts.html" />
+    <link rel="prev" title="Slate::sort" href="sort.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e0b7a23804b5 -->
+<section id="slate-split">
+<h1>Slate::split<a class="headerlink" href="#slate-split" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../slate_api_reference.html"><span class="doc std std-doc">Back to Slate API Reference</span></a></p>
+<section id="signatures">
+<h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">delimiter</span><span class="p">,</span>
+<span class="w">              </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">              </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;part&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="n">Slate</span><span class="o">::</span><span class="n">split</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">pattern</span><span class="p">,</span>
+<span class="w">              </span><span class="k">const</span><span class="w"> </span><span class="n">TextOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Splits every cell of a <code class="docutils literal notranslate"><span class="pre">Note</span></code> (string) thread on a delimiter, expanding the result into
+one output column per split position — column <code class="docutils literal notranslate"><span class="pre">part_0</span></code> (or <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>) holds each
+row’s first piece, <code class="docutils literal notranslate"><span class="pre">part_1</span></code> its second, and so on. Requires the thread to be
+<code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind. There are two overloads with different delimiter semantics:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code></strong>: always a literal substring split (never
+regex), with an optional <code class="docutils literal notranslate"><span class="pre">limit</span></code> on how many splits to perform and a customizable
+column-name <code class="docutils literal notranslate"><span class="pre">prefix</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">split(pattern,</span> <span class="pre">options)</span></code></strong>: <code class="docutils literal notranslate"><span class="pre">pattern</span></code> is literal or regex depending on
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code>; <code class="docutils literal notranslate"><span class="pre">options.limit</span></code> caps the split count and <code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> names the
+columns (the same <code class="docutils literal notranslate"><span class="pre">TextOptions</span></code> struct used across the string/text family — see
+<a class="reference internal" href="replace.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">replace()</span></code></span></a>).</p></li>
+</ul>
+<p>Both overloads produce ragged results: a row with fewer pieces than the widest row is
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the extra columns, and <code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the number of splits performed (a split
+of <code class="docutils literal notranslate"><span class="pre">&quot;a/b/c&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">1</span></code> yields two pieces, <code class="docutils literal notranslate"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;b/c&quot;]</span></code> — the remainder after
+the capped split stays joined, it isn’t dropped further).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The two overloads compute the output column count differently for invalid rows
+The single-delimiter overload (<code class="docutils literal notranslate"><span class="pre">split(delimiter,</span> <span class="pre">limit,</span> <span class="pre">prefix)</span></code>) determines the
+output column count from <strong>every</strong> row’s underlying text — including rows marked
+invalid — because it works from a raw, validity-unaware split computed once over the
+whole thread. An invalid cell whose underlying stored text happens to contain many
+delimiters can inflate the column count even though that row shows <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in every one
+of them. The <code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload does not have this quirk: it only computes
+each row’s split (and therefore only contributes to the column count) for rows that
+are actually valid. See Example 4 for a side-by-side demonstration with identical data
+under both overloads.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>delimiter</strong> / <strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
+The literal delimiter (first overload) or literal/regex pattern (second overload,
+depending on <code class="docutils literal notranslate"><span class="pre">options.regex</span></code>) to split on. An empty delimiter throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
+<p><strong>limit</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, first overload, default <code class="docutils literal notranslate"><span class="pre">-1</span></code>)
+Maximum number of splits to perform (producing at most <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">+</span> <span class="pre">1</span></code> pieces); <code class="docutils literal notranslate"><span class="pre">-1</span></code>
+means unlimited.</p>
+<p><strong>prefix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, first overload, default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>)
+Base name for the output columns: <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_1</span></code>, …</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">TextOptions</span></code>, second overload)
+<code class="docutils literal notranslate"><span class="pre">options.regex</span></code> (default <code class="docutils literal notranslate"><span class="pre">false</span></code>): treat <code class="docutils literal notranslate"><span class="pre">pattern</span></code> as regex. <code class="docutils literal notranslate"><span class="pre">options.limit</span></code>
+(default <code class="docutils literal notranslate"><span class="pre">-1</span></code>): cap the number of splits. <code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> (default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code>):
+base name for output columns. <code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> is <strong>not</strong> used by
+<code class="docutils literal notranslate"><span class="pre">split()</span></code>.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
+A new frame with one <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_0</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_1</span></code>, … feature per split position (as
+many as the widest split needs). Rows with fewer pieces are <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the extra
+columns.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. A plain literal split with no limit — the default <code class="docutils literal notranslate"><span class="pre">&quot;part&quot;</span></code> prefix, and a
+row with no delimiter at all.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a/b/c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x/y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;solo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">paths</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out1</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="output-before">
+<h3>Output (before)<a class="headerlink" href="#output-before" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  a/b/c
+1  x/y
+2  solo
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=============================
+     | part_0  part_1  part_2
+-----------------------------
+0    | a       b       c     
+1    | x       y       NULL  
+2    | solo    NULL    NULL  
+3    | NULL    NULL    NULL  
+-----------------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+<p>Row 0’s three-way split drives the output to three columns; row 1’s two-piece split
+leaves <code class="docutils literal notranslate"><span class="pre">part_2</span></code> <code class="docutils literal notranslate"><span class="pre">NULL</span></code>; row 2 has no <code class="docutils literal notranslate"><span class="pre">/</span></code> at all, so its entire original text lands in
+<code class="docutils literal notranslate"><span class="pre">part_0</span></code> and the rest is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>Example 2. <code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the number of splits — the remainder after the limit is
+reached stays joined together in the last column, not dropped.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paths</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | part_0  part_1
+---------------------
+0    | a       b/c   
+1    | x       y     
+2    | solo    NULL  
+3    | NULL    NULL  
+---------------------
+[4 cs x 2 feat]
+</pre></div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">=</span> <span class="pre">1</span></code>, row 0’s <code class="docutils literal notranslate"><span class="pre">&quot;a/b/c&quot;</span></code> splits only once, into <code class="docutils literal notranslate"><span class="pre">&quot;a&quot;</span></code> and the still-joined
+<code class="docutils literal notranslate"><span class="pre">&quot;b/c&quot;</span></code> — not three separate pieces. Row 1 (<code class="docutils literal notranslate"><span class="pre">&quot;x/y&quot;</span></code>) only had one delimiter anyway, so
+it’s unaffected by the cap.</p>
+<p>Example 3. The second overload: a regex pattern (splitting on a comma with optional
+surrounding whitespace) and a custom column prefix.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a, b,c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x , y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;single&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">rows</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rows</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="sa">R</span><span class="s">&quot;</span><span class="dl">(</span><span class="s">\s*,\s*</span><span class="dl">)</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{.</span><span class="n">regex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">prefix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;field&quot;</span><span class="p">});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output (before)<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0  a, b,c
+1  x , y
+2  single
+3  NULL
+
+ptype: Note
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>================================
+     | field_0  field_1  field_2
+--------------------------------
+0    | a        b        c      
+1    | x        y        NULL   
+2    | single   NULL     NULL   
+3    | NULL     NULL     NULL   
+--------------------------------
+[4 cs x 3 feat]
+</pre></div>
+</div>
+<p>The regex <code class="docutils literal notranslate"><span class="pre">\s*,\s*</span></code> treats the comma plus any surrounding spaces as a single
+delimiter, so <code class="docutils literal notranslate"><span class="pre">&quot;x</span> <span class="pre">,</span> <span class="pre">y&quot;</span></code> splits cleanly into <code class="docutils literal notranslate"><span class="pre">&quot;x&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;y&quot;</span></code> (no leftover spaces). The
+<code class="docutils literal notranslate"><span class="pre">options.prefix</span> <span class="pre">=</span> <span class="pre">&quot;field&quot;</span></code> renames the output columns from <code class="docutils literal notranslate"><span class="pre">part_N</span></code> to <code class="docutils literal notranslate"><span class="pre">field_N</span></code>.</p>
+<p>Example 4. The overload difference from the warning above, made concrete: identical
+data, but the single-delimiter overload’s column count is inflated by an invalid
+row’s underlying text, while the <code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload ignores that row
+entirely.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a/b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1/2/3/4&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}));</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">via_overload1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">via_overload2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mixed</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">TextOptions</span><span class="p">{});</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_overload1</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">via_overload2</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="output-split-first-overload">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">split(&quot;/&quot;)</span></code>, first overload)<a class="headerlink" href="#output-split-first-overload" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================================
+     | part_0  part_1  part_2  part_3
+-------------------------------------
+0    | a       b       NULL    NULL  
+1    | x       NULL    NULL    NULL  
+2    | NULL    NULL    NULL    NULL  
+-------------------------------------
+[3 cs x 4 feat]
+</pre></div>
+</div>
+</section>
+<section id="output-split-textoptions-second-overload">
+<h3>Output (<code class="docutils literal notranslate"><span class="pre">split(&quot;/&quot;,</span> <span class="pre">TextOptions{})</span></code>, second overload)<a class="headerlink" href="#output-split-textoptions-second-overload" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>=====================
+     | part_0  part_1
+---------------------
+0    | a       b     
+1    | x       NULL  
+2    | NULL    NULL  
+---------------------
+[3 cs x 2 feat]
+</pre></div>
+</div>
+<p>Row 2 was constructed invalid with the underlying text <code class="docutils literal notranslate"><span class="pre">&quot;1/2/3/4&quot;</span></code> — four pieces’
+worth of delimiters, even though the cell is invisible as <code class="docutils literal notranslate"><span class="pre">NULL</span></code> and was never meant
+to contribute real data. The first overload’s column count (4) is driven by that
+invisible text; the second overload’s column count (2) is driven only by the two
+genuinely valid rows.</p>
+<p>Example 5. A non-<code class="docutils literal notranslate"><span class="pre">Note</span></code> thread throws.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">bad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">numbers</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">msg</span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="sc">&#39;\n&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Output<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::split: expected Note payload
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Requires the calling thread to be <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind.</p></li>
+<li><p>An empty delimiter/pattern throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the <em>number of splits</em>, not the <em>number of output columns</em> directly —
+the capped remainder stays joined in the last piece (Example 2).</p></li>
+<li><p>The two overloads compute the output width differently for invalid rows — see the
+warning above and Example 4.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options.case_sensitive</span></code> has no effect on <code class="docutils literal notranslate"><span class="pre">split()</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="partition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::partition</span></code></span></a>: a related but simpler split — always exactly 3
+columns, first-occurrence-only, empty string (not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>) for a missing separator.</p></li>
+<li><p><a class="reference internal" href="extract.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::extract</span></code></span></a>: regex capture-group extraction, another
+column-expanding method.</p></li>
+<li><p><a class="reference internal" href="indicate.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::indicate</span></code></span></a>: another method that honors <code class="docutils literal notranslate"><span class="pre">options.prefix</span></code> for
+its output columns.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="slice.html">
+    <span class="label">Previous</span>
+    <span class="title">slice</span>
+  </a>
+  <a class="next-link" href="starts.html">
+    <span class="label">Next</span>
+    <span class="title">starts</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../slate_api_reference.html">Slate API Reference</a><ul>
+      <li>Previous: <a href="sort.html" title="previous chapter">Slate::sort</a></li>
+      <li>Next: <a href="starts.html" title="next chapter">Slate::starts</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/slate/split.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -122,8 +122,8 @@ comparison here involves the negative `-5`, all three positions come back
 - [`CatalogTimeSeriesAccessor::diff`](diff.md): the absolute
   period-over-period change.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::log_returns`](../thread-ts/log_returns.md): the
-  underlying single-thread engine this method delegates to.
+- [`TimeSeriesAccessor::log_returns`](../slate-ts/log_returns.md): the
+  underlying single-slate engine this method delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lead.html">

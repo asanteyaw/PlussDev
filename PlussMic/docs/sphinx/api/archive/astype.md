@@ -13,7 +13,7 @@ Archive::astype(pluss::codem::ScalarType dtype) const -> Archive
 
 ## What It Does
 
-Shorthand for [`cast(ThreadCastTarget::Series, {.series_dtype = dtype})`](cast.md) —
+Shorthand for [`cast(SlateCastTarget::Series, {.series_dtype = dtype})`](cast.md) —
 casts every stream in every catalog to `Series`, at the requested numeric dtype, in one
 call. Delegates to each catalog's own [`Catalog::astype()`](../catalog/astype.md).
 

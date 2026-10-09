@@ -17,7 +17,7 @@ Converts a `Duration`'s elapsed magnitude into a plain `Series` expressed in
 seconds — [`total().nanoseconds()`](total_nanoseconds.md) divided by `1e9`.
 This is the way out of duration-space back into an ordinary numeric `Series`,
 e.g. for storing elapsed time in a DataFrame column (recall `Duration` itself
-isn't a `ThreadKind` payload — see the
+isn't a `SlateKind` payload — see the
 [API reference overview](../../duration_api_reference)) or feeding it into
 arithmetic that doesn't care about the duration/instant distinction. See
 [`total().nanoseconds()`](total_nanoseconds.md) for the full explanation of

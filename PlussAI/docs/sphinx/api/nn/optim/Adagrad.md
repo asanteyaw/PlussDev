@@ -147,9 +147,13 @@ int main() {
   optim::Adagrad decayed(std::vector<Series*>{&w_decay}, optim::AdagradOptions{.learning_rate = 0.5, .lr_decay = 0.5});
 
   for (int step = 0; step < 6; ++step) {
-    plain.step(std::vector<Series>{w_plain.sub(target)});
-    decayed.step(std::vector<Series>{w_decay.sub(target)});
-    std::cout << "step " << step << ": lr_decay=0 -> w = " << w_plain.item<float>()
+    const Series w_plain_residual = w_plain.sub(target);
+    const float w_plain_loss = w_plain_residual.square().mul(0.5).item<float>();
+    plain.step(std::vector<Series>{w_plain_residual});
+    const Series w_decay_residual = w_decay.sub(target);
+    const float w_decay_loss = w_decay_residual.square().mul(0.5).item<float>();
+    decayed.step(std::vector<Series>{w_decay_residual});
+    std::cout << "step " << step << ": loss(lr_decay=0) = " << w_plain_loss << ", loss(lr_decay=0.5) = " << w_decay_loss << ", lr_decay=0 -> w = " << w_plain.item<float>()
                << ", lr_decay=0.5 -> w = " << w_decay.item<float>() << "\n";
   }
 
@@ -160,12 +164,12 @@ int main() {
 Output
 
 ```text
-step 0: lr_decay=0 -> w = 4.5, lr_decay=0.5 -> w = 4.5
-step 1: lr_decay=0 -> w = 4.17075, lr_decay=0.5 -> w = 4.2805
-step 2: lr_decay=0 -> w = 3.91459, lr_decay=0.5 -> w = 4.14919
-step 3: lr_decay=0 -> w = 3.70156, lr_decay=0.5 -> w = 4.05915
-step 4: lr_decay=0 -> w = 3.51791, lr_decay=0.5 -> w = 3.99237
-step 5: lr_decay=0 -> w = 3.35597, lr_decay=0.5 -> w = 3.94024
+step 0: loss(lr_decay=0) = 8, loss(lr_decay=0.5) = 8, lr_decay=0 -> w = 4.5, lr_decay=0.5 -> w = 4.5
+step 1: loss(lr_decay=0) = 6.125, loss(lr_decay=0.5) = 6.125, lr_decay=0 -> w = 4.17075, lr_decay=0.5 -> w = 4.2805
+step 2: loss(lr_decay=0) = 5.02682, loss(lr_decay=0.5) = 5.38084, lr_decay=0 -> w = 3.91459, lr_decay=0.5 -> w = 4.14919
+step 3: loss(lr_decay=0) = 4.24741, loss(lr_decay=0.5) = 4.95871, lr_decay=0 -> w = 3.70156, lr_decay=0.5 -> w = 4.05915
+step 4: loss(lr_decay=0) = 3.64922, loss(lr_decay=0.5) = 4.6792, lr_decay=0 -> w = 3.51791, lr_decay=0.5 -> w = 3.99237
+step 5: loss(lr_decay=0) = 3.16993, loss(lr_decay=0.5) = 4.47714, lr_decay=0 -> w = 3.35597, lr_decay=0.5 -> w = 3.94024
 ```
 
 ### Example 3

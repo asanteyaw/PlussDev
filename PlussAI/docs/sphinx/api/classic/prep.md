@@ -32,15 +32,49 @@ Every kernel in `prep` is used the same three-call way, regardless of
 sub-family — this is the one pattern worth internalizing before reading any
 individual page:
 
+Fit a standard scaler with explicit options and transform the training column. The program prints the value count.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::prep::StandardScalerOptions options{};
-cls::prep::StandardScaler scaler(options);
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-scaler.learn(train_batch);                       // fit on training data
-const pluss::Series scaled = scaler.map(train_batch).value();   // or on new data
-// scaler.learn_map(train_batch) fuses the two calls above into one.
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  cls::FeatureBatch train{};
+  train.x = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, {5, 1}, cfg);
+  cls::prep::StandardScalerOptions options{};
+  cls::prep::StandardScaler scaler(options);
+  scaler.learn(train);
+  const pluss::Series scaled = scaler.map(train).value();
+  std::cout << "scaled values = " << scaled.numel() << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+scaled values = 5
 ```
 
 `learn` fits (statistics, category vocabularies, …); `map` applies the fitted

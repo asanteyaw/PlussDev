@@ -34,12 +34,12 @@ Example 1. Replace an atlas's depth labels with the default integer sequence.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
-auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Thread(pluss::make_note({"jan", "feb"})));
+auto atlas = pluss::table::Atlas({q1, q2}, pluss::table::Slate(pluss::make_note({"jan", "feb"})));
 
 auto ranged = atlas.label().range();
 std::cout << ranged.label().values();
@@ -66,7 +66,7 @@ ptype: Series
 
 - [`AtlasLabelAccessor::reset`](reset.md): the equivalent operation, named to match
   "clearing" the labels rather than "ranging" them.
-- [`AtlasLabelAccessor::set`](set.md): set the depth labels to any `Thread`, not just the
+- [`AtlasLabelAccessor::set`](set.md): set the depth labels to any `Slate`, not just the
   default sequence.
 
 <div class="pluss-inline-prev-next">

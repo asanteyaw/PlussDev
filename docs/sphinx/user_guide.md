@@ -11,7 +11,7 @@ one umbrella include and one SDK target.
 | Module | Main purpose | Common objects |
 | --- | --- | --- |
 | PlussQit | Core array, text, time, dispatch, and serialization surface | `Series`, `Note`, `Timeline`, `TimeIndex`, `Type` |
-| PlussMic | Tables, loaders, DataFrame operations, Atlas stacks | `Thread`, `DataFrame`, `Atlas` |
+| PlussMic | Tables, loaders, DataFrame operations, Atlas stacks | `Slate`, `DataFrame`, `Atlas` |
 | PlussMa | Math, statistics, distributions, finance, optimization | distribution objects, optimizers, time-series helpers |
 | PlussPl | Plotting and export | `pluss::pl::Studio`, panes, traces |
 | PlussAI | Classical ML and neural/AI surfaces | NodeJ, Lymph, model/workflow types |
@@ -32,7 +32,7 @@ the default umbrella.
 Pluss uses a layered model:
 
 ```text
-Atlas -> DataFrame -> Thread -> Series / Note / Timeline / TimeIndex
+Atlas -> DataFrame -> Slate -> Series / Note / Timeline / TimeIndex
 ```
 
 ### Series
@@ -50,21 +50,21 @@ double total = x.sum().item<double>();
 ### Note
 
 `Note` is the vectorized text type. It is used directly for text arrays and
-indirectly through text `Thread` columns in a `DataFrame`.
+indirectly through text `Slate` columns in a `DataFrame`.
 
 ### Timeline and TimeIndex
 
 `Timeline` and `TimeIndex` are for date/time data. Use them for time axes,
 calendar extraction, alignment, and time-series workflows.
 
-### Thread
+### Slate
 
-`Thread` is a 1D table column. A `Thread` wraps exactly one core payload kind:
+`Slate` is a 1D table column. A `Slate` wraps exactly one core payload kind:
 numeric `Series`, text `Note`, `Timeline`, or `TimeIndex`. It also carries
 validity/missingness information.
 
 ```cpp
-pluss::table::Thread values(pluss::make_series({10.0, 12.5, 9.0}));
+pluss::table::Slate values(pluss::make_series({10.0, 12.5, 9.0}));
 auto cleaned = values.fillna(0.0).clip(0.0, 100.0);
 ```
 

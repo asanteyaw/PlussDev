@@ -35,9 +35,9 @@ Example 1. Suffix every feature name on a mixed-kind frame.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"sales_units", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-     {"sales_price", Thread(pluss::make_series({1.5, 2.0, 1.8}))},
-     {"city",        Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
+    {{"sales_units", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+     {"sales_price", Slate(pluss::make_series({1.5, 2.0, 1.8}))},
+     {"city",        Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))}});
 std::cout << orders;
 
 auto out = orders.feataxis().suffix("_v2");

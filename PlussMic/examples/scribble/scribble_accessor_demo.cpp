@@ -14,7 +14,7 @@ int main() {
   using pluss::table::ParseInvalid;
   using pluss::table::TextAlign;
   using pluss::table::TextOptions;
-  using pluss::table::ThreadCastOptions;
+  using pluss::table::SlateCastOptions;
   using pluss::table::TimeUnit;
   using pluss::table::TimelineLocalizeOptions;
 

@@ -131,7 +131,7 @@ void collect_branch_indexes(const Doc& doc,
 StringId TextPool::intern(std::string_view value) {
   PLUSS_CALL_GUARD();
   if (value.empty()) return 0;
-  if (const auto it = text_to_id_.find(std::string(value)); it != text_to_id_.end()) {
+  if (const auto it = text_to_id_.find(value); it != text_to_id_.end()) {
     return it->second;
   }
 
@@ -154,7 +154,7 @@ StringId TextPool::intern(std::string_view value) {
 StringId TextPool::lookup(std::string_view value) const {
   PLUSS_CALL_GUARD();
   if (value.empty()) return 0;
-  if (const auto it = text_to_id_.find(std::string(value)); it != text_to_id_.end()) {
+  if (const auto it = text_to_id_.find(value); it != text_to_id_.end()) {
     return it->second;
   }
   return 0;
@@ -168,12 +168,12 @@ const std::string& TextPool::at(StringId id) const {
   PLUSS_CALL_GUARD();
   if (id == 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextPool::at: id 0 does not name a stored string.");
+        "nlp::TextPool::at: id 0 does not name a stored string.");
   }
   const auto it = id_to_index_.find(id);
   if (it == id_to_index_.end()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::TextPool::at: unknown string id.");
+        "nlp::TextPool::at: unknown string id.");
   }
   return values_[it->second];
 }
@@ -193,10 +193,17 @@ StringId MorphBank::intern(const Morphology& value) {
   PLUSS_CALL_GUARD();
   if (text_pool_ == nullptr) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::MorphBank::intern: text pool is not attached.");
+        "nlp::MorphBank::intern: text pool is not attached.");
+  }
+  if (value.spec.empty()) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::MorphBank::intern: morphology spec must not be empty.");
   }
   const auto id = text_pool_->intern(value.spec);
-  forms_.insert_or_assign(id, value);
+  // A morphology id names a feature class, not a surface form. Preserve the
+  // first representative so observing another member cannot mutate an
+  // already-interned record behind existing tokens.
+  forms_.try_emplace(id, value);
   return id;
 }
 
@@ -232,6 +239,10 @@ const std::string& Lexicon::text(StringId id) const {
 
 const Lexeme& Lexicon::observe(std::string_view value) {
   PLUSS_CALL_GUARD();
+  if (value.empty()) {
+    ::pluss::ai::nodeb::detail::fail(
+        "nlp::Lexicon::observe: surface text must not be empty.");
+  }
   const auto id = texts_.intern(value);
   if (const auto it = lexemes_.find(id); it != lexemes_.end()) {
     return it->second;

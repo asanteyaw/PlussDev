@@ -40,8 +40,8 @@ Frame make_frame() {
   const Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, f64());
   return Frame{
       .x = DataFrame({
-          {"x1", pluss::table::Thread(x1)},
-          {"x2", pluss::table::Thread(x2)},
+          {"x1", pluss::table::Slate(x1)},
+          {"x2", pluss::table::Slate(x2)},
       }),
       .y = y,
   };

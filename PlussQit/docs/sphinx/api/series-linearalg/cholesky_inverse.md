@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::cholesky_inverse
+# Series::LinearAlgAccessor::cholesky_inverse
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::cholesky_inverse(bool upper = false) const
+Series Series::LinearAlgAccessor::cholesky_inverse(bool upper = false) const
 Series SeriesLinearAlgProxy::cholesky_inverse(bool upper = false) const
 ```
 

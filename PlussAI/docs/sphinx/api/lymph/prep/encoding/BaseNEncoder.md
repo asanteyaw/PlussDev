@@ -14,7 +14,7 @@ The type is `lymph::prep::BaseNEncoder`. It takes an
 `prep::BaseNEncoderOptions`) at construction, default-constructed if omitted. It
 shares its whole method surface with [`prep::OneHotEncoder`](OneHotEncoder.md) —
 `features` / `learn` / `map` / `learn_map` / `learned` / `summary`. It has **no**
-single-column `Thread` overload; use the `DataFrame` path.
+single-column `Slate` overload; use the `DataFrame` path.
 
 ## Construction
 
@@ -70,12 +70,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"code", Thread(pluss::make_series({10., 20., 30., 40., 50., 10., 30.}, {7}, f64))}});
-  const DataFrame later({{"code", Thread(pluss::make_series({50., 20., 10.}, {3}, f64))}});
+  const DataFrame train({{"code", Slate(pluss::make_series({10., 20., 30., 40., 50., 10., 30.}, {7}, f64))}});
+  const DataFrame later({{"code", Slate(pluss::make_series({50., 20., 10.}, {3}, f64))}});
 
   lymph::prep::BaseNEncoder encoder;  // base = 2
   std::cout << "learn_map(train) -- code_0..code_2 are the binary digits:\n"
@@ -130,12 +130,12 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame train(
-      {{"code", Thread(pluss::make_series({1., 2., 3., 4., 5., 6., 7., 8., 9.}, {9}, f64))}});
+      {{"code", Slate(pluss::make_series({1., 2., 3., 4., 5., 6., 7., 8., 9.}, {9}, f64))}});
 
   lymph::prep::BaseNEncoder encoder(lymph::prep::BaseNEncoderOptions{.base = 4});
   std::cout << "base = 4:\n"
@@ -185,13 +185,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
-  const DataFrame train({{"code", Thread(pluss::make_series({10., 20., 30., 40., 50., 60., 70.}, {7}, f64))}});
+  const DataFrame train({{"code", Slate(pluss::make_series({10., 20., 30., 40., 50., 60., 70.}, {7}, f64))}});
   // 7 categories -> codes 1..7 -> ceil(log2(8)) = 3 binary digit columns.
-  const DataFrame later({{"code", Thread(pluss::make_series({70., 10., 999.}, {3}, f64))}});
+  const DataFrame later({{"code", Slate(pluss::make_series({70., 10., 999.}, {3}, f64))}});
 
   lymph::prep::BaseNEncoder encoder;  // base = 2
   encoder.features({"code"}).learn(train);

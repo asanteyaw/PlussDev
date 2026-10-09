@@ -10,7 +10,7 @@
 
 #include "CodeH/core/Duration.h"
 #include "CodeH/core/Timeline.h"
-#include "CodeH/core/TimeIndex.h"
+#include "CodeH/core/TimelineIndexAccessor.h"
 
 namespace pluss::codeh {
 
@@ -325,33 +325,33 @@ std::ostream& operator<<(std::ostream& os, const Duration& d) {
   return os;
 }
 
-std::string to_string(const TimeIndex& idx, const TimelinePrintOptions& opt) {
+std::string to_string(const TimelineIndexAccessor& idx, const TimelinePrintOptions& opt) {
   if (!idx.timeline().defined()) {
-    return "TimeIndex(undefined)";
+    return "TimelineIndexAccessor(undefined)";
   }
   std::string s = to_string(idx.timeline(), opt);
-  // Reuse Timeline's rendering verbatim -- only the leading type name in the
-  // header differs, since a TimeIndex's values are exactly its Timeline's.
+  // Reuse Timeline's rendering verbatim and expose only the public accessor
+  // name; TimelineIndexAccessor is the private engine behind Timeline::index().
   constexpr std::string_view kFrom = "Timeline(";
   if (s.compare(0, kFrom.size(), kFrom) == 0) {
-    s.replace(0, kFrom.size(), "TimeIndex(");
+    s.replace(0, kFrom.size(), "TimelineIndexAccessor(");
   }
   return s;
 }
 
-std::string print_timeindex(const TimeIndex& idx,
+std::string print_index(const TimelineIndexAccessor& idx,
                             const TimelinePrintOptions& opt) {
   return to_string(idx, opt);
 }
 
-std::ostream& print_timeindex(std::ostream& os,
-                             const TimeIndex& idx,
+std::ostream& print_index(std::ostream& os,
+                             const TimelineIndexAccessor& idx,
                              const TimelinePrintOptions& opt) {
   os << to_string(idx, opt);
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const TimeIndex& idx) {
+std::ostream& operator<<(std::ostream& os, const TimelineIndexAccessor& idx) {
   os << to_string(idx, {});
   return os;
 }

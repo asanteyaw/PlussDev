@@ -20,17 +20,48 @@ defined and where a `pluss::table::DataFrame` is turned into one.
 
 ## How To Call It
 
+Turn two feature columns and one label column of a dataframe into a labeled batch. The program prints the row count and the feature count.
+
 ```cpp
-namespace cls = pluss::ai::classic;
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
 
-cls::DataFrameBatchOptions options{};
-options.feature_names = {"income", "balance"};
-options.label_feature = "default";
+#include <iostream>
+#include <vector>
 
-cls::StatusOr<cls::LabeledBatch> batch = cls::labeled_batch_from_dataframe(frame, options);
-if (batch.ok()) {
-  classifier->learn(batch.value());
+int main() {
+  namespace cls = pluss::ai::classic;
+  using pluss::table::DataFrame;
+  using pluss::table::Slate;
+
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame frame({
+      {"income", Slate(pluss::make_series(std::vector<double>{30.0, 42.0, 55.0, 61.0, 88.0, 92.0}, {6}, cfg))},
+      {"balance", Slate(pluss::make_series(std::vector<double>{1.0, 2.0, 1.5, 3.0, 5.0, 4.5}, {6}, cfg))},
+      {"default", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
+  });
+
+  cls::DataFrameBatchOptions options{};
+  options.feature_names = {"income", "balance"};
+  options.label_feature = "default";
+
+  const cls::StatusOr<cls::LabeledBatch> batch = cls::labeled_batch_from_dataframe(frame, options);
+  if (!batch.ok()) {
+    std::cout << "batch failed\n";
+    return 1;
+  }
+  std::cout << "rows = " << batch.value().y.numel() << "\n";
+  std::cout << "features = " << batch.value().features.x.sizes()[1] << "\n";
+  return 0;
 }
+```
+
+Output
+
+```text
+rows = 6
+features = 2
 ```
 
 For a `Series` you already hold — no `DataFrame` in the picture — build a

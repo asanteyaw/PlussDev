@@ -9,196 +9,56 @@ struct NexusResolvedJoinSpec {
   std::string result_name{};
 };
 
-struct NexusPullField {
-  std::string table{};
-  std::string feature{};
-  std::string token{};
-  std::optional<std::string> aggregate{};
-  std::optional<std::string> alias{};
-  bool prefer_feature_alias{false};
-};
-
-enum class NexusPullAggregateOp : std::uint8_t {
-  Count = 0,
-  Ndistinct = 1,
-  Sum = 2,
-  Mean = 3,
-  Median = 4,
-  Min = 5,
-  Max = 6,
-  Std = 7,
-  Var = 8,
-};
-
-struct NexusPullAggregateSpec {
-  enum class Anchor : std::uint8_t {
-    Latest = 0,
-    Root = 1,
-  };
-
-  NexusPullAggregateOp op{NexusPullAggregateOp::Count};
-  std::string token{};
-  std::optional<std::int64_t> window_value{};
-  std::optional<std::string> window_unit{};
-  Anchor anchor{Anchor::Latest};
-};
+// The pull grammar is shared with Locus (relational/Pull.h).
+using NexusPullField = relational::PullField;
+using NexusPullAggregateOp = relational::PullAggregateOp;
+using NexusPullAggregateSpec = relational::PullAggregate;
+using relational::parse_pull_aggregate;
+using relational::parse_pull_field;
+using relational::parse_pull_fields;
+using relational::parse_pull_spec;
+using relational::pull_field_key;
+using relational::pull_output_alias;
+using relational::pull_request_key;
+using relational::pull_window_seconds;
 
 struct NexusPullExpandedFrame {
   pluss::table::DataFrame frame{};
   std::unordered_map<std::string, std::string> projected{};
 };
 
+// Link vocabulary, lookup and join-spec resolution are shared with Locus
+// (relational/Links.h); these keep the Nexus call sites unchanged.
 RelationshipCardinality reverse_relationship_cardinality(RelationshipCardinality cardinality) {
-  switch (cardinality) {
-    case RelationshipCardinality::OneToOne:
-      return RelationshipCardinality::OneToOne;
-    case RelationshipCardinality::OneToMany:
-      return RelationshipCardinality::ManyToOne;
-    case RelationshipCardinality::ManyToOne:
-      return RelationshipCardinality::OneToMany;
-    case RelationshipCardinality::ManyToMany:
-      return RelationshipCardinality::ManyToMany;
-  }
-  return RelationshipCardinality::ManyToMany;
+  return relational::reverse_cardinality(cardinality);
 }
 
-std::string join_how_string(JoinHow how) {
-  switch (how) {
-    case JoinHow::Inner:
-      return "common";
-    case JoinHow::Left:
-      return "keep_left";
-    case JoinHow::Right:
-      return "keep_right";
-    case JoinHow::Outer:
-      return "unite";
-    case JoinHow::Cross:
-      return "cross";
-    case JoinHow::LeftOnly:
-      return "left_only";
-    case JoinHow::RightOnly:
-      return "right_only";
-  }
-  return "common";
-}
-
-std::string join_how_token(JoinHow how) {
-  switch (how) {
-    case JoinHow::Inner:
-      return "inner";
-    case JoinHow::Left:
-      return "left";
-    case JoinHow::Right:
-      return "right";
-    case JoinHow::Outer:
-      return "outer";
-    case JoinHow::Cross:
-      return "cross";
-    case JoinHow::LeftOnly:
-      return "left_only";
-    case JoinHow::RightOnly:
-      return "right_only";
-  }
-  return "inner";
-}
+std::string join_how_string(JoinHow how) { return relational::join_how_unify_token(how); }
 
 std::string relationship_cardinality_validate_string(RelationshipCardinality cardinality) {
-  switch (cardinality) {
-    case RelationshipCardinality::OneToOne:
-      return "one_to_one";
-    case RelationshipCardinality::OneToMany:
-      return "one_to_many";
-    case RelationshipCardinality::ManyToOne:
-      return "many_to_one";
-    case RelationshipCardinality::ManyToMany:
-      return "many_to_many";
-  }
-  return "many_to_many";
+  return relational::cardinality_validate_token(cardinality);
 }
 
-std::string stable_join_result_name(std::string_view left,
-                                    std::string_view right,
-                                    JoinHow how) {
-  (void)how;
-  return std::string(left) + "_" + std::string(right);
-}
-
-std::string stable_plan_result_name(std::string_view root,
-                                    const std::vector<JoinPlanStep>& steps) {
-  if (steps.empty()) {
-    return std::string(root);
-  }
-  return std::string(root) + "_" + steps.back().right_table;
-}
+using relational::join_how_token;
+using relational::oriented_relationship_keys;
+using relational::stable_join_result_name;
+using relational::stable_plan_result_name;
+using relational::validate_join_key_pairs;
 
 std::pair<const Relationship&, bool> require_oriented_relationship(const detail::NexusImpl& src,
                                                                    std::string_view left,
                                                                    std::string_view right,
                                                                    std::string_view relationship_name,
                                                                    std::string_view where) {
-  const auto rel_it = src.rel_name_to_pos_.find(std::string(relationship_name));
-  PLUSS_CHECK(rel_it != src.rel_name_to_pos_.end(),
-              std::string(where) + ": unknown relationship '" + std::string(relationship_name) + "'");
-  const auto& rel = src.relationships_[static_cast<std::size_t>(rel_it->second)];
-  if (rel.left_table == left && rel.right_table == right) {
-    return {rel, false};
-  }
-  if (rel.left_table == right && rel.right_table == left) {
-    return {rel, true};
-  }
-  PLUSS_FAIL(std::string(where) + ": relationship '" + std::string(relationship_name) +
-             "' does not connect '" + std::string(left) + "' and '" + std::string(right) + "'");
-}
-
-std::vector<std::pair<std::string, std::string>> oriented_relationship_keys(const Relationship& rel,
-                                                                             bool reversed) {
-  if (!reversed) {
-    return rel.keys;
-  }
-  std::vector<std::pair<std::string, std::string>> out;
-  out.reserve(rel.keys.size());
-  for (const auto& [left_key, right_key] : rel.keys) {
-    out.emplace_back(right_key, left_key);
-  }
-  return out;
-}
-
-void validate_join_key_pairs(const std::vector<std::pair<std::string, std::string>>& keys,
-                             std::string_view where) {
-  PLUSS_CHECK(!keys.empty(), std::string(where) + ": join keys cannot be empty");
-  std::unordered_set<std::string> seen;
-  seen.reserve(keys.size() * 2 + 1);
-  for (const auto& [left_key, right_key] : keys) {
-    PLUSS_CHECK(!left_key.empty() && !right_key.empty(),
-                std::string(where) + ": join key pairs cannot contain empty names");
-    const auto signature = left_key + std::string("\n") + right_key;
-    PLUSS_CHECK(seen.insert(signature).second,
-                std::string(where) + ": duplicate join key pair '" + left_key + "' -> '" + right_key + "'");
-  }
+  return relational::require_oriented_relationship(
+      src.relationships_, left, right, relationship_name, where, &src.rel_name_to_pos_);
 }
 
 std::string require_direct_relationship_name(const detail::NexusImpl& src,
                                              std::string_view left,
                                              std::string_view right,
                                              std::string_view where) {
-  std::optional<std::string> found;
-  for (const auto& rel : src.relationships_) {
-    const bool matches =
-        (rel.left_table == left && rel.right_table == right) ||
-        (rel.left_table == right && rel.right_table == left);
-    if (!matches) {
-      continue;
-    }
-    PLUSS_CHECK(!found.has_value(),
-                std::string(where) + ": multiple direct relationships connect '" +
-                    std::string(left) + "' and '" + std::string(right) +
-                    "'. Specify JoinSpec.relationship_name explicitly");
-    found = rel.name;
-  }
-  PLUSS_CHECK(found.has_value(),
-              std::string(where) + ": no direct relationship connects '" +
-                  std::string(left) + "' and '" + std::string(right) + "'");
-  return *found;
+  return relational::require_direct_relationship_name(src.relationships_, left, right, where);
 }
 
 NexusResolvedJoinSpec resolve_nexus_join_spec(const detail::NexusImpl& src,
@@ -208,50 +68,22 @@ NexusResolvedJoinSpec resolve_nexus_join_spec(const detail::NexusImpl& src,
                                               std::string_view right,
                                               const JoinSpec& spec,
                                               std::string_view where) {
+  const auto resolved =
+      relational::resolve_join(src.relationships_, left, right, spec, where, false, &src.rel_name_to_pos_);
   NexusResolvedJoinSpec out;
-  out.how = join_how_string(spec.how);
-  out.right_suffix = spec.right_suffix.empty()
-      ? std::string("_") + std::string(right)
-      : spec.right_suffix;
-  out.result_name = spec.result_name.value_or(stable_join_result_name(left, right, spec.how));
-
-  std::optional<RelationshipCardinality> validate = spec.validate;
-  std::vector<std::pair<std::string, std::string>> key_pairs = spec.keys;
-
-  if (spec.relationship_name.has_value()) {
-    const auto [rel, reversed] = require_oriented_relationship(
-        src, left, right, *spec.relationship_name, where);
-    if (key_pairs.empty()) {
-      key_pairs = oriented_relationship_keys(rel, reversed);
-    }
-    if (!validate.has_value()) {
-      validate = reversed
-          ? reverse_relationship_cardinality(rel.cardinality)
-          : rel.cardinality;
-    }
-  }
-
+  out.how = join_how_string(resolved.how);
+  out.right_suffix = resolved.right_suffix;
+  out.result_name = resolved.result_name;
   if (spec.how == JoinHow::Cross) {
-    PLUSS_CHECK(key_pairs.empty(),
-                std::string(where) + ": cross join does not accept join keys");
-    PLUSS_CHECK(!spec.relationship_name.has_value(),
-                std::string(where) + ": cross join cannot be relationship-driven");
     out.validate.clear();
     return out;
   }
-
-  validate_join_key_pairs(key_pairs, where);
-  out.left_keys.reserve(key_pairs.size());
-  out.right_keys.reserve(key_pairs.size());
-  for (const auto& [left_key, right_key] : key_pairs) {
-    out.left_keys.push_back(left_key);
-    out.right_keys.push_back(right_key);
-  }
+  out.left_keys = resolved.left_keys;
+  out.right_keys = resolved.right_keys;
   require_frame_features(left_frame, out.left_keys, where);
   require_frame_features(right_frame, out.right_keys, where);
-
-  if (validate.has_value()) {
-    out.validate = relationship_cardinality_validate_string(*validate);
+  if (resolved.validate.has_value()) {
+    out.validate = relationship_cardinality_validate_string(*resolved.validate);
   }
   return out;
 }
@@ -261,422 +93,6 @@ std::vector<std::string_view> key_views(const std::vector<std::string>& keys) {
   out.reserve(keys.size());
   for (const auto& key : keys) {
     out.push_back(key);
-  }
-  return out;
-}
-
-std::string pull_field_key(std::string_view table, std::string_view feature) {
-  return std::string(table) + "." + std::string(feature);
-}
-
-std::string pull_request_key(const NexusPullField& field) {
-  auto out = pull_field_key(field.table, field.feature);
-  if (field.aggregate.has_value()) {
-    out += ".";
-    out += *field.aggregate;
-  }
-  return out;
-}
-
-bool is_pull_backtick_quoted(std::string_view token) {
-  return token.size() >= 2 && token.front() == '`' && token.back() == '`';
-}
-
-std::string unquote_pull_token(std::string_view token, std::string_view where) {
-  PLUSS_CHECK(is_pull_backtick_quoted(token),
-              std::string(where) + ": malformed quoted field token '" + std::string(token) + "'");
-  return std::string(token.substr(1, token.size() - 2));
-}
-
-std::string lower_ascii(std::string_view token) {
-  std::string out(token);
-  std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
-    return static_cast<char>(std::tolower(c));
-  });
-  return out;
-}
-
-std::string join_pull_parts(const std::vector<std::string>& parts,
-                            std::size_t begin,
-                            std::size_t end) {
-  std::string out;
-  for (std::size_t i = begin; i < end; ++i) {
-    if (!out.empty()) {
-      out += ".";
-    }
-    out += parts[i];
-  }
-  return out;
-}
-
-std::vector<std::string> split_pull_dots(std::string_view token) {
-  std::vector<std::string> out;
-  std::string current;
-  bool quoted = false;
-  for (const char ch : token) {
-    if (ch == '`') {
-      quoted = !quoted;
-      current.push_back(ch);
-      continue;
-    }
-    if (ch == '.' && !quoted) {
-      out.push_back(current);
-      current.clear();
-      continue;
-    }
-    current.push_back(ch);
-  }
-  out.push_back(current);
-  return out;
-}
-
-std::optional<NexusPullAggregateSpec> parse_pull_aggregate(std::string_view token) {
-  const auto lower_token = lower_ascii(token);
-  auto lower = lower_token;
-  NexusPullAggregateSpec::Anchor anchor = NexusPullAggregateSpec::Anchor::Latest;
-  constexpr std::string_view root_suffix = "_root";
-  if (lower.size() > root_suffix.size() &&
-      lower.ends_with(root_suffix)) {
-    anchor = NexusPullAggregateSpec::Anchor::Root;
-    lower.resize(lower.size() - root_suffix.size());
-  }
-  if (lower == "count") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Count,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "ndistinct") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Ndistinct,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "sum") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Sum,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "mean") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Mean,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "median") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Median,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "min") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Min,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "max") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Max,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "std") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Std,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-  if (lower == "var") {
-    return NexusPullAggregateSpec{
-        .op = NexusPullAggregateOp::Var,
-        .token = std::string(token),
-        .anchor = anchor,
-    };
-  }
-
-  const auto split = lower.rfind('_');
-  if (split == std::string::npos || split == 0 || split + 1 >= lower.size()) {
-    return std::nullopt;
-  }
-
-  NexusPullAggregateSpec out;
-  const auto head = lower.substr(0, split);
-  if (head == "count") {
-    out.op = NexusPullAggregateOp::Count;
-  } else if (head == "sum") {
-    out.op = NexusPullAggregateOp::Sum;
-  } else if (head == "mean") {
-    out.op = NexusPullAggregateOp::Mean;
-  } else if (head == "median") {
-    out.op = NexusPullAggregateOp::Median;
-  } else if (head == "min") {
-    out.op = NexusPullAggregateOp::Min;
-  } else if (head == "max") {
-    out.op = NexusPullAggregateOp::Max;
-  } else if (head == "std") {
-    out.op = NexusPullAggregateOp::Std;
-  } else if (head == "var") {
-    out.op = NexusPullAggregateOp::Var;
-  } else {
-    return std::nullopt;
-  }
-
-  const auto tail = lower.substr(split + 1);
-  std::size_t digits_end = 0;
-  while (digits_end < tail.size() && std::isdigit(static_cast<unsigned char>(tail[digits_end]))) {
-    ++digits_end;
-  }
-  if (digits_end == 0 || digits_end == tail.size()) {
-    return std::nullopt;
-  }
-  const auto value_text = tail.substr(0, digits_end);
-  const auto unit = tail.substr(digits_end);
-  auto value = std::int64_t{0};
-  const auto* begin = value_text.data();
-  const auto* end = value_text.data() + value_text.size();
-  const auto result = std::from_chars(begin, end, value);
-  if (result.ec != std::errc{} || result.ptr != end || value <= 0) {
-    return std::nullopt;
-  }
-  out.token = std::string(token);
-  out.window_value = value;
-  out.window_unit = unit;
-  out.anchor = anchor;
-  return out;
-}
-
-std::string pull_alias_piece(std::string_view token) {
-  std::string out;
-  out.reserve(token.size());
-  bool underscore = false;
-  for (const char ch : token) {
-    if (std::isalnum(static_cast<unsigned char>(ch))) {
-      out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
-      underscore = false;
-      continue;
-    }
-    if (!underscore && !out.empty()) {
-      out.push_back('_');
-      underscore = true;
-    }
-  }
-  while (!out.empty() && out.back() == '_') {
-    out.pop_back();
-  }
-  return out.empty() ? "field" : out;
-}
-
-std::string normalize_pull_feature_token(std::string_view token, std::string_view where) {
-  return is_pull_backtick_quoted(token)
-      ? unquote_pull_token(token, where)
-      : std::string(token);
-}
-
-std::string pull_output_alias(std::string_view root, const NexusPullField& field) {
-  if (field.alias.has_value()) {
-    return *field.alias;
-  }
-  if (field.prefer_feature_alias) {
-    return field.feature;
-  }
-  if (!field.aggregate.has_value()) {
-    return field.table == root
-        ? field.feature
-        : pull_alias_piece(field.table) + "_" + pull_alias_piece(field.feature);
-  }
-  return pull_alias_piece(field.table) + "_" + pull_alias_piece(field.feature) + "_" +
-      pull_alias_piece(*field.aggregate);
-}
-
-std::int64_t find_pull_first_dot(std::string_view token) {
-  bool quoted = false;
-  for (std::size_t i = 0; i < token.size(); ++i) {
-    if (token[i] == '`') {
-      quoted = !quoted;
-      continue;
-    }
-    if (token[i] == '.' && !quoted) {
-      return static_cast<std::int64_t>(i);
-    }
-  }
-  PLUSS_CHECK(!quoted,
-              "Nexus::pull: unmatched backtick in field token '" + std::string(token) + "'");
-  return -1;
-}
-
-NexusPullField parse_pull_field(std::string_view root,
-                                std::string_view token,
-                                std::string_view where) {
-  PLUSS_CHECK(!token.empty(), std::string(where) + ": field token cannot be empty");
-  const auto dot = find_pull_first_dot(token);
-  if (dot < 0) {
-    const auto feature = is_pull_backtick_quoted(token)
-        ? unquote_pull_token(token, where)
-        : std::string(token);
-    return NexusPullField{
-        .table = std::string(root),
-        .feature = std::move(feature),
-        .token = std::string(token),
-        .prefer_feature_alias = false,
-    };
-  }
-  PLUSS_CHECK(dot > 0 && static_cast<std::size_t>(dot + 1) < token.size(),
-              std::string(where) + ": malformed qualified field '" + std::string(token) + "'");
-  const auto table = std::string(token.substr(0, static_cast<std::size_t>(dot)));
-  const auto rest = token.substr(static_cast<std::size_t>(dot + 1));
-  PLUSS_CHECK(!table.empty() && !rest.empty(),
-              std::string(where) + ": malformed qualified field '" + std::string(token) + "'");
-
-  if (is_pull_backtick_quoted(rest)) {
-    return NexusPullField{
-        .table = table,
-        .feature = unquote_pull_token(rest, where),
-        .token = std::string(token),
-        .prefer_feature_alias = false,
-    };
-  }
-
-  const auto parts = split_pull_dots(rest);
-  PLUSS_CHECK(!parts.empty(), std::string(where) + ": malformed qualified field '" + std::string(token) + "'");
-  if (parts.size() == 1) {
-    return NexusPullField{
-        .table = table,
-        .feature = normalize_pull_feature_token(parts.front(), where),
-        .token = std::string(token),
-        .prefer_feature_alias = false,
-    };
-  }
-
-  if (const auto aggregate = parse_pull_aggregate(parts.back()); aggregate.has_value()) {
-    const auto feature = normalize_pull_feature_token(
-        join_pull_parts(parts, 0, parts.size() - 1), where);
-    return NexusPullField{
-        .table = table,
-        .feature = feature,
-        .token = std::string(token),
-        .aggregate = aggregate->token,
-        .prefer_feature_alias = false,
-    };
-  }
-
-  return NexusPullField{
-      .table = table,
-      .feature = normalize_pull_feature_token(join_pull_parts(parts, 0, parts.size()), where),
-      .token = std::string(token),
-      .prefer_feature_alias = false,
-  };
-}
-
-std::string pull_op_token(PullOp op, std::string_view where) {
-  switch (op) {
-    case PullOp::Take:
-      return {};
-    case PullOp::Count:
-      return "count";
-    case PullOp::Ndistinct:
-      return "ndistinct";
-    case PullOp::Sum:
-      return "sum";
-    case PullOp::Mean:
-      return "mean";
-    case PullOp::Median:
-      return "median";
-    case PullOp::Min:
-      return "min";
-    case PullOp::Max:
-      return "max";
-    case PullOp::Std:
-      return "std";
-    case PullOp::Var:
-      return "var";
-  }
-  PLUSS_FAIL(std::string(where) + ": unsupported PullOp");
-}
-
-NexusPullField parse_pull_spec(std::string_view root,
-                               const PullSpec& spec,
-                               std::string_view where) {
-  PLUSS_CHECK(!spec.source.empty(), std::string(where) + ": pull spec source cannot be empty");
-  auto parsed = parse_pull_field(root, spec.source, where);
-  parsed.alias = spec.alias;
-  parsed.prefer_feature_alias = spec.prefer_feature_alias;
-  if (spec.op == PullOp::Take) {
-    PLUSS_CHECK(!spec.window.has_value(),
-                std::string(where) + ": scalar take spec cannot be windowed");
-    parsed.token = spec.source;
-    return parsed;
-  }
-
-  auto aggregate = pull_op_token(spec.op, where);
-  if (spec.window.has_value()) {
-    PLUSS_CHECK(spec.window->value > 0,
-                std::string(where) + ": pull window value must be positive");
-    PLUSS_CHECK(!spec.window->unit.empty(),
-                std::string(where) + ": pull window unit cannot be empty");
-    aggregate += "_" + std::to_string(spec.window->value) + spec.window->unit;
-    if (spec.window->anchor_root) {
-      aggregate += "_root";
-    }
-  }
-  parsed.aggregate = std::move(aggregate);
-  parsed.token = spec.source + "." + *parsed.aggregate;
-  return parsed;
-}
-
-std::vector<NexusPullField> parse_pull_fields(std::string_view root,
-                                              pluss::msharp::RangeView::Of<std::string_view> fields,
-                                              std::string_view where) {
-  PLUSS_CHECK(fields.size() > 0, std::string(where) + ": at least one field is required");
-  std::vector<NexusPullField> out;
-  out.reserve(fields.size());
-  std::unordered_set<std::string> seen;
-  seen.reserve(fields.size() * 2 + 1);
-  for (const auto field : fields) {
-    auto parsed = parse_pull_field(root, field, where);
-    const auto key = pull_request_key(parsed);
-    PLUSS_CHECK(seen.insert(key).second,
-                std::string(where) + ": duplicate requested field '" + key + "'");
-    if (parsed.aggregate.has_value()) {
-      PLUSS_CHECK(parsed.table != root,
-                  std::string(where) + ": aggregate field '" + parsed.token +
-                      "' must target a related table, not the root table");
-      (void)parse_pull_aggregate(*parsed.aggregate);
-    }
-    out.push_back(std::move(parsed));
-  }
-  return out;
-}
-
-std::vector<NexusPullField> parse_pull_fields(std::string_view root,
-                                              const std::vector<PullSpec>& fields,
-                                              std::string_view where) {
-  PLUSS_CHECK(!fields.empty(), std::string(where) + ": at least one field is required");
-  std::vector<NexusPullField> out;
-  out.reserve(fields.size());
-  std::unordered_set<std::string> seen;
-  seen.reserve(fields.size() * 2 + 1);
-  for (const auto& field_spec : fields) {
-    auto parsed = parse_pull_spec(root, field_spec, where);
-    const auto key = pull_request_key(parsed);
-    PLUSS_CHECK(seen.insert(key).second,
-                std::string(where) + ": duplicate requested field '" + key + "'");
-    if (parsed.aggregate.has_value()) {
-      PLUSS_CHECK(parsed.table != root,
-                  std::string(where) + ": aggregate field '" + parsed.token +
-                      "' must target a related table, not the root table");
-      (void)parse_pull_aggregate(*parsed.aggregate);
-    }
-    out.push_back(std::move(parsed));
   }
   return out;
 }
@@ -795,13 +211,13 @@ std::unordered_map<std::string, std::string> simulate_pull_projection_map(
   return out;
 }
 
-std::vector<std::pair<std::string, pluss::table::Thread>> materialize_pull_columns(
+std::vector<std::pair<std::string, pluss::table::Slate>> materialize_pull_columns(
     const pluss::table::DataFrame& materialized,
     std::string_view root,
     const std::vector<NexusPullField>& fields,
     const std::unordered_map<std::string, std::string>& projected,
     std::string_view where) {
-  std::vector<std::pair<std::string, pluss::table::Thread>> out_cols;
+  std::vector<std::pair<std::string, pluss::table::Slate>> out_cols;
   out_cols.reserve(fields.size());
   std::unordered_set<std::string> aliases;
   aliases.reserve(fields.size() * 2 + 1);
@@ -848,29 +264,6 @@ pluss::table::DataFrame::GroupOp pull_group_op(const NexusPullAggregateSpec& agg
   PLUSS_FAIL(std::string(where) + ": unsupported pull aggregate");
 }
 
-std::int64_t pull_window_seconds(const NexusPullAggregateSpec& spec, std::string_view where) {
-  PLUSS_CHECK(spec.window_value.has_value() && spec.window_unit.has_value(),
-              std::string(where) + ": missing pull window specification");
-  const auto value = *spec.window_value;
-  const auto unit = lower_ascii(*spec.window_unit);
-  if (unit == "s" || unit == "sec" || unit == "secs" || unit == "second" || unit == "seconds") {
-    return value;
-  }
-  if (unit == "m" || unit == "min" || unit == "mins" || unit == "minute" || unit == "minutes") {
-    return value * 60LL;
-  }
-  if (unit == "h" || unit == "hr" || unit == "hrs" || unit == "hour" || unit == "hours") {
-    return value * 60LL * 60LL;
-  }
-  if (unit == "d" || unit == "day" || unit == "days") {
-    return value * 24LL * 60LL * 60LL;
-  }
-  if (unit == "w" || unit == "wk" || unit == "wks" || unit == "week" || unit == "weeks") {
-    return value * 7LL * 24LL * 60LL * 60LL;
-  }
-  PLUSS_FAIL(std::string(where) + ": unsupported pull window unit '" + *spec.window_unit + "'");
-}
-
 std::vector<std::string> pull_root_projection_names(const std::vector<std::string>& root_keys,
                                                     std::string_view output_name) {
   auto out = root_keys;
@@ -878,7 +271,7 @@ std::vector<std::string> pull_root_projection_names(const std::vector<std::strin
   return out;
 }
 
-pluss::table::Thread materialize_grouped_pull(const pluss::table::DataFrame& root_frame,
+pluss::table::Slate materialize_grouped_pull(const pluss::table::DataFrame& root_frame,
                                 const std::vector<std::string>& root_keys,
                                 const pluss::table::DataFrame& grouped,
                                 std::string_view output_name,
@@ -905,7 +298,7 @@ pluss::table::Thread materialize_grouped_pull(const pluss::table::DataFrame& roo
   return joined.features(output_name);
 }
 
-pluss::table::Thread aggregate_pull_field(const pluss::table::DataFrame& root_frame,
+pluss::table::Slate aggregate_pull_field(const pluss::table::DataFrame& root_frame,
                             const std::vector<std::string>& root_keys,
                             const pluss::table::DataFrame& expanded,
                             std::string_view value_column,
@@ -1044,7 +437,7 @@ pluss::table::DataFrame nexus_pull_impl(const detail::NexusImpl& src,
     plain_fields.push_back(field);
   }
 
-  std::unordered_map<std::string, pluss::table::Thread> pulled_columns;
+  std::unordered_map<std::string, pluss::table::Slate> pulled_columns;
   pulled_columns.reserve(parsed.size() * 2 + 1);
 
   if (!plain_fields.empty()) {
@@ -1137,7 +530,7 @@ pluss::table::DataFrame nexus_pull_impl(const detail::NexusImpl& src,
     }
   }
 
-  std::vector<std::pair<std::string, pluss::table::Thread>> out;
+  std::vector<std::pair<std::string, pluss::table::Slate>> out;
   out.reserve(parsed.size());
   for (const auto& field : parsed) {
     const auto alias = pull_output_alias(root, field);
@@ -1183,110 +576,18 @@ JoinPath Nexus::path(std::string_view from, std::string_view to) const {
   const auto& src = impl_ref_();
   require_known_table(src, from, "Nexus::path");
   require_known_table(src, to, "Nexus::path");
-
-  const auto cache_key = nexus_path_cache_key(from, to);
-  if (const auto it = src.path_cache_.find(cache_key); it != src.path_cache_.end()) {
-    return it->second;
-  }
-
-  JoinPath out;
-  out.from = std::string(from);
-  out.to = std::string(to);
-  if (from == to) {
-    src.path_cache_.emplace(std::move(cache_key), out);
-    return out;
-  }
-
-  struct Trace {
-    std::string prev{};
-    std::string relationship_name{};
-    bool reversed{false};
-    bool seen{false};
-  };
-
-  std::unordered_map<std::string, Trace> trace;
-  trace.reserve(src.keys_.size() * 2 + 1);
-  trace.emplace(std::string(from), Trace{"", "", false, true});
-  const auto& adjacency = nexus_relationship_adjacency(src);
-
-  std::vector<std::string> frontier{std::string(from)};
-  std::size_t head = 0;
-  bool found = false;
-
-  while (head < frontier.size() && !found) {
-    const auto current = frontier[head++];
-    const auto adj_it = adjacency.find(current);
-    if (adj_it == adjacency.end()) {
-      continue;
-    }
-    for (const auto& edge : adj_it->second) {
-      const auto& next = edge.next;
-      if (trace.find(next) != trace.end()) {
-        continue;
-      }
-      trace.emplace(next, Trace{current, edge.relationship_name, edge.reversed, true});
-      frontier.push_back(next);
-      if (next == to) {
-        found = true;
-        break;
-      }
-    }
-  }
-
-  PLUSS_CHECK(found,
-              "Nexus::path: no relationship path from '" + std::string(from) + "' to '" + std::string(to) + "'");
-
-  std::vector<JoinPathStep> steps;
-  auto current = std::string(to);
-  while (current != from) {
-    const auto it = trace.find(current);
-    PLUSS_CHECK(it != trace.end() && it->second.seen,
-                "Nexus::path: internal path reconstruction failure");
-    steps.push_back(JoinPathStep{
-        .relationship_name = it->second.relationship_name,
-        .from_table = it->second.prev,
-        .to_table = current,
-        .reversed = it->second.reversed,
-    });
-    current = it->second.prev;
-  }
-  std::reverse(steps.begin(), steps.end());
-  out.steps = std::move(steps);
-  src.path_cache_.emplace(std::move(cache_key), out);
-  return out;
+  return src.link_cache_.path(src.keys_, src.relationships_, from, to, "Nexus::path");
 }
 
 JoinPlan Nexus::plan(const JoinPath& path_value, JoinHow how) const {
-  JoinPlan out;
-  out.root_table = path_value.from;
-  out.steps.reserve(path_value.steps.size());
-  for (const auto& step : path_value.steps) {
-    JoinSpec spec;
-    spec.how = how;
-    spec.right_suffix = std::string("_") + step.to_table;
-    spec.relationship_name = step.relationship_name;
-    out.steps.push_back(JoinPlanStep{
-        .left_table = step.from_table,
-        .right_table = step.to_table,
-        .spec = std::move(spec),
-    });
-  }
-  out.result_name = stable_plan_result_name(out.root_table, out.steps);
-  return out;
+  return relational::plan_from_path(path_value, how);
 }
 
 JoinPlan Nexus::plan(std::string_view from, std::string_view to, JoinHow how) const {
   const auto& src = impl_ref_();
   require_known_table(src, from, "Nexus::plan");
   require_known_table(src, to, "Nexus::plan");
-
-  const auto cache_key = nexus_plan_cache_key(from, to, how);
-  if (const auto it = src.plan_cache_.find(cache_key); it != src.plan_cache_.end()) {
-    return it->second;
-  }
-  auto computed = plan(path(from, to), how);
-  auto [it, _] = src.plan_cache_.emplace(std::move(cache_key), computed);
-  return it->second;
+  return src.link_cache_.plan(src.keys_, src.relationships_, from, to, how, "Nexus::path");
 }
 
 pluss::table::DataFrame Nexus::materialize(const JoinPlan& plan_value) const {

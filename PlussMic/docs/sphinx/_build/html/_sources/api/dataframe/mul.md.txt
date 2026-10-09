@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 24800483050a -->
+<!-- pluss-signature-hash: 3ad477c7e64e -->
 
 # DataFrame::mul
 
@@ -11,9 +11,9 @@
 DataFrame::mul(double other) const -> DataFrame
 DataFrame::mul(const DataFrame& other) const -> DataFrame
 DataFrame::mul(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::mul(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::mul(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::mul(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::mul(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::mul(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::mul(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -21,7 +21,7 @@ DataFrame::mul(const Thread& other, const AlignOptions& options, Axis axis = Axi
 The named-method form of elementwise multiplication. `mul()` shares the exact same
 overload shape and alignment rules as [`add()`](add.md) and the rest of the
 arithmetic family — see `add()`'s "What It Does" for the full explanation of the
-scalar/frame/Thread operand shapes and the `axis`/`options` parameters.
+scalar/frame/Slate operand shapes and the `axis`/`options` parameters.
 
 A common use is rescaling a feature (unit conversion, currency conversion, applying a
 tax or discount rate) without hand-writing a loop over cells.
@@ -31,10 +31,10 @@ tax or discount rate) without hand-writing a loop over cells.
 **other**
 
 The right-hand operand, multiplied against the current frame: `double` (broadcast
-scalar), `const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast
+scalar), `const DataFrame&` (aligned frame-to-frame), or `const Slate&` (broadcast
 per `axis`).
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
 value per feature; `Axis::Case` supplies one value per case.
@@ -78,11 +78,11 @@ c    | 2      60
 [3 cs x 2 feat]
 ```
 
-Example 2. Multiply by a `Thread` with one value per feature (`Axis::Feature`, the
+Example 2. Multiply by a `Slate` with one value per feature (`Axis::Feature`, the
 default) — apply a different scale factor to each column.
 
 ```cpp
-auto per_feature_scale = Thread(pluss::make_series({10.0, 0.9})); // units x10, price x0.9
+auto per_feature_scale = Slate(pluss::make_series({10.0, 0.9})); // units x10, price x0.9
 auto out = prices.mul(per_feature_scale);
 std::cout << out;
 ```

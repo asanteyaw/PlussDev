@@ -20,12 +20,55 @@ exactly like the one that produced it.
 
 ## How To Call It
 
+Save a fitted flow and its training batch to a bundle, then load and restore it. The program removes the bundle afterward and prints whether each step succeeded.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-const cls::Status saved = cls::io::save("model.bundle", flow, batch);
-// ... later, possibly in a different process ...
-const cls::StatusOr<cls::Flow> restored = cls::io::load_and_restore("model.bundle");
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
+
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const cls::LabeledBatch batch = fixture_batch(cfg);
+  cls::LinearFamilyOptions opts{};
+  opts.objective = cls::LinearObjective::Logistic;
+  cls::Flow flow = cls::make_flow(
+      cls::ModelSpec{cls::TaskKind::Classification, cls::ModelFamily::Linear, opts}).move_value();
+  flow.learn(batch);
+  const auto bundle = (std::filesystem::temp_directory_path() / "classic_io_example.bundle").string();
+  const cls::Status saved = cls::io::save(bundle, flow, batch);
+  const cls::StatusOr<cls::Flow> restored = cls::io::load_and_restore(bundle);
+  std::filesystem::remove(bundle);
+  std::cout << "saved = " << (saved.ok() ? "true" : "false") << "\n";
+  std::cout << "restored = " << (restored.ok() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+saved = true
+restored = true
 ```
 
 ## Related Pages

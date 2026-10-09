@@ -1,7 +1,7 @@
 summary = """
 Convert selected numeric features into interval labels defined by explicit bin edges.
 
-`DataFrame::bucketize(...)` delegates interval bucketing to the underlying numeric thread kernels while preserving the rest of the mixed-type frame. It is useful for grading bands, coarse feature engineering, histogram-style preprocessing, and rule-based segmentation.
+`DataFrame::bucketize(...)` delegates interval bucketing to the underlying numeric slate kernels while preserving the rest of the mixed-type frame. It is useful for grading bands, coarse feature engineering, histogram-style preprocessing, and rule-based segmentation.
 """
 
 returns = """
@@ -12,7 +12,7 @@ returns = """
 """
 
 see_also = [
-  "<a href=\"thread_api_reference.html#bucketize\"><code>Thread::bucketize</code></a>: bucketize one numeric column outside a frame.",
+  "<a href=\"slate_api_reference.html#bucketize\"><code>Slate::bucketize</code></a>: bucketize one numeric column outside a frame.",
   "<a href=\"#count_by\"><code>DataFrame::count_by</code></a>: summarize how many rows fell into each engineered bucket after bucketing.",
   "<a href=\"#bucketize\"><code>DataFrame::bucketize</code></a>: use the feature-specific overloads when only one subset of columns should be bucketed."
 ]

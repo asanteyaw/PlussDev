@@ -15,7 +15,7 @@ Archive ArchiveTimelineAccessor::tz(std::string_view name) const
 
 Relabels each bound key's timestamp *display* timezone to `name`, without
 changing the underlying instant — the same operation as
-[`Thread::tl().tz()`](../thread-timeline/tz.md)/
+[`Slate::tl().tz()`](../slate-timeline/tz.md)/
 [`DataFrame::tl().tz()`](../dataframe-timeline/tz.md) at the table layer.
 
 The relabeling survives being read back through any further `.tl()` call

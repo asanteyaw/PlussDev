@@ -21,14 +21,15 @@ void LemmatizerStage::apply(Doc& doc) const {
       token.lemma_id = token.lemma.empty() ? 0 : lexicon.intern(token.lemma);
       continue;
     }
+    // Language-table lemmas are already canonical, so `lowercase` governs only
+    // the rule-based fallback: lowercased when on, the surface form when off.
     if (options_.use_language_lookup) {
       token.lemma = resources::lookup_lemma(doc.lang, token.orth);
     }
     if (token.lemma.empty()) {
-      token.lemma = ::pluss::coden::native::cpu::simple_lemma_ascii(token.orth);
-    }
-    if (!options_.lowercase && !token.lemma.empty()) {
-      token.lemma = token.orth;
+      token.lemma = options_.lowercase
+                        ? ::pluss::coden::native::cpu::simple_lemma_ascii(token.orth)
+                        : token.orth;
     }
     if (options_.fill_from_orth_when_empty && token.lemma.empty()) {
       token.lemma = token.orth;
@@ -75,7 +76,7 @@ void LemmatizerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string_
       continue;
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::LemmatizerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
+        "nlp::LemmatizerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
   }
 }
 

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::math_symbols
+# Note::NlpAccessor::math_symbols
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::math_symbols() const
+TokenBatch Note::NlpAccessor::math_symbols() const
 ```
 
 ## Extract Mathematical Symbol Tokens

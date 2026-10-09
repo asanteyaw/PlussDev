@@ -11,6 +11,7 @@
 [`LoopRegularization`](LoopRegularization.md),
 [`CheckpointPolicy`](CheckpointPolicy.md),
 [`ExecutionPolicy`](ExecutionPolicy.md)), and
+[`ProgressPolicy`](ProgressPolicy.md), and
 [`AssessReport`](AssessReport.md), the result `assess()` returns.
 
 ## The Shared Contract

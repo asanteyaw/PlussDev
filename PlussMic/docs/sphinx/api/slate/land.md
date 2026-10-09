@@ -1,0 +1,138 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 74400bb31e91 -->
+
+# Slate::land
+
+[Back to Slate API Reference](../../slate_api_reference)
+
+## Signature
+
+```cpp
+Slate::land(const Slate& other) const -> Slate
+```
+
+## What It Does
+
+Elementwise logical AND. Unlike the arithmetic and comparison families, `land()` has
+only one overload — there's no scalar form, since a scalar boolean would just be
+`true`/`false` applied uniformly, which reads more clearly as a plain `if`. Both
+`*this` and `other` must be genuine `Bool`-typed `Series` slates (not `0`/`1`
+numbers — cast first with `astype(pluss::ScalarType::Bool)` if needed), and must be
+the same length; matching is purely positional.
+
+```{important} land() is the canonical logical-family reference
+`lor` and `lxor` share this exact single-overload shape, `Bool`-only requirement,
+and positional matching. Their own pages focus on what's different about each
+operator. See [`rand()`](rand.md) for an important difference in how display labels
+carry through the reflected forms of this family — genuinely different from the rest
+of this reference's reflected-method pairs.
+```
+
+## Parameters
+
+**other** (`const Slate&`)
+
+A `Bool`-typed `Series` slate, the same length as `*this`.
+
+## Returns
+
+`Slate`
+    A new `Bool`-typed slate, same length as `*this`, holding the elementwise
+    logical AND. Display labels (if `*this` has any set via `label().set()`) carry
+    through onto the result.
+
+## Examples
+
+Example 1. AND two boolean slates, with display labels set on both sides.
+
+```cpp
+using namespace pluss::table;
+
+auto left = Slate(pluss::make_series({true, false, true}, pluss::ScalarType::Bool))
+                .label().set(Slate(pluss::make_note({"p", "q", "r"})));
+auto right = Slate(pluss::make_series({true, true, false}, pluss::ScalarType::Bool))
+                 .label().set(Slate(pluss::make_note({"x", "y", "z"})));
+
+auto out = left.land(right);
+std::cout << out;
+```
+
+### Output
+
+```text
+p  true
+q  false
+r  false
+
+ptype: Series
+```
+
+`true & true = true`, `false & true = false`, `true & false = false` — and the
+result's row labels (`p, q, r`) come from `left`, the slate `land()` was called on.
+`right`'s labels (`x, y, z`) never appear. See [`rand()`](rand.md) for how the
+reflected form differs here.
+
+Example 2. A non-`Bool` operand throws.
+
+```cpp
+auto numeric = Slate(pluss::make_series({1.0, 0.0, 1.0}));
+try {
+  auto bad = left.land(numeric);
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+Slate::land(Slate): operation requires a Bool Series payload
+```
+
+Even though `1.0`/`0.0` look boolean-ish, `land()` requires the slate's actual
+scalar type to be `Bool` — cast first with `astype(pluss::ScalarType::Bool)`.
+
+Example 3. A length mismatch throws too.
+
+```cpp
+auto too_short = Slate(pluss::make_series({true, false}, pluss::ScalarType::Bool));
+try {
+  auto bad = left.land(too_short);
+} catch (const std::exception& e) {
+  std::string msg(e.what());
+  std::cout << msg.substr(0, msg.find('\n')) << "\n";
+}
+```
+
+### Output
+
+```text
+Slate::land(Slate): positional logical operation requires identical lengths
+```
+
+## Notes
+
+- Matching is purely positional, the same as the arithmetic and comparison
+  families — there is no case-label alignment.
+- The result's display labels always come from `*this` (the object `land()` was
+  called on), never from `other`.
+
+## See Also
+
+- [`Slate::rand`](rand.md): the reflected form — same values, but a genuinely
+  different label-carry rule.
+- [`Slate::lor`](lor.md), [`Slate::lxor`](lxor.md): the rest of the logical
+  family, sharing this exact shape.
+- [`DataFrame::land`](../dataframe/land.md): the multi-feature counterpart.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="label.html">
+    <span class="label">Previous</span>
+    <span class="title">label</span>
+  </a>
+  <a class="next-link" href="le.html">
+    <span class="label">Next</span>
+    <span class="title">le</span>
+  </a>
+</div>

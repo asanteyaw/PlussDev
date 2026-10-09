@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::isnull" href="isnull.html" />
@@ -51,8 +51,8 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns a new <code class="docutils literal notranslate"><span class="pre">Bool</span></code>-dtype <code class="docutils literal notranslate"><span class="pre">Series</span></code> stream, same length as the receiver, marking which rows
 are invalid — the same shape and, in every case tested here, the same result as
-<a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>. Delegates to <code class="docutils literal notranslate"><span class="pre">Thread::invalid()</span></code> (a distinct underlying method from
-<code class="docutils literal notranslate"><span class="pre">Thread::isnull()</span></code>), works uniformly across all four payload kinds.</p>
+<a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>. Delegates to <code class="docutils literal notranslate"><span class="pre">Slate::invalid()</span></code> (a distinct underlying method from
+<code class="docutils literal notranslate"><span class="pre">Slate::isnull()</span></code>), works uniformly across all four payload kinds.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
@@ -117,8 +117,8 @@ label        | value
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Works on every payload kind — no <code class="docutils literal notranslate"><span class="pre">Series</span></code>-only restriction.</p></li>
-<li><p>Calls a distinct underlying <code class="docutils literal notranslate"><span class="pre">Thread::invalid()</span></code> method from
-<a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>/<code class="docutils literal notranslate"><span class="pre">Thread::isnull()</span></code>, but has produced an identical result in every
+<li><p>Calls a distinct underlying <code class="docutils literal notranslate"><span class="pre">Slate::invalid()</span></code> method from
+<a class="reference internal" href="isnull.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">isnull()</span></code></span></a>/<code class="docutils literal notranslate"><span class="pre">Slate::isnull()</span></code>, but has produced an identical result in every
 case checked here, including both mask-based <code class="docutils literal notranslate"><span class="pre">NULL</span></code>s and unmarked numeric <code class="docutils literal notranslate"><span class="pre">NaN</span></code>.</p></li>
 <li><p>The result is always <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind (<code class="docutils literal notranslate"><span class="pre">Series[bool]</span></code>), regardless of the receiver’s own
 kind.</p></li>

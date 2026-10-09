@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::slice_index
+# Timeline::TimelineIndexAccessor::slice_index
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::slice_index(std::int64_t start, std::int64_t stop) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::slice_index(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does
@@ -29,14 +29,14 @@ The first excluded position.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The positional slice.
 
 ## Examples
 
 ```cpp
 auto out = base.slice_index(1, 4);
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -51,7 +51,7 @@ independent of the actual timestamp values.
 
 ```cpp
 auto middle = base.slice_index(1, 4);
-std::cout << pluss::timeindex::print(middle) << "\n";
+std::cout << pluss::timeline::print(middle.timeline()) << "\n";
 ```
 
 ## Notes
@@ -62,8 +62,8 @@ std::cout << pluss::timeindex::print(middle) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::head`](head.md)
-- [`TimelineIndexAccessor::tail`](tail.md)
+- [`Timeline::TimelineIndexAccessor::head`](head.md)
+- [`Timeline::TimelineIndexAccessor::tail`](tail.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="slice.html">

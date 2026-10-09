@@ -13,8 +13,8 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../_static/layout.js?v=e199898b"></script>
+    <script src="../_static/api_nav.js?v=47991f43"></script>
+    <script src="../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Duration::abs" href="api/duration/abs.html" />
@@ -52,14 +52,12 @@ behavioral prose and executable-derived outputs.</p>
 anchor to any calendar date). Elapsed nanoseconds and calendar positions are
 separate types because they obey different arithmetic rules.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Duration</span></code> is a genuine standalone N-D array type, not a helper that only
-exists inside a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> expression — it has its own shape (<code class="docutils literal notranslate"><span class="pre">dim()</span></code>,
+exists inside a <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> expression. It has its own shape (<code class="docutils literal notranslate"><span class="pre">dim()</span></code>,
 <code class="docutils literal notranslate"><span class="pre">numel()</span></code>, <code class="docutils literal notranslate"><span class="pre">sizes()</span></code>), its own factories (including <code class="docutils literal notranslate"><span class="pre">range()</span></code>, which builds an
-array with no <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> involved at all), and a full arithmetic/comparison/
-conversion surface. The one real asymmetry: <code class="docutils literal notranslate"><span class="pre">Duration</span></code> is not one of the four
-<code class="docutils literal notranslate"><span class="pre">ThreadKind</span></code> payloads a DataFrame column can hold (<code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>, <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code>) — to store elapsed time in a column, convert to a
-plain <code class="docutils literal notranslate"><span class="pre">Series</span></code> first via one of the <a class="reference internal" href="api/duration/total_nanoseconds.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">total()</span></code></span></a>
-accessor’s unit methods.</p>
+array with no <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> involved at all), and a full arithmetic, comparison,
+and conversion surface. It is also the elapsed-time payload kind used by the
+table layer alongside <code class="docutils literal notranslate"><span class="pre">Series</span></code>, <code class="docutils literal notranslate"><span class="pre">Note</span></code>, and <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>; it does not need to be
+reinterpreted as either a number or an instant to live in a column.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">Duration</span></code> when you have elapsed time that isn’t anchored to a particular
 calendar date:</p>
 <ul class="simple">
@@ -250,7 +248,6 @@ it, captured from <code class="docutils literal notranslate"><span class="pre">P
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -258,8 +255,8 @@ it, captured from <code class="docutils literal notranslate"><span class="pre">P
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

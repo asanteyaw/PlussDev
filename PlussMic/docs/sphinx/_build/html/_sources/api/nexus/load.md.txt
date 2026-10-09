@@ -138,19 +138,19 @@ std::filesystem::remove_all("/tmp/pluss_nexus_load_ex1");
 std::filesystem::create_directories("/tmp/pluss_nexus_load_ex1");
 
 DataFrame({
-    {"account_id", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"balance",    Thread(pluss::make_series({100.0, 250.0, 75.0}))},
+    {"account_id", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"balance",    Slate(pluss::make_series({100.0, 250.0, 75.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex1/account.csv");
 
 DataFrame({
-    {"district_id", Thread(pluss::make_series({10.0, 20.0}))},
-    {"name",        Thread(pluss::make_note({"North", "South"}))},
+    {"district_id", Slate(pluss::make_series({10.0, 20.0}))},
+    {"name",        Slate(pluss::make_note({"North", "South"}))},
 }).save_json("/tmp/pluss_nexus_load_ex1/district.json");
 
 DataFrame({
-    {"trans_id",   Thread(pluss::make_series({1000.0, 1001.0}))},
-    {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"amount",     Thread(pluss::make_series({50.0, -20.0}))},
+    {"trans_id",   Slate(pluss::make_series({1000.0, 1001.0}))},
+    {"account_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"amount",     Slate(pluss::make_series({50.0, -20.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex1/trans.csv");
 
 auto nx = Nexus::load("/tmp/pluss_nexus_load_ex1");
@@ -177,16 +177,16 @@ std::filesystem::remove_all("/tmp/pluss_nexus_load_ex2");
 std::filesystem::create_directories("/tmp/pluss_nexus_load_ex2");
 
 DataFrame({
-    {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"account_id", Slate(pluss::make_series({1.0, 2.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex2/account.csv");
 
 DataFrame({
-    {"district_id", Thread(pluss::make_series({10.0}))},
+    {"district_id", Slate(pluss::make_series({10.0}))},
 }).save_json("/tmp/pluss_nexus_load_ex2/district.json");
 
 DataFrame({
-    {"loan_id",    Thread(pluss::make_series({500.0}))},
-    {"account_id", Thread(pluss::make_series({1.0}))},
+    {"loan_id",    Slate(pluss::make_series({500.0}))},
+    {"account_id", Slate(pluss::make_series({1.0}))},
 }).save_json("/tmp/pluss_nexus_load_ex2/loan.json");
 
 LoadOptions options;
@@ -217,15 +217,15 @@ std::filesystem::remove_all("/tmp/pluss_nexus_load_ex3");
 std::filesystem::create_directories("/tmp/pluss_nexus_load_ex3");
 
 DataFrame({
-    {"account_id", Thread(pluss::make_series({1.0, 2.0}))},
+    {"account_id", Slate(pluss::make_series({1.0, 2.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex3/account.csv");
 
 DataFrame({
-    {"trans_id", Thread(pluss::make_series({1.0}))},
+    {"trans_id", Slate(pluss::make_series({1.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex3/trans.csv");
 
 DataFrame({
-    {"order_id", Thread(pluss::make_series({1.0}))},
+    {"order_id", Slate(pluss::make_series({1.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex3/order.csv");
 
 LoadOptions options;
@@ -254,13 +254,13 @@ std::filesystem::remove_all("/tmp/pluss_nexus_load_ex4");
 std::filesystem::create_directories("/tmp/pluss_nexus_load_ex4/raw");
 
 DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben"}))},
 }).save_csv("/tmp/pluss_nexus_load_ex4/raw/customers.csv");
 
 DataFrame({
-    {"event_id",    Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
+    {"event_id",    Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
 }).save_parquet("/tmp/pluss_nexus_load_ex4/raw/events.parquet");
 
 LoadOptions options;
@@ -288,7 +288,7 @@ Example 5. Invalid mixed selection mode.
 std::filesystem::remove_all("/tmp/pluss_nexus_load_ex5");
 std::filesystem::create_directories("/tmp/pluss_nexus_load_ex5");
 DataFrame({
-    {"account_id", Thread(pluss::make_series({1.0}))},
+    {"account_id", Slate(pluss::make_series({1.0}))},
 }).save_csv("/tmp/pluss_nexus_load_ex5/account.csv");
 
 LoadOptions options;

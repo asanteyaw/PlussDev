@@ -38,7 +38,7 @@ itself.
 
 **encoding** (`std::string_view`, default `"base64"`)
     Which scheme to apply: `"base64"`, `"hex"`, or `"url"`. Any other value
-    throws `"Thread::encode: encoding must be base64, hex, or url"`.
+    throws `"Slate::encode: encoding must be base64, hex, or url"`.
 
 ## Returns
 
@@ -55,7 +55,7 @@ punctuation, and a space:
 using namespace pluss::table;
 
 auto payloads = DataFrame({
-    {"text", Thread(pluss::make_note(
+    {"text", Slate(pluss::make_note(
         {"Hi", "Pluss!", "a b/c", "x"}),
         pluss::make_series(std::vector<bool>{true, true, true, false}))},
 });
@@ -168,7 +168,7 @@ try {
 ### Output
 
 ```text
-Thread::encode: encoding must be base64, hex, or url
+Slate::encode: encoding must be base64, hex, or url
 ```
 
 ## Notes

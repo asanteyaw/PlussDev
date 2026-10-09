@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::set_macro
+# Note::TexAccessor::set_macro
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::set_macro(std::string_view name,
+Note Note::TexAccessor::set_macro(std::string_view name,
                                std::string_view body) const
 ```
 

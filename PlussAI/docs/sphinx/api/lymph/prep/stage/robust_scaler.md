@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::robust_scaler`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `robust_scaler` builds an attachable [`prep::Stage`](Stage.md) that centres each
 routed numeric column on its **median** and scales by its **interquartile
@@ -88,7 +88,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -96,7 +96,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series ratio = pluss::make_series({0.9, 1.1, 0.7, 1.3, 0.6, 1.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"ratio", Thread(ratio)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"ratio", Slate(ratio)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
 
@@ -111,10 +111,10 @@ int main() {
   std::cout << "trained     = " << std::boolalpha << model.trained() << "\n\n";
 
   const DataFrame review({
-      {"amount", Thread(amount)},
-      {"ratio", Thread(ratio)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"amount", Slate(amount)},
+      {"ratio", Slate(ratio)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 
@@ -157,7 +157,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -165,8 +165,8 @@ int main() {
   // Five clustered values and one extreme outlier (1000).
   const pluss::Series clean = pluss::make_series({10.0, 12.0, 14.0, 16.0, 18.0, 20.0}, {6}, f64);
   const pluss::Series spiked = pluss::make_series({10.0, 12.0, 14.0, 16.0, 18.0, 1000.0}, {6}, f64);
-  const DataFrame clean_df({{"v", Thread(clean)}});
-  const DataFrame spiked_df({{"v", Thread(spiked)}});
+  const DataFrame clean_df({{"v", Slate(clean)}});
+  const DataFrame spiked_df({{"v", Slate(spiked)}});
 
   // robust_scaler uses the median and IQR, so the quartile-based centre and
   // scale barely move when one value blows up. standard_scaler, driven by the
@@ -238,13 +238,13 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const pluss::Series v = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}, {10}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   // with_centering / with_scaling switch the two steps independently, exactly
   // like standard_scaler. lower_quantile / upper_quantile widen or narrow the
@@ -318,7 +318,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -326,7 +326,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
 
   // Robust scaling on the numeric column, one-hot on the categorical one,
   // chained. Fully qualified factory spelling.
@@ -339,10 +339,10 @@ int main() {
 
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
   const DataFrame review({
-      {"amount", Thread(amount)},
-      {"region", Thread(region)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"amount", Slate(amount)},
+      {"region", Slate(region)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 

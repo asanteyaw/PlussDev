@@ -262,8 +262,8 @@ Minimal (defaults):
 lym::prep::OutlierIsolator iso;   // default options
 iso.learn(housing_df);            // train
 
-auto labels = iso.infer(housing_df);         // Thread<int64>, +1 (inlier), -1 (outlier)
-auto scores = iso.score_samples(housing_df); // Thread<float64>, lower => more anomalous
+auto labels = iso.infer(housing_df);         // Slate<int64>, +1 (inlier), -1 (outlier)
+auto scores = iso.score_samples(housing_df); // Slate<float64>, lower => more anomalous
 ```
 
 Configure options (seed, contamination, forest size):
@@ -456,7 +456,7 @@ const DataFrame x_test_s = scaler.map(x_test);
 Use these to normalize non-Gaussian features, expand basis features, and encode categories.
 For a single categorical column without a DataFrame wrapper, `lymph::prep::OneHotEncoder`
 `lymph::prep::FrequencyEncoder`, `lymph::prep::OrdinalEncoder`, and
-`lymph::prep::LabelEncoder` also support direct `pluss::table::Thread`
+`lymph::prep::LabelEncoder` also support direct `pluss::table::Slate`
 overloads (`learn/map/learn_map`).
 After fitting, encoder wrappers expose fitted attrs directly:
 
@@ -467,7 +467,7 @@ After fitting, encoder wrappers expose fitted attrs directly:
 - `frequencies_`: learned category frequencies per feature (FrequencyEncoder)
 - `state_`: raw serialized state tensors (advanced/debug)
 
-For `Thread` input, if `Thread::display_name()` is set, Lymph uses it as the
+For `Slate` input, if `Slate::display_name()` is set, Lymph uses it as the
 base for `mapped_names_`; otherwise it falls back to `feature_0`, `feature_1`, etc.
 
 `CategoryIndexer` specific role:
@@ -489,14 +489,14 @@ Encoder choice quick guide:
 
 - `OneHotEncoder`, `FrequencyEncoder`, `OrdinalEncoder`, `LabelEncoder`:
   - `DataFrame` (`learn/map/learn_map`)
-  - `Thread` (`learn/map/learn_map`)
+  - `Slate` (`learn/map/learn_map`)
 - other mappers in this section:
   - `DataFrame`
 
 #### Output
 
 - DataFrame path: mapped `DataFrame`
-- Thread path (one-hot/frequency): mapped `Series`
+- Slate path (one-hot/frequency): mapped `Series`
 
 #### Options
 
@@ -630,29 +630,29 @@ idx_then_oh.features({"ocean_proximity"});
 DataFrame x_cat_idx_oh_train = idx_then_oh.learn_map(x_cat_idx_train);
 DataFrame x_cat_idx_oh_test = idx_then_oh.map(x_cat_idx_test);
 
-// Single categorical Thread -> index Series
-pluss::table::Thread cat_label = train_df.features("ocean_proximity");
+// Single categorical Slate -> index Series
+pluss::table::Slate cat_label = train_df.features("ocean_proximity");
 Series y_cat_idx = indexer.learn_map(cat_label);
 
-// Thread path for a single categorical feature.
-pluss::table::Thread cat_thread = train_df.features("ocean_proximity");
-auto cat_thread_enc = lym::prep::OneHotEncoder({
+// Slate path for a single categorical feature.
+pluss::table::Slate cat_slate = train_df.features("ocean_proximity");
+auto cat_slate_enc = lym::prep::OneHotEncoder({
     .max_categories = 32,
     .overflow = lym::prep::CategoryOverflowPolicy::KeepMostFrequent,
     .include_unknown_bucket = true,
 });
-Series x_cat_series = cat_thread_enc.learn_map(cat_thread);
+Series x_cat_series = cat_slate_enc.learn_map(cat_slate);
 
 // Build named output columns from mapped_names_ if you need a new DataFrame.
-std::vector<std::pair<std::string, pluss::table::Thread>> cols{};
-const auto out_names = cat_thread_enc.mapped_names_;
+std::vector<std::pair<std::string, pluss::table::Slate>> cols{};
+const auto out_names = cat_slate_enc.mapped_names_;
 for (std::int64_t j = 0; j < static_cast<std::int64_t>(out_names.size()); ++j) {
   Series idx = pluss::make_series(
       std::vector<std::int64_t>{j},
       {1},
       pluss::Config{}.with_dtype(pluss::ScalarType::Int64).with_platform(x_cat_series.platform()));
   Series col = x_cat_series.index_select(1, idx).reshape({x_cat_series.sizes()[0]});
-  cols.emplace_back(out_names[static_cast<std::size_t>(j)], pluss::table::Thread(col));
+  cols.emplace_back(out_names[static_cast<std::size_t>(j)], pluss::table::Slate(col));
 }
 DataFrame x_cat_named(std::move(cols), train_df.cases());
 
@@ -667,7 +667,7 @@ const auto out_cols = cat.mapped_names_;
 // Unknown-category handling at inference.
 pluss::ai::nodej::InferOptions infer_opts{};
 infer_opts.unknown_categorical = pluss::ai::nodej::UnknownCategoryPolicy::MissingBucket;
-Series x_cat_unknown_safe = cat_thread_enc.map(test_df.features("ocean_proximity"), infer_opts);
+Series x_cat_unknown_safe = cat_slate_enc.map(test_df.features("ocean_proximity"), infer_opts);
 Series x_ord_unknown_safe = ord.map(test_df.features("ocean_proximity"), infer_opts);
 Series x_lbl_unknown_safe = lbl.map(test_df.features("ocean_proximity"), infer_opts);
 

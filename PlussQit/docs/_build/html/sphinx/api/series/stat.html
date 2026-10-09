@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::std" href="std.html" />
@@ -42,7 +42,7 @@
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="std std-doc">Back to Series API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SeriesStatAccessor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">stat</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">StatAccessor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">stat</span>
 <span class="n">SeriesStatProxy</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">stat</span><span class="p">()</span><span class="w"> </span><span class="k">const</span>
 <span class="n">SeriesStatProxy</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">stat</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Series</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
 <span class="n">SeriesStatProxy</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">stat</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">Series</span><span class="o">&gt;</span><span class="w"> </span><span class="n">others</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
@@ -55,7 +55,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">stat</span></code> is the entrypoint to the complete statistical method family. Accessing
 it does not copy values or perform a calculation; the terminal method selects
 the operation.</p>
-<p>Open the dedicated <a class="reference internal" href="../../series_stat_accessor_api_reference.html"><span class="std std-doc">SeriesStatAccessor API Reference</span></a>
+<p>Open the dedicated <a class="reference internal" href="../../series_stat_accessor_api_reference.html"><span class="std std-doc">Series::StatAccessor API Reference</span></a>
 for the complete method index and guided comparisons.</p>
 </section>
 <section id="direct-and-proxy-calls">
@@ -124,7 +124,7 @@ the same accessor does not imply the same output geometry.</p>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../../series_stat_accessor_api_reference.html"><span class="std std-doc">SeriesStatAccessor API Reference</span></a>:
+<li><p><a class="reference internal" href="../../series_stat_accessor_api_reference.html"><span class="std std-doc">Series::StatAccessor API Reference</span></a>:
 all 23 accessor methods, each with its own page.</p></li>
 <li><p><a class="reference internal" href="linearalg.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Series::linearalg</span></code></span></a>: linear-algebra accessor entrypoint.</p></li>
 </ul>
@@ -168,7 +168,6 @@ all 23 accessor methods, each with its own page.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -176,8 +175,8 @@ all 23 accessor methods, each with its own page.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

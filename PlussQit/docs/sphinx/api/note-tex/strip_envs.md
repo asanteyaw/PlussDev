@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_envs
+# Note::TexAccessor::strip_envs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_envs() const
+Note Note::TexAccessor::strip_envs() const
 ```
 
 ## Remove Complete Environment Regions

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d93f545dd037 -->
+<!-- pluss-signature-hash: 70508d84bd02 -->
 
 # DataFrameLabelAccessor::pos
 
@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::pos(double value) const -> Thread
-DataFrameLabelAccessor::pos(std::string_view value) const -> Thread
-DataFrameLabelAccessor::pos(const char* value) const -> Thread
+DataFrameLabelAccessor::pos(double value) const -> Slate
+DataFrameLabelAccessor::pos(std::string_view value) const -> Slate
+DataFrameLabelAccessor::pos(const char* value) const -> Slate
 ```
 
 ## What It Does
@@ -28,7 +28,7 @@ The value to locate every occurrence of.
 
 ## Returns
 
-`Thread`
+`Slate`
     `Int64` positions where the case label equals `value`, one entry per
     match, `display_name` `"pos"`, plain default integer index.
 
@@ -40,8 +40,8 @@ Example 1. Locate every occurrence of a repeated case-label value.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().pos("east");
@@ -68,8 +68,8 @@ Example 2. Locate a value on a numeric (`Series`) case-label axis, using the
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sales", Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}},
-    Thread(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
+    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}},
+    Slate(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
 std::cout << readings;
 
 auto out = readings.label().pos(10.0);
@@ -107,8 +107,8 @@ Example 3. Look up a value that doesn't occur, to see the call throw.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 try {
@@ -125,7 +125,7 @@ threw
 ```
 
 `"south"` never appears among the case labels, so the call throws instead of
-returning an empty `Thread` — check [`has("south")`](has.md) first if the
+returning an empty `Slate` — check [`has("south")`](has.md) first if the
 value's presence isn't already guaranteed.
 
 ## Notes

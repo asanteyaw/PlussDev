@@ -294,7 +294,7 @@ void test_temporal_filters_and_query_windowing() {
 void test_duration_filter_bounds() {
   using namespace pluss::bi;
 
-  const pluss::table::Thread elapsed(pluss::duration::nanos(
+  const pluss::table::Slate elapsed(pluss::duration::nanos(
       std::vector<std::int64_t>{
           -2'000'000'000LL,
           0,

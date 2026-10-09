@@ -52,8 +52,8 @@ Example 1. Insert a missing calendar day as an explicit `NULL` row.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({100.0, 102.0, 110.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({100.0, 102.0, 110.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-04T00:00:00Z"})));
 std::cout << readings;
 
@@ -97,9 +97,9 @@ column instead of case labels.
 
 ```cpp
 auto readings_named = DataFrame(
-    {{"reading_time", Thread(pluss::make_timeline({
+    {{"reading_time", Slate(pluss::make_timeline({
           "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-04T00:00:00Z"}))},
-     {"value", Thread(pluss::make_series({100.0, 102.0, 110.0}))}});
+     {"value", Slate(pluss::make_series({100.0, 102.0, 110.0}))}});
 std::cout << readings_named;
 
 auto out2 = readings_named.ts().insert_gaps("reading_time", "D");

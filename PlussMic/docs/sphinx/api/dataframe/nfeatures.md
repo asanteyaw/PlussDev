@@ -15,7 +15,7 @@ DataFrame::nfeatures() const -> std::int64_t
 
 Returns the number of features (columns) in the frame. This is the second number in a
 printed frame's `[N cs x M feat]` footer, and the length every feature-aligned
-`Thread` argument (the `Axis::Feature` side of [`add()`](add.md), [`eq()`](eq.md), and
+`Slate` argument (the `Axis::Feature` side of [`add()`](add.md), [`eq()`](eq.md), and
 similar methods) is checked against.
 
 ## Parameters

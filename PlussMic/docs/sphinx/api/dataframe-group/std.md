@@ -47,8 +47,8 @@ Example 1. One region with three observations, one with a single observation.
 using namespace pluss::table;
 
 auto loans = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "North", "South"}))},
-    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 50.0}))},
+    {"region", Slate(pluss::make_note({"North", "North", "North", "South"}))},
+    {"amount", Slate(pluss::make_series({10.0, 20.0, 30.0, 50.0}))},
 });
 std::cout << loans;
 
@@ -93,9 +93,9 @@ Example 2. Standard deviation only for one selected feature.
 
 ```cpp
 auto wide = DataFrame({
-    {"region", Thread(pluss::make_note({"North", "North", "North", "South"}))},
-    {"amount", Thread(pluss::make_series({10.0, 20.0, 30.0, 50.0}))},
-    {"units", Thread(pluss::make_series({1.0, 3.0, 5.0, 7.0}))},
+    {"region", Slate(pluss::make_note({"North", "North", "North", "South"}))},
+    {"amount", Slate(pluss::make_series({10.0, 20.0, 30.0, 50.0}))},
+    {"units", Slate(pluss::make_series({1.0, 3.0, 5.0, 7.0}))},
 });
 
 auto out2 = wide.group().by({"region"}).std({"units"});

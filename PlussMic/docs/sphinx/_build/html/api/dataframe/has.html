@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::head" href="head.html" />
@@ -37,7 +37,7 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 35a223690431 -->
+<!-- pluss-signature-hash: 27895befc63a -->
 <section id="dataframe-has">
 <h1>DataFrame::has<a class="headerlink" href="#dataframe-has" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
@@ -45,7 +45,7 @@
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">has</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">has</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">has</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">has</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">values</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
@@ -58,10 +58,10 @@ source.</p>
 <p>has(double) and has(string_view) are just eq() by another name
 <code class="docutils literal notranslate"><span class="pre">has(84.0)</span></code> and <code class="docutils literal notranslate"><span class="pre">has(&quot;Ada&quot;)</span></code> are implemented as plain calls to
 <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq(84.0)</span></code></span></a>/<code class="docutils literal notranslate"><span class="pre">eq(&quot;Ada&quot;)</span></code> — there is no added value over calling <code class="docutils literal notranslate"><span class="pre">eq()</span></code>
-directly for a single value. The real reason to reach for <code class="docutils literal notranslate"><span class="pre">has()</span></code> is the <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+directly for a single value. The real reason to reach for <code class="docutils literal notranslate"><span class="pre">has()</span></code> is the <code class="docutils literal notranslate"><span class="pre">Slate</span></code>
 overload below, which <code class="docutils literal notranslate"><span class="pre">eq()</span></code> cannot do.</p>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">has(const</span> <span class="pre">Thread&amp;</span> <span class="pre">values)</span></code> is the genuinely distinct overload: it checks each cell
+<p><code class="docutils literal notranslate"><span class="pre">has(const</span> <span class="pre">Slate&amp;</span> <span class="pre">values)</span></code> is the genuinely distinct overload: it checks each cell
 against a whole <strong>set</strong> of candidate values, marking <code class="docutils literal notranslate"><span class="pre">true</span></code> if the cell matches <em>any</em>
 of them — an “is this value one of these?” check, rather than “does this value equal
 one specific thing?”.</p>
@@ -72,7 +72,7 @@ one specific thing?”.</p>
 <p>A single value, broadcast against every numeric (for <code class="docutils literal notranslate"><span class="pre">double</span></code>) or <code class="docutils literal notranslate"><span class="pre">Note</span></code>-kind (for
 <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>) feature. Equivalent to calling <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a> with the same
 argument.</p>
-<p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Thread&amp;</span></code>)</p>
+<p><strong>values</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)</p>
 <p>A set of candidate values to check membership against. Each cell in the frame reports
 <code class="docutils literal notranslate"><span class="pre">true</span></code> if it equals <em>any</em> valid (non-null) entry in <code class="docutils literal notranslate"><span class="pre">values</span></code>; null entries in
 <code class="docutils literal notranslate"><span class="pre">values</span></code> are skipped and never match anything, including a null cell.</p>
@@ -92,7 +92,7 @@ according to whether that cell matches <code class="docutils literal notranslate
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;shipped&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;pending&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cancelled&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;shipped&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;returned&quot;</span><span class="p">})},</span>
 <span class="p">},</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;o1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o4&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o5&quot;</span><span class="p">}));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">closed_states</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;shipped&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cancelled&quot;</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">closed_states</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;shipped&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cancelled&quot;</span><span class="p">}));</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">has</span><span class="p">(</span><span class="n">closed_states</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">;</span>
 </pre></div>
@@ -143,7 +143,7 @@ s3   | true
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">has(double)</span></code>/<code class="docutils literal notranslate"><span class="pre">has(std::string_view)</span></code> are plain aliases for <a class="reference internal" href="eq.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">eq()</span></code></span></a> — prefer
 calling <code class="docutils literal notranslate"><span class="pre">eq()</span></code> directly for single-value checks; reach for <code class="docutils literal notranslate"><span class="pre">has()</span></code> specifically for
-the <code class="docutils literal notranslate"><span class="pre">Thread</span></code> (set-membership) overload.</p></li>
+the <code class="docutils literal notranslate"><span class="pre">Slate</span></code> (set-membership) overload.</p></li>
 <li><p>A null entry in the <code class="docutils literal notranslate"><span class="pre">values</span></code> candidate set never matches anything, including a
 null cell — nulls in <code class="docutils literal notranslate"><span class="pre">values</span></code> are simply skipped.</p></li>
 <li><p>A null cell in the source frame produces <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in the result, not <code class="docutils literal notranslate"><span class="pre">false</span></code>, matching

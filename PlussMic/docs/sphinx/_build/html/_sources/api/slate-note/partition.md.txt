@@ -1,0 +1,147 @@
+<!-- pluss-hand-authored -->
+
+# SlateNoteAccessor::partition
+
+[Back to SlateNoteAccessor API Reference](../../slate_note_accessor_api_reference)
+
+## Signature
+
+```cpp
+SlateNoteAccessor::partition(std::string_view separator,
+                              std::string prefix = "part") const -> DataFrame
+```
+
+## What It Does
+
+Splits every cell of the bound thread at the *first* occurrence of a literal
+`separator`, always producing exactly **three** output columns: the text before
+the separator, the separator itself, and the text after it — a direct forward to
+[`Slate::partition()`](../thread/partition.md). Requires the bound thread to be
+`Note`-kind. Narrower and simpler than [`split()`](split.md): always literal (no
+regex), always stops at the first match, always exactly three columns.
+
+```{important} A missing separator produces empty strings, not NULL
+When `separator` doesn't occur in a cell at all, that row's middle and third
+columns are the **empty string** `""`, not `NULL` — the row itself is still
+valid. Only a row that was already invalid on input produces `NULL` in all three
+output columns. See Example 1.
+```
+
+## Parameters
+
+**separator** (`std::string_view`)
+
+The literal text to split on. Must not be empty.
+
+**prefix** (`std::string`, default `"part"`)
+
+Base name for the three output columns: `<prefix>_0` (before), `<prefix>_1` (the
+separator, or `""` if not found), `<prefix>_2` (after, or `""` if not found).
+
+## Returns
+
+`DataFrame`
+    A new frame with exactly three features: `<prefix>_0`, `<prefix>_1`,
+    `<prefix>_2`.
+
+## Examples
+
+Example 1. The not-found case's empty strings vs. a genuinely invalid row's
+`NULL`s, via the accessor.
+
+```cpp
+using namespace pluss::table;
+
+auto entries = Slate(pluss::make_note({"key=value", "no-equals", "a=b=c", "x"}),
+    pluss::make_series(std::vector<bool>{true, true, true, false}));
+auto out = entries.nt().partition("=");
+std::cout << out;
+```
+
+### Output
+
+```text
+================================
+     | part_0     part_1  part_2
+--------------------------------
+0    | key        =       value 
+1    | no-equals                
+2    | a          =       b=c   
+3    | NULL       NULL    NULL  
+--------------------------------
+[4 cs x 3 feat]
+```
+
+Row 0 splits cleanly. Row 1 has no `=` — its `part_1`/`part_2` cells are empty
+strings, not `NULL`, since the row itself is valid. Row 2 (`"a=b=c"`) partitions
+only at the *first* `=`. Row 3 was invalid on input, so all three columns are
+genuinely `NULL`.
+
+Example 2. A custom column prefix.
+
+```cpp
+auto out2 = entries.nt().partition("=", "kv");
+std::cout << out2;
+```
+
+### Output
+
+```text
+=============================
+     | kv_0       kv_1  kv_2 
+-----------------------------
+0    | key        =     value
+1    | no-equals             
+2    | a          =     b=c  
+3    | NULL       NULL  NULL 
+-----------------------------
+[4 cs x 3 feat]
+```
+
+Example 3. An empty separator throws — the same message
+[`Slate::partition()`](../thread/partition.md) produces directly.
+
+```cpp
+try {
+  auto bad = entries.nt().partition("");
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Slate::partition: separator cannot be empty
+```
+
+## Notes
+
+- `SlateNoteAccessor::partition()` is a one-line forward to
+  [`Slate::partition()`](../thread/partition.md) — identical behavior and
+  throws.
+- Always literal (no regex) and always stops at the *first* occurrence — for a
+  regex-aware or multi-way split, use [`split()`](split.md).
+- Always produces exactly three output columns, regardless of input.
+- An empty `separator` throws.
+
+## See Also
+
+- [`Slate::partition`](../thread/partition.md): the direct, non-accessor form
+  this method forwards to.
+- [`SlateNoteAccessor::split`](split.md): the more general, possibly-regex,
+  unlimited-pieces sibling, with genuine `NULL`-padding instead of empty
+  strings.
+- [`SlateNoteAccessor::extract`](extract.md): regex capture-group extraction
+  into columns.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pad.html">
+    <span class="label">Previous</span>
+    <span class="title">pad</span>
+  </a>
+  <a class="next-link" href="replace.html">
+    <span class="label">Next</span>
+    <span class="title">replace</span>
+  </a>
+</div>

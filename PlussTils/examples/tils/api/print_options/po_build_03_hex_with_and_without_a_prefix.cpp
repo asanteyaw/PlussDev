@@ -1,0 +1,19 @@
+#include <pluss/tils/aux/output.h>
+
+#include <array>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
+
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.writeln(4095, PrintOptions{}.hex());
+  out.writeln(4095, PrintOptions{}.hex(false));
+  return 0;
+}

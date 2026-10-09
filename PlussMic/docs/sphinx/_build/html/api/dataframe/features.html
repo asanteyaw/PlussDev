@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::ffill" href="ffill.html" />
@@ -37,14 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 94a638ac8ff3 -->
+<!-- pluss-signature-hash: 7654487a2167 -->
 <section id="dataframe-features">
 <h1>DataFrame::features<a class="headerlink" href="#dataframe-features" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">features</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;&amp;</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">features</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">features</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">features</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">features</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">msharp</span><span class="o">::</span><span class="n">RangeView</span><span class="o">::</span><span class="n">Of</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
 <span class="n">DataFrame</span><span class="o">::</span><span class="n">features</span><span class="p">(</span><span class="n">StackArray</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string_view</span><span class="o">&gt;</span><span class="w"> </span><span class="n">names</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
@@ -58,9 +58,9 @@ entirely by how many names you pass:</p>
 <ul class="simple">
 <li><p><strong>No arguments</strong> — <code class="docutils literal notranslate"><span class="pre">features()</span></code> returns the frame’s ordered list of feature names,
 as a plain <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code>.</p></li>
-<li><p><strong>One name</strong> — <code class="docutils literal notranslate"><span class="pre">features(&quot;sales&quot;)</span></code> extracts a <em>single</em> feature as a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>, with
+<li><p><strong>One name</strong> — <code class="docutils literal notranslate"><span class="pre">features(&quot;sales&quot;)</span></code> extracts a <em>single</em> feature as a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>, with
 its case labels and display name attached (so printing it shows a
-<code class="docutils literal notranslate"><span class="pre">Name:</span> <span class="pre">sales,</span> <span class="pre">ptype:</span> <span class="pre">Series</span></code>-style footer, exactly like other named <code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+<code class="docutils literal notranslate"><span class="pre">Name:</span> <span class="pre">sales,</span> <span class="pre">ptype:</span> <span class="pre">Series</span></code>-style footer, exactly like other named <code class="docutils literal notranslate"><span class="pre">Slate</span></code>
 results).</p></li>
 <li><p><strong>Several names</strong> — <code class="docutils literal notranslate"><span class="pre">features({&quot;id&quot;,</span> <span class="pre">&quot;sales&quot;})</span></code> (or the equivalent range/
 <code class="docutils literal notranslate"><span class="pre">StackArray</span></code> overloads) projects the frame down to a <strong>subset</strong> <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>
@@ -72,7 +72,7 @@ preserved.</p></li>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>name</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, single-feature overload)</p>
-<p>The one feature to extract as a standalone <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
+<p>The one feature to extract as a standalone <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p>
 <p><strong>names</strong> (<code class="docutils literal notranslate"><span class="pre">initializer_list</span></code>/<code class="docutils literal notranslate"><span class="pre">RangeView</span></code>/<code class="docutils literal notranslate"><span class="pre">StackArray</span></code> of <code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>,
 multi-feature overload)</p>
 <p>The features to project, in the order you list them — the result’s feature order
@@ -82,7 +82,7 @@ follows this list, not the source frame’s original order.</p>
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::vector&lt;std::string&gt;&amp;</span></code> (no-argument overload)
 The frame’s feature names, in their current order.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code> (single-name overload)
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code> (single-name overload)
 The named feature, with case labels and display name attached.</p>
 <p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> (multi-name overload)
 A new frame containing only the named features, in the order requested, with
@@ -125,7 +125,7 @@ p3   | 3     90     Kumasi
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>id sales city
 </pre></div>
 </div>
-<p>Example 2. Extract a single feature as a standalone <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
+<p>Example 2. Extract a single feature as a standalone <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">sales_col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">features</span><span class="p">(</span><span class="s">&quot;sales&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">sales_col</span><span class="p">;</span>
 </pre></div>
@@ -171,7 +171,7 @@ labels, in the order requested. Listing names in a different order (say,
 <li><p>The multi-name overload’s result order follows the order you list names in, not the
 source frame’s order — use this to reorder columns as a side effect of selecting
 them.</p></li>
-<li><p>The single-name overload’s returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> carries the source frame’s case labels
+<li><p>The single-name overload’s returned <code class="docutils literal notranslate"><span class="pre">Slate</span></code> carries the source frame’s case labels
 and the feature’s own name for display; the no-argument overload returns a plain
 name list with no such attachment.</p></li>
 </ul>
@@ -181,7 +181,7 @@ name list with no such attachment.</p></li>
 <ul class="simple">
 <li><p><a class="reference internal" href="nfeatures.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::nfeatures</span></code></span></a>: the count matching this list’s length.</p></li>
 <li><p><a class="reference internal" href="get.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::get</span></code></span></a>: a null-safe alternative to the single-name overload,
-returning <code class="docutils literal notranslate"><span class="pre">std::optional&lt;Thread&gt;</span></code> instead of throwing on an unknown name.</p></li>
+returning <code class="docutils literal notranslate"><span class="pre">std::optional&lt;Slate&gt;</span></code> instead of throwing on an unknown name.</p></li>
 <li><p><a class="reference internal" href="drop.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::drop</span></code></span></a>: the complementary operation — remove named features
 instead of projecting down to them.</p></li>
 </ul>

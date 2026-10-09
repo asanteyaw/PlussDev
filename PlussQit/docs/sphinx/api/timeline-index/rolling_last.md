@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::rolling_last
+# Timeline::TimelineIndexAccessor::rolling_last
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_last(
+pluss::Series Timeline::TimelineIndexAccessor::rolling_last(
     const pluss::Series& values,
     const pluss::Duration& window) const
 ```
@@ -20,7 +20,7 @@ the current lane, but the distinction becomes important when the current value
 is `NaN`: the method searches backward within the window for the most recent
 valid observation.
 
-The result remains aligned one-for-one with the original `TimelineIndexAccessor`. This is
+The result remains aligned one-for-one with the original `Timeline::TimelineIndexAccessor`. This is
 not binning and does not reduce the case count. Use
 [`resample_last()`](resample_last.md) when one closing value per disjoint time
 bin is required.
@@ -37,11 +37,11 @@ length.
 ## Examples
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto window = pluss::duration::minutes(45);
 ```
 
@@ -96,8 +96,8 @@ trailing rolling operation rejects it because its moving-window contract would
 be undefined.
 
 ```cpp
-auto unordered = pluss::timeindex::make({
-    "2024-11-01T00:20:00Z", "2024-11-01T00:00:00Z"}, false);
+auto unordered = pluss::timeline::make({
+    "2024-11-01T00:20:00Z", "2024-11-01T00:00:00Z"}).index(false);
 try {
   (void)unordered.rolling_last(pluss::make_series({8.0, 2.0}), window);
 } catch (const std::exception& e) {
@@ -109,7 +109,7 @@ try {
 ### Output
 
 ```text
-TimelineIndexAccessor rolling operations require a monotonic increasing index
+Timeline::TimelineIndexAccessor rolling operations require a monotonic increasing index
 ```
 
 ## Cost And Ownership
@@ -120,9 +120,9 @@ does not mutate the index or payload.
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_first`](rolling_first.md)
-- [`TimelineIndexAccessor::rolling_max`](rolling_max.md)
-- [`TimelineIndexAccessor::resample_last`](resample_last.md)
+- [`Timeline::TimelineIndexAccessor::rolling_first`](rolling_first.md)
+- [`Timeline::TimelineIndexAccessor::rolling_max`](rolling_max.md)
+- [`Timeline::TimelineIndexAccessor::resample_last`](resample_last.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_first.html">

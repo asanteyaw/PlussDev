@@ -11,15 +11,15 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   const DataFrame train({
-      {"income",  Thread(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
-      {"region",  Thread(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
-      {"target",  Thread(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
+      {"income",  Slate(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
+      {"region",  Slate(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
+      {"target",  Slate(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
   });
 
   lymph::options::DFBatch data_options{};
@@ -40,10 +40,10 @@ int main() {
 
   std::cout << "trained = " << std::boolalpha << model.trained() << "\n";
   std::cout << DataFrame({
-      {"income",    Thread(train.features("income"))},
-      {"region",    Thread(train.features("region"))},
-      {"actual",    Thread(train.features("target"))},
-      {"predicted", Thread(model.infer(train, data_options))},
+      {"income",    Slate(train.features("income"))},
+      {"region",    Slate(train.features("region"))},
+      {"actual",    Slate(train.features("target"))},
+      {"predicted", Slate(model.infer(train, data_options))},
   });
 
   return 0;

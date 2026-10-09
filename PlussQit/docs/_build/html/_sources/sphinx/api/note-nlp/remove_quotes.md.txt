@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_quotes
+# Note::NlpAccessor::remove_quotes
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_quotes() const
+Note Note::NlpAccessor::remove_quotes() const
 ```
 
 ## Remove Quoted Passages

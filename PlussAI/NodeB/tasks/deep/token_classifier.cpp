@@ -47,17 +47,17 @@ void train_token_classifier(TokenClassifierState& state,
   state = TokenClassifierState{};
   if (docs.empty() || docs.size() != token_labels.size()) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::train_token_classifier: docs and token_labels must be the same non-empty size.");
+        "nlp::detail::train_token_classifier: docs and token_labels must be the same non-empty size.");
   }
   if (options.width <= 0 || options.num_layers <= 0 || options.num_heads <= 0 ||
       options.feedforward_width <= 0 || options.epochs <= 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::train_token_classifier: width, num_layers, num_heads, feedforward_width "
+        "nlp::detail::train_token_classifier: width, num_layers, num_heads, feedforward_width "
         "and epochs must all be positive.");
   }
   if (options.width % options.num_heads != 0) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::train_token_classifier: width must be a multiple of num_heads.");
+        "nlp::detail::train_token_classifier: width must be a multiple of num_heads.");
   }
 
   std::vector<std::string> labels{};
@@ -73,7 +73,7 @@ void train_token_classifier(TokenClassifierState& state,
   }
   if (labels.size() < 2) {
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::detail::train_token_classifier: expected at least two distinct labels.");
+        "nlp::detail::train_token_classifier: expected at least two distinct labels.");
   }
 
   runtime::SequenceOptions seq_options{};
@@ -87,15 +87,15 @@ void train_token_classifier(TokenClassifierState& state,
   runtime::Indexer indexer(seq_options);
   const auto indexer_status = indexer.learn(docs);
   if (!indexer_status.ok()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::detail::train_token_classifier: " + indexer_status.message);
+    ::pluss::ai::nodeb::detail::fail("nlp::detail::train_token_classifier: " + indexer_status.message);
   }
   const auto batch_or = indexer.batch(docs);
   if (!batch_or.ok()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::detail::train_token_classifier: " + batch_or.status().message);
+    ::pluss::ai::nodeb::detail::fail("nlp::detail::train_token_classifier: " + batch_or.status().message);
   }
   const auto& batch = batch_or.value();
   if (batch.empty()) {
-    ::pluss::ai::nodeb::detail::fail("nodeb::detail::train_token_classifier: documents produced no tokens.");
+    ::pluss::ai::nodeb::detail::fail("nlp::detail::train_token_classifier: documents produced no tokens.");
   }
 
   const auto vocab_size = static_cast<std::int64_t>(indexer.vocabulary().size());
@@ -171,6 +171,8 @@ void train_token_classifier(TokenClassifierState& state,
   ce_options.use_ignore_index = true;
   ce_options.ignore_index = -100;
 
+  state.loss_history.clear();
+  state.loss_history.reserve(static_cast<std::size_t>(options.epochs));
   try {
     for (std::int64_t epoch = 0; epoch < options.epochs; ++epoch) {
       const Series embedded = embedding->forward(batch);
@@ -184,10 +186,11 @@ void train_token_classifier(TokenClassifierState& state,
       optimizer->clear();
       loss.reverse();
       optimizer->step();
+      state.loss_history.push_back(loss.to(pluss::pCPU, ScalarType::Float64).item<double>());
     }
   } catch (const std::exception& e) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::detail::train_token_classifier: training became numerically unstable: ") + e.what());
+        std::string("nlp::detail::train_token_classifier: training became numerically unstable: ") + e.what());
   }
 
   encoder->model()->eval();
@@ -367,7 +370,7 @@ void load_token_classifier_state_lines(const char* prefix,
   if (label_count < 2 || width <= 0 || num_layers <= 0 || num_heads <= 0 || feedforward_width <= 0 ||
       indexer_line_count < 0 || embedding_line_count < 0 || encoder_param_count < 0) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::detail::load_token_classifier_state_lines: malformed ") + prefix + " state.");
+        std::string("nlp::detail::load_token_classifier_state_lines: malformed ") + prefix + " state.");
   }
 
   const auto indexer_lines_raw = collect_indexed_lines(p + "_indexer_", indexer_line_count, lines);
@@ -376,7 +379,7 @@ void load_token_classifier_state_lines(const char* prefix,
   const auto indexer_status = indexer.load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(indexer_views));
   if (!indexer_status.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::detail::load_token_classifier_state_lines: ") + indexer_status.message);
+        std::string("nlp::detail::load_token_classifier_state_lines: ") + indexer_status.message);
   }
 
   const auto embedding_lines_raw = collect_indexed_lines(p + "_embedding_", embedding_line_count, lines);
@@ -386,7 +389,7 @@ void load_token_classifier_state_lines(const char* prefix,
       embedding->load_state_lines(pluss::msharp::RangeView::Of<std::string_view>(embedding_views));
   if (!embedding_status.ok()) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::detail::load_token_classifier_state_lines: ") + embedding_status.message);
+        std::string("nlp::detail::load_token_classifier_state_lines: ") + embedding_status.message);
   }
 
   const auto cfg = token_classifier_float_cfg();
@@ -405,7 +408,7 @@ void load_token_classifier_state_lines(const char* prefix,
   auto encoder_params = encoder->model()->parameters();
   if (static_cast<std::int64_t>(encoder_params.size()) != encoder_param_count) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::detail::load_token_classifier_state_lines: ") + prefix +
+        std::string("nlp::detail::load_token_classifier_state_lines: ") + prefix +
         " encoder parameter count mismatch (architecture options changed since save?).");
   }
 
@@ -440,7 +443,7 @@ void load_token_classifier_state_lines(const char* prefix,
   if (static_cast<std::int64_t>(cls_weight_flat.size()) != width * num_classes ||
       static_cast<std::int64_t>(cls_bias_flat.size()) != num_classes) {
     ::pluss::ai::nodeb::detail::fail(
-        std::string("nodeb::detail::load_token_classifier_state_lines: ") + prefix +
+        std::string("nlp::detail::load_token_classifier_state_lines: ") + prefix +
         " classifier head shape mismatch.");
   }
   Series cls_weight = pluss::make_series(cls_weight_flat, std::vector<std::int64_t>{width, num_classes}, cfg)

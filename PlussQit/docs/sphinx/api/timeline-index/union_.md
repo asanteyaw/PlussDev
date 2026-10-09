@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::union_
+# Timeline::TimelineIndexAccessor::union_
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::union_(const TimelineIndexAccessor& other) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::union_(const Timeline::TimelineIndexAccessor& other) const
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ The other time index.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The union axis.
 
 ## Examples
@@ -31,7 +31,7 @@ Example 1. Build the complete exact clock represented by both axes.
 
 ```cpp
 auto out = base.union_(right);
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -46,7 +46,7 @@ need, not the indexer maps.
 
 ```cpp
 auto shared_clock = base.union_(right);
-std::cout << pluss::timeindex::print(shared_clock) << "\n";
+std::cout << pluss::timeline::print(shared_clock.timeline()) << "\n";
 ```
 
 ## Notes
@@ -57,8 +57,8 @@ std::cout << pluss::timeindex::print(shared_clock) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::intersection`](intersection.md)
-- [`TimelineIndexAccessor::difference`](difference.md)
+- [`Timeline::TimelineIndexAccessor::intersection`](intersection.md)
+- [`Timeline::TimelineIndexAccessor::difference`](difference.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tz_localize.html">

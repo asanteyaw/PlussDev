@@ -80,7 +80,7 @@ int main() {
                     {"temp", "humidity", "windspeed", "hour", "weekday", "month", "year",
                      "season", "is_holiday", "weather_condition", "is_workingday", "total_count"})
                    .dropnull();
-  const auto split = lymph::holdout_split(model,
+  const auto split = lymph::prep::holdout_split(model,
                                           lymph::HoldoutSplitOptions{
                                               .test_size = 0.33,
                                               .random_state = 42,
@@ -232,8 +232,8 @@ int main() {
   // Save notebook-equivalent CV residual and score plots using df.plot().
   //======== End Cell Seven =====
   auto cv_resid_df = DataFrame({
-      {"observed", pluss::table::Thread(y_train)},
-      {"residual", pluss::table::Thread(cv_resid)},
+      {"observed", pluss::table::Slate(y_train)},
+      {"residual", pluss::table::Slate(cv_resid)},
   });
   cv_resid_df.plot()
       .scatter("observed", "residual")
@@ -246,9 +246,9 @@ int main() {
     fold_axis_values.push_back(static_cast<double>(i));
   }
   auto cv_score_df = DataFrame({
-      {"fold", pluss::table::Thread(pluss::make_series(fold_axis_values, {k_folds}, f64_cfg))},
-      {"r2", pluss::table::Thread(pluss::make_series(cv_r2_scores, {k_folds}, f64_cfg))},
-      {"neg_mse", pluss::table::Thread(pluss::make_series(cv_mse_scores, {k_folds}, f64_cfg))},
+      {"fold", pluss::table::Slate(pluss::make_series(fold_axis_values, {k_folds}, f64_cfg))},
+      {"r2", pluss::table::Slate(pluss::make_series(cv_r2_scores, {k_folds}, f64_cfg))},
+      {"neg_mse", pluss::table::Slate(pluss::make_series(cv_mse_scores, {k_folds}, f64_cfg))},
   }).label().set("fold", false);
   cv_score_df.plot().line("r2").headline("Cross-validation R-squared by fold").save_pdf("03_cv_r2_by_fold.pdf");
 
@@ -277,9 +277,9 @@ int main() {
   // Save notebook-equivalent test residual and prediction-vs-observed plots.
   //======== End Cell Nine =====
   auto test_diag_df = DataFrame({
-      {"observed", pluss::table::Thread(y_test)},
-      {"predicted", pluss::table::Thread(y_pred)},
-      {"residual", pluss::table::Thread(test_resid)},
+      {"observed", pluss::table::Slate(y_test)},
+      {"predicted", pluss::table::Slate(y_pred)},
+      {"residual", pluss::table::Slate(test_resid)},
   });
   test_diag_df.plot()
       .scatter("observed", "residual")
@@ -427,8 +427,8 @@ int main() {
   // Save logistic probability diagnostics as PDF.
   //======== End Cell Fifteen =====
   auto logit_diag = DataFrame({
-      {"pred_prob", pluss::table::Thread(logit_prob)},
-      {"actual_class", pluss::table::Thread(y_test_binary)},
+      {"pred_prob", pluss::table::Slate(logit_prob)},
+      {"actual_class", pluss::table::Slate(y_test_binary)},
   });
   logit_diag.plot()
       .scatter("pred_prob", "actual_class")

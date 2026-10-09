@@ -98,9 +98,9 @@ Example 1. Direct mode: two numeric features rendered as two heatmap rows, no ag
 using namespace pluss::table;
 
 auto readings = DataFrame({
-    {"temp_c",     Thread(pluss::make_series({18.0, 21.0, 25.0, 19.0}))},
-    {"humidity_%", Thread(pluss::make_series({60.0, 55.0, 40.0, 65.0}))},
-}, Thread(pluss::make_note({"Mon", "Tue", "Wed", "Thu"})));
+    {"temp_c",     Slate(pluss::make_series({18.0, 21.0, 25.0, 19.0}))},
+    {"humidity_%", Slate(pluss::make_series({60.0, 55.0, 40.0, 65.0}))},
+}, Slate(pluss::make_note({"Mon", "Tue", "Wed", "Thu"})));
 
 auto chart = readings.plot().heatmap({"temp_c", "humidity_%"});
 chart.show();
@@ -128,9 +128,9 @@ by mean (the default `op`).
 
 ```cpp
 auto exam_rows = DataFrame({
-    {"campus", Thread(pluss::make_note({"North", "North", "West", "West"}))},
-    {"exam",   Thread(pluss::make_note({"Midterm", "Final", "Midterm", "Final"}))},
-    {"score",  Thread(pluss::make_series({71.0, 88.0, 79.0, 95.0}))},
+    {"campus", Slate(pluss::make_note({"North", "North", "West", "West"}))},
+    {"exam",   Slate(pluss::make_note({"Midterm", "Final", "Midterm", "Final"}))},
+    {"score",  Slate(pluss::make_series({71.0, 88.0, 79.0, 95.0}))},
 });
 
 auto chart = exam_rows.plot().heatmap(

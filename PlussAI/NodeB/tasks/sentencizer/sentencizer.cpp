@@ -147,7 +147,7 @@ void SentencizerStage::load_state_lines(pluss::msharp::RangeView::Of<std::string
       continue;
     }
     ::pluss::ai::nodeb::detail::fail(
-        "nodeb::SentencizerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
+        "nlp::SentencizerStage::load_state_lines: unrecognized line '" + std::string(line) + "'.");
   }
 }
 

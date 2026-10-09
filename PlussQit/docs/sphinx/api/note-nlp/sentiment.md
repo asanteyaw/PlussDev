@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::sentiment
+# Note::NlpAccessor::sentiment
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::sentiment() const
+Note Note::NlpAccessor::sentiment() const
 ```
 
 ## Score Lexical Sentiment

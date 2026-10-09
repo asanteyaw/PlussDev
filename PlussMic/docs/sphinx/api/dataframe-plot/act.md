@@ -88,7 +88,7 @@ for (int i = 0; i < 60; ++i) {
 }
 
 auto series = DataFrame({
-    {"signal", Thread(pluss::make_series(wave))},
+    {"signal", Slate(pluss::make_series(wave))},
 });
 
 auto chart = series.plot().act("signal");
@@ -104,7 +104,7 @@ Example 2. A shorter feature: `max_lag` is silently clamped rather than throwing
 
 ```cpp
 auto small = DataFrame({
-    {"reading", Thread(pluss::make_series({4.0, 5.0, 4.5, 6.0, 5.5, 7.0, 6.5}))},
+    {"reading", Slate(pluss::make_series({4.0, 5.0, 4.5, 6.0, 5.5, 7.0, 6.5}))},
 });
 
 auto chart = small.plot().act("reading");
@@ -151,8 +151,8 @@ Example 5. A non-numeric feature throws.
 
 ```cpp
 auto tagged = DataFrame({
-    {"signal", Thread(pluss::make_series({1.0, 2.0, 1.5, 2.5}))},
-    {"label",  Thread(pluss::make_note({"a", "b", "c", "d"}))},
+    {"signal", Slate(pluss::make_series({1.0, 2.0, 1.5, 2.5}))},
+    {"label",  Slate(pluss::make_note({"a", "b", "c", "d"}))},
 });
 
 try {

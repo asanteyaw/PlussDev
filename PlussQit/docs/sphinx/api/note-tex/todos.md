@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::todos
+# Note::TexAccessor::todos
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::todos() const
+TokenBatch Note::TexAccessor::todos() const
 ```
 
 ## Extract `\todo` Note Bodies Per Source Cell

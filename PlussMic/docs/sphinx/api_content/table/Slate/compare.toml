@@ -1,0 +1,95 @@
+summary = """
+Compare the current slate against a scalar, a native pluss payload, or another slate.
+
+This is the typed comparison surface behind scalar broadcasting and slate-to-slate comparison.
+"""
+
+returns = """
+`Slate`
+    Boolean-style result slate.
+"""
+
+notes = [
+  """
+Scalar-like inputs broadcast across the full slate length.
+""",
+  """
+Slate-to-slate comparison requires compatible sizes after any supported broadcast or alignment rules are applied.
+"""
+]
+
+[[parameters]]
+name = "other"
+body = """
+Right-hand comparison target.
+
+Supported forms include:
+- native text scalars such as `"BOLA"` or `std::string_view`,
+- numeric scalars such as `20.0`,
+- pluss payloads such as `Series`, `Note`, `Timeline`, and `TimeIndex`,
+- another `Slate`.
+"""
+
+[[parameters]]
+name = "op"
+body = """
+Comparison operator.
+
+- `Eq`: equal
+- `Ne`: not equal
+- `Lt`: less than
+- `Le`: less than or equal
+- `Gt`: greater than
+- `Ge`: greater than or equal
+"""
+
+[[examples]]
+title = "Broadcast one numeric scalar across a numeric slate."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+
+auto out = scores.compare(20.0, SlateBinaryCompareOp::Ge);
+"""
+output = """
+0  false
+1  true
+2  true
+3  true
+ptype: Series
+"""
+
+[[examples]]
+title = "Compare a note-backed slate against one text literal."
+code = """
+using namespace pluss::table;
+
+auto names = Slate(pluss::make_note({"Ada", "BOLA", "cHeN"}));
+
+auto out = names.compare("BOLA", SlateBinaryCompareOp::Eq);
+"""
+output = """
+0  false
+1  true
+2  false
+ptype: Series
+"""
+
+[[examples]]
+title = "Compare two numeric slates element by element."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto other = Slate(pluss::make_series({10.0, 10.0, 35.0, 45.0}));
+
+auto out = scores.compare(other, SlateBinaryCompareOp::Ne);
+"""
+output = """
+0  false
+1  true
+2  true
+3  true
+ptype: Series
+"""

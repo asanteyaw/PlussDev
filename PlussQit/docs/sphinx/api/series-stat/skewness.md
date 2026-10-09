@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::skewness
+# Series::StatAccessor::skewness
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::skewness() const
-Series SeriesStatAccessor::skewness(std::int64_t dim) const
+Series Series::StatAccessor::skewness() const
+Series Series::StatAccessor::skewness(std::int64_t dim) const
 Series SeriesStatProxy::skewness() const
 Series SeriesStatProxy::skewness(std::int64_t dim) const
 ```

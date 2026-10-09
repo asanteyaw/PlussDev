@@ -95,9 +95,9 @@ std::cout << "]\n";
 ## See Also
 
 - [`Note::contains`](contains.md): the yes/no version.
-- [`NoteRegexAccessor::count`](../note-regex/count.md): count matches of a
+- [`Note::RegexAccessor::count`](../note-regex/count.md): count matches of a
   pattern rather than a literal.
-- [`NoteRegexAccessor::findall`](../note-regex/findall.md): return the matches, not just
+- [`Note::RegexAccessor::findall`](../note-regex/findall.md): return the matches, not just
   their count.
 
 <div class="pluss-inline-prev-next">

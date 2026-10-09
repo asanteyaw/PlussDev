@@ -142,7 +142,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       }
     }
 
-    auto lymph_radius_cls = pluss::ai::lymph::neighbor_factory::radius_neighbors_classifier(NeighborFamilyOptions{
+    auto lymph_radius_cls = pluss::ai::lymph::models::neighbor::radius_neighbors_classifier(NeighborFamilyOptions{
         .k = 3,
         .radius = 0.05,
         .radius_fallback_k = 1,
@@ -256,7 +256,7 @@ bool run_nodej_neighbor_checks(std::ostream* err = nullptr) {
       }
     }
 
-    auto lymph_radius_reg = pluss::ai::lymph::neighbor_factory::radius_neighbors_regressor(NeighborFamilyOptions{
+    auto lymph_radius_reg = pluss::ai::lymph::models::neighbor::radius_neighbors_regressor(NeighborFamilyOptions{
         .k = 1,
         .radius = 0.01,
         .radius_fallback_k = 1,

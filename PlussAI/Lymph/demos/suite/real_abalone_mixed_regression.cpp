@@ -18,19 +18,19 @@ int main() {
   enc.max_categories = 8;
   enc.include_unknown_bucket = true;
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"sex", "length", "diameter", "height", "whole", "shucked", "viscera", "shell"})
       .label("rings")
       .note(lymph::DataNotePolicy::Factorize);
 
   lymph::Workflow wf = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
-          lymph::workflow::branch("cat", {"sex"}, {{"encode", lymph::stage::one_hot_encoder(enc)}}),
+          lymph::workflow::branch("cat", {"sex"}, {{"encode", lymph::prep::stage::one_hot_encoder(enc)}}),
           lymph::workflow::branch("num", {"length", "diameter", "height", "whole", "shucked", "viscera", "shell"}, {
-              {"scale", lymph::stage::standard_scaler()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::random_forest_regressor({.learners = 75, .subsample = 0.85}));
+      lymph::models::random_forest_regressor({.learners = 75, .subsample = 0.85}));
 
   wf.learn_(data);
   std::cout << "abalone r2: " << wf.assess(data).r2.item<double>() << "\n";

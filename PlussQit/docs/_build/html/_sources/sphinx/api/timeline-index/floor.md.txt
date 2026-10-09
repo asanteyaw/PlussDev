@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::floor
+# Timeline::TimelineIndexAccessor::floor
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::floor(std::string_view unit) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::floor(std::string_view unit) const
 ```
 
 ## What It Does
@@ -24,7 +24,7 @@ The case count stays the same. Only the timestamp values change.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The rounded axis.
 
 ## Examples
@@ -33,7 +33,7 @@ Example 1. Snap every timestamp down to the containing hour boundary.
 
 ```cpp
 auto out = base.floor("H");
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -56,8 +56,8 @@ auto bucket_starts = base.floor("H");
 
 ## See Also
 
-- [`TimelineIndexAccessor::ceil`](ceil.md)
-- [`TimelineIndexAccessor::round`](round.md)
+- [`Timeline::TimelineIndexAccessor::ceil`](ceil.md)
+- [`Timeline::TimelineIndexAccessor::round`](round.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="difference.html">

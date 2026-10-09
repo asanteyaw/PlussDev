@@ -21,19 +21,51 @@ participate in [`estimators`](estimators.md)/[`compose`](compose.md)/
 
 ## How To Call It
 
+Start an online linear classifier on a labeled batch, advance it with another batch, then predict on the features. The program prints the prediction count.
+
 ```cpp
+#include <pluss/pluss.h>
+#include <pluss/ai/ml.h>
+#include <pluss/mic.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <vector>
+
 namespace cls = pluss::ai::classic;
 
-cls::online::OnlineLinearOptions options{};
-options.family.objective = cls::LinearObjective::Logistic;
+cls::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  cls::LabeledBatch batch{};
+  batch.features.x = x;
+  batch.y = y;
+  return batch;
+}
 
-cls::online::OnlineLinearClassifier model =
-    cls::online::make_online_linear_classifier(options).value();
-model.learn(first_batch);
-// ... later, as more labeled rows arrive ...
-model.advance(next_batch);
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const cls::LabeledBatch first = fixture_batch(cfg);
+  cls::online::OnlineLinearOptions options{};
+  options.family.objective = cls::LinearObjective::Logistic;
+  cls::online::OnlineLinearClassifier model =
+      cls::online::make_online_linear_classifier(options).value();
+  model.learn(first);
+  model.advance(first);
+  const cls::StatusOr<pluss::Series> predicted = model.infer(first.features);
+  std::cout << "predictions = " << predicted.value().numel() << "\n";
+  return 0;
+}
+```
 
-const cls::StatusOr<pluss::Series> predicted = model.infer(probe_features);
+Output
+
+```text
+predictions = 8
 ```
 
 ## Related Pages

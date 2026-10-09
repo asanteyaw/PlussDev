@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_footers
+# Note::NlpAccessor::remove_footers
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_footers() const
+Note Note::NlpAccessor::remove_footers() const
 ```
 
 ## Remove Repeated Page And Rights Lines
@@ -92,7 +92,7 @@ Note(shape=[2, 2], dim=2, numel=4, encoding=utf8)
 ## See Also
 
 - [`remove_boilerplate`](remove_boilerplate.md): recognize policy and terms lines in addition to rights notices.
-- `NoteNlpAccessor::remove_headers`: remove hash-marked heading lines.
+- `Note::NlpAccessor::remove_headers`: remove hash-marked heading lines.
 - [`remove_html`](remove_html.md): strip markup while retaining element text.
 
 <div class="pluss-inline-prev-next">

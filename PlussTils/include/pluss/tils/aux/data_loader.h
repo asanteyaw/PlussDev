@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace pluss::tils {
+namespace pluss::loader {
 
 struct DataBatch {
   std::vector<Series> fields{};
@@ -154,7 +154,7 @@ private:
     out.fields.reserve(fields_.size());
     for (std::size_t i = 0; i < fields_.size(); ++i) {
       const auto& s = fields_[i];
-      const auto cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
+      const auto cfg = ::pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
       const auto idx = make_series(ids, {count}, cfg);
       out.fields.push_back(s.index_select(dims_[i], idx));
     }
@@ -601,7 +601,8 @@ private:
     out.fields.reserve(fields_.size());
     for (std::size_t i = 0; i < fields_.size(); ++i) {
       const auto& s = fields_[i];
-      const Config icfg = Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
+      const ::pluss::Config icfg =
+          ::pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
       const Series idx = make_series(ids, {count}, icfg);
       auto field = s.index_select(dims_[i], idx);
       if (options_.target_platform.has_value() || options_.target_dtype.has_value()) {
@@ -862,7 +863,8 @@ inline std::vector<Series> index_fields_(
   out.reserve(fields.size());
   for (std::size_t i = 0; i < fields.size(); ++i) {
     const auto& s = fields[i];
-    const auto cfg = Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
+    const auto cfg =
+        ::pluss::Config{}.with_dtype(ScalarType::Int64).with_platform(s.platform());
     const auto idx = make_series(ids, {static_cast<std::int64_t>(ids.size())}, cfg);
     out.push_back(s.index_select(dims[i], idx));
   }
@@ -1154,27 +1156,4 @@ inline DataLoaderSplit split_loaders(
       detail::materialize_dataset_fields_(dataset), split_options, train_options, val_options, test_options);
 }
 
-} // namespace pluss::tils
-
-namespace pluss::loader {
-using tils::Dataset;
-using tils::SeriesDataset;
-using tils::DataBatch;
-using tils::DataLoader;
-using tils::DataLoaderOptions;
-using tils::DataLoaderSplit;
-using tils::DataSplit;
-using tils::DataSplitOptions;
-using tils::TemporalSplitOptions;
-using tils::TemporalIndexFold;
-using tils::TemporalIndexSplit;
-using tils::TemporalFieldFold;
-using tils::TemporalFieldSplit;
-using tils::TemporalLoaderFold;
-using tils::TemporalLoaderSplit;
-using tils::split_fields;
-using tils::split_loaders;
-using tils::temporal_split_indices;
-using tils::temporal_split_fields;
-using tils::temporal_split_loaders;
 } // namespace pluss::loader

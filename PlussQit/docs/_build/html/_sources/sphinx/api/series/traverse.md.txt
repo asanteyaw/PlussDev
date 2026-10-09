@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-SeriesTraverseAccessor Series::traverse;
+Series::TraverseAccessor Series::traverse;
 
 SeriesTraverseProxy Series::traverse() const;
 SeriesTraverseProxy Series::traverse(std::initializer_list<ExtractSpec> on_specs) const;
@@ -88,12 +88,12 @@ coordinates index the three columns of row `1`.
 Every one produces a [`TraverseMatch`](../series-traverse/match.md); that page
 documents the result object.
 
-Open the [SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+Open the [Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 for the full method index.
 
 ## Returns
 
-`SeriesTraverseAccessor` (the member) / `SeriesTraverseProxy` (from calling it)
+`Series::TraverseAccessor` (the member) / `SeriesTraverseProxy` (from calling it)
     A lightweight search entrypoint bound to the owning `Series`. Reading
     `traverse` copies no data and computes nothing until a finder runs.
 
@@ -170,7 +170,7 @@ Coordinates come back in row-major order, so `values` reads
 
 ## See Also
 
-- [SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md):
+- [Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md):
   the full finder index.
 - [`TraverseMatch`](../series-traverse/match.md): the result object every finder
   returns.
@@ -188,6 +188,6 @@ Coordinates come back in row-major order, so `values` reads
   </a>
   <a class="next-link" href="../../series_traverse_accessor_api_reference.html">
     <span class="label">Next</span>
-    <span class="title">SeriesTraverseAccessor</span>
+    <span class="title">Series::TraverseAccessor</span>
   </a>
 </div>

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_tables
+# Note::TexAccessor::strip_tables
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_tables() const
+Note Note::TexAccessor::strip_tables() const
 ```
 
 ## Remove Complete Table Structures

@@ -49,7 +49,7 @@ Only `"123"` and `"007"` are pure digit runs.
 - [`Note::is_alnum`](is_alnum.md): letters **or** digits.
 - [`Note::contains_any_digit`](contains_any_digit.md): "has at least one
   digit" rather than "is all digits".
-- [`NoteRegexAccessor::match`](../note-regex/match.md): a whole-cell pattern check for
+- [`Note::RegexAccessor::match`](../note-regex/match.md): a whole-cell pattern check for
   richer numeric shapes (`-?\d+(\.\d+)?`).
 
 <div class="pluss-inline-prev-next">

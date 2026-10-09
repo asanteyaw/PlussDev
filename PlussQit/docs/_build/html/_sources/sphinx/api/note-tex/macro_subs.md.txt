@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::macro_subs
+# Note::TexAccessor::macro_subs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::macro_subs(std::int64_t max_passes = 1) const
+Note Note::TexAccessor::macro_subs(std::int64_t max_passes = 1) const
 ```
 
 ## Substitute Local Zero-Argument Macros

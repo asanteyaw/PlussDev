@@ -20,7 +20,7 @@ int main() {
   using pluss::Series;
   using pluss::pCPU;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
   pluss::tils::OutputEngine out;
   using Clock = std::chrono::steady_clock;
   auto secs = [](Clock::time_point a, Clock::time_point b) {
@@ -47,7 +47,7 @@ int main() {
       {0.0, 1.5, 3.0, 4.5, 6.0, std::numeric_limits<double>::infinity()},
       {1, 2, 3, 4, 5});
 
-  auto [strat_train_set, strat_test_set] = lymph::hold_out_split(
+  const auto strat_split = lymph::prep::holdout_split(
       housing,
       lymph::HoldoutSplitOptions{
           .test_size = 0.2,
@@ -56,8 +56,8 @@ int main() {
           .deterministic = true,
       });
 
-  strat_train_set = strat_train_set.drop({"income_cat"});
-  strat_test_set = strat_test_set.drop({"income_cat"});
+  auto strat_train_set = strat_split.train_set.drop({"income_cat"});
+  auto strat_test_set = strat_split.test_set.drop({"income_cat"});
   out.writef("train rows={} test rows={}", strat_train_set.ncases(), strat_test_set.ncases()).endln();
   //========== End Cell 2 ========
 
@@ -86,9 +86,9 @@ int main() {
   //========== Cell 5: Split X/Y + Numeric/Categorical Views ========
   // This is the explicit DataFrame split analogous to pandas X/y selection.
   const DataFrame train_x_raw = strat_train_set.drop({"median_house_value"});
-  const Thread train_y = strat_train_set.features("median_house_value");
+  const Slate train_y = strat_train_set.features("median_house_value");
   const DataFrame test_x_raw = strat_test_set.drop({"median_house_value"});
-  const Thread test_y = strat_test_set.features("median_house_value");
+  const Slate test_y = strat_test_set.features("median_house_value");
 
   const DataFrame train_num = train_x_raw.feataxis().series();
   const DataFrame test_num = test_x_raw.feataxis().series();
@@ -217,7 +217,7 @@ int main() {
 
   //========== Cell 12: Cross-Validation Comparison ========
   // Equivalent in spirit to sklearn cross_val_score model ranking.
-  lymph::metrics::CrossValidationOptions cv_options{};
+  lymph::selection::CrossValOptions cv_options{};
   cv_options.plan = pluss::ai::nodej::CVPlanKind::CrossVal;
   cv_options.folds = 3;
   cv_options.shuffle = true;
@@ -225,7 +225,7 @@ int main() {
   cv_options.deterministic = true;
 
   const auto t_cv0 = Clock::now();
-  const auto cv_plan = lymph::validate::cross(cv_options);
+  const auto cv_plan = lymph::selection::validate::cross(cv_options);
   const auto linear_cv = cv_plan.run(linear_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
   const auto tree_cv = cv_plan.run(tree_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
   const auto forest_cv = cv_plan.run(forest_wf.model_spec().value(), train_prepared, train_y, train_options, assess_options);
@@ -323,15 +323,15 @@ int main() {
   //========== Cell 15: Save, Load, Re-Infer ========
   const fs::path final_model_path = model_dir / "lymph_housing_ch2_best.bin";
   final_workflow.save(final_model_path.string(), train_prepared, train_y, train_options);
-  auto restored = lymph::Model::load(final_model_path.string());
+  auto restored = lymph::models::Model::load(final_model_path.string());
   const Series restored_pred = restored.infer(test_prepared);
   const auto parity = lymph::compare_series(final_pred, restored_pred);
   out.writeln("restored parity", parity.max_abs_diff, parity.mae);
 
   DataFrame prediction_frame({
       {"y_true", test_y},
-      {"y_pred", Thread(final_pred)},
-      {"y_pred_restored", Thread(restored_pred)},
+      {"y_pred", Slate(final_pred)},
+      {"y_pred_restored", Slate(restored_pred)},
   });
   prediction_frame.save_csv((output_dir / "housing_ch2_test_predictions.csv").string());
   out.writeln("saved predictions", (output_dir / "housing_ch2_test_predictions.csv").string());

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::warnings
+# Note::TexAccessor::warnings
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::warnings() const
+TokenBatch Note::TexAccessor::warnings() const
 ```
 
 ## Extract Compiler Diagnostics Embedded In Source Or Logs

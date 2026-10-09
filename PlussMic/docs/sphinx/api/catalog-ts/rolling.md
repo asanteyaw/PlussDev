@@ -31,7 +31,7 @@ full explanation and how to project down to numeric keys first.
 ```
 
 ```{important} Only the fixed-window overload — no calendar-duration form
-Unlike [`Thread::ts().rolling()`](../thread-ts/rolling.md), which also has a
+Unlike [`Slate::ts().rolling()`](../slate-ts/rolling.md), which also has a
 `rolling(axis, duration, ...)` calendar-duration overload,
 `CatalogTimeSeriesAccessor::rolling()` only has this one fixed-row-count
 signature — a multi-key catalog has no single unambiguous time axis to key a
@@ -172,11 +172,11 @@ try {
 ### Output
 
 ```text
-Thread::moving: window must be > 0
+Slate::moving: window must be > 0
 ```
 
 A window of `0` (or negative) has no meaningful trailing span, so it's
-rejected outright. The error is reported under `Thread::moving` — the private
+rejected outright. The error is reported under `Slate::moving` — the private
 engine this method delegates to internally.
 
 ## Notes
@@ -198,8 +198,8 @@ engine this method delegates to internally.
 - [`Stream::ts`](../stream/ts.md): the single-stream equivalent, which also
   exposes the calendar-duration overload — see the important callout above.
 - [`Catalog::ts`](../catalog/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::rolling`](../thread-ts/rolling.md): the underlying
-  single-thread engine this method's fixed-window form delegates to.
+- [`TimeSeriesAccessor::rolling`](../slate-ts/rolling.md): the underlying
+  single-slate engine this method's fixed-window form delegates to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="returns.html">

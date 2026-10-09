@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Slate::corr_with &#8212; PlussMic  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/api_ref.css?v=15722e59" />
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Slate::count" href="count.html" />
+    <link rel="prev" title="Slate::corr" href="corr.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9f41bd0f64a5 -->
+<section id="slate-corr-with">
+<h1>Slate::corr_with<a class="headerlink" href="#slate-corr-with" title="Link to this heading">¶</a></h1>
+<p><a class="reference internal" href="../../slate_api_reference.html"><span class="doc std std-doc">Back to Slate API Reference</span></a></p>
+<section id="signature">
+<h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Slate</span><span class="o">::</span><span class="n">corr_with</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">SlateCorrMethod</span><span class="w"> </span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SlateCorrMethod</span><span class="o">::</span><span class="n">Pearson</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">min_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">SlateValue</span>
+</pre></div>
+</div>
+</section>
+<section id="what-it-does">
+<h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<p>Computes the same correlation <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a> does, but returns it as a
+scalar <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code> gated by <code class="docutils literal notranslate"><span class="pre">min_count</span></code> instead of a raw <code class="docutils literal notranslate"><span class="pre">double</span></code> — below
+<code class="docutils literal notranslate"><span class="pre">min_count</span></code> valid pairs, the result is marked <em>invalid</em> rather than returning
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> as a plain, unflagged value. Both threads must be numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>; case
+labels align the pairing exactly as they do for <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>invalid whenever the underlying correlation isn’t finite
+Beyond the <code class="docutils literal notranslate"><span class="pre">min_count</span></code> gate, the result is also marked invalid whenever the
+underlying <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a> computation itself doesn’t come out to a finite
+number — for example, zero variance on either side (every observed value
+tied, under any of <code class="docutils literal notranslate"><span class="pre">Pearson</span></code>/<code class="docutils literal notranslate"><span class="pre">Spearman</span></code>/<code class="docutils literal notranslate"><span class="pre">KendallTau</span></code>) produces a <code class="docutils literal notranslate"><span class="pre">NaN</span></code>
+correlation, and that <code class="docutils literal notranslate"><span class="pre">NaN</span></code> is caught and reflected in
+<code class="docutils literal notranslate"><span class="pre">.slate().notnull()</span></code> rather than silently passing through as a “valid”
+result. You never need to separately guard against a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> hiding behind a
+<code class="docutils literal notranslate"><span class="pre">true</span></code> validity flag — check the scalar validity mask and trust it.</p>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p><strong>other</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Slate&amp;</span></code>)
+The numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> thread to correlate with.</p>
+<p><strong>method</strong> (<code class="docutils literal notranslate"><span class="pre">SlateCorrMethod</span></code>, default <code class="docutils literal notranslate"><span class="pre">Pearson</span></code>)
+<code class="docutils literal notranslate"><span class="pre">Pearson</span></code>, <code class="docutils literal notranslate"><span class="pre">Spearman</span></code>, or <code class="docutils literal notranslate"><span class="pre">KendallTau</span></code> — same semantics as
+<a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a>.</p>
+<p><strong>min_count</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, default <code class="docutils literal notranslate"><span class="pre">1</span></code>)
+The smallest number of valid pairs still considered valid. Must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span>&#160;&#160;&#160;&#160; <span class="pre">1</span></code>, or it throws.</p>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>
+A scalar <code class="docutils literal notranslate"><span class="pre">Float64</span></code> (or <code class="docutils literal notranslate"><span class="pre">Float32</span></code> off-CPU) holding the correlation
+coefficient.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<p>Example 1. Same computation as <code class="docutils literal notranslate"><span class="pre">corr()</span></code>, wrapped as a <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">40.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">35.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scores</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="w"> </span><span class="n">SlateCorrMethod</span><span class="o">::</span><span class="n">Pearson</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out</span><span class="p">.</span><span class="n">to_dbl</span><span class="p">();</span>
+</pre></div>
+</div>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0.943119
+</pre></div>
+</div>
+<p>Example 2. Below <code class="docutils literal notranslate"><span class="pre">min_count</span></code> valid pairs, the result is marked invalid.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">small</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">small_other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="mf">4.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">small</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">small_other</span><span class="p">,</span><span class="w"> </span><span class="n">SlateCorrMethod</span><span class="o">::</span><span class="n">Pearson</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out2</span><span class="p">.</span><span class="n">slate</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p>Example 3. Zero variance on the Pearson path is caught by the validity check
+— the scalar validity mask is <code class="docutils literal notranslate"><span class="pre">false</span></code>, not just a <code class="docutils literal notranslate"><span class="pre">NaN</span></code> value hiding behind
+<code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">constant</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span><span class="w"> </span><span class="mf">5.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">varying</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">out3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">constant</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">varying</span><span class="p">,</span><span class="w"> </span><span class="n">SlateCorrMethod</span><span class="o">::</span><span class="n">Pearson</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out3</span><span class="p">.</span><span class="n">slate</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+<p>Example 4. The same zero-variance case under <code class="docutils literal notranslate"><span class="pre">KendallTau</span></code> — the underlying
+rank correlation is <code class="docutils literal notranslate"><span class="pre">NaN</span></code> (every rank on the constant side ties), and that’s
+caught too, not just the Pearson path.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">out4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">constant</span><span class="p">.</span><span class="n">corr_with</span><span class="p">(</span><span class="n">varying</span><span class="p">,</span><span class="w"> </span><span class="n">SlateCorrMethod</span><span class="o">::</span><span class="n">KendallTau</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">out4</span><span class="p">.</span><span class="n">slate</span><span class="p">().</span><span class="n">notnull</span><span class="p">().</span><span class="n">as_series</span><span class="p">().</span><span class="n">to_vec</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>false
+</pre></div>
+</div>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">min_count</span></code> must be <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">1</span></code>, or it throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::corr_with:</span> <span class="pre">min_count</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">&gt;=</span> <span class="pre">1&quot;</span></code>.</p></li>
+<li><p>Case-label alignment applies exactly as it does for <a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">corr()</span></code></span></a>.</p></li>
+<li><p>See the important callout above: validity covers both the <code class="docutils literal notranslate"><span class="pre">min_count</span></code> gate
+and whether the underlying correlation itself came out finite, across all
+three methods.</p></li>
+<li><p>Both threads must already share the same platform, or it throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::corr_with:</span> <span class="pre">operands</span> <span class="pre">must</span> <span class="pre">share</span> <span class="pre">a</span> <span class="pre">platform&quot;</span></code>.</p></li>
+<li><p>Restricted to numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code> payloads; anything else throws
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::corr_with:</span> <span class="pre">expected</span> <span class="pre">a</span> <span class="pre">real</span> <span class="pre">numeric</span> <span class="pre">Series</span> <span class="pre">Slate&quot;</span></code>.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="corr.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::corr</span></code></span></a>: the same computation, returned as a raw <code class="docutils literal notranslate"><span class="pre">double</span></code>
+with <code class="docutils literal notranslate"><span class="pre">NaN</span></code> on failure instead of a validity-gated <code class="docutils literal notranslate"><span class="pre">SlateValue</span></code>.</p></li>
+<li><p><a class="reference internal" href="covar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Slate::covar</span></code></span></a>: the unnormalized counterpart.</p></li>
+</ul>
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="corr.html">
+    <span class="label">Previous</span>
+    <span class="title">corr</span>
+  </a>
+  <a class="next-link" href="count.html">
+    <span class="label">Next</span>
+    <span class="title">count</span>
+  </a>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PlussMic</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../plussmic_root.html">PlussMic API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual.html">PlussMic User Manual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dataframe.html">DataFrame Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kindle.html">Kindle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html">Bundle Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../scribble.html">Scribble Model Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../demo_catalog.html">Demo Catalog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build_outputs.html">Build Outputs</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_local/MANIFEST.html">Aggregated Local Documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../../api_reference.html">API Reference</a><ul>
+  <li><a href="../plussmic_root.html">PlussMic API Reference</a><ul>
+  <li><a href="../plussmic_table.html">PlussMic <code class="docutils literal notranslate"><span class="pre">table</span></code></a><ul>
+  <li><a href="../../slate_api_reference.html">Slate API Reference</a><ul>
+      <li>Previous: <a href="corr.html" title="previous chapter">Slate::corr</a></li>
+      <li>Next: <a href="count.html" title="next chapter">Slate::count</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/api/slate/corr_with.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -34,8 +34,8 @@ Frame make_frame() {
   const Series y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1}, {8}, f64());
   return Frame{
       .x = DataFrame({
-          {"x1", pluss::table::Thread(x1)},
-          {"x2", pluss::table::Thread(x2)},
+          {"x1", pluss::table::Slate(x1)},
+          {"x2", pluss::table::Slate(x2)},
       }),
       .y = y,
   };
@@ -194,9 +194,9 @@ bool run_search_checks(std::ostream* err) {
   }
 
   const DataFrame raw({
-      {"x1", pluss::table::Thread(frame.x.get("x1").value())},
-      {"x2", pluss::table::Thread(frame.x.get("x2").value())},
-      {"y", pluss::table::Thread(frame.y)},
+      {"x1", pluss::table::Slate(frame.x.get("x1").value())},
+      {"x2", pluss::table::Slate(frame.x.get("x2").value())},
+      {"y", pluss::table::Slate(frame.y)},
   });
   const workflow::Payload raw_payload = workflow::payload::make(raw).features({"x1", "x2"}).label("y");
   const workflow::Workflow design = workflow::make(workflow::Policy{});

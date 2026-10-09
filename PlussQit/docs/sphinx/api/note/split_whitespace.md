@@ -123,7 +123,7 @@ Both input cells map to empty ranges.
   that splits a **single** string into a 1-D `Note`.
 - [`Note::split`](split.md): literal single-delimiter field splitting that
   keeps empty fields.
-- [`NoteNlpAccessor::tokens`](../note-nlp/tokens.md): word tokens that also drop
+- [`Note::NlpAccessor::tokens`](../note-nlp/tokens.md): word tokens that also drop
   punctuation, not just whitespace.
 
 <div class="pluss-inline-prev-next">

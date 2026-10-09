@@ -62,9 +62,9 @@ Example 1. Pick the format at runtime, dispatching to `save_json()` under the ho
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"id",    Thread(pluss::make_series({101, 102, 103}))},
-    {"city",  Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units", Thread(pluss::make_series({2, 1, 4}))},
+    {"id",    Slate(pluss::make_series({101, 102, 103}))},
+    {"city",  Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units", Slate(pluss::make_series({2, 1, 4}))},
 });
 
 std::string_view fmt = "json";

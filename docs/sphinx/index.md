@@ -18,8 +18,8 @@
 
 <div class="pluss-card">
 <span class="card-name">PlussMic</span>
-<span class="card-model">DataFrame &middot; Thread &middot; Atlas</span>
-<p class="card-desc">The data-analysis layer: tabular data (<code>DataFrame</code>), typed columns (<code>Thread</code>), stacks of related frames (<code>Atlas</code>), plus streaming, bundling, and plotting.</p>
+<span class="card-model">DataFrame &middot; Slate &middot; Atlas</span>
+<p class="card-desc">The data-analysis layer: tabular data (<code>DataFrame</code>), typed columns (<code>Slate</code>), stacks of related frames (<code>Atlas</code>), plus streaming, bundling, and plotting.</p>
 <div class="card-links">
 <a href="_local/PlussMic/api_reference.html">API Reference &rarr;</a>
 </div>
@@ -28,7 +28,7 @@
 <div class="pluss-card">
 <span class="card-name">PlussQit</span>
 <span class="card-model">Series &middot; Note &middot; Timeline &middot; TimeIndex</span>
-<p class="card-desc">The core object layer: the numeric/boolean tensor object (<code>Series</code>), the vectorized text object (<code>Note</code>), and the two time objects that <code>Thread</code> builds on.</p>
+<p class="card-desc">The core object layer: the numeric/boolean tensor object (<code>Series</code>), the vectorized text object (<code>Note</code>), and the two time objects that <code>Slate</code> builds on.</p>
 <div class="card-links">
 <a href="_local/PlussQit/api_reference.html">API Reference &rarr;</a>
 </div>
@@ -76,13 +76,13 @@
 <div class="pluss-section">
 <h2>Core mental model</h2>
 <p class="section-sub">Pluss is organized around a small set of composable data objects. Every package above ultimately builds on, or feeds, this stack.</p>
-<div class="pluss-model-diagram">Atlas -&gt; DataFrame -&gt; Thread -&gt; Series / Note / Timeline / TimeIndex</div>
+<div class="pluss-model-diagram">Atlas -&gt; DataFrame -&gt; Slate -&gt; Series / Note / Timeline / TimeIndex</div>
 <ul class="pluss-model-list">
 <li><code>Series</code> is the numeric and boolean tensor-style object.</li>
 <li><code>Note</code> is the vectorized text object.</li>
 <li><code>Timeline</code> and <code>TimeIndex</code> are time objects.</li>
-<li><code>Thread</code> is a typed table column over one of those core objects.</li>
-<li><code>DataFrame</code> is a 2D table of named <code>Thread</code> features over a case axis.</li>
+<li><code>Slate</code> is a typed table column over one of those core objects.</li>
+<li><code>DataFrame</code> is a 2D table of named <code>Slate</code> features over a case axis.</li>
 <li><code>Atlas</code> is a stack of related <code>DataFrame</code> objects.</li>
 </ul>
 </div>

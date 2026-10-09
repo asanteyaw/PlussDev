@@ -15,7 +15,7 @@ Stream::mean() const -> Stream
 
 Returns the arithmetic mean of a `Series`-kind stream's non-`NULL` values, as a one-element
 `Stream`. `NULL`-marked rows are excluded from both the sum and the divisor. Delegates to
-`Thread::mean()`, so it's `Series`-only, same as [`sum()`](sum.md)/[`min()`](min.md)/
+`Slate::mean()`, so it's `Series`-only, same as [`sum()`](sum.md)/[`min()`](min.md)/
 [`max()`](max.md)/[`var()`](var.md)/[`std()`](std.md).
 
 ## Parameters
@@ -56,7 +56,7 @@ divisor is `4` (non-`NULL` count), not `5` (total row count).
 
 ## Notes
 
-- `Series`-only; throws `"Thread::mean is only valid for Series payload"` on
+- `Series`-only; throws `"Slate::mean is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - The divisor is the count of **non-`NULL`** rows, not the total row count — see Example 1.
 - Returns a one-element `Stream`, not a raw scalar, same as every other reduction in this

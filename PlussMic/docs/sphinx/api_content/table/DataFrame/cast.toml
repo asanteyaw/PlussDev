@@ -11,7 +11,7 @@ returns = """
 
 see_also = [
   "<a href=\"#astype\"><code>DataFrame::astype</code></a>: cast selected features directly to numeric series dtypes.",
-  "<a href=\"../../thread_api_reference.md#cast\"><code>Thread::cast</code></a>: cast one already-extracted thread."
+  "<a href=\"../../slate_api_reference.md#cast\"><code>Slate::cast</code></a>: cast one already-extracted slate."
 ]
 
 notes = [
@@ -84,7 +84,7 @@ auto raw = DataFrame({
 
 DataFrame::CastSpec keep_note;
 keep_note.feature = "raw_name";
-keep_note.target = ThreadCastTarget::Note;
+keep_note.target = SlateCastTarget::Note;
 
 auto out = raw.cast({keep_note});
 """

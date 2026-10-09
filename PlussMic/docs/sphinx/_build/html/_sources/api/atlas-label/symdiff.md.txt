@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 049fcfc26858 -->
+<!-- pluss-signature-hash: d9dfbce0d97e -->
 
 # AtlasLabelAccessor::symdiff
 
@@ -8,24 +8,24 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::symdiff(const Thread& other) const -> Thread
+AtlasLabelAccessor::symdiff(const Slate& other) const -> Slate
 ```
 
 ## What It Does
 
 Returns the symmetric set difference of the atlas's current depth labels and `other` —
 labels present in exactly one of the two sets, excluding anything present in both. A
-pure set operation: it returns a `Thread` of labels, not a new `Atlas`, and does not
+pure set operation: it returns a `Slate` of labels, not a new `Atlas`, and does not
 touch the bound atlas's frames.
 
 ## Parameters
 
-**other** (`const Thread&`)
+**other** (`const Slate&`)
     The other set of labels to compute the symmetric difference against.
 
 ## Returns
 
-`Thread`
+`Slate`
     The labels present in exactly one of the two sets, named `"symdiff"`.
 
 ## Examples
@@ -34,16 +34,16 @@ Example 1. Find the depth labels that are unique to one atlas or the other.
 
 ```cpp
 auto q1 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 auto q2 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({110.0, 90.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({110.0, 90.0}))},
 });
 auto q3 = pluss::table::DataFrame({
-    {"sales", pluss::table::Thread(pluss::make_series({95.0, 130.0}))},
+    {"sales", pluss::table::Slate(pluss::make_series({95.0, 130.0}))},
 });
-auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"jan", "feb", "mar"})));
-auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Thread(pluss::make_note({"feb", "mar", "apr"})));
+auto a1 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"jan", "feb", "mar"})));
+auto a2 = pluss::table::Atlas({q1, q2, q3}, pluss::table::Slate(pluss::make_note({"feb", "mar", "apr"})));
 
 std::cout << a1.label().symdiff(a2.label().values());
 ```
@@ -63,7 +63,7 @@ Name: symdiff, ptype: Note
 
 - Unlike [`diff()`](diff.md), direction doesn't matter — `a.label().symdiff(b)` and the
   equivalent call the other direction produce the same set of labels (order may differ).
-- Pure set operation — returns a `Thread`, not an `Atlas`.
+- Pure set operation — returns a `Slate`, not an `Atlas`.
 
 ## See Also
 

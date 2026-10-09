@@ -121,7 +121,7 @@ object lifecycle rather than a result operation and is intentionally excluded.
 
 ## Compatibility Reality
 
-High-level PlussMic `DataFrame` and `Thread` operations can keep their public
+High-level PlussMic `DataFrame` and `Slate` operations can keep their public
 contracts. Their internals can consume typed Notes or call explicit host export
 at the boundary. Current production code relies mainly on `Note::vector()` for
 text extraction, which remains available for Text and Bytes Notes.

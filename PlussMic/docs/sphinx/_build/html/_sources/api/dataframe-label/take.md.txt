@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 36aee3bfed90 -->
+<!-- pluss-signature-hash: c66fe40e8fcd -->
 
 # DataFrameLabelAccessor::take
 
@@ -8,14 +8,14 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const -> Thread
+DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const -> Slate
 ```
 
 ## What It Does
 
 Selects case-label values at the given positions, in the order given —
 positions may repeat or appear out of order. Returns the selected **values**
-as a bare `Thread`, not the corresponding `DataFrame` rows.
+as a bare `Slate`, not the corresponding `DataFrame` rows.
 
 ## Parameters
 
@@ -25,7 +25,7 @@ Positions to select, in the order you want them back.
 
 ## Returns
 
-`Thread`
+`Slate`
     The case-label values at those positions, plain default integer index.
 
 ## Examples
@@ -36,8 +36,8 @@ Example 1. Select positions out of order, including a repeat-free selection.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 auto labeled = orders.label().set("region");
 
 auto out = labeled.label().take({2, 0, 3});

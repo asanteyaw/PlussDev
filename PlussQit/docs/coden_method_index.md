@@ -379,7 +379,7 @@ Semantics are described at a high level; see the corresponding header for exact 
 
 ## TeX / LaTeX (1 accessor)
 
-- `NoteTexAccessor tex() const noexcept`
+- `Note::TexAccessor tex() const noexcept`
 
 The former flat `Note::tex_*` spellings have been removed. TeX operations
 live on `note.tex()`; use the [Note TeX Accessor API Reference](sphinx/note_tex_accessor_api_reference.md) for the
@@ -387,8 +387,8 @@ canonical method inventory and per-operation teaching pages.
 
 ## Accessors (2)
 
-- `NoteNlpAccessor nlp() const noexcept`
-- `NoteRegexAccessor regex() const noexcept`
+- `Note::NlpAccessor nlp() const noexcept`
+- `Note::RegexAccessor regex() const noexcept`
 
 ## Tokenization & splitting (4)
 
@@ -525,7 +525,7 @@ canonical method inventory and per-operation teaching pages.
 - `Note deduplicate() const`
 - `Note repeat_interleave(::std::int64_t repeats, ::std::int64_t dim) const`
 
-# NoteNlpAccessor method index
+# Note::NlpAccessor method index
 
 The accessor returned by `Note::nlp()` owns the linguistic surface. Its 100
 canonical methods intentionally omit forwarding aliases.
@@ -634,7 +634,7 @@ canonical methods intentionally omit forwarding aliases.
 - `TokenBatch align_tokens(const Note& other) const`
 - `TokenBatch align_sentences(const Note& other) const`
 
-# NoteRegexAccessor method index
+# Note::RegexAccessor method index
 
 The accessor returned by `Note::regex()` owns the six canonical pattern
 operations. Default arguments cover the former convenience overloads.

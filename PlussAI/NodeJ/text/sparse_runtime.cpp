@@ -63,7 +63,8 @@ namespace {
                                                                           const std::vector<double>& y01,
                                                                           const TrainOptions& options,
                                                                           const LinearFamilyOptions& linear_options,
-                                                                          const char* where) {
+                                                                          const char* where,
+                                                                          std::vector<double>* losses) {
   if (static_cast<std::int64_t>(y01.size()) != csr.rows) {
     return StatusOr<std::vector<double>>(Status::shape_mismatch(std::string(where) + " label count must match sparse rows."));
   }
@@ -103,6 +104,7 @@ namespace {
     if (!std::isfinite(loss)) {
       return StatusOr<std::vector<double>>(Status::numerical_failure(std::string(where) + " encountered non-finite objective."));
     }
+    if (losses != nullptr) losses->push_back(loss);
     if (std::abs(prev_loss - loss) <= options.tolerance) break;
     prev_loss = loss;
   }
@@ -381,10 +383,12 @@ Status SparseLinearBinaryClassifier::learn(const SparseCsrMatrix& csr,
   }
 
   feature_count_ = csr.cols;
+  std::vector<double> losses{};
   StatusOr<std::vector<double>> trained_or =
-      train_logistic_binary_weights(csr, y01, options, linear_options, "SparseLinearBinaryClassifier::learn");
+      train_logistic_binary_weights(csr, y01, options, linear_options, "SparseLinearBinaryClassifier::learn", &losses);
   if (!trained_or.ok()) return trained_or.status();
   weights_ = trained_or.move_value();
+  loss_history_ = std::move(losses);
   trained_ = true;
   return Status::success();
 }
@@ -571,6 +575,7 @@ Status SparseLinearRegressor::learn(const SparseCsrMatrix& csr,
 
   feature_count_ = csr.cols;
   weights_.assign(static_cast<std::size_t>(feature_count_ + 1), 0.0);
+  loss_history_.clear();
   const double lr = 0.05;
   const double l2 = linear_options.regularization == RegularizationKind::L2 ? linear_options.regularization_strength : 0.0;
   double prev_loss = std::numeric_limits<double>::infinity();
@@ -602,6 +607,7 @@ Status SparseLinearRegressor::learn(const SparseCsrMatrix& csr,
     }
     const double loss = loss_sum / n;
     if (!std::isfinite(loss)) return Status::numerical_failure("SparseLinearRegressor encountered non-finite objective.");
+    loss_history_.push_back(loss);
     if (std::abs(prev_loss - loss) <= options.tolerance) break;
     prev_loss = loss;
   }
@@ -740,6 +746,7 @@ Status SparseLinearMultiClassifier::learn(const SparseCsrMatrix& csr,
   feature_count_ = csr.cols;
   const std::int64_t stride = feature_count_ + 1;
   weights_.assign(static_cast<std::size_t>(stride * static_cast<std::int64_t>(class_values_.size())), 0.0);
+  loss_history_.clear();
 
   for (std::size_t ci = 0; ci < class_values_.size(); ++ci) {
     std::vector<double> y01(static_cast<std::size_t>(csr.rows), 0.0);
@@ -747,9 +754,11 @@ Status SparseLinearMultiClassifier::learn(const SparseCsrMatrix& csr,
     for (std::int64_t r = 0; r < csr.rows; ++r) {
       y01[static_cast<std::size_t>(r)] = yv[static_cast<std::size_t>(r)] == cls ? 1.0 : 0.0;
     }
+    std::vector<double> class_losses{};
     StatusOr<std::vector<double>> cls_w_or =
-        train_logistic_binary_weights(csr, y01, options, linear_options, "SparseLinearMultiClassifier::learn");
+        train_logistic_binary_weights(csr, y01, options, linear_options, "SparseLinearMultiClassifier::learn", &class_losses);
     if (!cls_w_or.ok()) return cls_w_or.status();
+    loss_history_.insert(loss_history_.end(), class_losses.begin(), class_losses.end());
     const std::vector<double>& cls_w = cls_w_or.value();
     for (std::int64_t j = 0; j < stride; ++j) {
       weights_[static_cast<std::size_t>(static_cast<std::int64_t>(ci) * stride + j)] = cls_w[static_cast<std::size_t>(j)];

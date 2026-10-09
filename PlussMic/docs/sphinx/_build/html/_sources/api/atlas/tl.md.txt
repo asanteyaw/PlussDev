@@ -46,7 +46,7 @@ Example 1. `tl()` binds without validating; the check happens when a method is c
 
 ```cpp
 auto f0 = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))},
+    {"ts", pluss::table::Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))},
 });
 auto atlas = pluss::table::Atlas({f0});
 

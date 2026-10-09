@@ -47,7 +47,7 @@ Example 1. Default: every numeric key in the first catalog, auto-sized grid.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {
@@ -76,7 +76,7 @@ Example 2. Explicit `rows`/`cols` grid shape.
 using namespace pluss::kindle::literals;
 
 std::vector<std::string> cities = {"Accra", "Tema", "Kumasi", "Takoradi", "Ho"};
-auto city_labels = pluss::table::Thread(pluss::make_note(cities));
+auto city_labels = pluss::table::Slate(pluss::make_note(cities));
 
 std::vector<pluss::kindle::Catalog> catalogs;
 for (int i = 0; i < 5; ++i) {

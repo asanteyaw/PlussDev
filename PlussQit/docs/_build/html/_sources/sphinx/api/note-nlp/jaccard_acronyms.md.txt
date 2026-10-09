@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::jaccard_acronyms
+# Note::NlpAccessor::jaccard_acronyms
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::jaccard_acronyms(const Note& other) const
+Note Note::NlpAccessor::jaccard_acronyms(const Note& other) const
 ```
 
 ## Acronym-Set Similarity Score Between Two Notes
@@ -31,8 +31,8 @@ trailing zeros trimmed.
 
 Per cell and pairwise; equal [`numel`](../note/numel.md) or a
 scalar (`numel() == 1`) broadcast. Bytes-mode input raises
-`NoteNlpAccessor::jaccard_acronyms requires a UTF-8 text Note (lhs is bytes)` (or
-`rhs`); a numel mismatch raises `NoteNlpAccessor::jaccard_acronyms expects equal numel
+`Note::NlpAccessor::jaccard_acronyms requires a UTF-8 text Note (lhs is bytes)` (or
+`rhs`); a numel mismatch raises `Note::NlpAccessor::jaccard_acronyms expects equal numel
 or scalar broadcast`.
 
 ## Example 1: Two Of Four Acronyms Shared
@@ -55,14 +55,14 @@ acronyms → `0.5`.
 
 ## See Also
 
-- [`NoteNlpAccessor::overlap_acronyms`](overlap_acronyms.md): the containment score over
+- [`Note::NlpAccessor::overlap_acronyms`](overlap_acronyms.md): the containment score over
   the same sets.
-- [`NoteNlpAccessor::intersect_acronyms`](intersect_acronyms.md): the shared acronyms
+- [`Note::NlpAccessor::intersect_acronyms`](intersect_acronyms.md): the shared acronyms
   themselves.
-- [`NoteNlpAccessor::jaccard_tokens`](jaccard_tokens.md) /
-  [`NoteNlpAccessor::jaccard_terms`](jaccard_terms.md) /
-  [`NoteNlpAccessor::jaccard_citations`](jaccard_citations.md) /
-  [`NoteNlpAccessor::jaccard_symbols`](jaccard_symbols.md): other set kinds.
+- [`Note::NlpAccessor::jaccard_tokens`](jaccard_tokens.md) /
+  [`Note::NlpAccessor::jaccard_terms`](jaccard_terms.md) /
+  [`Note::NlpAccessor::jaccard_citations`](jaccard_citations.md) /
+  [`Note::NlpAccessor::jaccard_symbols`](jaccard_symbols.md): other set kinds.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="intersect_tokens.html"><span class="label">Previous</span><span class="title">intersect_tokens</span></a>

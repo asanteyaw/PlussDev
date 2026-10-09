@@ -86,17 +86,17 @@ const detail::GroupStateCache& DataFrameGrouped::state_cached_() const {
   if (!state_cache_) {
     const auto& keyed = keyed_frame_cached_();
     const auto& key_names = key_names_cached_();
-    std::vector<Thread> key_columns;
+    std::vector<Slate> key_columns;
     key_columns.reserve(key_names.size());
     for (const auto& key : key_names) {
       key_columns.push_back(keyed.features(key));
     }
     state_cache_ = std::make_shared<const detail::GroupStateCache>(
         build_group_state_(
-            std::span<const Thread>(key_columns.data(), key_columns.size()),
+            std::span<const Slate>(key_columns.data(), key_columns.size()),
             std::span<const std::string>(key_names.data(), key_names.size()),
             keyed.ncases(),
-            ThreadGroupOptions{.dropnull = options_.dropnull, .sort = options_.sort},
+            SlateGroupOptions{.dropnull = options_.dropnull, .sort = options_.sort},
             "DataFrameGrouped"));
   }
   return *state_cache_;
@@ -169,13 +169,13 @@ DataFrame DataFrameGrouped::agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpe
     PLUSS_CHECK(
         out_seen.insert(out_name).second,
         "DataFrameGrouped::agg: duplicate output feature '" + out_name + "'");
-    std::optional<Thread> value_storage = std::nullopt;
+    std::optional<Slate> value_storage = std::nullopt;
     if (has_feature) {
       value_storage = keyed.features(spec.feature);
     }
     out_cols.emplace_back(
         out_name,
-        group_agg_thread_(
+        group_agg_slate_(
             state,
             value_storage ? &*value_storage : nullptr,
             spec.op,
@@ -214,7 +214,7 @@ DataFrame DataFrameGrouped::transform(pluss::msharp::RangeView::Of<DataFrame::Gr
   const auto& keyed = keyed_frame_cached_();
   const auto& state = state_cached_();
 
-  std::vector<std::pair<std::string, Thread>> out_cols;
+  std::vector<std::pair<std::string, Slate>> out_cols;
   out_cols.reserve(specs.size());
   std::unordered_set<std::string> out_seen;
   out_seen.reserve(specs.size());
@@ -230,23 +230,23 @@ DataFrame DataFrameGrouped::transform(pluss::msharp::RangeView::Of<DataFrame::Gr
     PLUSS_CHECK(out_seen.insert(out_name).second,
                 "DataFrameGrouped::transform: duplicate output feature '" + out_name + "'");
 
-    std::optional<Thread> value_storage = std::nullopt;
+    std::optional<Slate> value_storage = std::nullopt;
     if (has_feature) {
       value_storage = keyed.features(spec.feature);
     }
     if (state.ngroups == 0) {
       if (!value_storage.has_value()) {
-        value_storage = Thread(pluss::make_series(std::vector<std::int64_t>(keyed.ncases(), 0)));
+        value_storage = Slate(pluss::make_series(std::vector<std::int64_t>(keyed.ncases(), 0)));
       }
       out_cols.emplace_back(
           out_name,
-          group_empty_transform_thread_(*value_storage, spec.op, keyed.ncases()));
+          group_empty_transform_slate_(*value_storage, spec.op, keyed.ncases()));
       continue;
     }
     out_cols.emplace_back(
         out_name,
-        group_broadcast_thread_(
-            group_agg_thread_(
+        group_broadcast_slate_(
+            group_agg_slate_(
                 state,
                 value_storage ? &*value_storage : nullptr,
                 spec.op,
@@ -262,10 +262,10 @@ DataFrame DataFrameGrouped::transform(std::initializer_list<DataFrame::GroupSpec
 }
 
 DataFrame DataFrameGrouped::filter(const pluss::Series& keep) const {
-  return filter(Thread(keep));
+  return filter(Slate(keep));
 }
 
-DataFrame DataFrameGrouped::filter(const Thread& keep) const {
+DataFrame DataFrameGrouped::filter(const Slate& keep) const {
   PLUSS_CHECK(options_.layout == DataFrame::GroupLayout::Flat,
               "DataFrameGrouped::filter: only Flat layout is currently supported");
 
@@ -471,7 +471,7 @@ DataFrame DataFrameGrouped::mode_ties(std::string_view feature, std::string_view
   const auto& keyed = keyed_frame_cached_();
   const auto& state = state_cached_();
   const auto value = keyed.features(feature);
-  const bool is_note = value.kind() == ThreadKind::Note;
+  const bool is_note = value.kind() == SlateKind::Note;
 
   const auto note_ties = is_note ? group_note_mode_ties_(value, state)
                                  : std::vector<std::vector<std::string>>{};
@@ -526,9 +526,9 @@ DataFrame DataFrameGrouped::mode_ties(std::string_view feature, std::string_view
   const bool any_null = std::any_of(
       valid_out.begin(), valid_out.end(), [](bool v) { return !v; });
 
-  Thread value_col = is_note
-      ? (any_null ? group_note_thread_(note_out, valid_out) : group_note_thread_(note_out))
-      : (any_null ? group_f64_thread_(numeric_out, valid_out) : group_f64_thread_(numeric_out));
+  Slate value_col = is_note
+      ? (any_null ? group_note_slate_(note_out, valid_out) : group_note_slate_(note_out))
+      : (any_null ? group_f64_slate_(numeric_out, valid_out) : group_f64_slate_(numeric_out));
   out_cols.emplace_back(out_name, std::move(value_col));
 
   return DataFrame(std::move(out_cols)).title(frame_.title());

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::citations
+# Note::TexAccessor::citations
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::citations() const
+TokenBatch Note::TexAccessor::citations() const
 ```
 
 ## Extract One Argument Per Citation Command

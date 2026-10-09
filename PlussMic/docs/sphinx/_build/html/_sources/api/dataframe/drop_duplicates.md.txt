@@ -66,9 +66,9 @@ frame survives untouched.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
-    {"product",  Thread(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Accra", "Tema", "Accra", "Kumasi", "Tema"}))},
+    {"product",  Slate(pluss::make_note({"Laptop", "Laptop", "Phone", "Laptop", "Laptop", "Phone"}))},
 });
 
 auto unique_combos = orders.drop_duplicates({"city", "product"});

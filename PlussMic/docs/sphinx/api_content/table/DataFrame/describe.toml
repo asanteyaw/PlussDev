@@ -13,7 +13,7 @@ returns = """
 
 see_also = [
   "<a href=\"#mean\"><code>DataFrame::mean</code></a>, <a href=\"#std\"><code>DataFrame::std</code></a>: one specific statistic instead of the full descriptive table.",
-  "<a href=\"../../thread_api_reference.md#describe\"><code>Thread::describe</code></a>: summarize one extracted feature directly."
+  "<a href=\"../../slate_api_reference.md#describe\"><code>Slate::describe</code></a>: summarize one extracted feature directly."
 ]
 
 notes = [

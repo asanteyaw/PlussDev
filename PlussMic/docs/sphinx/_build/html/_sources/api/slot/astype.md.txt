@@ -14,7 +14,7 @@ Slot Slot::astype(pluss::codem::ScalarType dtype) const
 ## What It Does
 
 Casts every value to `Series`-kind with scalar dtype `dtype`. A narrow
-shorthand for `cast(ThreadCastOptions{.series_dtype = dtype}).series()`.
+shorthand for `cast(SlateCastOptions{.series_dtype = dtype}).series()`.
 
 ## Parameters
 

@@ -13,25 +13,25 @@ int main() {
   using pluss::table::ScanStatistic;
   using pluss::table::StatisticOptions;
   using pluss::table::TextAlign;
-  using pluss::table::Thread;
-  using pluss::table::ThreadValue;
+  using pluss::table::Slate;
+  using pluss::table::SlateValue;
   using pluss::table::TimeWindowStatistic;
   using pluss::table::UnicodeForm;
   using pluss::table::WindowClosure;
   using pluss::table::WindowOptions;
   using pluss::table::WindowStatistic;
 
-  auto ids = Thread(pluss::make_series(std::vector<std::int64_t>{
+  auto ids = Slate(pluss::make_series(std::vector<std::int64_t>{
       1001, 1002, 1003, 1004, 1005, 1006}));
-  auto scores = Thread(pluss::make_series(std::vector<double>{
+  auto scores = Slate(pluss::make_series(std::vector<double>{
       10.0, 20.0, 20.0, 40.0, 50.0, 50.0}));
-  auto costs = Thread(pluss::make_series(std::vector<double>{
+  auto costs = Slate(pluss::make_series(std::vector<double>{
       2.0, 4.0, 5.0, 8.0, 10.0, 12.0}));
-  auto groups = Thread(pluss::make_note({
+  auto groups = Slate(pluss::make_note({
       "west", "east", "west", "east", "west", "east"}));
-  auto labels = Thread(pluss::make_note({
+  auto labels = Slate(pluss::make_note({
       "alpha-10", "Beta-20", "red|blue", "west-30", "east-40", "red|green"}));
-  auto dates = Thread(pluss::make_timeline({
+  auto dates = Slate(pluss::make_timeline({
       "2024-01-01T00:00:00Z",
       "2024-01-02T00:00:00Z",
       "2024-01-04T00:00:00Z",
@@ -67,8 +67,6 @@ int main() {
   auto score_cost_cov = df.features("score").covar(df.features("cost"));
   auto score_cost_corr = df.features("score").corr_with(df.features("cost"));
   auto score_cost_dot = df.features("score").matmul(df.features("cost"));
-
-  auto checking_sth = df.features("label").tl();
 
   auto upper_label = df.features("label").nt().upper();
   auto label_lengths = df.features("label").nt().length();
@@ -126,12 +124,12 @@ int main() {
   auto label_indicators_df = df.features({"label"}).nt().indicate("|");
 
   auto mapped_scores = df.features({"score", "cost"}).map(
-      [](const ThreadValue& value) {
-        return ThreadValue(Thread(value.as_series() * 2.0));
+      [](const SlateValue& value) {
+        return SlateValue(Slate(value.as_series() * 2.0));
       });
   auto row_score = df.transform(
       [](const DataFrame& row) {
-        return ThreadValue(Thread(row.features("score").as_series() +
+        return SlateValue(Slate(row.features("score").as_series() +
                                   row.features("cost").as_series()));
       },
       Axis::Case);
@@ -143,7 +141,7 @@ int main() {
       pluss::table::ResultShape::Expand);
   auto folded_total = df.fold(
       [](const DataFrame& value) {
-        return Thread(value.features("score").sum().as_series());
+        return Slate(value.features("score").sum().as_series());
       });
   auto flowed = df.flow(
       [](const DataFrame& value) {
@@ -159,24 +157,25 @@ int main() {
   auto df_relabelled = df.features({"score", "cost"}).rename({"amount", "expense"});
 
   auto left = DataFrame({
-      {"a", Thread(pluss::make_series(std::vector<double>{1.0, 3.0}))},
-      {"b", Thread(pluss::make_series(std::vector<double>{2.0, 4.0}))},
+      {"a", Slate(pluss::make_series(std::vector<double>{1.0, 3.0}))},
+      {"b", Slate(pluss::make_series(std::vector<double>{2.0, 4.0}))},
   });
   auto right = DataFrame({
-      {"z", Thread(pluss::make_series(std::vector<double>{5.0, 6.0}))},
+      {"z", Slate(pluss::make_series(std::vector<double>{5.0, 6.0}))},
   });
   auto product = left.matmul(right);
 
-  auto prepared = df.prep_sql("SELECT account, score FROM self WHERE score > {min_score}");
+  auto prepared = df.prep_sql("SELECT account, score FROM df WHERE score > {min_score}");
   auto sql_result = prepared.execute({{"min_score", 15.0}});
 
-  auto atlas = Atlas({df, flowed});
+  auto atlas = Atlas({numeric, numeric});
+  auto text_atlas = Atlas({df, df});
   auto atlas_mapped = atlas.map(
-      [](const ThreadValue& value) {
-        return ThreadValue(Thread(value.as_series() + 1.0));
+      [](const SlateValue& value) {
+        return SlateValue(Slate(value.as_series() + 1.0));
       });
   auto atlas_moving = atlas.ts().rolling(2, WindowStatistic::Sum);
-  auto atlas_flowed = atlas.flow(
+  auto atlas_flowed = text_atlas.flow(
       [](const Atlas& value) {
         return value.map_frames([](const DataFrame& frame) {
           return frame.features({"label"}).nt().upper();

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::bibliography_keys
+# Note::TexAccessor::bibliography_keys
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::bibliography_keys() const
+TokenBatch Note::TexAccessor::bibliography_keys() const
 ```
 
 ## Extract Citation And Bibliography Identifiers By Source Cell

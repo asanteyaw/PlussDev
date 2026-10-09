@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::readability_level
+# Note::NlpAccessor::readability_level
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::readability_level() const
+Note Note::NlpAccessor::readability_level() const
 ```
 
 ## Classify A Readability Band

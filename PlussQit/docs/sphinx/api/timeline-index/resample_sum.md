@@ -1,12 +1,12 @@
-# TimelineIndexAccessor::resample_sum
+# Timeline::TimelineIndexAccessor::resample_sum
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_sum(const pluss::Series& values, const ResampleOptions& options) const
-pluss::Series TimelineIndexAccessor::resample_sum(const pluss::Series& values, std::string_view freq, std::int64_t step = 1) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_sum(const pluss::Series& values, const ResampleOptions& options) const
+pluss::Series Timeline::TimelineIndexAccessor::resample_sum(const pluss::Series& values, std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does
@@ -67,10 +67,10 @@ Example 2. Use the options overload when the bin anchor or boundary semantics
 must be explicit.
 
 ```cpp
-pluss::TimelineIndexAccessor::ResampleOptions opts;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions opts;
 opts.freq = "H";
 opts.step = 1;
-opts.origin = pluss::TimelineIndexAccessor::ResampleOrigin::Epoch;
+opts.origin = pluss::Timeline::TimelineIndexAccessor::ResampleOrigin::Epoch;
 
 auto totals = idx.resample_sum(values, opts);
 std::cout << pluss::series::print(totals) << "\n";
@@ -101,8 +101,8 @@ data=[15.0000]
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_mean`](resample_mean.md)
-- [`TimelineIndexAccessor::resample_agg`](resample_agg.md)
+- [`Timeline::TimelineIndexAccessor::resample_mean`](resample_mean.md)
+- [`Timeline::TimelineIndexAccessor::resample_agg`](resample_agg.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_ohlc.html">

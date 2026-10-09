@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_links
+# Note::TexAccessor::strip_links
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_links() const
+Note Note::TexAccessor::strip_links() const
 ```
 
 ## Remove Destinations Without Losing Labels

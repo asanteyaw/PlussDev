@@ -11,10 +11,8 @@ namespace {
 pluss::Series peaks_like(std::int64_t rows, std::int64_t cols) {
   const auto x_axis = pluss::series::linspace(-3.0, 3.0, cols, pluss::ScalarType::Float64).reshape({1, cols});
   const auto y_axis = pluss::series::linspace(-3.0, 3.0, rows, pluss::ScalarType::Float64).reshape({rows, 1});
-  const std::array<std::int64_t, 2> x_tile{rows, 1};
-  const std::array<std::int64_t, 2> y_tile{1, cols};
-  const auto x = x_axis.tile(std::span<const std::int64_t>(x_tile.data(), x_tile.size()));
-  const auto y = y_axis.tile(std::span<const std::int64_t>(y_tile.data(), y_tile.size()));
+  const auto x = x_axis.repeat({rows, 1});
+  const auto y = y_axis.repeat({1, cols});
   const auto crest = (1.0 - x).pow(2.0).mul(3.0).mul(x.pow(2.0).neg().sub(y.add(1.0).pow(2.0)).exp());
   const auto saddle = x.div(5.0).sub(x.pow(3.0)).sub(y.pow(5.0)).mul(-10.0).mul(x.pow(2.0).add(y.pow(2.0)).neg().exp());
   const auto tail = x.add(1.0).pow(2.0).neg().sub(y.pow(2.0)).exp().mul(-1.0 / 3.0);

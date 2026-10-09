@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,8 +16,8 @@ int main() {
   // of the learned range.
   const pluss::Series train = pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}, {5}, f64);
   const pluss::Series later = pluss::make_series({0.0, 25.0, 50.0, 75.0}, {4}, f64);
-  const DataFrame train_df({{"v", Thread(train)}});
-  const DataFrame later_df({{"v", Thread(later)}});
+  const DataFrame train_df({{"v", Slate(train)}});
+  const DataFrame later_df({{"v", Slate(later)}});
 
   // clip = false (default): out-of-range inputs map outside [0, 1].
   lymph::prep::MinMaxScaler open{lymph::options::MinMaxScaler{}};

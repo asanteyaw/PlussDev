@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteRegexAccessor::search
+# Note::RegexAccessor::search
 
 [Back to Note API Reference](../../note_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteRegexAccessor::search(std::string_view pattern) const
+Note Note::RegexAccessor::search(std::string_view pattern) const
 ```
 
 ## Test Whether A Pattern Occurs Anywhere In A Cell
@@ -50,10 +50,10 @@ Both `"2026"` and `"year 2026"` contain a digit run.
 
 ## See Also
 
-- [`NoteRegexAccessor::match`](match.md): the whole-cell, anchored version.
+- [`Note::RegexAccessor::match`](match.md): the whole-cell, anchored version.
 - [`Note::contains`](../note/contains.md): a literal (non-regex) "occurs anywhere"
   test.
-- [`NoteRegexAccessor::findall`](findall.md): return the matches, not just a
+- [`Note::RegexAccessor::findall`](findall.md): return the matches, not just a
   yes/no.
 
 <div class="pluss-inline-prev-next">

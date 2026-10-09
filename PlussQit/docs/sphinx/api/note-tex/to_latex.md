@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::to_latex
+# Note::TexAccessor::to_latex
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::to_latex(std::int64_t mode = 0) const
+Note Note::TexAccessor::to_latex(std::int64_t mode = 0) const
 ```
 
 ## Convert Plain Text Toward TeX Source

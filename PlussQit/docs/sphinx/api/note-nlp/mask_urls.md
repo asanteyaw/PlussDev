@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mask_urls
+# Note::NlpAccessor::mask_urls
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::mask_urls() const
+Note Note::NlpAccessor::mask_urls() const
 ```
 
 ## Remove Destinations While Preserving Sentence Punctuation

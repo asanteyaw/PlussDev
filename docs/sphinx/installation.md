@@ -141,7 +141,7 @@ dependencies explicit:
 
 ```cpp
 #include <pluss/core.h>      // Series, Note, Timeline, TimeIndex, Type
-#include <pluss/mic.h>       // DataFrame, Thread, Atlas, table I/O
+#include <pluss/mic.h>       // DataFrame, Slate, Atlas, table I/O
 #include <pluss/pl.h>        // plotting
 #include <pluss/ma.h>        // math/statistics utilities
 #include <pluss/ai.h>        // AI and ML surfaces

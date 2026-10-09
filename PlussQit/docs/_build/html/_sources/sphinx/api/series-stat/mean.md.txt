@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesStatAccessor::mean
+# Series::StatAccessor::mean
 
-[Back to SeriesStatAccessor API Reference](../../series_stat_accessor_api_reference.md)
+[Back to Series::StatAccessor API Reference](../../series_stat_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesStatAccessor::mean() const
-Series SeriesStatAccessor::mean(std::int64_t dim, bool keepdim = false) const
+Series Series::StatAccessor::mean() const
+Series Series::StatAccessor::mean(std::int64_t dim, bool keepdim = false) const
 Series SeriesStatProxy::mean() const
 Series SeriesStatProxy::mean(std::int64_t dim, bool keepdim = false) const
 ```

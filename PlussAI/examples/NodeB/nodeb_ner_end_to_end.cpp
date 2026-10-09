@@ -4,7 +4,8 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
 
   Workflow tokenizer{
       .lang = Language::English,
@@ -51,7 +52,7 @@ int main() {
 
   const auto predicted = ner_flow.infer("carol works at acme");
 
-  std::cout << "== NodeB Named Entity Recognition ==\n";
+  std::cout << "== PlussAI NLP Named Entity Recognition ==\n";
   std::cout << "text: carol works at acme\n";
   for (const auto& entity : predicted.entities) {
     std::cout << "  " << entity.label << ": " << entity.text(predicted) << "\n";

@@ -2099,23 +2099,31 @@ public:
     return slice(dim, 0, std::numeric_limits<std::int64_t>::max(), 1);
   }
 
+  // Accessors are subordinate Series surfaces, not independent value types.
+  // These aliases are the canonical public spellings; the longer class names
+  // remain as implementation identities to preserve ABI compatibility.
+  using StatAccessor = SeriesStatAccessor;
+  using LinearAlgAccessor = SeriesLinearAlgAccessor;
+  using AntidiffAccessor = SeriesAntidiffAccessor;
+  using TraverseAccessor = SeriesTraverseAccessor;
+
   // Statistical accessor:
   // - safe call style: `s.stat().mean()`
   // - convenience dot style: `s.stat.mean()`
-  SeriesStatAccessor stat;
+  StatAccessor stat;
   // Linear algebra accessor:
   // - safe call style: `s.linearalg().det()`
   // - convenience dot style: `s.linearalg.det()`
-  SeriesLinearAlgAccessor linearalg;
+  LinearAlgAccessor linearalg;
   // Antiderivative accessor -- reverses `diff()` (discrete forward
   // differencing on an already-materialized sequence), not autodiff:
   // - safe call style: `s.antidiff().trapezoid(x)`, `s.antidiff(x).trapezoid()`
   // - convenience dot style: `s.antidiff.trapezoid(x)`
-  SeriesAntidiffAccessor antidiff;
+  AntidiffAccessor antidiff;
   // Traverse/query accessor:
   // - dot style: `s.traverse.find_all(mask)`
   // - with explicit `on` selector: `s.traverse(specs).find_ge(...)`
-  SeriesTraverseAccessor traverse;
+  TraverseAccessor traverse;
 
   // An empty handle, equivalent to pluss::series::undefined(). Defined Series
   // values remain constructible only through the public factory functions.

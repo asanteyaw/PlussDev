@@ -30,6 +30,10 @@ lymph::prep::FeatureTransformer lymph::prep::feature_transformer(
 Each form also accepts `branches` as a braced `{...}` list or any range, and the
 name-list form accepts a range of names.
 
+## What It Does
+
+`feature_transformer` builds a feature transformer from an ordered feature space and a list of branches. The remainder policy decides what happens to features no branch covers. The three forms differ only in where the feature order comes from: an explicit list, a frame's features, or a frame with batch options.
+
 ## Parameters
 
 `feature_order` / `frame` / `frame` + `data_options`
@@ -92,14 +96,14 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"income",  Thread(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"region",  Thread(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
-      {"balance", Thread(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
+      {"income",  Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"region",  Slate(pluss::make_series({0., 1., 0., 1.}, {4}, f64))},
+      {"balance", Slate(pluss::make_series({10., 20., 30., 40.}, {4}, f64))},
   });
 
   lymph::prep::FeatureTransformer transformer = lymph::prep::feature_transformer(
@@ -152,13 +156,13 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"a", Thread(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"b", Thread(pluss::make_series({40., 30., 20., 10.}, {4}, f64))},
+      {"a", Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"b", Slate(pluss::make_series({40., 30., 20., 10.}, {4}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"a", "b"}).feature_batch();
@@ -218,14 +222,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame train({
-      {"income",  Thread(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
-      {"region",  Thread(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
-      {"target",  Thread(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
+      {"income",  Slate(pluss::make_series({1.0, 1.5, 2.0, 3.5, 4.0, 4.5}, {6}, f64))},
+      {"region",  Slate(pluss::make_series({0., 1., 0., 1., 0., 1.}, {6}, f64))},
+      {"target",  Slate(pluss::make_series({0., 0., 0., 1., 1., 1.}, {6}, f64))},
   });
 
   lymph::options::DFBatch data_options{};
@@ -246,10 +250,10 @@ int main() {
 
   std::cout << "trained = " << std::boolalpha << model.trained() << "\n";
   std::cout << DataFrame({
-      {"income",    Thread(train.features("income"))},
-      {"region",    Thread(train.features("region"))},
-      {"actual",    Thread(train.features("target"))},
-      {"predicted", Thread(model.infer(train, data_options))},
+      {"income",    Slate(train.features("income"))},
+      {"region",    Slate(train.features("region"))},
+      {"actual",    Slate(train.features("target"))},
+      {"predicted", Slate(model.infer(train, data_options))},
   });
 
   return 0;
@@ -277,6 +281,6 @@ trained = true
 
 - [`prep::FeatureTransformer`](FeatureTransformer.md) — the object this returns.
 - [`prep::branch`](branch.md) — building the `branches` argument.
-- [`prep::stage`](../stage_family.md) — the stage factories a branch composes.
+- [`prep::stage`](../stage.md) — the stage factories a branch composes.
 - [`Model::feature_transformer`](../../models/Model/feature_transformer.md) — attaching one to
   a model.

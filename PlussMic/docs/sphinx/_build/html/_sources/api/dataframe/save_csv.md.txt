@@ -131,9 +131,9 @@ Example 1. Save with the simple, filepath-only overload.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103}))},
-    {"city",     Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"units",    Thread(pluss::make_series({2, 1, 4}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103}))},
+    {"city",     Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"units",    Slate(pluss::make_series({2, 1, 4}))},
 });
 
 orders.save_csv("orders_out.csv");

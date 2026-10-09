@@ -7,7 +7,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   const pluss::Series b = pluss::make_series({1.0, 3.0, 2.0, 5.0, 4.0, 6.0}, {6}, f64);
   const pluss::Series c = pluss::make_series({0.1, 0.2, 0.15, 0.3, 0.25, 0.35}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"a", Thread(a)}, {"b", Thread(b)}, {"c", Thread(c)}});
+  const DataFrame x({{"a", Slate(a)}, {"b", Slate(b)}, {"c", Slate(c)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
 
@@ -33,10 +33,10 @@ int main() {
   std::cout << "trained     = " << std::boolalpha << model.trained() << "\n\n";
 
   const DataFrame review({
-      {"a", Thread(a)},
-      {"b", Thread(b)},
-      {"c", Thread(c)},
-      {"predicted", Thread(model.infer(x))},
+      {"a", Slate(a)},
+      {"b", Slate(b)},
+      {"c", Slate(c)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 

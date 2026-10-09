@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b40da3a6ef9c -->
+<!-- pluss-signature-hash: 8091708aee10 -->
 
 # DataFrame::truediv
 
@@ -11,9 +11,9 @@
 DataFrame::truediv(double other) const -> DataFrame
 DataFrame::truediv(const DataFrame& other) const -> DataFrame
 DataFrame::truediv(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::truediv(const Thread& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::truediv(const Thread& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::truediv(const Thread& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::truediv(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame::truediv(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
+DataFrame::truediv(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ The named-method form of elementwise division — and, verified against the unde
 numeric kernel, **the same operation as [`div()`](div.md)**. `truediv()` shares the
 exact same overload shape and alignment rules as [`add()`](add.md) and the rest of the
 arithmetic family — see `add()`'s "What It Does" for the full explanation of the
-scalar/frame/Thread operand shapes and the `axis`/`options` parameters.
+scalar/frame/Slate operand shapes and the `axis`/`options` parameters.
 
 ```{important} truediv() and div() are the same operation
 Both names route to the identical division kernel and produce identical results for
@@ -38,10 +38,10 @@ better at the call site.
 **other**
 
 The right-hand operand, dividing the current frame: `double` (broadcast scalar),
-`const DataFrame&` (aligned frame-to-frame), or `const Thread&` (broadcast per
+`const DataFrame&` (aligned frame-to-frame), or `const Slate&` (broadcast per
 `axis`).
 
-**axis** (`Axis`, default `Axis::Feature`, Thread overloads only)
+**axis** (`Axis`, default `Axis::Feature`, Slate overloads only)
 
 Same meaning as [`add()`](add.md)'s `axis`: `Axis::Feature` (default) supplies one
 value per feature; `Axis::Case` supplies one value per case.

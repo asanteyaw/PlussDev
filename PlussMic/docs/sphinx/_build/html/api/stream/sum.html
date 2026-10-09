@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::tabelize" href="tabelize.html" />
@@ -50,7 +50,7 @@
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the sum of a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind stream’s values, as a one-element <code class="docutils literal notranslate"><span class="pre">Stream</span></code> —
-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>-marked rows are excluded from the computation. Delegates to <code class="docutils literal notranslate"><span class="pre">Thread::sum()</span></code>, so it’s
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>-marked rows are excluded from the computation. Delegates to <code class="docutils literal notranslate"><span class="pre">Slate::sum()</span></code>, so it’s
 <code class="docutils literal notranslate"><span class="pre">Series</span></code>-only, same as <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>/<a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a>/<a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a>/
 <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>/<a class="reference internal" href="std.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">std()</span></code></span></a>.</p>
 </section>
@@ -98,7 +98,7 @@ label        | value
 </section>
 <section id="id1">
 <h3>Output<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::sum is only valid for Series payload
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::sum is only valid for Series payload
 </pre></div>
 </div>
 </section>

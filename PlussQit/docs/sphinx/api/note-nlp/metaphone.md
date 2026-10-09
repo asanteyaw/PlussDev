@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::metaphone
+# Note::NlpAccessor::metaphone
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::metaphone() const
+Note Note::NlpAccessor::metaphone() const
 ```
 
 ## Reduce Each Word To Its Consonant Skeleton
@@ -41,7 +41,7 @@ separator), each word is reduced, and the keys are joined with a single
 space. A cell with no word yields an empty string.
 
 The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode `Note` is rejected with `NoteNlpAccessor::metaphone requires a
+(a bytes-mode `Note` is rejected with `Note::NlpAccessor::metaphone requires a
 UTF-8 text Note (not bytes)`), and returns a fresh UTF-8 `Note`. Non-ASCII
 letters are not decoded — run [`to_ascii`](to_ascii.md)
 first if the input has accents.
@@ -80,11 +80,11 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
 
 ## See Also
 
-- [`NoteNlpAccessor::soundex`](soundex.md): a fixed four-character
+- [`Note::NlpAccessor::soundex`](soundex.md): a fixed four-character
   "sounds-like" code.
-- [`NoteNlpAccessor::to_ascii`](to_ascii.md): fold accents to
+- [`Note::NlpAccessor::to_ascii`](to_ascii.md): fold accents to
   ASCII before coding.
-- [`NoteNlpAccessor::tokens`](tokens.md): the word split used per cell.
+- [`Note::NlpAccessor::tokens`](tokens.md): the word split used per cell.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="mentions.html"><span class="label">Previous</span><span class="title">mentions</span></a>

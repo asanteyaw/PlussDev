@@ -82,7 +82,7 @@ ptype: Note
   `std::cout << stream.kind()` with a wall of overload-resolution errors.
 - Requires a defined stream ([`defined()`](defined.md)); throws `"Stream: undefined
   handle"` otherwise.
-- `StreamKind`'s four enumerators map 1:1 with `Thread`'s own payload kinds — a `Stream`
+- `StreamKind`'s four enumerators map 1:1 with `Slate`'s own payload kinds — a `Stream`
   always wraps exactly one of `Series`/`Note`/`Timeline`/`TimeIndex`.
 
 ## See Also

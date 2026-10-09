@@ -49,16 +49,16 @@ pluss::table::DataFrame make_base_frame() {
   const auto duration = pluss::duration::days({1, 2, 3, 4, 5});
 
   const auto metric_mask = make_bool_mask({true, false, true, true, false});
-  const auto case_axis = pluss::table::Thread(
+  const auto case_axis = pluss::table::Slate(
       pluss::make_note(std::vector<std::string>{"cs_0", "cs_1", "cs_2", "cs_3", "cs_4"}, shape));
 
   return pluss::table::DataFrame({
-                                    {"id", pluss::table::Thread(ids)},
-                                    {"metric", pluss::table::Thread(metric, metric_mask)},
-                                    {"city", pluss::table::Thread(city)},
-                                    {"text", pluss::table::Thread(text)},
-                                    {"timestamp", pluss::table::Thread(timestamp)},
-                                    {"duration", pluss::table::Thread(duration)},
+                                    {"id", pluss::table::Slate(ids)},
+                                    {"metric", pluss::table::Slate(metric, metric_mask)},
+                                    {"city", pluss::table::Slate(city)},
+                                    {"text", pluss::table::Slate(text)},
+                                    {"timestamp", pluss::table::Slate(timestamp)},
+                                    {"duration", pluss::table::Slate(duration)},
                                 },
                                 case_axis);
 }
@@ -259,7 +259,7 @@ void demo_archive_methods(const pluss::table::DataFrame& base_df) {
   std::cout << "\n=== Archive Methods ===\n";
   const auto f0 = base_df.slice(0, 3);
   const auto f1 = base_df.slice(2, 5);
-  const auto labels = pluss::table::Thread(
+  const auto labels = pluss::table::Slate(
       pluss::make_note(std::vector<std::string>{"batch_a", "batch_b"}, std::array<std::int64_t, 1>{2}));
   const pluss::table::Atlas atlas({f0, f1}, labels);
 

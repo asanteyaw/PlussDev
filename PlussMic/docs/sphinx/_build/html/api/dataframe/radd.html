@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::rand" href="rand.html" />
@@ -53,7 +53,7 @@
 of <code class="docutils literal notranslate"><span class="pre">frame</span> <span class="pre">+</span> <span class="pre">other</span></code>. <code class="docutils literal notranslate"><span class="pre">radd()</span></code>, <a class="reference internal" href="rsub.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rsub()</span></code></span></a>, <code class="docutils literal notranslate"><span class="pre">rmul</span></code>, <code class="docutils literal notranslate"><span class="pre">rdiv</span></code>, <code class="docutils literal notranslate"><span class="pre">rtruediv</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rfloordiv</span></code>, <code class="docutils literal notranslate"><span class="pre">rmod</span></code>, and <code class="docutils literal notranslate"><span class="pre">rpow</span></code> are the reflected counterparts of the eight forward
 arithmetic methods, all scalar-only (<code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">other</span></code>) — there is no reflected
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-to-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Thread</span></code> form, since swapping which side is the “frame”
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-to-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Slate</span></code> form, since swapping which side is the “frame”
 is unambiguous once a scalar is the other operand.</p>
 <p>For addition specifically, <code class="docutils literal notranslate"><span class="pre">frame.add(other)</span></code> and <code class="docutils literal notranslate"><span class="pre">frame.radd(other)</span></code> produce the
 <em>same</em> result, since addition is commutative — <code class="docutils literal notranslate"><span class="pre">radd()</span></code> mainly exists for symmetry
@@ -106,7 +106,7 @@ same number.</p>
 <ul class="simple">
 <li><p>All eight reflected methods (<code class="docutils literal notranslate"><span class="pre">radd</span></code>, <code class="docutils literal notranslate"><span class="pre">rsub</span></code>, <code class="docutils literal notranslate"><span class="pre">rmul</span></code>, <code class="docutils literal notranslate"><span class="pre">rdiv</span></code>, <code class="docutils literal notranslate"><span class="pre">rtruediv</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rfloordiv</span></code>, <code class="docutils literal notranslate"><span class="pre">rmod</span></code>, <code class="docutils literal notranslate"><span class="pre">rpow</span></code>) only accept a scalar <code class="docutils literal notranslate"><span class="pre">double</span></code>; there is no reflected
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Thread</span></code> overload.</p></li>
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">Slate</span></code> overload.</p></li>
 <li><p>For commutative operations (<code class="docutils literal notranslate"><span class="pre">radd</span></code>, <code class="docutils literal notranslate"><span class="pre">rmul</span></code>), the reflected and forward forms always
 agree. For non-commutative operations (<code class="docutils literal notranslate"><span class="pre">rsub</span></code>, <code class="docutils literal notranslate"><span class="pre">rdiv</span></code>, <code class="docutils literal notranslate"><span class="pre">rtruediv</span></code>, <code class="docutils literal notranslate"><span class="pre">rfloordiv</span></code>,
 <code class="docutils literal notranslate"><span class="pre">rmod</span></code>, <code class="docutils literal notranslate"><span class="pre">rpow</span></code>), the reflected form computes a genuinely different result — see

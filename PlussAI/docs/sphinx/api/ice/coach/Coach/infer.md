@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: b724cc44d12b -->
 # `pluss::ai::ice::Coach::infer`
 
 [Back to `pluss::ai::ice::Coach`](../Coach.md)
@@ -8,54 +7,105 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+[[nodiscard]] Series pluss::ai::ice::Coach::infer(const Model& model, Source& source) const;
+[[nodiscard]] Series pluss::ai::ice::Coach::infer(const Model& model, const Series& x, std::int64_t chunk_size = 0) const;
+[[nodiscard]] Series pluss::ai::ice::Coach::infer(const Model& model, const pluss::table::DataFrame& df,
+                                                  std::string_view target = {}, std::int64_t chunk_size = 0) const;
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Runs `model` over every row of its input and returns the concatenated
+predictions. `model` must already satisfy `model.ready()`. Like
+[`learn`](learn.md), the `Source&` overload is the primitive: the
+`Series` overload builds a
+[`TensorSource`](../../source/TensorSource.md) with `chunk_size` as
+that source's own `BatchPlan::batch_size` (`0` meaning one pass over
+every row) and forwards to it; the `DataFrame` overload extracts a
+feature matrix (optionally re-applying fitted standardization), then
+calls the `Series` overload. `on_run_begin`/`on_batch_begin`/
+`on_batch_end`/`on_run_end` all fire through this call, same as
+[`learn`](learn.md) -- see
+[`Callback`'s own Introduction](../../callback/Callback/Introduction.md)
+for the shorter `infer`/`assess` hook shape.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`const Model& model`
+: The trained model -- `const`, never mutated by inference itself
+  (though `Coach` does briefly toggle `is_training()` internally and
+  restore it afterward).
+
+`Source& source`
+: A pluggable batch feed, iterated once over `infer_batches()`.
+
+`const Series& x`
+: Raw input features.
+
+`std::int64_t chunk_size`
+: Rows per batch; `0` (the default) means every row in one batch.
+  Chunking changes nothing about the result -- inference has no
+  batch-dependent randomness -- only how much device memory a single
+  forward pass needs at once.
+
+`const pluss::table::DataFrame& df`
+: A frame whose columns (other than `target`, if named) become
+  features.
+
+`std::string_view target`
+: The column to exclude from the feature matrix -- name the same
+  column `learn` was trained against, even though its values are not
+  read here. Left empty (the default), every column becomes a feature,
+  which only works when `df` genuinely has no target column at all
+  (see Example 3's failure case otherwise).
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`Series` -- every batch's predictions concatenated along axis 0, in
+input row order regardless of `chunk_size`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+- Throws if `model.ready()` is `false`.
+- Throws whatever [`Model::infer_step`](../../model/Model/infer_step.md)
+  throws for a shape mismatch between the input and the model's
+  parameters -- see Example 3.
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples: the `Series`/`chunk_size` overload, the `Source&`
+primitive reconstructing exactly what a given `chunk_size` builds
+internally, and the `DataFrame` overload's `target` parameter, both
+naming it correctly and the shape-mismatch failure from leaving it out
+on a frame that still has the column.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 100;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+
+  const ice::Coach coach(options);
+  coach.learn(model, x, y);
+
+  const pluss::Series predictions = coach.infer(model, x);
+  std::cout << "predictions:\n" << predictions << "\n";
 
   return 0;
 }
@@ -64,27 +114,48 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+predictions:
+pluss::Series(shape=[4,1], strides=[1,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=[[0.0092697404],
+  [1.0043123],
+  [1.0074358],
+  [2.0024784]]
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 100;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+
+  const ice::Coach coach(options);
+  coach.learn(model, x, y);
+
+  // chunk_size becomes the infer Source's own BatchPlan::batch_size --
+  // reconstructing it by hand produces the identical predictions, chunked
+  // in pieces of 2 rows instead of one pass over all 4.
+  ice::TensorSource source(x, ice::BatchPlan{.batch_size = 2});
+  const pluss::Series via_source = coach.infer(model, source);
+  const pluss::Series via_chunk_size = coach.infer(model, x, /*chunk_size=*/2);
+
+  const double diff = via_source.sub(via_chunk_size).abs().amax().item<double>();
+  std::cout << "diff = " << diff << "\n";
 
   return 0;
 }
@@ -93,27 +164,62 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+diff = 0
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
+Naming the real target column excludes it from the feature matrix,
+reproducing exactly the shape `learn` trained on. Leaving `target`
+empty on the same frame leaves all three columns (including `"label"`)
+as features -- a shape the model was never trained on, so the forward
+pass throws.
 
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  const pluss::Config f32 = pluss::Config{}.with_dtype(ScalarType::Float32).with_platform(pluss::pCPU);
+  const pluss::Series x0 = pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}, f32);
+  const pluss::Series x1 = pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}, f32);
+  const pluss::Series label = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}, f32);
+
+  const DataFrame df({
+      {"x0", Slate(x0)},
+      {"x1", Slate(x1)},
+      {"label", Slate(label)},
+  });
+
+  ice::Outline model(nn::Fusion(2, 1));
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 100;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+
+  const ice::Coach coach(options);
+  coach.learn(model, df, "label");
+
+  const pluss::Series with_target_excluded = coach.infer(model, df, "label");
+  std::cout << "with target excluded:\n" << with_target_excluded << "\n";
+
+  bool threw = false;
+  try {
+    const pluss::Series with_target_included = coach.infer(model, df);
+    static_cast<void>(with_target_included);
+  } catch (const std::exception&) {
+    threw = true;
+  }
+  std::cout << "infer(model, df) with no target name threw: " << threw << "\n";
 
   return 0;
 }
@@ -122,12 +228,27 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+with target excluded:
+pluss::Series(shape=[4,1], strides=[1,1], dtype=float32, platform=cpu, numel=4, contiguous=true)
+data=[[0.0092697404],
+  [1.0043123],
+  [1.0074358],
+  [2.0024784]]
+infer(model, df) with no target name threw: 1
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`learn`](learn.md) -- the same `Source&`-primitive shape.
+- [`assess`](assess.md) -- runs inference and compares against ground
+  truth in one call.
+- [`TrainOptions::standardize`](../../options/TrainOptions.md) -- when
+  set, the `DataFrame` overload re-applies the fitted standardization
+  automatically.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: bbff242829be -->
+<!-- pluss-signature-hash: 4ca964d10de7 -->
 
 # DataFrame::filter
 
@@ -9,8 +9,8 @@
 
 ```cpp
 DataFrame::filter(const pluss::Series& bool_mask) const -> DataFrame
-DataFrame::filter(const Thread& bool_mask) const -> DataFrame
-DataFrame::filter(const Thread& bool_mask, const AlignOptions& options) const -> DataFrame
+DataFrame::filter(const Slate& bool_mask) const -> DataFrame
+DataFrame::filter(const Slate& bool_mask, const AlignOptions& options) const -> DataFrame
 ```
 
 ## What It Does
@@ -19,31 +19,31 @@ Keeps only the cases where `bool_mask` is `true`, dropping every other row, and 
 the resulting frame with all features intact. This is the row-filtering counterpart to
 [`query()`](query.md): `query()` takes a string expression and builds the boolean mask
 for you, while `filter()` takes an already-built mask — a boolean `Series`, or a boolean
-`Thread` produced by comparing a feature against a value or another feature (`df.get("units") >= 3`, for example).
+`Slate` produced by comparing a feature against a value or another feature (`df.get("units") >= 3`, for example).
 
 Reach for `filter()` when the mask is more naturally expressed in C++ than in a query
 string — built from a helper function, combined from several intermediate boolean
-threads with `&&` / `||`, or reused across several calls — and reach for `query()` when a
+slates with `&&` / `||`, or reused across several calls — and reach for `query()` when a
 single self-contained string predicate reads more clearly at the call site.
 
-Masks are usually built by comparing the `Thread` returned from
+Masks are usually built by comparing the `Slate` returned from
 [`features(name)`](features.md) against a scalar or another feature, for example
 `df.features("units") >= 3`. Note that [`get(name)`](get.md) returns
-`std::optional<Thread>` rather than a bare `Thread` (it is the "does this feature exist"
+`std::optional<Slate>` rather than a bare `Slate` (it is the "does this feature exist"
 lookup), so it needs `.value()` before it supports comparison operators —
 `features(name)` is the more direct accessor when you already know the feature exists.
 
 ## Parameters
 
-**bool_mask** (`const pluss::Series&` / `const Thread&`)
+**bool_mask** (`const pluss::Series&` / `const Slate&`)
 
 A boolean mask with one entry per case on the current frame. `true` keeps the
 corresponding row; `false` (or a null entry, which is treated as not-true) drops it.
-Both a raw `pluss::Series` and a `Thread` wrapping one are accepted directly — most
-masks arise naturally as a `Thread` from a feature comparison, such as
+Both a raw `pluss::Series` and a `Slate` wrapping one are accepted directly — most
+masks arise naturally as a `Slate` from a feature comparison, such as
 `df.get("unit_price") > 100.0`.
 
-**options** (`const AlignOptions&`, mask-`Thread` overload only)
+**options** (`const AlignOptions&`, mask-`Slate` overload only)
 
 Controls how the mask is aligned to the frame's case axis when the mask's own case axis
 does not already match the frame exactly (for example, a mask computed from a
@@ -66,12 +66,12 @@ Example 1. Filter using a mask built from comparing a feature to a scalar.
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"city",       Thread(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
-    {"product",    Thread(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"city",       Slate(pluss::make_note({"Accra", "Accra", "Tema", "Tema", "Kumasi", "Kumasi"}))},
+    {"product",    Slate(pluss::make_note({"Laptop", "Headphones", "Laptop", "Monitor", "Headphones", "Monitor"}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0, 320.0, 42.0, std::numeric_limits<double>::quiet_NaN()}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, std::numeric_limits<double>::quiet_NaN(), 0.08, 0.05, 0.12}))},
 });
 
 auto mask = orders.features("unit_price") > 100.0;
@@ -105,7 +105,7 @@ auto mask = (orders.features("units") >= 3) && (orders.features("city") != "Kuma
 auto out = orders.filter(mask);
 ```
 
-Composing boolean threads with `&&` / `||` reads naturally once a mask needs more than
+Composing boolean slates with `&&` / `||` reads naturally once a mask needs more than
 one condition, and keeps the logic in ordinary C++ rather than a string that only gets
 checked at runtime.
 

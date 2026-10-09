@@ -126,9 +126,9 @@ right-factor contributions. The two batches still remain independent.
 ## See Also
 
 - [`Series::baddbmm`](baddbmm.md): batched `bmm` with a scaled bias.
-- [`SeriesLinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
+- [`Series::LinearAlgAccessor::matmul`](../series-linearalg/matmul.md): the
   rank-polymorphic product with batch broadcasting.
-- [`SeriesLinearAlgAccessor::mm`](../series-linearalg/mm.md): the strict 2-D
+- [`Series::LinearAlgAccessor::mm`](../series-linearalg/mm.md): the strict 2-D
   product.
 
 <div class="pluss-inline-prev-next">

@@ -57,9 +57,9 @@ every other.
 using namespace pluss::table;
 
 auto metrics = DataFrame({
-    {"revenue",  Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0, 130.0}))},
-    {"cost",     Thread(pluss::make_series({60.0, 80.0, 55.0, 95.0, 85.0}))},
-    {"headcount", Thread(pluss::make_series({12.0, 14.0, 11.0, 16.0, 15.0}))},
+    {"revenue",  Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0, 130.0}))},
+    {"cost",     Slate(pluss::make_series({60.0, 80.0, 55.0, 95.0, 85.0}))},
+    {"headcount", Slate(pluss::make_series({12.0, 14.0, 11.0, 16.0, 15.0}))},
 });
 
 auto chart = metrics.plot().corr_heatmap();
@@ -108,8 +108,8 @@ Example 4. A feature that isn't numeric throws, same as every method sharing thi
 
 ```cpp
 auto tagged = DataFrame({
-    {"revenue", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"region",  Thread(pluss::make_note({"East", "West", "East"}))},
+    {"revenue", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"region",  Slate(pluss::make_note({"East", "West", "East"}))},
 });
 
 try {

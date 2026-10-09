@@ -22,7 +22,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 Config f64() {
   return Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -34,9 +34,9 @@ Series vec(std::vector<double> values) {
 
 DataFrame frame() {
   return DataFrame({
-      {"timestamp", Thread(vec({1.0, 2.0, 3.0}))},
-      {"x", Thread(vec({10.0, 20.0, 30.0}))},
-      {"y", Thread(vec({0.0, 1.0, 0.0}))},
+      {"timestamp", Slate(vec({1.0, 2.0, 3.0}))},
+      {"x", Slate(vec({10.0, 20.0, 30.0}))},
+      {"y", Slate(vec({0.0, 1.0, 0.0}))},
   });
 }
 
@@ -60,8 +60,10 @@ ai::Step frame_gate(std::string name = "gate") {
     if (inputs.front().is<DataFrame>()) {
       return ai::Artifact("clean", ai::Artifact::Value(inputs.front().get<DataFrame>()));
     }
-    if (inputs.front().is<lymph::Payload>()) {
-      return ai::Artifact("clean", ai::Artifact::Value(inputs.front().get<lymph::Payload>()));
+    if (inputs.front().is<lymph::workflow::Payload>()) {
+      return ai::Artifact(
+          "clean",
+          ai::Artifact::Value(inputs.front().get<lymph::workflow::Payload>()));
     }
     ::pluss::throw_error("procedure_phase7 frame_gate expected DataFrame or Payload input.");
   };
@@ -124,8 +126,8 @@ bool run_phase7_checks(std::ostream* err = nullptr) {
     options.fail_fast = false;
     const ai::Procedure proc = ai::procedure::make({frame_gate()}, {}, options);
     const DataFrame missing_time({
-        {"x", Thread(vec({10.0, 20.0, 30.0}))},
-        {"y", Thread(vec({0.0, 1.0, 0.0}))},
+        {"x", Slate(vec({10.0, 20.0, 30.0}))},
+        {"y", Slate(vec({0.0, 1.0, 0.0}))},
     });
     const ai::ProcedureResult out = proc.run({ai::procedure::input("raw", missing_time)});
     if (out.ok() || out.failed_step() != "gate" || !contains_text(out.warnings(), "timestamp")) {
@@ -138,9 +140,11 @@ bool run_phase7_checks(std::ostream* err = nullptr) {
     ai::ProcedureOptions options{};
     options.fail_fast = false;
     const ai::Procedure proc = ai::procedure::make({frame_gate()}, {}, options);
-    lymph::Payload payload = lymph::payload::make(frame()).time("timestamp");
-    const ai::ProcedureResult out = proc.run({ai::procedure::input("raw", payload)});
-    if (!out.ok() || out.audit().empty() || out.audit().front().inputs.front().type != "lymph::Payload") {
+    lymph::workflow::Payload sample =
+        lymph::workflow::payload::make(frame()).time("timestamp");
+    const ai::ProcedureResult out = proc.run({ai::procedure::input("raw", sample)});
+    if (!out.ok() || out.audit().empty() ||
+        out.audit().front().inputs.front().type != "lymph::workflow::Payload") {
       if (err) *err << "Procedure phase 7 should accept Payload time roles for time-aware steps\n";
       return false;
     }
@@ -188,7 +192,8 @@ bool run_phase7_checks(std::ostream* err = nullptr) {
 
   {
     const auto bundle = fresh_bundle_path("procedure_phase7_contract");
-    ai::Step gate = ai::procedure::step("gate", "raw", "clean", lymph::Policy{});
+    ai::Step gate = ai::procedure::step(
+        "gate", "raw", "clean", lymph::workflow::Policy{});
     gate.options().require_columns = {"timestamp", "x"};
     gate.options().time_feature = "timestamp";
     gate.options().requires_time = true;
@@ -201,7 +206,7 @@ bool run_phase7_checks(std::ostream* err = nullptr) {
                                    std::vector<ai::Link>(restored.links().begin(), restored.links().end()),
                                    options);
     const DataFrame missing({
-        {"x", Thread(vec({10.0, 20.0, 30.0}))},
+        {"x", Slate(vec({10.0, 20.0, 30.0}))},
     });
     const ai::ProcedureResult out = restored.run({ai::procedure::input("raw", missing)});
     std::filesystem::remove_all(bundle);

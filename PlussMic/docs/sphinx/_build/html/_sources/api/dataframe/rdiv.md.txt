@@ -94,7 +94,7 @@ since `frame / other` and `other / frame` are reciprocal operations, not the sam
 - `rdiv()` and `rtruediv()` are verified to be the same operation, mirroring the
   forward `div()`/`truediv()` identity.
 - Only accepts a scalar `double` — see [`radd()`](radd.md) for why there is no
-  reflected `DataFrame` or `Thread` overload.
+  reflected `DataFrame` or `Slate` overload.
 - Dividing by a frame value of `0` produces the usual floating-point division-by-zero
   result (`inf` or `NaN`, depending on the numerator), not an exception.
 

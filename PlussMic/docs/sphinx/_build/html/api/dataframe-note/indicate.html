@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::length" href="length.html" />
@@ -97,7 +97,7 @@ See Example 2 — this is the same category of surprise documented on
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>delimiter</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;|&quot;</span></code>)
 The literal text to split each cell on before collecting tokens. Must
-not be empty — <code class="docutils literal notranslate"><span class="pre">indicate(&quot;&quot;)</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::indicate:</span> <span class="pre">delimiter</span>&#160;&#160;&#160;&#160; <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
+not be empty — <code class="docutils literal notranslate"><span class="pre">indicate(&quot;&quot;)</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::indicate:</span> <span class="pre">delimiter</span>&#160;&#160;&#160;&#160; <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
 <p><strong>prefix</strong> (<code class="docutils literal notranslate"><span class="pre">std::string</span></code>, default <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)
 Text prepended to each level to form its column name — with the
 default empty prefix, a column is named exactly after the level text
@@ -117,7 +117,7 @@ behavior from the danger box above.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">tagged</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;tags&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;tags&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
 <span class="w">        </span><span class="p">{</span><span class="s">&quot;red|blue&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;blue|green&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;red&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -163,7 +163,7 @@ valid row that simply matched none of the levels.</p>
 from the warning above: row 3’s hidden invalid text introduces a level no
 valid row ever uses.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">langs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;langs&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;langs&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
 <span class="w">        </span><span class="p">{</span><span class="s">&quot;python, rust&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;python, go&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;just-one-word&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mars&quot;</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -220,7 +220,7 @@ from a genuinely rare but real tag.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::indicate: delimiter cannot be empty
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::indicate: delimiter cannot be empty
 </pre></div>
 </div>
 </section>
@@ -236,7 +236,7 @@ show <code class="docutils literal notranslate"><span class="pre">false</span></
 <li><p>The level set is collected from every row’s raw text regardless of
 validity, so an invalid row can introduce an all-false phantom column.
 See the warning above and Example 2.</p></li>
-<li><p>An empty <code class="docutils literal notranslate"><span class="pre">delimiter</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::indicate:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p>An empty <code class="docutils literal notranslate"><span class="pre">delimiter</span></code> throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::indicate:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
 </ul>
 </section>
 <section id="see-also">

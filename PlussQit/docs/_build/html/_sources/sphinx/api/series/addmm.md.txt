@@ -240,7 +240,7 @@ product:
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::mm`](../series-linearalg/mm.md): the bare matrix
+- [`Series::LinearAlgAccessor::mm`](../series-linearalg/mm.md): the bare matrix
   product `addmm` adds a bias to.
 - [`Series::addmv`](addmv.md) / [`Series::addr`](addr.md) /
   [`Series::baddbmm`](baddbmm.md): the vector, outer-product, and batched forms.

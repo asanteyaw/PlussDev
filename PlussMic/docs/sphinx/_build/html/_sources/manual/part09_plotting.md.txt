@@ -12,7 +12,7 @@ a SQL query, or an aggregation object. It plots from a `DataFrame` or `Atlas`.
 That means all the table skills from the earlier chapters still apply:
 
 1. Load the data into a `DataFrame`.
-2. Convert columns to the correct `Thread` kind.
+2. Convert columns to the correct `Slate` kind.
 3. Clean missing values deliberately.
 4. Filter, aggregate, pivot, or assign features.
 5. Call `plot()`, `plot3d()`, or `Atlas::plot()`.
@@ -34,7 +34,7 @@ The plotting classes used most often are:
 
 ```cpp
 pluss::table::DataFrame;
-pluss::table::Thread;
+pluss::table::Slate;
 pluss::table::DataFramePlotOptions;
 pluss::table::LinePlotOptions;
 pluss::table::ScatterPlotOptions;
@@ -88,10 +88,10 @@ simulation paths, or model versions.
 
 ## What PlussMic expects from the data
 
-Plotting methods use `Thread` kinds to decide how a feature can participate in a
+Plotting methods use `Slate` kinds to decide how a feature can participate in a
 plot.
 
-| Thread kind | Plotting role |
+| Slate kind | Plotting role |
 | --- | --- |
 | `Series` | Numeric y-values, x-values, histogram input, heatmap values, correlation input, 3D coordinates. |
 | `Note` | Labels, categories, hue groups, case labels, and tick labels. |
@@ -1202,7 +1202,7 @@ An `Atlas` is a stack of frames. Plotting an atlas is useful when the depth
 dimension is meaningful:
 
 ```cpp
-Thread scenarios = pluss::make_note({"base", "stress", "upside"});
+Slate scenarios = pluss::make_note({"base", "stress", "upside"});
 pluss::table::Atlas atlas({base, stressed, optimistic}, scenarios);
 
 auto fig = atlas.plot().line("revenue", "date");

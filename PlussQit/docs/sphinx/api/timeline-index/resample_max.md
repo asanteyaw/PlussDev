@@ -1,18 +1,18 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::resample_max
+# Timeline::TimelineIndexAccessor::resample_max
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-pluss::Series TimelineIndexAccessor::resample_max(
+pluss::Series Timeline::TimelineIndexAccessor::resample_max(
     const pluss::Series& values,
     std::string_view freq,
     std::int64_t step = 1) const
 
-pluss::Series TimelineIndexAccessor::resample_max(
+pluss::Series Timeline::TimelineIndexAccessor::resample_max(
     const pluss::Series& values,
     const ResampleOptions& options) const
 ```
@@ -62,11 +62,11 @@ nanosecond length.
 Example 1. Compute one maximum per hour.
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto values = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0});
 
 std::cout << pluss::series::print(index.resample_max(values, "H")) << "\n";
@@ -95,10 +95,10 @@ data=[5.0000]
 Example 3. Missing floating lanes are skipped without hiding an empty bin.
 
 ```cpp
-auto sparse = pluss::timeindex::make({
+auto sparse = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:10:00Z",
     "2024-11-01T00:20:00Z", "2024-11-01T02:00:00Z",
-});
+}).index();
 auto readings = pluss::make_series(std::vector<double>{
     std::numeric_limits<double>::quiet_NaN(), 3.0, 1.0, 7.0});
 
@@ -116,10 +116,10 @@ Example 4. Right-closed bins place an exact hour boundary in the preceding
 interval.
 
 ```cpp
-pluss::TimelineIndexAccessor::ResampleOptions options;
+pluss::Timeline::TimelineIndexAccessor::ResampleOptions options;
 options.freq = "H";
-options.closed = pluss::TimelineIndexAccessor::ResampleClosed::Right;
-options.label = pluss::TimelineIndexAccessor::ResampleLabel::Right;
+options.closed = pluss::Timeline::TimelineIndexAccessor::ResampleClosed::Right;
+options.label = pluss::Timeline::TimelineIndexAccessor::ResampleLabel::Right;
 
 std::cout << pluss::series::print(index.resample_max(values, options)) << "\n";
 ```
@@ -135,10 +135,10 @@ Example 5. Compare value selection with endpoint selection. The maximum need
 not be the last observation in its bin.
 
 ```cpp
-auto sample = pluss::timeindex::make({
+auto sample = pluss::timeline::make({
     "2025-01-01T00:00:00Z", "2025-01-01T00:20:00Z",
     "2025-01-01T00:40:00Z",
-});
+}).index();
 auto load = pluss::make_series({2.0, 9.0, 4.0});
 
 std::cout << pluss::series::print(sample.resample_max(load, "H")) << "\n";
@@ -180,9 +180,9 @@ uses linear work after bin construction.
 
 ## See Also
 
-- [`TimelineIndexAccessor::resample_min`](resample_min.md)
-- [`TimelineIndexAccessor::resample_last`](resample_last.md)
-- [`TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
+- [`Timeline::TimelineIndexAccessor::resample_min`](resample_min.md)
+- [`Timeline::TimelineIndexAccessor::resample_last`](resample_last.md)
+- [`Timeline::TimelineIndexAccessor::resample_ohlc`](resample_ohlc.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="resample_last.html">

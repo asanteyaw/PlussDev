@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::svd_u
+# Series::LinearAlgAccessor::svd_u
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::svd_u(bool full_matrices = true) const
+Series Series::LinearAlgAccessor::svd_u(bool full_matrices = true) const
 Series SeriesLinearAlgProxy::svd_u(bool full_matrices = true) const
 ```
 
@@ -26,7 +26,7 @@ singular vectors.
 ## Calling Styles And Which One To Use
 
 ```cpp
-auto direct = matrix.linearalg.svd_u(false);    // SeriesLinearAlgAccessor
+auto direct = matrix.linearalg.svd_u(false);    // Series::LinearAlgAccessor
 auto proxied = matrix.linearalg().svd_u(false); // SeriesLinearAlgProxy
 ```
 

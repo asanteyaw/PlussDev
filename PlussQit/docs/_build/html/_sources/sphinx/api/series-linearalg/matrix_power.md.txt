@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::matrix_power
+# Series::LinearAlgAccessor::matrix_power
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::matrix_power(std::int64_t n) const
+Series Series::LinearAlgAccessor::matrix_power(std::int64_t n) const
 Series SeriesLinearAlgProxy::matrix_power(std::int64_t n) const
 ```
 
@@ -215,9 +215,9 @@ negative exponents through matrix inversion.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::matrix_exp`](matrix_exp.md): exponential series of a matrix.
-- [`SeriesLinearAlgAccessor::inverse`](inverse.md): the `n = -1` case.
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): one matrix-composition step.
+- [`Series::LinearAlgAccessor::matrix_exp`](matrix_exp.md): exponential series of a matrix.
+- [`Series::LinearAlgAccessor::inverse`](inverse.md): the `n = -1` case.
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): one matrix-composition step.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="matrix_exp.html">

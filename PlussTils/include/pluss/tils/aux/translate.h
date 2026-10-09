@@ -19,8 +19,6 @@
 
 namespace pluss::tils {
 
-using transform_axis_options = transmit_options;
-
 namespace detail {
 
 inline std::int64_t wrap_axis(std::int64_t axis, std::int64_t dim, const char* where) {
@@ -34,7 +32,7 @@ template <class F, class SliceFn>
 auto translate_slices(F&& fn,
                      std::size_t nslices,
                      SliceFn&& slice_fn,
-                     transform_axis_options opts) {
+                     transmit_options opts) {
   using slice_t = std::decay_t<decltype(slice_fn(std::size_t{0}))>;
   using out_t = invoke_result_elem_t<F&, const slice_t&>;
 
@@ -44,7 +42,8 @@ auto translate_slices(F&& fn,
 
   if (opts.exec == transmit_exec::par &&
       opts.grain_size > 0 &&
-      std::default_initializable<out_t>) {
+      std::default_initializable<out_t> &&
+      std::copy_constructible<std::decay_t<F>>) {
     out.resize(nslices);
     const std::size_t hw = std::max<std::size_t>(1, std::thread::hardware_concurrency());
     const std::size_t workers = std::max<std::size_t>(1, opts.workers == 0 ? hw : opts.workers);
@@ -58,7 +57,7 @@ auto translate_slices(F&& fn,
     for (std::size_t c = 0; c < chunks; ++c) {
       const std::size_t start = c * block;
       const std::size_t end = std::min<std::size_t>(nslices, start + block);
-      futures.emplace_back(std::async(std::launch::async, [&, start, end]() {
+      futures.emplace_back(std::async(std::launch::async, [&, fn_copy, start, end]() mutable {
         for (std::size_t i = start; i < end; ++i) {
           const auto slice = slice_fn(i);
           out[i] = invoke_with_optional_index(fn_copy, slice, i);
@@ -127,13 +126,13 @@ inline std::vector<std::int64_t> unravel_index(std::size_t linear,
 // NumPy-style apply_along_axis for Series (up to CodeM max rank).
 // Applies fn to each 1D slice oriented along `axis`.
 template <class F>
-auto transform_axis(F&& fn,
-                    const pluss::Series& x,
-                    std::int64_t axis,
-                    transform_axis_options opts = {}) {
-  CODEM_CHECK(x.defined(), "transform_axis(Series): undefined input");
-  CODEM_CHECK(x.dim() > 0, "transform_axis(Series): axis dispatch requires dim > 0");
-  const auto d = detail::wrap_axis(axis, x.dim(), "transform_axis(Series)");
+auto map_axis(F&& fn,
+              const pluss::Series& x,
+              std::int64_t axis,
+              transmit_options opts = {}) {
+  CODEM_CHECK(x.defined(), "map_axis(Series): undefined input");
+  CODEM_CHECK(x.dim() > 0, "map_axis(Series): axis dispatch requires dim > 0");
+  const auto d = detail::wrap_axis(axis, x.dim(), "map_axis(Series)");
   const auto sizes = x.sizes();
   const auto layout = detail::make_axis_layout(
       x.dim(),
@@ -141,7 +140,7 @@ auto transform_axis(F&& fn,
       [&](std::int64_t k) {
         return sizes[static_cast<std::size_t>(k)];
       },
-      "transform_axis(Series)");
+      "map_axis(Series)");
 
   auto make_slice = [&](std::size_t linear_index) {
     const auto fixed_index = detail::unravel_index(linear_index, layout.fixed_shape);
@@ -160,18 +159,18 @@ auto transform_axis(F&& fn,
 
 // NumPy-style apply_along_axis for Note (0D..3D).
 template <class F>
-auto transform_axis(F&& fn,
-                    const pluss::Note& x,
-                    std::int64_t axis,
-                    transform_axis_options opts = {}) {
-  CODEM_CHECK(x.defined(), "transform_axis(Note): undefined input");
-  CODEM_CHECK(x.dim() > 0, "transform_axis(Note): axis dispatch requires dim > 0");
-  const auto d = detail::wrap_axis(axis, x.dim(), "transform_axis(Note)");
+auto map_axis(F&& fn,
+              const pluss::Note& x,
+              std::int64_t axis,
+              transmit_options opts = {}) {
+  CODEM_CHECK(x.defined(), "map_axis(Note): undefined input");
+  CODEM_CHECK(x.dim() > 0, "map_axis(Note): axis dispatch requires dim > 0");
+  const auto d = detail::wrap_axis(axis, x.dim(), "map_axis(Note)");
   const auto layout = detail::make_axis_layout(
       x.dim(),
       d,
       [&](std::int64_t k) { return x.size(k); },
-      "transform_axis(Note)");
+      "map_axis(Note)");
 
   auto make_slice = [&](std::size_t linear_index) {
     const auto fixed_index = detail::unravel_index(linear_index, layout.fixed_shape);
@@ -191,13 +190,13 @@ auto transform_axis(F&& fn,
 // NumPy-style apply_along_axis for Timeline (0D..3D).
 // Slices are returned as 1D Timeline views reconstructed from selected tick Series.
 template <class F>
-auto transform_axis(F&& fn,
-                    const pluss::codeh::Timeline& x,
-                    std::int64_t axis,
-                    transform_axis_options opts = {}) {
-  CODEM_CHECK(x.defined(), "transform_axis(Timeline): undefined input");
-  CODEM_CHECK(x.dim() > 0, "transform_axis(Timeline): axis dispatch requires dim > 0");
-  const auto d = detail::wrap_axis(axis, x.dim(), "transform_axis(Timeline)");
+auto map_axis(F&& fn,
+              const pluss::codeh::Timeline& x,
+              std::int64_t axis,
+              transmit_options opts = {}) {
+  CODEM_CHECK(x.defined(), "map_axis(Timeline): undefined input");
+  CODEM_CHECK(x.dim() > 0, "map_axis(Timeline): axis dispatch requires dim > 0");
+  const auto d = detail::wrap_axis(axis, x.dim(), "map_axis(Timeline)");
   const auto sizes = x.sizes();
   const auto layout = detail::make_axis_layout(
       x.dim(),
@@ -205,7 +204,7 @@ auto transform_axis(F&& fn,
       [&](std::int64_t k) {
         return sizes[static_cast<std::size_t>(k)];
       },
-      "transform_axis(Timeline)");
+      "map_axis(Timeline)");
 
   auto make_slice = [&](std::size_t linear_index) {
     const auto fixed_index = detail::unravel_index(linear_index, layout.fixed_shape);

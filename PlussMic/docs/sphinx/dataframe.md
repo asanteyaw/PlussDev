@@ -14,9 +14,9 @@ Use it when you want:
 
 ```cpp
 auto df = pluss::table::DataFrame({
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"opened", pluss::table::Thread(pluss::make_timeline({
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema", "Kumasi"}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"opened", pluss::table::Slate(pluss::make_timeline({
         "2024-01-01T08:00:00Z",
         "2024-01-02T08:00:00Z",
         "2024-01-03T08:00:00Z",
@@ -54,7 +54,7 @@ auto first_value = df.case_study().at(0).features({"city"});
 
 Notes:
 
-- `features("name")` returns a typed `Thread`
+- `features("name")` returns a typed `Slate`
 - `caselbl()` is the row axis, not just a display index
 - `case_study()` is the case-selection accessor; chain `features(...)` for projection
 - `describe()` is the fastest way to check whether numeric casts and missing values look right
@@ -67,13 +67,13 @@ table workflow.
 ### Select one column vs many columns
 
 ```cpp
-auto one = df.features("sales");                // Thread
+auto one = df.features("sales");                // Slate
 auto many = df.features({"city", "sales"});     // DataFrame
 ```
 
 Rule of thumb:
 
-- `features("name")` returns one `Thread`
+- `features("name")` returns one `Slate`
 - `features({"a", "b"})` returns a smaller `DataFrame`
 
 ### Rename one column vs many columns
@@ -157,14 +157,14 @@ see `dataframe_display.md`.
 auto work = csv_df
     .cast({
         pluss::table::DataFrame::CastSpec{
-            "Business Case ID", pluss::table::ThreadCastTarget::Timeline, {}},
+            "Business Case ID", pluss::table::SlateCastTarget::Timeline, {}},
     })
     .astype({{"Lifecycle Cost", pluss::codem::ScalarType::Float64}})
     .assign({
         pluss::table::DataFrame::DeriveSpec{
             "Cost_plus_buffer",
             [](const pluss::table::DataFrame& f) {
-              return pluss::table::Thread(f.features("Lifecycle Cost").as_series().add(500.0));
+              return pluss::table::Slate(f.features("Lifecycle Cost").as_series().add(500.0));
             },
         },
     });
@@ -260,7 +260,7 @@ auto summary = sales.group({.dropnull = true})
 
 Supported grouped operations are `Count`, `Ndistinct`, `Sum`, `Mean`, `Min`,
 `Max`, `Std`, and `Var`. Numeric reductions use Series scatter operations and
-stay on the payload platform. Group keys retain their original Thread type and
+stay on the payload platform. Group keys retain their original Slate type and
 first-seen order.
 
 ## Wide-To-Long Reshape
@@ -278,7 +278,7 @@ auto long_form = wide.lengthen(
 
 The result contains `student_id`, `assessment`, and `score`. Numeric value
 features must share dtype and platform; other value features must share a
-Thread kind. Missing masks are preserved. Leave the value-feature list empty
+Slate kind. Missing masks are preserved. Leave the value-feature list empty
 to stack every non-identifier feature.
 
 ## Low-Cardinality Encoding
@@ -357,7 +357,7 @@ auto dropped = df.dropnull();
 auto carried = df.ffill();
 
 auto rolling = df.ts().window({
-    {"sales_roll3", "sales", pluss::table::ThreadWindowOp::RollingMean, 3, 1},
+    {"sales_roll3", "sales", pluss::table::SlateWindowOp::RollingMean, 3, 1},
 });
 ```
 
@@ -365,13 +365,13 @@ auto rolling = df.ts().window({
 
 ```cpp
 auto left = pluss::table::DataFrame({
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema"}))},
-    {"sales", pluss::table::Thread(pluss::make_series({100.0, 120.0}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema"}))},
+    {"sales", pluss::table::Slate(pluss::make_series({100.0, 120.0}))},
 });
 
 auto right = pluss::table::DataFrame({
-    {"city", pluss::table::Thread(pluss::make_note({"Accra", "Tema"}))},
-    {"manager", pluss::table::Thread(pluss::make_note({"Ama", "Kojo"}))},
+    {"city", pluss::table::Slate(pluss::make_note({"Accra", "Tema"}))},
+    {"manager", pluss::table::Slate(pluss::make_note({"Ama", "Kojo"}))},
 });
 
 auto joined = left.unify({"city"}, right, {"city"}, "common", "_r");
@@ -436,12 +436,12 @@ Important behavior:
 
 ```cpp
 auto schedule = pluss::table::DataFrame({
-    {"ts", pluss::table::Thread(pluss::make_timeline({
+    {"ts", pluss::table::Slate(pluss::make_timeline({
         "2024-01-01T09:10:00Z",
         "2024-01-01T09:40:00Z",
         "2024-01-01T10:05:00Z",
     }))},
-    {"value", pluss::table::Thread(pluss::make_series({10.0, 20.0, 30.0}))},
+    {"value", pluss::table::Slate(pluss::make_series({10.0, 20.0, 30.0}))},
 });
 
 auto hourly = schedule.resample("ts", {"value"}, "1H", "mean", 1, false);

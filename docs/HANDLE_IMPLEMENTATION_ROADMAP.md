@@ -1,7 +1,7 @@
 # Handle Module Implementation Roadmap
 
 ## Overview
-The Handle module implements a **Feed-First design philosophy** for MongoDB-like NoSQL operations, complementing the Table module's Thread-First SQL-like design.
+The Handle module implements a **Feed-First design philosophy** for MongoDB-like NoSQL operations, complementing the Table module's Slate-First SQL-like design.
 
 ## Design Complete ✅
 
@@ -216,7 +216,7 @@ Document Field    Collection       Database
 ## Implementation Guidelines
 
 ### Coding Standards
-1. **Follow Table module patterns** - Mirror the Thread-First design
+1. **Follow Table module patterns** - Mirror the Slate-First design
 2. **Unit tests first** - Write tests before implementation (TDD)
 3. **Documentation** - Document all public APIs with examples
 4. **Performance** - Profile and optimize critical paths
@@ -281,7 +281,7 @@ src/datalog/handle/
 ### Comparison Tests
 - Compare with MongoDB driver (correctness)
 - Compare with pandas DataFrame (API similarity)
-- Compare Thread-First vs Feed-First (use cases)
+- Compare Slate-First vs Feed-First (use cases)
 
 ## Success Criteria
 
@@ -349,8 +349,8 @@ src/datalog/handle/
 
 ## Notes
 
-- The Feed-First design complements Thread-First, not replaces it
-- Use Table (Thread-First) for SQL-like columnar operations
+- The Feed-First design complements Slate-First, not replaces it
+- Use Table (Slate-First) for SQL-like columnar operations
 - Use Handle (Feed-First) for MongoDB-like document operations
 - Both modules can coexist and interoperate in the same application
 

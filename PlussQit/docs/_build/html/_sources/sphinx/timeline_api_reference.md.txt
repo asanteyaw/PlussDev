@@ -31,7 +31,7 @@ surface lives in the
 That difference is the clean split:
 
 - `Timeline` is the general time payload.
-- `TimelineIndexAccessor` is the 1D ordered-axis surface built on top of a
+- `Timeline::TimelineIndexAccessor` is the 1D ordered-axis surface built on top of a
   `Timeline`.
 
 ## Includes

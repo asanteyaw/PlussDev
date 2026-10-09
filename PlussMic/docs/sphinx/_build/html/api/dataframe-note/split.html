@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrameNoteAccessor::starts" href="starts.html" />
@@ -102,7 +102,7 @@ demonstration with identical data under both overloads.</p>
 <p><strong>delimiter</strong> / <strong>pattern</strong> (<code class="docutils literal notranslate"><span class="pre">std::string_view</span></code>)
 The literal delimiter (first overload) or literal/regex pattern (second
 overload, depending on <code class="docutils literal notranslate"><span class="pre">options.regex</span></code>) to split on. An empty delimiter
-throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
+throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p>
 <p><strong>limit</strong> (<code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code>, first overload, default <code class="docutils literal notranslate"><span class="pre">-1</span></code>)
 Maximum number of splits to perform (producing at most <code class="docutils literal notranslate"><span class="pre">limit</span> <span class="pre">+</span> <span class="pre">1</span></code>
 pieces); <code class="docutils literal notranslate"><span class="pre">-1</span></code> means unlimited.</p>
@@ -129,7 +129,7 @@ prefix, and a row with no delimiter at all.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">paths</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
 <span class="w">        </span><span class="p">{</span><span class="s">&quot;a/b/c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x/y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;solo&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -195,7 +195,7 @@ one delimiter anyway, so it’s unaffected by the cap.</p>
 <p>Example 3. The second overload: a regex pattern (splitting on a comma with
 optional surrounding whitespace) and a custom column prefix.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">(</span>
 <span class="w">        </span><span class="p">{</span><span class="s">&quot;a, b,c&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x , y&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;single&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;z&quot;</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
 <span class="p">});</span>
@@ -242,7 +242,7 @@ from <code class="docutils literal notranslate"><span class="pre">part_N</span><
 identical data, but the single-delimiter overload’s column count is
 inflated by an invalid row’s underlying text, while the <code class="docutils literal notranslate"><span class="pre">(pattern,</span> <span class="pre">options)</span></code> overload ignores that row entirely.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a/b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1/2/3/4&quot;</span><span class="p">}),</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;path&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a/b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;x&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1/2/3/4&quot;</span><span class="p">}),</span>
 <span class="w">        </span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">}))},</span>
 <span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">mixed</span><span class="p">;</span>
@@ -305,7 +305,7 @@ would expect from looking at the printed <code class="docutils literal notransla
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Requires the accessor to be built from exactly <strong>one</strong> feature.</p></li>
-<li><p>An empty delimiter/pattern throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
+<li><p>An empty delimiter/pattern throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::split:</span> <span class="pre">delimiter</span> <span class="pre">cannot</span> <span class="pre">be</span> <span class="pre">empty&quot;</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code> caps the <em>number of splits</em>, not the <em>number of output columns</em>
 directly — the capped remainder stays joined in the last piece (Example 2).</p></li>
 <li><p>The two overloads compute the output width differently for invalid

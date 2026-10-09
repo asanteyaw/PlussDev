@@ -45,8 +45,8 @@ a `Series`-kind feature is used as-is; a `Timeline`- or `TimeIndex`-kind feature
 converted to **epoch nanoseconds** (so a genuine timestamp feature can be used directly as
 an `x`/`y`/`z` axis, plotted on a raw nanosecond scale); a `Note`-kind feature is cast to
 `Series` (a text-to-number parse, which produces `NaN` for text that doesn't parse as a
-number rather than throwing outright). Any other `Thread` kind throws `"DataFrame::plot:
-unsupported Thread kind for numeric plotting"`. A resolved axis whose length doesn't match
+number rather than throwing outright). Any other `Slate` kind throws `"DataFrame::plot:
+unsupported Slate kind for numeric plotting"`. A resolved axis whose length doesn't match
 the frame's row count throws `"DataFrame::plot: feature '<name>' length mismatch with
 cases"` — note this shared low-level check's message always says `"DataFrame::plot"`, even
 when it fires from a `plot3d()` call.
@@ -76,7 +76,7 @@ when it fires from a `plot3d()` call.
 
     ```cpp
     enum class ScenePreset3D { Survey, Presentation, Studio, Topology };
-    enum class ThemePreset3D { Paper, Ocean, Slate, Mist };
+    enum class ThemePreset3D { Paper, Ocean, Graphite, Mist };
     enum class CameraPreset3D { Spatial, TopDown, Front, Side, Isometric };
     enum class ProjectionKind { Perspective, Orthographic };
 
@@ -121,7 +121,7 @@ when it fires from a `plot3d()` call.
     |---|---|---|---|
     | `Survey` | Ocean | Isometric | headlight + left lamp |
     | `Presentation` | Paper | perspective, low/wide angle | headlight + right lamp + sun key |
-    | `Studio` | Slate | Spatial (the library-wide default angle) | headlight + both lamps |
+    | `Studio` | Graphite | Spatial (the library-wide default angle) | headlight + both lamps |
     | `Topology` | Mist | TopDown | headlight only |
 
     ```cpp
@@ -163,9 +163,9 @@ Example 1. Default options: a simple 3D path.
 using namespace pluss::table;
 
 auto points = DataFrame({
-    {"x", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
-    {"y", Thread(pluss::make_series({4.0, 3.0, 5.0, 2.0}))},
-    {"z", Thread(pluss::make_series({2.0, 5.0, 4.0, 6.0}))},
+    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))},
+    {"y", Slate(pluss::make_series({4.0, 3.0, 5.0, 2.0}))},
+    {"z", Slate(pluss::make_series({2.0, 5.0, 4.0, 6.0}))},
 });
 
 auto chart = points.plot3d().line("x", "y", "z");
@@ -245,9 +245,9 @@ nanoseconds, per the note above.
 
 ```cpp
 auto readings = DataFrame({
-    {"measured_at", Thread(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"}))},
-    {"depth_m",     Thread(pluss::make_series({10.0, 12.0, 9.0}))},
-    {"temp_c",      Thread(pluss::make_series({18.0, 17.5, 19.0}))},
+    {"measured_at", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"}))},
+    {"depth_m",     Slate(pluss::make_series({10.0, 12.0, 9.0}))},
+    {"temp_c",      Slate(pluss::make_series({18.0, 17.5, 19.0}))},
 });
 
 auto chart = readings.plot3d().line("measured_at", "depth_m", "temp_c");

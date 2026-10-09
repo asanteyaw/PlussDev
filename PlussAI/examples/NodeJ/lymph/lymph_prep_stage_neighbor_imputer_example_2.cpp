@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -19,7 +19,7 @@ int main() {
   // the fill depends on which rows count as "near".
   const pluss::Series a = pluss::make_series({1., 2., 3., 4., 10., 11., 12., 13.}, {8}, f64);
   const pluss::Series b = pluss::make_series({2., 5., NaN, 9., 21., 24., 23., 27.}, {8}, f64);
-  const DataFrame frame({{"a", Thread(a)}, {"b", Thread(b)}});
+  const DataFrame frame({{"a", Slate(a)}, {"b", Slate(b)}});
 
   lymph::options::NeighborImputer k2{};
   k2.neighbors = 2;

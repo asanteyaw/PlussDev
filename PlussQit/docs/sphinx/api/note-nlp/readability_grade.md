@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::readability_grade
+# Note::NlpAccessor::readability_grade
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::readability_grade() const
+Note Note::NlpAccessor::readability_grade() const
 ```
 
 ## Estimate Reading Grade

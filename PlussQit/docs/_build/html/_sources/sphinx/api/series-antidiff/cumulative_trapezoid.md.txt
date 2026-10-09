@@ -1,15 +1,15 @@
 <!-- pluss-hand-authored -->
 
-# SeriesAntidiffAccessor::cumulative_trapezoid
+# Series::AntidiffAccessor::cumulative_trapezoid
 
-[Back to SeriesAntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
+[Back to Series::AntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesAntidiffAccessor::cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const
-Series SeriesAntidiffAccessor::cumulative_trapezoid(double dx, std::int64_t dim = -1) const
-Series SeriesAntidiffAccessor::cumulative_trapezoid(std::int64_t dim = -1) const
+Series Series::AntidiffAccessor::cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const
+Series Series::AntidiffAccessor::cumulative_trapezoid(double dx, std::int64_t dim = -1) const
+Series Series::AntidiffAccessor::cumulative_trapezoid(std::int64_t dim = -1) const
 
 Series SeriesAntidiffProxy::cumulative_trapezoid(const Series& x, std::int64_t dim = -1) const
 Series SeriesAntidiffProxy::cumulative_trapezoid(double dx, std::int64_t dim = -1) const
@@ -216,7 +216,7 @@ independently.
 
 ## See Also
 
-- [`SeriesAntidiffAccessor::trapezoid`](trapezoid.md): the total-area form
+- [`Series::AntidiffAccessor::trapezoid`](trapezoid.md): the total-area form
   of this same computation.
 - [`Series::cumsum`](../series/cumsum.md): the plain running sum this
   method's weighted version builds on.

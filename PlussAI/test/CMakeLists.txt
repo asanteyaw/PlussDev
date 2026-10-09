@@ -9,6 +9,13 @@ file(GLOB AI_TEST_SOURCES CONFIGURE_DEPENDS
 )
 list(FILTER AI_TEST_SOURCES EXCLUDE REGEX ".*/lymph_quick_test\\.cpp$")
 
+# These investigations use Catch2 TEST_CASE directly and have no standalone
+# main(), unlike the other AI tests with a no-Catch fallback.
+if(NOT Catch2_FOUND)
+    list(FILTER AI_TEST_SOURCES EXCLUDE REGEX
+        ".*/nn_mps_(gru_native_route|rng_platform_parity)_test\\.cpp$")
+endif()
+
 foreach(test_src ${AI_TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
 

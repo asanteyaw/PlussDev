@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::target_encoder`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `target_encoder` builds a **supervised** attachable [`prep::Stage`](Stage.md): each category is replaced by a smoothed mean of the training target for that category. The target reaches the stage automatically during [`Model::learn`](../../models/Model/learn.md) — it is not a target-free transform.
 
@@ -60,7 +60,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -71,15 +71,15 @@ int main() {
   const pluss::Series region = pluss::make_series({0,0,1,1,2,2,3,3,0,2}, {10}, f64);
   const pluss::Series noise  = pluss::make_series({.1,.9,.2,.8,.3,.7,.4,.6,.5,.5}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,0,1}, {10}, f64);
-  const DataFrame x({{"region", Thread(region)}, {"noise", Thread(noise)}});
+  const DataFrame x({{"region", Slate(region)}, {"noise", Slate(noise)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::target_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"region", Thread(region)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"region", Slate(region)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -122,7 +122,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -132,7 +132,7 @@ int main() {
   // smoothing -- both still fit this clean signal.
   const pluss::Series region = pluss::make_series({0,0,0,0,1,1,1,1,2,3}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,1,0}, {10}, f64);
-  const DataFrame x({{"region", Thread(region)}});
+  const DataFrame x({{"region", Slate(region)}});
 
   for (double s : {1.0, 50.0}) {
     lymph::options::TargetEncoder o{};
@@ -170,7 +170,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -180,15 +180,15 @@ int main() {
   const pluss::Series city = pluss::make_series({0,1,2,3,4,5,6,7,0,3}, {10}, f64);
   const pluss::Series size = pluss::make_series({1.,2.,3.,4.,5.,6.,7.,8.,1.,4.}, {10}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,0,1,1,1,1,0,0}, {10}, f64);
-  const DataFrame x({{"city", Thread(city)}, {"size", Thread(size)}});
+  const DataFrame x({{"city", Slate(city)}, {"size", Slate(size)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
   model.append(lymph::prep::stage::standard_scaler(), lymph::prep::route::names({"size"}))
        .append(lymph::prep::stage::target_encoder(), lymph::prep::route::names({"city"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"city", Thread(city)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"city", Slate(city)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

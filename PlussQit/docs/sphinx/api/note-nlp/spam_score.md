@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::spam_score
+# Note::NlpAccessor::spam_score
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::spam_score() const
+Note Note::NlpAccessor::spam_score() const
 ```
 
 ## Score Spam-Like Surface Signals

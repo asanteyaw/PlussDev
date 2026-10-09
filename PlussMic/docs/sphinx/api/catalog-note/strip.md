@@ -23,7 +23,7 @@ either end.
 ```{important} CatalogNoteAccessor requires every bound key to be Note-kind
 Every method on this accessor -- not just strip() -- routes through
 Stream::nt() for each bound key. If any bound key isn't Note-kind (Series,
-Timeline, TimeIndex), the call throws "Thread::strip is only valid for Note payload"
+Timeline, TimeIndex), the call throws "Slate::strip is only valid for Note payload"
 (the exact message names whichever method actually ran). Since Catalog::nt() binds
 *every* key of the catalog by default, this is the most common way to trip the throw
 -- project down to just the text keys first with Catalog::keys(names) or
@@ -114,7 +114,7 @@ try {
 ### Output
 
 ```text
-Thread::strip is only valid for Note payload
+Slate::strip is only valid for Note payload
 ```
 
 ## Notes

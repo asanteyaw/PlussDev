@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 25a5bffd31c9 -->
 # `pluss::ai::ice::Model::learn`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -30,6 +32,9 @@ subclass changes `learn`'s actual behavior by overriding `forward`/
   per-column mean/std are kept on the model (persisted through
   [`save`](save.md)/[`load`](load.md)) and reapplied automatically by
   the `DataFrame` overloads of [`infer`](infer.md)/[`assess`](assess.md).
+- Every overload leaves a record of the run behind. [`training_report`](training_report.md)
+  returns it: one entry per epoch, with the training and validation losses, and
+  the step count and stop reason.
 - The `Source` overload trains against an already-constructed
   [`Source`](../../source/Source.md) directly -- the common path when a
   [`DataSet`](../../data/DataSet.md)/[`TimeSeriesDataSet`](../../data/TimeSeriesDataSet.md)
@@ -94,7 +99,11 @@ int main() {
   options.validation.split_ratio = 0.0;
   model.learn(x, y, options);
 
-  std::cout << "ready() = " << model.ready() << "\n";
+  const auto& report = model.training_report();
+  std::cout << "epochs = " << report.epochs.size() << ", global_steps = " << report.global_steps << "\n";
+  std::cout << "first train_loss = " << report.epochs.front().train_loss
+            << ", last train_loss = " << report.epochs.back().train_loss << "\n";
+  std::cout << "stop_reason = \"" << report.stop_reason << "\"\n";
 
   return 0;
 }
@@ -103,7 +112,9 @@ int main() {
 Output
 
 ```text
-ready() = 1
+epochs = 100, global_steps = 100
+first train_loss = 2.35997, last train_loss = 5.02573e-05
+stop_reason = ""
 ```
 
 ### Example 2
@@ -130,7 +141,11 @@ int main() {
   options.learning_rate = 0.1;
   model.learn(x, y, x, y, options);
 
-  std::cout << "ready() = " << model.ready() << "\n";
+  const auto& report = model.training_report();
+  std::cout << "epochs = " << report.epochs.size() << ", global_steps = " << report.global_steps << "\n";
+  std::cout << "first train_loss = " << report.epochs.front().train_loss
+            << ", last train_loss = " << report.epochs.back().train_loss << "\n";
+  std::cout << "stop_reason = \"" << report.stop_reason << "\"\n";
 
   return 0;
 }
@@ -139,7 +154,9 @@ int main() {
 Output
 
 ```text
-ready() = 1
+epochs = 54, global_steps = 54
+first train_loss = 2.35997, last train_loss = 0.00239722
+stop_reason = "early_stopping"
 ```
 
 ### Example 3
@@ -159,12 +176,12 @@ int main() {
   namespace ice = pluss::ai::ice;
   namespace nn = pluss::nn;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const DataFrame df({
-      {"a", Thread(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
-      {"b", Thread(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
-      {"label", Thread(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
+      {"a", Slate(pluss::make_series({0.0f, 0.0f, 1.0f, 1.0f}, {4}))},
+      {"b", Slate(pluss::make_series({0.0f, 1.0f, 0.0f, 1.0f}, {4}))},
+      {"label", Slate(pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4}))},
   });
 
   ice::Outline model(nn::Fusion(2, 1));
@@ -174,7 +191,11 @@ int main() {
   options.validation.split_ratio = 0.0;
   model.learn(df, "label", options);
 
-  std::cout << "ready() = " << model.ready() << "\n";
+  const auto& report = model.training_report();
+  std::cout << "epochs = " << report.epochs.size() << ", global_steps = " << report.global_steps << "\n";
+  std::cout << "first train_loss = " << report.epochs.front().train_loss
+            << ", last train_loss = " << report.epochs.back().train_loss << "\n";
+  std::cout << "stop_reason = \"" << report.stop_reason << "\"\n";
 
   return 0;
 }
@@ -183,7 +204,9 @@ int main() {
 Output
 
 ```text
-ready() = 1
+epochs = 100, global_steps = 100
+first train_loss = 2.35997, last train_loss = 5.02573e-05
+stop_reason = ""
 ```
 
 ### Example 4
@@ -214,7 +237,11 @@ int main() {
   options.learning_rate = 0.1;
   model.learn(source, options);
 
-  std::cout << "ready() = " << model.ready() << "\n";
+  const auto& report = model.training_report();
+  std::cout << "epochs = " << report.epochs.size() << ", global_steps = " << report.global_steps << "\n";
+  std::cout << "first train_loss = " << report.epochs.front().train_loss
+            << ", last train_loss = " << report.epochs.back().train_loss << "\n";
+  std::cout << "stop_reason = \"" << report.stop_reason << "\"\n";
 
   return 0;
 }
@@ -223,7 +250,9 @@ int main() {
 Output
 
 ```text
-ready() = 1
+epochs = 100, global_steps = 100
+first train_loss = 2.35997, last train_loss = 5.02573e-05
+stop_reason = ""
 ```
 
 ## See Also
@@ -240,3 +269,16 @@ ready() = 1
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="is_training.html">
+    <span class="label">Previous</span>
+    <span class="title">is_training</span>
+  </a>
+  <a class="next-link" href="learn_step.html">
+    <span class="label">Next</span>
+    <span class="title">learn_step</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

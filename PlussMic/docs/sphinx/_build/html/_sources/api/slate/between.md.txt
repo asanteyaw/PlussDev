@@ -1,0 +1,249 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f919ea6c0583 -->
+
+# Slate::between
+
+[Back to Slate API Reference](../../slate_api_reference)
+
+## Signatures
+
+```cpp
+Slate::between(double a, double b, bool inclusive = false) const -> Slate
+Slate::between(double a, double b, bool include_left, bool include_right) const -> Slate
+Slate::between(std::string_view lo, std::string_view hi, bool inclusive = true) const -> Slate
+Slate::between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const -> Slate
+Slate::between(const Slate& lo, const Slate& hi, bool inclusive = true) const -> Slate
+Slate::between(const Slate& lo, const Slate& hi, bool include_left, bool include_right) const -> Slate
+```
+
+## What It Does
+
+Tests whether each element falls inside an interval, returning one boolean per row — the
+interval-membership counterpart to chaining two [`compare()`](compare.md) calls with a
+logical AND (which, internally, is exactly what `between()` does). It supports three bound
+styles:
+
+- **Numeric scalar bounds** (`double a, double b`) — requires a numeric `Series`-kind
+  thread; throws otherwise.
+- **Temporal/text scalar bounds** (`std::string_view lo, std::string_view hi`) — requires a
+  `Timeline`- or `TimeIndex`-kind thread; the literals are parsed as timestamps.
+- **Rowwise bounds** (`const Slate& lo, const Slate& hi`) — a different lower and upper
+  bound per row, useful for grading bands or per-row tolerance envelopes.
+
+Every style accepts either a single `inclusive` flag (shared by both boundaries) or two
+independent `include_left`/`include_right` flags for asymmetric boundaries. If the lower
+bound is numerically or temporally greater than the upper bound, `between()` swaps them
+(and their corresponding `include_*` flags) rather than returning all-`false`.
+
+```{important} The one-flag `inclusive` shorthand defaults differently per overload family
+The numeric-scalar overload defaults to `inclusive = false` (an **open** interval); the
+temporal/text-scalar and rowwise-`Slate` overloads both default to `inclusive = true` (a
+**closed** interval). This asymmetry is real, not a typo — pass the flag explicitly if you
+want to be certain rather than relying on the default. See Examples 1 and 5.
+```
+
+## Parameters
+
+**a**, **b** (`double`)
+    Lower and upper scalar numeric bounds. Requires a numeric `Series`-kind thread.
+
+**lo**, **hi** (`std::string_view`)
+    Lower and upper scalar temporal literals, parsed the same way
+    [`compare()`](compare.md)'s text overload parses them against a temporal thread.
+    Requires a `Timeline`- or `TimeIndex`-kind thread.
+
+**lo**, **hi** (`const Slate&`)
+    Lower- and upper-bound threads, applied element by element (row `i`'s value is tested
+    against `lo`'s and `hi`'s row `i`).
+
+**inclusive** (`bool`)
+    Shared boundary closure: `true` closes both boundaries (`>=`/`<=`), `false` opens both
+    (`>`/`<`). Default differs by overload family — see the important callout above.
+
+**include_left**, **include_right** (`bool`)
+    Independent boundary closure — `include_left` controls the lower bound, `include_right`
+    the upper bound. Use this form when the two boundaries need different treatment.
+
+## Returns
+
+`Slate`
+    A `Series`-kind thread of `Bool` values, one interval-membership result per row.
+
+## Examples
+
+Example 1. Numeric bounds with the default `inclusive` — note that the default is
+**`false`** here, so values sitting exactly on either boundary are excluded.
+
+```cpp
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0}));
+
+auto out = scores.between(10.0, 30.0);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  false
+1  true
+2  false
+ptype: Series
+```
+
+Example 2. Numeric bounds with shared inclusion explicitly requested — now the boundary
+values are included.
+
+```cpp
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+
+auto out = scores.between(20.0, 40.0, true);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  false
+1  true
+2  true
+3  true
+4  false
+ptype: Series
+```
+
+Example 3. Numeric bounds with asymmetric boundaries — lower open, upper closed.
+
+```cpp
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+
+auto out = scores.between(20.0, 40.0, false, true);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  false
+1  false
+2  true
+3  true
+4  false
+ptype: Series
+```
+
+Example 4. Temporal scalar bounds with shared inclusion, explicitly requested.
+
+```cpp
+auto dates = Slate(pluss::make_timeline({
+    "2024-01-01T00:00:00Z",
+    "2024-01-02T00:00:00Z",
+    "2024-01-03T00:00:00Z",
+}));
+
+auto out = dates.between("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", true);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  true
+1  true
+2  false
+ptype: Series
+```
+
+Example 5. Temporal scalar bounds with the default `inclusive` — the default here is
+**`true`**, the opposite of the numeric overload's default in Example 1.
+
+```cpp
+auto dates = Slate(pluss::make_timeline({
+    "2024-01-01T00:00:00Z",
+    "2024-01-05T00:00:00Z",
+}));
+
+auto out = dates.between("2024-01-01T00:00:00Z", "2024-01-05T00:00:00Z");
+std::cout << out;
+```
+
+### Output
+
+```text
+0  true
+1  true
+ptype: Series
+```
+
+Example 6. Rowwise lower and upper bound threads — a different interval per row, useful
+for tolerance bands.
+
+```cpp
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0, 50.0}));
+auto lower = Slate(pluss::make_series({10.0, 20.0, 35.0, 35.0, 45.0}));
+auto upper = Slate(pluss::make_series({15.0, 25.0, 35.0, 45.0, 50.0}));
+
+auto out = scores.between(lower, upper, true);
+std::cout << out;
+```
+
+### Output
+
+```text
+0  true
+1  true
+2  false
+3  true
+4  true
+ptype: Series
+```
+
+Example 7. Calling the numeric-scalar overload on a non-`Series` thread throws.
+
+```cpp
+auto notes = Slate(pluss::make_note({"a", "b"}));
+try {
+  auto out = notes.between(1.0, 2.0);
+} catch (const std::exception& e) {
+  std::cout << e.what();
+}
+```
+
+### Output
+
+```text
+Slate::between(double,double,...): requires Series payload; use temporal overloads for date/time threads
+```
+
+## Notes
+
+- The one-flag `inclusive` shorthand's **default value differs by overload family** —
+  `false` for the numeric-scalar overload, `true` for the temporal/text-scalar and
+  rowwise-`Slate` overloads. Pass the flag explicitly if you want the interval closure to
+  be self-documenting at the call site.
+- If the lower bound is greater than the upper bound, `between()` swaps them (and their
+  `include_*` flags) rather than returning `false` for every row.
+- Equivalent to two chained [`compare()`](compare.md) calls combined with a logical AND —
+  `(*this >= lo) & (*this <= hi)`, with the operators adjusted per the inclusion flags.
+
+## See Also
+
+- [`Slate::ge`](ge.md) and [`Slate::le`](le.md): spell out the lower- and upper-bound
+  tests manually when you want them as two separate results instead of one combined AND.
+- [`Slate::compare`](compare.md): the general comparison surface `between()` is built from.
+- [`Slate::bucketize`](bucketize.md): assign each value to a labeled bin instead of a
+  single in/out test.
+- [`DataFrame::filter`](../dataframe/filter.md): use the boolean result as a row mask
+  inside a frame workflow.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="astype.html">
+    <span class="label">Previous</span>
+    <span class="title">astype</span>
+  </a>
+  <a class="next-link" href="bfill.html">
+    <span class="label">Next</span>
+    <span class="title">bfill</span>
+  </a>
+</div>

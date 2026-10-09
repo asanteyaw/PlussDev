@@ -47,7 +47,7 @@ message pattern.
 Example 1. `Forward` (the default) — each gap takes the nearest prior value.
 
 ```cpp
-auto with_gap = pluss::kindle::Stream::from_thread(pluss::table::Thread(
+auto with_gap = pluss::kindle::Stream::from_slate(pluss::table::Slate(
     pluss::make_series({10.0, 20.0, 30.0, 40.0}),
     pluss::make_series(std::vector<bool>{true, false, true, true})));
 auto out = with_gap.ts().fill_gaps();
@@ -91,8 +91,8 @@ real value. Positions `2` and `3` were never missing, so they're untouched.
   different time axis, optionally filling any newly-introduced gaps the
   same way.
 - [`Stream::ts`](../stream/ts.md): the entry point this accessor is reached from.
-- [`TimeSeriesAccessor::fill_gaps`](../thread-ts/fill_gaps.md): the
-  underlying single-thread engine, with additional edge-case examples.
+- [`TimeSeriesAccessor::fill_gaps`](../slate-ts/fill_gaps.md): the
+  underlying single-slate engine, with additional edge-case examples.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="expanding.html">

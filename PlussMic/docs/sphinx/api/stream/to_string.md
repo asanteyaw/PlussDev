@@ -98,8 +98,8 @@ show length: 1056
     <span class="label">Previous</span>
     <span class="title">to_json</span>
   </a>
-  <a class="next-link" href="to_thread.html">
+  <a class="next-link" href="to_slate.html">
     <span class="label">Next</span>
-    <span class="title">to_thread</span>
+    <span class="title">to_slate</span>
   </a>
 </div>

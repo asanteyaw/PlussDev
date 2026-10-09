@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::soundex
+# Note::NlpAccessor::soundex
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::soundex() const
+Note Note::NlpAccessor::soundex() const
 ```
 
 ## Reduce Each Word To Its Soundex Code
@@ -41,7 +41,7 @@ separator), each word is coded, and the codes are joined with a single space.
 word that is a single letter codes as that letter plus `000`.
 
 The operation is shape-preserving and cell-independent, works on UTF-8 text
-(a bytes-mode `Note` is rejected with `NoteNlpAccessor::soundex requires a
+(a bytes-mode `Note` is rejected with `Note::NlpAccessor::soundex requires a
 UTF-8 text Note (not bytes)`), and returns a fresh UTF-8 `Note`. Non-ASCII
 letters are not decoded — run [`to_ascii`](to_ascii.md)
 first if the input has accents.
@@ -131,11 +131,11 @@ Note(shape=[1], dim=1, numel=1, encoding=utf8)
 
 ## See Also
 
-- [`NoteNlpAccessor::metaphone`](metaphone.md): a consonant-skeleton
+- [`Note::NlpAccessor::metaphone`](metaphone.md): a consonant-skeleton
   key that keeps more of the word's shape than a four-character Soundex code.
-- [`NoteNlpAccessor::to_ascii`](to_ascii.md): fold accents to
+- [`Note::NlpAccessor::to_ascii`](to_ascii.md): fold accents to
   ASCII before coding.
-- [`NoteNlpAccessor::tokens`](tokens.md): the word split used per cell.
+- [`Note::NlpAccessor::tokens`](tokens.md): the word split used per cell.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="sort_tokens.html"><span class="label">Previous</span><span class="title">sort_tokens</span></a>

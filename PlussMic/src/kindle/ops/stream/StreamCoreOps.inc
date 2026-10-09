@@ -1,8 +1,8 @@
-pluss::table::Thread Stream::to_thread() const {
+pluss::table::Slate Stream::to_slate() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
   auto out = std::visit(
       [&](const auto& payload) {
-        return pluss::table::Thread(payload, impl_ref_().validity_mask_);
+        return pluss::table::Slate(payload, impl_ref_().validity_mask_);
       },
       impl_ref_().payload_);
   if (has_label()) {
@@ -11,13 +11,13 @@ pluss::table::Thread Stream::to_thread() const {
   return out;
 }
 
-pluss::table::Thread Stream::to_thread(std::int64_t start, std::int64_t stop) const {
-  const auto t = to_thread();
+pluss::table::Slate Stream::to_slate(std::int64_t start, std::int64_t stop) const {
+  const auto t = to_slate();
   return t.slice(start, stop);
 }
 
-pluss::table::Thread Stream::tabelize() const {
-  return to_thread();
+pluss::table::Slate Stream::tabelize() const {
+  return to_slate();
 }
 
 pluss::scribble::Slot Stream::scribbelize() const {
@@ -108,70 +108,70 @@ pluss::scribble::Slot Stream::scribbelize() const {
 
 Stream Stream::head(std::int64_t n) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.head(n); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.head(n); });
 }
 
 Stream Stream::tail(std::int64_t n) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.tail(n); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.tail(n); });
 }
 
 Stream Stream::slice(std::int64_t start, std::int64_t stop) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.slice(start, stop); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.slice(start, stop); });
 }
 
 Stream Stream::take(std::span<const std::int64_t> indices) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.take(indices); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.take(indices); });
 }
 
 Stream Stream::filter(const pluss::Series& bool_mask) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return rowwise_stream_transform(*this, [&](const pluss::table::Thread& t) { return t.filter(bool_mask); });
+  return rowwise_stream_transform(*this, [&](const pluss::table::Slate& t) { return t.filter(bool_mask); });
 }
 
 Stream Stream::dropnull() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto source = to_thread();
+  const auto source = to_slate();
   const auto out = source.dropnull();
-  if (!has_label()) return Stream::from_thread(out);
+  if (!has_label()) return Stream::from_slate(out);
   const auto label_out = label()->filter(source.notnull().as_series());
-  return Stream::from_thread(out, label_out);
+  return Stream::from_slate(out, label_out);
 }
 
 Stream Stream::ffill() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.ffill(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.ffill(); });
 }
 
 Stream Stream::bfill() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [](const pluss::table::Thread& t) { return t.bfill(); });
+  return unary_stream_same_label(*this, [](const pluss::table::Slate& t) { return t.bfill(); });
 }
 
 Stream Stream::distinct(DistinctOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto out = to_thread().distinct(options.dropnull);
+  const auto out = to_slate().distinct(options.dropnull);
   if (out.label().has()) {
-    return Stream::from_thread(out, out.label().values());
+    return Stream::from_slate(out, out.label().values());
   }
-  return Stream::from_thread(out);
+  return Stream::from_slate(out);
 }
 
 Stream Stream::freq(FreqOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  const auto out = pluss::table::detail::freq_count_thread(
-      to_thread(), options.top, options.dropnull, "freq");
+  const auto out = pluss::table::detail::freq_count_slate(
+      to_slate(), options.top, options.dropnull, "freq");
   if (out.label().has()) {
-    return Stream::from_thread(out, out.label().values());
+    return Stream::from_slate(out, out.label().values());
   }
-  return Stream::from_thread(out);
+  return Stream::from_slate(out);
 }
 
 Stream Stream::ndistinct(DistinctOptions options) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().ndistinct(options.dropnull).thread());
+  return Stream::from_slate(to_slate().ndistinct(options.dropnull).slate());
 }
 
 Stream Stream::map(const std::function<Stream(const Stream&)>& fn) const {
@@ -184,33 +184,33 @@ Stream Stream::map(const std::function<Stream(const Stream&)>& fn) const {
   return out;
 }
 
-Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditions,
+Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Slate> conditions,
                       pluss::msharp::RangeView::Of<Stream> choices,
                       const Stream& default_value) {
   PLUSS_CHECK(!choices.empty(), "Stream::select: at least one choice is required");
   PLUSS_CHECK(default_value.defined(), "Stream::select: default value is undefined");
 
-  std::vector<pluss::table::Thread> choice_threads;
-  choice_threads.reserve(choices.size());
+  std::vector<pluss::table::Slate> choice_slates;
+  choice_slates.reserve(choices.size());
   bool any_labels = default_value.has_label();
   for (const auto& choice : choices) {
     PLUSS_CHECK(choice.defined(), "Stream::select: choice is undefined");
     any_labels = any_labels || choice.has_label();
-    choice_threads.push_back(choice.to_thread());
+    choice_slates.push_back(choice.to_slate());
   }
 
-  const auto out_thread = pluss::table::Thread::select(
+  const auto out_slate = pluss::table::Slate::select(
       conditions,
-      pluss::msharp::RangeView::Of<pluss::table::Thread>(choice_threads),
-      default_value.to_thread());
+      pluss::msharp::RangeView::Of<pluss::table::Slate>(choice_slates),
+      default_value.to_slate());
 
   if (!any_labels) {
-    return Stream::from_thread(out_thread);
+    return Stream::from_slate(out_slate);
   }
 
   PLUSS_CHECK(default_value.has_label(),
               "Stream::select: label presence must match across choices and default");
-  std::vector<pluss::table::Thread> choice_labels;
+  std::vector<pluss::table::Slate> choice_labels;
   choice_labels.reserve(choices.size());
   for (const auto& choice : choices) {
     PLUSS_CHECK(choice.has_label(),
@@ -218,46 +218,46 @@ Stream Stream::select(pluss::msharp::RangeView::Of<pluss::table::Thread> conditi
     choice_labels.push_back(*choice.label());
   }
 
-  const auto out_label = pluss::table::Thread::select(
+  const auto out_label = pluss::table::Slate::select(
       conditions,
-      pluss::msharp::RangeView::Of<pluss::table::Thread>(choice_labels),
+      pluss::msharp::RangeView::Of<pluss::table::Slate>(choice_labels),
       *default_value.label());
-  return Stream::from_thread(out_thread, out_label);
+  return Stream::from_slate(out_slate, out_label);
 }
 
 Stream Stream::astype(pluss::codem::ScalarType dtype) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return unary_stream_same_label(*this, [&](const pluss::table::Thread& t) { return t.astype(dtype); });
+  return unary_stream_same_label(*this, [&](const pluss::table::Slate& t) { return t.astype(dtype); });
 }
 
 Stream Stream::sum() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().sum().thread());
+  return Stream::from_slate(to_slate().sum().slate());
 }
 
 Stream Stream::mean() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().mean().thread());
+  return Stream::from_slate(to_slate().mean().slate());
 }
 
 Stream Stream::min() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().min().thread());
+  return Stream::from_slate(to_slate().min().slate());
 }
 
 Stream Stream::max() const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().max().thread());
+  return Stream::from_slate(to_slate().max().slate());
 }
 
 Stream Stream::var(bool unbiased) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().var(unbiased).thread());
+  return Stream::from_slate(to_slate().var(unbiased).slate());
 }
 
 Stream Stream::std(bool unbiased) const {
   PLUSS_CHECK(defined(), "Stream: undefined handle");
-  return Stream::from_thread(to_thread().std(unbiased).thread());
+  return Stream::from_slate(to_slate().std(unbiased).slate());
 }
 
 const pluss::Series& Stream::as_series() const {
@@ -423,4 +423,28 @@ const detail::StreamImpl& Stream::impl_ref_() const {
 std::ostream& operator<<(std::ostream& os, const Stream& stream) {
   stream.show(os);
   return os;
+}
+
+std::uint64_t Stream::fingerprint() const {
+  PLUSS_CHECK(defined(), "Stream: undefined handle");
+  const auto mix = [](std::uint64_t h, std::uint64_t v) {
+    h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+    return h;
+  };
+  std::uint64_t h = mix(0, static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(impl_.get())));
+  h = mix(h, static_cast<std::uint64_t>(size()));
+  switch (kind()) {
+    case StreamKind::Series:
+      h = mix(h, static_cast<std::uint64_t>(as_series().storage_version()));
+      break;
+    case StreamKind::Timeline:
+      h = mix(h, static_cast<std::uint64_t>(as_timeline().epoch_nanos().storage_version()));
+      break;
+    default:
+      break;  // Note and Duration payloads are never edited in place
+  }
+  if (detail::has_validity_mask(*this)) {
+    h = mix(h, static_cast<std::uint64_t>(detail::validity_mask(*this)->storage_version()));
+  }
+  return h;
 }

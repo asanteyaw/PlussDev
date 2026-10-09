@@ -17,7 +17,7 @@ using pluss::Config;
 using pluss::ScalarType;
 using pluss::Series;
 using pluss::table::DataFrame;
-using pluss::table::Thread;
+using pluss::table::Slate;
 using namespace pluss::ai::lymph;
 
 Config f64() {
@@ -41,8 +41,8 @@ FeatureBatch shaped_batch() {
 DataFrame shaped_frame() {
   const Series x = shaped_batch().x;
   return DataFrame({
-      {"skewed", Thread(x.narrow_copy(1, 0, 1).reshape({40}))},
-      {"linear", Thread(x.narrow_copy(1, 1, 1).reshape({40}))},
+      {"skewed", Slate(x.narrow_copy(1, 0, 1).reshape({40}))},
+      {"linear", Slate(x.narrow_copy(1, 1, 1).reshape({40}))},
   });
 }
 

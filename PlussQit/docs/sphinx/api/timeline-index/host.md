@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::host
+# Timeline::TimelineIndexAccessor::host
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-std::vector<std::int64_t> TimelineIndexAccessor::host() const
+std::vector<std::int64_t> Timeline::TimelineIndexAccessor::host() const
 ```
 
 ## What It Does
@@ -67,8 +67,8 @@ std::vector<std::int64_t> ticks = idx.host();
 
 ## See Also
 
-- [`TimelineIndexAccessor::timeline`](timeline.md): work with the same axis as a `Timeline`.
-- [`TimelineIndexAccessor::size`](size.md): count the number of ticks before exporting.
+- [`Timeline::TimelineIndexAccessor::timeline`](timeline.md): work with the same axis as a `Timeline`.
+- [`Timeline::TimelineIndexAccessor::size`](size.md): count the number of ticks before exporting.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="head.html">

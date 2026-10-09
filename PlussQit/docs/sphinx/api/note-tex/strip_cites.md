@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_cites
+# Note::TexAccessor::strip_cites
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_cites() const
+Note Note::TexAccessor::strip_cites() const
 ```
 
 ## Remove Complete Citation Calls

@@ -63,9 +63,9 @@ remaining feature (no column prefix).
 using namespace pluss::table;
 
 auto grades = DataFrame({
-    {"student", Thread(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
-    {"term",    Thread(pluss::make_note({"mid", "final", "mid", "final"}))},
-    {"score",   Thread(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
+    {"student", Slate(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
+    {"term",    Slate(pluss::make_note({"mid", "final", "mid", "final"}))},
+    {"score",   Slate(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
 });
 std::cout << grades;
 ```
@@ -115,10 +115,10 @@ feature name.
 
 ```cpp
 auto grades_with_attendance = DataFrame({
-    {"student",    Thread(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
-    {"term",       Thread(pluss::make_note({"mid", "final", "mid", "final"}))},
-    {"score",      Thread(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
-    {"attendance", Thread(pluss::make_series({95.0, 90.0, 98.0, 92.0}))},
+    {"student",    Slate(pluss::make_note({"Ada", "Ada", "Kojo", "Kojo"}))},
+    {"term",       Slate(pluss::make_note({"mid", "final", "mid", "final"}))},
+    {"score",      Slate(pluss::make_series({88.0, 91.0, 84.0, 89.0}))},
+    {"attendance", Slate(pluss::make_series({95.0, 90.0, 98.0, 92.0}))},
 });
 
 auto keyed_multi = grades_with_attendance.label().set({"student", "term"}, true, "|");

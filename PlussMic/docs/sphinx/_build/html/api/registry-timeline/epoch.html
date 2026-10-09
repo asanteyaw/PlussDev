@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="RegistryTimelineAccessor::floor" href="floor.html" />
@@ -124,7 +124,7 @@ expected scale.</p>
 </section>
 <section id="id2">
 <h3>Output<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::tl().epoch: unit is span-only; use Thread::tl().span
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::tl().epoch: unit is span-only; use Slate::tl().span
 </pre></div>
 </div>
 </section>
@@ -134,7 +134,7 @@ expected scale.</p>
 <ul class="simple">
 <li><p>See the important callout above — the default unit is <code class="docutils literal notranslate"><span class="pre">Nanos</span></code>.</p></li>
 <li><p>Only fixed-duration units are accepted; passing <code class="docutils literal notranslate"><span class="pre">Weeks</span></code>, <code class="docutils literal notranslate"><span class="pre">Months</span></code>, <code class="docutils literal notranslate"><span class="pre">Years</span></code>,
-or <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code> throws. The throw message references <code class="docutils literal notranslate"><span class="pre">Thread::tl().span</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">BusinessDays</span></code> throws. The throw message references <code class="docutils literal notranslate"><span class="pre">Slate::tl().span</span></code>,
 a suggestion that comes from the shared underlying engine — <code class="docutils literal notranslate"><span class="pre">Registry</span></code>’s
 <code class="docutils literal notranslate"><span class="pre">tl()</span></code> accessor has no <code class="docutils literal notranslate"><span class="pre">span()</span></code> method of its own.</p></li>
 <li><p>Requires every bound field to be <code class="docutils literal notranslate"><span class="pre">Timeline</span></code>-kind — a non-<code class="docutils literal notranslate"><span class="pre">Timeline</span></code> field

@@ -1,9 +1,9 @@
 namespace {
 
 template <class Apply>
-pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_map_threads_(const detail::DataFrameImpl& src,
+pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_map_slates_(const detail::DataFrameImpl& src,
                                                                            Apply&& apply) {
-  std::vector<Thread> out_cols;
+  std::vector<Slate> out_cols;
   out_cols.reserve(src.columns_.size());
   for (const auto& col : src.columns_) {
     out_cols.push_back(apply(col));
@@ -13,7 +13,7 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_map_threads_(const
 }
 
 template <class Apply>
-pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_zip_threads_(const detail::DataFrameImpl& lhs,
+pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_zip_slates_(const detail::DataFrameImpl& lhs,
                                                                            const detail::DataFrameImpl& rhs,
                                                                            std::string_view where,
                                                                            Apply&& apply) {
@@ -25,7 +25,7 @@ pluss::msharp::intrusive_ptr<detail::DataFrameImpl> dataframe_zip_threads_(const
     PLUSS_CHECK(lhs.names_[i] == rhs.names_[i],
                 std::string(where) + ": feature labels must match for positional logical operation");
   }
-  std::vector<Thread> out_cols;
+  std::vector<Slate> out_cols;
   out_cols.reserve(lhs.columns_.size());
   for (std::size_t i = 0; i < lhs.columns_.size(); ++i) {
     out_cols.push_back(apply(lhs.columns_[i], rhs.columns_[i]));
@@ -45,18 +45,18 @@ std::string freq_label_name_token_(const std::vector<std::string>& names) {
   return out;
 }
 
-Thread cast_thread_target_(const Thread& thread,
-                           ThreadCastTarget target,
-                           const ThreadCastOptions& options = {}) {
+Slate cast_slate_target_(const Slate& slate,
+                           SlateCastTarget target,
+                           const SlateCastOptions& options = {}) {
   switch (target) {
-    case ThreadCastTarget::Series:
-      return thread.cast(options).series();
-    case ThreadCastTarget::Note:
-      return thread.cast(options).note();
-    case ThreadCastTarget::Timeline:
-      return thread.cast(options).timeline();
-    case ThreadCastTarget::Duration:
-      return thread.cast(options).duration();
+    case SlateCastTarget::Series:
+      return slate.cast(options).series();
+    case SlateCastTarget::Note:
+      return slate.cast(options).note();
+    case SlateCastTarget::Timeline:
+      return slate.cast(options).timeline();
+    case SlateCastTarget::Duration:
+      return slate.cast(options).duration();
   }
   PLUSS_FAIL("DataFrame::cast: unsupported cast target");
 }
@@ -75,15 +75,15 @@ DataFrame DataFrame::add(const DataFrame& other, const AlignOptions& options) co
   return dataframe_math_frame(*this, other, options, BinaryMathOp::Add);
 }
 
-DataFrame DataFrame::add(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Add, false);
+DataFrame DataFrame::add(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Add, false);
 }
 
-DataFrame DataFrame::add(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Add, false, options);
+DataFrame DataFrame::add(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Add, false, options);
 }
 
-DataFrame DataFrame::add(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::add(const Slate& other, const AlignOptions& options, Axis axis) const {
   return add(other, axis, options);
 }
 
@@ -99,15 +99,15 @@ DataFrame DataFrame::sub(const DataFrame& other, const AlignOptions& options) co
   return dataframe_math_frame(*this, other, options, BinaryMathOp::Sub);
 }
 
-DataFrame DataFrame::sub(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Sub, false);
+DataFrame DataFrame::sub(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Sub, false);
 }
 
-DataFrame DataFrame::sub(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Sub, false, options);
+DataFrame DataFrame::sub(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Sub, false, options);
 }
 
-DataFrame DataFrame::sub(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::sub(const Slate& other, const AlignOptions& options, Axis axis) const {
   return sub(other, axis, options);
 }
 
@@ -123,15 +123,15 @@ DataFrame DataFrame::mul(const DataFrame& other, const AlignOptions& options) co
   return dataframe_math_frame(*this, other, options, BinaryMathOp::Mul);
 }
 
-DataFrame DataFrame::mul(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Mul, false);
+DataFrame DataFrame::mul(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Mul, false);
 }
 
-DataFrame DataFrame::mul(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Mul, false, options);
+DataFrame DataFrame::mul(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Mul, false, options);
 }
 
-DataFrame DataFrame::mul(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::mul(const Slate& other, const AlignOptions& options, Axis axis) const {
   return mul(other, axis, options);
 }
 
@@ -147,15 +147,15 @@ DataFrame DataFrame::div(const DataFrame& other, const AlignOptions& options) co
   return dataframe_math_frame(*this, other, options, BinaryMathOp::Div);
 }
 
-DataFrame DataFrame::div(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Div, false);
+DataFrame DataFrame::div(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Div, false);
 }
 
-DataFrame DataFrame::div(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Div, false, options);
+DataFrame DataFrame::div(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Div, false, options);
 }
 
-DataFrame DataFrame::div(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::div(const Slate& other, const AlignOptions& options, Axis axis) const {
   return div(other, axis, options);
 }
 
@@ -171,15 +171,15 @@ DataFrame DataFrame::truediv(const DataFrame& other, const AlignOptions& options
   return dataframe_math_frame(*this, other, options, BinaryMathOp::TrueDiv);
 }
 
-DataFrame DataFrame::truediv(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::TrueDiv, false);
+DataFrame DataFrame::truediv(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::TrueDiv, false);
 }
 
-DataFrame DataFrame::truediv(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::TrueDiv, false, options);
+DataFrame DataFrame::truediv(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::TrueDiv, false, options);
 }
 
-DataFrame DataFrame::truediv(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::truediv(const Slate& other, const AlignOptions& options, Axis axis) const {
   return truediv(other, axis, options);
 }
 
@@ -195,15 +195,15 @@ DataFrame DataFrame::floordiv(const DataFrame& other, const AlignOptions& option
   return dataframe_math_frame(*this, other, options, BinaryMathOp::FloorDiv);
 }
 
-DataFrame DataFrame::floordiv(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::FloorDiv, false);
+DataFrame DataFrame::floordiv(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::FloorDiv, false);
 }
 
-DataFrame DataFrame::floordiv(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::FloorDiv, false, options);
+DataFrame DataFrame::floordiv(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::FloorDiv, false, options);
 }
 
-DataFrame DataFrame::floordiv(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::floordiv(const Slate& other, const AlignOptions& options, Axis axis) const {
   return floordiv(other, axis, options);
 }
 
@@ -219,15 +219,15 @@ DataFrame DataFrame::mod(const DataFrame& other, const AlignOptions& options) co
   return dataframe_math_frame(*this, other, options, BinaryMathOp::Mod);
 }
 
-DataFrame DataFrame::mod(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Mod, false);
+DataFrame DataFrame::mod(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Mod, false);
 }
 
-DataFrame DataFrame::mod(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Mod, false, options);
+DataFrame DataFrame::mod(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Mod, false, options);
 }
 
-DataFrame DataFrame::mod(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::mod(const Slate& other, const AlignOptions& options, Axis axis) const {
   return mod(other, axis, options);
 }
 
@@ -243,15 +243,15 @@ DataFrame DataFrame::pow(const DataFrame& other, const AlignOptions& options) co
   return dataframe_math_frame(*this, other, options, BinaryMathOp::Pow);
 }
 
-DataFrame DataFrame::pow(const Thread& other, Axis axis) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Pow, false);
+DataFrame DataFrame::pow(const Slate& other, Axis axis) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Pow, false);
 }
 
-DataFrame DataFrame::pow(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_math_thread(*this, other, axis, BinaryMathOp::Pow, false, options);
+DataFrame DataFrame::pow(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_math_slate(*this, other, axis, BinaryMathOp::Pow, false, options);
 }
 
-DataFrame DataFrame::pow(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::pow(const Slate& other, const AlignOptions& options, Axis axis) const {
   return pow(other, axis, options);
 }
 
@@ -293,7 +293,7 @@ DataFrame DataFrame::eq(double other) const {
 
 DataFrame DataFrame::eq(std::string_view other) const {
   const auto text = std::string(other);
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.eq(text); }));
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.eq(text); }));
 }
 
 DataFrame DataFrame::eq(const DataFrame& other) const {
@@ -304,15 +304,15 @@ DataFrame DataFrame::eq(const DataFrame& other, const AlignOptions& options) con
   return dataframe_cmp_frame(*this, other, options, BinaryCmpOp::Eq);
 }
 
-DataFrame DataFrame::eq(const Thread& other, Axis axis) const {
-  return dataframe_cmp_thread(*this, other, axis, BinaryCmpOp::Eq);
+DataFrame DataFrame::eq(const Slate& other, Axis axis) const {
+  return dataframe_cmp_slate(*this, other, axis, BinaryCmpOp::Eq);
 }
 
-DataFrame DataFrame::eq(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_cmp_thread(*this, other, axis, BinaryCmpOp::Eq, options);
+DataFrame DataFrame::eq(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_cmp_slate(*this, other, axis, BinaryCmpOp::Eq, options);
 }
 
-DataFrame DataFrame::eq(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::eq(const Slate& other, const AlignOptions& options, Axis axis) const {
   return eq(other, axis, options);
 }
 
@@ -322,7 +322,7 @@ DataFrame DataFrame::ne(double other) const {
 
 DataFrame DataFrame::ne(std::string_view other) const {
   const auto text = std::string(other);
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.ne(text); }));
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.ne(text); }));
 }
 
 DataFrame DataFrame::ne(const DataFrame& other) const {
@@ -333,15 +333,15 @@ DataFrame DataFrame::ne(const DataFrame& other, const AlignOptions& options) con
   return dataframe_cmp_frame(*this, other, options, BinaryCmpOp::Ne);
 }
 
-DataFrame DataFrame::ne(const Thread& other, Axis axis) const {
-  return dataframe_cmp_thread(*this, other, axis, BinaryCmpOp::Ne);
+DataFrame DataFrame::ne(const Slate& other, Axis axis) const {
+  return dataframe_cmp_slate(*this, other, axis, BinaryCmpOp::Ne);
 }
 
-DataFrame DataFrame::ne(const Thread& other, Axis axis, const AlignOptions& options) const {
-  return dataframe_cmp_thread(*this, other, axis, BinaryCmpOp::Ne, options);
+DataFrame DataFrame::ne(const Slate& other, Axis axis, const AlignOptions& options) const {
+  return dataframe_cmp_slate(*this, other, axis, BinaryCmpOp::Ne, options);
 }
 
-DataFrame DataFrame::ne(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::ne(const Slate& other, const AlignOptions& options, Axis axis) const {
   return ne(other, axis, options);
 }
 
@@ -351,7 +351,7 @@ DataFrame DataFrame::lt(double other, bool strict) const {
 
 DataFrame DataFrame::lt(std::string_view other, bool strict) const {
   const auto text = std::string(other);
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) {
     return strict ? col.lt(text) : col.le(text);
   }));
 }
@@ -364,15 +364,15 @@ DataFrame DataFrame::lt(const DataFrame& other, const AlignOptions& options, boo
   return dataframe_cmp_frame(*this, other, options, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le);
 }
 
-DataFrame DataFrame::lt(const Thread& other, Axis axis, bool strict) const {
-  return dataframe_cmp_thread(*this, other, axis, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le);
+DataFrame DataFrame::lt(const Slate& other, Axis axis, bool strict) const {
+  return dataframe_cmp_slate(*this, other, axis, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le);
 }
 
-DataFrame DataFrame::lt(const Thread& other, Axis axis, const AlignOptions& options, bool strict) const {
-  return dataframe_cmp_thread(*this, other, axis, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le, options);
+DataFrame DataFrame::lt(const Slate& other, Axis axis, const AlignOptions& options, bool strict) const {
+  return dataframe_cmp_slate(*this, other, axis, strict ? BinaryCmpOp::Lt : BinaryCmpOp::Le, options);
 }
 
-DataFrame DataFrame::lt(const Thread& other, const AlignOptions& options, Axis axis, bool strict) const {
+DataFrame DataFrame::lt(const Slate& other, const AlignOptions& options, Axis axis, bool strict) const {
   return lt(other, axis, options, strict);
 }
 
@@ -392,15 +392,15 @@ DataFrame DataFrame::le(const DataFrame& other, const AlignOptions& options) con
   return lt(other, options, false);
 }
 
-DataFrame DataFrame::le(const Thread& other, Axis axis) const {
+DataFrame DataFrame::le(const Slate& other, Axis axis) const {
   return lt(other, axis, false);
 }
 
-DataFrame DataFrame::le(const Thread& other, Axis axis, const AlignOptions& options) const {
+DataFrame DataFrame::le(const Slate& other, Axis axis, const AlignOptions& options) const {
   return lt(other, axis, options, false);
 }
 
-DataFrame DataFrame::le(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::le(const Slate& other, const AlignOptions& options, Axis axis) const {
   return lt(other, axis, options, false);
 }
 
@@ -410,7 +410,7 @@ DataFrame DataFrame::gt(double other, bool strict) const {
 
 DataFrame DataFrame::gt(std::string_view other, bool strict) const {
   const auto text = std::string(other);
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) {
     return strict ? col.gt(text) : col.ge(text);
   }));
 }
@@ -423,15 +423,15 @@ DataFrame DataFrame::gt(const DataFrame& other, const AlignOptions& options, boo
   return dataframe_cmp_frame(*this, other, options, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge);
 }
 
-DataFrame DataFrame::gt(const Thread& other, Axis axis, bool strict) const {
-  return dataframe_cmp_thread(*this, other, axis, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge);
+DataFrame DataFrame::gt(const Slate& other, Axis axis, bool strict) const {
+  return dataframe_cmp_slate(*this, other, axis, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge);
 }
 
-DataFrame DataFrame::gt(const Thread& other, Axis axis, const AlignOptions& options, bool strict) const {
-  return dataframe_cmp_thread(*this, other, axis, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge, options);
+DataFrame DataFrame::gt(const Slate& other, Axis axis, const AlignOptions& options, bool strict) const {
+  return dataframe_cmp_slate(*this, other, axis, strict ? BinaryCmpOp::Gt : BinaryCmpOp::Ge, options);
 }
 
-DataFrame DataFrame::gt(const Thread& other, const AlignOptions& options, Axis axis, bool strict) const {
+DataFrame DataFrame::gt(const Slate& other, const AlignOptions& options, Axis axis, bool strict) const {
   return gt(other, axis, options, strict);
 }
 
@@ -451,70 +451,70 @@ DataFrame DataFrame::ge(const DataFrame& other, const AlignOptions& options) con
   return gt(other, options, false);
 }
 
-DataFrame DataFrame::ge(const Thread& other, Axis axis) const {
+DataFrame DataFrame::ge(const Slate& other, Axis axis) const {
   return gt(other, axis, false);
 }
 
-DataFrame DataFrame::ge(const Thread& other, Axis axis, const AlignOptions& options) const {
+DataFrame DataFrame::ge(const Slate& other, Axis axis, const AlignOptions& options) const {
   return gt(other, axis, options, false);
 }
 
-DataFrame DataFrame::ge(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::ge(const Slate& other, const AlignOptions& options, Axis axis) const {
   return gt(other, axis, options, false);
 }
 
 DataFrame DataFrame::land(const DataFrame& other) const {
-  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::land(DataFrame)",
-                                          [](const Thread& lhs, const Thread& rhs) { return lhs.land(rhs); }));
+  return DataFrame(dataframe_zip_slates_(impl_ref_(), other.impl_ref_(), "DataFrame::land(DataFrame)",
+                                          [](const Slate& lhs, const Slate& rhs) { return lhs.land(rhs); }));
 }
 
-DataFrame DataFrame::land(const Thread& other) const {
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.land(other); }));
+DataFrame DataFrame::land(const Slate& other) const {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.land(other); }));
 }
 
 DataFrame DataFrame::rand(const DataFrame& other) const {
-  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::rand(DataFrame)",
-                                          [](const Thread& lhs, const Thread& rhs) { return lhs.rand(rhs); }));
+  return DataFrame(dataframe_zip_slates_(impl_ref_(), other.impl_ref_(), "DataFrame::rand(DataFrame)",
+                                          [](const Slate& lhs, const Slate& rhs) { return lhs.rand(rhs); }));
 }
 
-DataFrame DataFrame::rand(const Thread& other) const {
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.rand(other); }));
+DataFrame DataFrame::rand(const Slate& other) const {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.rand(other); }));
 }
 
 DataFrame DataFrame::lor(const DataFrame& other) const {
-  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::lor(DataFrame)",
-                                          [](const Thread& lhs, const Thread& rhs) { return lhs.lor(rhs); }));
+  return DataFrame(dataframe_zip_slates_(impl_ref_(), other.impl_ref_(), "DataFrame::lor(DataFrame)",
+                                          [](const Slate& lhs, const Slate& rhs) { return lhs.lor(rhs); }));
 }
 
-DataFrame DataFrame::lor(const Thread& other) const {
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.lor(other); }));
+DataFrame DataFrame::lor(const Slate& other) const {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.lor(other); }));
 }
 
 DataFrame DataFrame::ror(const DataFrame& other) const {
-  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::ror(DataFrame)",
-                                          [](const Thread& lhs, const Thread& rhs) { return lhs.ror(rhs); }));
+  return DataFrame(dataframe_zip_slates_(impl_ref_(), other.impl_ref_(), "DataFrame::ror(DataFrame)",
+                                          [](const Slate& lhs, const Slate& rhs) { return lhs.ror(rhs); }));
 }
 
-DataFrame DataFrame::ror(const Thread& other) const {
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.ror(other); }));
+DataFrame DataFrame::ror(const Slate& other) const {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.ror(other); }));
 }
 
 DataFrame DataFrame::lxor(const DataFrame& other) const {
-  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::lxor(DataFrame)",
-                                          [](const Thread& lhs, const Thread& rhs) { return lhs.lxor(rhs); }));
+  return DataFrame(dataframe_zip_slates_(impl_ref_(), other.impl_ref_(), "DataFrame::lxor(DataFrame)",
+                                          [](const Slate& lhs, const Slate& rhs) { return lhs.lxor(rhs); }));
 }
 
-DataFrame DataFrame::lxor(const Thread& other) const {
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.lxor(other); }));
+DataFrame DataFrame::lxor(const Slate& other) const {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.lxor(other); }));
 }
 
 DataFrame DataFrame::rxor(const DataFrame& other) const {
-  return DataFrame(dataframe_zip_threads_(impl_ref_(), other.impl_ref_(), "DataFrame::rxor(DataFrame)",
-                                          [](const Thread& lhs, const Thread& rhs) { return lhs.rxor(rhs); }));
+  return DataFrame(dataframe_zip_slates_(impl_ref_(), other.impl_ref_(), "DataFrame::rxor(DataFrame)",
+                                          [](const Slate& lhs, const Slate& rhs) { return lhs.rxor(rhs); }));
 }
 
-DataFrame DataFrame::rxor(const Thread& other) const {
-  return DataFrame(dataframe_map_threads_(impl_ref_(), [&](const Thread& col) { return col.rxor(other); }));
+DataFrame DataFrame::rxor(const Slate& other) const {
+  return DataFrame(dataframe_map_slates_(impl_ref_(), [&](const Slate& col) { return col.rxor(other); }));
 }
 
 DataFrame DataFrame::compare(double other) const {
@@ -529,52 +529,52 @@ DataFrame DataFrame::compare(const DataFrame& other, const AlignOptions& options
   return ne(other, options);
 }
 
-DataFrame DataFrame::compare(const Thread& other, Axis axis) const {
+DataFrame DataFrame::compare(const Slate& other, Axis axis) const {
   return ne(other, axis);
 }
 
-DataFrame DataFrame::compare(const Thread& other, Axis axis, const AlignOptions& options) const {
+DataFrame DataFrame::compare(const Slate& other, Axis axis, const AlignOptions& options) const {
   return ne(other, axis, options);
 }
 
-DataFrame DataFrame::compare(const Thread& other, const AlignOptions& options, Axis axis) const {
+DataFrame DataFrame::compare(const Slate& other, const AlignOptions& options, Axis axis) const {
   return ne(other, axis, options);
 }
 
 DataFrame operator+(const DataFrame& lhs, double rhs) { return lhs.add(rhs); }
 DataFrame operator+(double lhs, const DataFrame& rhs) { return rhs.radd(lhs); }
 DataFrame operator+(const DataFrame& lhs, const DataFrame& rhs) { return lhs.add(rhs); }
-DataFrame operator+(const DataFrame& lhs, const Thread& rhs) { return lhs.add(rhs); }
-DataFrame operator+(const Thread& lhs, const DataFrame& rhs) { return rhs.add(lhs); }
+DataFrame operator+(const DataFrame& lhs, const Slate& rhs) { return lhs.add(rhs); }
+DataFrame operator+(const Slate& lhs, const DataFrame& rhs) { return rhs.add(lhs); }
 
 DataFrame operator-(const DataFrame& lhs, double rhs) { return lhs.sub(rhs); }
 DataFrame operator-(double lhs, const DataFrame& rhs) { return rhs.rsub(lhs); }
 DataFrame operator-(const DataFrame& lhs, const DataFrame& rhs) { return lhs.sub(rhs); }
-DataFrame operator-(const DataFrame& lhs, const Thread& rhs) { return lhs.sub(rhs); }
-DataFrame operator-(const Thread& lhs, const DataFrame& rhs) {
-  return dataframe_math_thread(rhs, lhs, Axis::Feature, BinaryMathOp::Sub, true);
+DataFrame operator-(const DataFrame& lhs, const Slate& rhs) { return lhs.sub(rhs); }
+DataFrame operator-(const Slate& lhs, const DataFrame& rhs) {
+  return dataframe_math_slate(rhs, lhs, Axis::Feature, BinaryMathOp::Sub, true);
 }
 
 DataFrame operator*(const DataFrame& lhs, double rhs) { return lhs.mul(rhs); }
 DataFrame operator*(double lhs, const DataFrame& rhs) { return rhs.rmul(lhs); }
 DataFrame operator*(const DataFrame& lhs, const DataFrame& rhs) { return lhs.mul(rhs); }
-DataFrame operator*(const DataFrame& lhs, const Thread& rhs) { return lhs.mul(rhs); }
-DataFrame operator*(const Thread& lhs, const DataFrame& rhs) { return rhs.mul(lhs); }
+DataFrame operator*(const DataFrame& lhs, const Slate& rhs) { return lhs.mul(rhs); }
+DataFrame operator*(const Slate& lhs, const DataFrame& rhs) { return rhs.mul(lhs); }
 
 DataFrame operator/(const DataFrame& lhs, double rhs) { return lhs.truediv(rhs); }
 DataFrame operator/(double lhs, const DataFrame& rhs) { return rhs.rtruediv(lhs); }
 DataFrame operator/(const DataFrame& lhs, const DataFrame& rhs) { return lhs.truediv(rhs); }
-DataFrame operator/(const DataFrame& lhs, const Thread& rhs) { return lhs.truediv(rhs); }
-DataFrame operator/(const Thread& lhs, const DataFrame& rhs) {
-  return dataframe_math_thread(rhs, lhs, Axis::Feature, BinaryMathOp::TrueDiv, true);
+DataFrame operator/(const DataFrame& lhs, const Slate& rhs) { return lhs.truediv(rhs); }
+DataFrame operator/(const Slate& lhs, const DataFrame& rhs) {
+  return dataframe_math_slate(rhs, lhs, Axis::Feature, BinaryMathOp::TrueDiv, true);
 }
 
 DataFrame operator%(const DataFrame& lhs, double rhs) { return lhs.mod(rhs); }
 DataFrame operator%(double lhs, const DataFrame& rhs) { return rhs.rmod(lhs); }
 DataFrame operator%(const DataFrame& lhs, const DataFrame& rhs) { return lhs.mod(rhs); }
-DataFrame operator%(const DataFrame& lhs, const Thread& rhs) { return lhs.mod(rhs); }
-DataFrame operator%(const Thread& lhs, const DataFrame& rhs) {
-  return dataframe_math_thread(rhs, lhs, Axis::Feature, BinaryMathOp::Mod, true);
+DataFrame operator%(const DataFrame& lhs, const Slate& rhs) { return lhs.mod(rhs); }
+DataFrame operator%(const Slate& lhs, const DataFrame& rhs) {
+  return dataframe_math_slate(rhs, lhs, Axis::Feature, BinaryMathOp::Mod, true);
 }
 
 DataFrame operator==(const DataFrame& lhs, double rhs) { return lhs.eq(rhs); }
@@ -588,8 +588,8 @@ DataFrame operator==(const char* lhs, const DataFrame& rhs) {
   return rhs.eq(std::string_view{lhs != nullptr ? lhs : ""});
 }
 DataFrame operator==(const DataFrame& lhs, const DataFrame& rhs) { return lhs.eq(rhs); }
-DataFrame operator==(const DataFrame& lhs, const Thread& rhs) { return lhs.eq(rhs); }
-DataFrame operator==(const Thread& lhs, const DataFrame& rhs) { return rhs.eq(lhs); }
+DataFrame operator==(const DataFrame& lhs, const Slate& rhs) { return lhs.eq(rhs); }
+DataFrame operator==(const Slate& lhs, const DataFrame& rhs) { return rhs.eq(lhs); }
 
 DataFrame operator!=(const DataFrame& lhs, double rhs) { return lhs.ne(rhs); }
 DataFrame operator!=(double lhs, const DataFrame& rhs) { return rhs.ne(lhs); }
@@ -602,8 +602,8 @@ DataFrame operator!=(const char* lhs, const DataFrame& rhs) {
   return rhs.ne(std::string_view{lhs != nullptr ? lhs : ""});
 }
 DataFrame operator!=(const DataFrame& lhs, const DataFrame& rhs) { return lhs.ne(rhs); }
-DataFrame operator!=(const DataFrame& lhs, const Thread& rhs) { return lhs.ne(rhs); }
-DataFrame operator!=(const Thread& lhs, const DataFrame& rhs) { return rhs.ne(lhs); }
+DataFrame operator!=(const DataFrame& lhs, const Slate& rhs) { return lhs.ne(rhs); }
+DataFrame operator!=(const Slate& lhs, const DataFrame& rhs) { return rhs.ne(lhs); }
 
 DataFrame operator<(const DataFrame& lhs, double rhs) { return lhs.lt(rhs); }
 DataFrame operator<(double lhs, const DataFrame& rhs) { return rhs.gt(lhs); }
@@ -616,8 +616,8 @@ DataFrame operator<(const char* lhs, const DataFrame& rhs) {
   return rhs.gt(std::string_view{lhs != nullptr ? lhs : ""});
 }
 DataFrame operator<(const DataFrame& lhs, const DataFrame& rhs) { return lhs.lt(rhs); }
-DataFrame operator<(const DataFrame& lhs, const Thread& rhs) { return lhs.lt(rhs); }
-DataFrame operator<(const Thread& lhs, const DataFrame& rhs) { return rhs.gt(lhs); }
+DataFrame operator<(const DataFrame& lhs, const Slate& rhs) { return lhs.lt(rhs); }
+DataFrame operator<(const Slate& lhs, const DataFrame& rhs) { return rhs.gt(lhs); }
 
 DataFrame operator<=(const DataFrame& lhs, double rhs) { return lhs.le(rhs); }
 DataFrame operator<=(double lhs, const DataFrame& rhs) { return rhs.ge(lhs); }
@@ -630,8 +630,8 @@ DataFrame operator<=(const char* lhs, const DataFrame& rhs) {
   return rhs.ge(std::string_view{lhs != nullptr ? lhs : ""});
 }
 DataFrame operator<=(const DataFrame& lhs, const DataFrame& rhs) { return lhs.le(rhs); }
-DataFrame operator<=(const DataFrame& lhs, const Thread& rhs) { return lhs.le(rhs); }
-DataFrame operator<=(const Thread& lhs, const DataFrame& rhs) { return rhs.ge(lhs); }
+DataFrame operator<=(const DataFrame& lhs, const Slate& rhs) { return lhs.le(rhs); }
+DataFrame operator<=(const Slate& lhs, const DataFrame& rhs) { return rhs.ge(lhs); }
 
 DataFrame operator>(const DataFrame& lhs, double rhs) { return lhs.gt(rhs); }
 DataFrame operator>(double lhs, const DataFrame& rhs) { return rhs.lt(lhs); }
@@ -644,8 +644,8 @@ DataFrame operator>(const char* lhs, const DataFrame& rhs) {
   return rhs.lt(std::string_view{lhs != nullptr ? lhs : ""});
 }
 DataFrame operator>(const DataFrame& lhs, const DataFrame& rhs) { return lhs.gt(rhs); }
-DataFrame operator>(const DataFrame& lhs, const Thread& rhs) { return lhs.gt(rhs); }
-DataFrame operator>(const Thread& lhs, const DataFrame& rhs) { return rhs.lt(lhs); }
+DataFrame operator>(const DataFrame& lhs, const Slate& rhs) { return lhs.gt(rhs); }
+DataFrame operator>(const Slate& lhs, const DataFrame& rhs) { return rhs.lt(lhs); }
 
 DataFrame operator>=(const DataFrame& lhs, double rhs) { return lhs.ge(rhs); }
 DataFrame operator>=(double lhs, const DataFrame& rhs) { return rhs.le(lhs); }
@@ -658,13 +658,13 @@ DataFrame operator>=(const char* lhs, const DataFrame& rhs) {
   return rhs.le(std::string_view{lhs != nullptr ? lhs : ""});
 }
 DataFrame operator>=(const DataFrame& lhs, const DataFrame& rhs) { return lhs.ge(rhs); }
-DataFrame operator>=(const DataFrame& lhs, const Thread& rhs) { return lhs.ge(rhs); }
-DataFrame operator>=(const Thread& lhs, const DataFrame& rhs) { return rhs.le(lhs); }
+DataFrame operator>=(const DataFrame& lhs, const Slate& rhs) { return lhs.ge(rhs); }
+DataFrame operator>=(const Slate& lhs, const DataFrame& rhs) { return rhs.le(lhs); }
 
 namespace {
 
 template <class Compatible, class Apply>
-std::optional<std::vector<Thread>> dataframe_replace_selected_impl(
+std::optional<std::vector<Slate>> dataframe_replace_selected_impl(
     const detail::DataFrameImpl& src,
     pluss::msharp::RangeView::Of<std::string_view> features,
     Compatible&& compatible,
@@ -714,8 +714,8 @@ DataFrame DataFrame::replace(double from, double to, pluss::msharp::RangeView::O
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
-      [from, to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Series; },
+      [from, to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(double, double)");
   if (!out_cols.has_value()) {
     return *this;
@@ -729,8 +729,8 @@ DataFrame DataFrame::replace(double from, pluss::null_t to, pluss::msharp::Range
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
-      [from, to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Series; },
+      [from, to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(double, null)");
   if (!out_cols.has_value()) {
     return *this;
@@ -753,8 +753,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
-      [&from_note, &to_note](const Thread& col) { return col.replace(from_note, to_note); },
+      [](const Slate& col) { return col.kind() == SlateKind::Note; },
+      [&from_note, &to_note](const Slate& col) { return col.replace(from_note, to_note); },
       "DataFrame::replace(string, string)");
   if (!out_cols.has_value()) {
     return *this;
@@ -772,8 +772,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
-      [&from_note, to](const Thread& col) { return col.replace(from_note, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Note; },
+      [&from_note, to](const Slate& col) { return col.replace(from_note, to); },
       "DataFrame::replace(string, null)");
   if (!out_cols.has_value()) {
     return *this;
@@ -797,8 +797,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
-      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Series; },
+      [&from, &to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Series, Series)");
   if (!out_cols.has_value()) {
     return *this;
@@ -815,8 +815,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
-      [&from, to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Series; },
+      [&from, to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Series, null)");
   if (!out_cols.has_value()) {
     return *this;
@@ -833,8 +833,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Series; },
-      [&to, from](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Series; },
+      [&to, from](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(null, Series)");
   if (!out_cols.has_value()) {
     return *this;
@@ -851,8 +851,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
-      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Note; },
+      [&from, &to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Note, Note)");
   if (!out_cols.has_value()) {
     return *this;
@@ -869,8 +869,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
-      [&from, to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Note; },
+      [&from, to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Note, null)");
   if (!out_cols.has_value()) {
     return *this;
@@ -887,8 +887,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Note; },
-      [&to, from](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Note; },
+      [&to, from](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(null, Note)");
   if (!out_cols.has_value()) {
     return *this;
@@ -905,10 +905,10 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) {
-        return col.kind() == ThreadKind::Timeline;
+      [](const Slate& col) {
+        return col.kind() == SlateKind::Timeline;
       },
-      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      [&from, &to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Timeline, Timeline)");
   if (!out_cols.has_value()) {
     return *this;
@@ -925,10 +925,10 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) {
-        return col.kind() == ThreadKind::Timeline;
+      [](const Slate& col) {
+        return col.kind() == SlateKind::Timeline;
       },
-      [&from, to](const Thread& col) { return col.replace(from, to); },
+      [&from, to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Timeline, null)");
   if (!out_cols.has_value()) {
     return *this;
@@ -952,8 +952,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Duration; },
-      [&from, &to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Duration; },
+      [&from, &to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Duration, Duration)");
   if (!out_cols.has_value()) {
     return *this;
@@ -970,8 +970,8 @@ DataFrame DataFrame::replace(
   auto out_cols = dataframe_replace_selected_impl(
       src,
       features,
-      [](const Thread& col) { return col.kind() == ThreadKind::Duration; },
-      [&from, to](const Thread& col) { return col.replace(from, to); },
+      [](const Slate& col) { return col.kind() == SlateKind::Duration; },
+      [&from, to](const Slate& col) { return col.replace(from, to); },
       "DataFrame::replace(Duration, null)");
   if (!out_cols.has_value()) {
     return *this;
@@ -1013,7 +1013,7 @@ std::vector<std::size_t> resolve_numeric_reduce_indices_(
   indices.reserve(src.columns_.size());
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto& col = src.columns_[i];
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+    if (col.kind() == SlateKind::Series && is_numeric_series_type(col.as_series())) {
       indices.push_back(i);
     }
   }
@@ -1048,7 +1048,7 @@ std::vector<std::size_t> resolve_bool_reduce_indices_(
   PLUSS_CHECK(!indices.empty(), std::string(where) + ": no features selected");
   for (const auto idx : indices) {
     const auto& col = src.columns_[idx];
-    PLUSS_CHECK(col.kind() == ThreadKind::Series,
+    PLUSS_CHECK(col.kind() == SlateKind::Series,
                 std::string(where) + ": feature '" + src.names_[idx] + "' must be a Bool Series");
     PLUSS_CHECK(col.as_series().scalar_type() == pluss::codem::ScalarType::Bool,
                 std::string(where) + ": feature '" + src.names_[idx] + "' must be a Bool Series");
@@ -1121,13 +1121,13 @@ ReduceMatrix_ bool_reduce_matrix_(
   };
 }
 
-Thread with_reduce_labels_(
-    Thread out,
+Slate with_reduce_labels_(
+    Slate out,
     const detail::DataFrameImpl& src,
   const std::vector<std::string>& names,
   std::int64_t axis) {
   if (axis == 0) {
-    return detail::with_label_kind(out.label().set(make_note_thread(names)), LabelKind::Feature);
+    return detail::with_label_kind(out.label().set(make_note_slate(names)), LabelKind::Feature);
   }
   return detail::with_label_kind(out.label().set(src.cases_), LabelKind::Case);
 }
@@ -1160,7 +1160,7 @@ enum class NumericAxisOp_ : std::uint8_t {
   Prod,
 };
 
-Thread reduce_numeric_(
+Slate reduce_numeric_(
     const detail::DataFrameImpl& src,
     std::int64_t axis,
     bool skipnull,
@@ -1185,7 +1185,7 @@ Thread reduce_numeric_(
     auto valid = identity_defined
                      ? pluss::Series::ones({output_size}, pluss::codem::ScalarType::Bool)
                      : pluss::Series::zeros({output_size}, pluss::codem::ScalarType::Bool);
-    return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
+    return with_reduce_labels_(Slate(values, valid), src, matrix.names, axis);
   }
 
   const auto invalid = matrix.valid.logical_not();
@@ -1253,10 +1253,10 @@ Thread reduce_numeric_(
   }
 
   const auto valid = reduced_validity_(matrix, axis, skipnull, identity_defined);
-  return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
+  return with_reduce_labels_(Slate(values, valid), src, matrix.names, axis);
 }
 
-Thread reduce_bool_(
+Slate reduce_bool_(
     const detail::DataFrameImpl& src,
     std::int64_t axis,
     pluss::msharp::RangeView::Of<std::string_view> features,
@@ -1271,12 +1271,12 @@ Thread reduce_bool_(
   const auto valid =
       skipnull ? pluss::Series::ones(values.sizes(), pluss::codem::ScalarType::Bool)
              : matrix.valid.all(axis);
-  return with_reduce_labels_(Thread(values, valid), src, matrix.names, axis);
+  return with_reduce_labels_(Slate(values, valid), src, matrix.names, axis);
 }
 
 bool has_any_numeric_feature_(const detail::DataFrameImpl& src) {
   for (const auto& col : src.columns_) {
-    if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+    if (col.kind() == SlateKind::Series && is_numeric_series_type(col.as_series())) {
       return true;
     }
   }
@@ -1288,7 +1288,7 @@ std::vector<std::size_t> resolve_temporal_reduce_indices_(const detail::DataFram
   indices.reserve(src.columns_.size());
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto kind = src.columns_[i].kind();
-    if (kind == ThreadKind::Timeline) {
+    if (kind == SlateKind::Timeline) {
       indices.push_back(i);
     }
   }
@@ -1307,10 +1307,10 @@ pluss::Timeline reduce_rebuild_timeline_like_(
 }
 
 // Per-feature min/max across Timeline columns (Axis::Case only -- each
-// feature reduces to one timestamp, mirroring Thread::min()/max() on a single
+// feature reduces to one timestamp, mirroring Slate::min()/max() on a single
 // temporal column). A column with no valid rows -- or any null when skipnull
 // is false -- contributes a NULL entry instead.
-Thread reduce_temporal_minmax_(
+Slate reduce_temporal_minmax_(
     const detail::DataFrameImpl& src,
     std::span<const std::size_t> indices,
     bool want_max,
@@ -1346,29 +1346,29 @@ Thread reduce_temporal_minmax_(
 
   auto out_timeline = reduce_rebuild_timeline_like_(reference_timeline, ticks);
   auto validity = bool_series_from_keep(valid);
-  Thread values = Thread(out_timeline, validity);
+  Slate values = Slate(out_timeline, validity);
   return with_reduce_labels_(values, src, reduce_names_(src, indices), /*axis=*/0);
 }
 
 } // namespace
 
-Thread DataFrame::sum(Axis axis, bool skipnull) const {
+Slate DataFrame::sum(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::sum");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Sum, "DataFrame::sum");
 }
 
-Thread DataFrame::mean(Axis axis, bool skipnull) const {
+Slate DataFrame::mean(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::mean");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Mean, "DataFrame::mean");
 }
 
-Thread DataFrame::median(Axis axis, bool skipnull) const {
+Slate DataFrame::median(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::median");
   return reduce_numeric_(
       impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Median, "DataFrame::median");
 }
 
-Thread DataFrame::min(Axis axis, bool skipnull) const {
+Slate DataFrame::min(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::min");
   const auto& src = impl_ref_();
   if (normalized_axis == 0 && !has_any_numeric_feature_(src)) {
@@ -1380,7 +1380,7 @@ Thread DataFrame::min(Axis axis, bool skipnull) const {
   return reduce_numeric_(src, normalized_axis, skipnull, NumericAxisOp_::Min, "DataFrame::min");
 }
 
-Thread DataFrame::max(Axis axis, bool skipnull) const {
+Slate DataFrame::max(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::max");
   const auto& src = impl_ref_();
   if (normalized_axis == 0 && !has_any_numeric_feature_(src)) {
@@ -1392,22 +1392,22 @@ Thread DataFrame::max(Axis axis, bool skipnull) const {
   return reduce_numeric_(src, normalized_axis, skipnull, NumericAxisOp_::Max, "DataFrame::max");
 }
 
-Thread DataFrame::std(Axis axis, bool skipnull) const {
+Slate DataFrame::std(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::std");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Std, "DataFrame::std");
 }
 
-Thread DataFrame::var(Axis axis, bool skipnull) const {
+Slate DataFrame::var(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::var");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Var, "DataFrame::var");
 }
 
-Thread DataFrame::prod(Axis axis, bool skipnull) const {
+Slate DataFrame::prod(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::prod");
   return reduce_numeric_(impl_ref_(), normalized_axis, skipnull, NumericAxisOp_::Prod, "DataFrame::prod");
 }
 
-Thread DataFrame::count(Axis axis) const {
+Slate DataFrame::count(Axis axis) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::count");
   const auto& src = impl_ref_();
   PLUSS_CHECK(!src.columns_.empty(), "DataFrame::count: no features");
@@ -1415,23 +1415,23 @@ Thread DataFrame::count(Axis axis) const {
   std::iota(indices.begin(), indices.end(), std::size_t{0});
   const auto names = reduce_names_(src, indices);
   const auto valid = validity_matrix_(src, indices, "DataFrame::count");
-  auto out = Thread(valid.to(pluss::codem::ScalarType::Int64).sum(normalized_axis));
+  auto out = Slate(valid.to(pluss::codem::ScalarType::Int64).sum(normalized_axis));
   return with_reduce_labels_(std::move(out), src, names, normalized_axis);
 }
 
-Thread DataFrame::any(bool skipnull) const {
+Slate DataFrame::any(bool skipnull) const {
   return any(Axis::Case, {}, skipnull);
 }
 
-Thread DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
+Slate DataFrame::any(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
   return any(Axis::Case, features, skipnull);
 }
 
-Thread DataFrame::any(Axis axis, bool skipnull) const {
+Slate DataFrame::any(Axis axis, bool skipnull) const {
   return any(axis, {}, skipnull);
 }
 
-Thread DataFrame::any(Axis axis,
+Slate DataFrame::any(Axis axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
                       bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::any");
@@ -1439,19 +1439,19 @@ Thread DataFrame::any(Axis axis,
       impl_ref_(), normalized_axis, features, false, skipnull, "DataFrame::any");
 }
 
-Thread DataFrame::all(bool skipnull) const {
+Slate DataFrame::all(bool skipnull) const {
   return all(Axis::Case, {}, skipnull);
 }
 
-Thread DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
+Slate DataFrame::all(pluss::msharp::RangeView::Of<std::string_view> features, bool skipnull) const {
   return all(Axis::Case, features, skipnull);
 }
 
-Thread DataFrame::all(Axis axis, bool skipnull) const {
+Slate DataFrame::all(Axis axis, bool skipnull) const {
   return all(axis, {}, skipnull);
 }
 
-Thread DataFrame::all(Axis axis,
+Slate DataFrame::all(Axis axis,
                       pluss::msharp::RangeView::Of<std::string_view> features,
                       bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::all");
@@ -1459,7 +1459,7 @@ Thread DataFrame::all(Axis axis,
       impl_ref_(), normalized_axis, features, true, skipnull, "DataFrame::all");
 }
 
-Thread DataFrame::csmin(Axis axis, bool skipnull) const {
+Slate DataFrame::csmin(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::csmin");
   const auto& src = impl_ref_();
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::csmin");
@@ -1473,13 +1473,13 @@ Thread DataFrame::csmin(Axis axis, bool skipnull) const {
                            .to_vec<std::int64_t>();
   auto out = normalized_axis == 0
                  ? src.cases_.take(indices)
-                 : make_note_thread(matrix.names).take(indices);
+                 : make_note_slate(matrix.names).take(indices);
   out = out.with_validity_mask(
       reduced_validity_(matrix, normalized_axis, skipnull, false));
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
-Thread DataFrame::csmax(Axis axis, bool skipnull) const {
+Slate DataFrame::csmax(Axis axis, bool skipnull) const {
   const auto normalized_axis = normalize_reduce_axis_(axis, "DataFrame::csmax");
   const auto& src = impl_ref_();
   const auto matrix = numeric_reduce_matrix_(src, "DataFrame::csmax");
@@ -1493,17 +1493,17 @@ Thread DataFrame::csmax(Axis axis, bool skipnull) const {
                            .to_vec<std::int64_t>();
   auto out = normalized_axis == 0
                  ? src.cases_.take(indices)
-                 : make_note_thread(matrix.names).take(indices);
+                 : make_note_slate(matrix.names).take(indices);
   out = out.with_validity_mask(
       reduced_validity_(matrix, normalized_axis, skipnull, false));
   return with_reduce_labels_(std::move(out), src, matrix.names, normalized_axis);
 }
 
-Thread DataFrame::ndistinct(bool dropnull) const {
+Slate DataFrame::ndistinct(bool dropnull) const {
   return ndistinct({}, dropnull);
 }
 
-Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> features,
+Slate DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> features,
                             bool dropnull) const {
   const auto& src = impl_ref_();
 
@@ -1536,16 +1536,16 @@ Thread DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> featu
     values.push_back(src.columns_[it->second].ndistinct(dropnull).as_series().item<std::int64_t>());
   }
 
-  return make_i64_thread(values)
-      .label().set(make_note_thread(names))
+  return make_i64_slate(values)
+      .label().set(make_note_slate(names))
       .name("ndistinct");
 }
 
-Thread DataFrame::freq() const {
+Slate DataFrame::freq() const {
   return freq(FreqOptions{});
 }
 
-Thread DataFrame::freq(FreqOptions options) const {
+Slate DataFrame::freq(FreqOptions options) const {
   PLUSS_CHECK(options.top >= 0, "DataFrame::freq: top must be >= 0");
   PLUSS_CHECK(nfeatures() > 0, "DataFrame::freq: no features");
 
@@ -1580,9 +1580,9 @@ Thread DataFrame::freq(FreqOptions options) const {
   auto out = grouped.features("count").label().set(labels);
   if (options.kind == FreqKind::Prop) {
     if (out.size() == 0) {
-      out = make_f64_thread({}).label().set(labels);
+      out = make_f64_slate({}).label().set(labels);
     } else {
-      const auto total = out.sum().thread().as_series().item<double>();
+      const auto total = out.sum().slate().as_series().item<double>();
       out = out.div(total).label().set(labels);
     }
     return out.name("prop");
@@ -1590,12 +1590,12 @@ Thread DataFrame::freq(FreqOptions options) const {
   return out.name("count");
 }
 
-Thread DataFrame::duplicated(bool keep_first,
+Slate DataFrame::duplicated(bool keep_first,
                              bool keep_last) const {
   return duplicated({}, keep_first, keep_last);
 }
 
-Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> features,
+Slate DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> features,
                              bool keep_first,
                              bool keep_last) const {
   PLUSS_CHECK(!(keep_first && keep_last),
@@ -1616,7 +1616,7 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
     for (const auto& name : scoped.features()) {
       const auto column = scoped.features(name);
       if (!key.empty()) key += "|";
-      key += detail::valid_at(column, row) ? thread_scalar_string_at(column, row) : "NULL";
+      key += detail::valid_at(column, row) ? slate_scalar_string_at(column, row) : "NULL";
     }
     rows_by_key[key].push_back(row);
   }
@@ -1629,16 +1629,16 @@ Thread DataFrame::duplicated(pluss::msharp::RangeView::Of<std::string_view> feat
       mask[static_cast<std::size_t>(rows[i])] = true;
     }
   }
-  return Thread(bool_series_from_keep(mask))
+  return Slate(bool_series_from_keep(mask))
       .label().set(scoped.label().values())
       .name("duplicated");
 }
 
-Thread DataFrame::repeated() const {
+Slate DataFrame::repeated() const {
   return repeated({});
 }
 
-Thread DataFrame::repeated(pluss::msharp::RangeView::Of<std::string_view> features) const {
+Slate DataFrame::repeated(pluss::msharp::RangeView::Of<std::string_view> features) const {
   return duplicated(features, false, false).name("repeated");
 }
 
@@ -1676,7 +1676,7 @@ DataFrameView DataFrame::corr(pluss::msharp::RangeView::Of<std::string_view> fea
     names.reserve(src.names_.size());
     for (std::size_t i = 0; i < src.names_.size(); ++i) {
       const auto& col = src.columns_[i];
-      if (col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series())) {
+      if (col.kind() == SlateKind::Series && is_numeric_series_type(col.as_series())) {
         names.push_back(src.names_[i]);
       }
     }
@@ -1693,7 +1693,7 @@ DataFrameView DataFrame::corr(pluss::msharp::RangeView::Of<std::string_view> fea
       const auto it = src.name_to_idx_.find(key);
       PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::corr: unknown feature '" + key + "'");
       const auto& col = src.columns_[it->second];
-      PLUSS_CHECK(col.kind() == ThreadKind::Series && is_numeric_series_type(col.as_series()),
+      PLUSS_CHECK(col.kind() == SlateKind::Series && is_numeric_series_type(col.as_series()),
                   "DataFrame::corr: feature '" + key + "' must be numeric");
       names.push_back(key);
     }
@@ -1702,25 +1702,25 @@ DataFrameView DataFrame::corr(pluss::msharp::RangeView::Of<std::string_view> fea
   PLUSS_CHECK(!names.empty(), "DataFrame::corr: no numeric features");
 
   const auto feature_count = names.size();
-  std::vector<Thread> numeric_threads;
-  numeric_threads.reserve(feature_count);
+  std::vector<Slate> numeric_slates;
+  numeric_slates.reserve(feature_count);
   for (const auto& name : names) {
-    numeric_threads.push_back(src.columns_[src.name_to_idx_.at(name)]);
+    numeric_slates.push_back(src.columns_[src.name_to_idx_.at(name)]);
   }
 
-  ThreadCorrMethod thread_method = ThreadCorrMethod::Pearson;
+  SlateCorrMethod slate_method = SlateCorrMethod::Pearson;
   switch (method) {
     case CorrMethod::Pearson:
-      thread_method = ThreadCorrMethod::Pearson;
+      slate_method = SlateCorrMethod::Pearson;
       break;
     case CorrMethod::Spearman:
-      thread_method = ThreadCorrMethod::Spearman;
+      slate_method = SlateCorrMethod::Spearman;
       break;
     case CorrMethod::KendallTau:
-      thread_method = ThreadCorrMethod::KendallTau;
+      slate_method = SlateCorrMethod::KendallTau;
       break;
     default:
-      thread_method = ThreadCorrMethod::Pearson;
+      slate_method = SlateCorrMethod::Pearson;
       break;
   }
 
@@ -1728,23 +1728,23 @@ DataFrameView DataFrame::corr(pluss::msharp::RangeView::Of<std::string_view> fea
   std::vector<double> corr_matrix(feature_count * feature_count, nan);
   for (std::size_t i = 0; i < feature_count; ++i) {
     for (std::size_t j = i; j < feature_count; ++j) {
-      const double corr = numeric_threads[i].corr(numeric_threads[j], thread_method);
+      const double corr = numeric_slates[i].corr(numeric_slates[j], slate_method);
       corr_matrix[i * feature_count + j] = corr;
       corr_matrix[j * feature_count + i] = corr;
     }
   }
 
-  std::vector<std::pair<std::string, Thread>> out_cols;
+  std::vector<std::pair<std::string, Slate>> out_cols;
   out_cols.reserve(feature_count);
   for (std::size_t c = 0; c < feature_count; ++c) {
     std::vector<double> col(feature_count, nan);
     for (std::size_t r = 0; r < feature_count; ++r) {
       col[r] = corr_matrix[r * feature_count + c];
     }
-    out_cols.emplace_back(names[c], make_f64_thread(col));
+    out_cols.emplace_back(names[c], make_f64_slate(col));
   }
 
-  auto out = DataFrame(std::move(out_cols), make_note_thread(names));
+  auto out = DataFrame(std::move(out_cols), make_note_slate(names));
   return DataFrameView(std::move(out), render, "corr", title());
 }
 
@@ -1776,7 +1776,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
 
   if (spec.op == MissingOp::IsNull || spec.op == MissingOp::NotNull ||
       spec.op == MissingOp::Invalid) {
-    std::vector<std::pair<std::string, Thread>> out_cols;
+    std::vector<std::pair<std::string, Slate>> out_cols;
     out_cols.reserve(target_indices.size());
     for (const auto idx : target_indices) {
       const auto mask = spec.op == MissingOp::IsNull
@@ -1787,15 +1787,15 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
       out_cols.emplace_back(src.names_[idx], mask);
     }
     std::vector<std::string> out_names;
-    std::vector<Thread> out_threads;
+    std::vector<Slate> out_slates;
     out_names.reserve(out_cols.size());
-    out_threads.reserve(out_cols.size());
-    for (auto& [name, thread] : out_cols) {
+    out_slates.reserve(out_cols.size());
+    for (auto& [name, slate] : out_cols) {
       out_names.push_back(std::move(name));
-      out_threads.push_back(std::move(thread));
+      out_slates.push_back(std::move(slate));
     }
     return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
-        std::move(out_names), std::move(out_threads), src.cases_, src.title_, src.case_axis_));
+        std::move(out_names), std::move(out_slates), src.cases_, src.title_, src.case_axis_));
   }
 
   if (spec.op == MissingOp::DropAny || spec.op == MissingOp::DropAll) {
@@ -1823,7 +1823,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
     PLUSS_CHECK(spec.value.has_value(), "DataFrame::missing(fill): value must be provided");
   }
 
-  std::vector<Thread> out_cols;
+  std::vector<Slate> out_cols;
   out_cols.reserve(src.columns_.size());
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto& col = src.columns_[i];
@@ -1834,7 +1834,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
 
     switch (spec.op) {
       case MissingOp::Fill:
-        if (col.kind() == ThreadKind::Series) {
+        if (col.kind() == SlateKind::Series) {
           out_cols.push_back(col.fillnull(*spec.value));
         } else {
           out_cols.push_back(col);
@@ -1922,7 +1922,7 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
   }
 
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   std::unordered_set<std::string> seen;
   seen.reserve(specs.size());
 
@@ -1933,7 +1933,7 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
     if (!seen.insert(spec.feature).second) {
       continue;
     }
-    out_cols[it->second] = cast_thread_target_(src.columns_[it->second], spec.target, spec.options);
+    out_cols[it->second] = cast_slate_target_(src.columns_[it->second], spec.target, spec.options);
   }
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
@@ -1943,7 +1943,7 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
 DataFrame DataFrame::cast(
     pluss::msharp::RangeView::Of<std::pair<std::string_view, pluss::codem::ScalarType>> feature_dtypes) const {
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   std::unordered_set<std::string> seen;
   seen.reserve(feature_dtypes.size());
   for (const auto& [name, dtype] : feature_dtypes) {
@@ -1966,13 +1966,13 @@ DataFrame DataFrame::cast(
 }
 
 DataFrame DataFrame::cast(
-    pluss::msharp::RangeView::Of<std::pair<std::string_view, ThreadCastTarget>> feature_targets) const {
+    pluss::msharp::RangeView::Of<std::pair<std::string_view, SlateCastTarget>> feature_targets) const {
   if (feature_targets.size() == 0) {
     return *this;
   }
 
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   std::unordered_set<std::string> seen;
   seen.reserve(feature_targets.size());
   for (const auto& [name, target] : feature_targets) {
@@ -1983,15 +1983,15 @@ DataFrame DataFrame::cast(
     if (!seen.insert(key).second) {
       continue;
     }
-    out_cols[it->second] = cast_thread_target_(src.columns_[it->second], target);
+    out_cols[it->second] = cast_slate_target_(src.columns_[it->second], target);
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
 DataFrame DataFrame::cast(
-    std::initializer_list<std::pair<std::string_view, ThreadCastTarget>> feature_targets) const {
-  return cast(pluss::msharp::RangeView::Of<std::pair<std::string_view, ThreadCastTarget>>(feature_targets));
+    std::initializer_list<std::pair<std::string_view, SlateCastTarget>> feature_targets) const {
+  return cast(pluss::msharp::RangeView::Of<std::pair<std::string_view, SlateCastTarget>>(feature_targets));
 }
 
 DataFrame DataFrame::astype(
@@ -2008,7 +2008,7 @@ DataFrame DataFrame::window(pluss::msharp::RangeView::Of<WindowSpec> specs, bool
   PLUSS_CHECK(specs.size() != 0, "DataFrame::window: at least one WindowSpec is required");
   const auto& src = impl_ref_();
 
-  std::vector<std::pair<std::string, Thread>> computed;
+  std::vector<std::pair<std::string, Slate>> computed;
   computed.reserve(specs.size());
 
   std::unordered_set<std::string> names_seen;
@@ -2046,16 +2046,16 @@ DataFrame DataFrame::window(pluss::msharp::RangeView::Of<WindowSpec> specs, bool
   auto out_cols = src.columns_;
   auto out_name_to_idx = src.name_to_idx_;
 
-  for (auto& [name, thread] : computed) {
+  for (auto& [name, slate] : computed) {
     const auto it = out_name_to_idx.find(name);
     if (it != out_name_to_idx.end()) {
-      out_cols[it->second] = std::move(thread);
+      out_cols[it->second] = std::move(slate);
       continue;
     }
     const auto next = out_cols.size();
     out_name_to_idx.emplace(name, next);
     out_names.push_back(name);
-    out_cols.push_back(std::move(thread));
+    out_cols.push_back(std::move(slate));
   }
 
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
@@ -2091,7 +2091,7 @@ DataFrame DataFrame::fillnull(std::string_view value, pluss::msharp::RangeView::
 
   if (features.size() == 0) {
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
-      if (src.columns_[i].kind() == ThreadKind::Note) {
+      if (src.columns_[i].kind() == SlateKind::Note) {
         target_indices.insert(i);
       }
     }
@@ -2107,11 +2107,11 @@ DataFrame DataFrame::fillnull(std::string_view value, pluss::msharp::RangeView::
     return *this;
   }
 
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   bool changed = false;
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
-    if (col.kind() == ThreadKind::Note && col.has_validity_mask()) {
+    if (col.kind() == SlateKind::Note && col.has_validity_mask()) {
       col = col.fillnull(value);
       changed = true;
     }
@@ -2137,7 +2137,7 @@ DataFrame DataFrame::fillnull(
   if (features.size() == 0) {
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
       const auto kind = src.columns_[i].kind();
-      if (kind == ThreadKind::Timeline) {
+      if (kind == SlateKind::Timeline) {
         target_indices.insert(i);
       }
     }
@@ -2153,12 +2153,12 @@ DataFrame DataFrame::fillnull(
     return *this;
   }
 
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   bool changed = false;
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
     const auto kind = col.kind();
-    if (kind == ThreadKind::Timeline && col.has_validity_mask()) {
+    if (kind == SlateKind::Timeline && col.has_validity_mask()) {
       col = col.fillnull(value);
       changed = true;
     }
@@ -2182,7 +2182,7 @@ DataFrame DataFrame::fillnull(
   std::unordered_set<std::size_t> target_indices;
   if (features.size() == 0) {
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
-      if (src.columns_[i].kind() == ThreadKind::Duration) {
+      if (src.columns_[i].kind() == SlateKind::Duration) {
         target_indices.insert(i);
       }
     }
@@ -2198,11 +2198,11 @@ DataFrame DataFrame::fillnull(
     return *this;
   }
 
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   bool changed = false;
   for (const auto idx : target_indices) {
     auto& col = out_cols[idx];
-    if (col.kind() == ThreadKind::Duration) {
+    if (col.kind() == SlateKind::Duration) {
       col = col.fillnull(value);
       changed = true;
     }
@@ -2220,7 +2220,7 @@ DataFrame DataFrame::fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) cons
   }
 
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   std::unordered_set<std::string> seen;
   seen.reserve(specs.size());
 
@@ -2243,7 +2243,7 @@ DataFrame DataFrame::fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) cons
 DataFrame& DataFrame::fillnull_(double value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
-    if (c.kind() == ThreadKind::Series && c.has_validity_mask()) {
+    if (c.kind() == SlateKind::Series && c.has_validity_mask()) {
       c.fillnull_(value);
     }
   }
@@ -2253,7 +2253,7 @@ DataFrame& DataFrame::fillnull_(double value) {
 DataFrame& DataFrame::fillnull_(std::string_view value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
-    if (c.kind() == ThreadKind::Note && c.has_validity_mask()) {
+    if (c.kind() == SlateKind::Note && c.has_validity_mask()) {
       c.fillnull_(value);
     }
   }
@@ -2264,7 +2264,7 @@ DataFrame& DataFrame::fillnull_(const pluss::Timeline& value) {
   auto& w = mut_impl_();
   for (auto& c : w.columns_) {
     const auto kind = c.kind();
-    if (kind == ThreadKind::Timeline && c.has_validity_mask()) {
+    if (kind == SlateKind::Timeline && c.has_validity_mask()) {
       c.fillnull_(value);
     }
   }
@@ -2274,7 +2274,7 @@ DataFrame& DataFrame::fillnull_(const pluss::Timeline& value) {
 DataFrame& DataFrame::fillnull_(const pluss::Duration& value) {
   auto& writable = mut_impl_();
   for (auto& column : writable.columns_) {
-    if (column.kind() == ThreadKind::Duration) {
+    if (column.kind() == SlateKind::Duration) {
       column.fillnull_(value);
     }
   }
@@ -2340,7 +2340,7 @@ DataFrame DataFrame::dropnull(const DropOptions& options) const {
   }
 
   std::vector<std::string> out_names;
-  std::vector<Thread> out_cols;
+  std::vector<Slate> out_cols;
   out_names.reserve(src.names_.size());
   out_cols.reserve(src.columns_.size());
   for (std::size_t i = 0; i < src.names_.size(); ++i) {
@@ -2374,7 +2374,7 @@ DataFrame DataFrame::ffill(std::int64_t limit) const {
 DataFrame DataFrame::ffill(const FillOptions& options) const {
   PLUSS_CHECK(options.limit == -1 || options.limit >= 0, "DataFrame::ffill: limit must be -1 or >= 0");
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   if (options.features.empty()) {
     for (auto& col : out_cols) {
       col = col.ffill(options.limit);
@@ -2403,7 +2403,7 @@ DataFrame DataFrame::bfill(std::int64_t limit) const {
 DataFrame DataFrame::bfill(const FillOptions& options) const {
   PLUSS_CHECK(options.limit == -1 || options.limit >= 0, "DataFrame::bfill: limit must be -1 or >= 0");
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   if (options.features.empty()) {
     for (auto& col : out_cols) {
       col = col.bfill(options.limit);
@@ -2434,11 +2434,11 @@ DataFrame DataFrame::interp(pluss::msharp::RangeView::Of<std::string_view> featu
 DataFrame DataFrame::interp(const FillOptions& options) const {
   PLUSS_CHECK(options.limit == -1 || options.limit >= 0, "DataFrame::interp: limit must be -1 or >= 0");
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
 
   if (options.features.empty()) {
     for (std::size_t i = 0; i < src.columns_.size(); ++i) {
-      if (src.columns_[i].kind() == ThreadKind::Series &&
+      if (src.columns_[i].kind() == SlateKind::Series &&
           is_numeric_series_type(src.columns_[i].as_series())) {
         out_cols[i] = src.columns_[i].interp(options.limit);
       }
@@ -2452,7 +2452,7 @@ DataFrame DataFrame::interp(const FillOptions& options) const {
       if (!seen.insert(it->second).second) {
         continue;
       }
-      PLUSS_CHECK(src.columns_[it->second].kind() == ThreadKind::Series &&
+      PLUSS_CHECK(src.columns_[it->second].kind() == SlateKind::Series &&
                       is_numeric_series_type(src.columns_[it->second].as_series()),
                   "DataFrame::interp: feature '" + name + "' must be a numeric Series");
       out_cols[it->second] = src.columns_[it->second].interp(options.limit);
@@ -2463,23 +2463,23 @@ DataFrame DataFrame::interp(const FillOptions& options) const {
       src.names_, std::move(out_cols), src.cases_, src.title_, src.case_axis_));
 }
 
-DataFrame DataFrame::mask(const Thread& bool_mask,
+DataFrame DataFrame::mask(const Slate& bool_mask,
                           pluss::msharp::RangeView::Of<std::string_view> features) const {
   return mask(bool_mask, features, row_mask_default_options_());
 }
 
-DataFrame DataFrame::mask(const Thread& bool_mask,
+DataFrame DataFrame::mask(const Slate& bool_mask,
                           const AlignOptions& options,
                           pluss::msharp::RangeView::Of<std::string_view> features) const {
   return mask(bool_mask, features, options);
 }
 
-DataFrame DataFrame::mask(const Thread& bool_mask,
+DataFrame DataFrame::mask(const Slate& bool_mask,
                           pluss::msharp::RangeView::Of<std::string_view> features,
                           const AlignOptions& options) const {
   PLUSS_CHECK(bool_mask.defined(), "DataFrame::mask: mask is undefined");
-  const auto aligned_mask = prepare_mask_thread_(impl_ref_(), bool_mask, "DataFrame::mask", options);
-  PLUSS_CHECK(aligned_mask.kind() == ThreadKind::Series, "DataFrame::mask: mask must be a Series thread");
+  const auto aligned_mask = prepare_mask_slate_(impl_ref_(), bool_mask, "DataFrame::mask", options);
+  PLUSS_CHECK(aligned_mask.kind() == SlateKind::Series, "DataFrame::mask: mask must be a Series slate");
   auto mask = aligned_mask.as_series();
   if (detail::has_validity_mask(aligned_mask)) {
     auto valid = *detail::validity_mask(aligned_mask);
@@ -2491,11 +2491,11 @@ DataFrame DataFrame::mask(const Thread& bool_mask,
   validate_bool_mask(mask, ncases(), "DataFrame::mask");
 
   const auto& src = impl_ref_();
-  std::vector<Thread> out_cols = src.columns_;
+  std::vector<Slate> out_cols = src.columns_;
   const auto picked = normalize_name_list(features);
   if (picked.empty()) {
     for (auto& col : out_cols) {
-      col = col.put(Thread(mask), pluss::series::null);
+      col = col.put(Slate(mask), pluss::series::null);
     }
   } else {
     std::unordered_set<std::size_t> seen;
@@ -2504,7 +2504,7 @@ DataFrame DataFrame::mask(const Thread& bool_mask,
       const auto it = src.name_to_idx_.find(name);
       PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::mask: unknown feature '" + name + "'");
       if (seen.insert(it->second).second) {
-        out_cols[it->second] = src.columns_[it->second].put(Thread(mask), pluss::series::null);
+        out_cols[it->second] = src.columns_[it->second].put(Slate(mask), pluss::series::null);
       }
     }
   }
@@ -2514,12 +2514,12 @@ DataFrame DataFrame::mask(const Thread& bool_mask,
 
 DataFrameView DataFrame::describe(bool render) const {
   const auto& src = impl_ref_();
-  std::vector<std::pair<std::string, Thread>> out_cols;
+  std::vector<std::pair<std::string, Slate>> out_cols;
   out_cols.reserve(src.columns_.size());
 
   for (std::size_t i = 0; i < src.columns_.size(); ++i) {
     const auto& col = src.columns_[i];
-    if (col.kind() != ThreadKind::Series) {
+    if (col.kind() != SlateKind::Series) {
       continue;
     }
     const auto& s = col.as_series();
@@ -2527,7 +2527,7 @@ DataFrameView DataFrame::describe(bool render) const {
       continue;
     }
 
-    Thread observed = col;
+    Slate observed = col;
     if (col.has_validity_mask()) {
       observed = col.filter(*col.validity_mask());
     }
@@ -2555,14 +2555,14 @@ DataFrameView DataFrame::describe(bool render) const {
     }
 
     std::vector<double> stats{count, mean, stdv, minv, q25, q50, q75, maxv};
-    out_cols.emplace_back(src.names_[i], make_f64_thread(stats));
+    out_cols.emplace_back(src.names_[i], make_f64_slate(stats));
   }
 
   PLUSS_CHECK(!out_cols.empty(), "DataFrame::describe: no numeric columns to describe");
 
   auto out = DataFrame(
       std::move(out_cols),
-      make_note_thread({"count", "mean", "std", "min", "25%", "50%", "75%", "max"}));
+      make_note_slate({"count", "mean", "std", "min", "25%", "50%", "75%", "max"}));
   return DataFrameView(std::move(out), render, "describe", title());
 }
 
@@ -2599,7 +2599,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
 
   struct KeyInfo {
     std::string name;
-    Thread value_col;
+    Slate value_col;
     std::optional<std::vector<bool>> valid;
   };
 
@@ -2642,7 +2642,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
         skip = true;
         break;
       }
-      key_values.push_back(valid ? thread_scalar_string_at(key_info.value_col, r) : "NULL");
+      key_values.push_back(valid ? slate_scalar_string_at(key_info.value_col, r) : "NULL");
     }
     if (skip) {
       continue;
@@ -2674,7 +2674,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
     rows.resize(static_cast<std::size_t>(top_n));
   }
 
-  std::vector<std::pair<std::string, Thread>> out_cols;
+  std::vector<std::pair<std::string, Slate>> out_cols;
   out_cols.reserve(keys.size() + 1);
   for (std::size_t k = 0; k < keys.size(); ++k) {
     std::vector<std::string> values;
@@ -2682,7 +2682,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
     for (const auto& row : rows) {
       values.push_back(row.key_values[k]);
     }
-    out_cols.emplace_back(keys[k], make_note_thread(values));
+    out_cols.emplace_back(keys[k], make_note_slate(values));
   }
 
   std::vector<std::int64_t> counts;
@@ -2690,7 +2690,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
   for (const auto& row : rows) {
     counts.push_back(row.count);
   }
-  out_cols.emplace_back("count", make_i64_thread(counts));
+  out_cols.emplace_back("count", make_i64_slate(counts));
 
   auto out = DataFrame(std::move(out_cols));
   return DataFrameView(std::move(out), render, "tally", title());
@@ -2721,17 +2721,17 @@ DataFrame DataFrame::copy() const {
 
 namespace {
 
-bool dataframe_scalar_equal_(const Thread& lhs, const Thread& rhs, std::int64_t row) {
-  return thread_scalar_string_at(lhs, row) == thread_scalar_string_at(rhs, row);
+bool dataframe_scalar_equal_(const Slate& lhs, const Slate& rhs, std::int64_t row) {
+  return slate_scalar_string_at(lhs, row) == slate_scalar_string_at(rhs, row);
 }
 
-bool dataframe_scalar_close_(const Thread& lhs,
-                             const Thread& rhs,
+bool dataframe_scalar_close_(const Slate& lhs,
+                             const Slate& rhs,
                              std::int64_t row,
                              double atol,
                              double rtol) {
-  const bool lhs_numeric = lhs.kind() == ThreadKind::Series && is_numeric_series_type(lhs.as_series());
-  const bool rhs_numeric = rhs.kind() == ThreadKind::Series && is_numeric_series_type(rhs.as_series());
+  const bool lhs_numeric = lhs.kind() == SlateKind::Series && is_numeric_series_type(lhs.as_series());
+  const bool rhs_numeric = rhs.kind() == SlateKind::Series && is_numeric_series_type(rhs.as_series());
   if (!lhs_numeric || !rhs_numeric) {
     return dataframe_scalar_equal_(lhs, rhs, row);
   }

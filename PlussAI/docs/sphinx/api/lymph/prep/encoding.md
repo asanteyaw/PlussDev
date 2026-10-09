@@ -6,14 +6,14 @@ as many later frames as you like, with the fitted category layout held on the
 object and readable through `summary()` and the public attributes.
 
 Each encoder here is the object twin of a
-[`prep::stage`](stage_family.md) factory: `prep::OneHotEncoder` does the same
+[`prep::stage`](stage.md) factory: `prep::OneHotEncoder` does the same
 arithmetic as `prep::stage::one_hot_encoder(...)`, from the same
 [`options::OneHotEncoder`](encoding/OneHotEncoderOptions.md) struct. The
 difference is ownership.
 
 | Reach for… | when… |
 | --- | --- |
-| the [`prep::stage::*`](stage_family.md) factory | the encoding should travel *inside a model's* preparation plan and be fitted by `Model::learn` |
+| the [`prep::stage::*`](stage.md) factory | the encoding should travel *inside a model's* preparation plan and be fitted by `Model::learn` |
 | the object here | the encoder is a *first-class thing you hold* — to fit once and reuse across frames, to read its learned category set, or to wire into a `prep::FeatureTransformer` branch or non-model code |
 
 ## The encoders
@@ -52,7 +52,7 @@ example per method, on [`prep::OneHotEncoder`](encoding/OneHotEncoder.md):
   (`feature_names` plus a `state` tensor vector).
 
 `OneHotEncoder`, `OrdinalEncoder`, `LabelEncoder` and `FrequencyEncoder` also
-carry **single-column overloads** — pass one `Thread`, get one `Series` back,
+carry **single-column overloads** — pass one `Slate`, get one `Series` back,
 with no `features()` pin — and expose the learned layout through the public
 `categories_` / `mapped_names_` attributes.
 
@@ -71,7 +71,7 @@ an unknown category simply hashes somewhere, no policy needed.
 Every encoder here accepts either an integer-coded column or a text
 (note-backed) column. On the `DataFrame` path a text column's category identity
 is taken as a **hash**, so `mapped_names_` reads `region_<hash>`; feed
-integer-coded categories, or use the single-column `Thread` overload, to keep
+integer-coded categories, or use the single-column `Slate` overload, to keep
 readable labels.
 
 <!-- apiref:toctree:start -->

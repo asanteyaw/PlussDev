@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamLabelAccessor::has" href="has.html" />
@@ -37,14 +37,14 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 58694bce6585 -->
+<!-- pluss-signature-hash: 5d801310aed1 -->
 <section id="streamlabelaccessor-align">
 <h1>StreamLabelAccessor::align<a class="headerlink" href="#streamlabelaccessor-align" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../stream_lbl_accessor_api_reference.html"><span class="doc std std-doc">Back to StreamLabelAccessor API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Stream</span><span class="w"> </span><span class="nf">StreamLabelAccessor::align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Stream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">target_labels</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
-<span class="n">Stream</span><span class="w"> </span><span class="n">StreamLabelAccessor</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="o">&amp;</span><span class="w"> </span><span class="n">target_labels</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
+<span class="n">Stream</span><span class="w"> </span><span class="n">StreamLabelAccessor</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="o">&amp;</span><span class="w"> </span><span class="n">target_labels</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="k">const</span>
 </pre></div>
 </div>
 </section>
@@ -52,7 +52,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Reorders (and, depending on <code class="docutils literal notranslate"><span class="pre">options.align</span></code>, relabels) the bound stream to
 match <code class="docutils literal notranslate"><span class="pre">target_labels</span></code>, following exactly the same <code class="docutils literal notranslate"><span class="pre">AlignBy</span></code>/<code class="docutils literal notranslate"><span class="pre">AlignOptions</span></code>
-rules as <a class="reference internal" href="../thread/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::align</span></code></span></a>:</p>
+rules as <a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code></strong> (the default): <code class="docutils literal notranslate"><span class="pre">target_labels</span></code> is used only for its
 <em>length</em> — the values and labels pass through positionally unchanged. See
@@ -67,13 +67,13 @@ is set.</p></li>
 <p>AlignBy::Both is rejected for a single Stream
 <code class="docutils literal notranslate"><span class="pre">AlignBy::Both</span></code> (matching by <em>both</em> case label and feature) is a
 <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>-only concept — passing it here throws, the same as it would for
-a bare <a class="reference internal" href="../thread/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::align</span></code></span></a> call. Only <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>
+a bare <a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a> call. Only <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>
 are meaningful for a single <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p>
 </div>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>target_labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Thread&amp;</span></code>)
+<p><strong>target_labels</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">pluss::table::Slate&amp;</span></code>)
 The label set to align onto. Under <code class="docutils literal notranslate"><span class="pre">Pos</span></code>, only its length matters; under
 <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code>, its entries are matched against the bound stream’s own
 labels.</p>
@@ -91,15 +91,15 @@ A new stream reordered/relabeled per <code class="docutils literal notranslate">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
 <p>Example 1. <code class="docutils literal notranslate"><span class="pre">AlignBy::Caselbl</span></code> reorders and relabels by matching case
 labels — an unmatched target label (<code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code>) produces <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignOptions</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignBy</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">                   </span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+<span class="w">                   </span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">align</span><span class="p">(</span>
-<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">})),</span>
 <span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Caselbl</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">aligned</span><span class="p">;</span>
 </pre></div>
@@ -122,15 +122,15 @@ d            | NA
 <code class="docutils literal notranslate"><span class="pre">20</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;b&quot;</span></code> looks up <code class="docutils literal notranslate"><span class="pre">10</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;d&quot;</span></code> has no match at all, so it’s <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 <p>Example 2. Setting <code class="docutils literal notranslate"><span class="pre">options.fill</span></code> replaces the unmatched-label <code class="docutils literal notranslate"><span class="pre">NULL</span></code> with
 a scalar instead.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignOptions</span><span class="p">;</span>
 <span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">AlignBy</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">                   </span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+<span class="w">                   </span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">align</span><span class="p">(</span>
-<span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">})),</span>
+<span class="w">    </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;d&quot;</span><span class="p">})),</span>
 <span class="w">    </span><span class="n">AlignOptions</span><span class="p">{.</span><span class="n">align</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AlignBy</span><span class="o">::</span><span class="n">Caselbl</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.0</span><span class="p">});</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">aligned</span><span class="p">;</span>
 </pre></div>
@@ -153,12 +153,12 @@ d            | -1
 <p>Example 3. The default <code class="docutils literal notranslate"><span class="pre">AlignBy::Pos</span></code> ignores <code class="docutils literal notranslate"><span class="pre">target_labels</span></code>’s <em>content</em>
 entirely — only its length is checked. The stream’s own current values and
 labels pass through unchanged.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Thread</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">table</span><span class="o">::</span><span class="n">Slate</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">labeled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">kindle</span><span class="o">::</span><span class="n">Stream</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="mf">20.0</span><span class="p">,</span><span class="w"> </span><span class="mf">30.0</span><span class="p">}))</span>
-<span class="w">                   </span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
+<span class="w">                   </span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">set</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">})));</span>
 
-<span class="k">auto</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">align</span><span class="p">(</span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;q&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s&quot;</span><span class="p">})));</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labeled</span><span class="p">.</span><span class="n">lbl</span><span class="p">().</span><span class="n">align</span><span class="p">(</span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;q&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;r&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;s&quot;</span><span class="p">})));</span>
 <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">aligned</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -189,14 +189,14 @@ result — only its length (<code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">Stream</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Pos</span></code> is the default; you must explicitly request <code class="docutils literal notranslate"><span class="pre">Caselbl</span></code> for
 label-matching behavior.</p></li>
-<li><p>Both overloads (<code class="docutils literal notranslate"><span class="pre">Stream</span></code>/<code class="docutils literal notranslate"><span class="pre">Thread</span></code>) behave identically — pick whichever
+<li><p>Both overloads (<code class="docutils literal notranslate"><span class="pre">Stream</span></code>/<code class="docutils literal notranslate"><span class="pre">Slate</span></code>) behave identically — pick whichever
 type your target labels already exist as.</p></li>
 </ul>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../thread/align.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Thread::align</span></code></span></a>: the underlying single-column
+<li><p><a class="reference internal" href="#../thread/align.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">Slate::align</span></code></span></a>: the underlying single-column
 alignment semantics this accessor’s <code class="docutils literal notranslate"><span class="pre">align()</span></code> follows exactly.</p></li>
 <li><p><a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamLabelAccessor::set</span></code></span></a>: attach a label outright instead of
 reordering by an existing one.</p></li>

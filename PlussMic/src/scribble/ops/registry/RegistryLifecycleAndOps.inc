@@ -201,7 +201,7 @@ RegistryCastAccessor Registry::cast() const {
   return RegistryCastAccessor(*this, fields(), {});
 }
 
-RegistryCastAccessor Registry::cast(const pluss::table::ThreadCastOptions& options) const {
+RegistryCastAccessor Registry::cast(const pluss::table::SlateCastOptions& options) const {
   return RegistryCastAccessor(*this, fields(), options);
 }
 

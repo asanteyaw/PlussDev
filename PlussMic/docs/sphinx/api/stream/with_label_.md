@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: d0ecc2db9d79 -->
+<!-- pluss-signature-hash: 05ce8efb26fb -->
 
 # Stream::with_label_
 
@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::with_label_(const pluss::table::Thread& label) -> Stream&
+Stream::with_label_(const pluss::table::Slate& label) -> Stream&
 ```
 
 ## What It Does
@@ -20,7 +20,7 @@ stream's own length exactly, or it throws before any state changes.
 
 ## Parameters
 
-**label** (`const pluss::table::Thread&`)
+**label** (`const pluss::table::Slate&`)
     The row-label axis to attach in place. Must match the stream's own length.
 
 ## Returns
@@ -34,10 +34,10 @@ stream's own length exactly, or it throws before any state changes.
 Example 1. Mutate a stream in place and confirm it's the same object.
 
 ```cpp
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-auto labels = Thread(pluss::make_note({"x", "y", "z"}));
+auto labels = Slate(pluss::make_note({"x", "y", "z"}));
 
 auto& ref = stream.with_label_(labels);
 std::cout << "same object: " << (&ref == &stream) << "\n";
@@ -54,10 +54,10 @@ stream has_label: 1
 Example 2. A length mismatch throws and leaves the stream's own label unmodified.
 
 ```cpp
-using pluss::table::Thread;
+using pluss::table::Slate;
 
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}));
-auto too_long = Thread(pluss::make_note({"a", "b", "c", "d"}));
+auto too_long = Slate(pluss::make_note({"a", "b", "c", "d"}));
 
 try {
   stream.with_label_(too_long);

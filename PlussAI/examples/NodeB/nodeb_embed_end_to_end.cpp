@@ -4,9 +4,10 @@
 #include <vector>
 
 int main() {
-  using namespace pluss::ai::nodeb;
-  using pluss::ai::nodeb::embed::EmbedOptions;
-  using pluss::ai::nodeb::embed::Embedder;
+  namespace nlp_api = pluss::ai::nlp;
+  using namespace nlp_api;
+  using nlp_api::embed::EmbedOptions;
+  using nlp_api::embed::Embedder;
 
   std::vector<std::string> corpus{};
   for (int i = 0; i < 40; ++i) {
@@ -47,7 +48,7 @@ int main() {
     return 1;
   }
 
-  std::cout << "== NodeB Static Embeddings ==\n";
+  std::cout << "== PlussAI NLP Static Embeddings ==\n";
   std::cout << "similarity(cat, dog)=" << Embedder::similarity(cat.value(), dog.value()) << "\n";
   std::cout << "similarity(cat, car)=" << Embedder::similarity(cat.value(), car.value()) << "\n";
   std::cout << "nearest(cat):\n";

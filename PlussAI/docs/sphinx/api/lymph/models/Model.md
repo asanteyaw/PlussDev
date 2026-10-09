@@ -13,9 +13,48 @@ parameters, carried as a single cheap-to-copy value.
 live under the model subfamilies (`linear`, `tree`, `ensemble`, …) and are
 re-exported at the family root, so both spellings compile:
 
+Create a logistic regression model two ways: the explicit path and the family shortcut. The shortcut is trained on a small batch here, and the program prints each model's trained state.
+
 ```cpp
-lymph::models::Model m1 = lymph::models::linear::logistic_regression();  // fully explicit
-lymph::models::Model m2 = lymph::models::logistic_regression();          // family shortcut
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+namespace lymph = pluss::ai::lymph;
+using pluss::table::DataFrame;
+using pluss::table::Slate;
+
+lymph::LabeledBatch fixture_batch(const pluss::Config& cfg) {
+  const pluss::Series x = pluss::make_series(std::vector<double>{
+      0.0, 0.1, 0.2, 0.0, 0.1, 0.3, 0.3, 0.2,
+      1.0, 1.1, 1.2, 0.9, 1.1, 1.3, 1.4, 1.0}, {8, 2}, cfg);
+  const pluss::Series y = pluss::make_series(std::vector<double>{0, 0, 0, 0, 1, 1, 1, 1}, {8}, cfg);
+  return lymph::LabeledBatch{
+      .features = lymph::FeatureBatch{.x = x, .layout = lymph::ObservationLayout::Rows},
+      .y = y,
+  };
+}
+
+int main() {
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const lymph::LabeledBatch batch = fixture_batch(cfg);
+  lymph::models::Model m1 = lymph::models::linear::logistic_regression();
+  lymph::models::Model m2 = lymph::models::logistic_regression();
+  m2.learn_(batch);
+  std::cout << "m1 trained = " << (m1.trained() ? "true" : "false") << "\n";
+  std::cout << "m2 trained = " << (m2.trained() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+m1 trained = false
+m2 trained = true
 ```
 
 Pick the explicit form when the reader benefits from seeing which subfamily an

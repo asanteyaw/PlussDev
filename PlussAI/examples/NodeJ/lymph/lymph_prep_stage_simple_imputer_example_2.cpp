@@ -9,7 +9,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -18,7 +18,7 @@ int main() {
   // strategy selects the fill statistic. Standalone view over one gappy column:
   // mean, median, and a fixed constant.
   const pluss::Series v = pluss::make_series({1., 2., 100., NaN, 4., NaN}, {6}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::SimpleImputer mean_opt{};                                  // default: Mean
   lymph::options::SimpleImputer median_opt{};

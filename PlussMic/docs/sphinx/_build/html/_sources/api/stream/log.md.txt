@@ -14,7 +14,7 @@ Stream::log() const -> Stream
 ## What It Does
 
 Applies the elementwise natural logarithm to a `Series`-kind stream. Delegates to
-`Thread::log()`, so it's `Series`-only, same as
+`Slate::log()`, so it's `Series`-only, same as
 [`abs()`](abs.md)/[`clip()`](clip.md)/[`exp()`](exp.md). Follows ordinary IEEE-754
 floating-point rules rather than throwing for out-of-domain input: `log(0)` is `-inf`, and
 `log` of a negative value is `nan` — neither raises an exception.
@@ -92,7 +92,7 @@ try {
 ### Output
 
 ```text
-Thread::log is only valid for Series payload
+Slate::log is only valid for Series payload
 ```
 
 ## Notes

@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::intersection
+# Timeline::TimelineIndexAccessor::intersection
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::intersection(const TimelineIndexAccessor& other) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::intersection(const Timeline::TimelineIndexAccessor& other) const
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ The other time index.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The shared timestamps.
 
 ## Examples
@@ -31,7 +31,7 @@ Example 1. Keep only timestamps that appear on both sides exactly.
 
 ```cpp
 auto out = base.intersection(right);
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -54,8 +54,8 @@ auto overlap = base.intersection(right);
 
 ## See Also
 
-- [`TimelineIndexAccessor::union_`](union_.md)
-- [`TimelineIndexAccessor::difference`](difference.md)
+- [`Timeline::TimelineIndexAccessor::union_`](union_.md)
+- [`Timeline::TimelineIndexAccessor::difference`](difference.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="host.html">

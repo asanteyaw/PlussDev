@@ -37,7 +37,7 @@ Example 1. Take the last two frames of a multi-frame atlas.
 std::vector<pluss::table::DataFrame> frames;
 for (int i = 0; i < 7; ++i) {
   frames.push_back(pluss::table::DataFrame({
-      {"id", pluss::table::Thread(pluss::make_series({double(i)}))},
+      {"id", pluss::table::Slate(pluss::make_series({double(i)}))},
   }));
 }
 auto atlas = pluss::table::Atlas(frames);

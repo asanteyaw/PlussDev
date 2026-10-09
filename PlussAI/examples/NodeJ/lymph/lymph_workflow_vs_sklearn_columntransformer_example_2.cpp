@@ -10,7 +10,7 @@ int main() {
   namespace prep    = lymph::prep;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -22,13 +22,13 @@ int main() {
   // five class 1, and every feature (numeric and categorical) carries the
   // signal.
   const DataFrame raw({
-      {"income",  Thread(pluss::make_series({1.0, 1.2, 1.4, 1.1, 1.3, 3.0, 3.2, 3.4, 3.1, 3.3}, {10}, f64))},
-      {"balance", Thread(pluss::make_series({0.5, 0.7, 0.6, 0.8, 0.5, 2.5, 2.7, 2.6, 2.8, 2.5}, {10}, f64))},
-      {"region",  Thread(pluss::make_note(std::vector<std::string>{
+      {"income",  Slate(pluss::make_series({1.0, 1.2, 1.4, 1.1, 1.3, 3.0, 3.2, 3.4, 3.1, 3.3}, {10}, f64))},
+      {"balance", Slate(pluss::make_series({0.5, 0.7, 0.6, 0.8, 0.5, 2.5, 2.7, 2.6, 2.8, 2.5}, {10}, f64))},
+      {"region",  Slate(pluss::make_note(std::vector<std::string>{
           "lo", "lo", "lo", "lo", "lo", "hi", "hi", "hi", "hi", "hi"}))},
-      {"tier",    Thread(pluss::make_note(std::vector<std::string>{
+      {"tier",    Slate(pluss::make_note(std::vector<std::string>{
           "a", "a", "a", "a", "a", "b", "b", "b", "b", "b"}))},
-      {"target",  Thread(pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64))},
+      {"target",  Slate(pluss::make_series({0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, f64))},
   });
 
   // final_pipe = Pipeline([("preprocessing", preprocessor), ("model", LogisticRegression())])

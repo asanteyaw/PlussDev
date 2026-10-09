@@ -14,13 +14,13 @@ Stream::has_label() const -> bool
 ## What It Does
 
 Reports whether this stream carries a **row-label axis** — an optional
-`pluss::table::Thread` of per-row labels, set via the constructor's `cases` parameter or
+`pluss::table::Slate` of per-row labels, set via the constructor's `cases` parameter or
 via [`with_label()`](with_label.md)/[`Stream::lbl()`](lbl.md)`.set(...)`. Most streams
 don't carry one; `Stream(data)` alone leaves it unset, and `has_label()` returns `false`.
 
 ```{important} Two related but distinct surfaces: label()/has_label() and lbl()
 `has_label()`/[`label()`](label.md) are a plain getter pair for the raw optional label
-`Thread` — cheap, no-frills, no default-value synthesis. [`lbl()`](lbl.md) returns a
+`Slate` — cheap, no-frills, no default-value synthesis. [`lbl()`](lbl.md) returns a
 `StreamLabelAccessor` with a richer surface (`values()`, `set()`, `range()`, `reset()`,
 `align()`) — notably, `lbl().values()` always returns *something* displayable, synthesizing
 a positional `0..n-1` range when no label has actually been set. `has_label()` still
@@ -34,7 +34,7 @@ reports `false` in that synthesized case; only an explicitly set label counts.
 ## Returns
 
 `bool`
-    `true` if a row-label `Thread` has been explicitly set (via a constructor's `cases`
+    `true` if a row-label `Slate` has been explicitly set (via a constructor's `cases`
     argument, [`with_label()`](with_label.md)/[`with_label_()`](with_label_.md), or
     [`lbl().set()`](lbl.md)); `false` otherwise, including right after
     [`lbl().reset()`](lbl.md) or [`clear_label()`](clear_label.md).
@@ -58,7 +58,7 @@ std::cout << stream.has_label();
 Example 2. Passing `cases` to the constructor sets the label immediately.
 
 ```cpp
-auto cases = pluss::table::Thread(pluss::make_note({"a", "b", "c"}));
+auto cases = pluss::table::Slate(pluss::make_note({"a", "b", "c"}));
 auto stream = pluss::kindle::Stream(pluss::make_series({10.0, 20.0, 30.0}), std::nullopt, cases);
 
 std::cout << stream.has_label();
@@ -106,16 +106,16 @@ label        | value
 ## See Also
 
 - [`Stream::label`](label.md): the paired getter — returns the actual optional label
-  `Thread` this method is only checking for.
+  `Slate` this method is only checking for.
 - [`Stream::lbl`](lbl.md): the fuller label accessor (`values()`, `set()`, `range()`,
   `reset()`, `align()`).
 - [`Stream::with_label`](with_label.md) / [`Stream::clear_label`](clear_label.md): set or
   clear the label this method reports on.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="from_thread.html">
+  <a class="prev-link" href="from_slate.html">
     <span class="label">Previous</span>
-    <span class="title">from_thread</span>
+    <span class="title">from_slate</span>
   </a>
   <a class="next-link" href="has_meta.html">
     <span class="label">Next</span>

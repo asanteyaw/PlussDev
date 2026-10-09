@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::align_union
+# Timeline::TimelineIndexAccessor::align_union
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-AlignUnion TimelineIndexAccessor::align_union(const TimelineIndexAccessor& other) const
+AlignUnion Timeline::TimelineIndexAccessor::align_union(const Timeline::TimelineIndexAccessor& other) const
 ```
 
 ## What It Does
@@ -40,7 +40,7 @@ Conceptually, the method performs three steps:
 
 **other**
 
-The other `TimelineIndexAccessor` to align against.
+The other `Timeline::TimelineIndexAccessor` to align against.
 
 ## Returns
 
@@ -52,20 +52,20 @@ The other `TimelineIndexAccessor` to align against.
 Example 1. Build one shared exact axis for two irregular time feeds.
 
 ```cpp
-auto left = pluss::timeindex::make({
+auto left = pluss::timeline::make({
     "2024-11-01T00:00:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z",
     "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
-auto right = pluss::timeindex::make({
+auto right = pluss::timeline::make({
     "2024-11-01T00:05:00Z",
     "2024-11-01T00:20:00Z",
     "2024-11-01T01:05:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 
 auto aligned = left.align_union(right);
 std::cout << pluss::timeline::print(aligned.index) << "\n";
@@ -114,9 +114,9 @@ std::cout << pluss::series::print(shared.right_indexer) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::join_asof`](join_asof.md): nearest-key alignment instead of exact
+- [`Timeline::TimelineIndexAccessor::join_asof`](join_asof.md): nearest-key alignment instead of exact
   union alignment.
-- [`TimelineIndexAccessor::timeline`](timeline.md): continue working directly on the union
+- [`Timeline::TimelineIndexAccessor::timeline`](timeline.md): continue working directly on the union
   axis as a temporal payload.
 
 <div class="pluss-inline-prev-next">

@@ -114,19 +114,7 @@ std::string cardinality_string(RelationshipCardinality cardinality) {
   return "many_to_one";
 }
 
-std::string validation_status_string(RelationshipValidationStatus status) {
-  switch (status) {
-    case RelationshipValidationStatus::Declared:
-      return "declared";
-    case RelationshipValidationStatus::Validated:
-      return "validated";
-    case RelationshipValidationStatus::Warning:
-      return "warning";
-    case RelationshipValidationStatus::Invalid:
-      return "invalid";
-  }
-  return "declared";
-}
+using relational::validation_status_string;
 
 pluss::table::DataFrame orphan_rows(const pluss::table::DataFrame& source,
                       const std::vector<std::string>& source_keys,
@@ -297,15 +285,15 @@ pluss::table::DataFrame Nexus::grain_audit(std::string_view table) const {
               "Nexus::grain_audit: no key declarations available for table '" + std::string(table) + "'");
 
   return pluss::table::DataFrame({
-      {"table", pluss::table::Thread(pluss::make_note(table_names))},
-      {"key_name", pluss::table::Thread(pluss::make_note(audit_names))},
-      {"key_signature", pluss::table::Thread(pluss::make_note(signatures))},
-      {"key_width", pluss::table::Thread(pluss::make_series(key_widths))},
-      {"rows", pluss::table::Thread(pluss::make_series(total_rows))},
-      {"complete_rows", pluss::table::Thread(pluss::make_series(complete_rows))},
-      {"missing_rows", pluss::table::Thread(pluss::make_series(missing_rows))},
-      {"duplicate_rows", pluss::table::Thread(pluss::make_series(duplicate_rows))},
-      {"valid", pluss::table::Thread(pluss::make_series(valid_rows))},
+      {"table", pluss::table::Slate(pluss::make_note(table_names))},
+      {"key_name", pluss::table::Slate(pluss::make_note(audit_names))},
+      {"key_signature", pluss::table::Slate(pluss::make_note(signatures))},
+      {"key_width", pluss::table::Slate(pluss::make_series(key_widths))},
+      {"rows", pluss::table::Slate(pluss::make_series(total_rows))},
+      {"complete_rows", pluss::table::Slate(pluss::make_series(complete_rows))},
+      {"missing_rows", pluss::table::Slate(pluss::make_series(missing_rows))},
+      {"duplicate_rows", pluss::table::Slate(pluss::make_series(duplicate_rows))},
+      {"valid", pluss::table::Slate(pluss::make_series(valid_rows))},
   });
 }
 
@@ -359,28 +347,28 @@ pluss::table::DataFrame Nexus::relationship_audit(std::string_view name) const {
       !audit.right_unique_required || audit.right.duplicate_frame.ncases() == 0;
 
   return pluss::table::DataFrame({
-      {"relationship", pluss::table::Thread(pluss::make_note(std::vector<std::string>{audit.rel.name}))},
-      {"left_table", pluss::table::Thread(pluss::make_note(std::vector<std::string>{audit.rel.left_table}))},
-      {"right_table", pluss::table::Thread(pluss::make_note(std::vector<std::string>{audit.rel.right_table}))},
-      {"cardinality", pluss::table::Thread(pluss::make_note(std::vector<std::string>{cardinality_string(audit.rel.cardinality)}))},
-      {"declared_status", pluss::table::Thread(pluss::make_note(std::vector<std::string>{validation_status_string(audit.rel.status)}))},
-      {"computed_status", pluss::table::Thread(pluss::make_note(std::vector<std::string>{validation_status_string(audit.computed_status)}))},
-      {"left_rows", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.left.total_rows}))},
-      {"right_rows", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.right.total_rows}))},
-      {"left_complete_rows", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.left.complete_rows}))},
-      {"right_complete_rows", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.right.complete_rows}))},
-      {"left_missing_keys", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.left.missing_rows}))},
-      {"right_missing_keys", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.right.missing_rows}))},
-      {"left_duplicate_rows", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.left.duplicate_frame.ncases()}))},
-      {"right_duplicate_rows", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.right.duplicate_frame.ncases()}))},
-      {"left_orphans", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.left_orphan_rows}))},
-      {"right_orphans", pluss::table::Thread(pluss::make_series(std::vector<std::int64_t>{audit.right_orphan_rows}))},
-      {"left_unique_required", pluss::table::Thread(pluss::make_series(std::vector<bool>{audit.left_unique_required}))},
-      {"right_unique_required", pluss::table::Thread(pluss::make_series(std::vector<bool>{audit.right_unique_required}))},
-      {"left_unique_valid", pluss::table::Thread(pluss::make_series(std::vector<bool>{left_unique_valid}))},
-      {"right_unique_valid", pluss::table::Thread(pluss::make_series(std::vector<bool>{right_unique_valid}))},
-      {"left_optional", pluss::table::Thread(pluss::make_series(std::vector<bool>{audit.rel.left_optional}))},
-      {"right_optional", pluss::table::Thread(pluss::make_series(std::vector<bool>{audit.rel.right_optional}))},
-      {"valid", pluss::table::Thread(pluss::make_series(std::vector<bool>{audit.valid}))},
+      {"relationship", pluss::table::Slate(pluss::make_note(std::vector<std::string>{audit.rel.name}))},
+      {"left_table", pluss::table::Slate(pluss::make_note(std::vector<std::string>{audit.rel.left_table}))},
+      {"right_table", pluss::table::Slate(pluss::make_note(std::vector<std::string>{audit.rel.right_table}))},
+      {"cardinality", pluss::table::Slate(pluss::make_note(std::vector<std::string>{cardinality_string(audit.rel.cardinality)}))},
+      {"declared_status", pluss::table::Slate(pluss::make_note(std::vector<std::string>{validation_status_string(audit.rel.status)}))},
+      {"computed_status", pluss::table::Slate(pluss::make_note(std::vector<std::string>{validation_status_string(audit.computed_status)}))},
+      {"left_rows", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.left.total_rows}))},
+      {"right_rows", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.right.total_rows}))},
+      {"left_complete_rows", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.left.complete_rows}))},
+      {"right_complete_rows", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.right.complete_rows}))},
+      {"left_missing_keys", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.left.missing_rows}))},
+      {"right_missing_keys", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.right.missing_rows}))},
+      {"left_duplicate_rows", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.left.duplicate_frame.ncases()}))},
+      {"right_duplicate_rows", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.right.duplicate_frame.ncases()}))},
+      {"left_orphans", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.left_orphan_rows}))},
+      {"right_orphans", pluss::table::Slate(pluss::make_series(std::vector<std::int64_t>{audit.right_orphan_rows}))},
+      {"left_unique_required", pluss::table::Slate(pluss::make_series(std::vector<bool>{audit.left_unique_required}))},
+      {"right_unique_required", pluss::table::Slate(pluss::make_series(std::vector<bool>{audit.right_unique_required}))},
+      {"left_unique_valid", pluss::table::Slate(pluss::make_series(std::vector<bool>{left_unique_valid}))},
+      {"right_unique_valid", pluss::table::Slate(pluss::make_series(std::vector<bool>{right_unique_valid}))},
+      {"left_optional", pluss::table::Slate(pluss::make_series(std::vector<bool>{audit.rel.left_optional}))},
+      {"right_optional", pluss::table::Slate(pluss::make_series(std::vector<bool>{audit.rel.right_optional}))},
+      {"valid", pluss::table::Slate(pluss::make_series(std::vector<bool>{audit.valid}))},
   });
 }

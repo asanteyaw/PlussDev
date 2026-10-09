@@ -76,8 +76,8 @@ Example 1. Daily buckets, aggregated directly with an explicit `op`.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"value", Thread(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T08:00:00Z", "2024-01-01T20:00:00Z",
         "2024-01-03T10:00:00Z", "2024-01-03T15:00:00Z"})));
 std::cout << readings;
@@ -146,10 +146,10 @@ column instead of case labels.
 
 ```cpp
 auto readings_named = DataFrame(
-    {{"reading_time", Thread(pluss::make_timeline({
+    {{"reading_time", Slate(pluss::make_timeline({
           "2024-01-01T08:00:00Z", "2024-01-01T20:00:00Z",
           "2024-01-03T10:00:00Z", "2024-01-03T15:00:00Z"}))},
-     {"value", Thread(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}});
+     {"value", Slate(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}});
 std::cout << readings_named;
 
 auto summed_named = readings_named.ts().resample(

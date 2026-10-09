@@ -97,6 +97,15 @@ bool run_nodeb_trainable_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  auto duplicate_predictions = predicted;
+  duplicate_predictions[0].entities.push_back(duplicate_predictions[0].entities.front());
+  const auto duplicate_score = assess::ner(duplicate_predictions, gold_docs);
+  if (duplicate_score.correct_count != entity_score.correct_count ||
+      duplicate_score.precision >= 1.0) {
+    if (err) *err << "nodeb ner assessment should match duplicate spans one-to-one\n";
+    return false;
+  }
+
   if (predicted[1].entity_texts() != std::vector<std::string>{"Kofi", "New York"}) {
     if (err) *err << "nodeb trainable ner should learn multi-token entity phrases\n";
     return false;

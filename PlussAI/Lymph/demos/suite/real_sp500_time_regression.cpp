@@ -11,7 +11,7 @@ int main() {
   const std::filesystem::path root = std::filesystem::path(__FILE__).parent_path().parent_path();
   const DataFrame raw = DataFrame::load_csv((root / "data/sp500_data.csv").string());
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"Open", "High", "Low", "Volume"})
       .label("Close")
       .time("Date");
@@ -23,17 +23,17 @@ int main() {
   time.lookback = 180;
 
   lymph::Workflow wf = lymph::workflow::make(
-      lymph::Policy{.require_columns = {"Date", "Close"}, .reject_missing = {"Date", "Close"}},
+      lymph::workflow::Policy{.require_columns = {"Date", "Close"}, .reject_missing = {"Date", "Close"}},
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("market", {"Open", "High", "Low", "Volume"}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"scale", lymph::stage::standard_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::gradient_boost_regressor({.learners = 60, .learning_rate = 0.04}));
+      lymph::models::gradient_boost_regressor({.learners = 60, .learning_rate = 0.04}));
   wf.time(time);
 
-  auto cv = lymph::validate::time().folds(4).gap(1).horizon(15).lookback(180).run(wf, data);
+  auto cv = lymph::selection::validate::time().folds(4).gap(1).horizon(15).lookback(180).run(wf, data);
   wf.learn_(data);
   std::cout << "sp500 folds: " << cv.report.folds.size() << "\n";
   std::cout << "sp500 rmse: " << wf.assess(data).rmse.item<double>() << "\n";

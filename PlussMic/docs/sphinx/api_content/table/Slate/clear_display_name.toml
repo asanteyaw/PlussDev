@@ -1,0 +1,26 @@
+summary = """
+Remove the display name from the current slate without changing its values.
+"""
+
+returns = """
+`Slate`
+    Slate with its display name cleared.
+"""
+
+[[examples]]
+title = "Clear a display name while preserving the payload."
+code = """
+using namespace pluss::table;
+
+auto scores = Slate(pluss::make_series({10.0, 20.0, 30.0, 40.0}));
+auto named = scores.with_display_name("scores");
+
+auto out = named.clear_display_name();
+"""
+output = """
+0  10
+1  20
+2  30
+3  40
+ptype: Series
+"""

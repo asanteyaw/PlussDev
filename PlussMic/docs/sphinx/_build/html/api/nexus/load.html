@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Nexus::map_frames" href="map_frames.html" />
@@ -168,19 +168,19 @@ std::filesystem::remove_all(&quot;/tmp/pluss_nexus_load_ex1&quot;);
 std::filesystem::create_directories(&quot;/tmp/pluss_nexus_load_ex1&quot;);
 
 DataFrame({
-    {&quot;account_id&quot;, Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {&quot;balance&quot;,    Thread(pluss::make_series({100.0, 250.0, 75.0}))},
+    {&quot;account_id&quot;, Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {&quot;balance&quot;,    Slate(pluss::make_series({100.0, 250.0, 75.0}))},
 }).save_csv(&quot;/tmp/pluss_nexus_load_ex1/account.csv&quot;);
 
 DataFrame({
-    {&quot;district_id&quot;, Thread(pluss::make_series({10.0, 20.0}))},
-    {&quot;name&quot;,        Thread(pluss::make_note({&quot;North&quot;, &quot;South&quot;}))},
+    {&quot;district_id&quot;, Slate(pluss::make_series({10.0, 20.0}))},
+    {&quot;name&quot;,        Slate(pluss::make_note({&quot;North&quot;, &quot;South&quot;}))},
 }).save_json(&quot;/tmp/pluss_nexus_load_ex1/district.json&quot;);
 
 DataFrame({
-    {&quot;trans_id&quot;,   Thread(pluss::make_series({1000.0, 1001.0}))},
-    {&quot;account_id&quot;, Thread(pluss::make_series({1.0, 2.0}))},
-    {&quot;amount&quot;,     Thread(pluss::make_series({50.0, -20.0}))},
+    {&quot;trans_id&quot;,   Slate(pluss::make_series({1000.0, 1001.0}))},
+    {&quot;account_id&quot;, Slate(pluss::make_series({1.0, 2.0}))},
+    {&quot;amount&quot;,     Slate(pluss::make_series({50.0, -20.0}))},
 }).save_csv(&quot;/tmp/pluss_nexus_load_ex1/trans.csv&quot;);
 
 auto nx = Nexus::load(&quot;/tmp/pluss_nexus_load_ex1&quot;);
@@ -205,16 +205,16 @@ file.</p>
 <span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2/account.csv&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;district_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;district_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">10.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2/district.json&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;loan_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">500.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;loan_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">500.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_json</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex2/loan.json&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -242,15 +242,15 @@ directory-listing order.</p>
 <span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3/account.csv&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;trans_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;trans_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3/trans.csv&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;order_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex3/order.csv&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -277,13 +277,13 @@ makes them discoverable at all; without it, only the top-level directory
 <span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4/raw&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Ada&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Ben&quot;</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4/raw/customers.csv&quot;</span><span class="p">);</span>
 
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;event_id&quot;</span><span class="p">,</span><span class="w">    </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="mf">3.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;customer_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_parquet</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex4/raw/events.parquet&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
@@ -308,7 +308,7 @@ the same as every other example on this page.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">remove_all</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5&quot;</span><span class="p">);</span>
 <span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5&quot;</span><span class="p">);</span>
 <span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;account_id&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1.0</span><span class="p">}))},</span>
 <span class="p">}).</span><span class="n">save_csv</span><span class="p">(</span><span class="s">&quot;/tmp/pluss_nexus_load_ex5/account.csv&quot;</span><span class="p">);</span>
 
 <span class="n">LoadOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>

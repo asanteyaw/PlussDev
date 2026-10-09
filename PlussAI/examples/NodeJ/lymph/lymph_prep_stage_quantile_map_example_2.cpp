@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   // output = Uniform spreads values evenly on [0, 1]; output = Gaussian maps
   // them onto a standard normal shape. Standalone over a skewed column.
   const pluss::Series v = pluss::make_series({1., 2., 4., 8., 16., 32., 64., 128.}, {8}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::QuantileMap uni{};                                   // default: Uniform
   lymph::options::QuantileMap gauss{};

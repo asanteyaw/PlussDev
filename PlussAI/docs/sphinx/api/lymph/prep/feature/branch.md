@@ -1,7 +1,7 @@
 # `lymph::prep::branch`
 
 A **branch** is one piece of a [`FeatureTransformer`](FeatureTransformer.md): a
-route (which columns) plus an ordered list of [stages](../stage_family.md) (what
+route (which columns) plus an ordered list of [stages](../stage.md) (what
 to do with them). The `prep::branch` namespace holds the `Branch` type,
 `compose` for the general case, and a family of one-stage builder shorthands.
 
@@ -29,11 +29,15 @@ A `Branch` is plain data — a list of `stages`, plus a route given as
 `feature_names`, `feature_route` positions, or both. `lymph::prep::Branch` is
 the family alias for `branch::Branch`.
 
+## What It Does
+
+A branch pairs a set of columns with the ordered stages to apply to them. `compose` builds a branch from any stage list, and the named builders create one-stage branches for the common transforms. The branch itself holds no fitted state.
+
 ## Parameters
 
 `stages`
 : The pipeline for this branch, run in order. Each element is a
-  [`prep::Stage`](../stage_family.md) from a `prep::stage::*` factory. A builder
+  [`prep::Stage`](../stage.md) from a `prep::stage::*` factory. A builder
   like `branch::standard_scaler` fills this with a single stage for you.
 
 `feature_names` / `feature_route`
@@ -80,12 +84,12 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"x", Thread(pluss::make_series({10., 20., std::nan(""), 40., 50.}, {5}, f64))},
+      {"x", Slate(pluss::make_series({10., 20., std::nan(""), 40., 50.}, {5}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"x"}).feature_batch();
@@ -138,13 +142,13 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"code",  Thread(pluss::make_series({10., 20., 30., 40., 10., 30.}, {6}, f64))},
-      {"spend", Thread(pluss::make_series({1., 2., 3., 4., 5., 6.}, {6}, f64))},
+      {"code",  Slate(pluss::make_series({10., 20., 30., 40., 10., 30.}, {6}, f64))},
+      {"spend", Slate(pluss::make_series({1., 2., 3., 4., 5., 6.}, {6}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"code", "spend"}).feature_batch();
@@ -197,14 +201,14 @@ int main() {
   using pluss::ScalarType;
   using pluss::Series;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
   const DataFrame raw({
-      {"a", Thread(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
-      {"b", Thread(pluss::make_series({10., 20., 10., 20.}, {4}, f64))},
-      {"c", Thread(pluss::make_series({5., 5., 6., 6.}, {4}, f64))},
+      {"a", Slate(pluss::make_series({1., 2., 3., 4.}, {4}, f64))},
+      {"b", Slate(pluss::make_series({10., 20., 10., 20.}, {4}, f64))},
+      {"c", Slate(pluss::make_series({5., 5., 6., 6.}, {4}, f64))},
   });
   const auto batch = [&] {
     return lymph::workflow::payload::make(raw).features({"a", "b", "c"}).feature_batch();
@@ -244,4 +248,4 @@ data=[[-1.3416408, -1, 1, 0, 0],
 - [`prep::feature_transformer`](feature_transformer.md) — consumes a list of
   branches.
 - [`prep::FeatureTransformer`](FeatureTransformer.md) — the object they build.
-- [`prep::stage`](../stage_family.md) — the stage factories `compose` takes.
+- [`prep::stage`](../stage.md) — the stage factories `compose` takes.

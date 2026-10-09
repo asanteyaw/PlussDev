@@ -3,8 +3,11 @@
 #include <pluss/pluss.h>
 
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <memory>
+#include <optional>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -216,6 +219,112 @@ bool run_user_stop_checks(std::ostream* err = nullptr) {
   return true;
 }
 
+bool run_epoch_logger_checks(std::ostream* err = nullptr) {
+  ice::ProgressPolicy policy{};
+  policy.log_every_n_epochs = 2;
+  policy.metrics = {"loss", "val_loss", "accuracy"};
+  policy.precision = 4;
+
+  std::ostringstream output{};
+  ice::EpochLoggerCallback logger(policy, output);
+  ice::TrainOptions recipe{};
+  recipe.execution.max_epochs = 5;
+  ice::RunState state{.stage = ice::StepStage::Learn, .recipe = &recipe};
+
+  state.epoch = 0;
+  state.put_metric("loss", 2.0);
+  logger.on_epoch_end(state);
+  if (!output.str().empty()) {
+    if (err) *err << "Epoch logger should skip epochs outside its cadence\n";
+    return false;
+  }
+
+  state.epoch = 1;
+  state.metrics.clear();
+  state.put_metric("loss", 1.25);
+  state.put_metric("accuracy", 0.75);
+  logger.on_epoch_end(state);
+  if (output.str() != "epoch 2/5: loss=1.25, accuracy=0.75\n") {
+    if (err) *err << "Epoch logger emitted an unexpected metric line: " << output.str();
+    return false;
+  }
+
+  state.epoch = 4;
+  state.metrics.clear();
+  state.put_metric("loss", 0.5);
+  logger.on_epoch_end(state);
+  if (output.str().find("epoch 5/5: loss=0.5\n") == std::string::npos) {
+    if (err) *err << "Epoch logger should always emit the final epoch\n";
+    return false;
+  }
+
+  ice::ProgressPolicy bar_policy{};
+  bar_policy.progress_bar = true;
+  bar_policy.bar_width = 10;
+  bar_policy.metrics = {"loss"};
+  std::ostringstream bar_output{};
+  ice::EpochLoggerCallback bar(bar_policy, bar_output);
+  state.epoch = 1;
+  state.metrics.clear();
+  state.put_metric("loss", 1.0);
+  bar.on_epoch_end(state);
+  bar.on_run_end(state);
+  if (bar_output.str().find("[====      ] 40% epoch 2/5: loss=1") == std::string::npos ||
+      bar_output.str().back() != '\n') {
+    if (err) *err << "Progress bar should report completion and terminate its live line\n";
+    return false;
+  }
+
+  bool rejected = false;
+  try {
+    ice::ProgressPolicy invalid{};
+    invalid.log_every_n_epochs = 0;
+    ice::EpochLoggerCallback invalid_logger(invalid, output);
+    static_cast<void>(invalid_logger);
+  } catch (const std::exception&) {
+    rejected = true;
+  }
+  if (!rejected) {
+    if (err) *err << "Epoch logger should reject a non-positive cadence\n";
+    return false;
+  }
+
+  return true;
+}
+
+bool run_automatic_progress_checks(std::ostream* err = nullptr) {
+  const auto data = make_regression_data(32, 85);
+  ice::TrainOptions options{};
+  options.loss = ice::LossKind::MSE;
+  options.execution.max_epochs = 3;
+  options.batch_size = 32;
+  options.validation.split_ratio = 0.0;
+  options.loop_regularization.early_stopping = false;
+  options.progress.verbose = true;
+  options.progress.log_every_n_epochs = 2;
+  options.progress.metrics = {"loss"};
+
+  std::ostringstream output{};
+  auto* original = std::cout.rdbuf(output.rdbuf());
+  try {
+    auto model = ice::Outline(pluss::nn::Fusion(3, 1));
+    model.learn(data.x, data.y, options);
+  } catch (...) {
+    std::cout.rdbuf(original);
+    throw;
+  }
+  std::cout.rdbuf(original);
+
+  const std::string text = output.str();
+  if (text.find("epoch 1/3") != std::string::npos ||
+      text.find("epoch 2/3: loss=") == std::string::npos ||
+      text.find("epoch 3/3: loss=") == std::string::npos) {
+    if (err) *err << "Coach should install the configured epoch logger automatically\n";
+    return false;
+  }
+  return true;
+}
+
 bool run_exception_callback_checks(std::ostream* err = nullptr) {
   const auto data = make_regression_data(64, 83);
   auto trace = std::make_shared<TraceCallback>();
@@ -351,6 +460,99 @@ bool run_early_stop_callback_unit_checks(std::ostream* err = nullptr) {
   } catch (const std::exception&) {
   }
 
+  // Validation every second epoch: an off-cadence epoch without the metric
+  // is skipped, so it neither stops the run nor throws.
+  ice::ValidationPolicy cadence_validation = validation;
+  cadence_validation.every_n_epochs = 2;
+  ice::EarlyStopCallback cadence_callback(cadence_validation, regularization);
+  cadence_callback.on_run_begin(state);
+  state.stop_requested = false;
+  state.epoch = 0;
+  state.metrics.clear();
+  state.put_metric("val_loss", 3.0);
+  cadence_callback.on_epoch_end(state);
+  state.epoch = 1;
+  state.metrics.clear();
+  cadence_callback.on_epoch_end(state);
+  if (state.stop_requested || cadence_callback.wait_count() != 0) {
+    if (err) *err << "EarlyStopCallback should skip epochs off the validation cadence\n";
+    return false;
+  }
+
+  return true;
+}
+
+// Regression for a dead-code bug in EarlyStopCallback::on_run_begin: it
+// used to guard its reset behind a `loaded_from_checkpoint_` flag that
+// could never actually be true at that point (the flag is only set by
+// load_state(), which Coach::learn calls *after* on_run_begin, by
+// design -- on_run_begin's reset always runs first and is always
+// overwritten with the real values afterward). The flag and its dead
+// branch were removed; this test pins the behavior that actually
+// matters: wait_count/best_value genuinely end up restored from the
+// checkpoint once the resumed run reaches its first epoch, regardless
+// of what on_run_begin itself did in between.
+bool run_early_stop_checkpoint_resume_checks(std::ostream* err = nullptr) {
+  const auto data = make_regression_data(40, 84);
+  const auto dirpath =
+      (std::filesystem::temp_directory_path() / "ice_early_stop_resume_test").string();
+
+  ice::TrainOptions save_options{};
+  save_options.loss = ice::LossKind::MSE;
+  save_options.execution.max_epochs = 3;
+  save_options.batch_size = 40;
+  save_options.learning_rate = 0.05;
+  save_options.validation.split_ratio = 0.3;
+  save_options.shuffle = false;
+  save_options.loop_regularization.early_stopping = true;
+  save_options.loop_regularization.patience = 100;  // never actually stops early
+  save_options.checkpoint.enabled = true;
+  save_options.checkpoint.save_last = true;
+  save_options.checkpoint.dirpath = dirpath;
+  save_options.checkpoint.filename = "resume";
+
+  auto model = ice::Outline(pluss::nn::Fusion(3, 1));
+  ice::Coach(save_options).learn(model, data.x, data.y);
+
+  ice::TrainOptions resume_options = save_options;
+  resume_options.execution.max_epochs = 4;
+  resume_options.checkpoint.resume_from = dirpath + "/resume-last.ckpt";
+
+  class CaptureAtEpochBeginCallback final : public ice::Callback {
+   public:
+    std::optional<std::int64_t> wait_count_at_epoch_begin{};
+    bool best_value_defined_at_epoch_begin = false;
+    void on_epoch_begin(ice::RunState&) override {
+      if (wait_count_at_epoch_begin.has_value()) return;  // only the first (resumed) epoch
+      wait_count_at_epoch_begin = early_stop->wait_count();
+      best_value_defined_at_epoch_begin = early_stop->best_value().has_value();
+    }
+    std::shared_ptr<ice::EarlyStopCallback> early_stop{};
+  };
+
+  ice::ValidationPolicy validation{};
+  ice::LoopRegularization regularization{};
+  regularization.early_stopping = true;
+  regularization.patience = 100;
+  const auto resumed_early_stop = std::make_shared<ice::EarlyStopCallback>(validation, regularization);
+  const auto capture = std::make_shared<CaptureAtEpochBeginCallback>();
+  capture->early_stop = resumed_early_stop;
+
+  auto resumed_model = ice::Outline(pluss::nn::Fusion(3, 1));
+  ice::Coach resume_coach(resume_options);
+  resume_coach.add_callback(resumed_early_stop);
+  resume_coach.add_callback(capture);
+  resume_coach.learn(resumed_model, data.x, data.y);
+
+  std::filesystem::remove_all(dirpath);
+
+  if (!capture->best_value_defined_at_epoch_begin) {
+    if (err) {
+      *err << "EarlyStopCallback should have its best_value restored by the time the resumed "
+              "run's first epoch begins\n";
+    }
+    return false;
+  }
   return true;
 }
 
@@ -362,6 +564,12 @@ TEST_CASE("ice callback and event system phase 6", "[ai][ice][callback]") {
   REQUIRE(run_user_stop_checks());
   REQUIRE(run_exception_callback_checks());
   REQUIRE(run_early_stop_callback_unit_checks());
+  REQUIRE(run_epoch_logger_checks());
+  REQUIRE(run_automatic_progress_checks());
+}
+
+TEST_CASE("ice EarlyStopCallback state survives a checkpoint resume", "[ai][ice][callback][coach]") {
+  REQUIRE(run_early_stop_checkpoint_resume_checks());
 }
 #else
 int main() {
@@ -370,6 +578,9 @@ int main() {
   ok = run_user_stop_checks(&std::cerr) && ok;
   ok = run_exception_callback_checks(&std::cerr) && ok;
   ok = run_early_stop_callback_unit_checks(&std::cerr) && ok;
+  ok = run_epoch_logger_checks(&std::cerr) && ok;
+  ok = run_automatic_progress_checks(&std::cerr) && ok;
+  ok = run_early_stop_checkpoint_resume_checks(&std::cerr) && ok;
   if (!ok) return 1;
   std::cout << "ice_callback_test passed\n";
   return 0;

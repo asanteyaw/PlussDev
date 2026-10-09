@@ -15,7 +15,7 @@ Stream::as_series() const -> const pluss::Series&
 
 Returns the stream's underlying `pluss::Series` payload by `const` reference — a raw escape
 hatch, only valid when the stream is `Series`-kind. Requires no copy; unlike
-[`to_thread()`](to_thread.md), this doesn't round-trip through `Thread` — it just exposes
+[`to_slate()`](to_slate.md), this doesn't round-trip through `Slate` — it just exposes
 the raw typed payload the `Stream` already wraps.
 
 ```{important} Kind-specific — throws if the stream isn't Series-kind
@@ -83,7 +83,7 @@ Stream payload is not Seri
 
 - [`Stream::as_note`](as_note.md) / [`Stream::as_timeline`](as_timeline.md): the equivalent escape hatch for the other
   three payload kinds.
-- [`Stream::to_thread`](to_thread.md): converts to a `Thread` instead of exposing the raw
+- [`Stream::to_slate`](to_slate.md): converts to a `Slate` instead of exposing the raw
   tensor-level payload.
 - [`Stream::kind`](kind.md): check the payload kind before calling this method.
 

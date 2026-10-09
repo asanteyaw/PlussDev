@@ -90,8 +90,8 @@ Example 1. Draw a fixed number of rows without a seed (result varies each run).
 using namespace pluss::table;
 
 auto orders = DataFrame({
-    {"order_id", Thread(pluss::make_series({101, 102, 103, 104, 105, 106}))},
-    {"units",    Thread(pluss::make_series({2, 5, 1, 3, 4, 2}))},
+    {"order_id", Slate(pluss::make_series({101, 102, 103, 104, 105, 106}))},
+    {"units",    Slate(pluss::make_series({2, 5, 1, 3, 4, 2}))},
 });
 
 auto three_rows = orders.sample(3);
@@ -158,10 +158,10 @@ Example 3. Draw a proportion of the features instead of the cases.
 
 ```cpp
 auto orders_wide = DataFrame({
-    {"order_id",   Thread(pluss::make_series({101, 102, 103}))},
-    {"units",      Thread(pluss::make_series({2, 5, 1}))},
-    {"unit_price", Thread(pluss::make_series({1200.0, 45.5, 1150.0}))},
-    {"discount",   Thread(pluss::make_series({0.1, 0.05, 0.08}))},
+    {"order_id",   Slate(pluss::make_series({101, 102, 103}))},
+    {"units",      Slate(pluss::make_series({2, 5, 1}))},
+    {"unit_price", Slate(pluss::make_series({1200.0, 45.5, 1150.0}))},
+    {"discount",   Slate(pluss::make_series({0.1, 0.05, 0.08}))},
 });
 
 auto half_the_features = orders_wide.sample(0.5, false, Axis::Feature);

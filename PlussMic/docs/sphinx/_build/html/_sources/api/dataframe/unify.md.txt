@@ -89,14 +89,14 @@ only in `orders`, and `2`/`3` exist on both sides:
 using namespace pluss::table;
 
 auto customers = DataFrame({
-    {"id",   Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"name", Thread(pluss::make_note({"Ada", "Bola", "Chen"}))},
+    {"id",   Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"name", Slate(pluss::make_note({"Ada", "Bola", "Chen"}))},
 });
 std::cout << customers;
 
 auto orders = DataFrame({
-    {"id",     Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"amount", Thread(pluss::make_series({100.0, 200.0, 300.0}))},
+    {"id",     Slate(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"amount", Slate(pluss::make_series({100.0, 200.0, 300.0}))},
 });
 std::cout << orders;
 ```
@@ -272,12 +272,12 @@ every row pairs with every row.
 
 ```cpp
 auto small_customers = DataFrame({
-    {"id",   Thread(pluss::make_series({1.0, 2.0}))},
-    {"name", Thread(pluss::make_note({"Ada", "Bola"}))},
+    {"id",   Slate(pluss::make_series({1.0, 2.0}))},
+    {"name", Slate(pluss::make_note({"Ada", "Bola"}))},
 });
 auto small_orders = DataFrame({
-    {"id",     Thread(pluss::make_series({2.0, 3.0}))},
-    {"amount", Thread(pluss::make_series({100.0, 200.0}))},
+    {"id",     Slate(pluss::make_series({2.0, 3.0}))},
+    {"amount", Slate(pluss::make_series({100.0, 200.0}))},
 });
 
 auto crossed = small_customers.unify({}, small_orders, {}, "cross");
@@ -309,9 +309,9 @@ feature.
 
 ```cpp
 auto orders_with_names = DataFrame({
-    {"id",     Thread(pluss::make_series({2.0, 3.0, 4.0}))},
-    {"name",   Thread(pluss::make_note({"Ba", "Ch", "Da"}))},
-    {"amount", Thread(pluss::make_series({100.0, 200.0, 300.0}))},
+    {"id",     Slate(pluss::make_series({2.0, 3.0, 4.0}))},
+    {"name",   Slate(pluss::make_note({"Ba", "Ch", "Da"}))},
+    {"amount", Slate(pluss::make_series({100.0, 200.0, 300.0}))},
 });
 
 auto default_suffix = customers.unify("id", orders_with_names);
@@ -354,8 +354,8 @@ here `customers` has `id = 2` twice.
 
 ```cpp
 auto dup_customers = DataFrame({
-    {"id",   Thread(pluss::make_series({2.0, 2.0, 3.0}))},
-    {"name", Thread(pluss::make_note({"Ada", "Bola", "Chen"}))},
+    {"id",   Slate(pluss::make_series({2.0, 2.0, 3.0}))},
+    {"name", Slate(pluss::make_note({"Ada", "Bola", "Chen"}))},
 });
 
 try {

@@ -2914,7 +2914,7 @@ protected:
 
   // These are all protected under socket_mutex
   size_t socket_requests_in_flight_ = 0;
-  std::thread::id socket_requests_are_from_thread_ = std::thread::id();
+  std::thread::id socket_requests_are_from_slate_ = std::thread::id();
   bool socket_should_be_closed_when_request_is_done_ = false;
 
   // Hostname to connection target map. The value is an IP literal or another
@@ -14806,7 +14806,7 @@ inline void ClientImpl::shutdown_ssl(Socket & /*socket*/,
   // If there are any requests in flight from threads other than us, then it's
   // a thread-unsafe race because individual ssl* objects are not thread-safe.
   assert(socket_requests_in_flight_ == 0 ||
-         socket_requests_are_from_thread_ == std::this_thread::get_id());
+         socket_requests_are_from_slate_ == std::this_thread::get_id());
 }
 
 inline void ClientImpl::shutdown_socket(Socket &socket) const {
@@ -14822,7 +14822,7 @@ inline void ClientImpl::close_socket(Socket &socket) {
   // suddenly they will be operating on a live socket that is different
   // than the one they intended!
   assert(socket_requests_in_flight_ == 0 ||
-         socket_requests_are_from_thread_ == std::this_thread::get_id());
+         socket_requests_are_from_slate_ == std::this_thread::get_id());
 
   // It is also a bug if this happens while SSL is still active
 #ifdef CPPHTTPLIB_SSL_ENABLED
@@ -14927,10 +14927,10 @@ inline bool ClientImpl::send_(Request &req, Response &res, Error &error) {
     // anyone else while this request is ongoing, even though we will be
     // releasing the mutex.
     if (socket_requests_in_flight_ > 1) {
-      assert(socket_requests_are_from_thread_ == std::this_thread::get_id());
+      assert(socket_requests_are_from_slate_ == std::this_thread::get_id());
     }
     socket_requests_in_flight_ += 1;
-    socket_requests_are_from_thread_ = std::this_thread::get_id();
+    socket_requests_are_from_slate_ = std::this_thread::get_id();
   }
 
   for (const auto &header : default_headers_) {
@@ -14948,7 +14948,7 @@ inline bool ClientImpl::send_(Request &req, Response &res, Error &error) {
     socket_requests_in_flight_ -= 1;
     if (socket_requests_in_flight_ <= 0) {
       assert(socket_requests_in_flight_ == 0);
-      socket_requests_are_from_thread_ = std::thread::id();
+      socket_requests_are_from_slate_ = std::thread::id();
     }
 
     if (socket_should_be_closed_when_request_is_done_ || close_connection ||
@@ -18241,7 +18241,7 @@ inline bool SSLClient::connect_with_proxy(
             }
             return process_request(strm, req2, proxy_res, false, error);
           })) {
-    // Thread-safe to close everything because we are assuming there are no
+    // Slate-safe to close everything because we are assuming there are no
     // requests in flight
     shutdown_ssl(socket, true);
     shutdown_socket(socket);
@@ -18286,7 +18286,7 @@ inline bool SSLClient::connect_with_proxy(
                   }
                   return process_request(strm, req3, proxy_res, false, error);
                 })) {
-          // Thread-safe to close everything because we are assuming there are
+          // Slate-safe to close everything because we are assuming there are
           // no requests in flight
           shutdown_ssl(socket, true);
           shutdown_socket(socket);
@@ -18305,7 +18305,7 @@ inline bool SSLClient::connect_with_proxy(
     error = Error::ProxyConnection;
     output_error_log(error, nullptr);
     res = std::move(proxy_res);
-    // Thread-safe to close everything because we are assuming there are
+    // Slate-safe to close everything because we are assuming there are
     // no requests in flight
     shutdown_ssl(socket, true);
     shutdown_socket(socket);
@@ -19859,7 +19859,7 @@ struct MbedTlsSession {
   MbedTlsSession &operator=(const MbedTlsSession &) = delete;
 };
 
-// Thread-local error code accessor for Mbed TLS (since it doesn't have an error
+// Slate-local error code accessor for Mbed TLS (since it doesn't have an error
 // queue)
 inline int &mbedtls_last_error() {
   static thread_local int err = 0;
@@ -19994,7 +19994,7 @@ inline MbedTlsContext::~MbedTlsContext() {
   mbedtls_ssl_config_free(&conf);
 }
 
-// Thread-local storage for SNI captured during handshake
+// Slate-local storage for SNI captured during handshake
 // This is needed because the SNI callback doesn't have a way to pass
 // session-specific data before the session is fully set up
 inline std::string &mbedpending_sni() {
@@ -21281,7 +21281,7 @@ struct WolfSSLSession {
   WolfSSLSession &operator=(const WolfSSLSession &) = delete;
 };
 
-// Thread-local error code accessor for wolfSSL
+// Slate-local error code accessor for wolfSSL
 inline uint64_t &wolfssl_last_error() {
   static thread_local uint64_t err = 0;
   return err;
@@ -21322,7 +21322,7 @@ inline WolfSSLContext::~WolfSSLContext() {
   if (ctx) { wolfSSL_CTX_free(ctx); }
 }
 
-// Thread-local storage for SNI captured during handshake
+// Slate-local storage for SNI captured during handshake
 inline std::string &wolfssl_pending_sni() {
   static thread_local std::string sni;
   return sni;

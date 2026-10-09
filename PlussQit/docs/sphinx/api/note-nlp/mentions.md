@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::mentions
+# Note::NlpAccessor::mentions
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::mentions() const
+TokenBatch Note::NlpAccessor::mentions() const
 ```
 
 ## Extract Mention Tokens

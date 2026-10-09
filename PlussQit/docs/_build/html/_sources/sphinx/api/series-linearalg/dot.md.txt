@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# SeriesLinearAlgAccessor::dot
+# Series::LinearAlgAccessor::dot
 
-[Back to SeriesLinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
+[Back to Series::LinearAlgAccessor API Reference](../../series_linearalg_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-Series SeriesLinearAlgAccessor::dot(const Series& other) const
+Series Series::LinearAlgAccessor::dot(const Series& other) const
 Series SeriesLinearAlgProxy::dot() const
 Series Series::dot(const Series& other) const
 ```
@@ -212,9 +212,9 @@ required.
 
 ## See Also
 
-- [`SeriesLinearAlgAccessor::vdot`](vdot.md): conjugating vector inner product.
-- [`SeriesLinearAlgAccessor::mv`](mv.md): matrix-vector product.
-- [`SeriesLinearAlgAccessor::matmul`](matmul.md): rank-polymorphic product.
+- [`Series::LinearAlgAccessor::vdot`](vdot.md): conjugating vector inner product.
+- [`Series::LinearAlgAccessor::mv`](mv.md): matrix-vector product.
+- [`Series::LinearAlgAccessor::matmul`](matmul.md): rank-polymorphic product.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="det.html">

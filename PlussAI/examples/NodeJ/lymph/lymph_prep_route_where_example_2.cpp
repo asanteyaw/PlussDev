@@ -14,7 +14,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -23,7 +23,7 @@ int main() {
   const pluss::Series price_eur = pluss::make_series({11., 17., 31., 39., 48., 55.}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"price_usd", Thread(price_usd)}, {"price_eur", Thread(price_eur)}, {"region", Thread(region)}});
+  const DataFrame x({{"price_usd", Slate(price_usd)}, {"price_eur", Slate(price_eur)}, {"region", Slate(region)}});
 
   // Route a scaler at every "price_" column by prefix -- no need to list them.
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -34,8 +34,8 @@ int main() {
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"region", Thread(region)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"region", Slate(region)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

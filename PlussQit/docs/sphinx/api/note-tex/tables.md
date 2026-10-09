@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::tables
+# Note::TexAccessor::tables
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::tables() const
+TokenBatch Note::TexAccessor::tables() const
 ```
 
 ## Extract Complete `table`/`table*` Environments

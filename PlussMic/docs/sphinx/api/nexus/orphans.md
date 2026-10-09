@@ -33,12 +33,12 @@ using namespace pluss::table;
 using namespace pluss::bundle;
 
 auto customers = DataFrame({
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0}))},
-    {"name",        Thread(pluss::make_note({"Ada", "Ben"}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0}))},
+    {"name",        Slate(pluss::make_note({"Ada", "Ben"}))},
 });
 auto orders = DataFrame({
-    {"order_id",    Thread(pluss::make_series({101.0, 102.0, 103.0}))},
-    {"customer_id", Thread(pluss::make_series({1.0, 2.0, 4.0}))},
+    {"order_id",    Slate(pluss::make_series({101.0, 102.0, 103.0}))},
+    {"customer_id", Slate(pluss::make_series({1.0, 2.0, 4.0}))},
 });
 
 auto biz = Nexus({

@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::difference
+# Timeline::TimelineIndexAccessor::difference
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::difference(const TimelineIndexAccessor& other) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::difference(const Timeline::TimelineIndexAccessor& other) const
 ```
 
 ## What It Does
@@ -22,7 +22,7 @@ The other time index.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     The left-only timestamps.
 
 ## Examples
@@ -31,7 +31,7 @@ Example 1. Remove every timestamp that also appears in the other axis.
 
 ```cpp
 auto out = base.difference(right);
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -55,8 +55,8 @@ auto left_only = base.difference(right);
 
 ## See Also
 
-- [`TimelineIndexAccessor::union_`](union_.md)
-- [`TimelineIndexAccessor::intersection`](intersection.md)
+- [`Timeline::TimelineIndexAccessor::union_`](union_.md)
+- [`Timeline::TimelineIndexAccessor::intersection`](intersection.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="ceil.html">

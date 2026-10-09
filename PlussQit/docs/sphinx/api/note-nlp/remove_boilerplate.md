@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_boilerplate
+# Note::NlpAccessor::remove_boilerplate
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_boilerplate() const
+Note Note::NlpAccessor::remove_boilerplate() const
 ```
 
 ## Delete Recognizable Policy And Rights Lines
@@ -128,8 +128,8 @@ boilerplate idempotent=true
 
 - [`remove_bullets`](remove_bullets.md): retain list items while deleting their markers.
 - [`remove_code`](remove_code.md): remove code-shaped spans and lines.
-- `NoteNlpAccessor::remove_headers`: remove heading lines rather than policy furniture.
-- `NoteNlpAccessor::remove_footers`: remove page-number and footer-shaped lines.
+- `Note::NlpAccessor::remove_headers`: remove heading lines rather than policy furniture.
+- `Note::NlpAccessor::remove_footers`: remove page-number and footer-shaped lines.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="readability_level.html"><span class="label">Previous</span><span class="title">readability_level</span></a>

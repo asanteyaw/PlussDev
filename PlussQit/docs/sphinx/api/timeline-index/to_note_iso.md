@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::to_note_iso
+# Timeline::TimelineIndexAccessor::to_note_iso
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signatures
 
 ```cpp
-Note TimelineIndexAccessor::to_note_iso() const
+Note Timeline::TimelineIndexAccessor::to_note_iso() const
 ```
 
 ## What It Does
@@ -55,8 +55,8 @@ std::cout << pluss::note::print(labels) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::tz_convert`](tz_convert.md)
-- [`TimelineIndexAccessor::timeline`](timeline.md)
+- [`Timeline::TimelineIndexAccessor::tz_convert`](tz_convert.md)
+- [`Timeline::TimelineIndexAccessor::timeline`](timeline.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="timeline.html">

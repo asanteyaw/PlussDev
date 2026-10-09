@@ -1,0 +1,81 @@
+<!-- pluss-hand-authored -->
+
+# SlateTimelineAccessor::month
+
+[Back to SlateTimelineAccessor API Reference](../../slate_timeline_accessor_api_reference)
+
+## Signature
+
+```cpp
+SlateTimelineAccessor::month() const -> Slate
+```
+
+## What It Does
+
+Replaces the bound slate with its calendar month (`1`-`12`), as a numeric
+`Series`.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Slate`
+    A new `Series`-kind (`Int64`) slate, same length as the bound slate,
+    holding each row's calendar month.
+
+## Examples
+
+Example 1. Extract the month from every row.
+
+```cpp
+using namespace pluss::table;
+
+auto events = Slate(pluss::make_timeline({
+    "2024-01-31T09:15:30Z",
+    "2024-02-29T23:45:00Z",
+    "2024-07-06T14:00:00Z",
+}));
+auto out = events.tl().month();
+std::cout << out;
+```
+
+### Output
+
+```text
+0  1
+1  2
+2  7
+
+ptype: Series
+```
+
+## Notes
+
+- `.tl()` requires the bound slate to already be `Timeline`-kind —
+  the accessor's constructor throws otherwise.
+- A `NaT` row (or one already null on the underlying slate) displays as
+  `"NULL"`, not a sentinel month number.
+- Reads the local calendar month relative to the slate's current timezone.
+
+## See Also
+
+- [`SlateTimelineAccessor::year`](year.md),
+  [`SlateTimelineAccessor::day`](day.md): the other calendar-date components.
+- [`SlateTimelineAccessor::month_start`](month_start.md),
+  [`SlateTimelineAccessor::month_end`](month_end.md): whether the row falls
+  on its month's first/last day.
+- [`SlateTimelineAccessor::month_name`](month_name.md): the month as a text
+  name instead of a number.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="minute.html">
+    <span class="label">Previous</span>
+    <span class="title">minute</span>
+  </a>
+  <a class="next-link" href="month_end.html">
+    <span class="label">Next</span>
+    <span class="title">month_end</span>
+  </a>
+</div>

@@ -1,29 +1,50 @@
 # `pluss::ai::ice::models::TemporalFusionTransformer`
 
-Multi-horizon quantile forecasting per Lim et al. 2019: variable selection networks, gated residual networks, an LSTM encoder/decoder, interpretable causal self-attention. No save()/load() (see this manifest's framework-level note).
+Multi-horizon quantile forecasting per Lim et al. 2019: variable
+selection networks, gated residual networks, an LSTM encoder/decoder,
+interpretable causal self-attention.
 
 ## Signature
 
 ```cpp
-// the public factories / constructors that produce this object
-// e.g. lymph::models::Model lymph::models::logistic_regression(...);
+explicit pluss::ai::ice::models::TemporalFusionTransformer::TemporalFusionTransformer(
+    pluss::ai::ice::models::TFTOptions options);
 ```
 
 ## Construction
 
-<!-- how an instance is obtained; delete if the Signature block says it all -->
+```cpp
+namespace ice = pluss::ai::ice;
+namespace data = ice::data;
+namespace models = ice::models;
 
-## State
+const auto dataset = data::TimeSeriesDataSet::from_series(my_batch);
+auto options = models::TFTOptions::from_dataset(dataset);
+options.encoder_length = 10;
+options.decoder_length = 5;
+options.hidden_size = 32;
+options.quantiles = {0.1, 0.5, 0.9};
 
-<!-- the observable fields / accessors and what each means -->
+models::TemporalFusionTransformer model(options);
+```
 
 ## Methods
 
-<!-- one line per method, linking its page; the toctree below carries the sidebar entries -->
+| Method | Returns | Covered on |
+| --- | --- | --- |
+| `assess(batch)` | `double` | [`assess`](TemporalFusionTransformer/assess.md) |
+| `learn(train, options = {})` / `learn(train, val, options = {})` | `void` | [`learn`](TemporalFusionTransformer/learn.md) |
+| `load(filepath)` | `TemporalFusionTransformer` | [`load`](TemporalFusionTransformer/load.md) |
+| `predict(batch)` | `TFTForecast` | [`predict`](TemporalFusionTransformer/predict.md) |
+| `ready()` | `bool` | [`ready`](TemporalFusionTransformer/ready.md) |
+| `save(filepath)` | `void` | [`save`](TemporalFusionTransformer/save.md) |
+| `to(platform)` | `TemporalFusionTransformer&` | [`to`](TemporalFusionTransformer/to.md) |
 
 ## Changelog
 
-- **0.1** — <!-- initial documented surface -->
+- **0.1** -- `TemporalFusionTransformer`: `learn`/`predict`/`assess`
+  over `TFTBatch`/`data::Batch`/`data::TimeSeriesBatch`, `save`/
+  `load`, `ready`, `to`.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::urls
+# Note::NlpAccessor::urls
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteNlpAccessor::urls() const
+TokenBatch Note::NlpAccessor::urls() const
 ```
 
 ## Extract Web Addresses

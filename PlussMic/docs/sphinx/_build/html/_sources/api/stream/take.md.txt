@@ -72,14 +72,14 @@ try {
 ### Output
 
 ```text
-Thread: index out of bou
+Slate: index out of bou
 ```
 
 ## Notes
 
 - Order and repetition are both meaningful — the result has exactly `indices.size()` rows,
   in the order given, with duplicates preserved.
-- An out-of-range index throws `"Thread: index out of bounds"` — unlike
+- An out-of-range index throws `"Slate: index out of bounds"` — unlike
   [`head()`](head.md)/[`tail()`](tail.md)/[`slice()`](slice.md), which clamp instead.
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.

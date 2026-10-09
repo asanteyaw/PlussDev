@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-TimelineIndexAccessor Timeline::index(bool require_sorted = true) const
+Timeline::TimelineIndexAccessor Timeline::index(bool require_sorted = true) const
 ```
 
 ## Treat Temporal Values As An Axis
@@ -182,14 +182,6 @@ borrowed storage is immutable or version-aware.
 contains `NaT`, or violates the requested ordering contract. Passing `false`
 relaxes only the final condition. No path silently reshapes, sorts, removes
 duplicates, or substitutes absent instants.
-
-## Compatibility
-
-`TimelineIndexAccessor` is currently a source-level name for the public
-`TimeIndex` compatibility object. `to_timeindex()` remains temporarily
-available as a forwarding spelling while downstream components migrate. New
-code should use `index()`; compatibility names will be removed only after the
-SDK no longer exposes TimeIndex as a value dtype.
 
 ## See Also
 

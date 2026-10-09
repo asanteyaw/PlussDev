@@ -41,7 +41,7 @@ infers every numeric feature in the frame, and an explicitly-passed non-numeric 
 Given the resolved feature names (`names`) and whether `features` was passed non-empty
 (`explicit_features`), the first matching rule below wins:
 
-1. **Exactly one numeric feature.** If the frame's row-label thread is Note-, Timeline-, or
+1. **Exactly one numeric feature.** If the frame's row-label slate is Note-, Timeline-, or
    TimeIndex-kind ("labeled") **and** the frame has 16 or fewer rows, routes to
    `bar(names.front())`. Otherwise routes to `line(names.front())`.
 2. **Exactly two numeric features, and `features` was left empty/default.** If the frame
@@ -55,7 +55,7 @@ Given the resolved feature names (`names`) and whether `features` was passed non
    or fewer rows, routes to `bar_stacked()` over the selected features; otherwise routes to
    `area_stacked()`.
 4. **Two, three, or four numeric features, and the frame "prefers an index plot"** — true
-   when the row-label thread is labeled-kind, *or* the frame has more than 24 rows (either
+   when the row-label slate is labeled-kind, *or* the frame has more than 24 rows (either
    condition alone is enough). Routes to `line()` with all selected features as `y_features`.
 5. **Five or fewer numeric features, and 256 or fewer rows.** Routes to a scatter-matrix
    view equivalent to `scatter_matrix(names)` with default options (`Full` triangle).
@@ -92,8 +92,8 @@ Example 1. One numeric feature, labeled (Note-kind) row axis, few rows: routes t
 using namespace pluss::table;
 
 auto monthly = DataFrame({
-    {"revenue", Thread(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
-}, Thread(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
+    {"revenue", Slate(pluss::make_series({100.0, 120.0, 90.0, 150.0}))},
+}, Slate(pluss::make_note({"Jan", "Feb", "Mar", "Apr"})));
 
 auto chart = monthly.plot().auto_plot();
 chart.show();
@@ -108,7 +108,7 @@ Example 2. One numeric feature, default (numeric) row axis: routes to `line()`.
 
 ```cpp
 auto trend = DataFrame({
-    {"temperature", Thread(pluss::make_series({18.0, 19.5, 21.0, 20.5, 22.0}))},
+    {"temperature", Slate(pluss::make_series({18.0, 19.5, 21.0, 20.5, 22.0}))},
 });
 
 auto chart = trend.plot().auto_plot();
@@ -125,9 +125,9 @@ elsewhere in the frame: routes to `scatter()` with that feature as hue.
 
 ```cpp
 auto flowers = DataFrame({
-    {"sepal_length", Thread(pluss::make_series({5.1, 6.7, 5.8, 6.3}))},
-    {"petal_length", Thread(pluss::make_series({1.4, 5.2, 5.1, 6.0}))},
-    {"species",      Thread(pluss::make_note({"setosa", "virginica", "virginica", "virginica"}))},
+    {"sepal_length", Slate(pluss::make_series({5.1, 6.7, 5.8, 6.3}))},
+    {"petal_length", Slate(pluss::make_series({1.4, 5.2, 5.1, 6.0}))},
+    {"species",      Slate(pluss::make_note({"setosa", "virginica", "virginica", "virginica"}))},
 });
 
 auto chart = flowers.plot().auto_plot();
@@ -159,9 +159,9 @@ Example 5. Two non-negative features, labeled row axis, few rows: routes to `bar
 
 ```cpp
 auto budget = DataFrame({
-    {"engineering", Thread(pluss::make_series({40.0, 45.0, 42.0}))},
-    {"sales",       Thread(pluss::make_series({20.0, 22.0, 25.0}))},
-}, Thread(pluss::make_note({"Q1", "Q2", "Q3"})));
+    {"engineering", Slate(pluss::make_series({40.0, 45.0, 42.0}))},
+    {"sales",       Slate(pluss::make_series({20.0, 22.0, 25.0}))},
+}, Slate(pluss::make_note({"Q1", "Q2", "Q3"})));
 
 auto chart = budget.plot().auto_plot();
 chart.show();
@@ -177,9 +177,9 @@ Example 6. The same shape but with more than 12 rows: routes to `area_stacked()`
 ```cpp
 std::vector<double> eng(20, 40.0), sales(20, 20.0);
 auto wide_budget = DataFrame({
-    {"engineering", Thread(pluss::make_series(eng))},
-    {"sales",       Thread(pluss::make_series(sales))},
-}, Thread(pluss::make_note(std::vector<std::string>(20, "Q"))));
+    {"engineering", Slate(pluss::make_series(eng))},
+    {"sales",       Slate(pluss::make_series(sales))},
+}, Slate(pluss::make_note(std::vector<std::string>(20, "Q"))));
 
 auto chart = wide_budget.plot().auto_plot();
 ```
@@ -201,9 +201,9 @@ for (int i = 0; i < 30; ++i) {
 }
 
 auto series = DataFrame({
-    {"a", Thread(pluss::make_series(a))},
-    {"b", Thread(pluss::make_series(b))},
-    {"c", Thread(pluss::make_series(c))},
+    {"a", Slate(pluss::make_series(a))},
+    {"b", Slate(pluss::make_series(b))},
+    {"c", Slate(pluss::make_series(c))},
 });
 
 auto chart = series.plot().auto_plot();
@@ -221,11 +221,11 @@ scatter-matrix.
 
 ```cpp
 auto metrics = DataFrame({
-    {"m1", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
-    {"m2", Thread(pluss::make_series({5.0, 4.0, 3.0, 2.0, 1.0}))},
-    {"m3", Thread(pluss::make_series({2.0, 2.0, 3.0, 3.0, 4.0}))},
-    {"m4", Thread(pluss::make_series({-1.0, 0.0, 1.0, 0.0, -1.0}))},
-    {"m5", Thread(pluss::make_series({10.0, 12.0, 9.0, 14.0, 11.0}))},
+    {"m1", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
+    {"m2", Slate(pluss::make_series({5.0, 4.0, 3.0, 2.0, 1.0}))},
+    {"m3", Slate(pluss::make_series({2.0, 2.0, 3.0, 3.0, 4.0}))},
+    {"m4", Slate(pluss::make_series({-1.0, 0.0, 1.0, 0.0, -1.0}))},
+    {"m5", Slate(pluss::make_series({10.0, 12.0, 9.0, 14.0, 11.0}))},
 });
 
 auto chart = metrics.plot().auto_plot();
@@ -242,12 +242,12 @@ Example 9. More than five numeric features: routes to a correlation heatmap.
 
 ```cpp
 auto wide_metrics = DataFrame({
-    {"m1", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"m2", Thread(pluss::make_series({3.0, 2.0, 1.0}))},
-    {"m3", Thread(pluss::make_series({2.0, 3.0, 1.0}))},
-    {"m4", Thread(pluss::make_series({1.0, 1.0, 2.0}))},
-    {"m5", Thread(pluss::make_series({4.0, 3.0, 2.0}))},
-    {"m6", Thread(pluss::make_series({0.0, 1.0, 0.0}))},
+    {"m1", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"m2", Slate(pluss::make_series({3.0, 2.0, 1.0}))},
+    {"m3", Slate(pluss::make_series({2.0, 3.0, 1.0}))},
+    {"m4", Slate(pluss::make_series({1.0, 1.0, 2.0}))},
+    {"m5", Slate(pluss::make_series({4.0, 3.0, 2.0}))},
+    {"m6", Slate(pluss::make_series({0.0, 1.0, 0.0}))},
 });
 
 auto chart = wide_metrics.plot().auto_plot();
@@ -264,8 +264,8 @@ Example 10. A non-numeric feature name in an explicit request throws, same as
 
 ```cpp
 auto tagged = DataFrame({
-    {"revenue", Thread(pluss::make_series({100.0, 120.0, 90.0}))},
-    {"region",  Thread(pluss::make_note({"East", "West", "East"}))},
+    {"revenue", Slate(pluss::make_series({100.0, 120.0, 90.0}))},
+    {"region",  Slate(pluss::make_note({"East", "West", "East"}))},
 });
 
 try {

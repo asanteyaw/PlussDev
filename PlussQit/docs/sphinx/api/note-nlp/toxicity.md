@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::toxicity
+# Note::NlpAccessor::toxicity
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::toxicity() const
+Note Note::NlpAccessor::toxicity() const
 ```
 
 ## Score Toxic Lexical Density

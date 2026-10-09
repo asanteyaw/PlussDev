@@ -1,14 +1,14 @@
 <!-- pluss-hand-authored -->
 
-# SeriesTraverseAccessor::find_all
+# Series::TraverseAccessor::find_all
 
-[Back to SeriesTraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
+[Back to Series::TraverseAccessor API Reference](../../series_traverse_accessor_api_reference.md)
 
 ## Signatures
 
 ```cpp
-TraverseMatch SeriesTraverseAccessor::find_all(const Series& mask) const;
-TraverseMatch SeriesTraverseAccessor::find_if(const Series& mask) const;
+TraverseMatch Series::TraverseAccessor::find_all(const Series& mask) const;
+TraverseMatch Series::TraverseAccessor::find_if(const Series& mask) const;
 
 TraverseMatch SeriesTraverseProxy::find_all(const Series& mask) const;
 TraverseMatch SeriesTraverseProxy::find_if(const Series& mask) const;
@@ -238,7 +238,7 @@ Only the matched positions receive gradient.
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="../../series_traverse_accessor_api_reference.html">
     <span class="label">Previous</span>
-    <span class="title">SeriesTraverseAccessor</span>
+    <span class="title">Series::TraverseAccessor</span>
   </a>
   <a class="next-link" href="find_and.html">
     <span class="label">Next</span>

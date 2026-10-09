@@ -14,7 +14,7 @@ int main() {
   const auto platform = mps_ready ? pluss::pMPS : pluss::pCPU;
   std::cout << (mps_ready ? "MPS ready. Training on GPU." : "Training on CPU.") << '\n';
 
-  auto doubled = suppose(std::vector<int>{1, 2, 3, 4})
+  auto doubled = pluss::tils::suppose(std::vector<int>{1, 2, 3, 4})
                      .then([](std::vector<int> v) {
                        for (auto& x : v) x *= 2;
                        return v;
@@ -39,7 +39,9 @@ int main() {
   std::cout << "\n";
 
   auto bills = pluss::make_series({42.50, 35.85, 50.03, 15.21, 5.45});
-  auto tips = pluss::tils::transmit(calc_tip, bills);
+  auto tips = pluss::tils::transmit(
+      [](const pluss::Series& values) { return calc_tip(values, 20.0); },
+      bills);
   std::cout << "tips: ";
   for (auto v : tips.to_vec<double>()) std::cout << v << " ";
   std::cout << "\n";

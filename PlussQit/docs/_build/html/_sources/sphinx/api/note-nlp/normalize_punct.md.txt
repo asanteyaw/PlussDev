@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::normalize_punct
+# Note::NlpAccessor::normalize_punct
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::normalize_punct(bool ascii_only = false) const
+Note Note::NlpAccessor::normalize_punct(bool ascii_only = false) const
 ```
 
 ## Canonicalize Common Typographic Punctuation

@@ -1,3 +1,5 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 64abaefb2d22 -->
 # `pluss::ai::ice::Model::test_step`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -168,3 +170,16 @@ metric_name = rmse
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="save.html">
+    <span class="label">Previous</span>
+    <span class="title">save</span>
+  </a>
+  <a class="next-link" href="to.html">
+    <span class="label">Next</span>
+    <span class="title">to</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

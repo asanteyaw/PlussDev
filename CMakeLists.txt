@@ -38,21 +38,55 @@ function(pluss_register_sdk_zip_link ZIP_LIBRARY)
     install(TARGETS pluss_sdk_zip_link EXPORT PlussTargets)
 endfunction()
 
-# On macOS, prefer the cpp_env LLVM toolchain for C/C++ compilation when the
-# user has not explicitly pinned compilers. This keeps modern C++20 support
-# while still allowing explicit override via -DCMAKE_{C,CXX}_COMPILER.
+# Use the compiler shipped with the selected macOS SDK by default. Conda's
+# compiler/resource headers and linker may lag behind an Xcode SDK upgrade.
+# Explicit CMake compiler settings and CC/CXX environment choices take priority.
 if(APPLE
    AND NOT DEFINED CMAKE_C_COMPILER
-   AND NOT DEFINED CMAKE_CXX_COMPILER)
-    set(_pluss_cpp_env "$ENV{CONDA_PREFIX}")
-    if(NOT _pluss_cpp_env)
-        set(_pluss_cpp_env "/Users/yawasante/software/miniconda3/envs/cpp_env")
+   AND NOT DEFINED CMAKE_CXX_COMPILER
+   AND "$ENV{CC}" STREQUAL ""
+   AND "$ENV{CXX}" STREQUAL "")
+    set(CMAKE_C_COMPILER "/usr/bin/clang" CACHE FILEPATH "C compiler")
+    set(CMAKE_CXX_COMPILER "/usr/bin/clang++" CACHE FILEPATH "CXX compiler")
+    message(STATUS "Auto-selected Apple clang toolchain for the macOS SDK")
+endif()
+
+set(_pluss_is_conda_clang FALSE)
+if(APPLE)
+    if(CMAKE_CXX_COMPILER MATCHES ".*/envs/cpp_env/bin/clang\\+\\+$"
+       OR CMAKE_CXX_COMPILER MATCHES ".*/envs/cpp_env/bin/arm64-apple-darwin[0-9.]+-clang\\+\\+$")
+        set(_pluss_is_conda_clang TRUE)
     endif()
-    if(EXISTS "${_pluss_cpp_env}/bin/clang" AND EXISTS "${_pluss_cpp_env}/bin/clang++")
-        set(CMAKE_C_COMPILER "${_pluss_cpp_env}/bin/clang" CACHE FILEPATH "C compiler" FORCE)
-        set(CMAKE_CXX_COMPILER "${_pluss_cpp_env}/bin/clang++" CACHE FILEPATH "CXX compiler" FORCE)
-        message(STATUS "Auto-selected cpp_env clang toolchain: ${_pluss_cpp_env}/bin/clang++")
+    if(DEFINED ENV{CONDA_PREFIX} AND NOT "$ENV{CONDA_PREFIX}" STREQUAL "")
+        if(CMAKE_CXX_COMPILER MATCHES "^$ENV{CONDA_PREFIX}/bin/clang\\+\\+$"
+           OR CMAKE_CXX_COMPILER MATCHES "^$ENV{CONDA_PREFIX}/bin/arm64-apple-darwin[0-9.]+-clang\\+\\+$")
+            set(_pluss_is_conda_clang TRUE)
+        endif()
     endif()
+endif()
+
+# CMake's compiler checks and try_compile() projects must use the same native
+# link driver as the main build; a top-level link-rule override is not inherited.
+if(_pluss_is_conda_clang AND EXISTS "/usr/bin/clang++")
+    foreach(_pluss_lang CXX OBJCXX)
+        if(NOT DEFINED CMAKE_USER_MAKE_RULES_OVERRIDE_${_pluss_lang})
+            set(CMAKE_USER_MAKE_RULES_OVERRIDE_${_pluss_lang}
+                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/AppleCondaLinkRules.cmake")
+        endif()
+    endforeach()
+    # Retry failures left in existing build trees by the old Conda link driver.
+    if(NOT PLUSS_NATIVE_LINKER_PROBES_RESET STREQUAL "apple-driver-v1")
+        foreach(_pluss_probe CMAKE_HAVE_LIBC_PTHREAD CMAKE_HAVE_PTHREADS_CREATE
+                             CMAKE_HAVE_PTHREAD_CREATE THREADS_HAVE_PTHREAD_ARG)
+            if(DEFINED ${_pluss_probe} AND NOT ${_pluss_probe})
+                unset(${_pluss_probe} CACHE)
+            endif()
+        endforeach()
+        set(PLUSS_NATIVE_LINKER_PROBES_RESET "apple-driver-v1" CACHE INTERNAL
+            "Retried failed thread probes with the native macOS link driver")
+    endif()
+    unset(_pluss_lang)
+    unset(_pluss_probe)
 endif()
 
 project(plussma VERSION 0.1.0 LANGUAGES CXX)
@@ -70,19 +104,6 @@ include(CTest)
 # Conda clang toolchains can fail to link Objective-C/Apple frameworks
 # (Foundation/Cocoa/Metal/Accelerate) even when compile succeeds. Keep
 # compilation toolchain unchanged, but force Apple clang as the link driver.
-set(_pluss_is_conda_clang FALSE)
-if(APPLE)
-    if(CMAKE_CXX_COMPILER MATCHES ".*/envs/cpp_env/bin/clang\\+\\+$"
-       OR CMAKE_CXX_COMPILER MATCHES ".*/envs/cpp_env/bin/arm64-apple-darwin[0-9.]+-clang\\+\\+$")
-        set(_pluss_is_conda_clang TRUE)
-    endif()
-    if(DEFINED ENV{CONDA_PREFIX} AND NOT "$ENV{CONDA_PREFIX}" STREQUAL "")
-        if(CMAKE_CXX_COMPILER MATCHES "^$ENV{CONDA_PREFIX}/bin/clang\\+\\+$"
-           OR CMAKE_CXX_COMPILER MATCHES "^$ENV{CONDA_PREFIX}/bin/arm64-apple-darwin[0-9.]+-clang\\+\\+$")
-            set(_pluss_is_conda_clang TRUE)
-        endif()
-    endif()
-endif()
 
 if(APPLE
    AND _pluss_is_conda_clang
@@ -533,6 +554,9 @@ add_custom_target(pluss_sdk_consumer_smoke
         -DSDK_STAGE_DIR=${PLUSS_SDK_STAGING_DIR}
         -DSDK_CONSUMER_SOURCE_DIR=${PLUSS_SDK_CONSUMER_SOURCE_DIR}
         -DSDK_CONSUMER_BUILD_DIR=${PLUSS_SDK_CONSUMER_BUILD_DIR}
+        -DArrow_DIR=${Arrow_DIR}
+        -DParquet_DIR=${Parquet_DIR}
+        -DTorch_DIR=${Torch_DIR}
         -P ${CMAKE_SOURCE_DIR}/cmake/RunSdkConsumerSmoke.cmake
     DEPENDS pluss
     USES_TERMINAL
@@ -560,6 +584,9 @@ if(BUILD_TESTING)
             -DSDK_STAGE_DIR=${PLUSS_SDK_STAGING_DIR}
             -DSDK_CONSUMER_SOURCE_DIR=${PLUSS_SDK_CONSUMER_SOURCE_DIR}
             -DSDK_CONSUMER_BUILD_DIR=${PLUSS_SDK_CONSUMER_BUILD_DIR}
+            -DArrow_DIR=${Arrow_DIR}
+            -DParquet_DIR=${Parquet_DIR}
+            -DTorch_DIR=${Torch_DIR}
             -P ${CMAKE_SOURCE_DIR}/cmake/RunSdkConsumerSmoke.cmake
     )
 endif()

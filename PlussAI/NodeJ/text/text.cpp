@@ -39,10 +39,11 @@ namespace {
   return Status::success();
 }
 
-[[nodiscard]] std::vector<std::string> tokenize_terms(const std::string& text, bool lowercase) {
+[[nodiscard]] std::vector<std::string> tokenize_terms(const std::string& text, bool lowercase, bool keep_punct) {
   const std::string normalized =
       lowercase ? ::pluss::coden::native::cpu::lower_ascii(text) : text;
-  const auto spans = ::pluss::coden::native::cpu::split_word_spans(normalized);
+  const auto spans = keep_punct ? ::pluss::coden::native::cpu::split_nlp_token_spans(normalized, true)
+                                : ::pluss::coden::native::cpu::split_word_spans(normalized);
   std::vector<std::string> tokens{};
   tokens.reserve(spans.size());
   for (const auto& [start, len] : spans) {
@@ -72,9 +73,10 @@ namespace {
 
 [[nodiscard]] std::vector<std::string> analyze_terms(const std::string& text,
                                                      bool lowercase,
+                                                     bool keep_punct,
                                                      std::int64_t min_ngram,
                                                      std::int64_t max_ngram) {
-  return build_ngrams(tokenize_terms(text, lowercase), min_ngram, max_ngram);
+  return build_ngrams(tokenize_terms(text, lowercase, keep_punct), min_ngram, max_ngram);
 }
 
 [[nodiscard]] std::uint64_t stable_hash64(std::string_view value) noexcept {
@@ -147,7 +149,8 @@ Status LexiconMapper::learn(pluss::msharp::RangeView::Of<std::string> documents)
   std::unordered_map<std::string, std::int64_t> df{};
   for (const std::string& doc : documents) {
     std::vector<std::string> tokens =
-        analyze_terms(doc, options_.lowercase, options_.min_ngram, options_.max_ngram);
+        analyze_terms(doc, options_.lowercase,
+                        options_.keep_punct, options_.min_ngram, options_.max_ngram);
     std::sort(tokens.begin(), tokens.end());
     tokens.erase(std::unique(tokens.begin(), tokens.end()), tokens.end());
     for (const std::string& token : tokens) {
@@ -202,6 +205,7 @@ StatusOr<FeatureBatch> LexiconMapper::map_dense(pluss::msharp::RangeView::Of<std
     const std::vector<std::string> tokens =
         analyze_terms(documents[static_cast<std::size_t>(r)],
                       options_.lowercase,
+                        options_.keep_punct,
                       options_.min_ngram,
                       options_.max_ngram);
     for (const std::string& tok : tokens) {
@@ -248,6 +252,7 @@ StatusOr<SparseTripletMatrix> LexiconMapper::map_sparse(pluss::msharp::RangeView
     const std::vector<std::string> tokens =
         analyze_terms(documents[static_cast<std::size_t>(r)],
                       options_.lowercase,
+                        options_.keep_punct,
                       options_.min_ngram,
                       options_.max_ngram);
     for (const std::string& tok : tokens) {
@@ -367,6 +372,7 @@ StatusOr<SparseTripletMatrix> LexiconMapper::map_tfidf_sparse(pluss::msharp::Ran
     const std::vector<std::string> tokens =
         analyze_terms(documents[static_cast<std::size_t>(r)],
                       options_.lowercase,
+                        options_.keep_punct,
                       options_.min_ngram,
                       options_.max_ngram);
     for (const std::string& tok : tokens) {
@@ -429,6 +435,7 @@ StatusOr<FeatureBatch> HashMapper::map_dense(pluss::msharp::RangeView::Of<std::s
     const auto terms =
         analyze_terms(documents[static_cast<std::size_t>(r)],
                       options_.lowercase,
+                        options_.keep_punct,
                       options_.min_ngram,
                       options_.max_ngram);
     for (const auto& term : terms) {
@@ -473,6 +480,7 @@ StatusOr<SparseTripletMatrix> HashMapper::map_sparse(pluss::msharp::RangeView::O
     const auto terms =
         analyze_terms(documents[static_cast<std::size_t>(r)],
                       options_.lowercase,
+                        options_.keep_punct,
                       options_.min_ngram,
                       options_.max_ngram);
     for (const auto& term : terms) {

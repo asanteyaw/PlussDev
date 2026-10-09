@@ -105,14 +105,19 @@ CliOptions parse_cli(int argc, char** argv) {
       continue;
     }
     if (arg == "--help" || arg == "-h") {
-      std::cout << "Usage: plussmic_csv_engine_bench --file <csv> [--engine serial] [--warmup 1] [--rounds 3] [--profile 0|1]\n";
+      std::cout << "Usage: plussmic_csv_engine_bench [--file <csv> (default: PlussMic/data/hour.csv)] [--engine serial] [--warmup 1] [--rounds 3] [--profile 0|1]\n";
       std::exit(0);
     }
     die("unknown argument: " + arg);
   }
 
   if (out.filepath.empty()) {
+#ifdef PLUSSMIC_SOURCE_DIR
+    out.filepath = (std::filesystem::path(PLUSSMIC_SOURCE_DIR) / "data" / "hour.csv").string();
+    std::cout << "No --file given; benchmarking default " << out.filepath << "\n";
+#else
     die("--file is required");
+#endif
   }
   if (!std::filesystem::exists(out.filepath)) {
     die("file does not exist: " + out.filepath);

@@ -76,12 +76,12 @@ pluss::table::DataFrame make_scroll_stress_frame() {
                      std::sin(static_cast<double>(row) * 0.031));
   }
   const auto shared_values = pluss::make_series(values);
-  std::vector<std::pair<std::string, pluss::table::Thread>> features;
+  std::vector<std::pair<std::string, pluss::table::Slate>> features;
   features.reserve(static_cast<std::size_t>(columns));
   for (std::int64_t column = 0; column < columns; ++column) {
     features.emplace_back(
         "feature_" + std::to_string(column),
-        pluss::table::Thread(shared_values));
+        pluss::table::Slate(shared_values));
   }
   return pluss::table::DataFrame(std::move(features))
       .title("50,000 x 1,000 scroll stress");

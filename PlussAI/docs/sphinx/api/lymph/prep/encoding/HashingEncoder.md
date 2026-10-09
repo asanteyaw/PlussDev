@@ -14,7 +14,7 @@ The type is `lymph::prep::HashingEncoder`. It takes an
 `prep::HashingEncoderOptions`) at construction, default-constructed if omitted.
 It shares its whole method surface with
 [`prep::OneHotEncoder`](OneHotEncoder.md) — `features` / `learn` / `map` /
-`learn_map` / `learned` / `summary`. It has **no** single-column `Thread`
+`learn_map` / `learned` / `summary`. It has **no** single-column `Slate`
 overload; use the `DataFrame` path.
 
 ## Construction
@@ -73,11 +73,11 @@ time.
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  const DataFrame train({{"tag", Thread(pluss::make_note(
+  const DataFrame train({{"tag", Slate(pluss::make_note(
       {"red", "green", "blue", "red", "cyan", "green", "black", "blue"}))}});
-  const DataFrame later({{"tag", Thread(pluss::make_note({"blue", "magenta"}))}});
+  const DataFrame later({{"tag", Slate(pluss::make_note({"blue", "magenta"}))}});
 
   lymph::prep::HashingEncoder encoder(
       lymph::prep::HashingEncoderOptions{.n_components = 4});
@@ -132,9 +132,9 @@ Rows 2 and 4 (`blue` and `cyan`) both land in `tag_3` — a collision.
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  const DataFrame train({{"tag", Thread(pluss::make_note(
+  const DataFrame train({{"tag", Slate(pluss::make_note(
       {"red", "green", "blue", "cyan", "black", "white"}))}});
 
   lymph::prep::HashingEncoder a(lymph::prep::HashingEncoderOptions{.n_components = 3, .seed = 0});
@@ -190,9 +190,9 @@ seed = 7 -- same rows, different buckets:
 int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
-  const DataFrame train({{"tag", Thread(pluss::make_note(
+  const DataFrame train({{"tag", Slate(pluss::make_note(
       {"red", "green", "blue", "cyan", "black", "white"}))}});
 
   lymph::prep::HashingEncoder narrow{lymph::prep::HashingEncoderOptions{.n_components = 2}};

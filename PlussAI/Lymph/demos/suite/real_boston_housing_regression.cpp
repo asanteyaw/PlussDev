@@ -14,19 +14,19 @@ int main() {
   csv.names = {"crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "b", "lstat", "medv"};
   const DataFrame raw = DataFrame::load_csv((root / "data/boston_housing.csv").string(), csv);
 
-  lymph::Payload data = lymph::payload::make(raw)
+  lymph::workflow::Payload data = lymph::workflow::payload::make(raw)
       .features({"crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "b", "lstat"})
       .label("medv");
 
   lymph::Workflow wf = lymph::workflow::make(
       std::vector<lymph::WorkflowBranchSpec>{
           lymph::workflow::branch("num", {"crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "b", "lstat"}, {
-              {"fill", lymph::stage::simple_imputer()},
-              {"shape", lymph::stage::power_map()},
-              {"scale", lymph::stage::standard_scaler()},
+              {"fill", lymph::prep::stage::simple_imputer()},
+              {"shape", lymph::prep::stage::power_map()},
+              {"scale", lymph::prep::stage::standard_scaler()},
           }),
       },
-      lymph::model::gradient_boost_regressor({.learners = 80, .learning_rate = 0.04}));
+      lymph::models::gradient_boost_regressor({.learners = 80, .learning_rate = 0.04}));
 
   wf.learn_(data);
   std::cout << "boston rmse: " << wf.assess(data).rmse.item<double>() << "\n";

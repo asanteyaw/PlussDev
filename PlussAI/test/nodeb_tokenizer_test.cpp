@@ -46,6 +46,23 @@ bool run_nodeb_tokenizer_checks(std::ostream* err = nullptr) {
     return false;
   }
 
+  // Multi-byte letters stay inside their word; non-letter Unicode punctuation
+  // becomes its own token; non-breaking spaces separate tokens.
+  const auto accented = nlp.infer("Il est là. Café naïve, « oui » — l'été.");
+  const std::vector<std::string> want_accented = {
+      "Il", "est", "là", ".", "Café", "naïve", ",", "«", "oui", "»", "—", "l'été", ".",
+  };
+  if (accented.token_texts() != want_accented) {
+    if (err) {
+      *err << "nodeb tokenizer should keep UTF-8 letters whole; got:";
+      for (const auto& token : accented.token_texts()) {
+        *err << " [" << token << "]";
+      }
+      *err << "\n";
+    }
+    return false;
+  }
+
   const auto batch = nlp.infer(pluss::make_note({"Alpha beta.", "Gamma!"}));
   if (batch.size() != 2 || batch[0].tokens.size() != 3 || batch[1].tokens.size() != 2) {
     if (err) *err << "nodeb tokenizer should infer Note batches document-by-document\n";

@@ -12,7 +12,7 @@
 
 #include "pluss/bi/studio.h"
 
-#include "BI_tools/json_lite.h"
+#include "pluss/bi/detail/json_lite.h"
 
 #include <httplib.h>
 
@@ -295,7 +295,7 @@ inline ServeHandle Studio::start_serving(
 
   svr->Post("/api/filter", [ctx](const httplib::Request& req, httplib::Response& res) {
     try {
-      const auto payload = pluss::bi_tools::parse_flat_json_object(req.body);
+      const auto payload = detail::parse_flat_json_object(req.body);
       const auto control_it = payload.find("control");
       PLUSS_CHECK(control_it != payload.end(),
                   "pluss::bi::Studio::serve: /api/filter request is missing 'control'");
@@ -317,7 +317,7 @@ inline ServeHandle Studio::start_serving(
       }
 
       res.set_content(
-          pluss::bi_tools::json_object({
+          detail::json_object({
               {"content_html", content_html},
               {"chips_html", chips_html},
           }),
@@ -325,7 +325,7 @@ inline ServeHandle Studio::start_serving(
     } catch (const std::exception& error) {
       res.status = 400;
       res.set_content(
-          pluss::bi_tools::json_object({{"error", error.what()}}),
+          detail::json_object({{"error", error.what()}}),
           "application/json");
     }
   });
@@ -346,12 +346,11 @@ inline ServeHandle Studio::start_serving(
   handle.url_ = "http://127.0.0.1:" + std::to_string(bound_port) + "/";
   handle.server_ = svr;
 
-  std::cout << "pluss::bi::Studio::serve: " << ctx->page_title << " is live at " << handle.url_
-            << " (press Ctrl+C to stop)" << std::endl;
-
-  if (open_browser && !pluss::bi_tools::open_path_in_browser(handle.url_)) {
-    std::cout << "pluss::bi::Studio::serve: could not auto-open a browser; "
-                 "open the URL above manually\n";
+  // Starting a server is quiet, so programmatic callers control their own output.
+  // The command-line wrapper, Studio::serve(), announces the URL.
+  if (open_browser && !detail::open_path_in_browser(handle.url_)) {
+    std::cout << "pluss::bi::Studio::start_serving: could not auto-open a browser; "
+                 "use the URL from ServeHandle::url()\n";
   }
 
   // `svr` (a shared_ptr copy) is captured by value so the Server -- and
@@ -376,6 +375,9 @@ inline void Studio::serve(
     bool open_browser,
     DashboardChrome chrome) {
   auto handle = start_serving(title, width, height, port, open_browser, chrome);
+  const std::string shown = title.empty() ? key_ : std::string(title);
+  std::cout << "pluss::bi::Studio::serve: " << shown << " is live at " << handle.url()
+            << " (press Ctrl+C to stop)" << std::endl;
   handle.wait();
 }
 

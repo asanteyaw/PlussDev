@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_figs
+# Note::TexAccessor::strip_figs
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_figs() const
+Note Note::TexAccessor::strip_figs() const
 ```
 
 ## Remove Figure Regions, Not Graphic Calls

@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::wrap_inline_math
+# Note::TexAccessor::wrap_inline_math
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::wrap_inline_math(std::string_view delim) const
+Note Note::TexAccessor::wrap_inline_math(std::string_view delim) const
 ```
 
 ## Wrap Each Cell As Inline Math, Unless It Already Looks Like Math

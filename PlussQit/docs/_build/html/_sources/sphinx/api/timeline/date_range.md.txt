@@ -68,9 +68,9 @@ The default `step = 1` means every unit. Larger values coarsen the grid:
 
 ## Notes
 
-- `date_range(...)` returns a `Timeline`, not a `TimeIndex`.
-- Promote the result to `TimeIndex` when the range is going to become an
-  ordered lookup axis.
+- `date_range(...)` returns a `Timeline` and retains the ordinary temporal
+  value surface.
+- Call `.index()` on the result when it will serve as an ordered lookup axis.
 - `start` and `end` are scalar endpoints. This is not a pairwise
   vectorized-range constructor.
 - The main toggle in practice is the combination of `freq` and `step`.

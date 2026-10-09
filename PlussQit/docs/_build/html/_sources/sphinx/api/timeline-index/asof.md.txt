@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::asof
+# Timeline::TimelineIndexAccessor::asof
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-std::int64_t TimelineIndexAccessor::asof(const Timeline& key) const
+std::int64_t Timeline::TimelineIndexAccessor::asof(const Timeline& key) const
 ```
 
 ## What It Does
@@ -74,9 +74,9 @@ pos = -1
 
 ## See Also
 
-- [`TimelineIndexAccessor::join_asof`](join_asof.md): vectorized as-of matching between two
+- [`Timeline::TimelineIndexAccessor::join_asof`](join_asof.md): vectorized as-of matching between two
   time axes.
-- [`TimelineIndexAccessor::searchsorted`](searchsorted.md): raw insertion lookup.
+- [`Timeline::TimelineIndexAccessor::searchsorted`](searchsorted.md): raw insertion lookup.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="argsort.html">

@@ -857,7 +857,7 @@ void test_aux_transmit_translate_and_queue_basics() {
   expect_true(mapped.size() == 3 && mapped[2] == 9, "transmit maps range values");
 
   pluss::Note n = pluss::make_note({{"aa", "bbb"}, {"c", "dddd"}});
-  const auto per_row_chars = pluss::tils::transform_axis(
+  const auto per_row_chars = pluss::tils::map_axis(
       [](const pluss::Note& row) {
         std::int64_t total = 0;
         for (std::int64_t i = 0; i < row.numel(); ++i) total += static_cast<std::int64_t>(row.at(i).size());
@@ -865,10 +865,10 @@ void test_aux_transmit_translate_and_queue_basics() {
       },
       n,
       1);
-  expect_true(per_row_chars.size() == 2, "transform_axis(Note, axis=1) returns one value per row slice");
-  expect_true(per_row_chars[0] == 5 && per_row_chars[1] == 5, "transform_axis computes per-row aggregation");
+  expect_true(per_row_chars.size() == 2, "map_axis(Note, axis=1) returns one value per row slice");
+  expect_true(per_row_chars[0] == 5 && per_row_chars[1] == 5, "map_axis computes per-row aggregation");
 
-  const auto per_col_chars = pluss::tils::transform_axis(
+  const auto per_col_chars = pluss::tils::map_axis(
       [](const pluss::Note& col) {
         std::int64_t total = 0;
         for (std::int64_t i = 0; i < col.numel(); ++i) total += static_cast<std::int64_t>(col.at(i).size());
@@ -876,8 +876,8 @@ void test_aux_transmit_translate_and_queue_basics() {
       },
       n,
       0);
-  expect_true(per_col_chars.size() == 2, "transform_axis(Note, axis=0) returns one value per column slice");
-  expect_true(per_col_chars[0] == 3 && per_col_chars[1] == 7, "transform_axis axis=0 follows NumPy column-wise semantics");
+  expect_true(per_col_chars.size() == 2, "map_axis(Note, axis=0) returns one value per column slice");
+  expect_true(per_col_chars[0] == 3 && per_col_chars[1] == 7, "map_axis axis=0 follows column-wise semantics");
 
   pluss::Type qn = n;
   expect_true(qn.kind() == pluss::Type::Kind::Note, "Type stores Note");

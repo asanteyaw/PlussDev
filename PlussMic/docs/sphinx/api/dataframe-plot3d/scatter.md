@@ -90,11 +90,11 @@ Example 1. Default options: uniform points, no size or color encoding.
 using namespace pluss::table;
 
 auto points = DataFrame({
-    {"x", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
-    {"y", Thread(pluss::make_series({5.0, 3.0, 4.0, 2.0, 1.0}))},
-    {"z", Thread(pluss::make_series({2.0, 6.0, 3.0, 5.0, 4.0}))},
-    {"mass",  Thread(pluss::make_series({10.0, 40.0, 15.0, 55.0, 25.0}))},
-    {"speed", Thread(pluss::make_series({1.2, 3.4, 0.8, 4.1, 2.0}))},
+    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0}))},
+    {"y", Slate(pluss::make_series({5.0, 3.0, 4.0, 2.0, 1.0}))},
+    {"z", Slate(pluss::make_series({2.0, 6.0, 3.0, 5.0, 4.0}))},
+    {"mass",  Slate(pluss::make_series({10.0, 40.0, 15.0, 55.0, 25.0}))},
+    {"speed", Slate(pluss::make_series({1.2, 3.4, 0.8, 4.1, 2.0}))},
 });
 
 auto chart = points.plot3d().scatter("x", "y", "z");
@@ -153,9 +153,9 @@ every axis feature.
 
 ```cpp
 auto mismatched = DataFrame({
-    {"x", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"y", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
-    {"z", Thread(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"x", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"y", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
+    {"z", Slate(pluss::make_series({1.0, 2.0, 3.0}))},
 });
 mismatched = mismatched.features({"x", "y", "z"});
 

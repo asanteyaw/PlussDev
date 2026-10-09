@@ -1,6 +1,6 @@
 # Data Workflows
 
-This guide teaches the day-to-day `DataFrame`, `Thread`, and `Atlas` workflow.
+This guide teaches the day-to-day `DataFrame`, `Slate`, and `Atlas` workflow.
 It is usage-first: load data, inspect it, select columns, filter rows, derive
 features, aggregate, plot, and save results.
 
@@ -87,12 +87,12 @@ auto only_series = df.series_features();
 auto only_text = df.note_features();
 ```
 
-`features("name")` returns a `Thread`. `features({"a", "b"})` returns a new
+`features("name")` returns a `Slate`. `features({"a", "b"})` returns a new
 `DataFrame` with the selected features.
 
-## Work with a Thread
+## Work with a Slate
 
-`Thread` is the column abstraction. Numeric threads support numeric transforms
+`Slate` is the column abstraction. Numeric threads support numeric transforms
 and reductions; text threads support text transforms; time threads support
 calendar transforms.
 
@@ -155,8 +155,8 @@ Use `transform` when you are changing existing features:
 
 ```cpp
 auto adjusted = df.transform({
-    {"age", [](const pluss::table::Thread& feature) { return feature + 1.0; }},
-    {"balance", [](const pluss::table::Thread& feature) { return feature.clip(-1000.0, 1000.0); }},
+    {"age", [](const pluss::table::Slate& feature) { return feature + 1.0; }},
+    {"balance", [](const pluss::table::Slate& feature) { return feature.clip(-1000.0, 1000.0); }},
 });
 ```
 
@@ -190,7 +190,7 @@ auto backward = df.bfill();
 auto complete = df.dropna();
 ```
 
-`Thread` has the same style for column-level workflows:
+`Slate` has the same style for column-level workflows:
 
 ```cpp
 auto clean_balance = df.features("balance").fillna(0.0).clip(0.0, 1'000'000.0);
@@ -247,7 +247,7 @@ auto daily = df.features({"close", "volume"})
     .resample("D", pluss::subsp::stats::ts::ResampleOp::Mean);
 auto lagged = df.shift({"close"}, 1);
 auto rolling = df.rolling({
-    {"close_5_mean", "close", pluss::table::ThreadWindowOp::RollingMean, 5, 3},
+    {"close_5_mean", "close", pluss::table::SlateWindowOp::RollingMean, 5, 3},
 });
 ```
 

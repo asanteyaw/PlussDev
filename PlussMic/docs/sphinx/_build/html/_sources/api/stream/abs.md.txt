@@ -14,7 +14,7 @@ Stream::abs() const -> Stream
 ## What It Does
 
 Returns a new `Series`-kind stream whose values are the elementwise absolute value of the
-current numeric payload. Delegates to `Thread::abs()` under the hood, so it only accepts a
+current numeric payload. Delegates to `Slate::abs()` under the hood, so it only accepts a
 `Series`-kind stream — calling it on `Note`/`Timeline`/`TimeIndex` throws.
 
 ## Parameters
@@ -69,13 +69,13 @@ try {
 ### Output
 
 ```text
-Thread::abs is only valid for Series payload
+Slate::abs is only valid for Series payload
 ```
 
 ## Notes
 
 - `Series`-only; throws on `Note`/`Timeline`/`TimeIndex` streams — see Example 2. The
-  thrown message is inherited verbatim from `Thread::abs()`, the delegate this method
+  thrown message is inherited verbatim from `Slate::abs()`, the delegate this method
   calls internally.
 - The thrown exception's `.what()` appends a native stack trace after the message text
   shown above; examples here show only the leading message for readability.

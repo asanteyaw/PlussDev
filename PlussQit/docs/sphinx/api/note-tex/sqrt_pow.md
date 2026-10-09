@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::sqrt_pow
+# Note::TexAccessor::sqrt_pow
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::sqrt_pow() const
+Note Note::TexAccessor::sqrt_pow() const
 ```
 
 ## Rewrite Roots As Reciprocal Powers

@@ -129,7 +129,7 @@ differentiable.
 
 - [`Series::addmm`](addmm.md): the matrix-matrix form and the shared contract.
 - [`Series::addr`](addr.md): the outer-product form.
-- [`SeriesLinearAlgAccessor::mv`](../series-linearalg/mv.md): the bare
+- [`Series::LinearAlgAccessor::mv`](../series-linearalg/mv.md): the bare
   matrix-vector product.
 
 <div class="pluss-inline-prev-next">

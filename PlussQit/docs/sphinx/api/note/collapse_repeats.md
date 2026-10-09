@@ -51,7 +51,7 @@ too.
   punctuation.
 - [`Note::collapse_whitespace`](collapse_whitespace.md) /
   [`Note::collapse_spaces`](collapse_spaces.md): collapse only whitespace.
-- [`NoteRegexAccessor::replace`](../note-regex/replace.md): `regex().replace(R"((.)\1+)",
+- [`Note::RegexAccessor::replace`](../note-regex/replace.md): `regex().replace(R"((.)\1+)",
   "$1")` for a Unicode-safe "collapse repeats" with more control.
 
 <div class="pluss-inline-prev-next">

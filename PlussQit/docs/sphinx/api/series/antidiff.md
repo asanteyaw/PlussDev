@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::antidiff -> SeriesAntidiffAccessor
+Series::antidiff -> Series::AntidiffAccessor
 
 Series::antidiff() -> SeriesAntidiffProxy
 Series::antidiff(const Series& x) -> SeriesAntidiffProxy
@@ -74,12 +74,12 @@ it integrates against that `x`; without one, it falls back to `dx = 1.0`.
   running antiderivative, one value per sample point
 
 Use the
-[SeriesAntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
+[Series::AntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
 as the landing page for this family.
 
 ## Returns
 
-`SeriesAntidiffAccessor` or `SeriesAntidiffProxy`
+`Series::AntidiffAccessor` or `SeriesAntidiffProxy`
     A lightweight method-selection object bound to the owning `Series`, and
     optionally to a peer `Series` (the x-coordinates).
 
@@ -124,9 +124,9 @@ exactly.
 
 ## See Also
 
-- [SeriesAntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
-- [`SeriesAntidiffAccessor::trapezoid`](../series-antidiff/trapezoid.md)
-- [`SeriesAntidiffAccessor::cumulative_trapezoid`](../series-antidiff/cumulative_trapezoid.md)
+- [Series::AntidiffAccessor API Reference](../../series_antidiff_accessor_api_reference.md)
+- [`Series::AntidiffAccessor::trapezoid`](../series-antidiff/trapezoid.md)
+- [`Series::AntidiffAccessor::cumulative_trapezoid`](../series-antidiff/cumulative_trapezoid.md)
 - [`Series::diff`](diff.md): the discrete forward difference `antidiff` reverses.
 - [`Series::cumsum`](cumsum.md): the plain (unweighted) cumulative sum
   `diff()`'s output telescopes back through exactly.

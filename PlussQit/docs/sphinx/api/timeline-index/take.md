@@ -1,11 +1,11 @@
-# TimelineIndexAccessor::take
+# Timeline::TimelineIndexAccessor::take
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TimelineIndexAccessor TimelineIndexAccessor::take(const pluss::Series& indices) const
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::take(const pluss::Series& indices) const
 ```
 
 ## What It Does
@@ -25,14 +25,14 @@ A 1D integer `Series` of positions to gather.
 
 ## Returns
 
-`TimelineIndexAccessor`
+`Timeline::TimelineIndexAccessor`
     A re-ordered or subset index.
 
 ## Examples
 
 ```cpp
 auto out = base.take(pluss::make_series(std::vector<std::int64_t>{4, 2, 0}));
-std::cout << pluss::timeindex::print(out) << "\n";
+std::cout << pluss::timeline::print(out.timeline()) << "\n";
 ```
 
 ### Output
@@ -48,7 +48,7 @@ Example 2. Reuse an `argsort()` result to physically reorder the axis.
 auto order = dup.argsort();
 auto sorted = dup.take(order);
 std::cout << pluss::series::print(order) << "\n";
-std::cout << pluss::timeindex::print(sorted) << "\n";
+std::cout << pluss::timeline::print(sorted.timeline()) << "\n";
 ```
 
 ## Notes
@@ -58,8 +58,8 @@ std::cout << pluss::timeindex::print(sorted) << "\n";
 
 ## See Also
 
-- [`TimelineIndexAccessor::argsort`](argsort.md)
-- [`TimelineIndexAccessor::slice_index`](slice_index.md)
+- [`Timeline::TimelineIndexAccessor::argsort`](argsort.md)
+- [`Timeline::TimelineIndexAccessor::slice_index`](slice_index.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="tail.html">

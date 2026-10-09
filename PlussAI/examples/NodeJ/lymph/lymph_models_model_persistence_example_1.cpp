@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   const pluss::Series income = pluss::make_series({1.0, 1.4, 1.8, 3.4, 3.8, 4.2}, {6}, f64);
   const pluss::Series balance = pluss::make_series({0.3, 0.5, 0.7, 1.8, 2.1, 2.4}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"income", Thread(income)}, {"balance", Thread(balance)}});
+  const DataFrame x({{"income", Slate(income)}, {"balance", Slate(balance)}});
 
   const lymph::models::Model model = lymph::models::logistic_regression().learn(x, y);
 
@@ -29,9 +29,9 @@ int main() {
   // Reload it into a brand new Model and confirm predictions are unchanged.
   const lymph::models::Model reloaded = lymph::models::Model::load(path.string());
   const DataFrame check({
-      {"income", Thread(income)},
-      {"original", Thread(model.infer(x))},
-      {"reloaded", Thread(reloaded.infer(x))},
+      {"income", Slate(income)},
+      {"original", Slate(model.infer(x))},
+      {"reloaded", Slate(reloaded.infer(x))},
   });
   std::cout << check;
 

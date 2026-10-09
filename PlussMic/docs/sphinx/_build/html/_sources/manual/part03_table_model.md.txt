@@ -1,16 +1,16 @@
 # Part III: The Table Model
 
-This part explains how `Thread`, `DataFrame`, `DataFrameView`, and `Atlas`
+This part explains how `Slate`, `DataFrame`, `DataFrameView`, and `Atlas`
 relate. Understanding these types makes the rest of PlussMic predictable.
 
-## Thread
+## Slate
 
-A `Thread` is one typed column. It can hold one of four payload kinds:
+A `Slate` is one typed column. It can hold one of four payload kinds:
 
 ```cpp
-pluss::table::Thread numeric(pluss::make_series({1.0, 2.0, 3.0}));
-pluss::table::Thread text(pluss::make_note({"red", "green", "blue"}));
-pluss::table::Thread dates(pluss::make_timeline({
+pluss::table::Slate numeric(pluss::make_series({1.0, 2.0, 3.0}));
+pluss::table::Slate text(pluss::make_note({"red", "green", "blue"}));
+pluss::table::Slate dates(pluss::make_timeline({
     "2024-01-01T00:00:00Z",
     "2024-01-02T00:00:00Z",
     "2024-01-03T00:00:00Z",
@@ -30,14 +30,14 @@ thread.info();
 Access the payload only after you know the kind:
 
 ```cpp
-if (thread.kind() == pluss::table::ThreadKind::Series) {
+if (thread.kind() == pluss::table::SlateKind::Series) {
   auto values = thread.as_series();
 }
 ```
 
 ## Missingness and validity
 
-`Thread` can carry a validity mask. Loader-created columns use this to represent
+`Slate` can carry a validity mask. Loader-created columns use this to represent
 missing values from input files.
 
 ```cpp
@@ -51,7 +51,7 @@ Numeric threads also support `isnan` and `isfinite`.
 
 ## DataFrame
 
-A `DataFrame` is a set of named `Thread` features with an optional case axis.
+A `DataFrame` is a set of named `Slate` features with an optional case axis.
 
 ```cpp
 auto df = pluss::table::DataFrame({
@@ -120,13 +120,13 @@ integer axis shown at the left. `features()` preserves insertion order:
 Feature selection:
 
 ```cpp
-auto sales = df.features("sales");                 // Thread
+auto sales = df.features("sales");                 // Slate
 auto smaller = df.features({"region", "sales"});   // DataFrame
 auto numeric = df.feataxis().series();
 auto text = df.feataxis().note();
 ```
 
-`features("name")` returns a `Thread` with display labels from the frame's case
+`features("name")` returns a `Slate` with display labels from the frame's case
 axis and a display name matching the feature. `features({"a", "b"})` returns a
 new `DataFrame` with the same case axis and the selected feature order.
 

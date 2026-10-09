@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::freq" href="freq.html" />
@@ -37,13 +37,13 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: f7770f19b5b2 -->
+<!-- pluss-signature-hash: 698d2993d041 -->
 <section id="dataframe-fold">
 <h1>DataFrame::fold<a class="headerlink" href="#dataframe-fold" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signature">
 <h2>Signature<a class="headerlink" href="#signature" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">fold</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Thread</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">ResultShape</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Reduce</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Thread</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">fold</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="n">Slate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">ResultShape</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ResultShape</span><span class="o">::</span><span class="n">Reduce</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Slate</span>
 </pre></div>
 </div>
 </section>
@@ -51,19 +51,19 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>A plain escape hatch for a custom reduction that isn’t already one of the built-in
 aggregates (<a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>, <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>, and so on). <code class="docutils literal notranslate"><span class="pre">fold()</span></code> calls <code class="docutils literal notranslate"><span class="pre">fn</span></code>
-with the current frame and returns whatever <code class="docutils literal notranslate"><span class="pre">Thread</span></code> <code class="docutils literal notranslate"><span class="pre">fn</span></code> produces, optionally checking
+with the current frame and returns whatever <code class="docutils literal notranslate"><span class="pre">Slate</span></code> <code class="docutils literal notranslate"><span class="pre">fn</span></code> produces, optionally checking
 that the result’s size matches what <code class="docutils literal notranslate"><span class="pre">shape</span></code> expects. <a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">flow()</span></code></span></a> is the sibling
-hook for a callback that returns a whole <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> instead of a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p>
+hook for a callback that returns a whole <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> instead of a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Thread(const</span> <span class="pre">DataFrame&amp;)&gt;&amp;</span></code>)</p>
+<p><strong>fn</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">std::function&lt;Slate(const</span> <span class="pre">DataFrame&amp;)&gt;&amp;</span></code>)</p>
 <p>The callback to run. It receives the current frame by <code class="docutils literal notranslate"><span class="pre">const</span></code> reference and must
-return a defined <code class="docutils literal notranslate"><span class="pre">Thread</span></code>. Throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::fold:</span> <span class="pre">callback</span> <span class="pre">is</span> <span class="pre">empty&quot;</span></code> if <code class="docutils literal notranslate"><span class="pre">fn</span></code> holds
+return a defined <code class="docutils literal notranslate"><span class="pre">Slate</span></code>. Throws <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::fold:</span> <span class="pre">callback</span> <span class="pre">is</span> <span class="pre">empty&quot;</span></code> if <code class="docutils literal notranslate"><span class="pre">fn</span></code> holds
 no target, and <code class="docutils literal notranslate"><span class="pre">&quot;DataFrame::fold:</span> <span class="pre">callback</span> <span class="pre">returned</span> <span class="pre">undefined&quot;</span></code> if it returns an
 undefined thread.</p>
 <p><strong>shape</strong> (<code class="docutils literal notranslate"><span class="pre">ResultShape</span></code>, default <code class="docutils literal notranslate"><span class="pre">ResultShape::Reduce</span></code>)</p>
-<p>Governs what size the returned <code class="docutils literal notranslate"><span class="pre">Thread</span></code> is checked against:</p>
+<p>Governs what size the returned <code class="docutils literal notranslate"><span class="pre">Slate</span></code> is checked against:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">Reduce</span></code></strong> (the default): the result must have exactly one entry — a single
 aggregate value, the same shape <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a> or <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a> produce for
@@ -76,7 +76,7 @@ exactly as computed.</p></li>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Thread</span></code>
+<p><code class="docutils literal notranslate"><span class="pre">Slate</span></code>
 Exactly whatever <code class="docutils literal notranslate"><span class="pre">fn</span></code> returned, after the <code class="docutils literal notranslate"><span class="pre">shape</span></code> check (if any) passes.</p>
 </section>
 <section id="examples">
@@ -85,9 +85,9 @@ Exactly whatever <code class="docutils literal notranslate"><span class="pre">fn
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">}))},</span>
-<span class="p">},</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;o1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o3&quot;</span><span class="p">})));</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;units&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;unit_price&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_series</span><span class="p">({</span><span class="mf">1200.0</span><span class="p">,</span><span class="w"> </span><span class="mf">45.5</span><span class="p">,</span><span class="w"> </span><span class="mf">1150.0</span><span class="p">}))},</span>
+<span class="p">},</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;o1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;o3&quot;</span><span class="p">})));</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">avg_price</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orders</span><span class="p">.</span><span class="n">fold</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="n">DataFrame</span><span class="o">&amp;</span><span class="w"> </span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;unit_price&quot;</span><span class="p">}).</span><span class="n">mean</span><span class="p">();</span>
@@ -146,12 +146,12 @@ the original frame is never modified by a <code class="docutils literal notransl
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="flow.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::flow</span></code></span></a>: the sibling hook for a callback that returns a whole
-<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> instead of a <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> instead of a <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 <li><p><a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::sum</span></code></span></a>, <a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::mean</span></code></span></a>: built-in reductions to
 reach for first, before writing a custom <code class="docutils literal notranslate"><span class="pre">fold()</span></code> callback for something they
 already compute.</p></li>
 <li><p><a class="reference internal" href="transform.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">DataFrame::transform</span></code></span></a>: apply a function per-feature across the
-frame and get a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> back, rather than reducing to a single <code class="docutils literal notranslate"><span class="pre">Thread</span></code>.</p></li>
+frame and get a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> back, rather than reducing to a single <code class="docutils literal notranslate"><span class="pre">Slate</span></code>.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="flow.html">

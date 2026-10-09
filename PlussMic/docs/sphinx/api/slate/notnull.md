@@ -1,0 +1,80 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8007230a14aa -->
+
+# Slate::notnull
+
+[Back to Slate API Reference](../../slate_api_reference)
+
+## Signature
+
+```cpp
+Slate::notnull() const -> Slate
+```
+
+## What It Does
+
+Returns a `Bool`-typed `Series` slate, same length as `*this`, marking `true`
+wherever the source slate is valid (not `NULL`) and `false` wherever it's `NULL` —
+the exact logical inverse of [`isnull()`](isnull.md). Works on every payload kind,
+with the same validity-mask-only semantics (and the same `Timeline`/`TimeIndex`
+internal-validity folding) described on that page.
+
+## Parameters
+
+`None`
+
+## Returns
+
+`Slate`
+    A new `Bool`-typed `Series` slate, same length as `*this`.
+
+## Examples
+
+Example 1. `notnull()` and `isnull()` are exact opposites, elementwise.
+
+```cpp
+using namespace pluss::table;
+
+auto numbers = Slate(pluss::make_series({1.0, 2.0, 3.0}),
+    pluss::make_series(std::vector<bool>{true, false, true}));
+std::cout << numbers.notnull() << "\n";
+std::cout << numbers.isnull();
+```
+
+### Output
+
+```text
+0  true
+1  false
+2  true
+
+ptype: Series
+0  false
+1  true
+2  false
+
+ptype: Series
+```
+
+## Notes
+
+- The exact logical inverse of [`isnull()`](isnull.md); see that page for the
+  validity-mask-only semantics and the `Timeline`/`TimeIndex` nuance.
+- A slate with no validity mask at all reports `true` at every position.
+
+## See Also
+
+- [`Slate::isnull`](isnull.md): the logical inverse.
+- [`Slate::dropnull`](dropnull.md): remove `NULL` rows using the same underlying
+  check.
+
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="normalize.html">
+    <span class="label">Previous</span>
+    <span class="title">normalize</span>
+  </a>
+  <a class="next-link" href="nt.html">
+    <span class="label">Next</span>
+    <span class="title">nt</span>
+  </a>
+</div>

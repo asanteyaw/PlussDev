@@ -1,13 +1,13 @@
 <!-- pluss-hand-authored -->
 
-# TimelineIndexAccessor::rolling_min
+# Timeline::TimelineIndexAccessor::rolling_min
 
 [Back to Timeline Index Accessor API Reference](../../timeline_index_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-pluss::Series TimelineIndexAccessor::rolling_min(
+pluss::Series Timeline::TimelineIndexAccessor::rolling_min(
     const pluss::Series& values,
     const pluss::Duration& window) const
 ```
@@ -39,11 +39,11 @@ change the number of lanes.
 ## Examples
 
 ```cpp
-auto index = pluss::timeindex::make({
+auto index = pluss::timeline::make({
     "2024-11-01T00:00:00Z", "2024-11-01T00:20:00Z",
     "2024-11-01T00:40:00Z", "2024-11-01T01:00:00Z",
     "2024-11-01T01:20:00Z",
-});
+}).index();
 auto window = pluss::duration::minutes(45);
 ```
 
@@ -121,9 +121,9 @@ storage; both inputs remain unchanged.
 
 ## See Also
 
-- [`TimelineIndexAccessor::rolling_max`](rolling_max.md)
-- [`TimelineIndexAccessor::rolling_first`](rolling_first.md)
-- [`TimelineIndexAccessor::resample_min`](resample_min.md)
+- [`Timeline::TimelineIndexAccessor::rolling_max`](rolling_max.md)
+- [`Timeline::TimelineIndexAccessor::rolling_first`](rolling_first.md)
+- [`Timeline::TimelineIndexAccessor::resample_min`](resample_min.md)
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rolling_mean.html">

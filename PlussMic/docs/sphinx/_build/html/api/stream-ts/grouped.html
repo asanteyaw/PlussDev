@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamTimeSeriesAccessor::lag" href="lag.html" />
@@ -128,7 +128,7 @@ rolling mean(2) is <code class="docutils literal notranslate"><span class="pre">
 <li><p>Every position with a missing <code class="docutils literal notranslate"><span class="pre">groups</span></code> entry shares one common bucket,
 windowed together in original relative order.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">groups</span></code> must be the same length as the bound stream, or it throws
-<code class="docutils literal notranslate"><span class="pre">&quot;Thread::grouped:</span> <span class="pre">group</span> <span class="pre">length</span> <span class="pre">mismatch&quot;</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::grouped:</span> <span class="pre">group</span> <span class="pre">length</span> <span class="pre">mismatch&quot;</span></code>.</p></li>
 <li><p>A pre-existing missing entry in the values stream (as opposed to <code class="docutils literal notranslate"><span class="pre">groups</span></code>)
 is skipped within any window that contains it, the same as
 <a class="reference internal" href="rolling.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rolling()</span></code></span></a>.</p></li>
@@ -143,7 +143,7 @@ engine, applied to the whole stream instead of independently per group.</p></li>
 <li><p><a class="reference internal" href="expanding.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamTimeSeriesAccessor::expanding</span></code></span></a>: a growing (not
 fixed-width) window, applied to the whole stream.</p></li>
 <li><p><a class="reference internal" href="../stream/ts.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">Stream::ts</span></code></span></a>: the entry point this accessor is reached from.</p></li>
-<li><p><a class="reference internal" href="../thread-ts/grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::grouped</span></code></span></a>: the underlying
+<li><p><a class="reference internal" href="../slate-ts/grouped.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TimeSeriesAccessor::grouped</span></code></span></a>: the underlying
 single-thread engine, with additional edge-case examples.</p></li>
 </ul>
 <div class="pluss-inline-prev-next">

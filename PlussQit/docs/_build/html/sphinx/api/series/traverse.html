@@ -13,8 +13,8 @@
     <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../../_static/api_nav.js?v=d45ea178"></script>
-    <script src="../../../_static/layout.js?v=e199898b"></script>
+    <script src="../../../_static/api_nav.js?v=47991f43"></script>
+    <script src="../../../_static/layout.js?v=367fc054"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <link rel="next" title="Series::traverse_put" href="traverse_put.html" />
@@ -42,7 +42,7 @@
 <p><a class="reference internal" href="../../series_api_reference.html"><span class="doc std std-doc">Back to Series API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SeriesTraverseAccessor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">traverse</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">Series</span><span class="o">::</span><span class="n">TraverseAccessor</span><span class="w"> </span><span class="n">Series</span><span class="o">::</span><span class="n">traverse</span><span class="p">;</span>
 
 <span class="n">SeriesTraverseProxy</span><span class="w"> </span><span class="nf">Series::traverse</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
 <span class="n">SeriesTraverseProxy</span><span class="w"> </span><span class="nf">Series::traverse</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">initializer_list</span><span class="o">&lt;</span><span class="n">ExtractSpec</span><span class="o">&gt;</span><span class="w"> </span><span class="n">on_specs</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
@@ -140,12 +140,12 @@ coordinates index the three columns of row <code class="docutils literal notrans
 </table>
 <p>Every one produces a <a class="reference internal" href="../series-traverse/match.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TraverseMatch</span></code></span></a>; that page
 documents the result object.</p>
-<p>Open the <a class="reference internal" href="../../series_traverse_accessor_api_reference.html"><span class="std std-doc">SeriesTraverseAccessor API Reference</span></a>
+<p>Open the <a class="reference internal" href="../../series_traverse_accessor_api_reference.html"><span class="std std-doc">Series::TraverseAccessor API Reference</span></a>
 for the full method index.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">SeriesTraverseAccessor</span></code> (the member) / <code class="docutils literal notranslate"><span class="pre">SeriesTraverseProxy</span></code> (from calling it)
+<p><code class="docutils literal notranslate"><span class="pre">Series::TraverseAccessor</span></code> (the member) / <code class="docutils literal notranslate"><span class="pre">SeriesTraverseProxy</span></code> (from calling it)
 A lightweight search entrypoint bound to the owning <code class="docutils literal notranslate"><span class="pre">Series</span></code>. Reading
 <code class="docutils literal notranslate"><span class="pre">traverse</span></code> copies no data and computes nothing until a finder runs.</p>
 </section>
@@ -225,7 +225,7 @@ bare mask</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../../series_traverse_accessor_api_reference.html"><span class="std std-doc">SeriesTraverseAccessor API Reference</span></a>:
+<li><p><a class="reference internal" href="../../series_traverse_accessor_api_reference.html"><span class="std std-doc">Series::TraverseAccessor API Reference</span></a>:
 the full finder index.</p></li>
 <li><p><a class="reference internal" href="../series-traverse/match.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">TraverseMatch</span></code></span></a>: the result object every finder
 returns.</p></li>
@@ -243,7 +243,7 @@ the indices.</p></li>
   </a>
   <a class="next-link" href="../../series_traverse_accessor_api_reference.html">
     <span class="label">Next</span>
-    <span class="title">SeriesTraverseAccessor</span>
+    <span class="title">Series::TraverseAccessor</span>
   </a>
 </div>
 </section>
@@ -282,7 +282,6 @@ the indices.</p></li>
 </li>
 </ul>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../TEMPORAL_CORE_MIGRATION.html">Temporal Core Migration</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../api_reference.html">PlussQit API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../../../api_reference.html#method-surface">Method surface</a></li>
 </ul>
@@ -290,8 +289,8 @@ the indices.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html">CodeN text API method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#chord-method-index">Chord method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-method-index">Note method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#notenlpaccessor-method-index">NoteNlpAccessor method index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#noteregexaccessor-method-index">NoteRegexAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-nlpaccessor-method-index">Note::NlpAccessor method index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../coden_method_index.html#note-regexaccessor-method-index">Note::RegexAccessor method index</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../derivative_coverage.html">Series derivative coverage</a></li>
 </ul>
 

@@ -8,7 +8,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -16,7 +16,7 @@ int main() {
   // Standalone with n_components = 4. Each row lands in exactly one bucket;
   // two distinct categories can collide into the same bucket by design.
   const pluss::Series c = pluss::make_series({0,1,2,3,4,0,1,2}, {8}, f64);
-  const DataFrame frame({{"c", Thread(c)}});
+  const DataFrame frame({{"c", Slate(c)}});
 
   lymph::options::HashingEncoder o{};
   o.n_components = 4;

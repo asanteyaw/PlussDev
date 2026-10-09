@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteNlpAccessor::remove_brackets
+# Note::NlpAccessor::remove_brackets
 
 [Back to Note NLP Accessor API Reference](../../note_nlp_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteNlpAccessor::remove_brackets() const
+Note Note::NlpAccessor::remove_brackets() const
 ```
 
 ## Remove Balanced Bracketed Asides With Their Contents
@@ -120,7 +120,7 @@ method does not decode arbitrary bytes or format typed values as text first.
 
 ## See Also
 
-- `NoteNlpAccessor::remove_parentheticals`: restrict removal to balanced parentheses.
+- `Note::NlpAccessor::remove_parentheticals`: restrict removal to balanced parentheses.
 - `Note::remove_punctuation`: retain bracket contents while deleting ASCII punctuation marks.
 - [`remove_code`](remove_code.md): delete code delimiters together with code content.
 

@@ -1,6 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: e3b0c44298fc -->
-
+<!-- pluss-signature-hash: c8d74d0f5e0e -->
 # `pluss::ai::ice::Model::to`
 
 [Back to `pluss::ai::ice::Model`](../Model.md)
@@ -8,54 +7,70 @@
 ## Signature
 
 ```cpp
-// public callable declarations only -- all overloads, incl. the `_` in-place
-// form when this method has one; full parameter types and defaults.
+pluss::ai::ice::Model& pluss::ai::ice::Model::to(pluss::Platform platform);
+pluss::ai::ice::Model& pluss::ai::ice::Model::to(pluss::ScalarType dtype);
+pluss::ai::ice::Model& pluss::ai::ice::Model::to(pluss::Platform platform, pluss::ScalarType dtype);
 ```
 
 ## What It Does
 
-<!-- prose: what the call actually does, its effect or the value it produces,
-     how it fits into the surrounding API -- everything a reader needs before
-     the parameter-level detail makes sense. Not a parameter-by-parameter
-     breakdown; that belongs in ## Parameters below. -->
+Moves every registered parameter and module onto `platform`/`dtype` in
+place. [`learn`](learn.md) calls this for you (see
+[`ExecutionPolicy::platform`](../../options/ExecutionPolicy.md),
+resolved via [`resolve_platform`](../../platform/resolve_platform.md));
+exposed publicly as an escape hatch for callers who want to place a
+model before/without going through `learn` -- for example, to warm it up
+on a GPU ahead of a [`save`](save.md)/[`load`](load.md) round trip.
+Returns `*this`, for chaining.
 
 ## Parameters
 
-<!-- deflist: for each parameter, what it controls, its default, and the
-     behaviour or interpretation consequence of changing it. -->
-`<Type name>`
-: <!-- TODO -->
+`Platform platform`
+: The target platform.
+
+`ScalarType dtype`
+: The target dtype.
 
 ## Returns
 
-<!-- what the value form returns; add a `Mutates:` line for the `_` form -->
+`Model&` -- a reference to `*this`.
 
 ## Errors
 
-- <!-- preconditions and failure modes, or delete -->
+Throws if the target platform/dtype combination isn't supported by this
+model's parameters (for example, a platform with no accelerator
+present).
 
 ## Practical Examples
 
-<!-- one short paragraph: what these examples establish and demonstrate -->
+Three examples, one per overload.
 
 ### Example 1
 
-<!-- one paragraph: why this example exists (baseline usage) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 200;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+  model.learn(x, y, options);
+
+  model.to(pluss::pCPU);
+  const pluss::Series one_row = pluss::make_series({1.0f, 2.0f}, {1, 2});
+  std::cout << "predictions:\n" << model.infer(one_row) << "\n";
 
   return 0;
 }
@@ -64,27 +79,37 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+predictions:
+pluss::Series(shape=[1,1], strides=[1,1], dtype=float32, platform=cpu, numel=1, contiguous=true)
+data=[[3.0000358]]
 ```
 
 ### Example 2
 
-<!-- one paragraph: why this example exists (an important option or variation) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 200;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+  model.learn(x, y, options);
+
+  model.to(pluss::ScalarType::Float64);
+  const pluss::Series one_row = pluss::make_series({1.0f, 2.0f}, {1, 2});
+  std::cout << "predictions:\n" << model.infer(one_row) << "\n";
 
   return 0;
 }
@@ -93,27 +118,37 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+predictions:
+pluss::Series(shape=[1,1], strides=[1,1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[[3.0000359]]
 ```
 
 ### Example 3
 
-<!-- one paragraph: why this example exists (an end-to-end / workflow-level run) -->
-
 ```cpp
 #include <pluss/pluss.h>
-#include <pluss/ai/lymph.h>
+#include <pluss/ai/ice.h>
+#include <pluss/nn.h>
 
 #include <iostream>
 
 int main() {
-  namespace lymph = pluss::ai::lymph;
-  using pluss::ScalarType;
-  using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  namespace ice = pluss::ai::ice;
+  namespace nn = pluss::nn;
 
-  // TODO: construct realistic inputs, configure the object, run the call,
-  //       then print the result with std::cout.
+  ice::Outline model(nn::Fusion(2, 1));
+  const pluss::Series x = pluss::make_series({0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f}, {4, 2});
+  const pluss::Series y = pluss::make_series({0.0f, 1.0f, 1.0f, 2.0f}, {4, 1});
+
+  ice::TrainOptions options{};
+  options.execution.max_epochs = 200;
+  options.learning_rate = 0.1;
+  options.validation.split_ratio = 0.0;
+  model.learn(x, y, options);
+
+  model.to(pluss::pCPU, pluss::ScalarType::Float64);
+  const pluss::Series one_row = pluss::make_series({1.0f, 2.0f}, {1, 2});
+  std::cout << "predictions:\n" << model.infer(one_row) << "\n";
 
   return 0;
 }
@@ -122,12 +157,22 @@ int main() {
 Output
 
 ```text
-TODO: paste the verified stdout of the exact program above
+predictions:
+pluss::Series(shape=[1,1], strides=[1,1], dtype=float64, platform=cpu, numel=1, contiguous=true)
+data=[[3.0000034]]
 ```
 
 ## See Also
 
-<!-- sibling method pages on this type, one line each -->
+- [`resolve_platform`](../../platform/resolve_platform.md) -- what
+  `learn` resolves `ExecutionPolicy::platform` through before calling
+  this.
+- [`ExecutionPolicy::platform`](../../options/ExecutionPolicy.md) -- the
+  `TrainPlatform` request `learn` resolves.
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->
 
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">

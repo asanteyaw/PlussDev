@@ -15,7 +15,7 @@ Stream::var(bool unbiased = true) const -> Stream
 
 Returns the variance of a `Series`-kind stream's non-`NULL` values, as a one-element
 `Stream`. `unbiased` (default `true`) selects Bessel's correction — dividing the sum of
-squared deviations by `n - 1` instead of `n`. Delegates to `Thread::var()`, so it's
+squared deviations by `n - 1` instead of `n`. Delegates to `Slate::var()`, so it's
 `Series`-only, same as [`sum()`](sum.md)/[`mean()`](mean.md)/[`min()`](min.md)/
 [`max()`](max.md)/[`std()`](std.md).
 
@@ -78,7 +78,7 @@ label        | value
 
 ## Notes
 
-- `Series`-only; throws `"Thread::var is only valid for Series payload"` on
+- `Series`-only; throws `"Slate::var is only valid for Series payload"` on
   `Note`/`Timeline`/`TimeIndex` streams.
 - `NULL` rows are excluded from both the mean and the divisor `n`, same as
   [`mean()`](mean.md).

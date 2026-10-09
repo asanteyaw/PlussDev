@@ -28,6 +28,8 @@ struct TokenClassifierState {
   std::int64_t num_heads = 0;
   std::int64_t feedforward_width = 0;
   bool ready = false;
+  // Loss after each training step of the last train_token_classifier call.
+  std::vector<double> loss_history{};
 };
 
 struct TokenClassifierOptions {

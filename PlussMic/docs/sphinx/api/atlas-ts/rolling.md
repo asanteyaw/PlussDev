@@ -69,8 +69,8 @@ Example 1. A fixed-size trailing rolling mean, stacked across two frames.
 ```cpp
 using namespace pluss::table;
 
-auto q1 = DataFrame({{"load", Thread(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
-auto q2 = DataFrame({{"load", Thread(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
+auto q1 = DataFrame({{"load", Slate(pluss::make_series({10.0, 20.0, 15.0, 30.0}))}});
+auto q2 = DataFrame({{"load", Slate(pluss::make_series({12.0, 18.0, 14.0, 28.0}))}});
 auto atlas = Atlas({q1, q2});
 
 auto out = atlas.ts().rolling(2);
@@ -108,13 +108,13 @@ case labels.
 
 ```cpp
 auto d1 = DataFrame(
-    {{"value", Thread(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({10.0, 20.0, 30.0, 5.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z",
         "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z"})));
 auto d2 = DataFrame(
-    {{"value", Thread(pluss::make_series({1.0, 2.0, 3.0, 4.0}))}},
-    Thread(pluss::make_timeline({
+    {{"value", Slate(pluss::make_series({1.0, 2.0, 3.0, 4.0}))}},
+    Slate(pluss::make_timeline({
         "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z",
         "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z"})));
 auto dur_atlas = Atlas({d1, d2});

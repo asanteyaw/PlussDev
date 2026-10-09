@@ -11,7 +11,7 @@ enum class CameraPreset3D : std::uint8_t {
 enum class ThemePreset3D : std::uint8_t {
   Paper,
   Ocean,
-  Slate,
+  Graphite,
   Mist,
 };
 
@@ -131,10 +131,10 @@ inline Pane& theme_preset3d(Pane& pane, ThemePreset3D preset) {
     case ThemePreset3D::Ocean:
       pane.theme_tokens() = Theme::ocean();
       break;
-    case ThemePreset3D::Slate: {
+    case ThemePreset3D::Graphite: {
       const Theme base = pane.theme_tokens();
       pane.theme_tokens() = Theme{
-          "flash3d_slate",
+          "flash3d_graphite",
           base.accents(),
           Rgba::from_u8(30, 36, 46),
           Rgba::from_u8(232, 237, 243),
@@ -195,7 +195,7 @@ inline Pane& scene_preset3d(Pane& pane, ScenePreset3D preset) {
           });
       break;
     case ScenePreset3D::Studio:
-      theme_preset3d(pane, ThemePreset3D::Slate);
+      theme_preset3d(pane, ThemePreset3D::Graphite);
       pane.grid(GridStyle::Major);
       camera_preset3d(pane, CameraPreset3D::Spatial);
       lighting3d(

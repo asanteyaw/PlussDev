@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Stream::sum" href="sum.html" />
@@ -51,7 +51,7 @@
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Returns the standard deviation of a <code class="docutils literal notranslate"><span class="pre">Series</span></code>-kind stream’s non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> values, as a
 one-element <code class="docutils literal notranslate"><span class="pre">Stream</span></code> — the square root of <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>, with the identical
-<code class="docutils literal notranslate"><span class="pre">unbiased</span></code> flag. Delegates to <code class="docutils literal notranslate"><span class="pre">Thread::std()</span></code>, so it’s <code class="docutils literal notranslate"><span class="pre">Series</span></code>-only, same as
+<code class="docutils literal notranslate"><span class="pre">unbiased</span></code> flag. Delegates to <code class="docutils literal notranslate"><span class="pre">Slate::std()</span></code>, so it’s <code class="docutils literal notranslate"><span class="pre">Series</span></code>-only, same as
 <a class="reference internal" href="sum.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sum()</span></code></span></a>/<a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>/<a class="reference internal" href="min.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">min()</span></code></span></a>/<a class="reference internal" href="max.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">max()</span></code></span></a>/<a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>.</p>
 </section>
 <section id="parameters">
@@ -113,7 +113,7 @@ label        | value
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code>-only; throws <code class="docutils literal notranslate"><span class="pre">&quot;Thread::std</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code> on
+<li><p><code class="docutils literal notranslate"><span class="pre">Series</span></code>-only; throws <code class="docutils literal notranslate"><span class="pre">&quot;Slate::std</span> <span class="pre">is</span> <span class="pre">only</span> <span class="pre">valid</span> <span class="pre">for</span> <span class="pre">Series</span> <span class="pre">payload&quot;</span></code> on
 <code class="docutils literal notranslate"><span class="pre">Note</span></code>/<code class="docutils literal notranslate"><span class="pre">Timeline</span></code>/<code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> streams.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NULL</span></code> rows are excluded, same as <a class="reference internal" href="var.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var()</span></code></span></a>/<a class="reference internal" href="mean.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mean()</span></code></span></a>.</p></li>
 <li><p>Always equals <code class="docutils literal notranslate"><span class="pre">sqrt(var(unbiased))</span></code> for the same <code class="docutils literal notranslate"><span class="pre">unbiased</span></code> argument.</p></li>

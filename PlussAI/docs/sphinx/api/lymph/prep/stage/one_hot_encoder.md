@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::one_hot_encoder`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `one_hot_encoder` builds an attachable [`prep::Stage`](Stage.md) that expands a
 routed categorical column into one indicator column per category. It is the
@@ -96,7 +96,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -105,7 +105,7 @@ int main() {
   const pluss::Series spend = pluss::make_series({120.0, 200.0, 90.0, 260.0, 140.0, 300.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 1, 0, 1, 0, 1}, {6}, f64);
-  const DataFrame x({{"spend", Thread(spend)}, {"region", Thread(region)}});
+  const DataFrame x({{"spend", Slate(spend)}, {"region", Slate(region)}});
 
   lymph::models::Model model = lymph::models::logistic_regression();
 
@@ -120,10 +120,10 @@ int main() {
   std::cout << "trained     = " << std::boolalpha << model.trained() << "\n\n";
 
   const DataFrame review({
-      {"spend", Thread(spend)},
-      {"region", Thread(region)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"spend", Slate(spend)},
+      {"region", Slate(region)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 
@@ -168,14 +168,14 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
 
   // Three distinct categories over six rows.
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
-  const DataFrame frame({{"region", Thread(region)}});
+  const DataFrame frame({{"region", Slate(region)}});
 
   // The stage factory and the standalone prep::OneHotEncoder take the same
   // option struct. The standalone object shows the expansion directly.
@@ -225,7 +225,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -233,7 +233,7 @@ int main() {
   // Four categories with clearly different frequencies: 0 appears 4x, 1 3x,
   // 2 2x, 3 once.
   const pluss::Series tier = pluss::make_series({0, 0, 0, 0, 1, 1, 1, 2, 2, 3}, {10}, f64);
-  const DataFrame frame({{"tier", Thread(tier)}});
+  const DataFrame frame({{"tier", Slate(tier)}});
 
   // max_categories caps how many real category columns are produced; overflow
   // says what happens to the rest. KeepMostFrequent keeps the top-N by count
@@ -300,7 +300,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -308,7 +308,7 @@ int main() {
   const pluss::Series amount = pluss::make_series({1200.0, 1800.0, 3400.0, 4100.0, 5200.0, 6000.0}, {6}, f64);
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
-  const DataFrame x({{"amount", Thread(amount)}, {"region", Thread(region)}});
+  const DataFrame x({{"amount", Slate(amount)}, {"region", Slate(region)}});
 
   // A one-hot stage paired with its route, alongside a scaler stage, via the
   // fully qualified factory spelling.
@@ -321,10 +321,10 @@ int main() {
 
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
   const DataFrame review({
-      {"amount", Thread(amount)},
-      {"region", Thread(region)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"amount", Slate(amount)},
+      {"region", Slate(region)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review;
 

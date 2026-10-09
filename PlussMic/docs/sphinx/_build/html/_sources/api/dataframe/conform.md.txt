@@ -51,10 +51,10 @@ column order and a different (reordered) subset of case labels.
 using namespace pluss::table;
 
 auto raw = DataFrame({
-    {"b", Thread(pluss::make_series({1, 2, 3}))},
-    {"a", Thread(pluss::make_series({10, 20, 30}))},
-    {"c", Thread(pluss::make_note({"p", "q", "r"}))},
-}, Thread(pluss::make_note({"x", "y", "z"})));
+    {"b", Slate(pluss::make_series({1, 2, 3}))},
+    {"a", Slate(pluss::make_series({10, 20, 30}))},
+    {"c", Slate(pluss::make_note({"p", "q", "r"}))},
+}, Slate(pluss::make_note({"x", "y", "z"})));
 std::cout << raw;
 ```
 
@@ -73,10 +73,10 @@ z    | 3     30    r
 
 ```cpp
 auto reference = DataFrame({
-    {"a", Thread(pluss::make_series({0, 0, 0}))},
-    {"b", Thread(pluss::make_series({0, 0, 0}))},
-    {"c", Thread(pluss::make_note({"", "", ""}))},
-}, Thread(pluss::make_note({"z", "x", "y"})));
+    {"a", Slate(pluss::make_series({0, 0, 0}))},
+    {"b", Slate(pluss::make_series({0, 0, 0}))},
+    {"c", Slate(pluss::make_note({"", "", ""}))},
+}, Slate(pluss::make_note({"z", "x", "y"})));
 
 auto conformed = raw.conform(reference);
 std::cout << conformed;
@@ -105,14 +105,14 @@ Example 2. A case label present in `other` but absent from this frame becomes a
 
 ```cpp
 auto raw2 = DataFrame({
-    {"a", Thread(pluss::make_series({1, 2}))},
-    {"b", Thread(pluss::make_series({10, 20}))},
-}, Thread(pluss::make_note({"x", "y"})));
+    {"a", Slate(pluss::make_series({1, 2}))},
+    {"b", Slate(pluss::make_series({10, 20}))},
+}, Slate(pluss::make_note({"x", "y"})));
 
 auto reference2 = DataFrame({
-    {"a", Thread(pluss::make_series({0, 0, 0}))},
-    {"b", Thread(pluss::make_series({0, 0, 0}))},
-}, Thread(pluss::make_note({"x", "z", "y"})));
+    {"a", Slate(pluss::make_series({0, 0, 0}))},
+    {"b", Slate(pluss::make_series({0, 0, 0}))},
+}, Slate(pluss::make_note({"x", "z", "y"})));
 
 auto conformed2 = raw2.conform(reference2);
 std::cout << conformed2;
@@ -143,9 +143,9 @@ call throw.
 ```cpp
 try {
   auto bad_reference = DataFrame({
-      {"a", Thread(pluss::make_series({0, 0}))},
-      {"c", Thread(pluss::make_series({0, 0}))},
-  }, Thread(pluss::make_note({"x", "y"})));
+      {"a", Slate(pluss::make_series({0, 0}))},
+      {"c", Slate(pluss::make_series({0, 0}))},
+  }, Slate(pluss::make_note({"x", "y"})));
   auto out = raw2.conform(bad_reference);
 } catch (const std::exception& e) {
   std::string msg(e.what());

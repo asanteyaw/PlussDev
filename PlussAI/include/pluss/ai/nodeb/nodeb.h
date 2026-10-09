@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/ai/nodeb/status.h"
 #include "pluss/ai/nodeb/options.h"
 #include "pluss/ai/nodeb/workflow.h"
 #include "pluss/ai/nodeb/tokenize.h"

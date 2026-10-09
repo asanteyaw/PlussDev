@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 4836af55a56d -->
+<!-- pluss-signature-hash: 11250034a70b -->
 
 # DataFrameLabelAccessor::has
 
@@ -9,10 +9,10 @@
 
 ```cpp
 DataFrameLabelAccessor::has() const -> bool
-DataFrameLabelAccessor::has(double value) const -> Thread
-DataFrameLabelAccessor::has(std::string_view value) const -> Thread
-DataFrameLabelAccessor::has(const char* value) const -> Thread
-DataFrameLabelAccessor::has(const Thread& values) const -> Thread
+DataFrameLabelAccessor::has(double value) const -> Slate
+DataFrameLabelAccessor::has(std::string_view value) const -> Slate
+DataFrameLabelAccessor::has(const char* value) const -> Slate
+DataFrameLabelAccessor::has(const Slate& values) const -> Slate
 ```
 
 ## What It Does
@@ -23,10 +23,10 @@ Two unrelated questions share this name:
   have **structured** (named, multi-level-capable) case labels at all — i.e.,
   were they built via a route like [`set(feature_name)`](set.md) rather than
   left as the default integer index or a raw axis from
-  [`set(const Thread&)`](set.md)?
+  [`set(const Slate&)`](set.md)?
 - **`has(value)`** / **`has(values)`** answer an elementwise membership
   question: for each row, does its case label equal `value` (single-value
-  overloads), or match *any* of `values` (the `Thread` overload, an "is one
+  overloads), or match *any* of `values` (the `Slate` overload, an "is one
   of" test)?
 
 ## Parameters
@@ -35,7 +35,7 @@ Two unrelated questions share this name:
 
 A single value to test each case label against, elementwise.
 
-**values** (`const Thread&`)
+**values** (`const Slate&`)
 
 A collection of values; each row is `true` if its case label matches *any* of
 them.
@@ -45,7 +45,7 @@ them.
 `bool`
     (No-argument overload) Whether the frame's case labels are structured.
 
-`Thread`
+`Slate`
     (Value-taking overloads) A boolean thread, one entry per row, displayed
     against the case labels, `display_name` `"has"`.
 
@@ -58,8 +58,8 @@ labels.
 using namespace pluss::table;
 
 auto orders = DataFrame(
-    {{"region", Thread(pluss::make_note({"east", "west", "east", "north"}))},
-     {"sales",  Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
+    {{"region", Slate(pluss::make_note({"east", "west", "east", "north"}))},
+     {"sales",  Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}});
 
 std::cout << orders.label().has();
 
@@ -84,7 +84,7 @@ Example 2. Elementwise membership against a single value, and against several.
 auto eq_east = labeled.label().has("east");
 std::cout << eq_east;
 
-auto in_set = labeled.label().has(Thread(pluss::make_note({"west", "north"})));
+auto in_set = labeled.label().has(Slate(pluss::make_note({"west", "north"})));
 std::cout << in_set;
 ```
 
@@ -115,8 +115,8 @@ using the `double` overload.
 using namespace pluss::table;
 
 auto readings = DataFrame(
-    {{"sales", Thread(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}},
-    Thread(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
+    {{"sales", Slate(pluss::make_series({100.0, 200.0, 150.0, 90.0}))}},
+    Slate(pluss::make_series({10.0, 20.0, 10.0, 30.0})));
 std::cout << readings;
 
 auto eq_ten = readings.label().has(10.0);

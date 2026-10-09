@@ -1,6 +1,6 @@
 # Time-Series Accessor Guide
 
-This guide documents the general time-series surface built on top of `Series`, `Thread`, and `DataFrame`.
+This guide documents the general time-series surface built on top of `Series`, `Slate`, and `DataFrame`.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ df.set("Log Returns") = df.features({"Adj Close"}).ts().log_returns();
 
 ## Surfaces
 
-## `Thread` surface
+## `Slate` surface
 
 `df.features("Adj Close").ts()` returns a `TimeSeriesAccessor` with:
 

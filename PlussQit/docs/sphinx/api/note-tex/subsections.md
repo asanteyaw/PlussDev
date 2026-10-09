@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::subsections
+# Note::TexAccessor::subsections
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-TokenBatch NoteTexAccessor::subsections() const
+TokenBatch Note::TexAccessor::subsections() const
 ```
 
 ## Extract Subsection Titles Per Source Cell

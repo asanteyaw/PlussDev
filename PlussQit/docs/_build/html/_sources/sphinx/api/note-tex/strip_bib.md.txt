@@ -1,12 +1,12 @@
 <!-- pluss-hand-authored -->
-# NoteTexAccessor::strip_bib
+# Note::TexAccessor::strip_bib
 
 [Back to Note TeX Accessor API Reference](../../note_tex_accessor_api_reference)
 
 ## Signature
 
 ```cpp
-Note NoteTexAccessor::strip_bib() const
+Note Note::TexAccessor::strip_bib() const
 ```
 
 ## Remove Bibliography Machinery As Complete Units

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="DataFrame::clip" href="clip.html" />
@@ -37,21 +37,21 @@
           <div class="body" role="main">
             
   <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: 09fa421b17dd -->
+<!-- pluss-signature-hash: 935848b4c957 -->
 <section id="dataframe-cast">
 <h1>DataFrame::cast<a class="headerlink" href="#dataframe-cast" title="Link to this heading">¶</a></h1>
 <p><a class="reference internal" href="../../dataframe_api_reference.html"><span class="doc std std-doc">Back to DataFrame API Reference</span></a></p>
 <section id="signatures">
 <h2>Signatures<a class="headerlink" href="#signatures" title="Link to this heading">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameCastAccessor</span>
-<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ThreadCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameCastAccessor</span>
+<span class="n">DataFrame</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">SlateCastOptions</span><span class="o">&amp;</span><span class="w"> </span><span class="n">options</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DataFrameCastAccessor</span>
 </pre></div>
 </div>
 </section>
 <section id="what-it-does">
 <h2>What It Does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
 <p>Enters a dedicated casting accessor bound to the current frame or subframe. <code class="docutils literal notranslate"><span class="pre">cast()</span></code>
-itself does not convert anything yet; it stores shared <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code>, and the
+itself does not convert anything yet; it stores shared <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code>, and the
 actual conversion happens when you finish the chain with one of the accessor methods:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">series()</span></code>: cast every bound feature to <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
@@ -74,14 +74,14 @@ and use its left sidebar to jump straight to <code class="docutils literal notra
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
-<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">ThreadCastOptions&amp;</span></code>, overload)</p>
+<p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">SlateCastOptions&amp;</span></code>, overload)</p>
 <p>Shared cast controls for every feature currently bound on the frame:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">series_dtype</span></code>: target numeric <code class="docutils literal notranslate"><span class="pre">ScalarType</span></code> when the target is <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">format</span></code>: date/time parse pattern for <code class="docutils literal notranslate"><span class="pre">Timeline</span></code> or <code class="docutils literal notranslate"><span class="pre">TimeIndex</span></code> targets</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">invalid</span></code>: <code class="docutils literal notranslate"><span class="pre">ParseInvalid::Raise</span></code> or <code class="docutils literal notranslate"><span class="pre">ParseInvalid::Null</span></code> for unparseable date text</p></li>
 </ul>
-<p>The zero-argument overload is shorthand for default <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions{}</span></code>.</p>
+<p>The zero-argument overload is shorthand for default <code class="docutils literal notranslate"><span class="pre">SlateCastOptions{}</span></code>.</p>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
@@ -96,12 +96,12 @@ inside <code class="docutils literal notranslate"><span class="pre">CastSpec</sp
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">table</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;opened_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-01 08:00:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bad-date&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;closed_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-02 09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03 10:45:00&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;opened_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-01 08:00:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;bad-date&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;closed_at&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;2024-01-02 09:30:00&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2024-01-03 10:45:00&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">      </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
-<span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="n">SlateCastOptions</span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;%Y-%m-%d %H:%M:%S&quot;</span><span class="p">;</span>
 <span class="n">options</span><span class="p">.</span><span class="n">invalid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ParseInvalid</span><span class="o">::</span><span class="n">Null</span><span class="p">;</span>
 
@@ -124,12 +124,12 @@ inside <code class="docutils literal notranslate"><span class="pre">CastSpec</sp
 <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">=</span> <span class="pre">Null</span></code> policy. <code class="docutils literal notranslate"><span class="pre">city</span></code> is untouched because it was never part of the
 selected subframe.</p>
 <p>Example 2. Parse one selected text column into numeric <code class="docutils literal notranslate"><span class="pre">Series</span></code>.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">ThreadCastOptions</span><span class="w"> </span><span class="n">numeric</span><span class="p">;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">SlateCastOptions</span><span class="w"> </span><span class="n">numeric</span><span class="p">;</span>
 <span class="n">numeric</span><span class="p">.</span><span class="n">series_dtype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pluss</span><span class="o">::</span><span class="n">codem</span><span class="o">::</span><span class="n">ScalarType</span><span class="o">::</span><span class="n">Float64</span><span class="p">;</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">amounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;10.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;oops&quot;</span><span class="p">}))},</span>
-<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Thread</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;amount_text&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;10.5&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;oops&quot;</span><span class="p">}))},</span>
+<span class="w">    </span><span class="p">{</span><span class="s">&quot;city&quot;</span><span class="p">,</span><span class="w">        </span><span class="n">Slate</span><span class="p">(</span><span class="n">pluss</span><span class="o">::</span><span class="n">make_note</span><span class="p">({</span><span class="s">&quot;Accra&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Tema&quot;</span><span class="p">}))},</span>
 <span class="p">});</span>
 
 <span class="k">auto</span><span class="w"> </span><span class="n">parsed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amounts</span><span class="p">.</span><span class="n">features</span><span class="p">({</span><span class="s">&quot;amount_text&quot;</span><span class="p">}).</span><span class="n">cast</span><span class="p">(</span><span class="n">numeric</span><span class="p">).</span><span class="n">series</span><span class="p">();</span>
@@ -158,7 +158,7 @@ becomes <code class="docutils literal notranslate"><span class="pre">NULL</span>
 <li><p><code class="docutils literal notranslate"><span class="pre">cast()</span></code> does not select columns. Selection belongs on <a class="reference internal" href="features.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">features(names)</span></code></span></a>.</p></li>
 <li><p>If you need to preserve the full frame while replacing only one or more casted
 columns, compose <code class="docutils literal notranslate"><span class="pre">features(...).cast()</span></code> with <a class="reference internal" href="set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set(...)</span></code></span></a>.</p></li>
-<li><p>The accessor applies one shared <code class="docutils literal notranslate"><span class="pre">ThreadCastOptions</span></code> scribble to every currently bound
+<li><p>The accessor applies one shared <code class="docutils literal notranslate"><span class="pre">SlateCastOptions</span></code> scribble to every currently bound
 feature.</p></li>
 <li><p>Calling <code class="docutils literal notranslate"><span class="pre">cast()</span></code> on a zero-feature frame is valid; the accessor methods simply
 return the same zero-feature frame.</p></li>

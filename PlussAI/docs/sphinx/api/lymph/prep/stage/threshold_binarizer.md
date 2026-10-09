@@ -2,7 +2,7 @@
 
 # `lymph::prep::stage::threshold_binarizer`
 
-[Back to `prep::stage`](../stage_family.md)
+[Back to `prep::stage`](../stage.md)
 
 `threshold_binarizer` builds an attachable [`prep::Stage`](Stage.md) that turns a routed numeric column into a two-valued flag about a cut point. It is stateless — the threshold is a fixed option, nothing is learned.
 
@@ -56,7 +56,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -65,7 +65,7 @@ int main() {
   // point. It is stateless -- the threshold is a fixed option, not learned.
   const pluss::Series balance = pluss::make_series({-50., -5., 0., 10., 40., 120.}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,0,1,1,1}, {6}, f64);
-  const DataFrame x({{"balance", Thread(balance)}});
+  const DataFrame x({{"balance", Slate(balance)}});
 
   lymph::options::ThresholdBinarizer o{};
   o.threshold = 5.0;
@@ -74,8 +74,8 @@ int main() {
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << ", trained = "
             << std::boolalpha << model.trained() << "\n\n";
-  std::cout << DataFrame({{"balance", Thread(balance)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"balance", Slate(balance)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }
@@ -114,7 +114,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -122,7 +122,7 @@ int main() {
   // threshold is the cut; low_value / high_value are what a below / above value
   // becomes. Default is 0 / 1; here a second binarizer emits -1 / +1.
   const pluss::Series v = pluss::make_series({-2., -1., 0., 1., 2., 3.}, {6}, f64);
-  const DataFrame frame({{"v", Thread(v)}});
+  const DataFrame frame({{"v", Slate(v)}});
 
   lymph::options::ThresholdBinarizer zero_one{};                       // threshold 0, 0/1
   lymph::options::ThresholdBinarizer signed_out{};
@@ -180,7 +180,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -188,7 +188,7 @@ int main() {
   const pluss::Series score = pluss::make_series({0.1, 0.3, 0.55, 0.7, 0.9, 0.4}, {6}, f64);
   const pluss::Series region = pluss::make_series({0,1,2,0,1,2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0,0,1,1,1,0}, {6}, f64);
-  const DataFrame x({{"score", Thread(score)}, {"region", Thread(region)}});
+  const DataFrame x({{"score", Slate(score)}, {"region", Slate(region)}});
 
   lymph::options::ThresholdBinarizer o{};
   o.threshold = 0.5;
@@ -197,8 +197,8 @@ int main() {
        .append(lymph::prep::stage::one_hot_encoder(), lymph::prep::route::names({"region"}));
   model.learn_(x, y);
   std::cout << "stage_count = " << model.stage_count() << "\n\n";
-  std::cout << DataFrame({{"score", Thread(score)}, {"actual", Thread(y)},
-                          {"predicted", Thread(model.infer(x))}});
+  std::cout << DataFrame({{"score", Slate(score)}, {"actual", Slate(y)},
+                          {"predicted", Slate(model.infer(x))}});
 
   return 0;
 }

@@ -45,9 +45,49 @@ alone.
 [`Stage`](prep/stage/Stage.md) is a transformation descriptor with its options
 baked in. You pair them and hand the pair to a model:
 
+Attach a standard scaler to two named columns with a route, then train from the dataframe. The model reports zero stages before training and one after, and the program confirms it trained.
+
 ```cpp
-model.append(lymph::prep::stage::standard_scaler(),
-             lymph::prep::route::names({"amount", "ratio"}));
+#include <pluss/pluss.h>
+#include <pluss/ai/lymph.h>
+#include <pluss/mic.h>
+
+#include <iostream>
+#include <vector>
+
+int main() {
+  namespace lymph = pluss::ai::lymph;
+  using pluss::table::DataFrame;
+  using pluss::table::Slate;
+
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64).with_platform(pluss::pCPU);
+  const DataFrame frame({
+      {"amount", Slate(pluss::make_series(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0, 60.0}, {6}, cfg))},
+      {"ratio", Slate(pluss::make_series(std::vector<double>{0.1, 0.4, 0.2, 0.5, 0.3, 0.6}, {6}, cfg))},
+      {"label", Slate(pluss::make_series(std::vector<double>{0, 0, 0, 1, 1, 1}, {6}, cfg))},
+  });
+
+  lymph::models::Model model = lymph::models::logistic_regression();
+  model.append(lymph::prep::stage::standard_scaler(),
+               lymph::prep::route::names({"amount", "ratio"}));
+  std::cout << "stages before learn = " << model.stage_count() << "\n";
+
+  lymph::DataFrameBatchOptions options{};
+  options.feature_names = {"amount", "ratio"};
+  options.label_feature = "label";
+  model.learn_(frame, options);
+  std::cout << "stages after learn = " << model.stage_count() << "\n";
+  std::cout << "trained = " << (model.trained() ? "true" : "false") << "\n";
+  return 0;
+}
+```
+
+Output
+
+```text
+stages before learn = 0
+stages after learn = 1
+trained = true
 ```
 
 Nothing is fitted at that point — the pair is an intention. The model fits it
@@ -78,7 +118,7 @@ and the ownership differ.
 - [`route`](prep/route.md) — declarative feature selection: `prep::route::names`,
   `prep::route::where`, `prep::route::remaining_of`, and the reusable
   `prep::Route` object they produce.
-- [`stage`](prep/stage_family.md) — attachable transformation descriptors:
+- [`stage`](prep/stage.md) — attachable transformation descriptors:
   `prep::Stage`, its `TransformContract`, and the `prep::stage::*` factory set.
 - [`scaling`](prep/scaling.md) — standalone learned numeric transformers such as
   `prep::StandardScaler`.
@@ -103,7 +143,7 @@ int main() {
   namespace lymph = pluss::ai::lymph;
   using pluss::ScalarType;
   using pluss::table::DataFrame;
-  using pluss::table::Thread;
+  using pluss::table::Slate;
 
   const pluss::Config f64 =
       pluss::Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU);
@@ -115,9 +155,9 @@ int main() {
   const pluss::Series region = pluss::make_series({0, 1, 2, 0, 1, 2}, {6}, f64);
   const pluss::Series y = pluss::make_series({0, 0, 0, 1, 1, 1}, {6}, f64);
   const DataFrame x({
-      {"amount", Thread(amount)},
-      {"ratio", Thread(ratio)},
-      {"region", Thread(region)},
+      {"amount", Slate(amount)},
+      {"ratio", Slate(ratio)},
+      {"region", Slate(region)},
   });
 
   lymph::models::Model model = lymph::models::logistic_regression();
@@ -143,11 +183,11 @@ int main() {
   const lymph::MetricReport report = model.assess(x, y, options);
 
   const DataFrame review({
-      {"amount", Thread(amount)},
-      {"ratio", Thread(ratio)},
-      {"region", Thread(region)},
-      {"actual", Thread(y)},
-      {"predicted", Thread(model.infer(x))},
+      {"amount", Slate(amount)},
+      {"ratio", Slate(ratio)},
+      {"region", Slate(region)},
+      {"actual", Slate(y)},
+      {"predicted", Slate(model.infer(x))},
   });
   std::cout << review << "\n";
   std::cout << "accuracy = " << report.accuracy.item<double>() << "\n";
@@ -191,7 +231,7 @@ plan, fitted exactly once.
 :hidden:
 
 prep/route
-prep/stage_family
+prep/stage
 prep/scaling
 prep/encoding
 prep/feature

@@ -13,8 +13,8 @@
     <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/api_nav.js?v=af5a0516"></script>
-    <script src="../../_static/layout.js?v=6be133a8"></script>
+    <script src="../../_static/api_nav.js?v=e742a746"></script>
+    <script src="../../_static/layout.js?v=fb49b4ce"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="StreamPlotAccessor::density" href="density.html" />
@@ -55,13 +55,13 @@
 <p>Draws one bar per row for the bound stream’s values, against an optional companion <code class="docutils literal notranslate"><span class="pre">x</span></code>
 stream — the same shape and naming rules as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>, drawn as bars instead of a
 connected line. Every overload forwards to
-<a class="reference internal" href="../thread-plot/bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::bar</span></code></span></a> after <code class="docutils literal notranslate"><span class="pre">Stream::to_thread()</span></code>.</p>
+<a class="reference internal" href="../slate-plot/bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::bar</span></code></span></a> after <code class="docutils literal notranslate"><span class="pre">Stream::to_slate()</span></code>.</p>
 </section>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <p><strong>x</strong> (<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">Stream&amp;</span></code>, optional)
 Same as <a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line()</span></code></span></a>’s <code class="docutils literal notranslate"><span class="pre">x</span></code> — a mismatched size throws
-<code class="docutils literal notranslate"><span class="pre">&quot;Thread::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&quot;Slate::plot:</span> <span class="pre">thread</span> <span class="pre">size</span> <span class="pre">mismatch&quot;</span></code>.</p>
 <p><strong>options</strong> (<code class="docutils literal notranslate"><span class="pre">BarPlotOptions</span></code>)
 The identical struct documented on
 <a class="reference internal" href="../catalog-plot/bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">CatalogPlotAccessor::bar</span></code></span></a> (<code class="docutils literal notranslate"><span class="pre">ci_enabled</span></code>, <code class="docutils literal notranslate"><span class="pre">ci_level</span></code>,
@@ -85,7 +85,7 @@ A figure with one pane containing a single bar trace of the bound stream’s val
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 1" src="../../_images/bar-12.svg" /></p>
+<p><img alt="Output of Example 1" src="../../_images/bar-13.svg" /></p>
 <p>Example 2. An explicit companion stream as the category axis.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -96,7 +96,7 @@ A figure with one pane containing a single bar trace of the bound stream’s val
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 2" src="../../_images/bar-22.svg" /></p>
+<p><img alt="Output of Example 2" src="../../_images/bar-23.svg" /></p>
 <p>Example 3. An explicit <code class="docutils literal notranslate"><span class="pre">BarPlotOptions</span></code>, drawing horizontal bars, with no companion stream.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -109,7 +109,7 @@ A figure with one pane containing a single bar trace of the bound stream’s val
 <span class="n">chart</span><span class="p">.</span><span class="n">show</span><span class="p">();</span>
 </pre></div>
 </div>
-<p><img alt="Output of Example 3" src="../../_images/bar-32.svg" /></p>
+<p><img alt="Output of Example 3" src="../../_images/bar-33.svg" /></p>
 <p>Example 4. A companion stream together with explicit options.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">pluss</span><span class="o">::</span><span class="nn">kindle</span><span class="p">;</span>
 
@@ -139,7 +139,7 @@ A figure with one pane containing a single bar trace of the bound stream’s val
 </div>
 <section id="output">
 <h3>Output<a class="headerlink" href="#output" title="Link to this heading">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread::plot: thread size mismatch
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Slate::plot: thread size mismatch
 </pre></div>
 </div>
 </section>
@@ -156,7 +156,7 @@ view or save the result.</p></li>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../thread-plot/bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ThreadPlotAccessor::bar</span></code></span></a>: the method this delegates to.</p></li>
+<li><p><a class="reference internal" href="../slate-plot/bar.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">SlatePlotAccessor::bar</span></code></span></a>: the method this delegates to.</p></li>
 <li><p><a class="reference internal" href="line.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::line</span></code></span></a>: the canonical explanation of this accessor’s
 shared naming/row-label mechanics.</p></li>
 <li><p><a class="reference internal" href="hist.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">StreamPlotAccessor::hist</span></code></span></a>: bars over binned value ranges instead of one bar

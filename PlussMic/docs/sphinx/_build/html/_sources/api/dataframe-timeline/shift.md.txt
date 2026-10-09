@@ -47,7 +47,7 @@ Example 1. Shift forward one calendar month, showing day-of-month clamping.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({
+    {{"ts", Slate(pluss::make_timeline({
           "2024-01-31T09:00:00Z",
           "2024-02-29T09:00:00Z",
       }))}});
@@ -93,7 +93,7 @@ the same day-of-month clamp apply at year granularity.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-02-29T09:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-02-29T09:00:00Z"}))}});
 std::cout << events;
 
 auto out = events.tl().shift(1, "years");
@@ -133,7 +133,7 @@ with no clamping — contrast with the calendar-aware `months`/`years` above.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-30T09:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-30T09:00:00Z"}))}});
 std::cout << events;
 
 auto out = events.tl().shift(3, "days");
@@ -172,9 +172,9 @@ Example 4. Shift by `"hours"` in both directions to see `periods` go negative.
 using namespace pluss::table;
 
 auto forward_base = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-01T23:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-01T23:00:00Z"}))}});
 auto backward_base = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-02T01:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-02T01:00:00Z"}))}});
 
 auto forward_out = forward_base.tl().shift(3, "hours");
 std::cout << forward_out;
@@ -217,7 +217,7 @@ boundary in one call.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-02T00:20:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-02T00:20:00Z"}))}});
 std::cout << events;
 
 auto out = events.tl().shift(-90, "minutes");
@@ -257,7 +257,7 @@ Example 6. Pass an unrecognized frequency string to see the call throw.
 using namespace pluss::table;
 
 auto events = DataFrame(
-    {{"ts", Thread(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
+    {{"ts", Slate(pluss::make_timeline({"2024-01-01T00:00:00Z"}))}});
 
 try {
   auto out = events.tl().shift(1, "week");

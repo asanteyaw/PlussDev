@@ -5,6 +5,7 @@ project(PlussMic_kindle NONE)
 
 target_sources(PlussMic PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/Stream.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/Ragged.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Catalog.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/Archive.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/io/CatalogIO.cpp

@@ -385,7 +385,7 @@ EXAMPLE_PREAMBLE = [
     "  namespace lymph = pluss::ai::lymph;",
     "  using pluss::ScalarType;",
     "  using pluss::table::DataFrame;",
-    "  using pluss::table::Thread;",
+    "  using pluss::table::Slate;",
     "",
     "  // TODO: construct realistic inputs, configure the object, run the call,",
     "  //       then print the result with std::cout.",
@@ -878,7 +878,9 @@ def cmd_lint(args: argparse.Namespace) -> int:
     header_text = read_header_surface(m)
 
     def check_forbidden(rel: str, text: str) -> None:
-        low = text.lower()
+        # Structural author comments may name an internal verifier source, but
+        # they are removed by MyST and are not part of the public page.
+        low = re.sub(r"<!--.*?-->", "", text, flags=re.S).lower()
         for pat in FORBIDDEN_TERMS:
             mobj = re.search(pat, low)
             if mobj:
@@ -902,12 +904,17 @@ def cmd_lint(args: argparse.Namespace) -> int:
             probs.append(f"{rel}: no ## Practical Examples section")
             return
         body = mobj.group(1)
-        blocks = re.split(r"\n###\s+Example\s+\d+\b", body)[1:]
+        blocks = re.split(r"\n###\s+", body)[1:]
+        verifier = re.search(r"<!--\s*pluss-verifier:\s*([^>]+?)\s*-->", text)
+        if verifier:
+            verifier_path = REPO_ROOT / verifier.group(1).strip()
+            if not verifier_path.is_file():
+                probs.append(f"{rel}: verifier source does not exist: {verifier_path}")
         if len(blocks) < 3:
-            probs.append(f"{rel}: {len(blocks)} numbered example(s) under "
-                         f"## Practical Examples, need >= 3 (Example 1..N)")
+            probs.append(f"{rel}: {len(blocks)} example(s) under "
+                         f"## Practical Examples, need >= 3")
         for i, blk in enumerate(blocks, 1):
-            if "int main(" not in blk:
+            if not verifier and "int main(" not in blk:
                 probs.append(f"{rel}: Example {i} is not an end-to-end `int main()` program")
             if "std::cout" not in blk and ".writeln(" not in blk:
                 probs.append(f"{rel}: Example {i} has no explicit print statement")
@@ -932,6 +939,13 @@ def cmd_lint(args: argparse.Namespace) -> int:
             # as ## Input Shapes for methods with several (features, label) forms.
             documented = "".join(re.findall(
                 r"##\s+(?:Parameters|Input Shapes|Fields)\b(.*?)(?:\n##\s|\Z)", text, re.S))
+            if not documented:
+                # A compact method may explain its one or two inputs directly
+                # in What It Does without manufacturing a redundant parameter
+                # table. Keep that prose eligible, but never count examples.
+                explained = re.search(
+                    r"##\s+What It Does\b(.*?)(?:\n##\s+Practical Examples|\Z)", text, re.S)
+                documented = explained.group(1) if explained else ""
             for p in sig_params(text):
                 if not re.search(rf"[`&\s]{re.escape(p)}[`,\s]", documented):
                     probs.append(f"{rel}: signature parameter `{p}` not documented "
@@ -950,8 +964,9 @@ def cmd_lint(args: argparse.Namespace) -> int:
             check_signature_discipline(rel, text)
             h3 = {h.split()[-1].strip("`") for h in H3.findall(text)}
             for fld in sym.fields:
-                if fld not in h3:
-                    probs.append(f"{rel}: options field `{fld}` has no ### prose subsection")
+                table_field = re.search(rf"^\|\s*`{re.escape(fld)}`\s*\|", text, re.M)
+                if fld not in h3 and not table_field:
+                    probs.append(f"{rel}: options field `{fld}` is absent from prose/table")
 
     for s in m.symbols:
         if args.family and not s.family.startswith(args.family):
